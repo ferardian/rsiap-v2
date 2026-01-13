@@ -1363,9 +1363,9 @@ const stopAutoScroll = () => {
     justify-content: center !important;
   }
 
-  /* Room Cards - 3 per row on mobile */
+  /* Room Cards - 2 per row on mobile */
   .availability-cards {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.5rem !important;
   }
 
