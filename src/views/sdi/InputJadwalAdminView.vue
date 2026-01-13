@@ -16,7 +16,14 @@
             v-model="filter.year" 
             :options="yearOptions"
             placeholder="Pilih Tahun"
-            class="year-select"
+            :disabled="loading"
+          />
+          <SearchableSelect 
+            v-if="departmentOptions.length > 1"
+            v-model="filter.department" 
+            :options="departmentOptions"
+            placeholder="Pilih Unit"
+            class="dept-select"
             :disabled="loading"
           />
           <input 
@@ -28,6 +35,9 @@
           >
           <button @click="fetchData" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button @click="openPatternModal" class="btn btn-secondary">
+            <i class="fas fa-magic"></i> Isi Pola
           </button>
         </div>
       </div>
@@ -188,6 +198,40 @@
       </div>
     </div>
 
+    <!-- Pattern Fill Modal -->
+    <div v-if="showPatternModal" class="modal-overlay" @click.self="closePatternModal">
+      <div class="modal-content pattern-modal">
+        <div class="modal-header">
+          <h3>Isi Pola Otomatis</h3>
+          <button @click="closePatternModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="text-sm text-gray-600 mb-4">
+            Atur pola shift berdasarkan hari. Pola akan diterapkan ke <strong>{{ filteredEmployees.length }} pegawai</strong> yang sedang tampil.
+          </p>
+          
+          <div class="pattern-grid">
+            <div v-for="(dayName, idx) in ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']" :key="idx" class="pattern-row">
+              <label>{{ dayName }}</label>
+              <select v-model="patternRules[idx]" class="form-select">
+                <option :value="null">- Tidak Diubah -</option>
+                <option value="EMPTY">❌ Libur / Kosong</option>
+                <option v-for="shift in shifts" :key="shift.shift" :value="shift.shift">
+                  {{ shift.shift }} ({{ shift.jam_masuk }}-{{ shift.jam_pulang }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closePatternModal">Batal</button>
+            <button class="btn btn-primary" @click="applyPattern">
+              <i class="fas fa-check"></i> Terapkan Pola
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -217,17 +261,17 @@ const filter = ref({
 })
 
 // Initialize filter from auth store if available
+// Initialize filter
 const initFilter = () => {
-  const userDept = authStore.user?.data?.detail?.departemen
-  if (userDept) {
-    filter.value.department = userDept
-  }
+    // Default to 'all' to let backend decide based on mapping
+    filter.value.department = 'all'
 }
 
 const loading = ref(false)
 const saving = ref(false)
 const employees = ref([])
 const shifts = ref([])
+const departmentOptions = ref([])
 const hasChanges = ref(false)
 const pendingChanges = ref({}) // Map: "pegawaiId_day" -> "shiftCode"
 
@@ -235,6 +279,10 @@ const pendingChanges = ref({}) // Map: "pegawaiId_day" -> "shiftCode"
 const showModal = ref(false)
 const selectedEmployee = ref(null)
 const selectedDay = ref(null)
+
+// Pattern Modal State
+const showPatternModal = ref(false)
+const patternRules = ref(new Array(7).fill(null)) // 0=Sun, 6=Sat
 
 // Computed
 const daysInMonth = computed(() => {
@@ -418,7 +466,7 @@ const fetchData = async () => {
   
   try {
     const [schedRes, shiftRes] = await Promise.all([
-      jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search),
+      jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search, 'admin'),
       // Only fetch shifts once ideally, but ok for now
       jadwalPegawaiService.getShifts()
     ])
@@ -426,6 +474,18 @@ const fetchData = async () => {
     // ApiResponse::success returns { message: ..., data: ... } WITHOUT 'success' boolean
     if (schedRes.data && schedRes.data.data) {
       employees.value = schedRes.data.data
+      
+      // Handle Authorized Departments
+      // Check both locations just in case (meta or root)
+      if (schedRes.data.authorized_departments || (schedRes.data.meta && schedRes.data.meta.authorized_departments)) {
+          const authorized = schedRes.data.authorized_departments || schedRes.data.meta.authorized_departments
+          departmentOptions.value = [
+              { id: 'all', name: 'Semua Unit' },
+              ...authorized
+          ]
+      } else {
+          departmentOptions.value = []
+      }
     }
     
     if (shiftRes.data && shiftRes.data.data) {
@@ -500,6 +560,41 @@ const selectShift = (shiftCode) => {
   closeModal()
 }
 
+// Pattern Logic
+const openPatternModal = () => {
+  showPatternModal.value = true
+}
+
+const closePatternModal = () => {
+  showPatternModal.value = false
+}
+
+const applyPattern = () => {
+  if (!confirm(`Terapkan pola ini ke ${filteredEmployees.value.length} pegawai? Data yang belum disimpan akan tertimpa.`)) return
+
+  const year = filter.value.year
+  const monthIdx = filter.value.month - 1
+  
+  filteredEmployees.value.forEach(emp => {
+    for (let d = 1; d <= daysInMonth.value; d++) {
+      const date = new Date(year, monthIdx, d)
+      const dayOfWeek = date.getDay()
+      
+      const rule = patternRules.value[dayOfWeek]
+      
+      if (rule !== null && rule !== undefined) {
+        const shiftVal = rule === 'EMPTY' ? '' : rule
+        const key = `${emp.id}_${d}`
+        pendingChanges.value[key] = shiftVal
+      }
+    }
+  })
+  
+  hasChanges.value = true
+  closePatternModal()
+  alert('Pola berhasil diterapkan! Jangan lupa klik Simpan.')
+}
+
 // Save
 const saveChanges = async () => {
   if (!hasChanges.value) return
@@ -552,7 +647,11 @@ onMounted(() => {
 })
 
 // Watch filters
-watch([() => filter.value.month, () => filter.value.year], () => {
+watch([
+  () => filter.value.month, 
+  () => filter.value.year,
+  () => filter.value.department
+], () => {
   fetchData()
 })
 </script>
@@ -608,6 +707,11 @@ watch([() => filter.value.month, () => filter.value.year], () => {
 .year-select {
   min-width: 100px;
   max-width: 120px;
+  max-width: 120px;
+}
+
+.dept-select {
+  min-width: 180px;
 }
 
 .search-input {
@@ -686,6 +790,14 @@ watch([() => filter.value.month, () => filter.value.year], () => {
   color: white;
 }
 
+.btn-secondary {
+  background: #64748b;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #475569;
+}
+
 .btn-primary:hover {
   background: #2563eb;
 }
@@ -742,6 +854,48 @@ watch([() => filter.value.month, () => filter.value.year], () => {
 }
 
 /* Sticky Headers and Columns */
+.pattern-modal {
+  max-width: 800px; /* Wider for side-by-side */
+  width: 95%;
+}
+.pattern-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Force 2 columns */
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.pattern-row {
+  display: flex;
+  flex-direction: row; /* Side by side */
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+}
+/* No first-child override needed */
+
+.pattern-row label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+  width: 80px; /* Fixed width for alignment */
+  flex-shrink: 0;
+}
+.pattern-row .form-select {
+  flex: 1; /* Take remaining space */
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
 thead th {
   position: sticky;
   top: 0;
@@ -1181,6 +1335,27 @@ thead .sticky-col {
   .summary-table th, .summary-table td {
      font-size: 0.7rem;
      padding: 0.25rem;
+  }
+
+  /* Pattern Modal Mobile */
+  .pattern-grid {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 1rem;
+  }
+  
+  .pattern-row {
+    flex-direction: column; /* Stack label and input */
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .pattern-row label {
+    width: 100%; /* Full width label */
+    font-size: 0.85rem;
+  }
+  
+  .pattern-row .form-select {
+    width: 100%; /* Full width input */
   }
 }
 </style>

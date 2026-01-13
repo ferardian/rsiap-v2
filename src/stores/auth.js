@@ -64,7 +64,16 @@ export const useAuthStore = defineStore('auth', {
 
           // Fetch user roles
           try {
-            const rolesResponse = await pegawaiService.getPegawaiAccessLevels(result.user.detail.nip)
+            // Fix: Gunakan akses yang lebih robust (handle wrapping .data dan key .nik/.nip)
+            const userObj = result.user?.data || result.user
+            const detail = userObj?.detail
+            const userNip = detail?.nik || detail?.nip || userObj?.id_user
+
+            if (!userNip) {
+              console.error('Cannot find NIK/NIP in user object:', result.user)
+            }
+
+            const rolesResponse = await pegawaiService.getPegawaiAccessLevels(userNip)
             this.userRoles = rolesResponse.data || []
             localStorage.setItem('user_roles', JSON.stringify(this.userRoles))
           } catch (roleError) {
@@ -81,9 +90,16 @@ export const useAuthStore = defineStore('auth', {
             // If multiple roles, require selection
             return { success: true, requireRoleSelection: true }
           } else {
-            // If no roles found (fallback), proceed without specific role context (or handle as error)
-            // For now, let's allow login but maybe with limited access
-            return { success: true, requireRoleSelection: false }
+            // Jika tidak ada role ditemukan
+            this.user = null
+            this.token = null
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('user')
+
+            return {
+              success: false,
+              error: 'Akun Anda tidak memiliki Role Akses yang aktif. Silakan hubungi IT.'
+            }
           }
         } else {
           this.error = result.error

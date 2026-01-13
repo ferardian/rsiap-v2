@@ -43,10 +43,16 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
+      // Jangan redirect jika error berasal dari endpoint login (biarkan UI menangani)
+      if (error.config.url.includes('auth/login')) {
+        return Promise.reject(error)
+      }
+
       // Token expired atau invalid
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
+      localStorage.clear() // Clear all storage items
+      // Gunakan BASE_URL agar sesuai dengan base path aplikasi
+      const baseUrl = import.meta.env.BASE_URL
+      window.location.href = `${baseUrl}login`.replace('//', '/')
     }
     return Promise.reject(error)
   }

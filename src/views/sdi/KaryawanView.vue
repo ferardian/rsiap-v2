@@ -2,7 +2,21 @@
   <div class="karyawan-container">
     <!-- Header -->
     <div class="page-header">
-      <div class="header-actions">
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button 
+          v-for="tab in tabs"
+          :key="tab.id"
+          :class="['tab-btn', { active: activeTab === tab.id }]"
+          @click="activeTab = tab.id"
+        >
+          <i :class="tab.icon"></i>
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- Search and Add (only for Data Karyawan tab) -->
+      <div v-if="activeTab === 'data-karyawan'" class="header-actions">
         <div class="search-box">
           <i class="fas fa-search"></i>
           <input 
@@ -19,154 +33,170 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Memuat data...</p>
-    </div>
+    <!-- Tab Content -->
+    <div v-if="activeTab === 'data-karyawan'">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Memuat data...</p>
+      </div>
 
-    <!-- Data Table (Desktop) -->
-    <div v-else-if="!loading && pegawaiList.length > 0" class="table-container">
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nama</th>
-              <th>NIP</th>
-              <th>Jenis Kelamin</th>
-              <th>TTL</th>
-              <th>Alamat</th>
-              <th>Pendidikan</th>
-              <th>No. KTP</th>
-              <th>No. Telp</th>
-              <!-- Jabatan merged with Name -->
-              <th>Departemen</th>
-              <th>Mulai Kerja</th>
-              <th>Masa Kerja</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="pegawai in pegawaiList" :key="pegawai.nip">
-              <td>
-                <div class="employee-profile">
-                  <div class="avatar">
-                    <img 
-                      v-if="pegawai.photo" 
-                      :src="getPhotoUrl(pegawai.photo)" 
-                      alt="Foto"
-                      @error="e => e.target.style.display = 'none'"
-                    >
-                    <span v-else class="initials">{{ getInitials(pegawai.nama) }}</span>
+      <!-- Data Table (Desktop) -->
+      <div v-else-if="!loading && pegawaiList.length > 0" class="table-container">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>NIP</th>
+                <th>Jenis Kelamin</th>
+                <th>TTL</th>
+                <th>Alamat</th>
+                <th>Pendidikan</th>
+                <th>No. KTP</th>
+                <th>No. Telp</th>
+                <!-- Jabatan merged with Name -->
+                <th>Departemen</th>
+                <th>Mulai Kerja</th>
+                <th>Masa Kerja</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="pegawai in pegawaiList" :key="pegawai.nip">
+                <td>
+                  <div class="employee-profile">
+                    <div class="avatar">
+                      <!-- Photo disabled to prevent 404 errors -->
+                      <span class="initials">{{ getInitials(pegawai.nama) }}</span>
+                    </div>
+                    <div class="employee-info">
+                      <span class="emp-name">{{ pegawai.nama }}</span>
+                      <span class="emp-role">{{ pegawai.jbtn || '-' }}</span>
+                    </div>
                   </div>
-                  <div class="employee-info">
-                    <span class="emp-name">{{ pegawai.nama }}</span>
-                    <span class="emp-role">{{ pegawai.jbtn || '-' }}</span>
+                </td>
+                <td><span class="nip-text">{{ pegawai.nip }}</span></td>
+                <td>{{ pegawai.jk || '-' }}</td>
+                <td>
+                  <div class="ttl">
+                    {{ pegawai.tmp_lahir || '-' }},<br>
+                    {{ formatDate(pegawai.tgl_lahir) }}
                   </div>
-                </div>
-              </td>
-              <td><span class="nip-text">{{ pegawai.nip }}</span></td>
-              <td>{{ pegawai.jk || '-' }}</td>
-              <td>
-                <div class="ttl">
-                  {{ pegawai.tmp_lahir || '-' }},<br>
-                  {{ formatDate(pegawai.tgl_lahir) }}
-                </div>
-              </td>
-              <td>
-                <div class="alamat-cell">{{ pegawai.alamat || '-' }}</div>
-              </td>
-              <td>{{ pegawai.pendidikan || '-' }}</td>
-              <td>{{ pegawai.no_ktp || '-' }}</td>
-              <td>{{ pegawai.no_telp || '-' }}</td>
-              <!-- Jabatan moved to name column subtitle -->
-              <td>{{ pegawai.departemen || '-' }}</td>
-              <td>{{ formatDate(pegawai.mulai_kerja) }}</td>
-              <td>
-                <span class="tenure-badge">
-                  {{ calculateTenure(pegawai.mulai_kerja) }}
-                </span>
-              </td>
-              <td>
-                <div class="action-buttons">
-                  <button v-if="canUpdate" class="btn-edit" @click="openEditModal(pegawai)" title="Edit">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button v-if="canDelete" class="btn-delete" @click="confirmDelete(pegawai)" title="Hapus">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td>
+                  <div class="alamat-cell">{{ pegawai.alamat || '-' }}</div>
+                </td>
+                <td>{{ pegawai.pendidikan || '-' }}</td>
+                <td>{{ pegawai.no_ktp || '-' }}</td>
+                <td>{{ pegawai.no_telp || '-' }}</td>
+                <!-- Jabatan moved to name column subtitle -->
+                <td>{{ pegawai.departemen || '-' }}</td>
+                <td>{{ formatDate(pegawai.mulai_kerja) }}</td>
+                <td>
+                  <span class="tenure-badge">
+                    {{ calculateTenure(pegawai.mulai_kerja) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button v-if="canUpdate" class="btn-edit" @click="openEditModal(pegawai)" title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button v-if="canDelete" class="btn-delete" @click="confirmDelete(pegawai)" title="Hapus">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>Tidak ada data karyawan</p>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="pagination.total > 0" class="pagination">
+        <button 
+          class="btn-page" 
+          :disabled="pagination.current_page === 1"
+          @click="changePage(pagination.current_page - 1)"
+        >
+          <i class="fas fa-chevron-left"></i>
+          Sebelumnya
+        </button>
+        <span class="page-info">
+          Halaman {{ pagination.current_page }} dari {{ pagination.last_page }}
+          ({{ pagination.total }} total)
+        </span>
+        <button 
+          class="btn-page" 
+          :disabled="pagination.current_page === pagination.last_page"
+          @click="changePage(pagination.current_page + 1)"
+        >
+          Selanjutnya
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <h3>Konfirmasi Hapus</h3>
+            <button class="btn-close" @click="showDeleteModal = false">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus karyawan <strong>{{ selectedPegawai?.nama }}</strong>?</p>
+            <p class="warning-text">Data yang dihapus tidak dapat dikembalikan.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="showDeleteModal = false">Batal</button>
+            <button class="btn-confirm-delete" @click="deletePegawai">
+              <i class="fas fa-trash"></i>
+              Hapus
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="empty-state">
-      <i class="fas fa-users"></i>
-      <p>Tidak ada data karyawan</p>
-    </div>
+    <!-- Staf Klinis Tab -->
+    <StafKlinisTab v-else-if="activeTab === 'staf-klinis'" />
 
-    <!-- Pagination -->
-    <div v-if="pagination.total > 0" class="pagination">
-      <button 
-        class="btn-page" 
-        :disabled="pagination.current_page === 1"
-        @click="changePage(pagination.current_page - 1)"
-      >
-        <i class="fas fa-chevron-left"></i>
-        Sebelumnya
-      </button>
-      <span class="page-info">
-        Halaman {{ pagination.current_page }} dari {{ pagination.last_page }}
-        ({{ pagination.total }} total)
-      </span>
-      <button 
-        class="btn-page" 
-        :disabled="pagination.current_page === pagination.last_page"
-        @click="changePage(pagination.current_page + 1)"
-      >
-        Selanjutnya
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Konfirmasi Hapus</h3>
-          <button class="btn-close" @click="showDeleteModal = false">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>Apakah Anda yakin ingin menghapus karyawan <strong>{{ selectedPegawai?.nama }}</strong>?</p>
-          <p class="warning-text">Data yang dihapus tidak dapat dikembalikan.</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showDeleteModal = false">Batal</button>
-          <button class="btn-confirm-delete" @click="deletePegawai">
-            <i class="fas fa-trash"></i>
-            Hapus
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Statistik Tab -->
+    <StatistikTab v-else-if="activeTab === 'statistik'" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useMenuStore } from '../../stores/menu'
 import { pegawaiService } from '../../services/pegawaiService'
+import StafKlinisTab from './components/StafKlinisTab.vue'
+import StatistikTab from './components/StatistikTab.vue'
+
+const router = useRouter()
+const route = useRoute()
 
 // Stores
 const menuStore = useMenuStore()
 
 // State
+const tabs = [
+  { id: 'data-karyawan', label: 'Data Karyawan', icon: 'fas fa-users' },
+  { id: 'staf-klinis', label: 'Staf Klinis', icon: 'fas fa-user-md' },
+  { id: 'statistik', label: 'Statistik', icon: 'fas fa-chart-pie' }
+]
+const activeTab = ref(route.query.tab || 'data-karyawan')
 const loading = ref(false)
 const searchQuery = ref('')
 const pegawaiList = ref([])
@@ -351,6 +381,46 @@ onMounted(() => {
 /* Header */
 .page-header {
   margin-bottom: 2rem;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-btn:hover {
+  color: #3b82f6;
+  background: #f8fafc;
+}
+
+.tab-btn.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.tab-btn i {
+  font-size: 1rem;
 }
 
 .header-actions {

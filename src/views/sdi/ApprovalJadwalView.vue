@@ -204,6 +204,13 @@ import { jadwalPegawaiService } from '../../services/jadwalPegawaiService'
 import { useAuthStore } from '../../stores/auth'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 
+const props = defineProps({
+  allowAllDepartments: {
+    type: Boolean,
+    default: false
+  }
+})
+
 const authStore = useAuthStore()
 
 const months = [
@@ -440,7 +447,13 @@ const fetchData = async () => {
   
   try {
     const [schedRes, shiftRes] = await Promise.all([
-      jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search),
+      jadwalPegawaiService.getSchedule(
+        filter.value.month, 
+        filter.value.year, 
+        filter.value.department, 
+        filter.value.search, 
+        props.allowAllDepartments ? 'admin' : null
+      ),
       // Only fetch shifts once ideally, but ok for now
       jadwalPegawaiService.getShifts()
     ])
@@ -456,6 +469,21 @@ const fetchData = async () => {
         // Metadata: authorized_departments
         if (schedRes.data.authorized_departments) {
             authorizedDepartments.value = schedRes.data.authorized_departments
+        }
+
+        // Override authorized departments if allowAllDepartments is true
+        if (props.allowAllDepartments) {
+            try {
+                const deptRes = await jadwalPegawaiService.getDepartments()
+                if (deptRes.data && deptRes.data.data) {
+                    authorizedDepartments.value = deptRes.data.data.map(d => ({
+                        id: d.dep_id, 
+                        name: d.nama_ruang
+                    }))
+                }
+            } catch (deptErr) {
+                console.error('Failed to fetch all departments', deptErr)
+            }
         }
     }
     
@@ -599,6 +627,18 @@ const approveSchedule = async () => {
 // Init
 onMounted(() => {
   initFilter()
+  fetchData()
+})
+
+watch(() => props.allowAllDepartments, (newVal) => {
+  if (newVal) {
+    filter.value.department = 'all'
+  } else {
+    // Switching back to Restricted mode
+    // Force reset to 'all' because the restricted list might not contain the previously selected dept
+    filter.value.department = 'all'
+    initFilter()
+  }
   fetchData()
 })
 

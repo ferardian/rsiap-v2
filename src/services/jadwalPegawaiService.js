@@ -2,10 +2,11 @@ import api from './api'
 
 export const jadwalPegawaiService = {
     // Get monthly schedule matrix
-    getSchedule(month, year, department, search) {
+    getSchedule(month, year, department, search, mode = null) {
         const params = { bulan: month, tahun: year }
         if (department) params.departemen = department
         if (search) params.search = search
+        if (mode) params.mode = mode
 
         return api.get('/sdi/jadwal-pegawai', { params })
     },
@@ -40,5 +41,10 @@ export const jadwalPegawaiService = {
             tahun: year,
             departemen: department
         })
+    },
+
+    // Get all departments
+    getDepartments() {
+        return api.get('/indikator-mutu/monitoring/units')
     }
 }

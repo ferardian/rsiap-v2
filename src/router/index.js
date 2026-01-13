@@ -35,6 +35,30 @@ const routes = [
     meta: { requiresAuth: true, layout: 'empty' }
   },
   {
+    path: '/codeblue/schedule',
+    name: 'CodeBlueSchedule',
+    component: () => import('../views/CodeBlueScheduleView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/informasi/jadwal-dokter',
+    name: 'JadwalDokter',
+    component: () => import('../views/informasi/JadwalDokterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/informasi/kamar',
+    name: 'Kamar',
+    component: () => import('../views/informasi/KamarView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dokumen-surat',
+    name: 'DokumenSurat',
+    component: () => import('../views/dokumen-surat/DokumenSuratView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/admin/menu',
     name: 'MenuManagement',
     component: () => import('../views/admin/MenuManagementView.vue'),
@@ -86,6 +110,31 @@ const routes = [
     path: '/sdi/jadwal-tambahan',
     name: 'JadwalTambahan',
     component: () => import('../views/sdi/JadwalTambahanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/approval/jadwal',
+    name: 'UnifiedApprovalJadwal',
+    component: () => import('../views/sdi/UnifiedApprovalJadwalView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/approval/jadwal-all',
+    name: 'UnifiedApprovalJadwalAll',
+    component: () => import('../views/sdi/UnifiedApprovalJadwalView.vue'),
+    props: { allowAllDepartments: true },
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/approval/cuti',
+    name: 'UnifiedApprovalCuti',
+    component: () => import('../views/sdi/ApprovalCutiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/approval/berkas',
+    name: 'UnifiedApprovalBerkas',
+    component: () => import('../views/akred/UnifiedApprovalBerkasView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -147,7 +196,79 @@ const routes = [
     name: 'RiwayatObat',
     component: () => import('../views/farmasi/RiwayatObatView.vue'),
     meta: { requiresAuth: true }
-  }
+  },
+  {
+    path: '/pemeriksaan/rawat-jalan',
+    name: 'RawatJalan',
+    component: () => import('../views/pemeriksaan/RawatJalanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/pemeriksaan/rawat-inap',
+    name: 'RawatInap',
+    component: () => import('../views/pemeriksaan/RawatInapView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/pemeriksaan/skrining-gizi',
+    name: 'SkriningGizi',
+    component: () => import('../views/pemeriksaan/SkriningGiziView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/indikator-mutu/master',
+    name: 'MasterIndikatorMutu',
+    component: () => import('../views/indikator-mutu/MasterIndikatorMutuView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/indikator-mutu/monitoring',
+    name: 'MonitoringIndikatorMutu',
+    component: () => import('../views/indikator-mutu/MonitoringIndikatorMutuView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/indikator-mutu/inputdata',
+    name: 'InputDataIndikatorMutu',
+    component: () => import('../views/indikator-mutu/InputDataIndikatorMutuView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/akred/spo',
+    name: 'SpoManagement',
+    component: () => import('../views/akred/SpoView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/pemeriksaan/jadwal-operasi',
+    name: 'JadwalOperasi',
+    component: () => import('../views/pemeriksaan/JadwalOperasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/pemeriksaan/tindakan-operasi',
+    name: 'TindakanOperasi',
+    component: () => import('../views/pemeriksaan/TindakanOperasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/logistik/satuan-jenis',
+    name: 'LogistikMaster',
+    component: () => import('../views/logistik/UnifiedLogistikMasterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/logistik/supplier',
+    name: 'LogistikSupplier',
+    component: () => import('../views/logistik/MasterSupplierView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/logistik/barang',
+    name: 'LogistikBarang',
+    component: () => import('../views/logistik/MasterBarangView.vue'),
+    meta: { requiresAuth: true }
+  },
 ]
 
 const router = createRouter({

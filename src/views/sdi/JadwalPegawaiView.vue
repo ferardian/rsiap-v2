@@ -16,7 +16,6 @@
             v-model="filter.year" 
             :options="yearOptions"
             placeholder="Pilih Tahun"
-            class="year-select"
             :disabled="loading"
           />
           <input 
@@ -216,18 +215,17 @@ const filter = ref({
   department: 'all'
 })
 
-// Initialize filter from auth store if available
+// Initialize filter
 const initFilter = () => {
-  const userDept = authStore.user?.data?.detail?.departemen
-  if (userDept) {
-    filter.value.department = userDept
-  }
+    // Default to 'all' to let backend decide based on mapping
+    filter.value.department = 'all'
 }
 
 const loading = ref(false)
 const saving = ref(false)
 const employees = ref([])
 const shifts = ref([])
+const departmentOptions = ref([])
 const hasChanges = ref(false)
 const pendingChanges = ref({}) // Map: "pegawaiId_day" -> "shiftCode"
 
@@ -424,8 +422,21 @@ const fetchData = async () => {
     ])
     
     // ApiResponse::success returns { message: ..., data: ... } WITHOUT 'success' boolean
+    
     if (schedRes.data && schedRes.data.data) {
       employees.value = schedRes.data.data
+      
+      // Handle Authorized Departments
+      // Check both locations just in case (meta or root)
+      if (schedRes.data.authorized_departments || (schedRes.data.meta && schedRes.data.meta.authorized_departments)) {
+          const authorized = schedRes.data.authorized_departments || schedRes.data.meta.authorized_departments
+          departmentOptions.value = [
+              { id: 'all', name: 'Semua Unit' },
+              ...authorized
+          ]
+      } else {
+          departmentOptions.value = []
+      }
     }
     
     if (shiftRes.data && shiftRes.data.data) {
@@ -608,6 +619,11 @@ watch([() => filter.value.month, () => filter.value.year], () => {
 .year-select {
   min-width: 100px;
   max-width: 120px;
+  max-width: 120px;
+}
+
+.dept-select {
+  min-width: 180px;
 }
 
 .search-input {

@@ -32,7 +32,8 @@ export const useMenuStore = defineStore('menu', {
     hasMenuPermission: (state) => (menuId, permission = 'can_view') => {
       const findMenu = (menus, id) => {
         for (const menu of menus) {
-          if (menu.id_menu === id) return menu
+          // Use loose equality to handle string/number mismatch
+          if (menu.id_menu == id) return menu
           if (menu.children && menu.children.length > 0) {
             const found = findMenu(menu.children, id)
             if (found) return found

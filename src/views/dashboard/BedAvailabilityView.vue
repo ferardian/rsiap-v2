@@ -472,6 +472,7 @@ const loadBeds = async (preserveScroll = false) => {
     const params = {}
     // kd_bangsal filter removed as we use category filter on frontend
     if (selectedClass.value) params.kelas = selectedClass.value
+    if (selectedStatus.value) params.status = selectedStatus.value
     
     const response = await bedAvailabilityService.getAllBeds(params)
     

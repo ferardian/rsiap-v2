@@ -149,7 +149,7 @@ const nik = computed(() => {
 // State
 const loading = ref(false)
 const cutiList = ref([])
-const selectedYear = ref('all')
+const selectedYear = ref(new Date().getFullYear())
 const activeTab = ref('pending')
 
 // Tabs configuration
@@ -227,7 +227,7 @@ const loadData = async () => {
   
   loading.value = true
   try {
-    const params = (selectedYear.value && selectedYear.value !== 'all') ? { year: selectedYear.value } : {}
+    const params = selectedYear.value ? { year: selectedYear.value } : {}
     console.log('Calling API with params:', params)
     
     // Fetch all statuses, filter will be done on frontend via tabs
