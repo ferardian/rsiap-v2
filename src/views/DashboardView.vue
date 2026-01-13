@@ -1602,6 +1602,165 @@ onUnmounted(() => {
   }
 }
 
+/* Mobile Optimization - Small Screens */
+@media (max-width: 640px) {
+  /* Ensure dashboard-main has padding */
+  .dashboard-main {
+    padding: 1rem !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Filter Section - Stack Vertically */
+  .filter-section {
+    flex-direction: column !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Filter Tabs - Full Width Stack */
+  .filter-tabs-container {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    border-radius: 0.5rem !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .filter-tab-item {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .filter-tab-item i {
+    font-size: 1rem !important;
+  }
+
+  /* Custom Date Inputs - Full Width */
+  .custom-date-input {
+    width: 100% !important;
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .date-separator {
+    display: none !important;
+  }
+
+  .custom-date-apply {
+    width: 100% !important;
+    padding: 0.75rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Auto Reload Button - Full Width */
+  .btn-auto-reload {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Welcome Section */
+  .welcome-section {
+    padding: 1.25rem !important;
+  }
+
+  .welcome-section h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .welcome-section p {
+    font-size: 0.875rem !important;
+  }
+
+  .user-badges {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .user-badge,
+  .department-badge {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .date-time {
+    font-size: 0.875rem !important;
+  }
+
+  .session-info {
+    font-size: 0.75rem !important;
+  }
+
+  /* Stat Cards */
+  .stat-card {
+    padding: 1.25rem !important;
+  }
+
+  .stat-icon {
+    width: 3rem !important;
+    height: 3rem !important;
+    font-size: 1.5rem !important;
+  }
+
+  .stat-content h3 {
+    font-size: 1.75rem !important;
+  }
+
+  .stat-content p {
+    font-size: 0.875rem !important;
+  }
+
+  /* Dashboard Sections - Reset to default */
+  .dashboard-sections {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    gap: 1rem !important;
+  }
+
+  /* Quick Stats Section */
+  .quick-stats-section h3 {
+    font-size: 1.125rem !important;
+  }
+
+  .quick-stat-card {
+    padding: 1rem !important; /* Reduced from 1.25rem to align with stat cards */
+  }
+
+  .stat-icon-wrapper {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+
+  .stat-icon-wrapper i {
+    font-size: 1.5rem !important;
+  }
+
+  .stat-details h4 {
+    font-size: 1.75rem !important;
+  }
+
+  .stat-details p {
+    font-size: 0.875rem !important;
+  }
+
+  .breakdown-grid-item,
+  .breakdown-item {
+    font-size: 0.75rem !important;
+  }
+}
+
 @media (max-width: 480px) {
   .dashboard-header {
     padding: 1rem;

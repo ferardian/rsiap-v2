@@ -1342,6 +1342,75 @@ const stopAutoScroll = () => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .page-header {
+    padding: 1rem !important;
+  }
+
+  .header-content {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .header-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .header-actions .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Room Cards - 3 per row on mobile */
+  .availability-cards {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  .availability-card {
+    padding: 0.75rem !important;
+  }
+
+  .bangsal-name,
+  .room-name {
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+    font-weight: 600 !important;
+  }
+
+  .class-badge {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.4rem !important;
+  }
+
+  .stat-number {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+  }
+
+  .stat-label {
+    font-size: 0.6rem !important;
+  }
+
+  .status-info {
+    font-size: 0.65rem !important;
+  }
+
+  .card-header-info {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .availability-stats {
+    gap: 0.4rem !important;
+  }
+
+  .stat-item {
+    padding: 0.5rem !important;
+  }
+
   .bed-grid {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 0.75rem;
