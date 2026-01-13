@@ -41,7 +41,7 @@
           <!-- Children Submenu -->
           <ul v-if="menu.children && menu.children.length > 0 && expandedMenus.includes(menu.id_menu) && !isCollapsed" class="nav-sublist">
             <li v-for="child in menu.children" :key="child.id_menu" class="nav-item">
-              <router-link :to="child.route" class="nav-link sub-link" active-class="active">
+              <router-link :to="child.route" class="nav-link sub-link" active-class="active" @click="handleSubmenuClick">
                 <span :class="`${getIconClass(child.icon)} sub-icon`">{{ getIconContent(child.icon) }}</span>
                 <span class="nav-text">{{ child.nama_menu }}</span>
               </router-link>
@@ -137,6 +137,18 @@ const handleMenuClick = (menu) => {
     }
   } else if (menu.route) {
     router.push(menu.route)
+    
+    // Auto-close sidebar on mobile after navigation
+    if (window.innerWidth < 768) {
+      emit('toggle-collapse')
+    }
+  }
+}
+
+const handleSubmenuClick = () => {
+  // Auto-close sidebar on mobile when submenu is clicked
+  if (window.innerWidth < 768) {
+    emit('toggle-collapse')
   }
 }
 

@@ -624,4 +624,21 @@ tbody td {
   color: #4b5563;
   border: 2px solid #d1d5db;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .tabs-container {
+    padding: 1rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .tab-button {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .tab-count {
+    font-size: 0.7rem !important;
+  }
+}
 </style>

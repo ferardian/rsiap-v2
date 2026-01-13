@@ -1371,26 +1371,55 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .dokumen-surat-page {
     padding: 1rem;
   }
 
+  /* Tabs */
   .tabs-container {
-    grid-template-columns: 1fr 1fr;
+    padding: 0.75rem !important;
+    gap: 0.25rem !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
+  .tab-button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Actions bar - stack filters vertically */
   .actions-bar {
-    flex-direction: column;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .search-box,
+  .filter-select,
+  .btn-upload {
+    width: 100% !important;
+  }
+
+  /* Table - enable horizontal scroll */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .files-table {
+    min-width: 700px !important;
     font-size: 0.875rem;
   }
 
   .files-table th,
   .files-table td {
     padding: 0.75rem 0.5rem;
+    white-space: nowrap;
   }
 }
 </style>

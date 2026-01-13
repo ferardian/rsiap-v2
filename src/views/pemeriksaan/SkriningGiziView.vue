@@ -7,13 +7,13 @@
         </h3>
         <p class="text-muted mb-0">Kelola data skrining gizi pasien rawat inap</p>
       </div>
-      <div class="col-md-5 d-flex justify-content-end align-items-center gap-2">
-        <div class="d-flex align-items-center gap-2 bg-white p-1 rounded shadow-sm border" style="min-width: fit-content;">
-            <input type="date" class="form-control form-control-sm border-0" v-model="filters.tgl_awal" title="Tanggal Awal" style="width: 110px;">
+      <div class="col-md-5 d-flex justify-content-end align-items-center gap-2 filter-section">
+        <div class="d-flex align-items-center gap-2 bg-white p-1 rounded shadow-sm border date-filter-wrapper">
+            <input type="date" class="form-control form-control-sm border-0 date-input" v-model="filters.tgl_awal" title="Tanggal Awal">
             <span class="text-muted small">s/d</span>
-            <input type="date" class="form-control form-control-sm border-0" v-model="filters.tgl_akhir" title="Tanggal Akhir" style="width: 110px;">
+            <input type="date" class="form-control form-control-sm border-0 date-input" v-model="filters.tgl_akhir" title="Tanggal Akhir">
         </div>
-        <div class="input-group" style="min-width: 200px;">
+        <div class="input-group search-wrapper">
           <span class="input-group-text bg-white border-end-0">
             <i class="fas fa-search text-muted"></i>
           </span>
@@ -353,5 +353,45 @@ onMounted(() => {
 <style scoped>
 .bg-pink {
     background-color: #e83e8c;
+}
+
+/* Desktop styles */
+.date-input {
+  width: 110px;
+}
+
+.search-wrapper {
+  min-width: 200px;
+}
+
+.date-filter-wrapper {
+  min-width: fit-content;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .filter-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .date-filter-wrapper {
+    min-width: 100% !important;
+    width: 100% !important;
+    padding: 0.25rem !important;
+    gap: 0.25rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .date-input {
+    width: 100% !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .search-wrapper {
+    min-width: 100% !important;
+  }
 }
 </style>

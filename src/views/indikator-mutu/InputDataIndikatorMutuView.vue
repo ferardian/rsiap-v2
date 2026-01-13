@@ -7,8 +7,8 @@
         </h3>
         <p class="text-muted mb-0">Input data realisasi indikator mutu harian</p>
       </div>
-      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2">
-        <div class="input-group" style="max-width: 250px;">
+      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2 filter-container">
+        <div class="input-group date-filter" style="max-width: 250px;">
           <span class="input-group-text bg-white border-end-0">
              <i class="fas fa-calendar-alt text-muted"></i>
           </span>
@@ -21,7 +21,7 @@
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit / Ruang"
-            class="style-chooser"
+            class="style-chooser unit-select"
             style="min-width: 250px;"
             :disabled="isUnitLocked"
             @update:modelValue="fetchIndicators"
@@ -864,5 +864,96 @@ onMounted(() => {
 
 .style-chooser .vs__actions {
     padding-top: 0 !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  /* Filter Section */
+  .filter-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+    margin-top: 1rem !important;
+  }
+
+  .date-filter {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .unit-select {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Card Header with Tabs */
+  .card-header.py-3 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .btn-group {
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 0.25rem !important;
+  }
+
+  .btn-group .btn {
+    flex-shrink: 0 !important;
+    font-size: 0.7rem !important;
+    padding: 0.4rem 0.6rem !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+  }
+
+  /* Softer colors for inactive tabs */
+  .btn-group .btn.btn-light {
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    color: #6c757d !important;
+  }
+
+  /* Active tab with softer primary color */
+  .btn-group .btn.btn-primary {
+    background: linear-gradient(135deg, #e0e0e0 0%, #ffffff 100%) !important;
+    border-color: #d0d0d0 !important;
+    color: #495057 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    font-weight: 600 !important;
+  }
+
+  /* Indicator selectors in tabs */
+  .card-header .flex-grow-1 {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .card-header .d-flex.gap-2 {
+    flex-direction: column !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  .card-header .d-flex.gap-2 .style-chooser {
+    width: 100% !important;
+  }
+
+  .card-header .d-flex.gap-2 input[type="month"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Ensure v-select in card header is full width */
+  .card-header .style-chooser {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 </style>

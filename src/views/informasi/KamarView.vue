@@ -985,17 +985,63 @@ onMounted(() => {
     padding: 1rem;
   }
 
+  /* Header - stack button below title */
+  .page-header {
+    padding: 1rem !important;
+  }
+
+  .header-content {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .btn-add {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Tabs */
+  .tabs-container {
+    padding: 1rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .tab-button {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Filters - stack vertically */
+  .filters-section {
+    padding: 1rem !important;
+  }
+
   .filter-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .search-box,
+  .filter-select {
+    width: 100% !important;
+  }
+
+  /* Table - enable horizontal scroll */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .kamar-table {
     font-size: 0.875rem;
+    min-width: 800px !important; /* Force minimum width to enable scroll */
   }
 
   .kamar-table th,
   .kamar-table td {
     padding: 0.75rem 0.5rem;
+    white-space: nowrap;
   }
 }
 

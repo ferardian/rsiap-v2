@@ -7,8 +7,8 @@
             <i class="fas fa-plus me-1"></i> Buat Analisa
          </button> -->
       </div>
-      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2">
-        <div class="input-group" style="max-width: 250px;">
+      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2 filter-container">
+        <div class="input-group date-filter" style="max-width: 250px;">
           <span class="input-group-text bg-white border-end-0">
              <i class="fas fa-calendar-alt text-muted"></i>
           </span>
@@ -21,7 +21,7 @@
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit / Ruang"
-            class="style-chooser"
+            class="style-chooser unit-select"
             style="min-width: 200px;"
             @update:modelValue="fetchData"
         >
@@ -30,7 +30,7 @@
             </template>
         </v-select>
 
-        <button class="btn btn-primary" @click="fetchData" title="Refresh">
+        <button class="btn btn-primary refresh-btn" @click="fetchData" title="Refresh">
           <i class="fas fa-sync-alt"></i>
         </button>
       </div>
@@ -494,6 +494,53 @@ onMounted(() => {
   border-radius: 6px;
   color: #495057;
   padding: 2px 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+    margin-top: 1rem !important;
+  }
+
+  .date-filter {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .unit-select {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .refresh-btn {
+    width: 100% !important;
+  }
+
+  /* Pagination */
+  .card-footer .d-flex {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+
+  .pagination {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+  }
+
+  .pagination .page-item {
+    flex-shrink: 0 !important;
+  }
+
+  .pagination .page-link {
+    font-size: 0.75rem !important;
+    padding: 0.375rem 0.5rem !important;
+  }
 }
 </style>
 

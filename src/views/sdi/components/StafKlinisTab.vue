@@ -1429,6 +1429,46 @@ tbody tr:hover .sticky-col-right {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .staf-klinis-container {
+    padding: 0.5rem 0;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .info-card {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Disable sticky columns on mobile */
+  .data-table .sticky-col,
+  .data-table .sticky-col-right,
+  .data-table th.sticky-col,
+  .data-table td.sticky-col,
+  .data-table th.sticky-col-right,
+  .data-table td.sticky-col-right {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  /* Enable table scroll */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .data-table {
+    min-width: 1200px !important;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }

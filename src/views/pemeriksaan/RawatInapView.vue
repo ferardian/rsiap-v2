@@ -2678,4 +2678,37 @@ input[type="date"].form-control-custom:hover {
 /* Helpers */
 .text-xs { font-size: 0.75rem; }
 .tracking-wide { letter-spacing: 0.025em; }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  /* Status filter column - remove min-width */
+  .col-md-auto[style*="min-width: 320px"] {
+    min-width: auto !important;
+  }
+
+  /* Status buttons - reduce padding and font size */
+  .btn-outline-custom {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .btn-outline-custom i {
+    font-size: 0.7rem !important;
+  }
+
+  /* Reduce gap between buttons */
+  .status-switch-wrapper .btn-group {
+    gap: 1px !important;
+  }
+
+  /* Card body padding */
+  .card-body {
+    padding: 1rem !important;
+  }
+
+  /* Form labels */
+  .form-label {
+    font-size: 0.7rem !important;
+  }
+}
 </style>

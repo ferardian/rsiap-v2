@@ -1390,6 +1390,25 @@ const stopAutoScroll = () => {
     font-weight: 700 !important;
   }
 
+  /* Smaller font for "TERSEDIA" status specifically */
+  .stat-item.available .stat-number {
+    font-size: 0.65rem !important;
+  }
+
+  /* Smaller icon for "TERSEDIA" status */
+  .stat-item.available .stat-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Smaller icon for "TERISI" status - same as available */
+  .stat-item.occupied .stat-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 1rem !important;
+  }
+
   .stat-label {
     font-size: 0.6rem !important;
   }

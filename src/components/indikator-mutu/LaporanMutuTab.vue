@@ -299,4 +299,30 @@ onMounted(() => {
   color: #495057;
   padding: 2px 0;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  /* Pagination */
+  .card-footer .d-flex {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+
+  .pagination {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+  }
+
+  .pagination .page-item {
+    flex-shrink: 0 !important;
+  }
+
+  .pagination .page-link {
+    font-size: 0.75rem !important;
+    padding: 0.375rem 0.5rem !important;
+  }
+}
 </style>

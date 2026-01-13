@@ -989,6 +989,23 @@ onMounted(() => {
     padding: 1rem;
   }
 
+  .page-header {
+    padding: 1rem !important;
+  }
+
+  .header-content {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .btn-add-schedule {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+  }
+
   .filters-section {
     grid-template-columns: 1fr;
   }

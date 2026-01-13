@@ -845,17 +845,57 @@ onMounted(() => {
     padding: 1rem;
   }
 
+  /* Tab Navigation - enable horizontal scroll */
+  .tab-navigation {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 0.75rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .tab-btn {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Header actions - stack vertically */
   .header-actions {
-    flex-direction: column;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
   }
 
-  .search-box {
-    max-width: 100%;
-  }
-
+  .search-box,
   .btn-add {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+  }
+
+  /* Table */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Disable sticky columns on mobile */
+  .data-table th:first-child,
+  .data-table td:first-child,
+  .data-table th:last-child,
+  .data-table td:last-child {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  .karyawan-table {
+    min-width: 800px !important;
+    font-size: 0.875rem;
+  }
+
+  .karyawan-table th,
+  .karyawan-table td {
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
   }
 
   .pagination {

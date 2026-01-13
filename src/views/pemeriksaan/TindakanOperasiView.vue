@@ -2,11 +2,11 @@
   <div class="row">
     <div class="col-12">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-primary py-3 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary py-3 d-flex justify-content-between align-items-center operasi-header">
           <h5 class="card-title fw-bold m-0 text-white">
             <i class="fas fa-file-medical-alt me-2"></i> Data Tindakan Operasi
           </h5>
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-2 date-filters">
              <!-- Date Filters -->
              <input type="date" class="form-control form-control-sm" v-model="filters.start">
              <input type="date" class="form-control form-control-sm" v-model="filters.end">
@@ -312,3 +312,33 @@ watch(() => [filters.start, filters.end], () => {
     fetchData(1)
 })
 </script>
+
+<style scoped>
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .operasi-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+  }
+
+  .operasi-header h5 {
+    font-size: 0.95rem !important;
+    margin: 0 !important;
+  }
+
+  .operasi-header .date-filters {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  .operasi-header .date-filters input {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 0.875rem !important;
+  }
+}
+</style>
