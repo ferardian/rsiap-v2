@@ -145,6 +145,19 @@ const checkScreenSize = () => {
   }
 }
 
+// Watcher for Mobile Sidebar to prevent body scroll
+watch(isSidebarCollapsed, (val) => {
+  if (window.innerWidth < 768) {
+    if (!val) {
+      // Sidebar is OPEN (not collapsed) on mobile
+      document.body.style.overflow = 'hidden'
+    } else {
+      // Sidebar is CLOSED (collapsed) on mobile
+      document.body.style.overflow = ''
+    }
+  }
+})
+
 // Initialize
 onMounted(() => {
   checkScreenSize()
@@ -153,6 +166,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkScreenSize)
+  // Ensure scroll is restored when component unmounts
+  document.body.style.overflow = ''
 })
 </script>
 
