@@ -4,10 +4,10 @@
       <div class="card">
         <div class="card-header">
           <div class="logo">
-            <span>RSIA</span>
+            <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
           </div>
-          <h1>SIRS Aplikasi</h1>
-          <p>Sistem Informasi Rumah Sakit</p>
+          <h1>RSIAP V2</h1>
+          <p>RSIA Aisyiyah Pekajangan</p>
         </div>
 
         <div class="card-body">
@@ -233,6 +233,31 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 1rem;
+}
+
+.card-header {
+  padding: 2rem 2rem 1rem;
+  text-align: center;
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 50%;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .error-text {

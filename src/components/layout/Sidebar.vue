@@ -3,11 +3,11 @@
     <!-- Brand -->
     <div class="sidebar-brand">
       <div class="brand-logo">
-        <span>🏥</span>
+        <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="img-fluid logo-img">
       </div>
       <div class="brand-text" v-if="!isCollapsed">
-        <h1>RSIA</h1>
-        <p>Sistem Informasi</p>
+        <h1 class="text-white">RSIA</h1>
+        <p>Aisyiyah Pekajangan</p>
       </div>
     </div>
 
@@ -239,16 +239,22 @@ onMounted(async () => {
 .brand-logo {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: white;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  color: white;
+  padding: 4px;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .sidebar-brand:hover .brand-logo {
