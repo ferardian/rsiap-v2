@@ -78,7 +78,7 @@
 
     <!-- Menu Table -->
     <div class="card flex-grow-1 d-flex flex-column" style="min-height: 0;">
-      <div class="card-body d-flex flex-column" style="overflow: hidden;">
+      <div class="card-body d-flex flex-column">
         <div v-if="menuStore.loading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -96,7 +96,7 @@
           <p class="text-muted">Klik tombol "Tambah Menu" untuk membuat menu baru</p>
         </div>
 
-        <div v-else class="table-responsive flex-grow-1" style="overflow-y: auto;">
+        <div v-else class="table-responsive flex-grow-1">
           <table class="table table-hover">
             <thead class="table-light">
               <tr>
@@ -159,7 +159,7 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3 flex-shrink-0">
+        <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3 flex-shrink-0 pagination-container">
           <div class="text-muted">
             Menampilkan {{ startIndex + 1 }}-{{ Math.min(endIndex, filteredMenus.length) }}
             dari {{ filteredMenus.length }} menu
@@ -1329,8 +1329,13 @@ onMounted(() => {
     font-size: 1.5rem;
   }
 
+  .card {
+    overflow: visible !important;
+  }
+
   .card-body {
     padding: 1rem;
+    overflow: visible !important;
   }
 
   .modal-content {
@@ -1381,6 +1386,32 @@ onMounted(() => {
   .modern-input .input-group-text {
     width: 40px;
   }
+
+  /* Pagination responsive */
+  .pagination-container {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: center !important;
+    text-align: center;
+  }
+
+  .pagination {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding-bottom: 0.5rem;
+  }
+
+  .pagination .page-item {
+    flex-shrink: 0;
+  }
+
+  .pagination .page-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1415,6 +1446,49 @@ onMounted(() => {
   .table th, .table td {
     padding: 0.5rem 0.25rem;
     font-size: 0.75rem;
+  }
+
+  /* Action buttons mobile */
+  .btn-group-sm {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+
+  .btn-group-sm > .btn {
+    padding: 0.2rem 0.3rem !important;
+    font-size: 0.65rem !important;
+    border-radius: 3px !important;
+    flex-shrink: 0;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-group-sm {
+    gap: 1px !important;
+  }
+
+  /* Prevent column wrapping and fix clipping */
+  .table th, .table td {
+    white-space: nowrap !important;
+  }
+
+  .table-responsive {
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem;
+    width: calc(100% + 1.5rem);
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+  }
+
+  .table td:last-child {
+    padding-right: 2rem !important; /* Extra large buffer */
+    min-width: 100px; /* Force minimum width to show all 3 small buttons */
   }
 
   .row.g-3 .col-md-4, .row.g-3 .col-md-3, .row.g-3 .col-md-2 {

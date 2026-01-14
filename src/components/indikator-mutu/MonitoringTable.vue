@@ -10,20 +10,21 @@
               <th width="15%">Standar</th>
               <th width="10%" class="text-center">Num</th>
               <th width="10%" class="text-center">Denum</th>
-              <th width="15%" class="text-center">Capaian</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="10%" class="text-center">Capaian</th>
+              <th width="12%" class="text-center">Terakhir Isi</th>
+              <th width="8%" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="7" class="text-center py-5">
+              <td colspan="8" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                   <span class="visually-hidden">Loading...</span>
                 </div>
               </td>
             </tr>
             <tr v-else-if="items.length === 0">
-              <td colspan="7" class="text-center py-5 text-muted">
+              <td colspan="8" class="text-center py-5 text-muted">
                 <i class="fas fa-chart-bar fa-3x mb-3 opacity-50"></i>
                 <p>Tidak ada data monitoring.</p>
               </td>
@@ -45,6 +46,12 @@
                 <span class="badge" :class="getBadgeClass(item.score, item.standar || item.standar_utama, item.rumus || item.rumus_utama)">
                     {{ parseFloat(item.score).toFixed(2) }}%
                 </span>
+              </td>
+              <td class="text-center">
+                <span class="text-muted small" v-if="item.last_filled">
+                  {{ formatDate(item.last_filled) }}
+                </span>
+                <span class="text-muted small italic" v-else>-</span>
               </td>
               <td class="text-center">
                 <button class="btn btn-sm btn-outline-info" @click="$emit('detail', item)" title="Detail / Analisa">
@@ -120,6 +127,12 @@ const getBadgeClass = (score, standar, rumus) => {
     }
 
     return isPass ? 'bg-success' : 'bg-danger';
+}
+
+const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    const options = { day: '2-digit', month: 'short', year: 'numeric' }
+    return new Date(dateString).toLocaleDateString('id-ID', options)
 }
 </script>
 

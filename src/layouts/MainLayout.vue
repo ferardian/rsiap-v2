@@ -120,12 +120,9 @@ const breadcrumbs = computed(() => {
 })
 
 const userName = computed(() => {
-  console.log('Auth Store User Data:', authStore.user)
-  console.log('User Name from getter:', authStore.userName)
   return authStore.userName
 })
 const userDepartment = computed(() => {
-  console.log('User Department from getter:', authStore.userDepartment)
   return authStore.userDepartment
 })
 
