@@ -1,24 +1,28 @@
 <template>
   <div class="rawat-inap-view">
-    <div class="page-header mb-4">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h2 class="mb-1">Rawat Inap</h2>
-          <p class="text-secondary mb-0">Daftar pasien yang sedang dirawat inap</p>
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-outline-primary" @click="copyToClipboard" :disabled="items.length === 0">
-            <i class="fas fa-copy me-2"></i> Copy
-          </button>
-          <button class="btn btn-success" @click="exportToExcel" :disabled="items.length === 0">
-            <i class="fas fa-file-excel me-2"></i> Excel
-          </button>
-        </div>
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div class="header-text">
+        <h2 class="page-title mb-1">Rawat Inap</h2>
+        <p class="page-subtitle text-secondary mb-0">Daftar pasien yang sedang dirawat inap</p>
+      </div>
+      <div class="action-buttons d-flex gap-2">
+        <button class="btn btn-action-outline d-md-none" @click="showFilters = !showFilters">
+          <i class="fas" :class="showFilters ? 'fa-times' : 'fa-filter'"></i>
+          {{ showFilters ? 'Tutup Filter' : 'Filter' }}
+        </button>
+        <button class="btn btn-action-outline d-none d-md-flex" @click="copyToClipboard" :disabled="items.length === 0">
+          <i class="fas fa-copy me-2"></i> Copy
+        </button>
+        <button class="btn btn-action-success d-none d-md-flex" @click="exportToExcel" :disabled="items.length === 0">
+          <i class="fas fa-file-excel me-2"></i> Excel
+        </button>
+
+        <!-- Tooltip for action buttons in mobile if needed, or just keep them hidden or inside filter? User asked to refine top part. Let's keep copy/excel hidden on mobile header if they are too much, or better yet, put them in the filter collapse if it's mobile. -->
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="card border-0 shadow-sm mb-4" style="z-index: 10; position: relative; overflow: visible;">
+    <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeInDown" v-if="showFilters || !isMobile" style="z-index: 10; position: relative; overflow: visible;">
       <div class="card-body">
         <!-- Row 1: Status & Tanggal -->
         <div class="row g-3 mb-4">
@@ -107,6 +111,20 @@
               >
             </div>
           </div>
+        </div>
+
+        <!-- Action buttons inside mobile filters -->
+        <div v-if="isMobile" class="row mt-4 pt-3 border-top g-2">
+           <div class="col-6">
+              <button class="btn btn-action-outline w-100" @click="copyToClipboard" :disabled="items.length === 0">
+                <i class="fas fa-copy me-2"></i> Copy
+              </button>
+           </div>
+           <div class="col-6">
+              <button class="btn btn-action-success w-100" @click="exportToExcel" :disabled="items.length === 0">
+                <i class="fas fa-file-excel me-2"></i> Excel
+              </button>
+           </div>
         </div>
       </div>
     </div>
@@ -1105,7 +1123,8 @@
     <!-- Context Menu -->
     <div 
       v-if="contextMenu.visible" 
-      class="context-menu shadow-sm"
+      ref="contextMenuRef"
+      class="context-menu shadow-lg animate__animated animate__fadeIn animate__faster"
       :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
     >
       <div class="context-menu-item result-header text-muted border-bottom">
@@ -1123,9 +1142,9 @@
       <!-- ERM Submenu -->
       <div class="context-menu-item has-submenu" @click.stop>
         <i class="fas fa-file-medical me-2 text-info"></i> ERM
-        <i class="fas fa-chevron-right ms-auto small text-muted" style="font-size: 0.7rem;"></i>
+        <i class="fas fa-chevron-right ms-auto small text-muted" :class="{ 'fa-rotate-180': contextMenu.submenuDirection === 'left' }" style="font-size: 0.7rem;"></i>
         
-        <div class="submenu shadow-sm">
+        <div class="submenu shadow-sm" :class="{ 'submenu-left': contextMenu.submenuDirection === 'left' }">
            <div class="context-menu-item" @click.stop="handleContextAction('soap')">
              <i class="fas fa-notes-medical me-2 text-primary"></i> SOAP
            </div>
@@ -1141,9 +1160,9 @@
       <!-- Permintaan Submenu -->
       <div class="context-menu-item has-submenu" @click.stop>
         <i class="fas fa-hand-holding-medical me-2 text-warning"></i> Permintaan
-        <i class="fas fa-chevron-right ms-auto small text-muted" style="font-size: 0.7rem;"></i>
+        <i class="fas fa-chevron-right ms-auto small text-muted" :class="{ 'fa-rotate-180': contextMenu.submenuDirection === 'left' }" style="font-size: 0.7rem;"></i>
         
-        <div class="submenu shadow-sm">
+        <div class="submenu shadow-sm" :class="{ 'submenu-left': contextMenu.submenuDirection === 'left' }">
            <div class="context-menu-item" @click.stop="handleContextAction('req-operasi')">
              <i class="fas fa-procedures me-2 text-danger"></i> Jadwal Operasi
            </div>
@@ -1237,6 +1256,16 @@ import operasiService from '@/services/operasiService'
 import dietService from '@/services/dietService'
 import skriningGiziService from '@/services/skriningGiziService'
 import FormSkriningGizi from '@/components/pemeriksaan/FormSkriningGizi.vue'
+import * as XLSX from 'xlsx'
+
+const toast = useToast()
+const showFilters = ref(false)
+const isMobile = ref(false)
+const contextMenuRef = ref(null)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 
 // Skrining Gizi Integration
 const showSkriningGiziModal = ref(false)
@@ -1311,34 +1340,55 @@ const handleSaveSkriningGizi = async (formData) => {
     isSavingSkriningGizi.value = false
   }
 }
-import * as XLSX from 'xlsx'
-
-const toast = useToast()
-
 // Context Menu State
 const contextMenu = reactive({
   visible: false,
   x: 0,
   y: 0,
-  item: null
+  item: null,
+  submenuDirection: 'right'
 })
 
-const showContextMenu = (e, item) => {
+import { nextTick } from 'vue'
+
+const showContextMenu = async (e, item) => {
+  contextMenu.item = item
   contextMenu.visible = true
+  
+  // Set initial position
   contextMenu.x = e.clientX
   contextMenu.y = e.clientY
-  
-  // Adjust if menu goes off screen (bottom/right)
-  const menuHeight = 250 // Approx
-  const menuWidth = 200
-  if (window.innerHeight - e.clientY < menuHeight) {
-    contextMenu.y = e.clientY - menuHeight
+
+  await nextTick()
+
+  if (contextMenuRef.value) {
+    const menuWidth = contextMenuRef.value.offsetWidth
+    const menuHeight = contextMenuRef.value.offsetHeight
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+
+    // Adjust horizontal position
+    if (e.clientX + menuWidth > screenWidth) {
+      contextMenu.x = e.clientX - menuWidth
+    }
+
+    // Adjust vertical position
+    if (e.clientY + menuHeight > screenHeight) {
+      contextMenu.y = e.clientY - menuHeight
+    }
+
+    // Determine sub-menu direction
+    const submenuWidth = 200 // Approx sub-menu width
+    if (contextMenu.x + menuWidth + submenuWidth > screenWidth) {
+      contextMenu.submenuDirection = 'left'
+    } else {
+      contextMenu.submenuDirection = 'right'
+    }
+
+    // Boundary check for left/top (ensure not negative)
+    contextMenu.x = Math.max(10, contextMenu.x)
+    contextMenu.y = Math.max(10, contextMenu.y)
   }
-  if (window.innerWidth - e.clientX < menuWidth) {
-    contextMenu.x = e.clientX - menuWidth
-  }
-  
-  contextMenu.item = item
 }
 
 const closeContextMenu = () => {
@@ -2181,11 +2231,14 @@ const grandTotal = computed(() => {
 onMounted(() => {
   loadMasterData()
   fetchData(true)
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   window.addEventListener('click', onWindowClick)
   window.addEventListener('scroll', closeContextMenu)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
   window.removeEventListener('click', onWindowClick)
   window.removeEventListener('scroll', closeContextMenu)
 })
@@ -2203,22 +2256,29 @@ onUnmounted(() => {
   position: fixed;
   z-index: 9999;
   background: white;
-  border-radius: 8px;
-  min-width: 200px;
+  border-radius: 12px;
+  min-width: 220px;
+  padding: 6px;
   /* overflow: hidden; Removed to allow submenu visibility */
   animation: fadeIn 0.1s ease-out;
-  border: 1px solid rgba(0,0,0,0.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
 }
 
 .context-menu-item {
-  padding: 10px 16px;
+  padding: 8px 12px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: #334155;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+
+.context-menu-item:last-child {
+  margin-bottom: 0;
 }
 
 .context-menu-item:hover {
@@ -2227,12 +2287,15 @@ onUnmounted(() => {
 }
 
 .context-menu-item.result-header {
-  background-color: #f8fafc;
-  font-weight: 600;
-  font-size: 0.75rem;
+  background-color: transparent;
+  padding: 8px 12px 12px 12px;
+  font-weight: 700;
+  font-size: 0.8rem;
   cursor: default;
-  color: #64748b;
+  color: #1e293b;
   pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 /* Submenu Styles */
@@ -2243,15 +2306,23 @@ onUnmounted(() => {
 .submenu {
   display: none;
   position: absolute;
-  top: -5px; /* Slightly higher alignment */
-  left: 100%; /* Show to the right */
+  top: -6px; /* Slightly higher alignment */
+  left: 100%; /* Default: Show to the right */
   margin-left: -5px; /* Overlap slightly to prevent gap closing menu */
   background: white;
-  min-width: 180px;
-  border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 200px;
+  border-radius: 12px;
+  padding: 6px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
   z-index: 10000;
+}
+
+.submenu-left {
+  left: auto !important;
+  right: 100% !important;
+  margin-left: 0 !important;
+  margin-right: -5px !important;
 }
 
 .has-submenu:hover .submenu {
@@ -2517,6 +2588,65 @@ onUnmounted(() => {
   65% { width: 0; right: 46px; top: 54px; }
   84% { width: 55px; right: 0px; top: 35px; }
   100% { width: 47px; right: 8px; top: 38px; }
+}
+
+/* Page Header Styling */
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.btn-action-outline {
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.btn-action-outline:hover:not(:disabled) {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.btn-action-success {
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.btn-action-success:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.3);
+}
+
+.btn-action-success:disabled,
+.btn-action-outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 /* Custom Switch Styling (Segmented Control look) */
 .btn-outline-custom {

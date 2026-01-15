@@ -1,71 +1,78 @@
 <template>
   <div class="container-fluid py-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h4 class="mb-1 fw-bold text-dark">
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div class="header-text">
+        <h2 class="page-title mb-1">
           <i class="fas fa-procedures me-2 text-danger"></i>
           Jadwal Operasi
-        </h4>
-        <p class="text-muted small mb-0">Daftar Jadwal Operasi Pasien</p>
+        </h2>
+        <p class="page-subtitle text-secondary mb-0">Daftar Jadwal Operasi Pasien</p>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-action-outline d-md-none" @click="showFilters = !showFilters">
+          <i class="fas" :class="showFilters ? 'fa-times' : 'fa-filter'"></i>
+          {{ showFilters ? 'Tutup Filter' : 'Filter' }}
+        </button>
       </div>
     </div>
 
     <!-- Filter Card -->
-    <div class="card shadow-sm mb-4" style="overflow: visible;">
-      <div class="card-body" style="overflow: visible;">
-        <div class="row g-3 align-items-end">
+    <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeInDown" v-if="showFilters || !isMobile" style="z-index: 10; position: relative; overflow: visible;">
+      <div class="card-body">
+        <div class="row g-3">
           <div class="col-md-2">
-            <label class="form-label small fw-bold text-muted mb-1">Tanggal Awal</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Tanggal Awal</label>
             <input 
               type="date" 
-              class="form-control" 
+              class="form-control form-control-custom" 
               v-model="filters.tgl_awal"
               @change="fetchData(true)"
             >
           </div>
           <div class="col-md-2">
-            <label class="form-label small fw-bold text-muted mb-1">Tanggal Akhir</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Tanggal Akhir</label>
             <input 
               type="date" 
-              class="form-control" 
+              class="form-control form-control-custom" 
               v-model="filters.tgl_akhir"
               @change="fetchData(true)"
             >
           </div>
           <div class="col-md-2">
-            <label class="form-label small fw-bold text-muted mb-1">Status</label>
-            <select 
-              class="form-select" 
-              v-model="filters.status"
-              @change="fetchData(true)"
-            >
-              <option value="">Semua Status</option>
-              <option value="Menunggu">Menunggu</option>
-              <option value="Proses Operasi">Proses Operasi</option>
-              <option value="Selesai">Selesai</option>
-            </select>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Status</label>
+            <v-select 
+              :options="['Menunggu', 'Proses Operasi', 'Selesai']" 
+              v-model="filters.status" 
+              placeholder="Semua Status"
+              class="style-chooser-custom"
+              @update:modelValue="fetchData(true)"
+            ></v-select>
           </div>
           <div class="col-md-3">
-            <label class="form-label small fw-bold text-muted mb-1">Dokter Operator</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Dokter Operator</label>
             <v-select
               v-model="filters.kd_dokter"
               :options="dokterList"
               :reduce="dokter => dokter.kd_dokter"
               label="nm_dokter"
               placeholder="Pilih Dokter"
+              class="style-chooser-custom"
               @update:modelValue="fetchData(true)"
-              :append-to-body="true"
-            ></v-select>
+            />
           </div>
           <div class="col-md-3">
-            <label class="form-label small fw-bold text-muted mb-1">Cari (No. Rawat / Nama Pasien)</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              v-model="filters.keyword"
-              placeholder="Ketik untuk mencari..."
-            >
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Cari Pasien</label>
+            <div class="search-input-wrapper">
+              <input 
+                type="text" 
+                class="form-control form-control-custom search-input" 
+                v-model="filters.keyword"
+                placeholder="No. Rawat / Nama Pasien"
+                @keyup.enter="fetchData(true)"
+              >
+              <i class="fas fa-search search-icon text-muted"></i>
+            </div>
           </div>
         </div>
       </div>
@@ -408,7 +415,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import operasiService from '@/services/operasiService'
 import rawatInapService from '@/services/rawatInapService'
 import LaporanOperasiModal from '@/components/pemeriksaan/LaporanOperasiModal.vue'
@@ -431,6 +438,12 @@ const items = ref([])
 const loading = ref(false)
 const hasMore = ref(true)
 const dokterList = ref([])
+const showFilters = ref(false)
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 const showUpdateStatusModal = ref(false)
 const selectedItem = ref(null)
 const newStatus = ref('')
@@ -727,18 +740,111 @@ watch(() => filters.keyword, () => {
 
 // Lifecycle
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   fetchDokter()
   fetchData(true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
 <style scoped>
+/* Page Header Styles */
+.page-title {
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+}
+
+.btn-action-outline {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-action-outline:hover {
+  background-color: #f8fafc;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+/* Filter Styles */
+.form-control-custom {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.form-control-custom:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.style-chooser-custom :deep(.vs__dropdown-toggle) {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 4px;
+  background: white;
+}
+
+.style-chooser-custom :deep(.vs__selected) {
+  font-size: 0.875rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.style-chooser-custom :deep(.vs__search) {
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input {
+  padding-right: 2.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
 .table thead th {
   background-color: #f8f9fa;
   font-weight: 600;
   font-size: 0.85rem;
   color: #495057;
   border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
 }
 
 .table tbody tr {

@@ -20,7 +20,7 @@ const service = {
     getSpoUnits: (id) => api.get(`/berkas/spo/${id}/units`),
 
     // Get list of departments for unit selection (using indikator-mutu endpoint)
-    getDepartments: () => api.get('/indikator-mutu/monitoring/units'),
+    getUnits: () => api.get('/indikator-mutu/monitoring/units'),
 };
 
 export default service;

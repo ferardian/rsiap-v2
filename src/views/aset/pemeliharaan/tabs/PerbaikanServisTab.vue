@@ -1,17 +1,17 @@
 <template>
   <div class="tab-container">
-    <div class="section-tabs">
+    <div class="section-tabs overflow-x-auto">
       <button 
         @click="activeSection = 'perbaikan'"
         :class="['section-tab', { active: activeSection === 'perbaikan' }]"
       >
-        Perbaikan Inventaris
+        <span class="text-nowrap">Perbaikan Inventaris</span>
       </button>
       <button 
         @click="activeSection = 'pemeliharaan'"
         :class="['section-tab', { active: activeSection === 'pemeliharaan' }]"
       >
-        Pemeliharaan Inventaris
+        <span class="text-nowrap">Pemeliharaan Inventaris</span>
       </button>
     </div>
 
@@ -28,7 +28,7 @@
           >
         </div>
         <button @click="openPerbaikanModal" class="btn-add">
-          <i class="fas fa-plus"></i> Tambah Perbaikan
+          <i class="fas fa-plus"></i> {{ isMobile ? 'Perbaikan' : 'Tambah Perbaikan' }}
         </button>
       </div>
 
@@ -91,7 +91,7 @@
           >
         </div>
         <button @click="openPemeliharaanModal" class="btn-add">
-          <i class="fas fa-plus"></i> Tambah Pemeliharaan
+          <i class="fas fa-plus"></i> {{ isMobile ? 'Pemeliharaan' : 'Tambah Pemeliharaan' }}
         </button>
       </div>
 
@@ -304,6 +304,10 @@ import { ref, onMounted, reactive, computed } from 'vue'
 import { asetPemeliharaanService } from '@/services/asetPemeliharaanService'
 import { asetInventarisService } from '@/services/asetInventarisService'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
+
+const props = defineProps({
+  isMobile: Boolean
+})
 
 const activeSection = ref('perbaikan')
 
@@ -558,9 +562,25 @@ onMounted(() => {
 <style scoped>
 .section-tabs {
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 2px solid #e2e8f0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+  padding-bottom: 5px;
+}
+
+.section-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.section-tabs::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .section-tab {
@@ -580,6 +600,11 @@ onMounted(() => {
   color: #3b82f6;
 }
 
+.section-tab {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .section-tab.active {
   color: #3b82f6;
   border-bottom-color: #3b82f6;
@@ -594,7 +619,23 @@ onMounted(() => {
   to { opacity: 1; }
 }
 
-.header-action { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+.header-action { 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: 1rem; 
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .header-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-box {
+    max-width: 100% !important;
+  }
+}
+
 .search-box { flex: 1; max-width: 300px; }
 .form-input { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; }
 .form-select { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; }

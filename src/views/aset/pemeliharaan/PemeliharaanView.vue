@@ -1,12 +1,14 @@
 <template>
   <div class="pemeliharaan-container">
-    <div class="page-header">
-      <h2>Pemeliharaan Aset & Fasilitas</h2>
-      <p class="subtitle">Manajemen perbaikan dan pemeliharaan inventaris serta gedung</p>
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div class="header-title">
+        <h2 class="fw-bold text-primary mb-1">🛠️ Pemeliharaan Aset & Fasilitas</h2>
+        <p class="subtitle mb-0">Manajemen perbaikan dan pemeliharaan inventaris serta gedung</p>
+      </div>
     </div>
 
     <div class="tabs-container">
-      <div class="tabs-header">
+      <div class="tabs-header overflow-x-auto">
         <button 
           v-for="tab in tabs" 
           :key="tab.id"
@@ -14,22 +16,41 @@
           :class="['tab-button', { active: activeTab === tab.id }]"
         >
           <i :class="tab.icon"></i>
-          {{ tab.label }}
+          <span class="text-nowrap">{{ tab.label }}</span>
         </button>
       </div>
 
       <div class="tab-content">
-        <component :is="currentTabComponent" />
+        <component 
+          :is="currentTabComponent" 
+          :is-mobile="isMobile"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import TiketPerbaikanTab from './tabs/TiketPerbaikanTab.vue'
 import PerbaikanServisTab from './tabs/PerbaikanServisTab.vue'
 import FasilitasGedungTab from './tabs/FasilitasGedungTab.vue'
+
+// Mobile Detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const activeTab = ref('tiket')
 
@@ -74,8 +95,23 @@ const currentTabComponent = computed(() => {
 
 .tabs-header {
   display: flex;
+  flex-wrap: nowrap;
   border-bottom: 2px solid #e2e8f0;
-  padding: 0 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: thin; /* Show thin scrollbar */
+  padding: 0 5px;
+}
+
+.tabs-header::-webkit-scrollbar {
+  height: 4px; /* Show thin scrollbar on Chrome/Safari */
+}
+
+.tabs-header::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .tab-button {
@@ -92,6 +128,8 @@ const currentTabComponent = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-button:hover {

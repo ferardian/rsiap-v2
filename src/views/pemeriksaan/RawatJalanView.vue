@@ -1,73 +1,95 @@
 <template>
   <div class="rawat-jalan-view">
-    <div class="page-header mb-4">
-      <h2 class="mb-1">Rawat Jalan</h2>
-      <p class="text-secondary mb-0">Daftar pasien registrasi rawat jalan</p>
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div class="header-text">
+        <h2 class="page-title mb-1">Rawat Jalan</h2>
+        <p class="page-subtitle text-secondary mb-0">Daftar pasien registrasi rawat jalan</p>
+      </div>
+      <div class="action-buttons d-flex gap-2">
+        <button class="btn btn-action-outline d-md-none" @click="showFilters = !showFilters">
+          <i class="fas" :class="showFilters ? 'fa-times' : 'fa-filter'"></i>
+          {{ showFilters ? 'Tutup Filter' : 'Filter' }}
+        </button>
+        <button class="btn btn-action-outline d-none d-md-flex" @click="copyToClipboard" :disabled="items.length === 0">
+          <i class="fas fa-copy me-2"></i> Copy
+        </button>
+        <button class="btn btn-action-success d-none d-md-flex" @click="exportToExcel" :disabled="items.length === 0">
+          <i class="fas fa-file-excel me-2"></i> Excel
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
-    <div class="card border-0 shadow-sm mb-4" style="z-index: 100; position: relative; overflow: visible;">
+    <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeInDown" v-if="showFilters || !isMobile" style="z-index: 100; position: relative; overflow: visible;">
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-2">
-            <label class="form-label text-sm fw-medium">Tanggal Periksa</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Tanggal Periksa</label>
             <input 
               type="date" 
-              class="form-control" 
+              class="form-control form-control-custom" 
               v-model="filters.tgl_periksa"
-              @change="fetchData"
+              @change="fetchData(true)"
             >
           </div>
           <div class="col-md-2">
-            <label class="form-label text-sm fw-medium">Status</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Status</label>
             <v-select 
               :options="['Ralan', 'Ranap', 'Semua']" 
               v-model="filters.status_lanjut" 
               placeholder="Pilih Status"
-              class="style-chooser"
+              class="style-chooser-custom"
               :clearable="false"
-              @update:modelValue="fetchData"
+              @update:modelValue="fetchData(true)"
             ></v-select>
           </div>
           <div class="col-md-3">
-            <label class="form-label text-sm fw-medium">Poliklinik</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Poliklinik</label>
             <v-select
               v-model="filters.kd_poli"
               :options="poliklinikList"
               :reduce="poli => poli.kd_poli"
               label="nm_poli"
               placeholder="Pilih Poliklinik"
-              @update:modelValue="fetchData"
+              class="style-chooser-custom"
+              @update:modelValue="fetchData(true)"
             />
           </div>
           <div class="col-md-3">
-            <label class="form-label text-sm fw-medium">Dokter</label>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Dokter</label>
             <v-select
               v-model="filters.kd_dokter"
               :options="dokterList"
               :reduce="dokter => dokter.kd_dokter"
               label="nm_dokter"
               placeholder="Pilih Dokter"
-              @update:modelValue="fetchData"
+              class="style-chooser-custom"
+              @update:modelValue="fetchData(true)"
             />
           </div>
           <div class="col-md-2">
-            <label class="form-label text-sm fw-medium">Cari Pasien</label>
-            <div class="input-group">
-              <span class="input-group-text bg-white border-end-0">
-                <i class="fas fa-search text-muted"></i>
-              </span>
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Cari Pasien</label>
+            <div class="search-input-wrapper">
               <input 
                 type="text" 
-                class="form-control border-start-0 ps-0" 
+                class="form-control form-control-custom search-input" 
                 v-model="filters.keyword"
                 placeholder="No RM / Nama"
-                @keyup.enter="fetchData"
+                @keyup.enter="fetchData(true)"
               >
+              <i class="fas fa-search search-icon text-muted"></i>
             </div>
           </div>
+        </div>
 
-
+        <!-- Mobile Actions -->
+        <div class="d-flex d-md-none gap-2 mt-3 pt-3 border-top">
+          <button class="btn btn-action-outline flex-grow-1" @click="copyToClipboard" :disabled="items.length === 0">
+            <i class="fas fa-copy me-2"></i> Copy
+          </button>
+          <button class="btn btn-action-success flex-grow-1" @click="exportToExcel" :disabled="items.length === 0">
+            <i class="fas fa-file-excel me-2"></i> Excel
+          </button>
         </div>
       </div>
     </div>
@@ -623,61 +645,72 @@
     </div>
     <!-- Context Menu -->
     <div 
-        v-if="showContextMenu" 
-        class="context-menu"
-        :style="{ top: contextMenuPosition.y + 'px', left: contextMenuPosition.x + 'px' }"
+      v-if="contextMenu.visible" 
+      ref="contextMenuRef"
+      class="context-menu shadow-lg animate__animated animate__fadeIn animate__faster"
+      :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
     >
-      <div class="context-menu-item" @click="handleContextAction('detail')">
-          <i class="fas fa-eye me-2 text-primary"></i> Lihat Detail
-      </div>
-      <div class="context-menu-item" @click="handleContextAction('billing')">
-          <i class="fas fa-file-invoice-dollar me-2 text-success"></i> Billing
+      <div class="context-menu-item result-header text-muted border-bottom">
+        {{ contextMenu.item?.pasien?.nm_pasien }}
       </div>
       
+      <div class="context-menu-item" @click="handleContextAction('detail')">
+        <i class="fas fa-eye me-2 text-primary"></i> Lihat Detail
+      </div>
+      
+      <div class="context-menu-item" @click="handleContextAction('billing')">
+        <i class="fas fa-file-invoice-dollar me-2 text-success"></i> Billing
+      </div>
+
        <!-- ERM Submenu -->
       <div class="context-menu-item has-submenu" @click.stop>
-        <div class="d-flex justify-content-between align-items-center w-100">
-           <span><i class="fas fa-notes-medical me-2 text-info"></i> ERM</span>
-           <i class="fas fa-chevron-right small text-muted"></i>
-        </div>
-        <div class="submenu">
-             <div class="context-menu-item" @click="handleContextAction('erm-soap')">
-               <i class="fas fa-file-medical me-2 text-secondary"></i> SOAP
+        <i class="fas fa-file-medical me-2 text-info"></i> ERM
+        <i class="fas fa-chevron-right ms-auto small text-muted" :class="{ 'fa-rotate-180': contextMenu.submenuDirection === 'left' }" style="font-size: 0.7rem;"></i>
+        
+        <div class="submenu shadow-sm" :class="{ 'submenu-left': contextMenu.submenuDirection === 'left' }">
+             <div class="context-menu-item" @click.stop="handleContextAction('erm-soap')">
+               <i class="fas fa-notes-medical me-2 text-primary"></i> SOAP
              </div>
-             <div class="context-menu-item" @click="handleContextAction('erm-asesmen')">
-               <i class="fas fa-stethoscope me-2 text-secondary"></i> Asesmen Medis
+             <div class="context-menu-item" @click.stop="handleContextAction('erm-asesmen')">
+               <i class="fas fa-user-md me-2 text-purple-600"></i> Asesmen Medis
              </div>
-             <div class="context-menu-item" @click="handleContextAction('erm-resume')">
-               <i class="fas fa-file-signature me-2 text-secondary"></i> Resume
+             <div class="context-menu-item" @click.stop="handleContextAction('erm-resume')">
+               <i class="fas fa-file-alt me-2 text-gray-600"></i> Resume
              </div>
         </div>
       </div>
 
        <!-- Permintaan Submenu -->
       <div class="context-menu-item has-submenu" @click.stop>
-        <div class="d-flex justify-content-between align-items-center w-100">
-           <span><i class="fas fa-hand-holding-medical me-2 text-warning"></i> Permintaan</span>
-           <i class="fas fa-chevron-right small text-muted"></i>
-        </div>
-        <div class="submenu">
-             <div class="context-menu-item" @click="handleContextAction('req-operasi')">
+        <i class="fas fa-hand-holding-medical me-2 text-warning"></i> Permintaan
+        <i class="fas fa-chevron-right ms-auto small text-muted" :class="{ 'fa-rotate-180': contextMenu.submenuDirection === 'left' }" style="font-size: 0.7rem;"></i>
+        
+        <div class="submenu shadow-sm" :class="{ 'submenu-left': contextMenu.submenuDirection === 'left' }">
+             <div class="context-menu-item" @click.stop="handleContextAction('req-operasi')">
                <i class="fas fa-procedures me-2 text-danger"></i> Jadwal Operasi
              </div>
-             <div class="context-menu-item" @click="handleContextAction('req-lab')">
+             <div class="context-menu-item" @click.stop="handleContextAction('req-lab')">
                <i class="fas fa-flask me-2 text-info"></i> Pemeriksaan Lab
              </div>
-             <div class="context-menu-item" @click="handleContextAction('req-rad')">
+             <div class="context-menu-item" @click.stop="handleContextAction('req-rad')">
                <i class="fas fa-x-ray me-2 text-dark"></i> Pemeriksaan Radiologi
              </div>
         </div>
       </div>
 
-      <div class="context-menu-divider"></div>
+      <div class="border-top my-1"></div>
+      
       <div class="context-menu-item" @click="handleContextAction('copyRawat')">
-          <i class="far fa-copy me-2 text-muted"></i> Salin No. Rawat
+          <i class="fas fa-copy me-2 text-secondary"></i> Salin No. Rawat
       </div>
       <div class="context-menu-item" @click="handleContextAction('copyRM')">
-          <i class="far fa-clipboard me-2 text-muted"></i> Salin No. RM
+          <i class="fas fa-id-card me-2 text-secondary"></i> Salin No. RM
+      </div>
+
+      <div class="border-top my-1"></div>
+      
+      <div class="context-menu-item text-danger" @click="closeContextMenu">
+        <i class="fas fa-times me-2"></i> Tutup
       </div>
     </div>
     <!-- Booking Operasi Modal -->
@@ -834,9 +867,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
 import rawatJalanService from '@/services/rawatJalanService'
 import operasiService from '@/services/operasiService'
+import * as XLSX from 'xlsx'
 
 // Utility: Simple Debounce
 const debounce = (fn, delay) => {
@@ -853,6 +887,8 @@ const items = ref([])
 const poliklinikList = ref([])
 const dokterList = ref([])
 const pagination = ref({})
+const showFilters = ref(false)
+const isMobile = ref(false)
 
 const filters = reactive({
   tgl_periksa: new Date().toISOString().split('T')[0],
@@ -861,6 +897,10 @@ const filters = reactive({
   kd_dokter: null,
   keyword: ''
 })
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 
 // Booking Operasi State
 const showBookingOperasiModal = ref(false)
@@ -894,26 +934,26 @@ watch(() => filters.keyword, () => {
     startDebounceInfo()
 })
 
-const fetchData = async (url = null) => {
+const fetchData = async (reset = false) => {
   loading.value = true
   try {
     const params = {
       ...filters,
-      page: url ? new URL(url, 'http://dummy.com').searchParams.get('page') : 1
+      page: reset ? 1 : (pagination.value.current_page || 1)
     }
     
     // Clean null values
     Object.keys(params).forEach(key => params[key] === null && delete params[key])
 
     const response = await rawatJalanService.getRawatJalan(params)
-    if (response) { // Accessing .data property handled by interceptor ideally, but checking direct response structure
-       // Assuming standard Laravel pagination response
-       const result = response.data
-       const paginationData = result.data // The pagination object from Laravel
+    if (response && response.data && response.data.success) {
+       const paginationData = response.data.data
        
-       items.value = paginationData.data // The actual array of items
+       items.value = paginationData.data
        
        pagination.value = {
+         current_page: paginationData.current_page,
+         last_page: paginationData.last_page,
          total: paginationData.total,
          from: paginationData.from,
          to: paginationData.to,
@@ -1230,27 +1270,64 @@ const calculateGrandTotal = (data) => {
 }
 
 // Context Menu Logic
-const showContextMenu = ref(false)
-const contextMenuPosition = ref({ x: 0, y: 0 })
-const contextMenuItem = ref(null)
+const contextMenuRef = ref(null)
+const contextMenu = reactive({
+  visible: false,
+  x: 0,
+  y: 0,
+  item: null,
+  submenuDirection: 'right'
+})
 
-const handleRightClick = (event, item) => {
-  contextMenuItem.value = item
-  contextMenuPosition.value = {
-    x: event.clientX,
-    y: event.clientY
+const handleRightClick = async (e, item) => {
+  contextMenu.item = item
+  contextMenu.visible = true
+  
+  // Set initial position
+  contextMenu.x = e.clientX
+  contextMenu.y = e.clientY
+
+  await nextTick()
+
+  if (contextMenuRef.value) {
+    const menuWidth = contextMenuRef.value.offsetWidth
+    const menuHeight = contextMenuRef.value.offsetHeight
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+
+    // Adjust horizontal position
+    if (e.clientX + menuWidth > screenWidth) {
+      contextMenu.x = e.clientX - menuWidth
+    }
+
+    // Adjust vertical position
+    if (e.clientY + menuHeight > screenHeight) {
+      contextMenu.y = e.clientY - menuHeight
+    }
+
+    // Determine sub-menu direction
+    const submenuWidth = 200 // Approx sub-menu width
+    if (contextMenu.x + menuWidth + submenuWidth > screenWidth) {
+      contextMenu.submenuDirection = 'left'
+    } else {
+      contextMenu.submenuDirection = 'right'
+    }
+
+    // Boundary check for left/top (ensure not negative)
+    contextMenu.x = Math.max(10, contextMenu.x)
+    contextMenu.y = Math.max(10, contextMenu.y)
   }
-  showContextMenu.value = true
 }
 
 const closeContextMenu = () => {
-  showContextMenu.value = false
+  contextMenu.visible = false
+  contextMenu.item = null
 }
 
 const handleContextAction = async (action) => {
-  if (!contextMenuItem.value) return
+  if (!contextMenu.item) return
   
-  const item = contextMenuItem.value
+  const item = contextMenu.item
   closeContextMenu()
 
   switch (action) {
@@ -1283,10 +1360,107 @@ const handleContextAction = async (action) => {
        break
     case 'copyRawat':
       navigator.clipboard.writeText(item.no_rawat)
+      alert('No. Rawat berhasil disalin!')
       break
     case 'copyRM':
       navigator.clipboard.writeText(item.no_rkm_medis)
+      alert('No. RM berhasil disalin!')
       break
+  }
+}
+
+// Data Export Functions
+const fetchAllData = async () => {
+    try {
+        const params = {
+          ...filters,
+          per_page: 999999 // Fetch all
+        }
+        
+        // Clean null values
+        Object.keys(params).forEach(key => params[key] === null && delete params[key])
+        
+        const response = await rawatJalanService.getRawatJalan(params)
+        if (response.data && response.data.success) {
+            return response.data.data.data
+        }
+    } catch (error) {
+        console.error('Error fetching all data:', error)
+        alert('Gagal mengambil data lengkap untuk export.')
+    }
+    return []
+}
+
+const formatDataForExport = (data) => {
+  return data.map(item => ({
+    'No. Reg': item.no_reg,
+    'No. Rawat': item.no_rawat,
+    'No. RM': item.no_rkm_medis,
+    'Nama Pasien': item.pasien?.nm_pasien,
+    'JK': item.pasien?.jk,
+    'Poliklinik': item.poliklinik?.nm_poli,
+    'Dokter': item.dokter?.nm_dokter,
+    'Status': item.stts,
+    'Alamat': item.pasien?.alamat
+  }))
+}
+
+const copyToClipboard = async () => {
+  const originalLabel = document.activeElement.innerHTML
+  const btn = document.activeElement
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Loading...'
+  btn.disabled = true
+
+  try {
+      const allData = await fetchAllData()
+      const data = formatDataForExport(allData)
+      
+      if (data.length === 0) {
+          alert('Tidak ada data untuk disalin.')
+          return
+      }
+
+      const headers = Object.keys(data[0])
+      const rows = data.map(row => headers.map(header => row[header] || '').join('\t'))
+      const tsv = [headers.join('\t'), ...rows].join('\n')
+
+      await navigator.clipboard.writeText(tsv)
+      alert(`Berhasil menyalin ${data.length} data ke clipboard! 📋`) 
+  } catch (err) {
+      console.error('Failed to copy keys: ', err)
+      alert('Gagal menyalin data.')
+  } finally {
+      btn.innerHTML = originalLabel
+      btn.disabled = false
+  }
+}
+
+const exportToExcel = async () => {
+  const originalLabel = document.activeElement.innerHTML
+  const btn = document.activeElement
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Exporting...'
+  btn.disabled = true
+
+  try {
+      const allData = await fetchAllData()
+      const data = formatDataForExport(allData)
+
+      if (data.length === 0) {
+          alert('Tidak ada data untuk diexport.')
+          return
+      }
+
+      const ws = XLSX.utils.json_to_sheet(data)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, "Rawat Jalan")
+      
+      XLSX.writeFile(wb, `RawatJalan_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`)
+  } catch (error) {
+      console.error('Export Error:', error)
+      alert('Gagal mengexport data Excel.')
+  } finally {
+      btn.innerHTML = originalLabel
+      btn.disabled = false
   }
 }
 
@@ -1298,10 +1472,17 @@ const closeModal = () => {
 
 // Lifecycle
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   loadMasterData()
-  fetchData()
+  fetchData(true)
   
   window.addEventListener('click', closeContextMenu)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+  window.removeEventListener('click', closeContextMenu)
 })
 </script>
 
@@ -1481,29 +1662,136 @@ onMounted(() => {
   padding-top: 1rem;
 }
 
+/* Page Header Styles */
+.page-title {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+}
+
+.btn-action-outline {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-action-outline:hover {
+  background-color: #f8fafc;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.btn-action-success {
+  display: flex;
+  align-items: center;
+  background-color: #10b981;
+  border: 1px solid #10b981;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-action-success:hover {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+/* Filter Styles */
+.form-control-custom {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.form-control-custom:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.style-chooser-custom :deep(.vs__dropdown-toggle) {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 4px;
+  background: white;
+}
+
+.style-chooser-custom :deep(.vs__selected) {
+  font-size: 0.875rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.style-chooser-custom :deep(.vs__search) {
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input {
+  padding-right: 2.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
 /* Context Menu */
 .context-menu {
   position: fixed;
-  background: white;
-  min-width: 180px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
   z-index: 9999;
-  padding: 6px 0;
+  background: white;
+  border-radius: 12px;
+  min-width: 220px;
+  padding: 6px;
   animation: fadeIn 0.1s ease-out;
-  overflow: visible; /* Penting untuk submenu */
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
 }
 
 .context-menu-item {
-  padding: 8px 16px;
+  padding: 8px 12px;
   cursor: pointer;
+  font-size: 0.875rem;
+  color: #334155;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
-  color: #334155;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  border-radius: 8px;
+  margin-bottom: 2px;
   position: relative;
+}
+
+.context-menu-item:last-child {
+  margin-bottom: 0;
 }
 
 .context-menu-item:hover {
@@ -1511,33 +1799,51 @@ onMounted(() => {
   color: #2563eb;
 }
 
-.context-menu-divider {
-  height: 1px;
-  background-color: #e2e8f0;
-  margin: 6px 0;
+.context-menu-item.result-header {
+  background-color: transparent;
+  padding: 8px 12px 12px 12px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: default;
+  color: #1e293b;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 /* Submenu Styles */
 .has-submenu {
-  justify-content: space-between;
+  position: relative;
 }
 
 .submenu {
   display: none;
   position: absolute;
+  top: -6px;
   left: 100%;
-  top: 0;
+  margin-left: -5px;
   background: white;
-  min-width: 180px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  padding: 6px 0;
-  margin-left: 2px;
+  min-width: 200px;
+  border-radius: 12px;
+  padding: 6px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  z-index: 10000;
+}
+
+.submenu-left {
+  left: auto !important;
+  right: 100% !important;
+  margin-left: 0 !important;
+  margin-right: -5px !important;
 }
 
 .has-submenu:hover .submenu {
   display: block;
+}
+
+.fa-rotate-180 {
+  transform: rotate(180deg);
 }
 
 /* Success Checkmark Animation */

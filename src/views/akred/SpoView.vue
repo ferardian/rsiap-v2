@@ -1,65 +1,75 @@
 <template>
   <div class="container-fluid py-4">
     <!-- Header -->
-    <div class="row mb-4" v-if="mode === 'manage'">
-      <div class="col-md-6">
+    <div class="row align-items-center mb-4 g-3">
+      <div class="col-12 col-md-6">
         <h3 class="fw-bold text-primary mb-1">
-          <i class="fas fa-file-medical me-2"></i>Manajemen SPO
+          <i class="fas fa-file-medical me-2"></i>{{ mode === 'approval' ? 'Approval SPO' : 'Manajemen SPO' }}
         </h3>
         <p class="text-muted mb-0">Standar Prosedur Operasional Rumah Sakit</p>
       </div>
-      <div class="col-md-6 d-flex justify-content-end align-items-center">
-        <button class="btn btn-primary" @click="openCreateModal">
+      <div class="col-12 col-md-6 d-flex justify-content-end align-items-center gap-2">
+        <button v-if="mode === 'manage'" class="btn btn-primary px-3 shadow-sm d-none d-md-block" @click="openCreateModal">
           <i class="fas fa-plus me-2"></i>Tambah SPO
+        </button>
+        <button class="btn btn-outline-primary shadow-sm d-md-none fw-bold" @click="showFilters = !showFilters">
+          <i class="fas" :class="showFilters ? 'fa-times' : 'fa-filter'"></i>
+          {{ showFilters ? 'Tutup Filter' : 'Filter' }}
+        </button>
+        <button v-if="mode === 'manage'" class="btn btn-primary d-md-none flex-grow-1 shadow-sm" @click="openCreateModal">
+          <i class="fas fa-plus me-2"></i>SPO
         </button>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="card shadow-sm border-0 mb-3">
+    <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeInDown" v-if="showFilters || !isMobile" style="z-index: 100; position: relative;">
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-3">
-            <label class="form-label small">Cari</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              v-model="filters.search"
-              placeholder="Nomor, Judul..."
-              @input="debouncedSearch"
-            >
+            <label class="form-label small fw-bold text-muted text-uppercase mb-2 tracking-wide">Cari</label>
+            <div class="position-relative">
+              <input 
+                type="text" 
+                class="form-control" 
+                v-model="filters.search"
+                placeholder="Nomor, Judul..."
+                @input="debouncedSearch"
+                style="padding-right: 35px;"
+              >
+              <i class="fas fa-search position-absolute text-muted" style="right: 12px; top: 12px;"></i>
+            </div>
           </div>
           <div class="col-md-2">
-            <label class="form-label small">Status</label>
-            <select class="form-select" v-model="filters.status">
-              <option value="">Semua</option>
+            <label class="form-label small fw-bold text-muted text-uppercase mb-2 tracking-wide">Status</label>
+            <select class="form-select" v-model="filters.status" @change="fetchSpo">
+              <option value="">Semua Status</option>
               <option value="pengajuan">Pengajuan</option>
               <option value="disetujui">Disetujui</option>
             </select>
           </div>
           <div class="col-md-2">
-            <label class="form-label small">Jenis</label>
-            <select class="form-select" v-model="filters.jenis">
-              <option value="">Semua</option>
+            <label class="form-label small fw-bold text-muted text-uppercase mb-2 tracking-wide">Jenis</label>
+            <select class="form-select" v-model="filters.jenis" @change="fetchSpo">
+              <option value="">Semua Jenis</option>
               <option value="medis">Medis</option>
               <option value="penunjang">Penunjang</option>
               <option value="umum">Umum</option>
             </select>
           </div>
           <div class="col-md-3">
-            <label class="form-label small">Unit</label>
+            <label class="form-label small fw-bold text-muted text-uppercase mb-2 tracking-wide">Unit</label>
             <v-select
               :options="departments"
               label="nama_ruang"
               v-model="filters.unit"
               :reduce="dept => dept.dep_id"
               placeholder="Pilih Unit..."
-              appendToBody
-              :calculatePosition="withPopper"
+              class="v-select-custom"
             />
           </div>
           <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-outline-secondary w-100" @click="resetFilters">
+            <button class="btn btn-light w-100 border text-muted fw-bold" @click="resetFilters">
               <i class="fas fa-redo me-2"></i>Reset
             </button>
           </div>
@@ -202,7 +212,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { createPopper } from '@popperjs/core'
 import spoService from '@/services/spoService'
@@ -246,6 +256,12 @@ const showFormModal = ref(false)
 const selectedSpo = ref(null)
 const showPreviewModal = ref(false)
 const previewSpoData = ref(null)
+const showFilters = ref(false)
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 
 const filters = reactive({
   search: '',
@@ -480,17 +496,42 @@ watch(
 )
 
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   fetchSpo()
   fetchDepartments()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
 <style scoped>
+.tracking-wide {
+  letter-spacing: 0.05em;
+}
+
 .table th {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.v-select-custom :deep(.vs__dropdown-toggle) {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  padding: 4px;
+  background: white;
+}
+
+.v-select-custom :deep(.vs__selected) {
+  font-size: 0.875rem;
+  color: #334155;
+  font-weight: 500;
 }
 
 .btn-group-sm .btn {

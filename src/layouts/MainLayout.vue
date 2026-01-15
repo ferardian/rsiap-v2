@@ -253,6 +253,10 @@ onUnmounted(() => {
   gap: 0.5rem;
 }
 
+.breadcrumb-item::before {
+  display: none !important;
+}
+
 .crumb-text {
   font-size: 0.875rem;
   font-weight: 500;

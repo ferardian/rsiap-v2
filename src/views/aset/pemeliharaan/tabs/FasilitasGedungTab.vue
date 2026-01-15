@@ -6,12 +6,12 @@
           v-model="search" 
           @input="fetchData"
           type="text" 
-          placeholder="Cari No Pemeliharaan / Uraian..." 
+          placeholder="Cari No Pemeliharaan..." 
           class="form-input"
         >
       </div>
       <button @click="openModal" class="btn-add">
-        <i class="fas fa-plus"></i> Tambah Pemeliharaan Gedung
+        <i class="fas fa-plus"></i> {{ isMobile ? 'Gedung' : 'Tambah Pemeliharaan Gedung' }}
       </button>
     </div>
 
@@ -138,6 +138,10 @@
 import { ref, onMounted, reactive, computed } from 'vue'
 import { asetPemeliharaanService } from '@/services/asetPemeliharaanService'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
+
+const props = defineProps({
+  isMobile: Boolean
+})
 
 const items = ref([])
 const loading = ref(false)
@@ -298,7 +302,23 @@ onMounted(() => fetchData())
 </script>
 
 <style scoped>
-.header-action { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+.header-action { 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: 1rem; 
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .header-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-box {
+    max-width: 100% !important;
+  }
+}
+
 .search-box { flex: 1; max-width: 300px; }
 .form-input { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; }
 .form-select { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; }

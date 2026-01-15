@@ -1,8 +1,10 @@
 <template>
   <div class="inventaris-page">
-    <div class="page-header">
-      <h2>🗄️ Manajemen Inventaris</h2>
-      <p class="subtitle">Kelola master barang, item inventaris, sirkulasi peminjaman, dan hibah aset.</p>
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div class="header-title">
+        <h2 class="fw-bold text-primary mb-1">🗄️ Manajemen Inventaris</h2>
+        <p class="subtitle mb-0">Kelola master barang, item inventaris, sirkulasi peminjaman, dan hibah aset.</p>
+      </div>
     </div>
 
     <!-- Tabs Navigation -->
@@ -21,17 +23,36 @@
 
     <!-- Tab Content -->
     <div class="tab-content">
-      <component :is="activeComponent" />
+      <component 
+        :is="activeComponent" 
+        :is-mobile="isMobile"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import KoleksiBarangTab from './tabs/KoleksiBarangTab.vue'
 import ItemInventarisTab from './tabs/ItemInventarisTab.vue'
 import SirkulasiTab from './tabs/SirkulasiTab.vue'
 import HibahTab from './tabs/HibahTab.vue'
+
+// Mobile Detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 // Define Tabs
 const tabs = [
@@ -74,10 +95,25 @@ const activeComponent = computed(() => {
 
 .tabs-nav {
   display: flex;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   border-bottom: 1px solid #e2e8f0;
   margin-bottom: 1.5rem;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+  padding-bottom: 5px;
+}
+
+.tabs-nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-nav::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .tab-btn {
@@ -93,6 +129,7 @@ const activeComponent = computed(() => {
   gap: 0.5rem;
   transition: all 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-btn:hover {
