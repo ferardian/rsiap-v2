@@ -1,21 +1,20 @@
 <template>
   <div class="role-menu-management">
-    <!-- Beautiful Header -->
-    <div class="hero-header">
-      <div class="layout-container">
-        <div class="header-flex">
-          <div class="header-content">
-            <h1 class="hero-title">
-              <i class="fas fa-shield-alt hero-icon"></i>
-              Manajemen Role-Menu
-            </h1>
-            <p class="hero-subtitle">Kelola hak akses pengguna dengan sistem permission yang fleksibel dan aman</p>
-          </div>
-          <div class="header-actions">
-            <button class="btn-back-hero" @click="$router.back()">
-              <i class="fas fa-arrow-left me-2"></i>Kembali
-            </button>
-          </div>
+    <!-- Standard Header -->
+    <div class="page-header">
+      <div class="header-container">
+        <div class="header-left">
+          <h1 class="page-title">
+            <i class="fas fa-shield-alt project-icon me-2"></i>
+            Manajemen Role-Menu
+          </h1>
+          <p class="page-subtitle">Kelola hak akses pengguna dengan sistem permission yang fleksibel dan aman</p>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-secondary btn-back" @click="$router.push('/admin/role')">
+            <i class="fas fa-arrow-left me-1"></i>
+            <span>Kembali</span>
+          </button>
         </div>
       </div>
     </div>
@@ -76,16 +75,22 @@
             <div class="selection-grid">
               <div class="selection-col">
                 <div class="select-wrapper">
-                  <select
+                  <v-select
                     v-model="selectedRole"
-                    class="modern-select"
-                    @change="loadMenuPermissions"
+                    :options="roles"
+                    label="nama_role"
+                    :reduce="role => role.id_role"
+                    placeholder="🎯 Pilih Role"
+                    class="modern-v-select"
+                    @update:modelValue="loadMenuPermissions"
                   >
-                    <option value="">🎯 Pilih Role</option>
-                    <option v-for="role in roles" :key="role.id_role" :value="role.id_role">
-                      👤 {{ role.nama_role }}
-                    </option>
-                  </select>
+                    <template #option="option">
+                      <div class="d-flex align-items-center">
+                        <span class="me-2">👤</span>
+                        <span>{{ option.nama_role }}</span>
+                      </div>
+                    </template>
+                  </v-select>
                 </div>
               </div>
               <div class="selection-col">
@@ -170,6 +175,27 @@
                   </span>
                 </div>
               </div>
+              <div class="header-search-wrapper mx-lg-4 my-2 my-lg-0 flex-grow-1">
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                  </span>
+                  <input
+                    v-model="menuSearchQuery"
+                    type="text"
+                    class="form-control border-start-0 ps-0"
+                    placeholder="Cari menu atau fitur..."
+                  />
+                  <button
+                    v-if="menuSearchQuery"
+                    class="btn btn-outline-secondary border-start-0"
+                    type="button"
+                    @click="menuSearchQuery = ''"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
               <button
                 class="btn-save-primary"
                 @click="savePermissions"
@@ -183,11 +209,16 @@
             <!-- Menu Tree -->
             <div class="menu-tree-modern">
               <MenuPermissionNode
-                v-for="menu in menuTree"
+                v-for="menu in filteredMenuTree"
                 :key="menu.id_menu"
                 :menu="menu"
                 @permission-changed="handlePermissionChange"
               />
+              <div v-if="filteredMenuTree.length === 0" class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Menu tidak ditemukan</h5>
+                <p class="text-muted">Coba kata kunci lain</p>
+              </div>
             </div>
           </div>
         </div>
@@ -209,26 +240,30 @@
               <i class="fas fa-exchange-alt"></i>
             </div>
             <div class="copy-form">
-              <div class="form-group-modern">
-                <label>📤 Role Sumber</label>
-                <select v-model="copySourceRole" class="form-control-modern">
-                  <option value="">Pilih Role Sumber</option>
-                  <option v-for="role in roles" :key="'src-'+role.id_role" :value="role.id_role">
-                    {{ role.nama_role }}
-                  </option>
-                </select>
+              <div class="form-group-modern mb-3">
+                <label class="form-label">📤 Role Sumber</label>
+                <v-select
+                  v-model="copySourceRole"
+                  :options="roles"
+                  label="nama_role"
+                  :reduce="role => role.id_role"
+                  placeholder="Pilih Role Sumber"
+                  class="modern-v-select"
+                />
               </div>
               <div class="arrow-transfer">
                 <i class="fas fa-arrow-down"></i>
               </div>
-              <div class="form-group-modern">
-                <label>📥 Role Target</label>
-                <select v-model="copyTargetRole" class="form-control-modern">
-                  <option value="">Pilih Role Target</option>
-                  <option v-for="role in roles" :key="'tgt-'+role.id_role" :value="role.id_role">
-                    {{ role.nama_role }}
-                  </option>
-                </select>
+              <div class="form-group-modern mb-3">
+                <label class="form-label">📥 Role Target</label>
+                <v-select
+                  v-model="copyTargetRole"
+                  :options="roles"
+                  label="nama_role"
+                  :reduce="role => role.id_role"
+                  placeholder="Pilih Role Target"
+                  class="modern-v-select"
+                />
               </div>
             </div>
             <div class="alert-copy">
@@ -275,6 +310,7 @@ const error = ref('')
 const showCopyModal = ref(false)
 const copySourceRole = ref('')
 const copyTargetRole = ref('')
+const menuSearchQuery = ref('')
 
 // Computed properties
 const totalEnabledPermissions = computed(() => {
@@ -345,6 +381,40 @@ const modifiedCount = computed(() => {
   }
   checkChanges(menuTree.value, originalMenuTree.value)
   return count
+})
+
+const filteredMenuTree = computed(() => {
+  if (!menuSearchQuery.value) return menuTree.value
+
+  const query = menuSearchQuery.value.toLowerCase()
+
+  const filterNodes = (nodes, parentMatches = false) => {
+    return nodes.map(node => {
+      const newNode = { ...node }
+      const isSelfMatch = node.nama_menu.toLowerCase().includes(query)
+      
+      // Jika parent match atau diri sendiri match, maka "group" ini dianggap match
+      const currentOrParentMatches = parentMatches || isSelfMatch
+      
+      let filteredChildren = []
+      if (node.children && node.children.length > 0) {
+        // Teruskan status match ke anak-anaknya
+        filteredChildren = filterNodes(node.children, currentOrParentMatches)
+      }
+
+      // Tampilkan node jika: diri sendiri match, parent match, atau ada anak yang match
+      if (isSelfMatch || parentMatches || filteredChildren.length > 0) {
+        return {
+          ...newNode,
+          children: filteredChildren,
+          expanded: true
+        }
+      }
+      return null
+    }).filter(node => node !== null)
+  }
+
+  return filterNodes(menuTree.value)
 })
 
 // Methods
@@ -506,95 +576,73 @@ onMounted(() => {
   padding-bottom: 2rem;
 }
 
-/* Layout Utilities */
-.layout-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-/* Hero Header */
-.hero-header {
+/* Standard Page Header */
+.page-header {
+  margin-bottom: 1.5rem;
   background: white;
-  padding: 2rem 0 2rem 0;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 1.25rem 1.75rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
-.header-flex {
+.header-container {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 1rem;
 }
 
-.hero-title {
-  color: #1e293b;
-  font-size: 1.75rem;
+.page-title {
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.hero-icon {
-  color: #3b82f6;
-  background: #eff6ff;
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  font-size: 1.1rem;
-}
-
-.hero-subtitle {
-  color: #64748b;
-  font-size: 1rem;
-  margin-bottom: 0;
-  margin-left: 3.5rem;
-}
-
-.btn-back-hero {
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  padding: 0.6rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.btn-back-hero:hover {
-  background: #f8fafc;
   color: #1e293b;
-  border-color: #cbd5e1;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.project-icon {
+  color: #3b82f6;
+}
+
+.page-subtitle {
+  color: #64748b;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+
+.btn-back {
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
 }
 
 /* Stats Section */
 .stats-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   position: relative;
   z-index: 10;
 }
 
 .stats-grid-wrapper {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
 }
 
 .stat-card {
   background: white;
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  gap: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s;
   height: 100%;
 }
@@ -643,13 +691,14 @@ onMounted(() => {
   background: white;
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  /* Removed overflow: hidden to prevent dropdown clipping */
 }
 
 .card-header-gradient {
   background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   padding: 1.5rem 2rem;
   color: white;
+  border-radius: 16px 16px 0 0; /* Added to keep corners rounded after removing parent overflow */
 }
 
 .card-header-gradient h3 {
@@ -691,27 +740,34 @@ onMounted(() => {
   position: relative;
 }
 
-.modern-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 1rem;
-  color: #1e293b;
-  background-color: #f8fafc;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 16px 12px;
+.modern-v-select {
+  --vs-border-color: #e2e8f0;
+  --vs-border-width: 2px;
+  --vs-border-radius: 10px;
+  --vs-font-size: 1rem;
+  --vs-line-height: 1.5;
+  --vs-dropdown-max-height: 300px;
+  --vs-dropdown-bg: #ffffff;
+  --vs-dropdown-option-color: #374151;
+  --vs-dropdown-option--active-bg: #3b82f6;
+  --vs-dropdown-option--active-color: #ffffff;
+  --vs-search-input-color: #374151;
+  --vs-controls-color: #64748b;
+  --vs-selected-color: #1e293b;
 }
 
-.modern-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background-color: white;
+.modern-v-select :deep(.vs__dropdown-toggle) {
+  padding: 0.5rem 0.25rem;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.modern-v-select :deep(.vs__dropdown-menu) {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  border-radius: 10px;
+  margin-top: 4px;
 }
 
 .action-buttons {
@@ -801,6 +857,33 @@ onMounted(() => {
   align-items: center;
   position: relative;
   z-index: 10;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header-search-wrapper .input-group-text {
+  border-right: none;
+  padding-left: 1rem;
+}
+
+.header-search-wrapper .form-control {
+  border-left: none;
+  box-shadow: none !important;
+  font-size: 0.95rem;
+}
+
+.header-search-wrapper .form-control:focus {
+  border-color: #e2e8f0;
+}
+
+.header-search-wrapper .btn-outline-secondary {
+  border-left: none;
+  color: #94a3b8;
+}
+
+.header-search-wrapper .btn-outline-secondary:hover {
+  background: transparent;
+  color: #64748b;
 }
 
 .save-info h4 {
@@ -1021,25 +1104,86 @@ onMounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .hero-header {
-    padding: 1.5rem;
-  }
-  
-  .hero-title {
-    font-size: 1.25rem;
-  }
-  
-  .hero-subtitle {
-     margin-left: 0;
-     margin-top: 0.5rem;
-  }
-  
-  .permissions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .stat-card {
+  .page-header {
+    padding: 1rem;
     margin-bottom: 1rem;
+  }
+  
+  .header-container {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .page-title {
+    font-size: 1.15rem;
+    gap: 0.5rem;
+  }
+  
+  .page-subtitle {
+     display: none;
+  }
+
+  .btn-back span {
+    display: none !important;
+  }
+  
+  .btn-back {
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+
+  .btn-back i {
+    margin: 0 !important;
+  }
+  
+  .stats-grid-wrapper {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .stat-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .stat-content p {
+    font-size: 0.7rem;
+  }
+  
+  .card-header-gradient, .card-body-modern, .save-bar, .menu-tree-modern {
+    padding: 1rem;
+  }
+
+  .save-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .header-search-wrapper {
+    margin: 0 !important;
+  }
+
+  .btn-save-primary {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-grid-wrapper {
+    grid-template-columns: 1fr;
   }
 }
 </style>
