@@ -1,14 +1,15 @@
 <template>
   <div class="user-management">
     <div class="page-header">
-      <div class="header-content">
-        <div class="header-text">
+      <div class="header-container">
+        <div class="header-left">
           <h1 class="page-title">👤 Kelola User</h1>
           <p class="page-subtitle">Manajemen pengguna dan hak akses sistem</p>
         </div>
-        <div class="header-actions">
-          <button class="btn btn-primary" @click="showBulkAssignModal = true">
-            <i class="fas fa-users"></i> Bulk Assign Role
+        <div class="header-right">
+          <button class="btn btn-primary btn-bulk-assign" @click="showBulkAssignModal = true">
+            <i class="fas fa-users"></i>
+            <span>{{ isMobile ? 'Bulk' : 'Bulk Assign Role' }}</span>
           </button>
         </div>
       </div>
@@ -16,12 +17,12 @@
 
 
     <!-- Filter dan Search -->
-    <div class="card mb-3 flex-shrink-0">
+    <div class="card mb-3 filter-card flex-shrink-0">
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label">Search User</label>
-            <div class="input-group">
+            <div class="input-group search-group">
               <span class="input-group-text"><i class="fas fa-search"></i></span>
               <input
                 v-model="searchQuery"
@@ -34,28 +35,36 @@
           </div>
           <div class="col-md-3">
             <label class="form-label">Filter Role</label>
-            <select v-model="filterRole" class="form-select" @change="fetchUsers">
-              <option value="">Semua Role</option>
-              <option
-                v-for="role in roleStore.roles"
-                :key="role.id_role"
-                :value="role.id_role"
-              >
-                {{ role.nama_role }}
-              </option>
-            </select>
+            <v-select
+              v-model="filterRole"
+              :options="roleStore.roles"
+              label="nama_role"
+              :reduce="role => role.id_role"
+              placeholder="Semua Role"
+              class="modern-v-select"
+              @update:modelValue="fetchUsers"
+            />
           </div>
           <div class="col-md-3">
             <label class="form-label">Filter Status</label>
-            <select v-model="filterActive" class="form-select" @change="fetchUsers">
-              <option value="">Semua Status</option>
-              <option value="active">Aktif</option>
-              <option value="inactive">Tidak Aktif</option>
-            </select>
+            <v-select
+              v-model="filterActive"
+              :options="[
+                { label: 'Semua Status', value: '' },
+                { label: 'Aktif', value: 'active' },
+                { label: 'Tidak Aktif', value: 'inactive' }
+              ]"
+              label="label"
+              :reduce="status => status.value"
+              placeholder="Pilih Status"
+              class="modern-v-select"
+              @update:modelValue="fetchUsers"
+            />
           </div>
           <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-outline-secondary w-100" @click="resetFilters">
-              <i class="fas fa-redo"></i> Reset
+            <button class="btn btn-outline-secondary btn-reset w-100" @click="resetFilters">
+              <i class="fas fa-redo"></i>
+              <span>Reset</span>
             </button>
           </div>
         </div>
@@ -140,14 +149,9 @@
           <i class="fas fa-exclamation-triangle"></i> {{ error }}
         </div>
 
-        <div v-else-if="filteredUsers.length === 0" class="text-center py-5">
-          <i class="fas fa-users fa-3x text-muted mb-3"></i>
-          <h5 class="text-muted">Tidak ada data user</h5>
-          <p class="text-muted">Coba ubah filter atau pencarian</p>
-        </div>
-
-        <div v-else class="table-responsive flex-grow-1" style="overflow-y: auto;">
-          <table class="table table-hover">
+        <div v-else class="table-responsive-wrapper flex-grow-1" style="min-height: 0;">
+          <div class="table-responsive h-100">
+            <table class="table table-hover align-middle">
             <thead class="table-light">
               <tr>
                 <th @click="sortBy('nama')" style="cursor: pointer;">
@@ -216,20 +220,24 @@
             </tbody>
           </table>
         </div>
+        </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3 flex-shrink-0">
-          <div class="text-muted">
+        <div v-if="totalPages > 1" class="pagination-container d-flex justify-content-between align-items-center mt-3 flex-shrink-0">
+          <div class="text-muted pagination-info">
             Menampilkan {{ startIndex + 1 }}-{{ Math.min(endIndex, filteredUsers.length) }}
             dari {{ filteredUsers.length }} user
           </div>
-          <nav>
+          <nav class="pagination-nav">
             <ul class="pagination mb-0">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage = 1">First</a>
+                <a class="page-link" href="#" @click.prevent="currentPage = 1" :title="isMobile ? 'First' : ''">
+                  <i v-if="isMobile" class="fas fa-angle-double-left"></i>
+                  <span v-else>First</span>
+                </a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage--">Previous</a>
+                <a class="page-link" href="#" @click.prevent="currentPage--">Prev</a>
               </li>
               <li
                 v-for="page in visiblePages"
@@ -243,7 +251,10 @@
                 <a class="page-link" href="#" @click.prevent="currentPage++">Next</a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="currentPage = totalPages">Last</a>
+                <a class="page-link" href="#" @click.prevent="currentPage = totalPages" :title="isMobile ? 'Last' : ''">
+                  <i v-if="isMobile" class="fas fa-angle-double-right"></i>
+                  <span v-else>Last</span>
+                </a>
               </li>
             </ul>
           </nav>
@@ -352,17 +363,16 @@
           <div class="modal-body">
             <div class="mb-3">
               <label class="form-label">Pilih Role *</label>
-              <select v-model="bulkAssign.role_id" class="form-select" :class="{ 'is-invalid': errors.role_id }">
-                <option value="">-- Pilih Role --</option>
-                <option
-                  v-for="role in roleStore.roles"
-                  :key="role.id_role"
-                  :value="role.id_role"
-                >
-                  {{ role.nama_role }}
-                </option>
-              </select>
-              <div v-if="errors.role_id" class="invalid-feedback">
+              <v-select
+                v-model="bulkAssign.role_id"
+                :options="roleStore.roles"
+                label="nama_role"
+                :reduce="role => role.id_role"
+                placeholder="-- Pilih Role --"
+                class="modern-v-select"
+                :class="{ 'is-invalid': errors.role_id }"
+              />
+              <div v-if="errors.role_id" class="error-feedback">
                 {{ errors.role_id }}
               </div>
             </div>
@@ -425,13 +435,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoleStore } from '../../stores/role'
 import { useAuthStore } from '../../stores/auth'
 import { showToast } from '../../utils/notification'
 
 const roleStore = useRoleStore()
 const authStore = useAuthStore()
+
+// Responsiveness
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
 
 // State
 const searchQuery = ref('')
@@ -755,6 +771,12 @@ onMounted(async () => {
     fetchRoles(),
     fetchUsers()
   ])
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
@@ -770,41 +792,48 @@ onMounted(async () => {
 .page-header {
   margin-bottom: 1.5rem;
   background: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
 }
 
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .page-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
   color: #64748b;
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
-.header-content {
+.btn-bulk-assign {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
-}
-
-.header-text {
-  flex: 1;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 
@@ -947,32 +976,40 @@ onMounted(async () => {
   opacity: 0.9;
 }
 
-.table-responsive {
-  border-radius: 0.75rem;
+.table-responsive-wrapper {
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
+  min-width: 800px;
   margin-bottom: 0;
-  background: white;
 }
 
 .table th {
   border-top: none;
   font-weight: 700;
-  color: #374151;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #475569;
+  background: #f8fafc;
   padding: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table th:hover {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  background: #f1f5f9;
 }
 
 .table td {
@@ -982,7 +1019,7 @@ onMounted(async () => {
 }
 
 .table tbody tr:hover {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background-color: #f8fafc;
 }
 
 .user-avatar {
@@ -1073,8 +1110,15 @@ onMounted(async () => {
 }
 
 .page-item.disabled .page-link {
-  color: #cbd5e1;
+  color: #94a3b8;
   background: transparent;
+  opacity: 0.6;
+}
+
+.pagination .page-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal {
@@ -1222,118 +1266,132 @@ code {
 }
 
 @media (max-width: 768px) {
-  .user-management {
-    padding: 1rem;
-  }
-
-  .page-header {
-    padding: 1rem;
-    margin-bottom: 1rem;
+  .header-container {
+    flex-direction: row;
+    align-items: center;
   }
 
   .page-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
-  .btn-primary {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-
-  .card-body {
-    padding: 1rem;
-  }
-
-  /* Statistics cards for mobile */
-  .row.mb-3.flex-shrink-0 .card {
-    min-height: 70px;
-    margin-bottom: 0.5rem;
-  }
-
-  .row.mb-3.flex-shrink-0 .card-title {
-    font-size: 1.2rem;
-  }
-
-  .row.mb-3.flex-shrink-0 .card .card-body {
-    padding: 0.75rem;
-  }
-
-  .modal-dialog {
-    margin: 1rem;
-  }
-
-  .modal-header, .modal-body, .modal-footer {
-    padding: 1rem 1.5rem;
-  }
-
-  .table th, .table td {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
-  }
-
-  /* Filter section */
-  .card.mb-3.flex-shrink-0 .card-body {
-    padding: 1rem;
-  }
-
-  .row.g-3 {
-    margin-bottom: 0;
-  }
-}
-
-@media (max-width: 576px) {
-  .user-management {
-    padding: 0.5rem;
-    border-radius: 0;
-  }
-
-  .page-header {
-    padding: 1rem;
-    border-radius: 0.75rem;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .page-header .d-flex {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch !important;
-  }
-
-  .btn-primary {
-    width: 100%;
-  }
-
-  .row.g-3 .col-md-4, .row.g-3 .col-md-3, .row.g-3 .col-md-2 {
-    margin-bottom: 1rem;
-  }
-
-  .card-body {
-    padding: 1rem;
-  }
-
-  .table-responsive {
+  .page-subtitle {
     font-size: 0.75rem;
   }
 
+  .btn-bulk-assign, .btn-reset {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
   .table th, .table td {
-    padding: 0.5rem 0.25rem;
+    padding: 0.75rem 0.5rem;
   }
 
   .user-avatar {
     display: none;
   }
+}
 
-  .btn-group {
-    flex-direction: column;
-    width: 100%;
+/* Modern V-Select Custom Styling */
+.modern-v-select {
+  --vs-border-color: #e2e8f0;
+  --vs-border-width: 2px;
+  --vs-border-radius: 0.75rem;
+  --vs-font-size: 0.9rem;
+  --vs-line-height: 1.5;
+  --vs-dropdown-max-height: 250px;
+  --vs-dropdown-bg: #ffffff;
+  --vs-dropdown-option-color: #374151;
+  --vs-dropdown-option--active-bg: #3b82f6;
+  --vs-dropdown-option--active-color: #ffffff;
+  --vs-search-input-color: #374151;
+  --vs-controls-color: #64748b;
+  --vs-selected-color: #1e293b;
+}
+
+.modern-v-select :deep(.vs__dropdown-toggle) {
+  padding: 0.4rem 0.25rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.modern-v-select.is-invalid :deep(.vs__dropdown-toggle) {
+  border-color: #ef4444;
+}
+
+.modern-v-select :deep(.vs__dropdown-menu) {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  margin-top: 4px;
+}
+
+.modern-v-select :deep(.vs__dropdown-option) {
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 2px;
+}
+
+.error-feedback {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+/* Pagination Responsive */
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: center !important;
+    text-align: center;
   }
 
-  .btn-group-sm > .btn {
-    margin-bottom: 0.25rem;
+  .pagination-info {
+    font-size: 0.8rem;
+    order: 2;
+  }
+
+  .pagination-nav {
+    order: 1;
     width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pagination {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 0.5rem 1.5rem; /* Increased padding */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .pagination::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pagination .page-item {
+    flex-shrink: 0;
+  }
+
+  .pagination .page-link {
+    padding: 0.6rem 0.8rem; /* Slightly larger targets */
+    font-size: 0.9rem;
+    margin: 0 0.25rem;
+    min-width: 46px;
+    height: 42px;
+    text-align: center;
   }
 }
 </style>

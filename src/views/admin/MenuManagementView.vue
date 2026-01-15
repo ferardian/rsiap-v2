@@ -1,80 +1,91 @@
 <template>
   <div class="menu-management">
     <div class="page-header">
-      <div>
-        <h1 class="page-title">📋 Kelola Menu</h1>
-        <p class="page-subtitle">Manajemen menu dan hak akses sistem</p>
+      <div class="header-container">
+        <div class="header-left">
+          <h1 class="page-title">📋 Kelola Menu</h1>
+          <p class="page-subtitle">Manajemen menu dan hak akses sistem</p>
+        </div>
+        <div class="header-right">
+          <button v-if="isMobile" class="btn btn-filter-toggle" @click="showFilters = !showFilters">
+            <i class="fas" :class="showFilters ? 'fa-filter-circle-xmark' : 'fa-filter'"></i>
+            {{ showFilters ? 'Sembunyikan' : 'Filter' }}
+          </button>
+          <button class="btn btn-primary btn-add-menu" @click="showCreateModal = true">
+            <i class="fas fa-plus"></i>
+            <span>{{ isMobile ? 'Tambah' : 'Tambah Menu' }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Filter dan Search -->
-    <div class="card mb-3 flex-shrink-0 filter-card">
-      <div class="card-body">
-        <div class="row g-4 align-items-end">
-          <div class="col-12 col-lg-4">
-            <div class="filter-group">
-              <label class="filter-label">
-                <i class="fas fa-search"></i> Cari Menu
-              </label>
-              <div class="input-group modern-input">
-                <span class="input-group-text">
-                  <i class="fas fa-search"></i>
-                </span>
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  class="form-control"
-                  placeholder="Masukkan nama menu..."
-                  @input="debounceSearch"
-                />
+    <transition name="animate-fade-down">
+      <div v-if="!isMobile || showFilters" class="card mb-3 flex-shrink-0 filter-card">
+        <div class="card-body">
+          <div class="row g-4 align-items-end">
+            <div class="col-12 col-lg-4">
+              <div class="filter-group">
+                <label class="filter-label">
+                  <i class="fas fa-search"></i> Cari Menu
+                </label>
+                <div class="input-group modern-input">
+                  <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                  </span>
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    class="form-control"
+                    placeholder="Masukkan nama menu..."
+                    @input="debounceSearch"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-6 col-lg-2">
-            <div class="filter-group">
-              <label class="filter-label">
-                <i class="fas fa-toggle-on"></i> Status
-              </label>
-              <div class="select-wrapper">
-                <select v-model="filterActive" class="form-select modern-select" @change="fetchMenus">
-                  <option value="">Semua</option>
-                  <option :value="true">Aktif</option>
-                  <option :value="false">Non-aktif</option>
-                </select>
-                <i class="fas fa-chevron-down select-arrow"></i>
+            <div class="col-6 col-lg-2">
+              <div class="filter-group">
+                <label class="filter-label">
+                  <i class="fas fa-toggle-on"></i> Status
+                </label>
+                <div class="select-wrapper">
+                  <select v-model="filterActive" class="form-select modern-select" @change="fetchMenus">
+                    <option value="">Semua</option>
+                    <option :value="true">Aktif</option>
+                    <option :value="false">Non-aktif</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="filter-group">
-              <label class="filter-label">
-                <i class="fas fa-layer-group"></i> Level
-              </label>
-              <div class="select-wrapper">
-                <select v-model="filterParent" class="form-select modern-select" @change="fetchMenus">
-                  <option value="">Semua</option>
-                  <option value="">Utama</option>
-                  <option v-for="parent in parentMenus" :key="parent.id_menu" :value="parent.id_menu">
-                    {{ parent.nama_menu }}
-                  </option>
-                </select>
-                <i class="fas fa-chevron-down select-arrow"></i>
+            <div class="col-6 col-lg-3">
+              <div class="filter-group">
+                <label class="filter-label">
+                  <i class="fas fa-layer-group"></i> Level
+                </label>
+                <div class="select-wrapper">
+                  <select v-model="filterParent" class="form-select modern-select" @change="fetchMenus">
+                    <option value="">Semua</option>
+                    <option value="">Utama</option>
+                    <option v-for="parent in parentMenus" :key="parent.id_menu" :value="parent.id_menu">
+                      {{ parent.nama_menu }}
+                    </option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-12 col-lg-4">
-            <div class="filter-actions">
-              <button class="btn-reset" @click="resetFilters">
-                <i class="fas fa-sync-alt"></i> Reset
-              </button>
-              <button class="btn btn-primary" @click="showCreateModal = true">
-                <i class="fas fa-plus"></i> Tambah Menu
-              </button>
+            <div class="col-12 col-lg-3">
+              <div class="filter-actions">
+                <button class="btn-reset" @click="resetFilters">
+                  <i class="fas fa-sync-alt"></i> Reset
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </transition>
 
     <!-- Menu Table -->
     <div class="card flex-grow-1 d-flex flex-column" style="min-height: 0;">
@@ -359,11 +370,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useMenuStore } from '../../stores/menu'
 import { showToast } from '../../utils/notification'
 
 const menuStore = useMenuStore()
+
+// Responsiveness
+const isMobile = ref(false)
+const showFilters = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
 
 // State
 const searchQuery = ref('')
@@ -615,6 +634,12 @@ watch([filterActive, filterParent], () => {
 // Lifecycle
 onMounted(() => {
   fetchMenus()
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
@@ -630,24 +655,65 @@ onMounted(() => {
 .page-header {
   margin-bottom: 1.5rem;
   background: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
 }
 
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .page-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
   color: #64748b;
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
+}
+
+.btn-filter-toggle {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 0.625rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.btn-filter-toggle:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-add-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 .card {
@@ -932,13 +998,19 @@ onMounted(() => {
 
 .table th {
   border-top: none;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #475569;
   background: #f8fafc;
   padding: 1rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.table th:hover {
+  background: #f1f5f9;
+  cursor: pointer;
 }
 
 .table td {
@@ -1412,6 +1484,39 @@ onMounted(() => {
     padding: 0.4rem 0.6rem;
     font-size: 0.8rem;
   }
+
+  .header-container {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .btn-filter-toggle, .btn-add-menu {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Animations */
+.animate-fade-down-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.animate-fade-down-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.animate-fade-down-enter-from,
+.animate-fade-down-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
 }
 
 @media (max-width: 576px) {

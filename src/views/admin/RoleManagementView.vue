@@ -1,17 +1,19 @@
 <template>
   <div class="role-management">
     <div class="page-header">
-      <div class="header-content">
-        <div class="header-text">
+      <div class="header-container">
+        <div class="header-left">
           <h1 class="page-title">👥 Kelola Role</h1>
           <p class="page-subtitle">Manajemen role dan hak akses pengguna</p>
         </div>
-        <div class="header-actions">
-          <button class="btn btn-secondary" @click="showUserAssignmentModal = true">
-            <i class="fas fa-user-plus"></i> Assign User
+        <div class="header-right">
+          <button class="btn btn-secondary btn-assign-user" @click="showUserAssignmentModal = true">
+            <i class="fas fa-user-plus"></i>
+            <span>{{ isMobile ? 'Assign' : 'Assign User' }}</span>
           </button>
-          <button class="btn btn-primary" @click="showCreateModal = true">
-            <i class="fas fa-plus"></i> Tambah Role
+          <button class="btn btn-primary btn-add-role" @click="showCreateModal = true">
+            <i class="fas fa-plus"></i>
+            <span>{{ isMobile ? 'Tambah' : 'Tambah Role' }}</span>
           </button>
         </div>
       </div>
@@ -301,35 +303,40 @@
           </div>
           <div class="modal-body">
             <div class="row g-3">
-              <div class="col-md-6">
+              <div class="col-md-6 dropdown-group">
                 <label class="form-label">Pilih Pegawai *</label>
-                <select v-model="userAssignment.nip" class="form-select" :class="{ 'is-invalid': errors.nip }">
-                  <option value="">-- Pilih Pegawai --</option>
-                  <option
-                    v-for="pegawai in availablePegawai"
-                    :key="pegawai.nip"
-                    :value="pegawai.nip"
-                  >
-                    {{pegawai.nama}} ({{pegawai.nip}})
-                  </option>
-                </select>
-                <div v-if="errors.nip" class="invalid-feedback">
+                <v-select
+                  v-model="userAssignment.nip"
+                  :options="availablePegawai"
+                  label="nama"
+                  :reduce="p => p.nip"
+                  placeholder="-- Pilih Pegawai --"
+                  class="modern-v-select"
+                  :class="{ 'is-invalid': errors.nip }"
+                >
+                  <template #option="option">
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold">{{ option.nama }}</span>
+                      <small class="text-muted">{{ option.nip }}</small>
+                    </div>
+                  </template>
+                </v-select>
+                <div v-if="errors.nip" class="error-feedback">
                   {{ errors.nip }}
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-6 dropdown-group">
                 <label class="form-label">Pilih Role *</label>
-                <select v-model="userAssignment.id_role" class="form-select" :class="{ 'is-invalid': errors.id_role }">
-                  <option value="">-- Pilih Role --</option>
-                  <option
-                    v-for="role in roleStore.roles"
-                    :key="role.id_role"
-                    :value="role.id_role"
-                  >
-                    {{ role.nama_role }}
-                  </option>
-                </select>
-                <div v-if="errors.id_role" class="invalid-feedback">
+                <v-select
+                  v-model="userAssignment.id_role"
+                  :options="roleStore.roles"
+                  label="nama_role"
+                  :reduce="r => r.id_role"
+                  placeholder="-- Pilih Role --"
+                  class="modern-v-select"
+                  :class="{ 'is-invalid': errors.id_role }"
+                />
+                <div v-if="errors.id_role" class="error-feedback">
                   {{ errors.id_role }}
                 </div>
               </div>
@@ -419,13 +426,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoleStore } from '../../stores/role'
 import { useAuthStore } from '../../stores/auth'
 import { showToast } from '../../utils/notification'
 
 const roleStore = useRoleStore()
 const authStore = useAuthStore()
+
+// Responsiveness
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
 
 // State
 const showCreateModal = ref(false)
@@ -713,6 +726,12 @@ const formatDate = (dateString) => {
 onMounted(async () => {
   await fetchRoles()
   await fetchPegawai()
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
@@ -728,41 +747,56 @@ onMounted(async () => {
 .page-header {
   margin-bottom: 1.5rem;
   background: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
 }
 
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .page-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
   color: #64748b;
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
-.header-content {
+.btn-assign-user {
+  background: #64748b;
+  color: white;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
-.header-text {
-  flex: 1;
-}
-
-.header-actions {
+.btn-add-role {
   display: flex;
-  gap: 0.75rem;
   align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 .role-card {
@@ -1050,12 +1084,13 @@ onMounted(async () => {
 .table th {
   border-top: none;
   font-weight: 700;
-  color: #374151;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #475569;
+  background: #f8fafc;
   padding: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table td {
@@ -1065,7 +1100,7 @@ onMounted(async () => {
 }
 
 .table tbody tr:hover {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background-color: #f8fafc;
 }
 
 .input-group {
@@ -1129,8 +1164,22 @@ onMounted(async () => {
     padding: 1.5rem;
   }
 
+  .header-container {
+    flex-direction: row;
+    align-items: center;
+  }
+
   .page-title {
-    font-size: 2rem;
+    font-size: 1.25rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .btn-assign-user, .btn-add-role {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
   }
 
   .btn-group .btn {
@@ -1214,5 +1263,61 @@ onMounted(async () => {
     flex: 0 0 100%;
     max-width: 100%;
   }
+}
+
+/* Modern V-Select Custom Styling */
+.modern-v-select {
+  --vs-border-color: #e2e8f0;
+  --vs-border-width: 2px;
+  --vs-border-radius: 0.75rem;
+  --vs-font-size: 1rem;
+  --vs-line-height: 1.5;
+  --vs-dropdown-max-height: 300px;
+  --vs-dropdown-bg: #ffffff;
+  --vs-dropdown-option-color: #374151;
+  --vs-dropdown-option--active-bg: #3b82f6;
+  --vs-dropdown-option--active-color: #ffffff;
+  --vs-search-input-color: #374151;
+  --vs-controls-color: #64748b;
+  --vs-selected-color: #1e293b;
+}
+
+.modern-v-select :deep(.vs__dropdown-toggle) {
+  padding: 0.5rem 0.25rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.modern-v-select.is-invalid :deep(.vs__dropdown-toggle) {
+  border-color: #ef4444;
+}
+
+.modern-v-select :deep(.vs__dropdown-menu) {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  margin-top: 4px;
+}
+
+.modern-v-select :deep(.vs__dropdown-option) {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 2px;
+}
+
+.modern-v-select :deep(.vs__search::placeholder) {
+  color: #94a3b8;
+}
+
+.error-feedback {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.dropdown-group {
+  margin-bottom: 0.5rem;
 }
 </style>
