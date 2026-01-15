@@ -269,6 +269,12 @@ const routes = [
     component: () => import('../views/logistik/MasterBarangView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/helpdesk/tiket-masuk',
+    name: 'TiketMasukHelpdesk',
+    component: () => import('../views/helpdesk/TiketMasukView.vue'),
+    meta: { requiresAuth: true }
+  },
 ]
 
 const router = createRouter({
