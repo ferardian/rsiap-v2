@@ -94,9 +94,10 @@
                 <td>{{ pegawai.departemen || '-' }}</td>
                 <td>{{ formatDate(pegawai.mulai_kerja) }}</td>
                 <td>
-                  <span class="tenure-badge">
+                  <div class="tenure-badge">
+                    <i class="fas fa-history"></i>
                     {{ calculateTenure(pegawai.mulai_kerja) }}
-                  </span>
+                  </div>
                 </td>
                 <td>
                   <div class="action-buttons">
@@ -144,6 +145,15 @@
         </button>
       </div>
 
+      <!-- Pegawai Form Modal -->
+      <PegawaiFormModal 
+        :show="showFormModal"
+        :is-edit="isEditMode"
+        :pegawai-data="selectedPegawai"
+        @close="showFormModal = false"
+        @saved="loadPegawai"
+      />
+
       <!-- Delete Confirmation Modal -->
       <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
         <div class="modal-content" @click.stop>
@@ -183,6 +193,10 @@ import { useMenuStore } from '../../stores/menu'
 import { pegawaiService } from '../../services/pegawaiService'
 import StafKlinisTab from './components/StafKlinisTab.vue'
 import StatistikTab from './components/StatistikTab.vue'
+import PegawaiFormModal from './components/PegawaiFormModal.vue'
+import { useToast } from 'vue-toastification'
+
+const toast = useToast()
 
 const router = useRouter()
 const route = useRoute()
@@ -207,6 +221,8 @@ const pagination = ref({
   total: 0
 })
 const showDeleteModal = ref(false)
+const showFormModal = ref(false)
+const isEditMode = ref(false)
 const selectedPegawai = ref(null)
 
 // Computed - Permissions
@@ -273,13 +289,27 @@ const changePage = (page) => {
 }
 
 const openAddModal = () => {
-  // TODO: Open add modal
-  alert('Fitur tambah karyawan akan segera ditambahkan')
+  selectedPegawai.value = null
+  isEditMode.value = false
+  showFormModal.value = true
 }
 
-const openEditModal = (pegawai) => {
-  // TODO: Open edit modal
-  alert(`Edit karyawan: ${pegawai.nama}`)
+const openEditModal = async (pegawai) => {
+  loading.value = true
+  try {
+    // Get full employee data for editing
+    const response = await pegawaiService.getPegawaiById(pegawai.nip)
+    if (response.data.success) {
+      selectedPegawai.value = response.data.data
+      isEditMode.value = true
+      showFormModal.value = true
+    }
+  } catch (error) {
+    console.error('Error fetching employee detail:', error)
+    toast.error('Gagal mengambil detail data karyawan')
+  } finally {
+    loading.value = false
+  }
 }
 
 const confirmDelete = (pegawai) => {
@@ -626,13 +656,21 @@ onMounted(() => {
 
 .tenure-badge {
   display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 4px 10px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border-radius: 9999px; /* Pill shape */
+  background: #f0f9ff;
+  color: #0369a1;
+  border-radius: 6px;
   font-size: 0.75rem;
-  font-weight: 500;
-  border: 1px solid #dbeafe;
+  font-weight: 600;
+  border: 1px solid #e0f2fe;
+  white-space: nowrap;
+}
+
+.tenure-badge i {
+  font-size: 0.7rem;
+  opacity: 0.8;
 }
 
 .ttl {

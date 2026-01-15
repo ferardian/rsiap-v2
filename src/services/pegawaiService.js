@@ -14,29 +14,28 @@ export const pegawaiService = {
      * Get single employee by NIK
      */
     getPegawaiById(nik) {
-        return api.get(`/sdi/pegawai/${nik}`)
+        return api.get(`/sdi/pegawai/${nik}`, {
+            params: {
+                select: '*',
+                include: 'petugas,dep,statusKerja'
+            }
+        })
     },
 
     /**
      * Create new employee
      */
     createPegawai(data) {
-        return api.post('/sdi/pegawai', data, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
+        return api.post('/sdi/pegawai', data)
     },
 
     /**
      * Update employee
      */
     updatePegawai(nik, data) {
-        return api.put(`/sdi/pegawai/${nik}`, data, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
+        // If data contains files (photo), we should use FormData and POST with _method PUT
+        // For now, assume JSON-only updates
+        return api.put(`/sdi/pegawai/${nik}`, data)
     },
 
     /**
@@ -104,5 +103,11 @@ export const pegawaiService = {
      */
     getStatistik() {
         return api.get('/sdi/pegawai/statistik')
+    },
+
+    // ========== Master Data ==========
+
+    getMaster(resource, params = {}) {
+        return api.post(`/sdi/master/${resource}/search`, params)
     }
 }
