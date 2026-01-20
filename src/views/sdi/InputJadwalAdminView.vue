@@ -1841,6 +1841,79 @@ thead .sticky-col {
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* Mobile Optimizations for Premium Modal */
+@media (max-width: 768px) {
+  .ai-ultra-premium-popup {
+    padding: 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  .ai-ultra-premium-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .subtitle-premium {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .ai-icon-container {
+    height: 70px !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .ai-fancy-icon-premium {
+    font-size: 2.75rem !important;
+  }
+
+  .ai-pulse-hologram {
+    width: 55px !important;
+    height: 55px !important;
+  }
+
+  .ai-details-card-premium {
+    border-radius: 12px !important;
+  }
+
+  .label-premium, .value-premium {
+    font-size: 0.8rem !important;
+  }
+
+  .desc-premium {
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    margin-top: 0.75rem !important;
+  }
+
+  .swal2-actions {
+    margin-top: 1rem !important;
+    gap: 8px !important;
+  }
+
+  .btn-premium-action, .btn-premium-secondary {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8rem !important;
+    min-width: 120px !important;
+    border-radius: 12px !important;
+  }
+  
+  /* success/error screen adjustments */
+  .success-glow-icon {
+    font-size: 3rem !important;
+  }
+  .success-title-premium {
+    font-size: 1.2rem !important;
+  }
+  .success-desc-premium {
+    font-size: 0.8rem !important;
+  }
+  .stats-badge-premium {
+    padding: 0.5rem 1.25rem !important;
+    font-size: 0.85rem !important;
+  }
+}
+
 /* Success UI */
 .success-glow-icon {
   font-size: 4.5rem;
