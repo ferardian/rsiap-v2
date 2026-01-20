@@ -663,16 +663,51 @@ const generateAiSchedule = async () => {
     return
   }
 
-  // Confirm action
+  // Premium Confirm action
   const result = await Swal.fire({
-    title: 'Rekomendasi AI',
-    text: `🤖 AI akan membuat rekomendasi jadwal untuk ${filteredEmployees.value.length} pegawai di bulan ${months[filter.value.month - 1]} ${filter.value.year}. Lanjutkan?`,
-    icon: 'question',
+    title: 'Rekomendasi Penjadwalan AI',
+    html: `
+      <div class="ai-confirm-content">
+        <div class="ai-icon-container mb-4">
+          <div class="ai-pulse-hologram"></div>
+          <i class="fas fa-brain ai-fancy-icon-premium"></i>
+        </div>
+        <div class="ai-text-info-premium">
+          <p class="subtitle-premium">AI Core Engine Ready</p>
+          <div class="ai-details-card-premium mt-3">
+             <div class="card-glass-glow"></div>
+             <div class="d-flex justify-content-between px-3 py-2 border-bottom border-white-50">
+                <span class="label-premium">Analisis Objek:</span>
+                <span class="value-premium">${filteredEmployees.value.length} Pegawai</span>
+             </div>
+             <div class="d-flex justify-content-between px-3 py-2">
+                <span class="label-premium">Periode Target:</span>
+                <span class="value-premium">${months[filter.value.month - 1]} ${filter.value.year}</span>
+             </div>
+          </div>
+          <p class="mt-4 desc-premium">Sistem akan mengoptimalkan sebaran shift berdasarkan aturan unit dan meminimalisir bentrok jadwal.</p>
+        </div>
+      </div>
+    `,
     showCancelButton: true,
-    confirmButtonText: 'Ya, Generate',
-    cancelButtonText: 'Batal',
-    confirmButtonColor: '#8e44ad', // AI Purple
-    cancelButtonColor: '#64748b'
+    confirmButtonText: 'Execute Analysis ⚡',
+    cancelButtonText: 'Cancel Operation',
+    reverseButtons: true,
+    customClass: {
+      popup: 'ai-ultra-premium-popup glass-morphism-2',
+      title: 'ai-ultra-premium-title',
+      confirmButton: 'btn-premium-action',
+      cancelButton: 'btn-premium-secondary'
+    },
+    buttonsStyling: false,
+    showClass: {
+      popup: 'swal2-noanimation',
+      backdrop: 'swal2-noanimation'
+    },
+    hideClass: {
+      popup: '',
+      backdrop: ''
+    }
   })
 
   if (!result.isConfirmed) return
@@ -777,8 +812,12 @@ const generateAiSchedule = async () => {
         Swal.fire({
           icon: 'warning',
           title: 'Pegawai Tidak Cocok',
-          text: `${mismatchCount} pegawai dari respon AI tidak dikenali sistem. Pastikan AI menggunakan ID yang benar.`,
-          confirmButtonColor: '#f59e0b'
+          text: `${mismatchCount} pegawai dari respon AI tidak dikenali sistem.`,
+          customClass: {
+            popup: 'ai-ultra-premium-popup glass-morphism-2',
+            confirmButton: 'btn-premium-action'
+          },
+          buttonsStyling: false
         })
     }
 
@@ -787,15 +826,36 @@ const generateAiSchedule = async () => {
           icon: 'info',
           title: 'Tidak Ada Perubahan',
           text: 'Respon AI valid tapi tidak ada data shift yang bisa diterapkan.',
-          confirmButtonColor: '#3b82f6'
+          customClass: {
+            popup: 'ai-ultra-premium-popup glass-morphism-2',
+            confirmButton: 'btn-premium-action'
+          },
+          buttonsStyling: false
         })
     } else if (appliedCount > 0) {
         hasChanges.value = true
         Swal.fire({
-          icon: 'success',
-          title: 'Rekomendasi AI Selesai',
-          text: `✅ Rekomendasi AI berhasil diterapkan! (${appliedCount} shift diisi). Silakan periksa dan Simpan jika sudah sesuai.`,
-          confirmButtonColor: '#3b82f6'
+          title: 'Rekomendasi Selesai',
+          html: `
+            <div class="ai-success-content">
+              <div class="success-glow-icon mb-4">
+                 <i class="fas fa-check-double ai-icon-glow"></i>
+              </div>
+              <h4 class="success-title-premium">Optimization Complete!</h4>
+              <p class="success-desc-premium">Sistem AI telah berhasil menyusun strategi shift.</p>
+              <div class="stats-badge-premium mt-3">
+                 <strong>${appliedCount}</strong> Data Shift Terintegrasi
+              </div>
+              <p class="mt-4 text-muted small fst-italic">Tinjau hasil pada tabel dan klik "Simpan Changes" untuk finalisasi.</p>
+            </div>
+          `,
+          showConfirmButton: true,
+          confirmButtonText: 'Konfirmas & Lihat',
+          customClass: {
+            popup: 'ai-ultra-premium-popup glass-morphism-2',
+            confirmButton: 'btn-premium-action'
+          },
+          buttonsStyling: false
         })
     }
 
@@ -803,9 +863,13 @@ const generateAiSchedule = async () => {
     console.error('AI Generation Error', err)
     Swal.fire({
       icon: 'error',
-      title: 'AI Gagal',
-      text: 'Gagal mendapatkan rekomendasi AI: ' + (err.message || 'Unknown error'),
-      confirmButtonColor: '#ef4444'
+      title: 'Operational Failure',
+      text: err.message || 'Unknown exception during AI inference.',
+      customClass: {
+        popup: 'ai-ultra-premium-popup glass-morphism-2',
+        confirmButton: 'btn-premium-action'
+      },
+      buttonsStyling: false
     })
   } finally {
     analyzing.value = false
@@ -1605,5 +1669,177 @@ thead .sticky-col {
   .pattern-row .form-select {
     width: 100%; /* Full width input */
   }
+}
+/* Global SweetAlert2 Ultra-Premium Overrides */
+</style>
+
+<style>
+.ai-ultra-premium-popup {
+  border-radius: 32px !important;
+  padding: 2.5rem !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  animation: premium-appearance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+.glass-morphism-2 {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(25px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.ai-ultra-premium-title {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 1.6rem !important;
+  letter-spacing: -0.04em !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.subtitle-premium {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: #6366f1;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.ai-details-card-premium {
+  position: relative;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.card-glass-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.label-premium {
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.value-premium {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.desc-premium {
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.btn-premium-action {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  color: white !important;
+  font-weight: 700 !important;
+  padding: 1rem 2.5rem !important;
+  border-radius: 16px !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  margin-left: 0.5rem !important;
+}
+
+.btn-premium-action:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 20px 30px -10px rgba(79, 70, 229, 0.5) !important;
+}
+
+.btn-premium-secondary {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  padding: 1rem 2rem !important;
+  border-radius: 16px !important;
+  border: 1px solid #e2e8f0 !important;
+  cursor: pointer !important;
+  transition: all 0.3s !important;
+  margin-right: 0.5rem !important;
+}
+
+.btn-premium-secondary:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Animations */
+.ai-icon-container {
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ai-fancy-icon-premium {
+  font-size: 4rem;
+  background: linear-gradient(135deg, #6366f1 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ai-float 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 15px rgba(99, 102, 241, 0.2));
+}
+
+.ai-pulse-hologram {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 50%;
+  animation: pulse-hologram 2s ease-out infinite;
+}
+
+@keyframes ai-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes pulse-hologram {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes premium-appearance {
+  0% { opacity: 0; transform: scale(0.85) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Success UI */
+.success-glow-icon {
+  font-size: 4.5rem;
+  color: #10b981;
+  text-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+}
+
+.success-title-premium {
+  font-weight: 800;
+  color: #064e3b;
+  margin-top: -1rem;
+}
+
+.stats-badge-premium {
+  display: inline-block;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  padding: 0.75rem 2rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 </style>
