@@ -39,6 +39,17 @@
           <button @click="openPatternModal" class="btn btn-secondary">
             <i class="fas fa-magic"></i> Isi Pola
           </button>
+          
+          <!-- AI Schedule Button -->
+          <button 
+            @click="generateAiSchedule" 
+            class="btn btn-ai"
+            :disabled="analyzing || loading"
+          >
+            <i v-if="analyzing" class="fas fa-spinner fa-spin"></i>
+            <i v-else class="fas fa-robot"></i>
+            <span class="desktop-text">{{ analyzing ? 'Menganalisis...' : 'Rekomendasi AI' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -163,6 +174,10 @@
         <i v-if="saving" class="fas fa-spinner fa-spin"></i>
         <span v-else>💾 Simpan Perubahan</span>
       </button>
+      <!-- Clear Changes Button -->
+      <button @click="clearPendingChanges" class="btn btn-secondary ml-2" :disabled="saving">
+          <i class="fas fa-undo"></i> Reset
+      </button>
     </div>
 
     <!-- Shift Selection Modal -->
@@ -268,6 +283,7 @@ const initFilter = () => {
 }
 
 const loading = ref(false)
+const analyzing = ref(false) // AI Generating state
 const saving = ref(false)
 const employees = ref([])
 const shifts = ref([])
@@ -595,8 +611,141 @@ const applyPattern = () => {
   alert('Pola berhasil diterapkan! Jangan lupa klik Simpan.')
 }
 
+const clearPendingChanges = () => {
+    if (confirm('Apakah Anda yakin ingin mereset semua perubahan yang belum disimpan?')) {
+        pendingChanges.value = {}
+        hasChanges.value = false
+    }
+}
+
+// AI Schedule Generation
+const generateAiSchedule = async () => {
+  if (filteredEmployees.value.length === 0) {
+    alert('Tidak ada data pegawai untuk dijadwalkan.')
+    return
+  }
+
+  // Confirm action
+  if (!confirm(`🤖 AI akan membuat rekomendasi jadwal untuk ${filteredEmployees.value.length} pegawai di bulan ${months[filter.value.month - 1]} ${filter.value.year}. Lanjutkan?`)) return
+
+  analyzing.value = true
+  
+  try {
+    // Get Department Name
+    let deptName = 'Unknown Department'
+    const selectedDept = departmentOptions.value.find(d => d.id === filter.value.department)
+    if (selectedDept) deptName = selectedDept.name
+    else if (employees.value.length > 0) deptName = employees.value[0].departemen // Fallback
+
+    const payload = {
+      month: filter.value.month,
+      year: filter.value.year,
+      department: filter.value.department // This is already dep_id from filter
+    }
+
+    console.log('📡 Generating Schedule with Backend:', payload)
+
+    const response = await jadwalPegawaiService.generateSchedule(payload)
+    console.log('✅ Backend Response:', response.data)
+    
+    // Backend returns clean JSON: { success: true, data: [...] }
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Gagal generate jadwal')
+    }
+
+    const results = response.data.data
+
+    // Helper to find array recursively or parse from string
+    const extractResults = (input) => {
+        // If it's the schedule array we want
+        if (Array.isArray(input) && input.length > 0 && (input[0].id || input[0].id_pegawai)) {
+            return input
+        }
+
+        // If it's a string, try parsing it
+        if (typeof input === 'string') {
+            try {
+                const clean = input.replace(/```json|```/g, '').trim()
+                const parsed = JSON.parse(clean)
+                return extractResults(parsed) // Recurse to check if inside is an array
+            } catch (e) { return null }
+        }
+
+        // If it's an object, check known fields
+        if (typeof input === 'object' && input !== null) {
+            // Check nested fields
+            const fields = ['output', 'text', 'data', 'content', 'response']
+            for (const f of fields) {
+                if (input[f]) {
+                    const found = extractResults(input[f])
+                    if (found) return found
+                }
+            }
+
+            // Handle the [{ output: "..." }] case from n8n
+            if (Array.isArray(input) && input.length > 0) {
+                return extractResults(input[0])
+            }
+        }
+
+        return null
+    }
+
+
+    if (!Array.isArray(results) || results.length === 0) {
+        console.error('❌ Backend returned invalid data:', results)
+        throw new Error('Backend tidak mengembalikan data jadwal yang valid.')
+    }
+
+    // Apply Changes
+    let appliedCount = 0
+    let mismatchCount = 0
+    
+    results.forEach(row => {
+        const empId = row.id || row.id_pegawai
+        if (!empId) return
+
+        // Validate ID existence
+        const employeeExists = employees.value.some(e => String(e.id) === String(empId))
+        if (!employeeExists) {
+            console.warn(`⚠️ ID Mismatch: AI returned ID '${empId}' but it was not found in the employee list.`)
+            mismatchCount++
+            return
+        }
+
+        // Iterate keys h1..h31
+        for (let d = 1; d <= daysInMonth.value; d++) {
+            const dayKey = `h${d}`
+            if (row[dayKey] !== undefined) { // Allow empty string for Libur
+                const key = `${empId}_${d}`
+                pendingChanges.value[key] = row[dayKey]
+                appliedCount++
+            }
+        }
+    })
+
+    if (mismatchCount > 0) {
+        alert(`⚠️ Peringatan: ${mismatchCount} pegawai dari respon AI tidak dikenali sistem. Pastikan AI menggunakan ID yang benar. (Lihat Console)`)
+    }
+
+    if (appliedCount === 0 && mismatchCount === 0) {
+        alert('Respon AI valid tapi tidak ada data shift yang bisa diterapkan.')
+    } else if (appliedCount > 0) {
+        hasChanges.value = true
+        alert(`✅ Rekomendasi AI berhasil diterapkan! (${appliedCount} shift diisi). Silakan periksa dan Simpan jika sudah sesuai.`)
+    }
+
+  } catch (err) {
+    console.error('AI Generation Error', err)
+    alert('Gagal mendapatkan rekomendasi AI: ' + (err.message || 'Unknown error'))
+  } finally {
+    analyzing.value = false
+  }
+}
+
 // Save
 const saveChanges = async () => {
+
   if (!hasChanges.value) return
   
   saving.value = true
@@ -796,6 +945,25 @@ watch([
 }
 .btn-secondary:hover {
   background: #475569;
+}
+
+.btn-ai {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4), 0 2px 4px -1px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-ai:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5), 0 4px 6px -2px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-ai:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary:hover {

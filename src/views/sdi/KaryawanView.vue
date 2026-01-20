@@ -183,6 +183,9 @@
 
     <!-- Statistik Tab -->
     <StatistikTab v-else-if="activeTab === 'statistik'" />
+
+    <!-- Komite Tab -->
+    <CommitteeTab v-else-if="activeTab === 'komite'" />
   </div>
 </template>
 
@@ -194,6 +197,7 @@ import { pegawaiService } from '../../services/pegawaiService'
 import StafKlinisTab from './components/StafKlinisTab.vue'
 import StatistikTab from './components/StatistikTab.vue'
 import PegawaiFormModal from './components/PegawaiFormModal.vue'
+import CommitteeTab from './components/CommitteeTab.vue'
 import { useToast } from 'vue-toastification'
 
 const toast = useToast()
@@ -208,6 +212,7 @@ const menuStore = useMenuStore()
 const tabs = [
   { id: 'data-karyawan', label: 'Data Karyawan', icon: 'fas fa-users' },
   { id: 'staf-klinis', label: 'Staf Klinis', icon: 'fas fa-user-md' },
+  { id: 'komite', label: 'Komite', icon: 'fas fa-users-cog' },
   { id: 'statistik', label: 'Statistik', icon: 'fas fa-chart-pie' }
 ]
 const activeTab = ref(route.query.tab || 'data-karyawan')

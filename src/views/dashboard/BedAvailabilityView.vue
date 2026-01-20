@@ -415,10 +415,30 @@ const groupedBeds = computed(() => {
   return finalGrouped
 })
 
-const totalBeds = computed(() => beds.value.reduce((sum, bed) => sum + bed.kapasitas, 0))
-const availableBeds = computed(() => beds.value.reduce((sum, bed) => sum + bed.tersedia, 0))
-const occupiedBeds = computed(() => beds.value.reduce((sum, bed) => sum + bed.terisi, 0))
-const cleaningBeds = computed(() => 0) // Not available in summary data
+const totalBeds = computed(() => {
+  const source = filteredBedsList.value
+  if (selectedStatus.value === 'KOSONG') return availableBeds.value
+  if (selectedStatus.value === 'ISI') return occupiedBeds.value
+  if (selectedStatus.value === 'DIBERSIHKAN') return cleaningBeds.value
+  if (selectedStatus.value === 'DIBOOKING') return source.reduce((sum, bed) => sum + (bed.dibooking || 0), 0)
+  
+  return source.reduce((sum, bed) => sum + bed.kapasitas, 0)
+})
+
+const availableBeds = computed(() => {
+  if (selectedStatus.value && selectedStatus.value !== 'KOSONG') return 0
+  return filteredBedsList.value.reduce((sum, bed) => sum + bed.tersedia, 0)
+})
+
+const occupiedBeds = computed(() => {
+  if (selectedStatus.value && selectedStatus.value !== 'ISI') return 0
+  return filteredBedsList.value.reduce((sum, bed) => sum + bed.terisi, 0)
+})
+
+const cleaningBeds = computed(() => {
+  if (selectedStatus.value && selectedStatus.value !== 'DIBERSIHKAN') return 0
+  return filteredBedsList.value.reduce((sum, bed) => sum + (bed.dibersihkan || 0), 0)
+})
 
 // Helper methods for bed status
 const getBedStatusClass = (bed) => {

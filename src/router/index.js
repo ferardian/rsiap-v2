@@ -162,6 +162,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/unit-shift-rules',
+    name: 'UnitShiftRules',
+    component: () => import('../views/sdi/UnitShiftRulesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/sdi/master-pegawai',
+    name: 'MasterPegawai',
+    component: () => import('../views/sdi/MasterPegawaiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/aset-fasilitas/master-data',
     name: 'MasterDataAset',
     component: () => import('../views/aset/master/MasterDataView.vue'),

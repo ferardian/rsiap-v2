@@ -30,13 +30,28 @@
                 </div>
                 
                 <div class="row g-3 mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Kode Ruang (Dep ID)</label>
+                        <v-select 
+                            :options="departments" 
+                            label="nama" 
+                            v-model="selectedDepartment"
+                            :reduce="dept => dept.dep_id"
+                            placeholder="Pilih Departemen"
+                            class="style-chooser"
+                            @update:modelValue="handleDepartmentChange"
+                        >
+                            <template #option="{ nama, dep_id }">
+                                <span class="fw-bold">{{ dep_id }}</span> - {{ nama }}
+                            </template>
+                            <template #selected-option="{ nama, dep_id }">
+                                <span class="fw-bold">{{ dep_id }}</span> - {{ nama }}
+                            </template>
+                        </v-select>
+                    </div>
+                    <div class="col-md-5">
                         <label class="form-label fw-bold">Nama Ruang / Unit <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" v-model="form.nama_ruang" required placeholder="Nama Ruang (Contoh: IGD)">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Kode Ruang (Dep ID)</label>
-                        <input type="text" class="form-control" v-model="form.dep_id" placeholder="Optional">
                     </div>
                      <div class="col-md-3">
                         <label class="form-label fw-bold">Status</label>
@@ -50,11 +65,19 @@
                 <div class="row g-3 mb-3">
                      <div class="col-md-8">
                         <label class="form-label fw-bold">Jenis Indikator</label>
-                        <input type="text" class="form-control" v-model="form.nama_jenis" placeholder="Contoh: Kepatuhan, Waktu Tunggu">
+                        <v-select 
+                            :options="jenisIndikatorOptions" 
+                            label="label" 
+                            v-model="selectedJenisIndikator"
+                            :reduce="item => item.value"
+                            placeholder="Pilih Jenis Indikator"
+                            class="style-chooser"
+                            @update:modelValue="handleJenisChange"
+                        />
                     </div>
                      <div class="col-md-4">
                         <label class="form-label fw-bold">ID Jenis</label>
-                        <input type="number" class="form-control" v-model="form.id_jenis" placeholder="Optional ID">
+                        <input type="number" class="form-control" v-model="form.id_jenis" placeholder="Optional ID" readonly>
                     </div>
                 </div>
                 
@@ -122,7 +145,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
+import departemenService from '@/services/departemenService'
 
 const props = defineProps({
   visible: Boolean,
@@ -152,10 +176,29 @@ const form = reactive({
 })
 
 const isEdit = ref(false)
+const departments = ref([])
+const selectedDepartment = ref(null)
+const selectedJenisIndikator = ref(null)
+
+const jenisIndikatorOptions = [
+    { value: 'Indikator Mutu Nasional', label: 'Indikator Mutu Nasional', id: 2 },
+    { value: 'Indikator Mutu Prioritas Rumah Sakit', label: 'Indikator Mutu Prioritas Rumah Sakit', id: 3 },
+    { value: 'Indikato Mutu Prioritas Unit', label: 'Indikato Mutu Prioritas Unit', id: 4 },
+    { value: 'Indikator Mutu Unit', label: 'Indikator Mutu Unit', id: 5 },
+    { value: 'Indikator Mutu Prioritas Rumah Sakit/SKP', label: 'Indikator Mutu Prioritas Rumah Sakit/SKP', id: 6 }
+]
 
 watch(() => props.initialData, (newVal) => {
     if (newVal && Object.keys(newVal).length > 0) {
         Object.assign(form, newVal)
+        // Set selected department for edit mode
+        if (newVal.dep_id) {
+            selectedDepartment.value = newVal.dep_id
+        }
+        // Set selected jenis indikator for edit mode
+        if (newVal.nama_jenis) {
+            selectedJenisIndikator.value = newVal.nama_jenis
+        }
         isEdit.value = true
     } else {
         // Reset form
@@ -176,12 +219,43 @@ watch(() => props.initialData, (newVal) => {
             formula: '',
             id_master: null
         })
+        selectedDepartment.value = null
+        selectedJenisIndikator.value = null
         isEdit.value = false
     }
     activeTab.value = 'identitas'
 }, { immediate: true })
 
+const fetchDepartments = async () => {
+    try {
+        const response = await departemenService.index({ limit: 1000 })
+        departments.value = response.data.data || []
+    } catch (error) {
+        console.error('Error fetching departments:', error)
+    }
+}
+
+const handleDepartmentChange = (depId) => {
+    form.dep_id = depId
+    const dept = departments.value.find(d => d.dep_id === depId)
+    if (dept) {
+        form.nama_ruang = dept.nama
+    }
+}
+
+const handleJenisChange = (value) => {
+    form.nama_jenis = value
+    const jenis = jenisIndikatorOptions.find(j => j.value === value)
+    if (jenis) {
+        form.id_jenis = jenis.id
+    }
+}
+
 const save = () => {
     emit('save', { ...form })
 }
+
+onMounted(() => {
+    fetchDepartments()
+})
 </script>

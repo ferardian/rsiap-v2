@@ -8,6 +8,19 @@
         <p class="text-muted mb-0">Input data realisasi indikator mutu harian</p>
       </div>
       <div class="col-md-6 d-flex justify-content-end align-items-center gap-2 filter-container">
+        <!-- Context Toggle -->
+        <div v-if="isCommitteeMember" class="btn-group context-toggle me-2" role="group">
+          <input type="radio" class="btn-check" name="inputMode" id="modeUnit" value="unit" v-model="inputMode" @change="handleModeChange">
+          <label class="btn btn-outline-primary btn-sm px-3" for="modeUnit">
+            <i class="fas fa-hospital me-1"></i> Unit
+          </label>
+          
+          <input type="radio" class="btn-check" name="inputMode" id="modeKomite" value="komite" v-model="inputMode" @change="handleModeChange">
+          <label class="btn btn-outline-primary btn-sm px-3" for="modeKomite">
+            <i class="fas fa-users-cog me-1"></i> Komite
+          </label>
+        </div>
+
         <div class="input-group date-filter" style="max-width: 250px;">
           <span class="input-group-text bg-white border-end-0">
              <i class="fas fa-calendar-alt text-muted"></i>
@@ -23,7 +36,7 @@
             placeholder="Pilih Unit / Ruang"
             class="style-chooser unit-select"
             style="min-width: 250px;"
-            :disabled="isUnitLocked"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
             @update:modelValue="fetchIndicators"
         >
              <template #no-options="{ search, searching, loading }">
@@ -347,9 +360,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
+import committeeService from '@/services/committeeService'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -363,6 +377,11 @@ const filters = reactive({
     tgl_transaksi: new Date().toISOString().slice(0, 10),
     unit: null
 })
+
+// === CONTEXT MODE STATE ===
+const inputMode = ref('unit') // 'unit' | 'komite'
+const isCommitteeMember = ref(false)
+const userCommittees = ref([])
 
 // === ANALISA MODE STATE ===
 const selectedIndicatorAnalisa = ref(null)
@@ -392,14 +411,12 @@ const fetchUnits = async () => {
         const response = await api.getUnits()
         units.value = response.data.data
         
-        // Check if user has specific department
-        // Path based on user provided JSON: user.data.detail.departemen
+        const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik
         const userDepNameOrId = authStore.user?.data?.detail?.departemen || 
                                 authStore.user?.detail?.departemen || 
                                 authStore.user?.dep_id
         
         if (userDepNameOrId) {
-            // Find if user's department exists in the unit list (Match ID or Name)
             const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
             
             if (myUnit) {
@@ -409,9 +426,17 @@ const fetchUnits = async () => {
             }
         }
 
-        // Fallback or Initial Load if not locked
         if (units.value.length > 0 && !filters.unit) {
             filters.unit = units.value[0].dep_id
+        }
+
+        // Check committee membership
+        if (userNik) {
+            const commRes = await committeeService.getByNik(userNik)
+            if (commRes.data.success && commRes.data.data.length > 0) {
+                userCommittees.value = commRes.data.data
+                isCommitteeMember.value = true
+            }
         }
         
         if (filters.unit) {
@@ -429,20 +454,21 @@ const fetchIndicators = async () => {
     try {
         const params = {
             limit: 100,
-            dep_id: filters.unit,
             status: '1'
         }
         
-        // Parallel fetch: Master Indicators AND Existing Realisasi
-        const [masterRes, realisasiRes] = await Promise.all([
-            api.getRuang(params),
-            api.getRealisasi({
-                dep_id: filters.unit,
-                tgl_transaksi: filters.tgl_transaksi
-            })
-        ])
+        let masterRes;
+        // Always use Master Ruang for both modes, as per user requirement
+        // "isi Sesuai user ada di Komite mana, krna master indikator kan ada nilai dep_id disitu"
+        params.dep_id = filters.unit
+        masterRes = await api.getRuang(params)
 
-        const rawItems = masterRes.data.data.data || []
+        const realisasiRes = await api.getRealisasi({
+            dep_id: filters.unit,
+            tgl_transaksi: filters.tgl_transaksi
+        })
+
+        const rawItems = masterRes.data.data.data || masterRes.data.data || []
         const realisasiData = realisasiRes.data.data || []
         
         // Map realisasi by id_inmut for easy lookup
@@ -451,7 +477,7 @@ const fetchIndicators = async () => {
             realisasiMap.set(item.id_inmut, item)
         })
 
-        // Filter client-side if needed (sanity check)
+        // Always filter by selected unit
         const filteredItems = rawItems.filter(item => item.dep_id === filters.unit)
         
         indicators.value = filteredItems.map(item => {
@@ -794,8 +820,26 @@ const formatMonthYear = (monthStr) => {
     return `${monthNames[parseInt(month) - 1]} ${year}`
 }
 
+const handleModeChange = () => {
+    if (inputMode.value === 'unit') {
+        const userDepNameOrId = authStore.user?.data?.detail?.departemen || 
+                                authStore.user?.detail?.departemen || 
+                                authStore.user?.dep_id
+        const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
+        if (myUnit) filters.unit = myUnit.dep_id
+    } else {
+        // Switch to the first committee's department
+        if (userCommittees.value.length > 0) {
+            const commDepId = userCommittees.value[0].komite?.dep_id
+            if (commDepId) {
+                filters.unit = commDepId
+            }
+        }
+    }
+    fetchIndicators()
+}
+
 // Watchers for Bulk Mode
-import { watch } from 'vue'
 watch(() => selectedIndicator.value, fetchMonthlyData)
 // Re-fetch monthly data if month changes while in monthly mode
 watch(() => filters.tgl_transaksi, () => {
