@@ -255,6 +255,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { jadwalPegawaiService } from '../../services/jadwalPegawaiService'
 import { useAuthStore } from '../../stores/auth'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
+import Swal from 'sweetalert2'
 
 const authStore = useAuthStore()
 
@@ -509,7 +510,12 @@ const fetchData = async () => {
     }
   } catch (err) {
     console.error('Failed to load schedule', err)
-    alert('Gagal memuat data jadwal.')
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Memuat Data',
+      text: 'Terjadi kesalahan saat memuat data jadwal.',
+      confirmButtonColor: '#3b82f6'
+    })
   } finally {
     loading.value = false
   }
@@ -585,8 +591,19 @@ const closePatternModal = () => {
   showPatternModal.value = false
 }
 
-const applyPattern = () => {
-  if (!confirm(`Terapkan pola ini ke ${filteredEmployees.value.length} pegawai? Data yang belum disimpan akan tertimpa.`)) return
+const applyPattern = async () => {
+  const result = await Swal.fire({
+    title: 'Terapkan Pola?',
+    text: `Pola ini akan diterapkan ke ${filteredEmployees.value.length} pegawai. Perubahan yang belum disimpan mungkin tertimpa.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, Terapkan',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#3b82f6',
+    cancelButtonColor: '#64748b'
+  })
+
+  if (!result.isConfirmed) return
 
   const year = filter.value.year
   const monthIdx = filter.value.month - 1
@@ -608,11 +625,27 @@ const applyPattern = () => {
   
   hasChanges.value = true
   closePatternModal()
-  alert('Pola berhasil diterapkan! Jangan lupa klik Simpan.')
+  Swal.fire({
+    icon: 'success',
+    title: 'Pola Diterapkan',
+    text: 'Pola berhasil diterapkan! Jangan lupa klik Simpan untuk mempermanenkan perubahan.',
+    confirmButtonColor: '#3b82f6'
+  })
 }
 
-const clearPendingChanges = () => {
-    if (confirm('Apakah Anda yakin ingin mereset semua perubahan yang belum disimpan?')) {
+const clearPendingChanges = async () => {
+    const result = await Swal.fire({
+        title: 'Reset Perubahan?',
+        text: 'Apakah Anda yakin ingin mereset semua perubahan yang belum disimpan?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Reset',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b'
+    })
+
+    if (result.isConfirmed) {
         pendingChanges.value = {}
         hasChanges.value = false
     }
@@ -621,12 +654,28 @@ const clearPendingChanges = () => {
 // AI Schedule Generation
 const generateAiSchedule = async () => {
   if (filteredEmployees.value.length === 0) {
-    alert('Tidak ada data pegawai untuk dijadwalkan.')
+    Swal.fire({
+      icon: 'info',
+      title: 'Data Tidak Tersedia',
+      text: 'Tidak ada data pegawai untuk dijadwalkan.',
+      confirmButtonColor: '#3b82f6'
+    })
     return
   }
 
   // Confirm action
-  if (!confirm(`🤖 AI akan membuat rekomendasi jadwal untuk ${filteredEmployees.value.length} pegawai di bulan ${months[filter.value.month - 1]} ${filter.value.year}. Lanjutkan?`)) return
+  const result = await Swal.fire({
+    title: 'Rekomendasi AI',
+    text: `🤖 AI akan membuat rekomendasi jadwal untuk ${filteredEmployees.value.length} pegawai di bulan ${months[filter.value.month - 1]} ${filter.value.year}. Lanjutkan?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, Generate',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#8e44ad', // AI Purple
+    cancelButtonColor: '#64748b'
+  })
+
+  if (!result.isConfirmed) return
 
   analyzing.value = true
   
@@ -725,19 +774,39 @@ const generateAiSchedule = async () => {
     })
 
     if (mismatchCount > 0) {
-        alert(`⚠️ Peringatan: ${mismatchCount} pegawai dari respon AI tidak dikenali sistem. Pastikan AI menggunakan ID yang benar. (Lihat Console)`)
+        Swal.fire({
+          icon: 'warning',
+          title: 'Pegawai Tidak Cocok',
+          text: `${mismatchCount} pegawai dari respon AI tidak dikenali sistem. Pastikan AI menggunakan ID yang benar.`,
+          confirmButtonColor: '#f59e0b'
+        })
     }
 
     if (appliedCount === 0 && mismatchCount === 0) {
-        alert('Respon AI valid tapi tidak ada data shift yang bisa diterapkan.')
+        Swal.fire({
+          icon: 'info',
+          title: 'Tidak Ada Perubahan',
+          text: 'Respon AI valid tapi tidak ada data shift yang bisa diterapkan.',
+          confirmButtonColor: '#3b82f6'
+        })
     } else if (appliedCount > 0) {
         hasChanges.value = true
-        alert(`✅ Rekomendasi AI berhasil diterapkan! (${appliedCount} shift diisi). Silakan periksa dan Simpan jika sudah sesuai.`)
+        Swal.fire({
+          icon: 'success',
+          title: 'Rekomendasi AI Selesai',
+          text: `✅ Rekomendasi AI berhasil diterapkan! (${appliedCount} shift diisi). Silakan periksa dan Simpan jika sudah sesuai.`,
+          confirmButtonColor: '#3b82f6'
+        })
     }
 
   } catch (err) {
     console.error('AI Generation Error', err)
-    alert('Gagal mendapatkan rekomendasi AI: ' + (err.message || 'Unknown error'))
+    Swal.fire({
+      icon: 'error',
+      title: 'AI Gagal',
+      text: 'Gagal mendapatkan rekomendasi AI: ' + (err.message || 'Unknown error'),
+      confirmButtonColor: '#ef4444'
+    })
   } finally {
     analyzing.value = false
   }
@@ -774,7 +843,13 @@ const saveChanges = async () => {
     
     // ApiResponse return 200 on success
     if (res.status === 200) {
-      // alert('Jadwal berhasil disimpan!')
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil Disimpan',
+        text: 'Jadwal berhasil disimpan!',
+        timer: 2000,
+        showConfirmButton: false
+      })
       // Refresh data to secure state
       await fetchData()
     } else {
@@ -783,7 +858,12 @@ const saveChanges = async () => {
     
   } catch (err) {
     console.error('Save failed', err)
-    alert('Gagal menyimpan jadwal: ' + (err.response?.data?.message || err.message))
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Menyimpan',
+      text: 'Gagal menyimpan jadwal: ' + (err.response?.data?.message || err.message),
+      confirmButtonColor: '#ef4444'
+    })
   } finally {
     saving.value = false
   }
