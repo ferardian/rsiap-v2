@@ -685,7 +685,7 @@ const generateAiSchedule = async () => {
                 <span class="value-premium">${months[filter.value.month - 1]} ${filter.value.year}</span>
              </div>
           </div>
-          <p class="mt-4 desc-premium">Sistem akan mengoptimalkan sebaran shift berdasarkan aturan unit dan meminimalisir bentrok jadwal.</p>
+          <p class="mt-2 desc-premium">Sistem akan mengoptimalkan sebaran shift berdasarkan aturan unit dan meminimalisir bentrok jadwal.</p>
         </div>
       </div>
     `,
@@ -1753,7 +1753,6 @@ thead .sticky-col {
   cursor: pointer !important;
   box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4) !important;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-  margin-left: 0.5rem !important;
 }
 
 .btn-premium-action:hover {
@@ -1770,12 +1769,34 @@ thead .sticky-col {
   border: 1px solid #e2e8f0 !important;
   cursor: pointer !important;
   transition: all 0.3s !important;
-  margin-right: 0.5rem !important;
 }
 
 .btn-premium-secondary:hover {
   background: #f1f5f9 !important;
   color: #0f172a !important;
+}
+
+/* Force side-by-side buttons */
+.swal2-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-top: 1.25rem !important;
+  width: 100% !important;
+}
+
+/* Ensure buttons don't stack on small screens and have consistent width */
+.swal2-confirm, .swal2-cancel, .btn-premium-action, .btn-premium-secondary {
+  margin: 0 !important;
+  flex: 1 !important;
+  max-width: 180px !important;
+  min-width: 140px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  white-space: nowrap !important;
 }
 
 /* Animations */
