@@ -287,6 +287,12 @@ const routes = [
     component: () => import('../views/helpdesk/TiketMasukView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/bpjs/antrol',
+    name: 'BpjsAntrol',
+    component: () => import('../views/bpjs/AntrolView.vue'),
+    meta: { requiresAuth: true }
+  },
 ]
 
 const router = createRouter({
