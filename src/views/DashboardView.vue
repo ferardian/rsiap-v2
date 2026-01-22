@@ -14,7 +14,7 @@
                 <span class="badge-text">{{ getUserPosition }}</span>
               </div>
               <div class="department-badge">
-                <span class="dept-text">{{ getUserDepartment }}</span>
+                <span class="dept-text">{{ departmentName }}</span>
               </div>
             </div>
           </div>
@@ -377,6 +377,7 @@ import { useAuthStore } from '../stores/auth'
 import MenuManagementModal from '../components/MenuManagementModal.vue'
 import RoleManagementModal from '../components/RoleManagementModal.vue'
 import UserManagementModal from '../components/UserManagementModal.vue'
+import departemenService from '../services/departemenService'
 import dashboardService from '../services/dashboardService'
 
 
@@ -384,6 +385,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 // Reactive data
+const departmentName = ref(authStore.user?.data?.detail?.departemen || 'Unknown')
 const currentDateTime = ref('')
 const timeInterval = ref(null)
 const autoReloadInterval = ref(null)
@@ -504,6 +506,21 @@ const getWelcomeMessage = computed(() => {
 })
 
 // Methods
+const fetchDepartmentName = async () => {
+  const depCode = authStore.user?.data?.detail?.departemen
+  if (depCode) {
+    try {
+      const response = await departemenService.show(depCode)
+      if (response.data && response.data.data) {
+        departmentName.value = response.data.data.nama
+      }
+    } catch (err) {
+      console.error('Failed to fetch department name', err)
+      departmentName.value = depCode // Fallback to code
+    }
+  }
+}
+
 const updateDateTime = () => {
   const now = new Date()
   const options = {
@@ -644,6 +661,7 @@ onMounted(() => {
   timeInterval.value = setInterval(updateDateTime, 1000)
   fetchDashboardStats() // Initial load (defaults to today in backend if no params, or we can explicit pass today)
   fetchCodeBlueSchedule() // Load code blue schedule
+  fetchDepartmentName() // Fetch real department name
   startAutoReload() // Start auto reload
 })
 
