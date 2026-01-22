@@ -181,7 +181,7 @@
                 type="text" 
                 v-model="searchQuery"
                 class="search-input" 
-                placeholder="Cari nama atau NIK karyawan..."
+                placeholder="Cari nama, NIK, jabatan, atau departemen..."
                 @input="filterEmployees"
               />
               <button v-if="searchQuery" @click="clearSearch" class="clear-search">
@@ -205,8 +205,8 @@
 
           <div v-else class="employee-grid">
             <div v-for="emp in filteredDetailList" :key="emp.nik" class="employee-card">
-              <div class="employee-avatar">
-                <i class="fas fa-user"></i>
+              <div class="employee-avatar" :class="emp.jk === 'L' || emp.jk === 'Pria' ? 'male' : 'female'">
+                <i :class="emp.jk === 'L' || emp.jk === 'Pria' ? 'fas fa-male' : 'fas fa-female'"></i>
               </div>
               <div class="employee-details">
                 <h6 class="employee-name">{{ emp.nama }}</h6>
@@ -218,6 +218,10 @@
                   <span class="meta-item">
                     <i class="fas fa-briefcase"></i>
                     {{ emp.jbtn }}
+                  </span>
+                  <span class="meta-item">
+                    <i :class="emp.jk === 'L' || emp.jk === 'Pria' ? 'fas fa-mars' : 'fas fa-venus'"></i>
+                    {{ emp.jk === 'L' || emp.jk === 'Pria' ? 'Laki-laki' : 'Perempuan' }}
                   </span>
                   <span class="meta-item">
                     <i class="fas fa-building"></i>
@@ -302,8 +306,26 @@ const filterEmployees = () => {
   }
   
   filteredDetailList.value = detailList.value.filter(emp => {
-    return emp.nama.toLowerCase().includes(query) || 
-           emp.nik.toLowerCase().includes(query)
+    const nameMatch = emp.nama?.toLowerCase().includes(query)
+    const nikMatch = emp.nik?.toLowerCase().includes(query)
+    const jbtnMatch = emp.jbtn?.toLowerCase().includes(query)
+    const deptMatch = emp.departemen?.toLowerCase().includes(query)
+    
+    // Gender search improvement
+    const jkRaw = emp.jk?.toLowerCase() || ''
+    const isMaleKeyword = 'laki-laki'.includes(query) || 'pria'.includes(query) || query === 'l'
+    const isFemaleKeyword = 'perempuan'.includes(query) || 'wanita'.includes(query) || query === 'p'
+    
+    let jkMatch = false
+    if (isMaleKeyword) {
+      jkMatch = jkRaw === 'l' || jkRaw === 'laki-laki' || jkRaw === 'pria'
+    } else if (isFemaleKeyword) {
+      jkMatch = jkRaw === 'p' || jkRaw === 'perempuan' || jkRaw === 'wanita'
+    } else {
+      jkMatch = jkRaw.includes(query)
+    }
+
+    return nameMatch || nikMatch || jbtnMatch || deptMatch || jkMatch
   })
 }
 
@@ -964,13 +986,21 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  color: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
   flex-shrink: 0;
+}
+
+.employee-avatar.male {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #3b82f6;
+}
+
+.employee-avatar.female {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  color: #ec4899;
 }
 
 .employee-details {

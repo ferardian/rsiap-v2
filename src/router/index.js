@@ -29,6 +29,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/kunjungan',
+    name: 'VisitDashboard',
+    component: () => import('../views/dashboard/KunjunganView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/bed/display',
     name: 'BedAvailabilityDisplay',
     component: () => import('../views/dashboard/BedAvailabilityView.vue'),
@@ -291,6 +297,12 @@ const routes = [
     path: '/bpjs/antrol',
     name: 'BpjsAntrol',
     component: () => import('../views/bpjs/AntrolView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/penyakit',
+    name: 'Top10Penyakit',
+    component: () => import('../views/laporan/PenyakitReportView.vue'),
     meta: { requiresAuth: true }
   },
 ]
