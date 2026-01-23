@@ -122,7 +122,16 @@
                         </span>
                       </td>
                       <td>
-                         <span class="status-pill" :class="ticket.status.toLowerCase()">{{ ticket.status }}</span>
+                        <div class="d-flex align-items-center">
+                          <span class="status-dot" :class="ticket.status.toLowerCase()"></span>
+                          <span class="status-pill" :class="ticket.status.toLowerCase()">
+                            <i v-if="ticket.status === 'Open'" class="fas fa-envelope-open-text me-1"></i>
+                            <i v-if="ticket.status === 'Proses'" class="fas fa-spinner fa-spin me-1"></i>
+                            <i v-if="ticket.status === 'Selesai'" class="fas fa-check-double me-1"></i>
+                            <i v-if="ticket.status === 'Batal'" class="fas fa-times-circle me-1"></i>
+                            {{ ticket.status }}
+                          </span>
+                        </div>
                       </td>
                       <td class="text-center">
                         <button class="btn btn-kelola-sm" @click="openManageModal(ticket)">
@@ -224,14 +233,33 @@
                   </select>
                 </div>
 
+                <div v-if="manageTicketData.status === 'Selesai'" class="form-group mb-3">
+                  <label class="form-label fw-bold">Waktu Selesai</label>
+                  <input 
+                    type="datetime-local" 
+                    v-model="manageTicketData.jam_selesai" 
+                    class="form-control premium-input"
+                  >
+                  <small class="text-muted mt-1 d-block">Kosongkan untuk menggunakan waktu saat ini</small>
+                </div>
+
                 <div class="form-group mb-3">
                   <label class="form-label fw-bold">Teknisi Penanggung Jawab</label>
-                  <select v-model="manageTicketData.nik_teknisi" class="form-select premium-select">
-                    <option value="">Pilih Teknisi...</option>
-                    <option v-for="t in technicians" :key="t.nik" :value="t.nik">
-                      {{ t.nama }}
-                    </option>
-                  </select>
+                  <v-select
+                    v-model="manageTicketData.nik_teknisi"
+                    :options="technicians"
+                    :reduce="t => t.nik"
+                    label="nama"
+                    placeholder="Cari & Pilih Teknisi..."
+                    class="premium-v-select"
+                  >
+                    <template #no-options="{ search, searching }">
+                      <template v-if="searching">
+                        Tidak ditemukan teknisi dengan nama "<em>{{ search }}</em>".
+                      </template>
+                      <em v-else>Ketik untuk mencari teknisi...</em>
+                    </template>
+                  </v-select>
                 </div>
 
                 <div class="form-group mb-4">
@@ -299,6 +327,7 @@ const manageTicketData = reactive({
   status: 'Open',
   nik_teknisi: '',
   solusi: '',
+  jam_selesai: '',
 })
 
 const priorities = [
@@ -387,6 +416,19 @@ const openManageModal = (ticket) => {
   manageTicketData.status = ticket.status
   manageTicketData.nik_teknisi = ticket.nik_teknisi || ''
   manageTicketData.solusi = ticket.solusi || ''
+  
+  // Format jam_selesai for datetime-local input (YYYY-MM-DDTHH:mm)
+  if (ticket.jam_selesai) {
+    const d = new Date(ticket.jam_selesai)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hours = String(d.getHours()).padStart(2, '0')
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+    manageTicketData.jam_selesai = `${year}-${month}-${day}T${hours}:${minutes}`
+  } else {
+    manageTicketData.jam_selesai = ''
+  }
   
   const modal = new bootstrap.Modal(document.getElementById('manageTicketModal'))
   modal.show()
@@ -677,6 +719,68 @@ onMounted(() => {
 
 .status-pill {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-pill.open { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.status-pill.proses { background: #fefce8; color: #a16207; border: 1px solid #fef9c3; }
+.status-pill.selesai { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; }
+.status-pill.batal { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  display: inline-block;
+}
+
+.status-dot.open { background: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
+.status-dot.proses { background: #eab308; box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.2); }
+.status-dot.selesai { background: #22c55e; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2); }
+.status-dot.batal { background: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); }
+
+/* Premium V-Select */
+.premium-v-select :deep(.vs__dropdown-toggle) {
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  padding: 3px 0;
+  background: white;
+}
+
+.premium-v-select :deep(.vs__selected) {
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.premium-v-select :deep(.vs__search::placeholder) {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.premium-v-select :deep(.vs__dropdown-menu) {
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  padding: 8px;
+}
+
+.premium-v-select :deep(.vs__dropdown-option) {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.premium-v-select :deep(.vs__dropdown-option--highlight) {
+  background: #eff6ff;
+  color: #2563eb;
 }
 </style>

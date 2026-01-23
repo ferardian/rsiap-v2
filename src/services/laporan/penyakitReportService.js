@@ -6,5 +6,11 @@ export const penyakitReportService = {
     },
     getSummary(params = {}) {
         return api.get('/laporan/penyakit/summary', { params })
+    },
+    getDeathDetails(params = {}) {
+        return api.get('/laporan/penyakit/death-details', { params })
+    },
+    getDeadliestDiseases(params = {}) {
+        return api.get('/laporan/penyakit/deadliest', { params })
     }
 }

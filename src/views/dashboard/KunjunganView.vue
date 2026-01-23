@@ -87,6 +87,28 @@
             <h3 class="stat-value">{{ summary.mati_48_l + summary.mati_48_p }} <small>(L:{{ summary.mati_48_l }} P:{{ summary.mati_48_p }})</small></h3>
           </div>
         </div>
+        <!-- Inpatient Care Duration Stats (Only for Ranap) -->
+        <div v-if="filters.status_lanjut === 'Ranap' && inpatientCare" class="stat-card care-days">
+          <div class="stat-icon">📅</div>
+          <div class="stat-info">
+            <span class="stat-label">Jumlah Hari Perawatan</span>
+            <h3 class="stat-value">{{ inpatientCare.hari_perawatan }} <small>hari</small></h3>
+          </div>
+        </div>
+        <div v-if="filters.status_lanjut === 'Ranap' && inpatientCare" class="stat-card lama-inap">
+          <div class="stat-icon">🏥</div>
+          <div class="stat-info">
+            <span class="stat-label">Jumlah Lama Dirawat</span>
+            <h3 class="stat-value">{{ inpatientCare.lama_dirawat }} <small>hari</small></h3>
+          </div>
+        </div>
+        <div v-if="filters.status_lanjut === 'Ranap' && inpatientCare" class="stat-card avg-stay">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-info">
+            <span class="stat-label">Rata-rata Lama Inap (ALOS)</span>
+            <h3 class="stat-value">{{ inpatientCare.avg_lama_dirawat }} <small>hari/pasien</small></h3>
+          </div>
+        </div>
       </div>
 
       <div class="visuals-grid">
@@ -188,6 +210,7 @@ const summary = ref({
   mati_48_l: 0, mati_48_p: 0 
 })
 const visitData = ref({ registrasi: [], cara_bayar: [], poli: [], dokter: [] })
+const inpatientCare = ref(null)
 
 const filters = ref({
   tgl_awal: new Date().toISOString().substr(0, 10),
@@ -202,6 +225,7 @@ const fetchData = async () => {
     const data = response.data.data
     visitData.value = data
     summary.value = data.summary
+    inpatientCare.value = data.inpatient_care || null
   } catch (error) {
     console.error('Failed to fetch visit stats:', error)
   } finally {
@@ -231,6 +255,8 @@ onMounted(() => {
 <style scoped>
 .visit-dashboard {
   padding: 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Header */
@@ -321,6 +347,9 @@ onMounted(() => {
 .stat-card.keluar { border-bottom: 4px solid #10b981; }
 .stat-card.mati { border-bottom: 4px solid #64748b; }
 .stat-card.mati-long { border-bottom: 4px solid #475569; }
+.stat-card.care-days { border-bottom: 4px solid #8b5cf6; }
+.stat-card.lama-inap { border-bottom: 4px solid #f59e0b; }
+.stat-card.avg-stay { border-bottom: 4px solid #06b6d4; }
 
 
 .stat-card {
@@ -455,6 +484,12 @@ onMounted(() => {
   margin-bottom: 0.4rem;
   font-size: 0.85rem;
   font-weight: 600;
+  gap: 0.5rem;
+}
+
+.item-label {
+  flex: 1;
+  word-break: break-word;
 }
 
 .bar-container-mini {
@@ -608,9 +643,176 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .visuals-grid { grid-template-columns: 1fr; }
-  .full-width { grid-column: auto; }
-  .header-content { flex-direction: column; align-items: flex-start; }
+  .page-header {
+    padding: 1.5rem 1.25rem;
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 1.5rem;
+    margin: -1.5rem -1rem 1.5rem -1rem; /* Full width on mobile */
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .header-actions {
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .date-inputs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .date-inputs span {
+    text-align: center;
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+
+  .dashboard-content {
+    padding: 0 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .visuals-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+
+  .visual-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .summary-item {
+    padding-right: 0.5rem;
+  }
+
+  .poli-grid {
+    display: flex;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0.5rem 0 1.5rem 0;
+    gap: 1.25rem;
+    height: auto;
+    min-height: 320px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .poli-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .poli-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .poli-item {
+    min-width: 85px;
+    flex: 0 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .poli-bar-wrapper {
+    height: 160px;
+    margin-top: auto;
+  }
+
+  .poli-name {
+    font-size: 0.7rem;
+    height: auto;
+    min-height: 45px;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .poli-val {
+    top: -22px;
+    font-size: 0.75rem;
+  }
+
+  .doctor-row {
+    gap: 0.75rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+  }
+
+  .doc-rank {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+
+  .doc-name {
+    font-size: 0.8rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
+    line-height: 1.2;
+  }
+
+  .doc-count {
+    font-size: 0.75rem;
+    min-width: 65px;
+    text-align: right;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 </style>
