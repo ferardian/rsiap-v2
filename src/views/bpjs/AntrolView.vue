@@ -27,17 +27,24 @@
     <!-- Quick Stats -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-md">
-        <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
+        <div class="stat-card glass-card p-3 shadow-sm border-0 h-100 cursor-pointer" 
+             :class="{'border-start border-4 border-danger': missingQueues.length > 0}"
+             @click="openComparison('no-antrol')">
           <div class="text-muted small fw-bold mb-1">TOTAL SEP (RJ)</div>
-          <div class="h3 fw-bold mb-0 text-dark">{{ sepCount }}</div>
-          <div class="stat-footer mt-2 small text-muted">Rawat Jalan Non-IGD</div>
+          <div class="h3 fw-bold mb-0 text-dark">
+            {{ sepList.length }}
+            <span v-if="missingQueues.length > 0" class="text-danger small ms-1" style="font-size: 0.8rem;">
+              <i class="fas fa-exclamation-circle"></i> {{ missingQueues.length }} Miss
+            </span>
+          </div>
+          <div class="stat-footer mt-2 small text-muted">vs {{ uniqueAntrolCount }} Antrean Unik</div>
         </div>
       </div>
       <div class="col-6 col-md">
-        <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
+        <div class="stat-card glass-card p-3 shadow-sm border-0 h-100 cursor-pointer" @click="openComparison('matching')">
           <div class="text-muted small fw-bold mb-1">TOTAL ANTREAN</div>
           <div class="h3 fw-bold mb-0 text-primary">{{ antrolList.length }}</div>
-          <div class="stat-footer mt-2 small text-muted">Diterima sistem</div>
+          <div class="stat-footer mt-2 small text-muted">{{ uniqueAntrolCount }} Pasien Unik</div>
         </div>
       </div>
       <div class="col-6 col-md">
@@ -67,6 +74,41 @@
           <div class="h3 fw-bold mb-0 text-danger">{{ statusCounts.batal }}</div>
           <div class="stat-footer mt-2 small text-muted">Dibatalkan/Tidak hadir</div>
         </div>
+      </div>
+    </div>
+    
+    <!-- Alerts for Missing Queues -->
+    <div v-if="missingQueues.length > 0" class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 animate__animated animate__headShake">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="bg-warning bg-opacity-25 rounded-circle p-2 px-3">
+           <i class="fas fa-exclamation-triangle text-warning fa-lg"></i>
+        </div>
+        <div>
+          <h6 class="m-0 fw-bold text-dark">Peringatan Antrean Online</h6>
+          <p class="mb-0 small text-muted">Ditemukan {{ missingQueues.length }} pasien yang sudah memiliki SEP tapi belum masuk ke data antrean online.</p>
+        </div>
+      </div>
+      <div class="table-responsive bg-white rounded-3 shadow-sm">
+        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.8rem;">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3 py-2">Nama Pasien</th>
+              <th class="py-2">No. Kartu</th>
+              <th class="py-1">No. Rawat</th>
+              <th class="py-1">No. SEP</th>
+              <th class="text-center py-2">Info</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="sep in missingQueues" :key="sep.no_sep">
+              <td class="ps-3 fw-bold">{{ sep.nama_pasien }}</td>
+              <td class="text-muted">{{ sep.no_kartu }}</td>
+              <td class="text-muted">{{ sep.no_rawat }}</td>
+              <td class="small">{{ sep.no_sep }}</td>
+              <td class="text-center"><span class="badge bg-danger-subtle text-danger rounded-pill px-3">Belum Antrean</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -158,15 +200,114 @@
                       class="btn btn-sync-task" 
                       title="Adjustment Waktu Antrean"
                       @click="showAdjustmentModal(item)"
-                      :disabled="syncLoading === item.kodebooking"
+                      :disabled="syncLoading === item.kodebooking || bulkSyncLoading === item.kodebooking"
                     >
                       <i class="fas" :class="syncLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-clock-rotate-left'"></i>
+                    </button>
+                    <button 
+                      class="btn btn-bulk-sync" 
+                      title="Sync Semua Task Sekaligus"
+                      @click="bulkSyncTask(item)"
+                      :disabled="bulkSyncLoading === item.kodebooking || syncLoading === item.kodebooking"
+                    >
+                      <i class="fas" :class="bulkSyncLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
                     </button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Visualization Modal -->
+    <div v-if="activeComparisonModal" class="modal-overlay" @click.self="activeComparisonModal = false">
+      <div class="modal-content glass-card p-0 overflow-hidden shadow-lg border-0" style="max-width: 850px;">
+        <div class="modal-header-premium p-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+          <div>
+            <h5 class="m-0 fw-bold text-white"><i class="fas fa-chart-pie me-2"></i>Visualisasi Perbandingan Data</h5>
+            <small class="text-white-50">Monitoring Sinkronisasi SEP vs Antrean Online</small>
+          </div>
+          <button class="btn-close-premium" @click="activeComparisonModal = false">&times;</button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="row g-0 border-bottom">
+            <div class="col-4 p-4 text-center border-end cursor-pointer transition-all" 
+                 :class="{'bg-blue-50': comparisonTab === 'matching'}" @click="comparisonTab = 'matching'">
+              <div class="h3 fw-bold mb-0 text-success">{{ matchingData.length }}</div>
+              <div class="small fw-bold text-muted text-uppercase">Sudah Terbit SEP</div>
+              <div class="progress mt-2" style="height: 4px;">
+                <div class="progress-bar bg-success" :style="{width: (matchingData.length / uniqueAntrolCount * 100) + '%'}"></div>
+              </div>
+            </div>
+            <div class="col-4 p-4 text-center border-end cursor-pointer transition-all"
+                 :class="{'bg-blue-50': comparisonTab === 'no-sep'}" @click="comparisonTab = 'no-sep'">
+              <div class="h3 fw-bold mb-0 text-warning">{{ antrolWithoutSep.length }}</div>
+              <div class="small fw-bold text-muted text-uppercase">Antrol Belum SEP</div>
+              <div class="progress mt-2" style="height: 4px;">
+                <div class="progress-bar bg-warning" :style="{width: (antrolWithoutSep.length / uniqueAntrolCount * 100) + '%'}"></div>
+              </div>
+            </div>
+            <div class="col-4 p-4 text-center cursor-pointer transition-all"
+                 :class="{'bg-blue-50': comparisonTab === 'no-antrol'}" @click="comparisonTab = 'no-antrol'">
+              <div class="h3 fw-bold mb-0 text-danger">{{ missingQueues.length }}</div>
+              <div class="small fw-bold text-muted text-uppercase">SEP Tanpa Antrol</div>
+              <div class="progress mt-2" style="height: 4px;">
+                <div class="progress-bar bg-danger" :style="{width: (missingQueues.length / sepList.length * 100) + '%'}"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-light bg-opacity-50" style="max-height: 50vh; overflow-y: auto;">
+             <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="m-0 fw-bold">Detail Data: 
+                  <span class="text-primary" v-if="comparisonTab === 'matching'">Matching (SEP Aktif)</span>
+                  <span class="text-warning" v-else-if="comparisonTab === 'no-sep'">Antrean Belum Terbit SEP</span>
+                  <span class="text-danger" v-else>SEP Belum Ada di Antrol</span>
+                </h6>
+                <div class="search-box-sm">
+                   <input type="text" v-model="filters.keyword" class="form-control form-control-sm border-0 shadow-sm" placeholder="Cari data...">
+                </div>
+             </div>
+
+             <div v-if="filteredComparisonData.length === 0" class="text-center py-5 text-muted">
+                <i class="fas fa-search fa-2x mb-2 opacity-25"></i>
+                <p>Tidak ada data ditemukan</p>
+             </div>
+             
+             <div v-else class="table-responsive bg-white rounded-3 shadow-sm border overflow-hidden">
+                <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.8rem;">
+                  <thead class="bg-light">
+                    <tr>
+                      <th class="ps-3 py-2">Pasien / Nama</th>
+                      <th class="py-2">No. Kartu</th>
+                      <th v-if="comparisonTab !== 'no-antrol'" class="py-2">No. RM</th>
+                      <th v-if="comparisonTab === 'no-antrol'" class="py-2">No. Rawat</th>
+                      <th v-if="comparisonTab !== 'no-sep'" class="py-2">No. SEP</th>
+                      <th class="text-center py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in filteredComparisonData" :key="item.kodebooking || item.no_sep">
+                      <td class="ps-3 fw-bold">{{ item.nokapst ? (item.noantrean || '-') : item.nama_pasien }}</td>
+                      <td class="text-muted">{{ item.nokapst || item.no_kartu }}</td>
+                      <td v-if="comparisonTab !== 'no-antrol'">{{ item.norekammedis || '-' }}</td>
+                      <td v-if="comparisonTab === 'no-antrol'">{{ item.no_rawat }}</td>
+                      <td v-if="comparisonTab !== 'no-sep'" class="small text-blue-600 fw-bold">{{ item.no_sep || '-' }}</td>
+                      <td class="text-center">
+                         <span v-if="comparisonTab === 'matching'" class="badge bg-success-subtle text-success rounded-pill px-3">Sudah SEP</span>
+                         <span v-else-if="comparisonTab === 'no-sep'" class="badge bg-warning-subtle text-warning rounded-pill px-3">Belum SEP</span>
+                         <span v-else class="badge bg-danger-subtle text-danger rounded-pill px-3">Gagal Antrol</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+             </div>
+          </div>
+        </div>
+        <div class="modal-footer p-3 bg-light border-0">
+          <button class="btn btn-secondary px-4 fw-bold" @click="activeComparisonModal = false">Tutup Dashboard</button>
         </div>
       </div>
     </div>
@@ -308,13 +449,16 @@ import { useToast } from 'vue-toastification'
 
 const toast = useToast()
 const loading = ref(false)
-const sepCount = ref(0) // Added this line
+const sepList = ref([]) // Changed from sepCount
 const antrolList = ref([])
 const taskLoading = ref(null)
 const syncLoading = ref(null)
+const bulkSyncLoading = ref(null)
 const taskList = ref([])
 const activeTaskListModal = ref(false)
 const activeAdjustmentModal = ref(false)
+const activeComparisonModal = ref(false) // Added this line
+const comparisonTab = ref('matching') // Added this line
 const selectedBooking = ref(null)
 const adjData = reactive({
   no_rawat: '',
@@ -347,6 +491,75 @@ const statusCounts = computed(() => {
   })
   return counts
 })
+
+const uniqueAntrolCount = computed(() => {
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  const uniqueCards = new Set(list.filter(i => i.nokapst).map(item => item.nokapst))
+  return uniqueCards.size
+})
+
+const missingQueues = computed(() => {
+  const seps = Array.isArray(sepList.value) ? sepList.value : []
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  
+  if (!seps.length) return []
+  
+  const antrolCards = new Set(list.filter(i => i.nokapst).map(item => item.nokapst))
+  return seps.filter(sep => sep.no_kartu && !antrolCards.has(sep.no_kartu))
+})
+
+const antrolWithoutSep = computed(() => {
+  const seps = Array.isArray(sepList.value) ? sepList.value : []
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  
+  const sepCards = new Set(seps.map(s => s.no_kartu))
+  return list.filter(item => item.nokapst && !sepCards.has(item.nokapst))
+})
+
+const matchingData = computed(() => {
+  const seps = Array.isArray(sepList.value) ? sepList.value : []
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  
+  const sepCards = new Set(seps.map(s => s.no_kartu))
+  return list.filter(item => item.nokapst && sepCards.has(item.nokapst))
+})
+
+const filteredComparisonData = computed(() => {
+  let source = []
+  if (comparisonTab.value === 'matching') source = matchingData.value
+  else if (comparisonTab.value === 'no-sep') source = antrolWithoutSep.value
+  else if (comparisonTab.value === 'no-antrol') source = missingQueues.value
+  
+  let result = source
+  if (filters.keyword) {
+    const kw = filters.keyword.toLowerCase()
+    result = source.filter(item => {
+      const name = (item.pasien?.nm_pasien || item.nama_pasien || '').toLowerCase()
+      const card = (item.nokapst || item.no_kartu || '').toLowerCase()
+      const rm = String(item.norekammedis || '').toLowerCase()
+      const rawat = String(item.no_rawat || item.no_rawat || '').toLowerCase()
+      const antrean = String(item.noantrean || '').toLowerCase()
+      
+      return name.includes(kw) || 
+             card.includes(kw) || 
+             rm.includes(kw) || 
+             rawat.includes(kw) || 
+             antrean.includes(kw)
+    })
+  }
+
+  // Sort by card number
+  return [...result].sort((a, b) => {
+    const cardA = String(a.nokapst || a.no_kartu || '')
+    const cardB = String(b.nokapst || b.no_kartu || '')
+    return cardA.localeCompare(cardB)
+  })
+})
+
+const openComparison = (tab = 'matching') => {
+  comparisonTab.value = tab
+  activeComparisonModal.value = true
+}
 
 const filteredAntrol = computed(() => {
   let list = Array.isArray(antrolList.value) ? antrolList.value : []
@@ -390,7 +603,7 @@ const fetchAntrolData = async () => {
     }
 
     if (sepRes.data.metadata.code === 200) {
-      sepCount.value = sepRes.data.response
+      sepList.value = sepRes.data.response
     }
   } catch (error) {
     console.error(error)
@@ -483,6 +696,26 @@ const showAdjustmentModal = async (item) => {
 const closeAdjustmentModal = () => {
   activeAdjustmentModal.value = false
   selectedBooking.value = null
+}
+
+const bulkSyncTask = async (item) => {
+  if (!confirm('Sinkronisasi semua task (3-7 atau 3-5) untuk pasien ini ke BPJS Antrol?')) return
+  
+  bulkSyncLoading.value = item.kodebooking
+  try {
+    const response = await bpjsAntrolService.syncTaskQueue(item.kodebooking)
+    if (response.data.metadata.code === 200) {
+      toast.success('Berhasil sinkronisasi semua task!')
+      await fetchAntrolData()
+    } else {
+      toast.warning(response.data.metadata.message)
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error('Gagal melakukan bulk sync')
+  } finally {
+    bulkSyncLoading.value = null
+  }
 }
 
 const updateLocalTask = async (taskId) => {
@@ -643,6 +876,16 @@ onMounted(() => {
   min-width: 300px;
 }
 
+.cursor-pointer { cursor: pointer; }
+.transition-all { transition: all 0.2s ease-in-out; }
+.bg-blue-50 { background-color: #f0f7ff !important; }
+
+.search-box-sm .form-control {
+  border-radius: 20px;
+  padding-left: 15px;
+  width: 200px;
+}
+
 .date-filter-card {
   padding: 0.5rem 1rem;
 }
@@ -742,6 +985,26 @@ onMounted(() => {
   background: #16a34a;
   color: white;
   border-color: #16a34a;
+  transform: scale(1.1);
+}
+
+.btn-bulk-sync {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.btn-bulk-sync:hover {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
   transform: scale(1.1);
 }
 

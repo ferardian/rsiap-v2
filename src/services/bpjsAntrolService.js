@@ -33,10 +33,10 @@ const bpjsAntrolService = {
     updateLocalTaskQueue: (payload) => api.post('/bpjs/antrol/antrean/update-local', payload),
 
     /**
-     * Sync task times from local SIMRS to BPJS
+     * Sync all tasks (3-7 or 3-5) from local SIMRS to BPJS in bulk
      * @param {string} kodebooking 
      */
-    syncTaskQueue: (kodebooking) => api.post('/bpjs/antrol/antrean/sync', { kodebooking }),
+    syncTaskQueue: (kodebooking) => api.post('/bpjs/antrol/antrean/sync-queue', { kodebooking }),
 
     /**
      * Get Outpatient SEP count (excluding IGD) for a given date
