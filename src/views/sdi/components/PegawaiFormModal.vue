@@ -86,6 +86,15 @@
                   required
                 />
               </div>
+              <div class="form-group">
+                <label>Email <span class="required">*</span></label>
+                <input 
+                  type="email" 
+                  v-model="form.email" 
+                  placeholder="email@contoh.com"
+                  required
+                />
+              </div>
                <div class="form-group">
                 <label>NPWP</label>
                 <input 
@@ -388,6 +397,7 @@ const form = ref({
   photo: '-',
   no_ktp: '',
   no_telp: '',
+  email: '',
   gol_darah: '-',
   agama: 'ISLAM',
   stts_nikah: 'BELUM MENIKAH'
@@ -445,6 +455,7 @@ const resetForm = () => {
     photo: '-',
     no_ktp: '',
     no_telp: '',
+    email: '',
     gol_darah: '-',
     agama: 'ISLAM',
     stts_nikah: 'BELUM MENIKAH'
@@ -471,6 +482,15 @@ watch(() => props.pegawaiData, (newVal) => {
     } else if (newVal.no_telp) {
         // Fallback for no_telp from join
         form.value.no_telp = newVal.no_telp
+    }
+
+    // Handle Email relationship mapping
+    if (newVal.email) {
+      if (typeof newVal.email === 'object' && newVal.email.email) {
+        form.value.email = newVal.email.email
+      } else if (typeof newVal.email === 'string') {
+        form.value.email = newVal.email
+      }
     }
   } else if (!props.isEdit) {
     resetForm()

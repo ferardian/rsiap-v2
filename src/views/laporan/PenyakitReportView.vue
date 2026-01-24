@@ -1,59 +1,73 @@
 <template>
   <div class="penyakit-report-container p-4">
     <!-- Header Section -->
-    <div class="report-header mb-4">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-          <h2 class="page-title mb-1">Laporan 10 Besar Penyakit</h2>
-          <p class="text-muted small mb-0">Statistik diagnosa penyakit terbanyak berdasarkan periode</p>
+    <div class="page-header mb-4">
+      <div class="header-content">
+        <div class="header-text">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h2 class="page-title mb-0">
+              <i class="fas fa-chart-pie me-2"></i>
+              Laporan 10 Besar Penyakit
+            </h2>
+            <button @click="isFilterVisible = !isFilterVisible" class="btn-toggle-filter d-md-none">
+              <i class="fas" :class="isFilterVisible ? 'fa-chevron-up' : 'fa-filter'"></i>
+            </button>
+          </div>
+          <p class="page-subtitle mb-0">Statistik diagnosa penyakit terbanyak berdasarkan periode</p>
         </div>
         
-        <div class="filter-actions d-flex gap-3 align-items-center">
-          <!-- Date Range -->
-          <div class="input-group-custom">
-            <span class="label">Periode</span>
-            <div class="d-flex align-items-center gap-2">
-              <input type="date" v-model="filters.tgl_awal" class="form-control-custom" />
-              <span class="text-muted">s/d</span>
-              <input type="date" v-model="filters.tgl_akhir" class="form-control-custom" />
+        <transition name="collapse">
+          <div v-show="isFilterVisible || !isMobile" class="header-actions">
+          <div class="filter-grid">
+            <!-- Date Range -->
+            <div class="filter-group">
+              <label class="filter-label">PERIODE</label>
+              <div class="date-input-group">
+                <input type="date" v-model="filters.tgl_awal" class="form-input" />
+                <span class="date-separator">s/d</span>
+                <input type="date" v-model="filters.tgl_akhir" class="form-input" />
+              </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group">
+              <label class="filter-label">STATUS</label>
+              <select v-model="filters.status" class="form-select">
+                <option value="all">Semua Layanan</option>
+                <option value="Ralan">Rawat Jalan</option>
+                <option value="Ranap">Rawat Inap</option>
+              </select>
+            </div>
+
+            <!-- Pasien Filter -->
+            <div class="filter-group">
+              <label class="filter-label">PASIEN</label>
+              <select v-model="filters.stts_daftar" class="form-select">
+                <option value="all">Semua Status</option>
+                <option value="Baru">Pasien Baru</option>
+                <option value="Lama">Pasien Lama</option>
+              </select>
+            </div>
+
+            <!-- Gender Filter -->
+            <div class="filter-group">
+              <label class="filter-label">GENDER</label>
+              <select v-model="filters.jk" class="form-select">
+                <option value="all">Semua Gender</option>
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+              </select>
+            </div>
+
+            <div class="filter-group d-flex align-items-end">
+              <button @click="loadData" class="btn-refresh-premium" :disabled="loading">
+                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+                Refresh
+              </button>
             </div>
           </div>
-
-          <!-- Status Filter -->
-          <div class="input-group-custom">
-            <span class="label">Status</span>
-            <select v-model="filters.status" class="form-select-custom">
-              <option value="all">Semua</option>
-              <option value="Ralan">Rawat Jalan</option>
-              <option value="Ranap">Rawat Inap</option>
-            </select>
-          </div>
-
-          <!-- Pasien Filter -->
-          <div class="input-group-custom">
-            <span class="label">Pasien</span>
-            <select v-model="filters.stts_daftar" class="form-select-custom">
-              <option value="all">Semua</option>
-              <option value="Baru">Baru</option>
-              <option value="Lama">Lama</option>
-            </select>
-          </div>
-
-          <!-- Gender Filter -->
-          <div class="input-group-custom">
-            <span class="label">Gender</span>
-            <select v-model="filters.jk" class="form-select-custom">
-              <option value="all">Semua</option>
-              <option value="L">Laki-laki</option>
-              <option value="P">Perempuan</option>
-            </select>
-          </div>
-
-          <button @click="loadData" class="btn-refresh" :disabled="loading">
-            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
-            Refresh
-          </button>
         </div>
+      </transition>
       </div>
     </div>
 
@@ -336,6 +350,8 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { penyakitReportService } from '@/services/laporan/penyakitReportService'
 
 const loading = ref(false)
+const isFilterVisible = ref(false)
+const isMobile = ref(false)
 const loadingModal = ref(false)
 const showModal = ref(false)
 const selectedDisease = ref(null)
@@ -437,7 +453,16 @@ const calculateMortalityRate = (item) => {
   return ((item.total_mati / item.total_kasus) * 100).toFixed(1)
 }
 
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 992
+  if (!isMobile.value) {
+    isFilterVisible.value = true
+  }
+}
+
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   loadData()
 })
 </script>
@@ -448,65 +473,183 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.page-title {
-  color: #1e293b;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.page-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+  padding: 3rem 2rem;
+  border-radius: 0 0 40px 40px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(30, 58, 138, 0.2);
+  margin: -1.5rem -1.5rem 2rem -1.5rem; /* Full width */
 }
 
-/* Filters */
-.input-group-custom {
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header-content {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
-.label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  margin-left: 4px;
+.page-title {
+  color: white !important;
+  font-weight: 800;
+  font-size: 1.85rem;
+  margin: 0;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.form-control-custom, .form-select-custom {
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #334155;
-  background-color: white;
-  transition: all 0.2s;
+.page-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  padding-left: 2.2rem;
 }
 
-.form-control-custom:focus, .form-select-custom:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.header-actions {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(15px) saturate(160%);
+  padding: 1.5rem 2.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 }
 
-.btn-refresh {
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #3b82f6;
+.btn-toggle-filter {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 1.25rem;
+  justify-content: center;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-refresh:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+.btn-toggle-filter:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.btn-refresh:disabled {
-  opacity: 0.7;
+/* Collapse Transition */
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: all 0.3s ease-out;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.filter-grid {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 0.35rem 0.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.date-separator {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.form-input, .form-select {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  background: #fff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-refresh-premium {
+  background: white;
+  color: #1e3a8a;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-refresh-premium:hover:not(:disabled) {
+  background: #fff;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.btn-refresh-premium:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-refresh-premium:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -868,5 +1011,91 @@ thead th {
 
 .stat-item i {
   color: #94a3b8;
+}
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+  .header-actions {
+    padding: 1.25rem;
+  }
+  .filter-grid {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-text {
+    text-align: center;
+  }
+  .page-subtitle {
+    padding-left: 0;
+  }
+  .filter-grid {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 3rem 1.25rem;
+    border-radius: 0 0 32px 32px;
+    margin: -1.5rem -1.25rem 2rem -1.25rem;
+  }
+
+  .header-actions {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .date-input-group {
+    flex-direction: column;
+    align-items: stretch;
+    background: transparent;
+    padding: 0;
+    border: none;
+    gap: 0.5rem;
+  }
+
+  .date-separator {
+    text-align: center;
+    color: white;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px;
+    border-radius: 4px;
+    width: fit-content;
+    margin: 0 auto;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .btn-refresh-premium {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .stat-card {
+    padding: 1.25rem;
+  }
 }
 </style>

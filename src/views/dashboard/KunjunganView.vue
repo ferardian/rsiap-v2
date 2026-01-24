@@ -4,16 +4,25 @@
     <div class="page-header">
       <div class="header-content">
         <div class="header-text">
-          <h1 class="page-title">📈 Dashboard Kunjungan</h1>
-          <p class="page-subtitle">Analisis data kunjungan pasien Rawat Jalan & Rawat Inap</p>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h1 class="page-title mb-0">
+                 <i class="fas fa-chart-line mr-2"></i>
+                 Dashboard Kunjungan
+            </h1>
+            <button @click="isFilterVisible = !isFilterVisible" class="btn-toggle-filter d-md-none">
+              <i class="fas" :class="isFilterVisible ? 'fa-chevron-up' : 'fa-filter'"></i>
+            </button>
+          </div>
+          <p class="page-subtitle mb-0">Analisis data kunjungan pasien Rawat Jalan & Rawat Inap</p>
         </div>
-        <div class="header-actions">
+        <transition name="collapse">
+          <div v-show="isFilterVisible || !isMobile" class="header-actions">
           <div class="filter-group">
             <div class="filter-item">
               <label>Periode</label>
               <div class="date-inputs">
                 <input type="date" v-model="filters.tgl_awal" @change="fetchData" class="form-input">
-                <span>sampai</span>
+                <span class="separator">sampai</span>
                 <input type="date" v-model="filters.tgl_akhir" @change="fetchData" class="form-input">
               </div>
             </div>
@@ -27,6 +36,7 @@
             </div>
           </div>
         </div>
+      </transition>
       </div>
     </div>
 
@@ -39,49 +49,63 @@
       <!-- Summary Cards -->
       <div class="stats-grid">
         <div class="stat-card total">
-          <div class="stat-icon">🏥</div>
+          <div class="stat-icon">
+               <i class="fas fa-hospital-user"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Total Kunjungan</span>
             <h3 class="stat-value">{{ summary.total }}</h3>
           </div>
         </div>
         <div class="stat-card new">
-          <div class="stat-icon">🆕</div>
+          <div class="stat-icon">
+               <i class="fas fa-user-plus"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Pasien Baru</span>
             <h3 class="stat-value">{{ summary.baru }} <small>({{ getPercentage(summary.baru, summary.total) }}%)</small></h3>
           </div>
         </div>
         <div class="stat-card old">
-          <div class="stat-icon">🔄</div>
+          <div class="stat-icon">
+               <i class="fas fa-user-check"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Pasien Lama</span>
             <h3 class="stat-value">{{ summary.lama }} <small>({{ getPercentage(summary.lama, summary.total) }}%)</small></h3>
           </div>
         </div>
         <div class="stat-card gender">
-          <div class="stat-icon">👫</div>
+          <div class="stat-icon">
+               <i class="fas fa-users-viewfinder"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Gender (L : P)</span>
             <h3 class="stat-value">{{ summary.pria }} : {{ summary.wanita }}</h3>
           </div>
         </div>
         <div class="stat-card keluar">
-          <div class="stat-icon">🏥</div>
+          <div class="stat-icon">
+               <i class="fas fa-door-open"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Keluar (Hidup + Mati)</span>
             <h3 class="stat-value">{{ summary.keluar_l + summary.keluar_p }} <small>(L:{{ summary.keluar_l }} P:{{ summary.keluar_p }})</small></h3>
           </div>
         </div>
         <div class="stat-card mati">
-          <div class="stat-icon">🥀</div>
+          <div class="stat-icon">
+               <i class="fas fa-skull"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Keluar Meninggal</span>
             <h3 class="stat-value">{{ summary.mati_l + summary.mati_p }} <small>(L:{{ summary.mati_l }} P:{{ summary.mati_p }})</small></h3>
           </div>
         </div>
         <div class="stat-card mati-long">
-          <div class="stat-icon">⏱️</div>
+          <div class="stat-icon">
+               <i class="fas fa-hourglass-end"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Meninggal >= 48 Jam</span>
             <h3 class="stat-value">{{ summary.mati_48_l + summary.mati_48_p }} <small>(L:{{ summary.mati_48_l }} P:{{ summary.mati_48_p }})</small></h3>
@@ -89,21 +113,27 @@
         </div>
         <!-- Inpatient Care Duration Stats (Only for Ranap) -->
         <div v-if="filters.status_lanjut === 'Ranap' && inpatientCare" class="stat-card care-days">
-          <div class="stat-icon">📅</div>
+          <div class="stat-icon">
+               <i class="fas fa-calendar-alt"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Jumlah Hari Perawatan</span>
             <h3 class="stat-value">{{ inpatientCare.hari_perawatan }} <small>hari</small></h3>
           </div>
         </div>
         <div v-if="filters.status_lanjut === 'Ranap' && inpatientCare" class="stat-card lama-inap">
-          <div class="stat-icon">🏥</div>
+          <div class="stat-icon">
+               <i class="fas fa-bed"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Jumlah Lama Dirawat</span>
             <h3 class="stat-value">{{ inpatientCare.lama_dirawat }} <small>hari</small></h3>
           </div>
         </div>
         <div v-if="filters.status_lanjut === 'Ranap' && inpatientCare" class="stat-card avg-stay">
-          <div class="stat-icon">⏱️</div>
+          <div class="stat-icon">
+               <i class="fas fa-history"></i>
+          </div>
           <div class="stat-info">
             <span class="stat-label">Rata-rata Lama Inap (ALOS)</span>
             <h3 class="stat-value">{{ inpatientCare.avg_lama_dirawat }} <small>hari/pasien</small></h3>
@@ -200,10 +230,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import dashboardVisitService from '../../services/dashboardVisitService'
 
 const loading = ref(true)
+const isFilterVisible = ref(false)
+const isMobile = ref(false)
 const summary = ref({ 
   total: 0, baru: 0, lama: 0, pria: 0, wanita: 0, 
   keluar_l: 0, keluar_p: 0, mati_l: 0, mati_p: 0,
@@ -247,8 +279,21 @@ const getData = (stts, jk) => {
      return item ? item.total : 0
 }
 
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 992
+  if (!isMobile.value) {
+    isFilterVisible.value = true
+  }
+}
+
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   fetchData()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
@@ -261,20 +306,48 @@ onMounted(() => {
 
 /* Header */
 .page-header {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-  padding: 2.5rem 2rem;
-  border-radius: 20px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+  padding: 3rem 2rem;
+  border-radius: 0 0 30px 30px;
   margin-bottom: 2rem;
   color: white;
+  position: relative;
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: -20px;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 40px;
+  transform: rotate(15deg);
+  pointer-events: none;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   flex-wrap: wrap;
   gap: 1.5rem;
+  padding: 0 1rem;
 }
 
 .page-title {
@@ -288,14 +361,54 @@ onMounted(() => {
   opacity: 0.9;
   font-size: 1rem;
   margin-top: 0.5rem;
+  padding-left: 2.2rem; /* Align with title text (skipping icon space) */
 }
 
 .header-actions {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 1.25rem;
-  border-radius: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(15px) saturate(160%);
+  padding: 1.5rem 2.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-filter {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-filter:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Collapse Transition */
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: all 0.3s ease-out;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .filter-group {
@@ -318,22 +431,32 @@ onMounted(() => {
   opacity: 0.8;
 }
 
-.date-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+.date-inputs .separator {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  opacity: 0.6;
+  color: white;
+  padding: 0 0.25rem;
 }
 
 .form-input, .form-select {
-  background: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
   font-size: 0.9rem;
   color: #1e293b;
-  font-weight: 600;
+  font-weight: 700;
   outline: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.form-input:focus, .form-select:focus {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* Stats Grid */
@@ -644,23 +767,34 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .page-header {
-    padding: 1.5rem 1.25rem;
-    border-radius: 0 0 20px 20px;
+    padding: 3rem 1.25rem;
+    border-radius: 0 0 32px 32px;
     margin-bottom: 1.5rem;
-    margin: -1.5rem -1rem 1.5rem -1rem; /* Full width on mobile */
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
+    margin: -1.5rem -1.25rem 1.5rem -1.25rem; /* Full width correction */
   }
 
   .page-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    padding-left: 0; /* Center alignment on mobile doesn't need icon offset */
+  }
+
+  .header-actions {
+    padding: 1rem;
+    width: 100%;
+    backdrop-filter: blur(15px);
+  }
+
+  .header-text {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.8rem;
   }
 
   .header-actions {
@@ -686,7 +820,8 @@ onMounted(() => {
   }
 
   .dashboard-content {
-    padding: 0 1rem;
+    padding: 0 1.25rem;
+    font-size: 0.9rem; /* Global scale reduction */
   }
 
   .stats-grid {
@@ -695,10 +830,11 @@ onMounted(() => {
   }
 
   .stat-card {
-    padding: 1rem;
+    padding: 0.75rem;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    border-radius: 12px;
   }
 
   .stat-icon {
@@ -713,7 +849,7 @@ onMounted(() => {
 
   .visuals-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   .full-width {
@@ -721,11 +857,49 @@ onMounted(() => {
   }
 
   .visual-card {
-    padding: 1.25rem 1rem;
+    padding: 0.85rem;
+    overflow: hidden;
+    border-radius: 12px;
   }
 
   .summary-item {
-    padding-right: 0.5rem;
+    padding-right: 1.25rem !important; /* Force right gutter */
+  }
+
+  .breakdown-item {
+    gap: 0.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .list-item {
+    margin-bottom: 0.75rem;
+  }
+
+  .item-label, .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .breakdown-item,
+  .list-item,
+  .doctor-row {
+    padding-right: 1.25rem; /* Larger gutter for bars */
+  }
+
+  .bar-container, 
+  .bar-container-mini,
+  .doc-bar-container {
+    width: 94% !important; /* Force a gap on the right */
+    height: 16px;
+  }
+
+  .bar-container .value {
+    font-size: 0.6rem;
+    right: 5px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
   }
 
   .poli-grid {
@@ -784,7 +958,7 @@ onMounted(() => {
 
   .doctor-row {
     gap: 0.75rem;
-    padding: 0.5rem 0.5rem 0.5rem 0;
+    padding: 0.5rem 0.75rem 0.5rem 0;
   }
 
   .doc-rank {

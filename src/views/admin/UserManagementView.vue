@@ -199,16 +199,23 @@
                   </span>
                 </td>
                 <td class="text-center">
-                  <div class="btn-group btn-group-sm">
+                  <div class="action-buttons">
                     <button
-                      class="btn btn-outline-primary"
+                      class="action-btn action-btn-primary"
                       @click="manageUserRoles(user)"
                       title="Manage Roles"
                     >
                       <i class="fas fa-user-shield"></i>
                     </button>
                     <button
-                      class="btn btn-outline-info"
+                      class="action-btn action-btn-warning"
+                      @click="openSetPasswordModal(user)"
+                      title="Set Password"
+                    >
+                      <i class="fas fa-key"></i>
+                    </button>
+                    <button
+                      class="action-btn action-btn-info"
                       @click="viewUserDetail(user)"
                       title="Detail"
                     >
@@ -431,6 +438,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Set Password Modal -->
+    <SetPasswordModal 
+      :show="showSetPasswordModal"
+      :user-id="selectedUserForPassword"
+      @close="showSetPasswordModal = false"
+      @saved="handlePasswordSaved"
+    />
   </div>
 </template>
 
@@ -439,6 +454,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoleStore } from '../../stores/role'
 import { useAuthStore } from '../../stores/auth'
 import { showToast } from '../../utils/notification'
+import SetPasswordModal from './components/SetPasswordModal.vue'
 
 const roleStore = useRoleStore()
 const authStore = useAuthStore()
@@ -472,6 +488,10 @@ const bulkAssign = ref({
 
 const selectAll = ref(false)
 const errors = ref({})
+
+// Set Password Modal State
+const showSetPasswordModal = ref(false)
+const selectedUserForPassword = ref(null)
 
 // Computed
 const filteredUsers = computed(() => {
@@ -753,6 +773,15 @@ const closeBulkAssignModal = () => {
 
 const viewUserDetail = (user) => {
   showToast(`Detail user: ${user.nama}`, 'info')
+}
+
+const openSetPasswordModal = (user) => {
+  selectedUserForPassword.value = user.nip
+  showSetPasswordModal.value = true
+}
+
+const handlePasswordSaved = () => {
+  showToast('Password berhasil diubah', 'success')
 }
 
 // Watch for bulkAssign.users changes
@@ -1392,6 +1421,79 @@ code {
     min-width: 46px;
     height: 42px;
     text-align: center;
+  }
+}
+
+/* Action Buttons Styling */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  padding: 0;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.action-btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.action-btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.action-btn-warning:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.action-btn-info {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+}
+
+.action-btn-info:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    gap: 0.375rem;
+  }
+  
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
   }
 }
 </style>

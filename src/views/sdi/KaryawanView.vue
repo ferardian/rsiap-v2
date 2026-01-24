@@ -145,6 +145,11 @@
         </button>
       </div>
 
+      <!-- Loading Detail Overlay -->
+      <div v-if="loadingDetail" class="detail-loading-overlay">
+        <div class="spinner"></div>
+      </div>
+
       <!-- Pegawai Form Modal -->
       <PegawaiFormModal 
         :show="showFormModal"
@@ -217,6 +222,7 @@ const tabs = [
 ]
 const activeTab = ref(route.query.tab || 'data-karyawan')
 const loading = ref(false)
+const loadingDetail = ref(false)
 const searchQuery = ref('')
 const pegawaiList = ref([])
 const pagination = ref({
@@ -300,7 +306,7 @@ const openAddModal = () => {
 }
 
 const openEditModal = async (pegawai) => {
-  loading.value = true
+  loadingDetail.value = true
   try {
     // Get full employee data for editing
     const response = await pegawaiService.getPegawaiById(pegawai.nip)
@@ -313,7 +319,7 @@ const openEditModal = async (pegawai) => {
     console.error('Error fetching employee detail:', error)
     toast.error('Gagal mengambil detail data karyawan')
   } finally {
-    loading.value = false
+    loadingDetail.value = false
   }
 }
 
@@ -967,5 +973,34 @@ onMounted(() => {
   .employee-name {
     max-width: 150px;
   }
+}
+
+/* Detail Loading Overlay */
+.detail-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

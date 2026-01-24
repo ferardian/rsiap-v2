@@ -157,9 +157,14 @@
                   </span>
                 </td>
                 <td class="px-3 py-3 text-end">
-                  <button class="btn btn-sm btn-light border" title="Lihat Detail" @click="openModal(item)">
-                    <i class="fas fa-eye text-secondary"></i>
-                  </button>
+                  <div class="d-flex justify-content-end gap-1">
+                    <button class="btn btn-sm btn-light border" title="Lihat Detail" @click="openModal(item)">
+                      <i class="fas fa-eye text-secondary"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light border" title="Menu Aksi" @click="openActionSheet(item)">
+                      <i class="fas fa-ellipsis-v text-secondary"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -709,8 +714,106 @@
 
       <div class="border-top my-1"></div>
       
-      <div class="context-menu-item text-danger" @click="closeContextMenu">
+       <div class="context-menu-item text-danger" @click="closeContextMenu">
         <i class="fas fa-times me-2"></i> Tutup
+      </div>
+    </div>
+
+    <!-- Mobile Action Sheet -->
+    <div v-if="showActionSheet" class="action-sheet-overlay" @click="closeActionSheet">
+      <div class="action-sheet-container animate__animated animate__slideInUp animate__faster" @click.stop>
+        <div class="action-sheet-header">
+          <div class="header-line"></div>
+          <div class="header-content">
+            <h6 class="mb-0 fw-bold">{{ selectedActionItem?.pasien?.nm_pasien }}</h6>
+            <p class="mb-0 text-muted small">{{ selectedActionItem?.no_rawat }}</p>
+          </div>
+          <button class="btn-close-sheet" @click="closeActionSheet">&times;</button>
+        </div>
+        
+        <div class="action-sheet-body">
+          <div class="action-item" @click="executeAction('detail')">
+            <div class="action-icon icon-blue">
+              <i class="fas fa-eye"></i>
+            </div>
+            <div class="action-label">Lihat Detail</div>
+          </div>
+          
+          <div class="action-item" @click="executeAction('billing')">
+            <div class="action-icon icon-green">
+              <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="action-label">Billing Pasien</div>
+          </div>
+
+          <div class="action-section-title">ERM / MEDIS</div>
+
+          <div class="action-item" @click="executeAction('erm-soap')">
+            <div class="action-icon icon-cyan">
+              <i class="fas fa-notes-medical"></i>
+            </div>
+            <div class="action-label">SOAP (CPPT)</div>
+          </div>
+
+          <div class="action-item" @click="executeAction('erm-asesmen')">
+            <div class="action-icon icon-purple">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <div class="action-label">Asesmen Medis</div>
+          </div>
+
+          <div class="action-item" @click="executeAction('erm-resume')">
+            <div class="action-icon icon-gray">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="action-label">Resume Medis</div>
+          </div>
+
+          <div class="action-section-title">PERMINTAAN</div>
+
+          <div class="action-item" @click="executeAction('req-operasi')">
+            <div class="action-icon icon-red">
+              <i class="fas fa-procedures"></i>
+            </div>
+            <div class="action-label">Jadwal Operasi</div>
+          </div>
+
+          <div class="action-item" @click="executeAction('req-lab')">
+            <div class="action-icon icon-info">
+              <i class="fas fa-flask"></i>
+            </div>
+            <div class="action-label">Pemeriksaan Lab</div>
+          </div>
+
+          <div class="action-item" @click="executeAction('req-rad')">
+            <div class="action-icon icon-dark">
+              <i class="fas fa-x-ray"></i>
+            </div>
+            <div class="action-label">Pemeriksaan Radiologi</div>
+          </div>
+
+          <div class="action-section-title">LAINNYA</div>
+
+          <div class="action-item" @click="executeAction('copyRawat')">
+            <div class="action-icon icon-light">
+              <i class="fas fa-copy"></i>
+            </div>
+            <div class="action-label">Salin No. Rawat</div>
+          </div>
+
+          <div class="action-item" @click="executeAction('copyRM')">
+            <div class="action-icon icon-light">
+              <i class="fas fa-id-card"></i>
+            </div>
+            <div class="action-label">Salin No. RM</div>
+          </div>
+        </div>
+        
+        <div class="action-sheet-footer">
+          <button class="btn btn-light w-100 py-3 fw-bold text-danger rounded-0 border-top mt-2" @click="closeActionSheet">
+            BATAL
+          </button>
+        </div>
       </div>
     </div>
     <!-- Booking Operasi Modal -->
@@ -1317,6 +1420,28 @@ const handleRightClick = async (e, item) => {
     contextMenu.x = Math.max(10, contextMenu.x)
     contextMenu.y = Math.max(10, contextMenu.y)
   }
+}
+
+
+// Mobile Action Sheet State
+const showActionSheet = ref(false)
+const selectedActionItem = ref(null)
+
+const openActionSheet = (item) => {
+  selectedActionItem.value = item
+  showActionSheet.value = true
+}
+
+const closeActionSheet = () => {
+  showActionSheet.value = false
+}
+
+const executeAction = async (action) => {
+  if (!selectedActionItem.value) return
+  
+  contextMenu.item = selectedActionItem.value
+  await handleContextAction(action)
+  showActionSheet.value = false
 }
 
 const closeContextMenu = () => {
@@ -1998,6 +2123,129 @@ onUnmounted(() => {
     width: 47px;
     right: 8px;
     top: 38px;
+  }
+}
+
+/* Mobile Action Sheet (Bottom Sheet) */
+.action-sheet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.action-sheet-container {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+}
+
+.action-sheet-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+  text-align: center;
+}
+
+.header-line {
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 0 auto 0.75rem;
+}
+
+.btn-close-sheet {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 1.25rem;
+  background: #f1f5f9;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.action-sheet-body {
+  overflow-y: auto;
+  padding: 0.5rem 1rem;
+}
+
+.action-section-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  padding: 1.25rem 0.5rem 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.75rem;
+  border-radius: 12px;
+  margin-bottom: 0.25rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.action-item:active {
+  background-color: #f1f5f9;
+  transform: scale(0.98);
+}
+
+.action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 1rem;
+}
+
+.action-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Action Icon Colors */
+.icon-blue { background-color: #eff6ff; color: #3b82f6; }
+.icon-green { background-color: #f0fdf4; color: #22c55e; }
+.icon-cyan { background-color: #ecfeff; color: #06b6d4; }
+.icon-purple { background-color: #faf5ff; color: #a855f7; }
+.icon-gray { background-color: #f8fafc; color: #64748b; }
+.icon-red { background-color: #fef2f2; color: #ef4444; }
+.icon-info { background-color: #e0f2fe; color: #0ea5e9; }
+.icon-dark { background-color: #f1f5f9; color: #334155; }
+.icon-light { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+@media (min-width: 768px) {
+  .action-sheet-container {
+    max-width: 400px;
+    margin-bottom: 2rem;
+    border-radius: 20px;
   }
 }
 </style>

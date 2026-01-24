@@ -156,6 +156,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/data-dokter',
+    name: 'DataDokter',
+    component: () => import('../views/sdi/DokterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/pengajuan-cuti',
     name: 'PengajuanCuti',
     component: () => import('../views/sdi/PengajuanCutiView.vue'),
@@ -297,6 +303,18 @@ const routes = [
     path: '/bpjs/antrol',
     name: 'BpjsAntrol',
     component: () => import('../views/bpjs/AntrolView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/hais',
+    name: 'LaporanHais',
+    component: () => import('../views/laporan/HaisLaporanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laboratorium/indikator',
+    name: 'LaboratoriumIndikator',
+    component: () => import('../views/laboratorium/LabIndicatorView.vue'),
     meta: { requiresAuth: true }
   },
   {
