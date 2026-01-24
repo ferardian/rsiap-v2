@@ -207,7 +207,7 @@
                     <button 
                       class="btn btn-bulk-sync" 
                       title="Sync Semua Task Sekaligus"
-                      @click="bulkSyncTask(item)"
+                      @click="openBulkSyncModal(item)"
                       :disabled="bulkSyncLoading === item.kodebooking || syncLoading === item.kodebooking"
                     >
                       <i class="fas" :class="bulkSyncLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
@@ -440,6 +440,84 @@
       </div>
     </div>
   </div>
+
+  <!-- Bulk Sync Confirmation Modal -->
+  <div v-if="showBulkSyncModal" class="modal-overlay" @click.self="closeBulkSyncModal">
+    <div class="bulk-sync-modal">
+      <div class="modal-header-gradient">
+        <div class="modal-icon">
+          <i class="fas fa-sync-alt fa-spin"></i>
+        </div>
+        <h3>Sinkronisasi Task Otomatis</h3>
+        <p class="modal-subtitle">Sistem akan menyinkronkan semua task ke BPJS Antrol</p>
+      </div>
+      
+      <div class="modal-body-content">
+        <div class="patient-info-card">
+          <div class="info-row">
+            <i class="fas fa-user"></i>
+            <div>
+              <span class="label">Nama Pasien</span>
+              <strong>{{ selectedBulkSyncItem?.namapasien }}</strong>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-id-card"></i>
+            <div>
+              <span class="label">No. Kartu BPJS</span>
+              <strong>{{ selectedBulkSyncItem?.nokapst }}</strong>
+            </div>
+          </div>
+          <div class="info-row">
+            <i class="fas fa-barcode"></i>
+            <div>
+              <span class="label">Kode Booking</span>
+              <strong>{{ selectedBulkSyncItem?.kodebooking }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="task-info-card">
+          <h4><i class="fas fa-tasks"></i> Task yang Akan Disinkronkan</h4>
+          <div class="task-list">
+            <div class="task-item">
+              <span class="task-number">3</span>
+              <span class="task-name">Mulai Pemeriksaan</span>
+            </div>
+            <div class="task-item">
+              <span class="task-number">4</span>
+              <span class="task-name">Estimasi Selesai</span>
+            </div>
+            <div class="task-item">
+              <span class="task-number">5</span>
+              <span class="task-name">Selesai Pemeriksaan</span>
+            </div>
+            <div class="task-item conditional">
+              <span class="task-number">6</span>
+              <span class="task-name">Racik Obat <small>(jika ada resep)</small></span>
+            </div>
+            <div class="task-item conditional">
+              <span class="task-number">7</span>
+              <span class="task-name">Serah Terima Obat <small>(jika ada resep)</small></span>
+            </div>
+          </div>
+          <div class="info-note">
+            <i class="fas fa-info-circle"></i>
+            <span>Sistem akan otomatis mendeteksi task yang tersedia di SIMRS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" @click="closeBulkSyncModal">
+          <i class="fas fa-times"></i> Batal
+        </button>
+        <button class="btn-confirm" @click="bulkSyncTask">
+          <i class="fas fa-check"></i> Ya, Sinkronkan Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -454,6 +532,8 @@ const antrolList = ref([])
 const taskLoading = ref(null)
 const syncLoading = ref(null)
 const bulkSyncLoading = ref(null)
+const showBulkSyncModal = ref(false)
+const selectedBulkSyncItem = ref(null)
 const taskList = ref([])
 const activeTaskListModal = ref(false)
 const activeAdjustmentModal = ref(false)
@@ -698,8 +778,21 @@ const closeAdjustmentModal = () => {
   selectedBooking.value = null
 }
 
-const bulkSyncTask = async (item) => {
-  if (!confirm('Sinkronisasi semua task (3-7 atau 3-5) untuk pasien ini ke BPJS Antrol?')) return
+const openBulkSyncModal = (item) => {
+  selectedBulkSyncItem.value = item
+  showBulkSyncModal.value = true
+}
+
+const closeBulkSyncModal = () => {
+  showBulkSyncModal.value = false
+  selectedBulkSyncItem.value = null
+}
+
+const bulkSyncTask = async () => {
+  const item = selectedBulkSyncItem.value
+  if (!item) return
+  
+  showBulkSyncModal.value = false
   
   bulkSyncLoading.value = item.kodebooking
   try {
@@ -1012,4 +1105,274 @@ onMounted(() => {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.bulk-sync-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 550px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.modal-header-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  padding: 32px 24px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.modal-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.modal-header-gradient h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.modal-subtitle {
+  margin: 0;
+  opacity: 0.95;
+  font-size: 14px;
+}
+
+.modal-body-content {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.patient-info-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-row i {
+  width: 36px;
+  height: 36px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.info-row > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-row .label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.info-row strong {
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.task-info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.task-info-card h4 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-info-card h4 i {
+  color: #2563eb;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.task-item:hover {
+  border-color: #2563eb;
+  transform: translateX(4px);
+}
+
+.task-item.conditional {
+  opacity: 0.7;
+}
+
+.task-number {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.task-item.conditional .task-number {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+.task-name {
+  flex: 1;
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.task-name small {
+  color: #64748b;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.info-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fef3c7;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.info-note i {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.modal-actions {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel {
+  background: white;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-cancel:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px) scale(0.95);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+  }
+}
+
 </style>
