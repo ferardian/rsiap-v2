@@ -78,7 +78,7 @@ export const useMenuStore = defineStore('menu', {
       this.error = null
 
       try {
-        const response = await menuService.getUserMenus()
+        const response = await menuService.getUserMenus({ platform: 'web' })
         this.userMenus = response.data || []
         return { success: true, data: this.userMenus }
       } catch (error) {

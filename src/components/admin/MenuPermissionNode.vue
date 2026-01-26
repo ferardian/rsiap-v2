@@ -4,6 +4,14 @@
       <div class="menu-info">
         <i :class="menuIcon" class="menu-toggle-icon"></i>
         <span class="menu-name">{{ menu.nama_menu }}</span>
+        <span 
+          v-if="menu.platform" 
+          class="badge-platform ms-2"
+          :class="menu.platform === 'mobile' ? 'platform-mobile' : 'platform-web'"
+        >
+          <i :class="menu.platform === 'mobile' ? 'fas fa-mobile-alt' : 'fas fa-desktop'"></i>
+          {{ menu.platform.toUpperCase() }}
+        </span>
       </div>
       <div class="menu-actions" @click.stop>
         <button 
@@ -148,6 +156,29 @@ const updatePermission = (key, value) => {
   font-weight: 600;
   color: #334155;
   font-size: 1rem;
+}
+
+.badge-platform {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.platform-web {
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #dbeafe;
+}
+
+.platform-mobile {
+  background: #f0fdf4;
+  color: #22c55e;
+  border: 1px solid #dcfce7;
 }
 
 .btn-select-all {

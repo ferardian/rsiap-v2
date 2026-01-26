@@ -14,8 +14,8 @@ export const menuService = {
   },
 
   // Get user menus based on their access level
-  async getUserMenus() {
-    const response = await api.get('/menu-management/user-menus')
+  async getUserMenus(params = {}) {
+    const response = await api.get('/menu-management/user-menus', { params })
     return response.data
   },
 

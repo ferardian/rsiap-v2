@@ -75,10 +75,25 @@
                 </div>
               </div>
             </div>
-            <div class="col-12 col-lg-3">
+            <div class="col-6 col-lg-2">
+              <div class="filter-group">
+                <label class="filter-label">
+                  <i class="fas fa-laptop-code"></i> Platform
+                </label>
+                <div class="select-wrapper">
+                  <select v-model="filterPlatform" class="form-select modern-select" @change="fetchMenus">
+                    <option value="">Semua</option>
+                    <option value="web">Web</option>
+                    <option value="mobile">Mobile</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-1">
               <div class="filter-actions">
-                <button class="btn-reset" @click="resetFilters">
-                  <i class="fas fa-sync-alt"></i> Reset
+                <button class="btn-reset w-100" @click="resetFilters">
+                  <i class="fas fa-sync-alt"></i>
                 </button>
               </div>
             </div>
@@ -119,6 +134,7 @@
                 </th>
                 <th>Icon</th>
                 <th>Route</th>
+                <th>Platform</th>
                 <th>Parent</th>
                 <th>Status</th>
                 <th class="text-center">Aksi</th>
@@ -137,6 +153,11 @@
                 </td>
                 <td><span class="menu-icon">{{ menu.icon }}</span></td>
                 <td><code class="text-muted">{{ menu.route || '-' }}</code></td>
+                <td>
+                  <span :class="['badge rounded-pill', menu.platform === 'mobile' ? 'bg-indigo' : 'bg-blue']">
+                    {{ menu.platform === 'mobile' ? '📱 Mobile' : '💻 Web' }}
+                  </span>
+                </td>
                 <td>{{ menu.parent?.nama_menu || '-' }}</td>
                 <td>
                   <span :class="['badge', menu.is_active ? 'bg-success' : 'bg-danger']">
@@ -218,7 +239,7 @@
           </button>
         </div>
 
-        <div class="sidebar-body">
+        <div class="sidebar-body" ref="sidebarBody">
           <form @submit.prevent="saveMenu">
             <div class="form-group">
               <label class="form-label">Nama Menu *</label>
@@ -302,6 +323,18 @@
             </div>
 
             <div class="form-group">
+              <label class="form-label">Platform *</label>
+              <div class="select-wrapper">
+                <select v-model="formData.platform" class="form-select" required>
+                  <option value="web">Web</option>
+                  <option value="mobile">Mobile</option>
+                </select>
+                <i class="fas fa-laptop-code select-icon"></i>
+              </div>
+              <div class="form-help">Pilih target platform untuk menu ini</div>
+            </div>
+
+            <div class="form-group">
               <label class="form-label">Status</label>
               <div class="toggle-group">
                 <div class="toggle-switch" :class="{ active: formData.is_active }" @click="toggleStatus">
@@ -375,6 +408,7 @@ import { useMenuStore } from '../../stores/menu'
 import { showToast } from '../../utils/notification'
 
 const menuStore = useMenuStore()
+const sidebarBody = ref(null)
 
 // Responsiveness
 const isMobile = ref(false)
@@ -388,6 +422,7 @@ const checkMobile = () => {
 const searchQuery = ref('')
 const filterActive = ref('')
 const filterParent = ref('')
+const filterPlatform = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const sortField = ref('urutan')
@@ -405,7 +440,8 @@ const formData = ref({
   route: '',
   parent_id: null,
   urutan: 1,
-  is_active: true
+  is_active: true,
+  platform: 'web'
 })
 
 const errors = ref({})
@@ -432,9 +468,17 @@ const filteredMenus = computed(() => {
   // Filter by parent
   if (filterParent.value !== '') {
     menus = menus.filter(menu => menu.parent_id === filterParent.value)
-  } else if (filterParent.value === '') {
-    // Filter main menus only
-    menus = menus.filter(menu => menu.parent_id === null)
+  } else {
+    // Show only main menus if no parent filter is applied (default state)
+    // Only apply if search query is empty to avoid hiding searched sub-menus
+    if (!searchQuery.value) {
+      menus = menus.filter(menu => menu.parent_id === null)
+    }
+  }
+
+  // Filter by platform
+  if (filterPlatform.value !== '') {
+    menus = menus.filter(menu => menu.platform === filterPlatform.value)
   }
 
   // Sort
@@ -521,6 +565,7 @@ const resetFilters = () => {
   searchQuery.value = ''
   filterActive.value = ''
   filterParent.value = ''
+  filterPlatform.value = ''
   currentPage.value = 1
 }
 
@@ -541,7 +586,8 @@ const closeModal = () => {
     route: '',
     parent_id: null,
     urutan: 1,
-    is_active: true
+    is_active: true,
+    platform: 'web'
   }
   errors.value = {}
 }
@@ -618,7 +664,9 @@ const deleteMenu = async () => {
 }
 
 const toggleStatus = () => {
-  formData.value.is_active = !formData.value.is_active
+  // Ensure we strictly use booleans for the switch
+  const isActive = formData.value.is_active;
+  formData.value.is_active = !(isActive === true || isActive == 1);
 }
 
 const viewMenuPermissions = (menu) => {
@@ -627,7 +675,7 @@ const viewMenuPermissions = (menu) => {
 }
 
 // Watch for filter changes to reset pagination
-watch([filterActive, filterParent], () => {
+watch([filterActive, filterParent, filterPlatform], () => {
   currentPage.value = 1
 })
 
@@ -640,6 +688,17 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+})
+
+// Watch for modal opening to scroll to top
+watch(showCreateModal, (val) => {
+  if (val) {
+    setTimeout(() => {
+      if (sidebarBody.value) {
+        sidebarBody.value.scrollTop = 0
+      }
+    }, 50)
+  }
 })
 </script>
 
@@ -731,7 +790,7 @@ onUnmounted(() => {
 }
 
 .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   color: white;
   border-radius: 12px 12px 0 0;
   border: none;
@@ -754,7 +813,7 @@ onUnmounted(() => {
   content: '';
   width: 2px;
   height: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   border-radius: 2px;
 }
 
@@ -925,7 +984,7 @@ onUnmounted(() => {
 .modal-header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   padding: 1.5rem 2rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   color: white;
   border-radius: 1.25rem 1.25rem 0 0;
   position: relative;
@@ -1040,6 +1099,16 @@ onUnmounted(() => {
 
 .bg-info {
   background: #06b6d4 !important;
+}
+
+.bg-indigo {
+  background: #6366f1 !important;
+  color: white;
+}
+
+.bg-blue {
+  background: #3b82f6 !important;
+  color: white;
 }
 
 .text-muted {
@@ -1178,6 +1247,134 @@ onUnmounted(() => {
   cursor: pointer;
   user-select: none;
   font-size: 0.95rem;
+}
+
+/* Sidebar Form Styles */
+.sidebar-form {
+  position: fixed;
+  top: 0;
+  right: -450px;
+  width: 450px;
+  height: 100vh;
+  background: white;
+  z-index: 1050;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+  border-left: 1px solid #e2e8f0;
+}
+
+.sidebar-form.active {
+  right: 0;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar-header {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.btn-sidebar-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.btn-sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.sidebar-body {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.sidebar-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 1rem;
+  background: white;
+  flex-shrink: 0;
+}
+
+/* Toggle Switch Styles */
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  background-color: #cbd5e1;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e2e8f0;
+}
+
+.toggle-switch.active {
+  background-color: #10b981;
+  border-color: #059669;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(24px);
+}
+
+.toggle-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.3s ease;
+}
+
+.toggle-switch.active + .toggle-label {
+  color: #10b981;
 }
 
 /* Animations */
