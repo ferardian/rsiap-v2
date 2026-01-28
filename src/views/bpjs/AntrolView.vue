@@ -145,22 +145,22 @@
             <thead>
               <tr>
                 <th>Antrean</th>
-                <th>Kartu & Pasien</th>
-                <th>Poli & Jam</th>
+                <th>Pasien & Kartu</th>
+                <th>Poli & Dokter</th>
                 <th>Status</th>
                 <th>Sumber & Estimasi</th>
                 <th class="text-center">Aksi</th>
               </tr>
-</thead>
+            </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="5" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                   <div class="spinner-border text-primary spinner-sm"></div>
                   <p class="mt-2 text-muted">Memuat data dari BPJS Antrol...</p>
                 </td>
               </tr>
               <tr v-else-if="filteredAntrol.length === 0">
-                <td colspan="5" class="text-center py-5 text-muted">
+                <td colspan="6" class="text-center py-5 text-muted">
                   <i class="fas fa-folder-open fa-3x mb-3 text-light"></i>
                   <p>Tidak ada data antrean untuk tanggal terpilih.</p>
                 </td>
@@ -171,12 +171,16 @@
                   <small class="text-muted d-block mt-1">{{ item.kodebooking }}</small>
                 </td>
                 <td>
-                  <div class="fw-bold text-dark">{{ item.nokapst }}</div>
+                  <div class="fw-bold text-dark">{{ item.nama_pasien || '-' }}</div>
+                  <div class="small text-muted mb-1">{{ item.nokapst }}</div>
                   <div class="small text-muted">RM: {{ item.norekammedis || '-' }}</div>
                 </td>
                 <td>
                   <div class="fw-bold">{{ item.kodepoli }}</div>
-                  <div class="small text-muted text-truncate" style="max-width: 200px;">Jam: {{ item.jampraktek }}</div>
+                  <div class="small text-primary mb-1">{{ item.nama_dokter || '-' }}</div>
+                  <div class="small text-muted text-truncate" style="max-width: 200px;">
+                    <i class="far fa-clock me-1"></i>{{ item.jampraktek }}
+                  </div>
                 </td>
                 <td>
                   <span class="badge-status" :class="getStatusClass(item.status)">
