@@ -167,7 +167,7 @@
             </div>
             <div class="form-group mb-4">
               <label class="form-label fw-bold">Tentukan Prioritas</label>
-              <div class="prio-selector">
+              <div class="prio-selector mb-3">
                 <div 
                   v-for="p in priorities" 
                   :key="p.id" 
@@ -179,6 +179,24 @@
                   <span>{{ p.label }}</span>
                 </div>
               </div>
+
+              <label class="form-label fw-bold">Tugaskan Teknisi (Opsional)</label>
+              <v-select
+                v-model="ticketFormData.nik_teknisi"
+                :options="technicians"
+                :reduce="t => t.nik"
+                label="nama"
+                placeholder="Pilih teknisi untuk langsung proses..."
+                class="premium-v-select"
+              >
+                <template #no-options="{ search, searching }">
+                  <template v-if="searching">
+                    Tidak ditemukan teknisi dengan nama "<em>{{ search }}</em>".
+                  </template>
+                  <em v-else>Ketik untuk mencari teknisi...</em>
+                </template>
+              </v-select>
+              <small class="text-muted fst-italic">*Jika teknisi dipilih, status otomatis menjadi <strong>PROSES</strong> (Response Time tercatat).</small>
             </div>
           </div>
           <div class="modal-footer border-0 pt-0">
@@ -320,7 +338,8 @@ const logFilters = reactive({
 
 const selectedLog = ref(null)
 const ticketFormData = reactive({
-  prioritas: 'Medium'
+  prioritas: 'Medium',
+  nik_teknisi: null
 })
 
 const manageTicketData = reactive({
@@ -380,6 +399,7 @@ const handleLogSearch = () => {
 const openTicketModal = (log) => {
   selectedLog.value = log
   ticketFormData.prioritas = 'Medium'
+  ticketFormData.nik_teknisi = null
   const modal = new bootstrap.Modal(document.getElementById('createTicketModal'))
   modal.show()
 }
@@ -389,7 +409,8 @@ const submitTicket = async () => {
   try {
     const payload = {
       temp_log_id: selectedLog.value.id,
-      prioritas: ticketFormData.prioritas
+      prioritas: ticketFormData.prioritas,
+      nik_teknisi: ticketFormData.nik_teknisi
     }
     const response = await helpdeskService.createTicketFromLog(payload)
     if (response.data.success) {
