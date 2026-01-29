@@ -43,8 +43,9 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Jangan redirect jika error berasal dari endpoint login (biarkan UI menangani)
-      if (error.config.url.includes('auth/login')) {
+      // Jangan redirect jika error berasal dari endpoint login atau reset password (biarkan UI menangani)
+      const excludeUrls = ['auth/login', 'auth/forgot-password', 'auth/change-password']
+      if (excludeUrls.some((url) => error.config.url.includes(url))) {
         return Promise.reject(error)
       }
 
