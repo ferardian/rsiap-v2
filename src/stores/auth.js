@@ -152,6 +152,25 @@ export const useAuthStore = defineStore('auth', {
     // Clear error
     clearError() {
       this.error = null
+    },
+
+    // Refresh current user data from server
+    async refreshUserData() {
+      try {
+        const userDetail = await authService.getUserDetail()
+        this.user = userDetail
+        localStorage.setItem('user', JSON.stringify(userDetail))
+        return { success: true, data: userDetail }
+      } catch (error) {
+        console.error('Failed to refresh user data:', error)
+        return { success: false, error }
+      }
+    },
+
+    // Handle email update (e.g., after a successful email change)
+    async handleUpdateEmail() {
+      // After a successful email update, refresh user data to reflect the change
+      await this.refreshUserData()
     }
   }
 })

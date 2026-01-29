@@ -23,6 +23,22 @@
             <div class="session-info">Sesi aktif</div>
           </div>
         </div>
+
+        <!-- Personal Alert: If email is missing/invalid -->
+        <div v-if="isEmailInvalid" class="personal-alert mt-4 animate-fade-in-down">
+          <div class="personal-alert-card">
+            <div class="personal-alert-icon">
+              <i class="fas fa-envelope-open-text"></i>
+            </div>
+            <div class="personal-alert-content">
+              <strong>Email Belum Valid!</strong>
+              <span>Email Anda belum terdaftar atau format tidak sesuai. Mohon lengkapi di menu profil.</span>
+            </div>
+            <router-link to="/profil" class="btn-fix-email">
+              Lengkapi Sekarang
+            </router-link>
+          </div>
+        </div>
       </section>
 
       <!-- Statistics Cards -->
@@ -142,6 +158,7 @@
 
       <!-- Dynamic Menu & Recent Activities -->
       <section class="dashboard-sections">
+
         <!-- Quick Stats Cards -->
         <div class="quick-stats-section">
           <h3>📊 Statistik Rumah Sakit</h3>
@@ -379,6 +396,7 @@ import RoleManagementModal from '../components/RoleManagementModal.vue'
 import UserManagementModal from '../components/UserManagementModal.vue'
 import departemenService from '../services/departemenService'
 import dashboardService from '../services/dashboardService'
+import { pegawaiService } from '../services/pegawaiService'
 
 
 const router = useRouter()
@@ -505,6 +523,13 @@ const getWelcomeMessage = computed(() => {
   return 'Selamat malam! Jangan lupa istirahat.'
 })
 
+const isEmailInvalid = computed(() => {
+  const email = authStore.user?.data?.detail?.email_resmi || authStore.user?.detail?.email_resmi || null
+  if (!email || email === '-' || email === '') return true
+  const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+  return !regex.test(email)
+})
+
 // Methods
 const fetchDepartmentName = async () => {
   const depCode = authStore.user?.data?.detail?.departemen
@@ -571,6 +596,20 @@ const fetchCodeBlueSchedule = async () => {
     codeBlueSchedule.value = response.data.data
   } catch (error) {
     console.error('Error fetching code blue schedule:', error)
+  }
+}
+
+const fetchPegawaiTanpaEmail = async () => {
+  loadingTanpaEmail.value = true
+  try {
+    const response = await pegawaiService.getPegawaiTanpaEmail()
+    if (response.data && response.data.success) {
+      pegawaiTanpaEmail.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching pegawai tanpa email:', error)
+  } finally {
+    loadingTanpaEmail.value = false
   }
 }
 
@@ -657,6 +696,7 @@ const toggleAutoReload = () => {
 
 // Lifecycle hooks
 onMounted(() => {
+  authStore.refreshUserData()
   updateDateTime()
   timeInterval.value = setInterval(updateDateTime, 1000)
   fetchDashboardStats() // Initial load (defaults to today in backend if no params, or we can explicit pass today)
@@ -678,6 +718,174 @@ onUnmounted(() => {
 /* Dashboard layout */
 .dashboard-page {
   width: 100%;
+}
+
+/* Alert Section */
+.alert-section {
+  margin-top: 1rem;
+}
+
+.alert-card.warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.alert-icon {
+  width: 48px;
+  height: 48px;
+  background: #fef3c7;
+  color: #d97706;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.alert-title h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+}
+
+.alert-title p {
+  font-size: 0.875rem;
+  color: #b45309;
+  margin: 0.25rem 0 0 0;
+}
+
+.btn-toggle-alert {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #fcd34d;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-alert:hover {
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border-color: #f59e0b;
+}
+
+.table-container-minimal {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #fde68a;
+}
+
+.alert-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.alert-table th {
+  background: #fff9db;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #b45309;
+  font-weight: 700;
+  border-bottom: 1px solid #fde68a;
+}
+
+.alert-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #fef3c7;
+  font-size: 0.875rem;
+}
+
+.alert-table tr:last-child td {
+  border-bottom: none;
+}
+
+.email-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.email-badge.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.email-badge.invalid {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Personal Email Alert */
+.personal-alert-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #fff4e6;
+  border: 1px solid #ffd8a8;
+  border-radius: 12px;
+  color: #d9480f;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.personal-alert-icon {
+  font-size: 1.5rem;
+  color: #f76707;
+  flex-shrink: 0;
+}
+
+.personal-alert-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.personal-alert-content strong {
+  font-size: 1rem;
+  margin-bottom: 0.125rem;
+}
+
+.personal-alert-content span {
+  font-size: 0.85rem;
+  color: #862e08;
+}
+
+.btn-fix-email {
+  padding: 0.5rem 1rem;
+  background: #f76707;
+  color: white !important;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-fix-email:hover {
+  background: #e8590c;
 }
 
 /* Welcome Section */

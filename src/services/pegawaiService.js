@@ -109,5 +109,26 @@ export const pegawaiService = {
 
     getMaster(resource, params = {}) {
         return api.post(`/sdi/master/${resource}/search`, params)
+    },
+
+    /**
+     * Get list of employees without email registration
+     */
+    getPegawaiTanpaEmail() {
+        return api.get('/sdi/pegawai/tanpa-email')
+    },
+
+    /**
+     * Update employee email
+     */
+    updateEmail(nik, email) {
+        return api.post('/sdi/pegawai/update-email', { nik, email })
+    },
+
+    /**
+     * Update employee profile (email, alamat, no_telp)
+     */
+    updateProfile(data) {
+        return api.post('/sdi/pegawai/update-profile', data)
     }
 }

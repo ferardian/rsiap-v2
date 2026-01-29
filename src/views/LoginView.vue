@@ -95,9 +95,9 @@
               <strong>Info:</strong> Gunakan username dan password yang telah terdaftar
             </p>
             <div class="help-links">
-              <a href="#" class="help-link" @click.prevent>
+              <router-link to="/forgot-password" class="help-link">
                 Lupa password?
-              </a>
+              </router-link>
               <span class="separator">•</span>
               <a href="#" class="help-link" @click.prevent>
                 Bantuan IT

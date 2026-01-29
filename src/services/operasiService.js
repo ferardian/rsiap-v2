@@ -31,6 +31,9 @@ export default {
     storeLaporan(data) {
         return api.post('/operasi/laporan', data)
     },
+    deleteLaporan(params) {
+        return api.delete('/operasi/laporan', { params })
+    },
     getDokter() {
         return api.get('/operasi/dokter')
     },

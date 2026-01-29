@@ -35,6 +35,57 @@
 
     <!-- Tab Content -->
     <div v-if="activeTab === 'data-karyawan'">
+      <!-- Alert Section: Pegawai Tanpa Email -->
+      <section v-if="pegawaiTanpaEmail.length > 0 && activeTab === 'data-karyawan'" class="alert-section mb-4">
+        <div class="alert-card warning">
+          <div class="alert-header">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-title">
+              <h3>Data Email Pegawai Bermasalah</h3>
+              <p>Terdapat {{ pegawaiTanpaEmail.length }} pegawai dengan email belum terdaftar atau format tidak valid.</p>
+            </div>
+            <button @click="showAllTanpaEmail = !showAllTanpaEmail" class="btn-toggle-alert">
+              <i :class="showAllTanpaEmail ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+              <span>{{ showAllTanpaEmail ? 'Sembunyikan' : 'Lihat Detail' }}</span>
+            </button>
+          </div>
+          
+          <div v-show="showAllTanpaEmail" class="alert-body mt-4">
+            <div class="table-container-minimal">
+              <table class="alert-table">
+                <thead>
+                  <tr>
+                    <th class="ps-4">NIK</th>
+                    <th>Nama Pegawai</th>
+                    <th>Departemen/Unit</th>
+                    <th class="pe-4">Status Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="emp in pegawaiTanpaEmail" :key="emp.nik">
+                    <td class="ps-4"><code>{{ emp.nik }}</code></td>
+                    <td class="fw-medium">{{ emp.nama }}</td>
+                    <td class="text-muted">{{ emp.departemen }}</td>
+                    <td class="pe-4">
+                      <span 
+                        :class="['email-badge', emp.email === '(Belum Terdaftar)' ? 'missing' : 'invalid']"
+                        @click="openUpdateEmailModal(emp)"
+                        style="cursor: pointer;"
+                        title="Klik untuk update email"
+                      >
+                        {{ emp.email }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
         <i class="fas fa-spinner fa-spin"></i>
@@ -159,6 +210,44 @@
         @saved="loadPegawai"
       />
 
+      <!-- Update Email Modal -->
+      <div v-if="showUpdateEmailModal" class="modal-overlay" @click="showUpdateEmailModal = false">
+        <div class="modal-content small" @click.stop>
+          <div class="modal-header">
+            <h3>Update Email Pegawai</h3>
+            <button class="btn-close" @click="showUpdateEmailModal = false">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="employee-info-mini mb-4">
+              <span class="label">Nama Karyawan:</span>
+              <span class="value">{{ selectedNamaForEmail }}</span>
+            </div>
+            <div class="form-group mb-4">
+              <label for="update-email">Alamat Email Baru</label>
+              <input 
+                id="update-email"
+                v-model="emailToUpdate" 
+                type="email" 
+                class="form-control" 
+                placeholder="contoh@rsiaaisyiyah.com"
+                @keyup.enter="handleUpdateEmail"
+              >
+              <small class="text-muted">Pastikan format email sudah benar.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="showUpdateEmailModal = false">Batal</button>
+            <button class="btn-confirm" @click="handleUpdateEmail" :disabled="submittingEmail">
+              <i v-if="submittingEmail" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-save"></i>
+              Simpan Email
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Delete Confirmation Modal -->
       <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
         <div class="modal-content" @click.stop>
@@ -235,6 +324,14 @@ const showDeleteModal = ref(false)
 const showFormModal = ref(false)
 const isEditMode = ref(false)
 const selectedPegawai = ref(null)
+const pegawaiTanpaEmail = ref([])
+const showAllTanpaEmail = ref(false)
+const loadingTanpaEmail = ref(false)
+const showUpdateEmailModal = ref(false)
+const emailToUpdate = ref('')
+const selectedNikForEmail = ref('')
+const selectedNamaForEmail = ref('')
+const submittingEmail = ref(false)
 
 // Computed - Permissions
 // MENU_ID 23 is for 'Data Karyawan'
@@ -297,6 +394,62 @@ const handleSearch = async () => {
 
 const changePage = (page) => {
   loadPegawai(page)
+}
+
+const fetchPegawaiTanpaEmail = async () => {
+  loadingTanpaEmail.value = true
+  try {
+    const response = await pegawaiService.getPegawaiTanpaEmail()
+    if (response.data && response.data.success) {
+      pegawaiTanpaEmail.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching pegawai tanpa email:', error)
+  } finally {
+    loadingTanpaEmail.value = false
+  }
+}
+
+const openUpdateEmailModal = (emp) => {
+  selectedNikForEmail.value = emp.nik
+  selectedNamaForEmail.value = emp.nama
+  emailToUpdate.value = emp.email === '(Belum Terdaftar)' ? '' : emp.email
+  showUpdateEmailModal.value = true
+}
+
+const handleUpdateEmail = async () => {
+  if (!emailToUpdate.value) {
+    toast.error('Email tidak boleh kosong')
+    return
+  }
+  
+  // Basic validation
+  const regex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+  if (!regex.test(emailToUpdate.value)) {
+    toast.error('Format email tidak valid')
+    return
+  }
+
+  submittingEmail.value = true
+  try {
+    const response = await pegawaiService.updateEmail(selectedNikForEmail.value, emailToUpdate.value)
+    if (response.data.success) {
+      toast.success('Email berhasil diperbarui')
+      showUpdateEmailModal.value = false
+      fetchPegawaiTanpaEmail() // Refresh the problematic list
+
+      // Refresh logged-in user data if the NIK matches
+      const currentUserNip = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik
+      if (selectedNikForEmail.value === currentUserNip) {
+        authStore.refreshUserData()
+      }
+    }
+  } catch (error) {
+    console.error('Error updating email:', error)
+    toast.error(error.response?.data?.message || 'Gagal memperbarui email')
+  } finally {
+    submittingEmail.value = false
+  }
 }
 
 const openAddModal = () => {
@@ -409,6 +562,7 @@ const getInitials = (name) => {
 // Lifecycle
 onMounted(() => {
   loadPegawai()
+  fetchPegawaiTanpaEmail()
 })
 </script>
 
@@ -975,6 +1129,78 @@ onMounted(() => {
   }
 }
 
+/* Modal Enhancements */
+.modal-content.small {
+  max-width: 450px;
+}
+
+.employee-info-mini {
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.employee-info-mini .label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.employee-info-mini .value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-confirm {
+  padding: 0.625rem 1.25rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-confirm:hover {
+  background: #2563eb;
+}
+
+.btn-confirm:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Detail Loading Overlay */
 .detail-loading-overlay {
   position: fixed;
@@ -1002,5 +1228,118 @@ onMounted(() => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Email Alert Styles */
+.alert-card.warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.alert-icon {
+  width: 48px;
+  height: 48px;
+  background: #fef3c7;
+  color: #d97706;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.alert-title h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+}
+
+.alert-title p {
+  font-size: 0.875rem;
+  color: #b45309;
+  margin: 0.25rem 0 0 0;
+}
+
+.btn-toggle-alert {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #fcd34d;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-alert:hover {
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border-color: #f59e0b;
+}
+
+.table-container-minimal {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #fde68a;
+}
+
+.alert-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.alert-table th {
+  background: #fff9db;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #b45309;
+  font-weight: 700;
+  border-bottom: 1px solid #fde68a;
+}
+
+.alert-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #fef3c7;
+  font-size: 0.875rem;
+}
+
+.alert-table tr:last-child td {
+  border-bottom: none;
+}
+
+.email-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.email-badge.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.email-badge.invalid {
+  background: #fef3c7;
+  color: #92400e;
 }
 </style>

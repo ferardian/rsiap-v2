@@ -67,6 +67,9 @@
                          <button class="btn btn-sm btn-outline-warning" @click="onEdit(item)" title="Edit Laporan">
                             <i class="fas fa-edit"></i> Edit
                          </button>
+                         <button v-if="canDelete" class="btn btn-sm btn-outline-danger" @click="onDelete(item)" title="Hapus Laporan">
+                            <i class="fas fa-trash"></i> Hapus
+                         </button>
                       </div>
                    </td>
                 </tr>
@@ -108,12 +111,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/auth'
+import { useMenuStore } from '@/stores/menu'
 import operasiService from '@/services/operasiService'
 import LaporanOperasiModal from '@/components/pemeriksaan/LaporanOperasiModal.vue'
+import Swal from 'sweetalert2'
 
 const toast = useToast()
+const route = useRoute()
+const authStore = useAuthStore()
+const menuStore = useMenuStore()
 
 // State
 const items = ref([])
@@ -127,6 +137,29 @@ const filters = reactive({
   end: ''
 })
 const pagination = ref({})
+
+// Permissions
+const currentMenu = computed(() => {
+  const findMenuByRoute = (menus, path) => {
+    for (const menu of menus) {
+      if (menu.route === path) return menu
+      if (menu.children) {
+        const found = findMenuByRoute(menu.children, path)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  return findMenuByRoute(menuStore.userMenus, route.path)
+})
+
+const canDelete = computed(() => {
+  // Super admin check
+  if (authStore.user?.data?.detail?.jbtn?.toLowerCase().includes('admin')) {
+    return true
+  }
+  return currentMenu.value ? Boolean(currentMenu.value.can_delete) : false
+})
 
 const dokterList = ref([])
 const pegawaiList = ref([])
@@ -247,6 +280,39 @@ const onEdit = (item) => {
 const onDetail = (item) => {
     isReadonly.value = true
     openModal(item)
+}
+
+const onDelete = async (item) => {
+    const result = await Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: "Laporan operasi yang dihapus tidak dapat dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    })
+
+    if (result.isConfirmed) {
+        try {
+            const params = {
+                no_rawat: item.no_rawat,
+                kode_paket: item.kode_paket,
+                tgl_operasi: item.tgl_operasi
+            }
+            const response = await operasiService.deleteLaporan(params)
+            if (response.data.success) {
+                toast.success('Laporan operasi berhasil dihapus')
+                fetchData(pagination.value.current_page)
+            } else {
+                toast.error(response.data.message || 'Gagal menghapus laporan')
+            }
+        } catch (e) {
+            console.error("Delete failed", e)
+            toast.error(e.response?.data?.message || 'Gagal menghapus laporan operasi')
+        }
+    }
 }
 
 const openModal = (item) => {

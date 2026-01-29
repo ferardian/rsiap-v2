@@ -13,6 +13,18 @@ const routes = [
     meta: { requiresGuest: true }
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/auth/ForgotPasswordView.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/change-password',
+    name: 'ChangePassword',
+    component: () => import('../views/auth/ChangePasswordView.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
     path: '/dashboard',
     redirect: '/dashboard/overview'
   },
@@ -321,6 +333,12 @@ const routes = [
     path: '/laporan/penyakit',
     name: 'Top10Penyakit',
     component: () => import('../views/laporan/PenyakitReportView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profil',
+    name: 'Profile',
+    component: () => import('../views/ProfileView.vue'),
     meta: { requiresAuth: true }
   },
 ]

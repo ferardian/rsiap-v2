@@ -95,5 +95,34 @@ export const authService = {
   // Get token
   getToken() {
     return localStorage.getItem('access_token')
+  },
+
+  // Forgot Password Features
+  async getCaptcha() {
+    try {
+      const response = await api.get('/user/auth/captcha')
+      return response.data
+    } catch (error) {
+      console.error('Captcha error:', error)
+      throw error
+    }
+  },
+
+  async forgotPassword(data) {
+    try {
+      const response = await api.post('/user/auth/forgot-password', data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async changePassword(data) {
+    try {
+      const response = await api.post('/user/auth/change-password', data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
