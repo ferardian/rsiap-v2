@@ -42,6 +42,7 @@
               :reduce="role => role.id_role"
               placeholder="Semua Role"
               class="modern-v-select"
+              teleport="body"
               @update:modelValue="fetchUsers"
             />
           </div>
@@ -58,6 +59,7 @@
               :reduce="status => status.value"
               placeholder="Pilih Status"
               class="modern-v-select"
+              teleport="body"
               @update:modelValue="fetchUsers"
             />
           </div>
@@ -378,14 +380,28 @@
                 placeholder="-- Pilih Role --"
                 class="modern-v-select"
                 :class="{ 'is-invalid': errors.role_id }"
+                teleport="body"
               />
               <div v-if="errors.role_id" class="error-feedback">
                 {{ errors.role_id }}
               </div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Filter Jabatan</label>
+              <v-select
+                v-model="bulkAssignJabatanFilter"
+                :options="uniqueJabatanList"
+                label="label"
+                :reduce="item => item.value"
+                placeholder="Semua Jabatan"
+                class="modern-v-select"
+                teleport="body"
+              />
+              <small class="text-muted">Filter pegawai berdasarkan jabatan</small>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Pilih User *</label>
-              <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+              <div class="user-list-container border rounded p-3">
                 <div class="form-check mb-2">
                   <input
                     id="selectAll"
@@ -400,7 +416,7 @@
                 </div>
                 <hr>
                 <div
-                  v-for="user in usersWithoutRoleList"
+                  v-for="user in filteredUsersForBulkAssign"
                   :key="user.nip"
                   class="form-check mb-2"
                 >
@@ -486,6 +502,7 @@ const bulkAssign = ref({
   users: []
 })
 
+const bulkAssignJabatanFilter = ref('')
 const selectAll = ref(false)
 const errors = ref({})
 
@@ -591,6 +608,35 @@ const availableRoles = computed(() => {
   if (!selectedUser.value) return []
   const currentRoleIds = currentUserRoles.value.map(ur => ur.id_role)
   return roleStore.roles.filter(role => !currentRoleIds.includes(role.id_role))
+})
+
+// Get unique jabatan list for filter
+const uniqueJabatanList = computed(() => {
+  const jabatanSet = new Set()
+  roleStore.pegawai.forEach(user => {
+    if (user.jbtn) {
+      jabatanSet.add(JSON.stringify({ value: user.jbtn, label: user.jbtn }))
+    } else if (user.kdjbtn) {
+      // Fallback if jbtn is missing but kdjbtn exists (unlikely given current resource)
+      jabatanSet.add(JSON.stringify({ value: user.kdjbtn, label: user.jbtn || user.kdjbtn }))
+    }
+  })
+  return Array.from(jabatanSet).map(item => JSON.parse(item)).sort((a, b) => a.label.localeCompare(b.label))
+})
+
+// Filtered users for bulk assign based on jabatan filter
+const filteredUsersForBulkAssign = computed(() => {
+  let users = usersWithoutRoleList.value
+  
+  if (bulkAssignJabatanFilter.value) {
+    // Check against both jbtn and kdjbtn to be safe
+    users = users.filter(user => 
+      user.jbtn === bulkAssignJabatanFilter.value || 
+      user.kdjbtn === bulkAssignJabatanFilter.value
+    )
+  }
+  
+  return users
 })
 
 // Methods
@@ -713,7 +759,7 @@ const saveUserRoles = async () => {
 
 const toggleSelectAll = () => {
   if (selectAll.value) {
-    bulkAssign.value.users = usersWithoutRoleList.value.map(user => user.nip)
+    bulkAssign.value.users = filteredUsersForBulkAssign.value.map(user => user.nip)
   } else {
     bulkAssign.value.users = []
   }
@@ -767,6 +813,7 @@ const closeBulkAssignModal = () => {
     role_id: '',
     users: []
   }
+  bulkAssignJabatanFilter.value = ''
   selectAll.value = false
   errors.value = {}
 }
@@ -786,7 +833,13 @@ const handlePasswordSaved = () => {
 
 // Watch for bulkAssign.users changes
 watch(() => bulkAssign.value.users, (newUsers) => {
-  selectAll.value = newUsers.length === usersWithoutRoleList.value.length
+  selectAll.value = newUsers.length === filteredUsersForBulkAssign.value.length && filteredUsersForBulkAssign.value.length > 0
+})
+
+// Watch for jabatan filter changes to reset selection
+watch(() => bulkAssignJabatanFilter.value, () => {
+  bulkAssign.value.users = []
+  selectAll.value = false
 })
 
 // Watch for filter changes to reset pagination
@@ -1162,6 +1215,7 @@ onUnmounted(() => {
 .modal-dialog {
   margin: 2rem auto;
   animation: modalSlideIn 0.3s ease-out;
+  overflow: visible;
 }
 
 @keyframes modalSlideIn {
@@ -1180,7 +1234,7 @@ onUnmounted(() => {
   border-radius: 1rem;
   background: white;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .modal-header {
@@ -1197,12 +1251,19 @@ onUnmounted(() => {
 
 .modal-body {
   padding: 2rem;
+  overflow: visible;
 }
 
 .modal-footer {
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   padding: 1.5rem 2rem;
+}
+
+.user-list-container {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .border {
@@ -1359,6 +1420,10 @@ code {
   padding: 0.5rem;
   border-radius: 0.75rem;
   margin-top: 4px;
+  z-index: 9999 !important;
+  min-width: 100%; /* Minimal selebar input parent */
+  width: max-content; /* Melebar sesuai konten jika teks panjang */
+  max-width: 400px; /* Batasi lebar maksimal agar tidak terlalu lebar */
 }
 
 .modern-v-select :deep(.vs__dropdown-option) {
@@ -1372,6 +1437,15 @@ code {
   font-size: 0.8rem;
   margin-top: 0.5rem;
   font-weight: 500;
+}
+
+.filter-card {
+  overflow: visible !important;
+  z-index: 10;
+}
+
+.filter-card .card-body {
+  overflow: visible !important;
 }
 
 /* Pagination Responsive */

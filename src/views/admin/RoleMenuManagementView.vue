@@ -175,25 +175,39 @@
                   </span>
                 </div>
               </div>
-              <div class="header-search-wrapper mx-lg-4 my-2 my-lg-0 flex-grow-1">
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-search text-muted"></i>
-                  </span>
-                  <input
-                    v-model="menuSearchQuery"
-                    type="text"
-                    class="form-control border-start-0 ps-0"
-                    placeholder="Cari menu atau fitur..."
-                  />
-                  <button
-                    v-if="menuSearchQuery"
-                    class="btn btn-outline-secondary border-start-0"
-                    type="button"
-                    @click="menuSearchQuery = ''"
-                  >
-                    <i class="fas fa-times"></i>
-                  </button>
+              <div class="header-filters mx-lg-4 my-2 my-lg-0 flex-grow-1">
+                <div class="filters-grid">
+                  <div class="search-input-wrapper">
+                    <div class="input-group input-group-modern">
+                      <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                      </span>
+                      <input
+                        v-model="menuSearchQuery"
+                        type="text"
+                        class="form-control border-start-0 ps-0"
+                        placeholder="Cari menu atau fitur..."
+                      />
+                      <button
+                        v-if="menuSearchQuery"
+                        class="btn btn-outline-secondary border-start-0"
+                        type="button"
+                        @click="menuSearchQuery = ''"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="platform-select-wrapper">
+                    <v-select
+                      v-model="selectedPlatform"
+                      :options="platforms"
+                      :reduce="p => p.value"
+                      :clearable="false"
+                      placeholder="Platform"
+                      class="platform-v-select"
+                    />
+                  </div>
                 </div>
               </div>
               <button
@@ -311,6 +325,13 @@ const showCopyModal = ref(false)
 const copySourceRole = ref('')
 const copyTargetRole = ref('')
 const menuSearchQuery = ref('')
+const selectedPlatform = ref('all')
+
+const platforms = ref([
+  { label: '🌎 Semua Platform', value: 'all' },
+  { label: '💻 Web', value: 'web' },
+  { label: '📱 Mobile', value: 'mobile' }
+])
 
 // Computed properties
 const totalEnabledPermissions = computed(() => {
@@ -384,7 +405,34 @@ const modifiedCount = computed(() => {
 })
 
 const filteredMenuTree = computed(() => {
-  if (!menuSearchQuery.value) return menuTree.value
+  let result = menuTree.value
+
+  // 1. Filter by Platform first
+  if (selectedPlatform.value !== 'all') {
+    const filterByPlatform = (nodes) => {
+      return nodes.map(node => {
+        const newNode = { ...node }
+        
+        let filteredChildren = []
+        if (node.children && node.children.length > 0) {
+          filteredChildren = filterByPlatform(node.children)
+        }
+
+        // Keep node if platform matches OR it has matching children
+        if (node.platform === selectedPlatform.value || filteredChildren.length > 0) {
+          return {
+            ...newNode,
+            children: filteredChildren
+          }
+        }
+        return null
+      }).filter(node => node !== null)
+    }
+    result = filterByPlatform(result)
+  }
+
+  // 2. Filter by Search Query
+  if (!menuSearchQuery.value) return result
 
   const query = menuSearchQuery.value.toLowerCase()
 
@@ -393,16 +441,13 @@ const filteredMenuTree = computed(() => {
       const newNode = { ...node }
       const isSelfMatch = node.nama_menu.toLowerCase().includes(query)
       
-      // Jika parent match atau diri sendiri match, maka "group" ini dianggap match
       const currentOrParentMatches = parentMatches || isSelfMatch
       
       let filteredChildren = []
       if (node.children && node.children.length > 0) {
-        // Teruskan status match ke anak-anaknya
         filteredChildren = filterNodes(node.children, currentOrParentMatches)
       }
 
-      // Tampilkan node jika: diri sendiri match, parent match, atau ada anak yang match
       if (isSelfMatch || parentMatches || filteredChildren.length > 0) {
         return {
           ...newNode,
@@ -414,7 +459,7 @@ const filteredMenuTree = computed(() => {
     }).filter(node => node !== null)
   }
 
-  return filterNodes(menuTree.value)
+  return filterNodes(result)
 })
 
 // Methods
@@ -807,9 +852,6 @@ onMounted(() => {
 .btn-reset { background: #ef4444; }
 
 /* Permissions Section */
-.permissions-section {
-  /* Padding handled by layout-container */
-}
 
 .permissions-container-modern {
   background: white;
@@ -859,6 +901,56 @@ onMounted(() => {
   z-index: 10;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.header-filters {
+  flex: 1;
+}
+
+.filters-grid {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-input-wrapper {
+  flex: 2;
+}
+
+.platform-select-wrapper {
+  flex: 1;
+  min-width: 180px;
+}
+
+.platform-v-select {
+  --vs-border-color: #e2e8f0;
+  --vs-border-width: 1px;
+  --vs-border-radius: 8px;
+  --vs-font-size: 0.9rem;
+  --vs-dropdown-bg: #ffffff;
+}
+
+.platform-v-select :deep(.vs__dropdown-toggle) {
+  background: white;
+  padding: 0.15rem 0;
+}
+
+.input-group-modern {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+}
+
+.input-group-modern .input-group-text,
+.input-group-modern .form-control,
+.input-group-modern .btn {
+  border-color: transparent;
+}
+
+.input-group-modern .form-control:focus {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .header-search-wrapper .input-group-text {

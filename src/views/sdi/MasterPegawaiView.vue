@@ -34,6 +34,9 @@
           <i class="fas fa-hammer fa-3x text-muted mb-3"></i>
           <h5 class="text-muted">Modul Jabatan sedang dalam pengembangan</h5>
         </div>
+        <div v-else-if="activeTab === 'mapping-jabatan'" key="mapping-jabatan">
+          <MappingJabatanModule />
+        </div>
       </transition>
     </div>
   </div>
@@ -42,12 +45,14 @@
 <script setup>
 import { ref } from 'vue';
 import DepartemenModule from './components/DepartemenModule.vue';
+import MappingJabatanModule from './components/MappingJabatanModule.vue';
 
 const activeTab = ref('departemen');
 
 const tabs = [
   { id: 'departemen', label: 'Departemen', icon: 'fas fa-building' },
   { id: 'jabatan', label: 'Jabatan', icon: 'fas fa-user-tie' },
+  { id: 'mapping-jabatan', label: 'Mapping Jabatan', icon: 'fas fa-sitemap' },
 ];
 </script>
 

@@ -102,7 +102,6 @@
                 type="month" 
                 class="form-control" 
                 v-model="analisaFilters.bulan"
-                @change="fetchAnalisaData"
                 style="max-width: 200px;"
             >
         </div>
@@ -205,14 +204,14 @@
             
             <div v-else>
                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <diV>
+                    <div>
                         <h5 class="mb-0 text-primary">
                             <i class="fas fa-chart-line me-2"></i> {{ selectedIndicator.nama_inmut }}
                         </h5>
                         <small class="text-muted">
                             Periode: {{ new Date(filters.tgl_transaksi).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) }}
                         </small>
-                    </diV>
+                    </div>
                     <button class="btn btn-primary" @click="saveBulk" :disabled="bulkSaving">
                         <i class="fas fa-save me-2"></i>
                         {{ bulkSaving ? 'Menyimpan...' : 'Simpan Semua Data' }}
@@ -274,7 +273,7 @@
                         </div>
                         
                         <!-- Data Completeness Warning -->
-                        <div v-if="!monthlyStats.isComplete" class="alert alert-warning mt-3 mb-0">
+                        <div v-if="!monthlyStats.isComplete && !analisaForm.id_analisa" class="alert alert-warning mt-3 mb-0">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             <strong>Data belum lengkap!</strong> 
                             Terdapat {{ monthlyStats.missingDays.length }} tanggal yang belum diisi: 
@@ -332,23 +331,86 @@
                     <div class="card-header bg-light">
                         <h6 class="mb-0"><i class="fas fa-history me-2"></i> Riwayat Analisa</h6>
                     </div>
-                    <div class="card-body">
-                        <div v-for="item in existingAnalisa" :key="item.id_analisa" class="border-bottom pb-3 mb-3">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1">
-                                    <small class="text-muted">{{ formatDate(item.tanggal_awal) }} - {{ formatDate(item.tanggal_akhir) }}</small>
-                                    <p class="mb-1"><strong>Analisa:</strong> {{ item.analisa }}</p>
-                                    <p class="mb-0"><strong>Tindak Lanjut:</strong> {{ item.tindak_lanjut }}</p>
-                                </div>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" @click="editAnalisa(item)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" @click="deleteAnalisaItem(item.id_analisa)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th width="5%" class="text-center">#</th>
+                                        <th width="25%">Indikator</th>
+                                        <th width="30%">Capaian & Periode</th>
+                                        <th width="30%">Analisa & Tindak Lanjut</th>
+                                        <th width="10%" class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(item, index) in existingAnalisa" :key="item.id_analisa">
+                                        <td class="text-center">{{ index + 1 }}</td>
+                                        <td>
+                                            <div class="fw-bold text-primary">
+                                                {{ item.nama_inmut || selectedIndicatorAnalisa?.nama_inmut || '-' }}
+                                            </div>
+                                            <small class="text-muted">{{ getUnitName() }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="mb-2">
+                                                <small class="text-secondary d-block">PERIODE</small>
+                                                <span class="fw-bold">{{ formatDate(item.tanggal_awal) }} - {{ formatDate(item.tanggal_akhir) }}</span>
+                                            </div>
+                                            
+                                            <div class="row g-2" style="font-size: 0.85rem;">
+                                                <div class="col-12">
+                                                    <div class="d-flex align-items-center justify-content-between border-bottom pb-1 mb-1">
+                                                        <span class="text-secondary">Target</span>
+                                                        <span class="fw-bold text-dark">{{ getTargetDisplayFromItem(item) }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="p-1 bg-light rounded text-center border">
+                                                        <small class="d-block text-secondary" style="font-size: 0.7rem;">NUMERATOR</small>
+                                                        <span class="fw-bold">{{ item.jml_num }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="p-1 bg-light rounded text-center border">
+                                                        <small class="d-block text-secondary" style="font-size: 0.7rem;">DENOMINATOR</small>
+                                                        <span class="fw-bold">{{ item.jml_denum }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 mt-2">
+                                                    <div class="d-flex align-items-center justify-content-between p-2 rounded" 
+                                                         :class="isTargetMet(item) ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'">
+                                                        <span class="fw-bold">Score: {{ calculateCapaian(item.jml_num, item.jml_denum) }}%</span>
+                                                        <span class="badge" :class="isTargetMet(item) ? 'bg-success' : 'bg-danger'">
+                                                            {{ isTargetMet(item) ? 'Tercapai' : 'Tidak Tercapai' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="mb-2">
+                                                <strong class="d-block text-secondary" style="font-size: 0.8rem;">ANALISA:</strong>
+                                                <span>{{ item.analisa.substring(0, 100) }}{{ item.analisa.length > 100 ? '...' : '' }}</span>
+                                            </div>
+                                            <div>
+                                                <strong class="d-block text-secondary" style="font-size: 0.8rem;">TINDAK LANJUT:</strong>
+                                                <span>{{ item.tindak_lanjut.substring(0, 100) }}{{ item.tindak_lanjut.length > 100 ? '...' : '' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group-vertical gap-1">
+                                                <button class="btn btn-sm btn-outline-primary" @click="editAnalisa(item)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @click="deleteAnalisaItem(item.id_analisa)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -360,7 +422,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import committeeService from '@/services/committeeService'
@@ -405,6 +467,8 @@ const monthlyStats = ref({
     isComplete: false,
     missingDays: []
 })
+
+const isEditingAnalisa = ref(false)
 
 const fetchUnits = async () => {
     try {
@@ -708,22 +772,27 @@ const fetchAnalisaData = async () => {
             id_inmut: selectedIndicatorAnalisa.value.id_inmut
         })
         
-        const monthlyData = realisasiRes.data.data || []
+        const realisasiData = realisasiRes.data.data || []
         
-        // Calculate stats
-        const totalNum = monthlyData.reduce((sum, item) => sum + (item.num || 0), 0)
-        const totalDenum = monthlyData.reduce((sum, item) => sum + (item.denum || 0), 0)
+        // Calculate total num/denum
+        let totalNum = 0
+        let totalDenum = 0
+        
+        realisasiData.forEach(r => {
+            totalNum += parseInt(r.num) || 0
+            totalDenum += parseInt(r.denum) || 0
+        })
+        
         const score = totalDenum > 0 ? ((totalNum / totalDenum) * 100).toFixed(2) : 0
         
-        // Check completeness
+        // Check for missing days
         const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate()
-        const filledDays = new Set(monthlyData.map(item => new Date(item.tanggal_inmut).getDate()))
+        const filledDays = new Set(realisasiData.map(r => new Date(r.tanggal_inmut).getDate()))
         const missingDays = []
         for (let d = 1; d <= daysInMonth; d++) {
             if (!filledDays.has(d)) missingDays.push(d)
         }
         
-        // Update monthlyStats (need to make it ref instead of computed)
         monthlyStats.value = {
             totalNum,
             totalDenum,
@@ -786,10 +855,59 @@ const saveAnalisa = async () => {
     }
 }
 
-const editAnalisa = (item) => {
+const editAnalisa = async (item) => {
+    // Set form data
     analisaForm.id_analisa = item.id_analisa
     analisaForm.analisa = item.analisa
     analisaForm.tindak_lanjut = item.tindak_lanjut
+    
+    // Extract year-month from item's tanggal_awal (format: YYYY-MM-DD or ISO timestamp)
+    // Parse the date and convert to local timezone
+    const dateObj = new Date(item.tanggal_awal)
+    const year = dateObj.getFullYear()
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+    const itemBulan = `${year}-${month}`
+    
+    // Update selected indicator to match the item
+    // First, try to find from existing indicators list
+    const matchingIndicator = indicators.value.find(ind => ind.id_inmut === item.id_inmut)
+    
+    if (matchingIndicator) {
+        selectedIndicatorAnalisa.value = matchingIndicator
+    } else if (item.indikator) {
+        // If not found in list, use the indicator data from item
+        selectedIndicatorAnalisa.value = {
+            id_inmut: item.id_inmut,
+            nama_inmut: item.nama_inmut || item.indikator.nama_inmut,
+            dep_id: filters.unit,
+            standar: item.indikator.standar,
+            rumus: item.indikator.rumus,
+            satuan: item.indikator.satuan
+        }
+    } else {
+        // Fallback: create minimal indicator object
+        selectedIndicatorAnalisa.value = {
+            id_inmut: item.id_inmut,
+            nama_inmut: item.nama_inmut,
+            dep_id: filters.unit
+        }
+    }
+    
+    // Use item's data directly instead of re-fetching
+    monthlyStats.value = {
+        totalNum: item.jml_num,
+        totalDenum: item.jml_denum,
+        score: parseFloat(item.jumlah || 0),
+        isComplete: true, // Assume complete since it's already saved
+        missingDays: []
+    }
+    
+    // Set flag and update filter in nextTick to prevent race condition
+    isEditingAnalisa.value = true
+    await nextTick()
+    analisaFilters.bulan = itemBulan
+    
+    // Scroll to top so user can see the form
     window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -810,6 +928,68 @@ const resetAnalisaForm = () => {
     analisaForm.id_analisa = null
     analisaForm.analisa = ''
     analisaForm.tindak_lanjut = ''
+}
+
+const calculateCapaian = (num, denum) => {
+    if (!denum || denum === 0) return 0
+    return ((num / denum) * 100).toFixed(2)
+}
+
+const getTargetDisplay = (indicator) => {
+    if (!indicator) return '-'
+    const symbol = getRumusSymbol(indicator.rumus)
+    return `${symbol} ${indicator.standar} ${indicator.satuan || ''}`
+}
+
+const getTargetDisplayFromItem = (item) => {
+    // Try to get from item.indikator.master_utama first (like in monitoring)
+    const ind = item?.indikator
+    if (!ind) return getTargetDisplay(selectedIndicatorAnalisa.value)
+    
+    const utama = ind.master_utama || ind.masterUtama
+    const std = (utama && utama.standar) ? utama.standar : ind.standar
+    const rumus = (utama && utama.rumus) ? utama.rumus : ind.rumus
+    const satuan = (utama && utama.satuan) ? utama.satuan : ind.satuan
+    
+    return `${getRumusSymbol(rumus)} ${std} ${satuan || ''}`
+}
+
+const getUnitName = () => {
+    if (!filters.unit || !units.value.length) return '-'
+    const unit = units.value.find(u => u.dep_id === filters.unit)
+    return unit ? unit.nama_ruang : '-'
+}
+
+const isTargetMet = (item) => {
+    // Try to get indicator data from item.indikator first (like in monitoring)
+    const ind = item?.indikator
+    let target, rumus, score
+    
+    if (ind) {
+        const utama = ind.master_utama || ind.masterUtama
+        target = parseFloat((utama && utama.standar) ? utama.standar : ind.standar)
+        rumus = String((utama && utama.rumus) ? utama.rumus : ind.rumus)
+        score = parseFloat(item.jumlah || calculateCapaian(item.jml_num, item.jml_denum))
+    } else if (selectedIndicatorAnalisa.value) {
+        const indicator = selectedIndicatorAnalisa.value
+        score = parseFloat(calculateCapaian(item.jml_num, item.jml_denum))
+        target = parseFloat(indicator.standar)
+        rumus = String(indicator.rumus)
+    } else {
+        return false
+    }
+    
+    if (isNaN(target) || isNaN(score)) return false
+    
+    // 1: =, 2: ≤, 3: <, 4: ≥, 5: >
+    switch(rumus) {
+        case '1': return Math.abs(score - target) < 0.01
+        case '2': return score <= target
+        case '3': return score < target
+        case '4': return score >= target
+        case '5': return score > target
+        default: return false
+    }
 }
 
 const formatMonthYear = (monthStr) => {
@@ -844,6 +1024,16 @@ watch(() => selectedIndicator.value, fetchMonthlyData)
 // Re-fetch monthly data if month changes while in monthly mode
 watch(() => filters.tgl_transaksi, () => {
     if (viewMode.value === 'monthly') fetchMonthlyData()
+})
+
+// Watcher for analisaFilters.bulan - only fetch if not editing
+watch(() => analisaFilters.bulan, () => {
+    if (!isEditingAnalisa.value) {
+        fetchAnalisaData()
+    } else {
+        // Reset flag after skip
+        isEditingAnalisa.value = false
+    }
 })
 
 onMounted(() => {
@@ -999,5 +1189,19 @@ onMounted(() => {
     width: 100% !important;
     max-width: 100% !important;
   }
+}
+
+/* Fallback for Bootstrap versions < 5.3 */
+.bg-success-subtle { 
+  background-color: #d1e7dd !important; 
+}
+.text-success-emphasis { 
+  color: #0a3622 !important; 
+}
+.bg-danger-subtle { 
+  background-color: #f8d7da !important; 
+}
+.text-danger-emphasis { 
+  color: #58151c !important; 
 }
 </style>

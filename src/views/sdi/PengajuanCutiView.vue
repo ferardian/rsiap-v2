@@ -13,7 +13,7 @@
     <!-- Stats / Counter -->
     <div class="stats-grid">
       <div class="stat-card bg-gradient-to-br from-blue-50 to-white border border-blue-100">
-        <div class="stat-icon bg-blue-500 text-white shadow-lg shadow-blue-500/30">
+        <div class="stat-icon text-white shadow-lg" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
           <i class="fas fa-calendar-day"></i>
         </div>
         <div class="stat-info">
@@ -21,13 +21,13 @@
           <p class="text-blue-600 font-medium">Cuti Semester 1</p>
         </div>
       </div>
-      <div class="stat-card bg-gradient-to-br from-green-50 to-white border border-green-100">
-        <div class="stat-icon bg-green-500 text-white shadow-lg shadow-green-500/30">
+      <div class="stat-card bg-gradient-to-br from-pink-50 to-white border border-pink-100">
+        <div class="stat-icon text-white shadow-lg" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
           <i class="fas fa-calendar-check"></i>
         </div>
         <div class="stat-info">
           <h3>{{ stats?.jml2 || 0 }}</h3>
-          <p class="text-green-600 font-medium">Cuti Semester 2</p>
+          <p class="text-pink-600 font-medium">Cuti Semester 2</p>
         </div>
       </div>
     </div>
@@ -63,26 +63,27 @@
                 <th>Tanggal Pengajuan</th>
                 <th>Jenis Cuti</th>
                 <th>Tanggal Cuti</th>
+                <th>Semester</th>
                 <th>Status</th>
                 <th class="text-right">Aksi</th>
               </tr>
             </thead>
             <tbody v-if="loading">
               <tr>
-                <td colspan="5" class="py-8 text-center text-gray-500">
+                <td colspan="6" class="py-8 text-center text-gray-500">
                   <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...
                 </td>
               </tr>
             </tbody>
-            <tbody v-else-if="cutiList.length === 0">
+            <tbody v-else-if="paginatedCutiList.length === 0">
               <tr>
-                <td colspan="5" class="py-8 text-center text-gray-500">
+                <td colspan="6" class="py-8 text-center text-gray-500">
                   Belum ada riwayat pengajuan cuti.
                 </td>
               </tr>
             </tbody>
             <tbody v-else>
-              <tr v-for="cuti in cutiList" :key="cuti.id_cuti">
+              <tr v-for="cuti in paginatedCutiList" :key="cuti.id_cuti">
                 <td>
                   {{ formatDate(cuti.tanggal_pengajuan) }}
                 </td>
@@ -91,6 +92,12 @@
                 </td>
                 <td>
                   {{ formatDate(cuti.tanggal_cuti) }}
+                </td>
+                <td>
+                  <span :class="getSemesterBadgeClass(cuti.tanggal_cuti)">
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    {{ getSemester(cuti.tanggal_cuti) }}
+                  </span>
                 </td>
                 <td>
                   <span :class="getStatusBadgeClass(cuti.status ?? cuti.status_cuti)" :style="getStatusBadgeStyle(cuti.status ?? cuti.status_cuti)">
@@ -111,6 +118,32 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div v-if="cutiList.length > 0" class="pagination-wrapper">
+      <div class="pagination-container">
+        <div class="pagination-info">
+          Menampilkan {{ startIndex + 1 }} - {{ endIndex }} dari {{ cutiList.length }} data
+        </div>
+        <div class="pagination-controls">
+          <button 
+            class="pagination-btn" 
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="pagination-text">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+          <button 
+            class="pagination-btn" 
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -224,6 +257,8 @@ const cutiList = ref([])
 const stats = ref(null)
 const showModal = ref(false)
 const selectedYear = ref('all') // Default to 'all' to show all data
+const currentPage = ref(1)
+const itemsPerPage = ref(15)
 
 // Year options (current year and 5 years back)
 const yearOptions = computed(() => {
@@ -251,6 +286,24 @@ const yearOptionsForSelect = computed(() => {
   return options
 })
 
+// Pagination computed properties
+const totalPages = computed(() => {
+  return Math.ceil(cutiList.value.length / itemsPerPage.value)
+})
+
+const startIndex = computed(() => {
+  return (currentPage.value - 1) * itemsPerPage.value
+})
+
+const endIndex = computed(() => {
+  const end = startIndex.value + itemsPerPage.value
+  return end > cutiList.value.length ? cutiList.value.length : end
+})
+
+const paginatedCutiList = computed(() => {
+  return cutiList.value.slice(startIndex.value, endIndex.value)
+})
+
 const form = reactive({
   jenis: '',
   tanggal_cuti: {
@@ -269,6 +322,7 @@ const jenisCutiOptions = [
 
 // Watch year change to reload data
 watch(selectedYear, () => {
+  currentPage.value = 1 // Reset to first page when filter changes
   loadData()
 })
 
@@ -285,6 +339,9 @@ const loadData = async () => {
     // Load stats with year filter
     const statsResponse = await cutiPegawaiService.getCounter(nik.value, params)
     stats.value = statsResponse.data.data
+    
+    // Reset to first page
+    currentPage.value = 1
   } catch (error) {
     console.error('Failed to load cuti data', error)
     showToast('Gagal memuat data cuti', 'error')
@@ -396,6 +453,18 @@ const getStatusBadgeStyle = (status) => {
   return {} // Reset inline styles
 }
 
+const getSemester = (dateString) => {
+  if (!dateString) return '-'
+  const month = new Date(dateString).getMonth() + 1 // 1-12
+  return month >= 1 && month <= 6 ? 'Semester 1' : 'Semester 2'
+}
+
+const getSemesterBadgeClass = (dateString) => {
+  if (!dateString) return 'semester-badge'
+  const month = new Date(dateString).getMonth() + 1
+  return month >= 1 && month <= 6 ? 'semester-badge semester-1' : 'semester-badge semester-2'
+}
+
 onMounted(() => {
   loadData()
 })
@@ -426,6 +495,7 @@ onMounted(() => {
   margin-bottom: 0.5rem;
   letter-spacing: -0.025em;
   background: linear-gradient(to right, #1e293b, #334155);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -459,13 +529,14 @@ onMounted(() => {
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
 .stat-info h3 {
@@ -879,8 +950,112 @@ input[type="date"]:focus, select:focus {
 }
 
 .status-unknown {
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: 2px solid #d1d5db;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  border: 2px solid #9ca3af;
+}
+
+/* Semester Badge Styles */
+.semester-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.semester-1 {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 2px solid #60a5fa;
+}
+
+.semester-2 {
+  background-color: #fce7f3;
+  color: #9f1239;
+  border: 2px solid #f472b6;
+}
+
+/* Pagination Styles */
+.pagination-wrapper {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.pagination-container {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-info {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-text {
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 120px;
+  text-align: center;
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .pagination-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .pagination-info {
+    order: 2;
+  }
+  
+  .pagination-controls {
+    order: 1;
+  }
 }
 </style>
