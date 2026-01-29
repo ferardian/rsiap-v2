@@ -216,8 +216,10 @@ onMounted(() => {
 }
 
 .card-header {
-  padding: 2rem 2rem 1rem;
+  padding: 2rem;
   text-align: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
 }
 
 .logo {
@@ -230,7 +232,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
@@ -243,12 +245,12 @@ onMounted(() => {
 h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: white;
   margin-bottom: 0.25rem;
 }
 
 p {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.875rem;
 }
 
