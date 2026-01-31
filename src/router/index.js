@@ -107,6 +107,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/mobile-app/slider',
+    name: 'SliderManagement',
+    component: () => import('../views/admin/SliderManagementView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/select-role',
     name: 'SelectRole',
     component: () => import('../views/SelectRoleView.vue'),
