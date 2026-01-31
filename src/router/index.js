@@ -113,6 +113,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/mobile-app/artikel',
+    name: 'ArticleManagement',
+    component: () => import('../views/admin/ArticleManagementView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/select-role',
     name: 'SelectRole',
     component: () => import('../views/SelectRoleView.vue'),
