@@ -47,6 +47,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/statistik-ranap',
+    name: 'StatistikRanap',
+    component: () => import('../views/dashboard/StatistikRanapView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/bed/display',
     name: 'BedAvailabilityDisplay',
     component: () => import('../views/dashboard/BedAvailabilityView.vue'),
@@ -333,6 +339,12 @@ const routes = [
     path: '/laporan/penyakit',
     name: 'Top10Penyakit',
     component: () => import('../views/laporan/PenyakitReportView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/operasi',
+    name: 'LaporanOperasi',
+    component: () => import('../views/laporan/OperasiReportView.vue'),
     meta: { requiresAuth: true }
   },
   {

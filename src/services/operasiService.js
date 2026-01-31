@@ -39,5 +39,8 @@ export default {
     },
     getPegawai() {
         return api.get('/operasi/pegawai')
+    },
+    getPenjab() {
+        return api.get('/operasi/penjab')
     }
 }

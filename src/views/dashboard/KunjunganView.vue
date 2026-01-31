@@ -18,7 +18,27 @@
         <transition name="collapse">
           <div v-show="isFilterVisible || !isMobile" class="header-actions">
           <div class="filter-group">
+            <!-- Mode Selector -->
             <div class="filter-item">
+              <label>Mode Periode</label>
+              <div class="mode-selector">
+                <button 
+                  @click="filters.mode = 'harian'; fetchData()" 
+                  :class="['mode-btn', { active: filters.mode === 'harian' }]"
+                >
+                  <i class="fas fa-calendar-day"></i> Harian
+                </button>
+                <button 
+                  @click="filters.mode = 'tahunan'; fetchData()" 
+                  :class="['mode-btn', { active: filters.mode === 'tahunan' }]"
+                >
+                  <i class="fas fa-calendar-alt"></i> Tahunan
+                </button>
+              </div>
+            </div>
+
+            <!-- Date Range (Harian Mode) -->
+            <div v-if="filters.mode === 'harian'" class="filter-item">
               <label>Periode</label>
               <div class="date-inputs">
                 <input type="date" v-model="filters.tgl_awal" @change="fetchData" class="form-input">
@@ -26,6 +46,15 @@
                 <input type="date" v-model="filters.tgl_akhir" @change="fetchData" class="form-input">
               </div>
             </div>
+
+            <!-- Year Selector (Tahunan Mode) -->
+            <div v-if="filters.mode === 'tahunan'" class="filter-item">
+              <label>Tahun</label>
+              <select v-model="filters.tahun" @change="fetchData" class="form-select">
+                <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+              </select>
+            </div>
+
             <div class="filter-item">
               <label>Jenis Layanan</label>
               <select v-model="filters.status_lanjut" @change="fetchData" class="form-select">
@@ -244,9 +273,17 @@ const summary = ref({
 const visitData = ref({ registrasi: [], cara_bayar: [], poli: [], dokter: [] })
 const inpatientCare = ref(null)
 
+// Generate year options (current year ± 5 years)
+const currentYear = new Date().getFullYear()
+const yearOptions = ref(
+  Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
+)
+
 const filters = ref({
+  mode: 'harian', // 'harian' or 'tahunan'
   tgl_awal: new Date().toISOString().substr(0, 10),
   tgl_akhir: new Date().toISOString().substr(0, 10),
+  tahun: currentYear,
   status_lanjut: 'all'
 })
 
@@ -429,6 +466,47 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.8;
+}
+
+/* Mode Selector */
+.mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.25rem;
+  border-radius: 12px;
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.mode-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.mode-btn.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e3a8a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mode-btn i {
+  font-size: 0.9rem;
 }
 
 .date-inputs .separator {
@@ -805,6 +883,15 @@ onUnmounted(() => {
   .filter-group {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .mode-selector {
+    flex-direction: row;
+  }
+
+  .mode-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
   }
 
   .date-inputs {
