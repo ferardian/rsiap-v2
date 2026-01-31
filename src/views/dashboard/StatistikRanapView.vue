@@ -127,7 +127,6 @@
                 <h6 class="text-muted small fw-bold text-uppercase">AVLOS</h6>
                 <h3 class="fw-bold mb-1">{{ currentData.indicators?.avlos || 0 }}</h3>
                 <p class="text-muted small mb-0">Rerata Lama Rawat</p>
-                <div class="metric-standard mt-2">Std: 6-9 hari</div>
               </div>
             </div>
             <div class="col-md-4">
@@ -138,7 +137,6 @@
                 <h6 class="text-muted small fw-bold text-uppercase">TOI</h6>
                 <h3 class="fw-bold mb-1">{{ currentData.indicators?.toi || 0 }}</h3>
                 <p class="text-muted small mb-0">Tenggang Pakai Bed</p>
-                <div class="metric-standard mt-2">Std: 1-3 hari</div>
               </div>
             </div>
             <div class="col-md-4">
@@ -149,7 +147,6 @@
                 <h6 class="text-muted small fw-bold text-uppercase">BTO</h6>
                 <h3 class="fw-bold mb-1">{{ currentData.indicators?.bto || 0 }}</h3>
                 <p class="text-muted small mb-0">Perputaran Bed</p>
-                <div class="metric-standard mt-2">Std: 40-50 kali</div>
               </div>
             </div>
             
