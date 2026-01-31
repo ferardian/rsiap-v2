@@ -707,10 +707,217 @@ onMounted(() => {
   border-radius: 10px;
 }
 
+/* Mobile Responsive Styles */
 @media (max-width: 768px) {
+  .statistik-ranap-container {
+    padding: 0.75rem !important;
+  }
+
+  .dashboard-header {
+    padding: 1.5rem !important;
+    border-radius: 0 0 20px 20px !important;
+  }
+
+  .header-icon-bg {
+    width: 44px;
+    height: 44px;
+  }
+
+  .dashboard-header h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .dashboard-header p {
+    font-size: 0.8rem !important;
+  }
+
+  .mode-toggle-group {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .mode-pill-btn {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+
+  /* Category Tabs - Horizontal Scroll */
+  .category-tabs-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-tabs {
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .category-tab {
+    padding: 1rem 0.25rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  /* Filter Row */
+  .filter-row {
+    padding: 1rem !important;
+  }
+
+  .filter-label {
+    font-size: 0.65rem;
+  }
+
+  /* BOR Gauge - Smaller on Mobile */
   .bor-gauge-wrapper {
-    width: 140px;
-    height: 140px;
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .bor-gauge-value .value {
+    font-size: 1.75rem !important;
+  }
+
+  .bor-gauge-value .label {
+    font-size: 0.65rem !important;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 5px 12px;
+  }
+
+  /* Metric Cards - Stack on Mobile */
+  .row.g-4 {
+    gap: 1rem !important;
+  }
+
+  .metric-card h6 {
+    font-size: 0.7rem;
+  }
+
+  .metric-card h3 {
+    font-size: 1.5rem;
+  }
+
+  .metric-card p {
+    font-size: 0.75rem;
+  }
+
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .metric-standard {
+    font-size: 0.65rem;
+  }
+
+  /* Raw Metrics */
+  .raw-metrics-card {
+    font-size: 0.8rem;
+  }
+
+  .raw-metrics-card .text-xs {
+    font-size: 0.6rem !important;
+  }
+
+  /* Trend Card */
+  .trend-card {
+    padding: 1rem !important;
+  }
+
+  .trend-card h5 {
+    font-size: 0.9rem !important;
+  }
+
+  .metric-selector {
+    width: 100%;
+  }
+
+  .metric-selector .btn {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  /* Chart Container */
+  .chart-container {
+    height: 280px !important;
+    margin-top: 1rem;
+  }
+
+  /* Table Responsive */
+  .styled-table {
+    font-size: 0.8rem;
+  }
+
+  .styled-table thead th {
+    font-size: 0.65rem;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .styled-table tbody td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .styled-table .badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+
+  /* Cards General */
+  .card {
+    border-radius: 16px !important;
+  }
+
+  .filters-card .card-body {
+    padding: 0 !important;
+  }
+
+  /* Adjust spacing for mobile */
+  .mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  /* Form Controls */
+  .form-control-sm,
+  .form-select-sm {
+    font-size: 0.8rem;
+  }
+
+  /* Button */
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 480px) {
+  .dashboard-header h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .bor-gauge-wrapper {
+    width: 110px !important;
+    height: 110px !important;
+  }
+
+  .bor-gauge-value .value {
+    font-size: 1.5rem !important;
+  }
+
+  .metric-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .chart-container {
+    height: 240px !important;
+  }
+
+  .category-tab {
+    font-size: 0.75rem;
   }
 }
 </style>
