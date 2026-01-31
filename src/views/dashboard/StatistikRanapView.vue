@@ -43,11 +43,11 @@
           <div class="category-tabs d-flex px-3">
             <button 
               v-for="cat in categories" 
-              :key="cat"
-              @click="setActiveCategory(cat)"
-              :class="['category-tab', { active: filters.activeCategory === cat }]"
+              :key="cat.value"
+              @click="setActiveCategory(cat.value)"
+              :class="['category-tab', { active: filters.activeCategory === cat.value }]"
             >
-              {{ cat }}
+              {{ cat.label }}
             </button>
           </div>
         </div>
@@ -256,7 +256,7 @@
       <!-- Data Table -->
       <div v-if="filters.isYearlyMode" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <div class="card-header bg-white py-3 px-4">
-          <h6 class="mb-0 fw-bold"><i class="fas fa-table me-2 text-primary"></i>Rincian Data Bulanan - {{ filters.activeCategory }}</h6>
+          <h6 class="mb-0 fw-bold"><i class="fas fa-table me-2 text-primary"></i>Rincian Data Bulanan - {{ getCategoryLabel(filters.activeCategory) }}</h6>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0 styled-table">
@@ -299,7 +299,14 @@ import ranapStatistikService from '@/services/ranapStatistikService'
 
 const loading = ref(false)
 const dataLoaded = ref(false)
-const categories = ["Gabungan", "Anak", "Kandungan", "BYC", "ICU", "Isolasi"]
+const categories = [
+  { label: "Gabungan", value: "Gabungan" },
+  { label: "Anak", value: "Anak" },
+  { label: "Kandungan", value: "Kandungan" },
+  { label: "Bayi", value: "BYC" },
+  { label: "ICU", value: "ICU" },
+  { label: "Isolasi", value: "Isolasi" }
+]
 const monthNamesLong = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
 const filters = reactive({
@@ -488,6 +495,11 @@ const fetchData = async () => {
 const setYearlyMode = (mode) => {
   filters.isYearlyMode = mode
   fetchData()
+}
+
+const getCategoryLabel = (val) => {
+  const cat = categories.find(c => c.value === val)
+  return cat ? cat.label : val
 }
 
 const setActiveCategory = (cat) => {
