@@ -191,10 +191,10 @@
               </div>
             </div>
             
-            <div class="chart-container" style="height: 300px; position: relative;">
-               <svg class="trend-chart-svg" width="100%" height="100%" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMid meet">
+            <div class="chart-container" style="position: relative;">
+               <svg class="trend-chart-svg" width="100%" height="100%" :viewBox="svgParams.viewBox" preserveAspectRatio="none">
                   <!-- Grid Lines -->
-                  <line v-for="i in 5" :key="'grid'+i" x1="50" :y1="i*50 + 20" x2="950" :y2="i*50 + 20" stroke="#f1f5f9" stroke-width="1" />
+                  <line v-for="i in 5" :key="'grid'+i" x1="30" :y1="i*(svgParams.height/6) + 20" :x2="svgParams.width - 30" :y2="i*(svgParams.height/6) + 20" stroke="#f1f5f9" stroke-width="1" />
                   
                   <!-- Area -->
                   <path :d="chartPathData.area" fill="url(#chartGradient)" opacity="0.15" />
@@ -204,20 +204,22 @@
                   
                   <!-- Dots and Values -->
                   <g v-for="(p, i) in chartPoints" :key="'dot'+i">
+                    <!-- Dots -->
                     <circle 
                       :cx="p.x" 
                       :cy="p.y" 
-                      r="5" 
+                      r="6" 
                       fill="white" 
                       stroke="#3b82f6" 
-                      stroke-width="2.5" 
+                      stroke-width="3" 
                       class="chart-dot"
                     />
+                    <!-- Value Labels -->
                     <text 
                       :x="p.x" 
                       :y="p.y - 12" 
                       text-anchor="middle" 
-                      font-size="13" 
+                      :font-size="filters.activeMetric === 'BOR' ? '12' : '13'" 
                       font-weight="700" 
                       fill="#1e3a8a"
                       font-family="system-ui, -apple-system, sans-serif"
@@ -228,12 +230,13 @@
                   <g v-for="(p, i) in chartPoints" :key="'lbl'+i">
                     <text 
                       :x="p.x" 
-                      y="285" 
+                      :y="svgParams.height - 15" 
                       text-anchor="middle" 
-                      font-size="11" 
+                      font-size="12" 
                       fill="#94a3b8" 
                       font-weight="600"
                       font-family="system-ui, -apple-system, sans-serif"
+                      :class="i % 2 === 0 ? 'month-label-even' : 'month-label-odd'"
                     >{{ p.month }}</text>
                   </g>
 
@@ -264,6 +267,9 @@
                 <th class="text-center">AVLOS (Hari)</th>
                 <th class="text-center">TOI (Hari)</th>
                 <th class="text-center">BTO (Kali)</th>
+                <th class="text-center bg-light">A (Bed)</th>
+                <th class="text-center bg-light">HP (Hari Rawat)</th>
+                <th class="text-center bg-light">D (Keluar)</th>
               </tr>
             </thead>
             <tbody>
@@ -275,6 +281,9 @@
                 <td class="text-center">{{ m.avlos }}</td>
                 <td class="text-center">{{ m.toi }}</td>
                 <td class="text-center">{{ m.bto }}</td>
+                <td class="text-center bg-light fw-bold text-primary">{{ m.A || 0 }}</td>
+                <td class="text-center bg-light fw-bold text-success">{{ m.HP || 0 }}</td>
+                <td class="text-center bg-light fw-bold text-orange">{{ m.D || 0 }}</td>
               </tr>
             </tbody>
           </table>
@@ -371,6 +380,28 @@ const borStatusStyle = computed(() => {
   return { backgroundColor: bg, color: text }
 })
 
+const svgParams = reactive({
+  width: 1000,
+  height: 300,
+  viewBox: '0 0 1000 300'
+})
+
+const updateDimensions = () => {
+  const width = window.innerWidth
+  if (width < 768) {
+    // Mobile dimensions: narrower coordinate system to prevent excessive shrinking
+    // Height taller to utilize vertical space
+    svgParams.width = 600
+    svgParams.height = 350
+    svgParams.viewBox = '0 0 600 350'
+  } else {
+    // Desktop dimensions
+    svgParams.width = 1000
+    svgParams.height = 300
+    svgParams.viewBox = '0 0 1000 300'
+  }
+}
+
 // Chart Logic
 const chartPoints = computed(() => {
   if (!yearlyData.value.months) return []
@@ -380,11 +411,12 @@ const chartPoints = computed(() => {
   const vals = yearlyData.value.months.map(m => parseFloat(m[metric]) || 0)
   const max = Math.max(...vals, metric === 'bor' ? 100 : 10) * 1.2
 
-  const chartWidth = 900  // 950 - 50 (margins)
-  const chartHeight = 240 // 270 - 30 (top margin)
-  const marginLeft = 50
+  const chartWidth = svgParams.width - 60 // margins
+  const chartHeight = svgParams.height - 60
+  const marginLeft = 30
   const marginTop = 30
 
+  // Check if we need to hide labels collision (if needed in logic)
   return yearlyData.value.months.map((m, i) => {
     const val = parseFloat(m[metric]) || 0
     const x = marginLeft + (i * (chartWidth / 11))
@@ -404,17 +436,18 @@ const chartPathData = computed(() => {
   
   let d = `M ${chartPoints.value[0].x} ${chartPoints.value[0].y}`
   for (let i = 1; i < chartPoints.value.length; i++) {
-    // Smooth bezier curve
     const prev = chartPoints.value[i-1]
     const curr = chartPoints.value[i]
+    
+    // Adjust curve tension based on width to avoid loops in tight spaces
     const midX = (prev.x + curr.x) / 2
     d += ` C ${midX} ${prev.y}, ${midX} ${curr.y}, ${curr.x} ${curr.y}`
   }
   
-  // Create area path by closing to bottom
+  const bottomY = svgParams.height - 20 // Near bottom
   const lastPoint = chartPoints.value[chartPoints.value.length-1]
   const firstPoint = chartPoints.value[0]
-  const area = `${d} L ${lastPoint.x} 270 L ${firstPoint.x} 270 Z`
+  const area = `${d} L ${lastPoint.x} ${bottomY} L ${firstPoint.x} ${bottomY} Z`
   
   return { line: d, area: area }
 })
@@ -459,7 +492,6 @@ const setYearlyMode = (mode) => {
 
 const setActiveCategory = (cat) => {
   filters.activeCategory = cat
-  // For yearly mode, category change requires new fetch
   if (filters.isYearlyMode) {
     fetchData()
   }
@@ -471,6 +503,8 @@ Number.prototype.clamp = function(min, max) {
 };
 
 onMounted(() => {
+  updateDimensions()
+  window.addEventListener('resize', updateDimensions)
   fetchData()
 })
 </script>
@@ -838,10 +872,23 @@ onMounted(() => {
     padding: 0.4rem 0.6rem;
   }
 
-  /* Chart Container */
+  .metric-selector {
+    width: 100%;
+  }
+
+  .metric-selector .btn {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  /* Chart Container - Logic handled by dynamic viewBox now */
   .chart-container {
-    height: 280px !important;
     margin-top: 1rem;
+  }
+
+  /* Hide odd month labels on mobile to reduce clutter */
+  .month-label-odd {
+    display: none;
   }
 
   /* Table Responsive */
@@ -909,8 +956,15 @@ onMounted(() => {
     font-size: 1.25rem;
   }
 
+  /* Chart Container */
   .chart-container {
-    height: 240px !important;
+    /* No override needed */
+  }
+
+  /* Extra emphasis on chart elements for very small screens */
+  .chart-dot {
+    r: 8 !important;
+    stroke-width: 4 !important;
   }
 
   .category-tab {
