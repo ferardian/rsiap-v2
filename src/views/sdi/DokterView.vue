@@ -741,4 +741,47 @@ onMounted(() => {
 .btn-confirm-delete:hover {
   background: #b91c1c;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dokter-container {
+    padding: 1rem;
+  }
+
+  .page-header {
+    padding: 2rem 1.5rem;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .btn-add {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .btn-page {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

@@ -1,38 +1,30 @@
 <template>
   <div class="rekap-presensi-wrapper p-3 px-lg-4">
     <div class="page-header mb-4">
-      <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>
           <h1 class="page-title mb-1">📅 Rekap Presensi Pegawai</h1>
-          <p class="page-subtitle text-muted">Laporan kehadiran, keterlambatan, dan durasi kerja pegawai</p>
+          <p class="page-subtitle text-muted mb-0">Laporan kehadiran, keterlambatan, dan durasi kerja pegawai</p>
         </div>
-        <div class="header-actions d-flex gap-2">
-          <div class="btn-group bg-white rounded-pill p-1 shadow-sm border">
-            <button 
-              class="btn btn-sm px-3 rounded-pill transition-all" 
-              :class="displayMode === 'detail' ? 'btn-primary shadow-sm' : 'btn-light border-0'"
-              @click="displayMode = 'detail'"
-            >
-              <i class="fas fa-list me-1"></i>Detail
-            </button>
-            <button 
-              class="btn btn-sm px-3 rounded-pill transition-all" 
-              :class="displayMode === 'summary' ? 'btn-primary shadow-sm' : 'btn-light border-0'"
-              @click="displayMode = 'summary'"
-            >
-              <i class="fas fa-chart-pie me-1"></i>Ringkasan
-            </button>
-          </div>
+        <div class="header-actions d-flex flex-wrap gap-2">
+          <button 
+            class="btn btn-light rounded-pill p-2 px-3 shadow-sm border d-md-none"
+            @click="isFilterVisible = !isFilterVisible"
+            :title="isFilterVisible ? 'Tutup Filter' : 'Filter'"
+          >
+            <i class="fas" :class="isFilterVisible ? 'fa-filter-circle-xmark' : 'fa-filter'"></i>
+          </button>
           <button @click="downloadReport" class="btn btn-outline-primary rounded-pill px-4 shadow-sm" :disabled="loading">
-            <i class="fas fa-file-excel me-2"></i>Export Excel
+            <i class="fas fa-file-excel me-2"></i>Export
           </button>
         </div>
       </div>
     </div>
 
     <!-- Filter Section -->
-    <div class="card glass-card border-0 shadow-sm mb-4">
-      <div class="card-body p-4">
+    <transition name="slide-fade">
+      <div v-if="isFilterVisible" class="card glass-card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
         <form @submit.prevent="fetchData" class="row g-3">
           <div class="col-md-3">
             <label class="small-label mb-2 text-primary">TANGGAL AWAL</label>
@@ -73,6 +65,27 @@
         </form>
       </div>
     </div>
+    </transition>
+
+    <!-- Display Mode Switcher & Summary -->
+    <div class="d-flex justify-content-center mb-4">
+      <div class="btn-group bg-white rounded-pill p-1 shadow-sm border">
+        <button 
+          class="btn btn-sm px-4 py-2 rounded-pill transition-all" 
+          :class="displayMode === 'detail' ? 'btn-primary shadow' : 'btn-light border-0'"
+          @click="displayMode = 'detail'"
+        >
+          <i class="fas fa-list me-2"></i>Detail Data
+        </button>
+        <button 
+          class="btn btn-sm px-4 py-2 rounded-pill transition-all" 
+          :class="displayMode === 'summary' ? 'btn-primary shadow' : 'btn-light border-0'"
+          @click="displayMode = 'summary'"
+        >
+          <i class="fas fa-chart-pie me-2"></i>Ringkasan
+        </button>
+      </div>
+    </div>
 
     <!-- Data Table (Summary Mode) -->
     <div v-if="displayMode === 'summary'" class="card glass-card border-0 shadow-sm overflow-hidden">
@@ -80,9 +93,9 @@
         <h6 class="fw-bold mb-0"><i class="fas fa-th-list me-2 text-white-50"></i>Rekapitulasi Per Pegawai</h6>
         <div class="small text-white-50 fw-bold">TOTAL: {{ summaryItems.length }} PEGAWAI</div>
       </div>
-      <div class="card-body p-4">
-        <div class="table-responsive rounded-3 border overflow-hidden">
-          <table class="table table-hover align-middle mb-0 text-center">
+      <div class="card-body p-0 p-lg-4">
+        <div class="table-responsive border-top border-lg rounded-lg-3">
+          <table class="table table-hover align-middle mb-0 text-center" style="min-width: 1000px;">
             <thead class="bg-light-soft small-label text-dark">
               <tr>
                 <th class="ps-4 py-3 text-start">PEGAWAI</th>
@@ -93,7 +106,8 @@
                 <th class="py-3 bg-success-soft">TEPAT</th>
                 <th class="py-3 bg-danger-soft">LAMBAT</th>
                 <th class="py-3 bg-warning-soft">PSW</th>
-                <th class="py-3 bg-danger text-white pe-4">ABSEN</th>
+                <th class="py-3 bg-danger text-white">ABSEN</th>
+                <th class="py-3 text-center pe-4">AKSI</th>
               </tr>
             </thead>
             <tbody>
@@ -105,7 +119,7 @@
               <tr v-else-if="summaryItems.length === 0">
                 <td colspan="9" class="text-center py-5 text-muted">Tidak ada data ringkasan</td>
               </tr>
-              <tr v-for="s in summaryItems" :key="s.nik" class="cursor-pointer" @click="viewEmployeeDetail(s)">
+              <tr v-for="s in summaryItems" :key="s.nik">
                 <td class="ps-4 text-start">
                   <div class="fw-bold text-dark">{{ s.nama }}</div>
                   <div class="smallest text-muted">{{ s.nik }} • {{ s.jbtn }}</div>
@@ -117,10 +131,15 @@
                 <td class="text-success fw-bold">{{ s.tepat_waktu }}</td>
                 <td class="text-danger fw-bold">{{ s.terlambat }}</td>
                 <td class="text-warning fw-bold">{{ s.psw }}</td>
-                <td class="pe-4">
+                <td>
                   <span :class="s.tidak_presensi > 0 ? 'text-danger fw-800' : 'text-muted'" style="font-size: 1.1rem;">
                     {{ s.tidak_presensi }}
                   </span>
+                </td>
+                <td class="pe-4 text-center">
+                  <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" @click="viewEmployeeDetail(s)">
+                    <i class="fas fa-search me-1"></i>Detail
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -135,6 +154,24 @@
         <h6 class="fw-bold mb-0 text-white"><i class="fas fa-history me-2 text-white-50"></i>Log Aktivitas Presensi</h6>
         <div class="small text-white-50 fw-bold">TOTAL: {{ pagination.total }} RECORDS</div>
       </div>
+      
+      <!-- Info Bar for Focused Employee -->
+      <div v-if="focusedEmployee" class="bg-primary-soft p-3 px-4 border-bottom d-flex align-items-center justify-content-between animate__animated animate__fadeIn">
+        <div class="d-flex align-items-center overflow-hidden">
+          <div class="avatar-sm flex-shrink-0 bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="text-truncate">
+            <div class="smallest text-primary fw-bold text-uppercase ls-1">Menampilkan Detail Untuk:</div>
+            <div class="fw-bold text-dark text-truncate">{{ focusedEmployee.nama }}</div>
+            <div class="text-muted small font-monospace">({{ focusedEmployee.nik }})</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-primary rounded-pill px-3 ms-2 flex-shrink-0" @click="clearFocusedEmployee">
+          <i class="fas fa-times me-1"></i> <span class="d-none d-sm-inline">Lihat Semua</span>
+        </button>
+      </div>
+
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead class="bg-light-soft small-label text-dark">
@@ -273,6 +310,8 @@ const items = ref([])
 const summaryItems = ref([])
 const displayMode = ref('detail') // detail | summary
 const selectedItem = ref(null)
+const focusedEmployee = ref(null)
+const isFilterVisible = ref(window.innerWidth >= 768)
 
 // Native date helpers
 const today = new Date()
@@ -330,7 +369,12 @@ const fetchData = async () => {
 
 const fetchDetail = async () => {
   try {
-    const res = await rekapPresensiService.getRekapPresensi(filters)
+    const finalFilters = { ...filters }
+    if (focusedEmployee.value) {
+      finalFilters.search = focusedEmployee.value.nik
+    }
+    
+    const res = await rekapPresensiService.getRekapPresensi(finalFilters)
     items.value = res.data.data
     const meta = res.data.meta
     pagination.total = meta.total
@@ -358,6 +402,12 @@ const resetFilters = () => {
   filters.status = ''
   filters.search = ''
   filters.page = 1
+  focusedEmployee.value = null
+  fetchData()
+}
+
+const clearFocusedEmployee = () => {
+  focusedEmployee.value = null
   fetchData()
 }
 
@@ -410,12 +460,9 @@ const showDetail = (item) => {
 }
 
 const viewEmployeeDetail = (employee) => {
-  filters.search = employee.nik
+  focusedEmployee.value = employee
+  filters.search = '' // Clear visible search box
   displayMode.value = 'detail'
-  // fetchData() will be called automatically by watch(displayMode) or we can call it manually
-  // But wait, displayMode watch calls fetchData. 
-  // If we are already in detail, it won't trigger. 
-  // Let's call it manually to be sure if search changed.
   fetchData()
 }
 
@@ -545,5 +592,24 @@ onMounted(() => {
 
 .font-monospace {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+
+@media (max-width: 767px) {
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>

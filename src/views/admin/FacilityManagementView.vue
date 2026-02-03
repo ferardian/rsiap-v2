@@ -469,4 +469,64 @@ onMounted(fetchFacilities)
   background: rgba(255,255,255,0.3);
   transform: rotate(90deg);
 }
+/* Responsive */
+@media (max-width: 768px) {
+  .facility-management {
+    gap: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+
+  .header-right {
+    width: 100%;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sidebar-form {
+    width: 100%;
+    right: -100%;
+    border-left: none;
+  }
+  
+  .sidebar-form.active {
+    right: 0;
+  }
+
+  .sidebar-body {
+    padding: 1.5rem;
+  }
+
+  .sidebar-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .sidebar-footer {
+    padding: 1rem 1.5rem;
+    flex-direction: column-reverse;
+  }
+
+  .sidebar-footer .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .sidebar-footer .btn-secondary {
+    margin-bottom: 0;
+  }
+
+  .btn-sidebar-close {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0; /* Anti-gepeng */
+  }
+}
 </style>

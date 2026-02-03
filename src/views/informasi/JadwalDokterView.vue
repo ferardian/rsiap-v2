@@ -53,7 +53,7 @@
 
     <!-- Schedule Display -->
     <div v-else class="schedule-container">
-      <div v-for="day in days" :key="day" class="day-section">
+      <div v-for="day in (selectedDay ? [selectedDay] : days)" :key="day" class="day-section">
         <h2 class="day-header">
           <i class="fas fa-calendar"></i>
           {{ day }}

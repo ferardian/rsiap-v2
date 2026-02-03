@@ -293,22 +293,27 @@
               <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light-soft small-label">
                   <tr>
-                    <th class="ps-3">PASIEN / NO RM</th>
-                    <th>NIK</th>
-                    <th>NO. BPJS</th>
+                    <th class="ps-3 text-nowrap">PASIEN / NO RM</th>
+                    <th class="d-none d-md-table-cell">NIK</th>
+                    <th class="d-none d-md-table-cell">NO. BPJS</th>
                     <th class="text-center">AKSI</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="p in lookupResults" :key="p.no_rkm_medis">
                     <td class="ps-3">
-                      <div class="fw-bold text-dark">{{ p.nm_pasien }}</div>
+                      <div class="fw-bold text-dark text-truncate" style="max-width: 150px;">{{ p.nm_pasien }}</div>
                       <div class="small text-muted font-monospace">{{ p.no_rkm_medis }}</div>
+                      <!-- Visible only on mobile -->
+                      <div class="d-md-none mt-1">
+                        <span v-if="p.no_peserta" class="badge bg-light text-primary border p-1">{{ p.no_peserta }}</span>
+                        <span v-else class="text-muted small">No BPJS: -</span>
+                      </div>
                     </td>
-                    <td><span class="small font-monospace text-muted">{{ p.no_ktp || '-' }}</span></td>
-                    <td><span class="small font-monospace text-primary fw-bold">{{ p.no_peserta || '-' }}</span></td>
+                    <td class="d-none d-md-table-cell"><span class="small font-monospace text-muted">{{ p.no_ktp || '-' }}</span></td>
+                    <td class="d-none d-md-table-cell"><span class="small font-monospace text-primary fw-bold">{{ p.no_peserta || '-' }}</span></td>
                     <td class="text-center">
-                      <button class="btn btn-sm btn-primary rounded-pill px-3" @click="selectPasien(p)">
+                      <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" @click="selectPasien(p)">
                         Pilih
                       </button>
                     </td>
