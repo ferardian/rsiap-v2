@@ -50,6 +50,13 @@
       </div>
       <div class="col-6 col-md">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
+          <div class="text-muted small fw-bold mb-1">MOBILE JKN</div>
+          <div class="h3 fw-bold mb-0 text-info">{{ mobileJknCount }}</div>
+          <div class="stat-footer mt-2 small text-muted"><i class="fas fa-mobile-alt me-1"></i>Dari Mobile JKN</div>
+        </div>
+      </div>
+      <div class="col-6 col-md">
+        <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
           <div class="text-muted small fw-bold mb-1">BELUM LAYAN</div>
           <div class="h3 fw-bold mb-0 text-warning">{{ statusCounts.antrean }}</div>
           <div class="stat-footer mt-2 small text-muted">Akan dilayani</div>
@@ -582,6 +589,11 @@ const uniqueAntrolCount = computed(() => {
   const list = Array.isArray(antrolList.value) ? antrolList.value : []
   const uniqueCards = new Set(list.filter(i => i.nokapst).map(item => item.nokapst))
   return uniqueCards.size
+})
+
+const mobileJknCount = computed(() => {
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  return list.filter(item => String(item.sumberdata).toLowerCase().includes('mobile jkn')).length
 })
 
 const missingQueues = computed(() => {
