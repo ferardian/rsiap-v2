@@ -9,10 +9,17 @@
       </div>
       <div class="header-actions">
         <div class="date-filter-card glass-card shadow-sm">
-          <label class="small-label mb-1 d-block text-muted">Filter Tanggal</label>
+          <label class="small-label mb-1 d-block text-muted">Rentang Tanggal</label>
           <div class="d-flex align-items-center gap-2">
             <input 
               v-model="filters.tanggal" 
+              type="date" 
+              class="form-control premium-input-sm" 
+              @change="fetchAntrolData"
+            >
+            <span class="text-muted small">s/d</span>
+            <input 
+              v-model="filters.tgl_akhir" 
               type="date" 
               class="form-control premium-input-sm" 
               @change="fetchAntrolData"
@@ -568,6 +575,7 @@ const adjData = reactive({
 
 const filters = reactive({
   tanggal: new Date().toISOString().split('T')[0],
+  tgl_akhir: new Date().toISOString().split('T')[0],
   keyword: '',
   status: ''
 })
@@ -684,10 +692,10 @@ const filteredAntrol = computed(() => {
 const fetchAntrolData = async () => {
   loading.value = true
   try {
-    // Parallel fetch
+    // Parallel fetch using range methods
     const [antrolRes, sepRes] = await Promise.all([
-      bpjsAntrolService.getPendaftaranByTanggal(filters.tanggal),
-      bpjsAntrolService.getSepCount(filters.tanggal)
+      bpjsAntrolService.getPendaftaranByRange(filters.tanggal, filters.tgl_akhir),
+      bpjsAntrolService.getSepCountByRange(filters.tanggal, filters.tgl_akhir)
     ])
 
     if (antrolRes.data.metadata.code === 200) {

@@ -42,6 +42,20 @@ const bpjsAntrolService = {
      * Get Outpatient SEP count (excluding IGD) for a given date
      */
     getSepCount: (tanggal) => api.get(`/bpjs/antrol/sep/count/${tanggal}`),
+
+    /**
+     * Get queue registration by date range
+     * @param {string} tglAwal - YYYY-MM-DD
+     * @param {string} tglAkhir - YYYY-MM-DD
+     */
+    getPendaftaranByRange: (tglAwal, tglAkhir) => api.get(`/bpjs/antrol/pendaftaran/range/${tglAwal}/${tglAkhir}`),
+
+    /**
+     * Get Outpatient SEP list (excluding IGD) for a given date range
+     * @param {string} tglAwal - YYYY-MM-DD
+     * @param {string} tglAkhir - YYYY-MM-DD
+     */
+    getSepCountByRange: (tglAwal, tglAkhir) => api.get(`/bpjs/antrol/sep/range/${tglAwal}/${tglAkhir}`),
 };
 
 export default bpjsAntrolService;
