@@ -222,6 +222,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/rekap-cuti',
+    name: 'RekapCutiSDI',
+    component: () => import('../views/sdi/RekapCutiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/aset-fasilitas/master-data',
     name: 'MasterDataAset',
     component: () => import('../views/aset/master/MasterDataView.vue'),
@@ -342,9 +348,27 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/bpjs/mapping-dokter',
+    name: 'BpjsMappingDokter',
+    component: () => import('../views/bpjs/MappingDokterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/bpjs/pasien',
+    name: 'BpjsPasien',
+    component: () => import('../views/bpjs/PasienVclaimView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/laporan/hais',
     name: 'LaporanHais',
     component: () => import('../views/laporan/HaisLaporanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/rekap-presensi',
+    name: 'RekapPresensi',
+    component: () => import('../views/laporan/RekapPresensiView.vue'),
     meta: { requiresAuth: true }
   },
   {

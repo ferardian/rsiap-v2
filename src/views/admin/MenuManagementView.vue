@@ -68,7 +68,7 @@
                     <option value="">Semua</option>
                     <option value="">Utama</option>
                     <option v-for="parent in parentMenus" :key="parent.id_menu" :value="parent.id_menu">
-                      {{ parent.nama_menu }}
+                      {{ parent.nama_menu }} ({{ parent.platform === 'mobile' ? 'Mobile' : 'Web' }})
                     </option>
                   </select>
                   <i class="fas fa-chevron-down select-arrow"></i>
