@@ -1,3 +1,4 @@
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -387,6 +388,18 @@ const routes = [
     path: '/laporan/operasi',
     name: 'LaporanOperasi',
     component: () => import('../views/laporan/OperasiReportView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ppra/tim',
+    name: 'TimPpra',
+    component: () => import('../views/ppra/TimPpraView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ppra/mapping-obat',
+    name: 'PpraMappingObat',
+    component: () => import('../views/ppra/MappingObatView.vue'),
     meta: { requiresAuth: true }
   },
   {
