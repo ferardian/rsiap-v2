@@ -220,7 +220,7 @@ const fetchData = async () => {
   loading.value = true;
   try {
     const response = await ppraService.getLaporan(filters);
-    reportData.value = response.data.data;
+    reportData.value = response.data.data || [];
   } catch (error) {
     console.error('Failed to fetch report:', error);
     Swal.fire('Gagal', 'Tidak dapat mengambil data laporan', 'error');
