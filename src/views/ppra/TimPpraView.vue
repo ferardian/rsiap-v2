@@ -74,57 +74,91 @@
 
     <!-- Modal Form -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
+      <div class="modal-content glass-effect">
         <div class="modal-header">
-          <h2>{{ isEditMode ? 'Edit Anggota' : 'Tambah Anggota' }}</h2>
+          <div class="header-icon">
+            <i class="fas" :class="isEditMode ? 'fa-user-edit' : 'fa-user-plus'"></i>
+          </div>
+          <div>
+            <h2>{{ isEditMode ? 'Edit Anggota' : 'Tambah Anggota' }}</h2>
+            <p class="subtitle">{{ isEditMode ? 'Perbarui data anggota tim.' : 'Tambahkan anggota baru ke tim PPRA.' }}</p>
+          </div>
           <button @click="closeModal" class="btn-close-modal">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="modal-body">
             
-          <div class="form-group mb-3" v-if="!isEditMode">
-            <label>Pegawai <span class="text-danger">*</span></label>
-            <VueSelect
-                v-model="selectedPegawai"
-                :options="pegawaiList"
-                :reduce="pegawai => pegawai.nik"
-                label="nama"
-                placeholder="Cari Pegawai..."
-                @search="onSearchPegawai"
-                :disabled="isEditMode"
-            >
-                <template #option="{ nama, nik }">
-                    <div class="d-flex flex-column">
-                        <span class="font-weight-bold">{{ nama }}</span>
-                        <small class="text-muted">{{ nik }}</small>
+          <div class="form-group mb-4" v-if="!isEditMode">
+            <label class="form-label">Pegawai <span class="text-danger">*</span></label>
+            <div class="select-wrapper">
+                <VueSelect
+                    v-model="selectedPegawai"
+                    :options="pegawaiList"
+                    label="nama"
+                    placeholder="Ketik nama atau NIK pegawai..."
+                    @search="onSearchPegawai"
+                    class="modern-select"
+                >
+                    <template #option="{ nama, nik }">
+                        <div class="option-item">
+                            <span class="option-name">{{ nama }}</span>
+                            <div class="option-meta">
+                                <span class="option-code">{{ nik }}</span>
+                            </div>
+                        </div>
+                    </template>
+                    <template #no-options="{ search, searching }">
+                        <div class="no-options">
+                            <template v-if="searching">
+                                <i class="fas fa-search"></i> Tidak ditemukan hasil untuk "<em>{{ search }}</em>".
+                            </template>
+                            <template v-else>
+                                <i class="fas fa-keyboard"></i> Ketik nama pegawai untuk mencari...
+                            </template>
+                        </div>
+                    </template>
+                </VueSelect>
+            </div>
+          </div>
+
+          <div class="form-group mb-4" v-if="isEditMode">
+            <label class="form-label">Nama Pegawai</label>
+            <div class="readonly-input">
+                <i class="fas fa-user-circle"></i>
+                <input type="text" :value="formData.nama" disabled>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-4">
+                    <label class="form-label">Jabatan di Tim <span class="text-danger">*</span></label>
+                    <VueSelect
+                        v-model="formData.jabatan"
+                        :options="['Ketua', 'Wakil Ketua', 'Sekretaris', 'Anggota']"
+                        placeholder="Pilih Jabatan..."
+                        class="modern-select"
+                    ></VueSelect>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-4">
+                    <label class="form-label">Role / Keterangan</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-briefcase"></i>
+                        <input type="text" v-model="formData.role" class="form-control" placeholder="Contoh: Dokter Anak">
                     </div>
-                </template>
-            </VueSelect>
-          </div>
-
-          <div class="form-group mb-3">
-            <label>Jabatan di Tim <span class="text-danger">*</span></label>
-            <select v-model="formData.jabatan" class="form-control simple-select">
-              <option value="">Pilih Jabatan</option>
-              <option value="Ketua">Ketua</option>
-              <option value="Wakil Ketua">Wakil Ketua</option>
-              <option value="Sekretaris">Sekretaris</option>
-              <option value="Anggota">Anggota</option>
-            </select>
-          </div>
-
-          <div class="form-group mb-3">
-            <label>Role / Keterangan</label>
-            <input type="text" v-model="formData.role" class="form-control" placeholder="Contoh: Dokter Spesialis Anak">
+                </div>
+            </div>
           </div>
 
         </div>
         <div class="modal-footer">
-          <button @click="closeModal" class="btn-secondary">Batal</button>
-          <button @click="saveMember" class="btn-primary" :disabled="saving">
-            <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
-            {{ saving ? 'Menyimpan...' : 'Simpan' }}
+          <button @click="closeModal" class="btn-cancel">Batal</button>
+          <button @click="saveMember" class="btn-save" :disabled="saving">
+            <span v-if="saving" class="spinner-border spinner-border-sm me-2"></span>
+            {{ saving ? 'Menyimpan...' : 'Simpan Data' }}
           </button>
         </div>
       </div>
@@ -154,6 +188,7 @@ const selectedPegawai = ref(null);
 const formData = reactive({
   id: null,
   nik: '',
+  nama: '',
   jabatan: '',
   role: ''
 });
@@ -183,13 +218,18 @@ const handleSearch = () => {
 };
 
 const onSearchPegawai = async (search, loading) => {
-    if(search.length < 3) return;
+    if(search.length < 3) {
+        pegawaiList.value = []; // Clear options if search query is too short
+        loading(false);
+        return;
+    }
     loading(true);
     try {
-        const response = await pegawaiService.get(search); // Adjust based on actual service
+        const response = await pegawaiService.searchPegawai(search);
         pegawaiList.value = response.data.data || [];
     } catch (e) {
         console.error(e);
+        pegawaiList.value = []; // Clear options on error
     }
     loading(false);
 };
@@ -224,8 +264,10 @@ const handleImageError = (member) => {
 const openAddModal = () => {
   isEditMode.value = false;
   selectedPegawai.value = null;
+  pegawaiList.value = []; // Reset history
   formData.id = null;
   formData.nik = '';
+  formData.nama = '';
   formData.jabatan = '';
   formData.role = '';
   showModal.value = true;
@@ -235,6 +277,7 @@ const openEditModal = (member) => {
   isEditMode.value = true;
   formData.id = member.id;
   formData.nik = member.nik;
+  formData.nama = member.pegawai?.nama;
   formData.jabatan = member.jabatan;
   formData.role = member.role;
   showModal.value = true;
@@ -263,7 +306,7 @@ const saveMember = async () => {
       });
     } else {
       await ppraService.storeTim({
-        nik: selectedPegawai.value,
+        nik: selectedPegawai.value?.nik,
         jabatan: formData.jabatan,
         role: formData.role
       });
@@ -309,54 +352,64 @@ onMounted(() => {
 <style scoped>
 .tim-ppra-page {
   padding: 1.5rem;
-  background-color: #f8f9fa;
+  background-color: #f0f2f5;
   min-height: 100vh;
+  font-family: 'Inter', sans-serif;
 }
 
 .page-header {
   margin-bottom: 2rem;
   background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding: 1.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px solid rgba(0,0,0,0.02);
 }
 
 .header-content h1 {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #2c3e50;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.header-content h1 i {
+    color: #3498db;
+    background: #e8f4fd;
+    padding: 10px;
+    border-radius: 10px;
 }
 
 .header-content p {
   color: #7f8c8d;
-  margin: 5px 0 0;
-  font-size: 0.9rem;
+  margin: 8px 0 0 54px;
+  font-size: 0.95rem;
 }
 
 .btn-primary {
-  background: #3498db;
+  background: linear-gradient(135deg, #3498db, #2980b9);
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: 0.85rem 1.8rem;
+  border-radius: 12px;
   color: white;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-  background: #2980b9;
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
 
 .filters-section {
@@ -365,17 +418,25 @@ onMounted(() => {
 
 .search-box {
   background: white;
-  padding: 0.8rem 1.2rem;
-  border-radius: 10px;
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-  max-width: 400px;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  max-width: 450px;
+  border: 1px solid #f0f2f5;
+  transition: all 0.3s;
+}
+
+.search-box:focus-within {
+    border-color: #3498db;
+    box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
 }
 
 .search-box i {
-  color: #95a5a6;
+  color: #bdc3c7;
+  font-size: 1.1rem;
 }
 
 .search-box input {
@@ -384,6 +445,29 @@ onMounted(() => {
   width: 100%;
   font-size: 1rem;
   color: #2c3e50;
+  background: transparent;
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 3rem 0;
+  color: #7f8c8d;
+}
+
+.loading-state .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  color: #3498db !important;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #bdc3c7;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
 }
 
 .team-grid {
@@ -401,10 +485,12 @@ onMounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
+  border: 1px solid #f0f2f5;
 }
 
 .team-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .member-photo {
@@ -521,97 +607,275 @@ onMounted(() => {
   color: #2980b9;
 }
 
-/* Modal */
+/* Modal Styling Premium */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(44, 62, 80, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1050;
   padding: 1rem;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   width: 100%;
-  max-width: 500px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 600px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255,255,255,0.8);
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
+  from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-header {
-  padding: 1.5rem;
+  padding: 2rem 2.5rem 1.5rem;
   border-bottom: 1px solid #f1f2f6;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    background: #e8f4fd;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3498db;
+    font-size: 1.5rem;
+    margin-right: 1.2rem;
 }
 
 .modal-header h2 {
-  font-size: 1.25rem;
-  margin: 0;
-  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0 0 5px;
+  font-weight: 800;
   color: #2c3e50;
 }
 
+.subtitle {
+    margin: 0;
+    color: #95a5a6;
+    font-size: 0.9rem;
+}
+
 .btn-close-modal {
-  background: transparent;
+  background: #f8f9fa;
   border: none;
-  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1rem;
   cursor: pointer;
   color: #95a5a6;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-modal:hover {
+    background: #e74c3c;
+    color: white;
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 2rem 2.5rem;
 }
 
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #f1f2f6;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
+.row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.col-md-6 {
+    flex: 1;
+    min-width: 200px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+    color: #34495e;
+    font-size: 0.95rem;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon i {
+    position: absolute;
+    left: 15px;
+    color: #95a5a6;
+}
+
+.input-with-icon input {
+    padding-left: 40px;
+}
+
+.readonly-input {
+    background: #f8f9fa;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.readonly-input input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    color: #34495e;
+    font-weight: 700;
 }
 
 .form-control {
   width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #dfe6e9;
-  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e0e6ed;
+  border-radius: 12px;
   font-size: 0.95rem;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  background: #fafbfc;
 }
 
 .form-control:focus {
   border-color: #3498db;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
   outline: none;
 }
 
-.btn-secondary {
-  background: #ecf0f1;
-  color: #7f8c8d;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+/* Custom Vue Select Styling */
+:deep(.v-select) {
+    background: #fafbfc;
+    border-radius: 12px;
 }
 
-.btn-secondary:hover {
-  background: #bdc3c7;
+:deep(.vs__dropdown-toggle) {
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    padding: 6px 4px;
+    transition: all 0.2s;
+}
+
+:deep(.vs--open .vs__dropdown-toggle) {
+    border-color: #3498db;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+:deep(.vs__dropdown-menu) {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    padding: 10px;
+    margin-top: 5px;
+}
+
+:deep(.vs__dropdown-option) {
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+:deep(.vs__dropdown-option--highlight) {
+    background: #e8f4fd;
+    color: #3498db;
+}
+
+.option-item {
+    padding: 4px 0;
+}
+
+.option-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.option-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.no-options {
+    padding: 10px;
+    text-align: center;
+    color: #95a5a6;
+}
+
+.modal-footer {
+  padding: 1.5rem 2.5rem 2rem;
+  border-top: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: #fbfdff;
+  border-radius: 0 0 20px 20px;
+}
+
+.btn-cancel {
+  background: white;
+  color: #7f8c8d;
+  border: 1px solid #e0e6ed;
+  padding: 0.8rem 1.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f1f2f6;
+    color: #2c3e50;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+    transition: all 0.2s;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+}
+
+.btn-save:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Responsive adjustments */
@@ -620,8 +884,14 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    padding: 1.5rem;
   }
   
+  .header-content p {
+      margin-left: 0;
+      margin-top: 10px;
+  }
+
   .btn-primary {
     width: 100%;
     justify-content: center;
@@ -630,5 +900,56 @@ onMounted(() => {
   .search-box {
     max-width: 100%;
   }
+
+  .col-md-6 {
+      flex: 100%;
+  }
+
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem 1rem;
+  }
+  
+  .header-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    margin-right: 0.8rem;
+    border-radius: 12px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-radius: 0 0 16px 16px;
+  }
 }
+
+@media (max-width: 480px) {
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.8rem;
+  }
+  
+  .btn-save, .btn-cancel {
+    width: 100%;
+    padding: 0.8rem;
+  }
+}
+
 </style>

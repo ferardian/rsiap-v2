@@ -853,6 +853,7 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 1rem;
   background: #fbfdff;
+  border-radius: 0 0 20px 20px;
 }
 
 .btn-cancel {
@@ -920,6 +921,53 @@ onMounted(() => {
   
   .col-md-6 {
       flex: 100%;
+  }
+
+  /* Modal Mobile Tweaks */
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem 1rem;
+  }
+  
+  .header-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    margin-right: 0.8rem;
+    border-radius: 12px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-radius: 0 0 16px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.8rem;
+  }
+  
+  .btn-save, .btn-cancel {
+    width: 100%;
+    padding: 0.8rem;
   }
 }
 </style>
