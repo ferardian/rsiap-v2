@@ -64,5 +64,17 @@ export default {
         return api.get('/ppra/mapping-obat/search-obat', {
             params: { keyword }
         });
+    },
+
+    getLaporan(params) {
+        return api.get('/ppra/laporan', { params });
+    },
+
+    storeVerifikasi(data) {
+        return api.post('/ppra/verifikasi', data);
+    },
+
+    getVerifikasi(params) {
+        return api.get('/ppra/verifikasi', { params });
     }
 }

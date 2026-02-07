@@ -13,6 +13,7 @@
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.6.2",
     "bootstrap": "^5.3.8",
+    "dayjs": "^1.11.19",
     "lodash": "^4.17.21",
     "pinia": "^2.1.7",
     "qrcode": "^1.5.4",

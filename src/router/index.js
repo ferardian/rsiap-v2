@@ -229,6 +229,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/temporary-presensi',
+    name: 'TemporaryPresensi',
+    component: () => import('../views/sdi/TemporaryPresensiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/aset-fasilitas/master-data',
     name: 'MasterDataAset',
     component: () => import('../views/aset/master/MasterDataView.vue'),
@@ -400,6 +406,12 @@ const routes = [
     path: '/ppra/mapping-obat',
     name: 'PpraMappingObat',
     component: () => import('../views/ppra/MappingObatView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ppra/laporan',
+    name: 'PpraLaporan',
+    component: () => import('../views/ppra/PpraLaporanView.vue'),
     meta: { requiresAuth: true }
   },
   {
