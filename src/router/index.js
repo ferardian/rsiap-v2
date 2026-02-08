@@ -420,6 +420,12 @@ const routes = [
     component: () => import('../views/ProfileView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/pasien/data',
+    name: 'DataPasien',
+    component: () => import('../views/pasien/DataPasienView.vue'),
+    meta: { requiresAuth: true }
+  },
 ]
 
 const router = createRouter({
