@@ -142,18 +142,28 @@
         </div>
       </div>
     </div>
+
+    <!-- Detail Modal -->
+    <PatientDetailModal 
+      :show="showDetailModal" 
+      :patient="selectedPatient" 
+      @close="showDetailModal = false" 
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import pasienService from '../../services/pasienService';
+import PatientDetailModal from './components/PatientDetailModal.vue';
 import { debounce } from 'lodash';
 
 // State
 const patients = ref([]);
 const loading = ref(false);
 const searchQuery = ref('');
+const showDetailModal = ref(false);
+const selectedPatient = ref(null);
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -192,19 +202,23 @@ const fetchPatients = async () => {
                 value: searchQuery.value
             },
             limit: pagination.value.per_page,
-            page: pagination.value.current_page
+            page: pagination.value.current_page,
+            sort: [
+                { field: 'no_rkm_medis', direction: 'desc' }
+            ]
         };
         response = await pasienService.searchPasien(searchPayload);
     } else {
         // Use the same search endpoint but with empty search to get paginated list
-        // Or specific logic if backend differs. 
-        // Assuming searchPasien handles empty search gracefully or we pass empty string.
          const searchPayload = {
             search: {
                 value: ''
             },
             limit: pagination.value.per_page,
-            page: pagination.value.current_page
+            page: pagination.value.current_page,
+            sort: [
+                { field: 'no_rkm_medis', direction: 'desc' }
+            ]
         };
         response = await pasienService.searchPasien(searchPayload);
     }
@@ -243,10 +257,8 @@ const formatDate = (dateString) => {
 };
 
 const viewDetail = (patient) => {
-  // Placeholder for future detail view or modal
-  console.log('View detail:', patient);
-  // You might want to router push to detail page if it exists
-  // router.push({ name: 'PasienDetail', params: { id: patient.no_rkm_medis } });
+  selectedPatient.value = patient;
+  showDetailModal.value = true;
 };
 
 onMounted(() => {
