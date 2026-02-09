@@ -9,9 +9,14 @@
                  <i class="fas fa-chart-line mr-2"></i>
                  Dashboard Kunjungan
             </h1>
-            <button @click="isFilterVisible = !isFilterVisible" class="btn-toggle-filter d-md-none">
-              <i class="fas" :class="isFilterVisible ? 'fa-chevron-up' : 'fa-filter'"></i>
-            </button>
+            <div class="header-buttons">
+              <button @click="fetchData" class="btn-refresh" :disabled="loading" title="Refresh Data">
+                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+              </button>
+              <button @click="isFilterVisible = !isFilterVisible" class="btn-toggle-filter d-md-none">
+                <i class="fas" :class="isFilterVisible ? 'fa-chevron-up' : 'fa-filter'"></i>
+              </button>
+            </div>
           </div>
           <p class="page-subtitle mb-0">Analisis data kunjungan pasien Rawat Jalan & Rawat Inap</p>
         </div>
@@ -62,6 +67,19 @@
                 <option value="Ralan">Rawat Jalan</option>
                 <option value="Ranap">Rawat Inap</option>
               </select>
+            </div>
+
+            <!-- Poliklinik Filter -->
+            <div class="filter-item poli-filter">
+              <label>Poliklinik / Unit</label>
+              <SearchableSelect
+                v-model="filters.kd_poli"
+                :options="poliklinikOptions"
+                labelKey="nm_poli"
+                valueKey="kd_poli"
+                placeholder="Semua Poliklinik"
+                @change="fetchData"
+              />
             </div>
           </div>
         </div>
@@ -222,16 +240,60 @@
           </div>
         </div>
 
-        <!-- Poli / Unit -->
+        <!-- Poli / Unit / Bangsal -->
         <div class="visual-card full-width">
-          <h4 class="card-title">Berdasarkan Unit / Poliklinik</h4>
+          <h4 class="card-title">
+            {{ filters.status_lanjut === 'Ranap' ? 'Berdasarkan Bangsal / Kamar' : 'Berdasarkan Unit / Poliklinik' }}
+          </h4>
           <div class="poli-grid">
-            <div v-for="item in visitData.poli" :key="item.label" class="poli-item">
+            <template v-if="filters.status_lanjut === 'Ranap'">
+              <div v-for="item in visitData.bangsal" :key="item.label" class="poli-item">
+                <span class="poli-name">{{ item.label }}</span>
+                <div class="poli-bar-wrapper">
+                    <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                         <span class="poli-val">{{ item.total }}</span>
+                    </div>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div v-for="item in visitData.poli" :key="item.label" class="poli-item">
+                <span class="poli-name">{{ item.label }}</span>
+                <div class="poli-bar-wrapper">
+                    <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                         <span class="poli-val">{{ item.total }}</span>
+                    </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+ 
+        <!-- Kategori Pasien (Hanya Ranap) -->
+        <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card full-width">
+          <h4 class="card-title">Berdasarkan Kategori Pasien</h4>
+          <div class="poli-grid">
+            <div v-for="item in visitData.kategori" :key="item.label" class="poli-item">
               <span class="poli-name">{{ item.label }}</span>
               <div class="poli-bar-wrapper">
-                   <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                        <span class="poli-val">{{ item.total }}</span>
-                   </div>
+                  <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                       <span class="poli-val">{{ item.total }}</span>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Kelas Pasien (Hanya Ranap) -->
+        <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card full-width">
+          <h4 class="card-title">Berdasarkan Kelas Perawatan</h4>
+          <div class="poli-grid">
+            <div v-for="item in visitData.kelas" :key="item.label" class="poli-item">
+              <span class="poli-name">{{ item.label }}</span>
+              <div class="poli-bar-wrapper">
+                  <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                       <span class="poli-val">{{ item.total }}</span>
+                  </div>
               </div>
             </div>
           </div>
@@ -261,16 +323,19 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import dashboardVisitService from '../../services/dashboardVisitService'
+import poliklinikService from '../../services/poliklinikService'
+import SearchableSelect from '../../components/ui/SearchableSelect.vue'
 
 const loading = ref(true)
 const isFilterVisible = ref(false)
 const isMobile = ref(false)
+const poliklinikOptions = ref([])
 const summary = ref({ 
   total: 0, baru: 0, lama: 0, pria: 0, wanita: 0, 
   keluar_l: 0, keluar_p: 0, mati_l: 0, mati_p: 0,
   mati_48_l: 0, mati_48_p: 0 
 })
-const visitData = ref({ registrasi: [], cara_bayar: [], poli: [], dokter: [] })
+const visitData = ref({ registrasi: [], cara_bayar: [], poli: [], dokter: [], bangsal: [], kategori: [], kelas: [] })
 const inpatientCare = ref(null)
 
 // Generate year options (current year ± 5 years)
@@ -284,8 +349,21 @@ const filters = ref({
   tgl_awal: new Date().toISOString().substr(0, 10),
   tgl_akhir: new Date().toISOString().substr(0, 10),
   tahun: currentYear,
-  status_lanjut: 'all'
+  status_lanjut: 'all',
+  kd_poli: 'all'
 })
+
+const fetchPoliklinik = async () => {
+  try {
+    const response = await poliklinikService.getAllPoliklinik()
+    poliklinikOptions.value = [
+      { kd_poli: 'all', nm_poli: 'Semua Poliklinik' },
+      ...response.data.data
+    ]
+  } catch (error) {
+    console.error('Failed to fetch poliklinik:', error)
+  }
+}
 
 const fetchData = async () => {
   loading.value = true
@@ -308,12 +386,12 @@ const getPercentage = (value, total) => {
 }
 
 const getData = (stts, jk) => {
-     if (!visitData.value.registrasi) return 0
-     const item = visitData.value.registrasi.find(r => 
-          r.stts_daftar?.toLowerCase() === stts.toLowerCase() && 
-          r.jk?.toLowerCase() === jk.toLowerCase()
-     )
-     return item ? item.total : 0
+  if (!visitData.value.registrasi) return 0
+  const item = visitData.value.registrasi.find(r => 
+    r.stts_daftar?.toLowerCase() === stts.toLowerCase() && 
+    r.jk?.toLowerCase() === jk.toLowerCase()
+  )
+  return item ? item.total : 0
 }
 
 const checkMobile = () => {
@@ -326,6 +404,7 @@ const checkMobile = () => {
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+  fetchPoliklinik()
   fetchData()
 })
 
@@ -341,6 +420,16 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.poli-filter {
+  min-width: 250px;
+}
+
+@media (max-width: 992px) {
+  .poli-filter {
+    min-width: 100%;
+  }
+}
+
 /* Header */
 .page-header {
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
@@ -349,8 +438,10 @@ onUnmounted(() => {
   margin-bottom: 2rem;
   color: white;
   position: relative;
-  overflow: hidden;
+  /* Remove overflow: hidden to allow dropdowns to show */
+  overflow: visible; 
   box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
+  z-index: 10;
 }
 
 .page-header::before {
@@ -409,6 +500,8 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 20;
 }
 
 .btn-toggle-filter {
@@ -423,6 +516,41 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-refresh {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-refresh i {
+  font-size: 1rem;
 }
 
 .btn-toggle-filter:hover {

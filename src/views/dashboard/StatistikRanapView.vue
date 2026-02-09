@@ -173,6 +173,52 @@
         </div>
       </div>
 
+      <!-- BOR Per Kelas Section (Only for Gabungan Category) -->
+      <div v-if="filters.activeCategory === 'Gabungan' && overallData.bor_per_kelas" class="bor-kelas-section mb-4 animate__animated animate__fadeInUp">
+        <h5 class="card-title-sm mb-3">BOR per Kelas Rawat <span v-if="filters.isYearlyMode" class="text-primary fw-normal small">(Rerata Tahunan)</span></h5>
+        <div class="row g-3">
+          <div v-for="cl in overallData.bor_per_kelas" :key="cl.kelas" class="col-md-2 col-6">
+            <div class="bor-kelas-card card border-0 shadow-sm rounded-4 p-3 h-100">
+              <h6 class="text-muted x-small fw-bold mb-2 text-uppercase">{{ cl.kelas }}</h6>
+              <div class="d-flex align-items-center justify-content-between">
+                <h4 class="fw-bold mb-0">{{ cl.bor }}%</h4>
+              </div>
+              <div class="bor-mini-progress mt-2">
+                <div class="progress-bar" :style="{ width: cl.bor + '%', backgroundColor: getBorColor(cl.bor) }"></div>
+              </div>
+              <div class="mt-2 d-flex justify-content-between text-xs text-muted">
+                <span>Bed: {{ cl.A }}</span>
+                <span>HP: {{ cl.HP }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ward BOR Section (Filtered by Period & Category) -->
+      <div v-if="currentData.ward_occupancy && currentData.ward_occupancy.length > 0" class="ward-occupancy-section mb-4 animate__animated animate__fadeInUp">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title-sm mb-0">BOR per Bangsal <span v-if="filters.isYearlyMode" class="text-primary fw-normal small">(Rerata Tahunan)</span></h5>
+        </div>
+        <div class="row g-3 custom-scrollbar" style="overflow-x: auto; flex-wrap: nowrap; padding-bottom: 1rem;">
+          <div v-for="w in currentData.ward_occupancy" :key="w.label" class="col-lg-3 col-md-4 col-sm-6" style="flex: 0 0 auto; width: 280px;">
+            <div class="ward-card card border-0 shadow-sm rounded-4 p-3 h-100">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="text-dark small fw-bold mb-0 text-truncate me-2" :title="w.label">{{ w.label }}</h6>
+                <span class="badge x-small fw-bold" :style="getBorBadgeStyle(w.bor)">{{ w.bor }}%</span>
+              </div>
+              <div class="bor-mini-progress mt-2 mb-3">
+                <div class="progress-bar" :style="{ width: w.bor + '%', backgroundColor: getBorColor(w.bor) }"></div>
+              </div>
+              <div class="mt-2 d-flex justify-content-between text-xs text-muted">
+                <span>Bed: {{ w.A }}</span>
+                <span>HP: {{ w.HP }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Trend Chart (Only for Yearly Mode) -->
       <div v-if="filters.isYearlyMode" class="row mb-4">
         <div class="col-12">
@@ -301,6 +347,7 @@ const loading = ref(false)
 const dataLoaded = ref(false)
 const categories = [
   { label: "Gabungan", value: "Gabungan" },
+  { label: "Umum (Non-Intensif)", value: "Umum" },
   { label: "Anak", value: "Anak" },
   { label: "Kandungan", value: "Kandungan" },
   { label: "Bayi", value: "BYC" },
@@ -324,10 +371,11 @@ const yearlyData = ref({ months: [] })
 
 const currentData = computed(() => {
   if (filters.isYearlyMode) {
-      // For yearly mode, currentData could be a summary of all months or just empty-ish?
-      // In mobile app, in yearly mode, the main cards are not shown as prominently or 
-      // they might show the average of the months.
-      // Let's calculate the average for yearly mode main cards.
+      if (overallData.value && overallData.value.indicators) {
+          return overallData.value
+      }
+      
+      // Fallback for non-Gabungan categories in yearly mode if aggregate failed (averaging months)
       if (!yearlyData.value.months || yearlyData.value.months.length === 0) return {}
       
       const count = yearlyData.value.months.filter(m => m.bor > 0).length || 1
@@ -466,6 +514,12 @@ const getBorBadgeStyle = (bor) => {
     return { backgroundColor: bg, color: text, borderColor: border }
 }
 
+const getBorColor = (bor) => {
+    if (bor >= 60 && bor <= 85) return '#10b981'
+    if (bor < 60) return '#f59e0b'
+    return '#ef4444'
+}
+
 // Methods
 const fetchData = async () => {
   loading.value = true
@@ -476,6 +530,8 @@ const fetchData = async () => {
         kategori: filters.activeCategory
       })
       yearlyData.value = res.data.data
+      // In yearly mode, our backend now returns the specific category aggregate in data.overall
+      overallData.value = res.data.data.overall || {}
     } else {
       const res = await ranapStatistikService.getIndicators({
         tgl_awal: filters.tgl_awal,
@@ -699,6 +755,29 @@ onMounted(() => {
 }
 
 .text-xs { font-size: 0.65rem; }
+.x-small { font-size: 0.6rem; }
+
+/* BOR Kelas Cards */
+.bor-kelas-card {
+  transition: transform 0.2s;
+}
+
+.bor-kelas-card:hover {
+  transform: translateY(-3px);
+}
+
+.bor-mini-progress {
+  height: 4px;
+  background-color: #f1f5f9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bor-mini-progress .progress-bar {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 1s ease;
+}
 
 /* Chart SVG */
 .trend-chart-svg {
