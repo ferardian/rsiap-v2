@@ -1,8 +1,8 @@
-import axios from 'axios'
+import api from '../api'
 
 const morbiditasRanapService = {
     getData(params) {
-        return axios.get('/laporan/statistik/ranap/morbiditas', { params })
+        return api.get('/laporan/statistik/ranap/morbiditas', { params })
     }
 }
 
