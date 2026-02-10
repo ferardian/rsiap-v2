@@ -382,7 +382,13 @@ onMounted(() => {
   position: sticky !important;
   left: 0;
   z-index: 20;
-  background: #fff;
+  background-color: #fff !important; /* Ensure solid background to hide columns scrolling underneath */
+}
+
+/* Ensure header fixed columns stay above everything */
+thead .fixed-col {
+  z-index: 110;
+  background-color: #f8fafc !important;
 }
 
 .data-row td { 
@@ -390,8 +396,8 @@ onMounted(() => {
   padding: 0.75rem 0.5rem;
 }
 
-.data-row:hover .fixed-col { background: #f8fafc; }
 .data-row:hover td { background: #f8fafc; }
+.data-row:hover .fixed-col { background-color: #f8fafc !important; }
 
 .val-nonzero { color: #1e293b; font-weight: 700; background: #fffcf0; }
 .border-start-item { border-left: 1.5px solid #e2e8f0 !important; }
