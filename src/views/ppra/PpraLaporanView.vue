@@ -182,10 +182,17 @@
                 <td class="text-center">{{ item.is_new_patient ? getPatientIndex(item.original_index) : '' }}</td>
                 <td>
                   <div v-if="item.is_new_patient || (pIndex === 0 && !item.isSubTotal)" class="d-flex flex-column animate-fade">
-                    <span class="fw-bold text-dark">{{ item.nm_pasien }}</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fw-bold text-dark h6 mb-0">{{ item.nm_pasien }}</span>
+                      <span class="age-tag bg-soft-info text-info border border-info border-opacity-25 animate-fade">
+                        <i class="fas fa-baby-carriage me-1" style="font-size: 10px;"></i>
+                        {{ item.usia }}
+                      </span>
+                    </div>
                     <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
                       <span class="badge bg-light text-primary border px-2">RM: {{ item.no_rkm_medis }}</span>
                       <span class="badge bg-light text-secondary border px-2">No: {{ item.no_rawat }}</span>
+                      <span class="badge bg-light text-danger border px-2"><i class="fas fa-weight me-1"></i>{{ item.berat_badan }}</span>
                       <span class="text-muted" style="font-size: 11px;">
                         <i class="far fa-calendar-alt me-1"></i>{{ item.tgl_masuk }}
                       </span>
@@ -783,6 +790,8 @@ const exportToExcel = () => {
     'No': item.is_new_patient ? getPatientIndex(index) : '',
     'Nama Pasien': item.nm_pasien,
     'No. RM': item.no_rkm_medis,
+    'Usia': item.usia,
+    'BB': item.berat_badan,
     'DPJP': item.nm_dokter,
     'No. Rawat': item.no_rawat,
     'Tgl Masuk': item.tgl_masuk,
@@ -1121,5 +1130,20 @@ onMounted(() => {
 .uppercase-tracking {
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.bg-soft-info {
+  background-color: rgba(186, 230, 253, 0.4);
+}
+
+.age-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 </style>
