@@ -58,13 +58,13 @@
               type="text" 
               class="form-control modern-input ps-4" 
               placeholder="Ketik kriteria cari..."
-              @keyup.enter="fetchData"
+              @keyup.enter="handleSearch"
             >
             <i class="fas fa-search position-absolute start-0 top-50 translate-middle-y ms-2 text-muted" style="font-size: 12px;"></i>
           </div>
         </div>
         <div class="filter-actions d-flex gap-2">
-          <button class="btn btn-primary ripple" @click="fetchData" :disabled="loading">
+          <button class="btn btn-primary ripple" @click="handleSearch" :disabled="loading">
             <i class="fas fa-search me-1"></i> Tampilkan
           </button>
           <button class="btn btn-success ripple" @click="exportToExcel" :disabled="reportData.length === 0">
@@ -106,22 +106,40 @@
       <div class="col-md-4 mb-3 mb-md-0">
         <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-success">
           <div class="summary-icon bg-soft-success text-success">
-            <i class="fas fa-pills"></i>
+            <i class="fas fa-check-circle"></i>
           </div>
-          <div>
-            <div class="text-muted small fw-bold text-uppercase">Total DDD</div>
-            <div class="h4 mb-0 fw-bold">{{ summaryStats.totalDDD }}</div>
+          <div class="flex-grow-1">
+            <div class="text-muted small fw-bold text-uppercase mb-2">Status Verifikasi</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-success fw-bold" style="font-size: 14px;">✓ {{ summaryStats.verification.verified }}</div>
+                <div class="text-muted" style="font-size: 11px;">Terverifikasi</div>
+              </div>
+              <div class="text-end">
+                <div class="text-warning fw-bold" style="font-size: 14px;">⏳ {{ summaryStats.verification.pending }}</div>
+                <div class="text-muted" style="font-size: 11px;">Pending</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       <div class="col-md-4">
-        <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-warning">
-          <div class="summary-icon bg-soft-warning text-warning">
-            <i class="fas fa-hourglass-half"></i>
+        <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-info">
+          <div class="summary-icon bg-soft-info text-info">
+            <i class="fas fa-user-check"></i>
           </div>
-          <div>
-            <div class="text-muted small fw-bold text-uppercase">Rerata LOS</div>
-            <div class="h4 mb-0 fw-bold">{{ summaryStats.avgLOS }} Hari</div>
+          <div class="flex-grow-1">
+            <div class="text-muted small fw-bold text-uppercase mb-2">Status Approval</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="text-success fw-bold" style="font-size: 14px;">✓ {{ summaryStats.approval.approved }}</div>
+                <div class="text-muted" style="font-size: 11px;">Disetujui</div>
+              </div>
+              <div class="text-end">
+                <div class="text-warning fw-bold" style="font-size: 14px;">⏳ {{ summaryStats.approval.pending }}</div>
+                <div class="text-muted" style="font-size: 11px;">Pending</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -462,18 +480,26 @@ const dokterOptions = ref([]);
 const currentPage = ref(1);
 const itemsPerPage = ref(25);
 
+const reportMetrics = ref({
+  verification: { verified: 0, pending: 0 },
+  approval: { approved: 0, pending: 0 }
+});
+
 const summaryStats = computed(() => {
-  if (!reportData.value.length) return { totalPatient: 0, totalDDD: '0.00', avgLOS: 0 };
+  if (!reportData.value.length) {
+    return {
+      totalPatient: 0,
+      verification: { verified: 0, pending: 0 },
+      approval: { approved: 0, pending: 0 }
+    };
+  }
   
   const totalPatient = reportData.value.filter(i => i.is_new_patient).length;
-  const totalDDD = reportData.value.reduce((acc, curr) => acc + parseFloat(curr.total_ddd || 0), 0);
-  const totalLOS = reportData.value.filter(i => i.is_new_patient).reduce((acc, curr) => acc + parseInt(curr.los || 0), 0);
-  const avgLOS = totalPatient > 0 ? (totalLOS / totalPatient).toFixed(1) : 0;
   
   return {
     totalPatient,
-    totalDDD: totalDDD.toFixed(2),
-    avgLOS
+    verification: reportMetrics.value.verification,
+    approval: reportMetrics.value.approval
   };
 });
 
@@ -580,14 +606,29 @@ const fetchData = async () => {
       kd_dokter: filters.kd_dokter,
       search: filters.search
     });
-    reportData.value = response.data.data || [];
-    currentPage.value = 1; // Reset to first page on new search
+    
+    // Handle new response structure with data and metrics
+    if (response.data.data && Array.isArray(response.data.data.data)) {
+      reportData.value = response.data.data.data || [];
+      reportMetrics.value = response.data.data.metrics || {
+        verification: { verified: 0, pending: 0 },
+        approval: { approved: 0, pending: 0 }
+      };
+    } else {
+      // Fallback for old response structure
+      reportData.value = response.data.data || [];
+    }
   } catch (error) {
     console.error('Failed to fetch report:', error);
     Swal.fire('Gagal', 'Tidak dapat mengambil data laporan', 'error');
   } finally {
     loading.value = false;
   }
+};
+
+const handleSearch = () => {
+  currentPage.value = 1; // Reset to first page on new search
+  fetchData();
 };
 
 const fetchRekapBulanan = async () => {
@@ -906,9 +947,11 @@ onMounted(() => {
 .border-start-primary { border-left: 4px solid #3b82f6; }
 .border-start-success { border-left: 4px solid #10b981; }
 .border-start-warning { border-left: 4px solid #f59e0b; }
+.border-start-info { border-left: 4px solid #3b82f6; }
 
 .bg-soft-success { background: #ecfdf5; }
 .bg-soft-warning { background: #fffbeb; }
+.bg-soft-info { background: #eff6ff; }
 
 .bg-soft-primary { background: #eff6ff; }
 
