@@ -379,6 +379,15 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/morbiditas-ralan',
+    name: 'laporan-morbiditas-ralan',
+    component: () => import('@/views/laporan/MorbiditasRalanView.vue'),
+    meta: {
+      title: 'Morbiditas Ralan',
+      requiresAuth: true
+    }
+  },
+  {
     path: '/laporan/morbiditas-ranap',
     name: 'MorbiditasRanap',
     component: () => import('../views/laporan/MorbiditasRanapView.vue'),
