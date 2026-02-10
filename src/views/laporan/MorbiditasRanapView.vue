@@ -78,15 +78,19 @@
                 <th :colspan="Object.keys(ageGroups).length * 2" class="text-center bg-primary-soft text-primary py-2 border-bottom-0">
                   Jumlah Pasien Hidup dan Mati Menurut Kelompok Umur & Jenis Kelamin
                 </th>
+                <th colspan="2" class="text-center bg-success-soft text-success py-2 border-bottom-0">Jml. Pasien (L+P)</th>
+                <th colspan="2" class="text-center bg-danger-soft text-danger py-2 border-bottom-0">Jml. Pasien Keluar Mati</th>
                 <th rowspan="3" class="text-center align-middle bg-dark text-white">Total</th>
               </tr>
               <tr class="header-row-2">
                 <th v-for="(group, key) in ageGroups" :key="key" colspan="2" class="text-center py-2 age-group-header">
                   {{ group.label }}
                 </th>
+                <th colspan="2" class="text-center py-2 age-group-header">Total L/P</th>
+                <th colspan="2" class="text-center py-2 age-group-header">Mati L/P</th>
               </tr>
               <tr class="header-row-3 text-center">
-                <template v-for="n in Object.keys(ageGroups).length" :key="n">
+                <template v-for="n in (Object.keys(ageGroups).length + 2)" :key="n">
                   <th class="gender-header male text-nowrap"><small>L</small></th>
                   <th class="gender-header female text-nowrap"><small>P</small></th>
                 </template>
@@ -125,6 +129,12 @@
                     {{ item[key + '_p'] || 0 }}
                   </td>
                 </template>
+                <!-- New Columns -->
+                <td class="text-center border-start-item fw-700 bg-success-soft">{{ item.total_l || 0 }}</td>
+                <td class="text-center fw-700 bg-success-soft">{{ item.total_p || 0 }}</td>
+                <td class="text-center border-start-item fw-700 bg-danger-soft">{{ item.mati_l || 0 }}</td>
+                <td class="text-center fw-700 bg-danger-soft">{{ item.mati_p || 0 }}</td>
+                
                 <td class="text-center fw-bold bg-light-item">{{ item.total_pasien }}</td>
               </tr>
             </tbody>
@@ -210,8 +220,9 @@ const exportToExcel = () => {
     h1.push(group.label, "")
     h2.push("Laki-Laki", "Perempuan")
   })
-  h1.push("Total")
-  h2.push("")
+  
+  h1.push("Total L/P", "", "Mati L/P", "", "Total")
+  h2.push("L", "P", "L", "P", "")
   
   wsData.push(["LAPORAN MORBIDITAS RAWAT INAP"])
   wsData.push([`Periode: ${months[parseInt(filters.month) - 1]} ${filters.year}`])
@@ -225,7 +236,7 @@ const exportToExcel = () => {
       row.push(item[key + '_l'] || 0)
       row.push(item[key + '_p'] || 0)
     })
-    row.push(item.total_pasien)
+    row.push(item.total_l || 0, item.total_p || 0, item.mati_l || 0, item.mati_p || 0, item.total_pasien)
     wsData.push(row)
   })
   
@@ -244,6 +255,11 @@ const exportToExcel = () => {
     merges.push({ s: { r: 3, c: colIdx }, e: { r: 3, c: colIdx + 1 } })
     colIdx += 2
   })
+  
+  // Merge new columns headers
+  merges.push({ s: { r: 3, c: colIdx }, e: { r: 3, c: colIdx + 1 } }) // Total L/P
+  merges.push({ s: { r: 3, c: colIdx + 2 }, e: { r: 3, c: colIdx + 3 } }) // Mati L/P
+  merges.push({ s: { r: 3, c: colIdx + 4 }, e: { r: 4, c: colIdx + 4 } }) // Grand Total
   
   ws['!merges'] = merges
   
@@ -332,6 +348,8 @@ onMounted(() => {
 }
 
 .bg-primary-soft { background-color: #eef2ff; }
+.bg-success-soft { background-color: #f0fdf4; }
+.bg-danger-soft { background-color: #fef2f2; }
 .text-pink { color: #db2777; }
 .bg-info-soft { background-color: #ecf8ff; }
 
