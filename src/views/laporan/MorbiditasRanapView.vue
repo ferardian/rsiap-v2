@@ -280,10 +280,10 @@ onMounted(() => {
 }
 
 .page-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   border-radius: 0 0 40px 40px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
 }
 
 .page-title {

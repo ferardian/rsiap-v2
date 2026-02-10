@@ -73,25 +73,28 @@
             <thead class="sticky-thead">
               <tr class="header-row-1">
                 <th rowspan="3" class="text-center align-middle fixed-col header-fixed">No.</th>
-                <th rowspan="3" class="align-middle fixed-col header-fixed" style="left: 50px; width: 100px; min-width: 100px;">Kode ICD-10</th>
-                <th rowspan="3" class="align-middle fixed-col header-fixed" style="left: 150px; min-width: 300px; max-width: 450px;">Diagnosis Penyakit</th>
-                <th :colspan="Object.keys(ageGroups).length * 2" class="text-center bg-primary-soft text-primary py-2 border-bottom-0">
+                <th rowspan="3" class="text-center align-middle fixed-col header-fixed" style="left: 50px; width: 80px; min-width: 80px;">Aksi</th>
+                <th rowspan="3" class="align-middle fixed-col header-fixed" style="left: 130px; width: 100px; min-width: 100px;">Kode ICD-10</th>
+                <th rowspan="3" class="align-middle fixed-col header-fixed" style="left: 230px; min-width: 300px; max-width: 450px;">Diagnosis Penyakit</th>
+                <th :colspan="Object.keys(ageGroups).length * 2" class="text-center bg-primary-soft text-primary py-2 border-bottom-0 border-start-item">
                   Jumlah Kasus Baru Menurut Kelompok Umur & Jenis Kelamin
                 </th>
-                <th colspan="3" class="text-center bg-success-soft text-success py-2 border-bottom-0">Kasus Baru (L+P)</th>
+                <th colspan="3" class="text-center bg-success-soft text-success py-2 border-bottom-0 border-start-item border-end-item">Jumlah Kasus Baru Menurut Jenis Kelamin</th>
                 <th colspan="3" class="text-center bg-info-soft text-info py-2 border-bottom-0">Jumlah Kunjungan</th>
               </tr>
               <tr class="header-row-2">
                 <th v-for="(group, key) in ageGroups" :key="key" colspan="2" class="text-center py-2 age-group-header">
                   {{ group.label }}
                 </th>
-                <th colspan="2" class="text-center py-2 age-group-header">Subtotal</th>
-                <th rowspan="2" class="text-center align-middle bg-success text-white px-3">Total</th>
-                <th colspan="2" class="text-center py-2 age-group-header">Subtotal</th>
-                <th rowspan="2" class="text-center align-middle bg-info text-white px-3">Total</th>
+                <th rowspan="2" class="text-center align-middle bg-success-soft text-success border-start-item">L</th>
+                <th rowspan="2" class="text-center align-middle bg-success-soft text-success">P</th>
+                <th rowspan="2" class="text-center align-middle bg-success text-white border-end-item">Total</th>
+                <th rowspan="2" class="text-center align-middle bg-info-soft text-info border-start-item">L</th>
+                <th rowspan="2" class="text-center align-middle bg-info-soft text-info">P</th>
+                <th rowspan="2" class="text-center align-middle bg-info text-white">Total</th>
               </tr>
               <tr class="header-row-3 text-center">
-                <template v-for="n in (Object.keys(ageGroups).length + 2)" :key="n">
+                <template v-for="(group, key) in ageGroups" :key="key">
                   <th class="gender-header male text-nowrap"><small>L</small></th>
                   <th class="gender-header female text-nowrap"><small>P</small></th>
                 </template>
@@ -116,10 +119,15 @@
               </tr>
               <tr v-for="(item, index) in results" :key="item.kd_penyakit" class="data-row">
                 <td class="text-center fixed-col" style="width: 50px; min-width: 50px;">{{ index + 1 }}</td>
-                <td class="fixed-col" style="left: 50px; width: 100px; min-width: 100px;">
+                <td class="text-center fixed-col" style="left: 50px; width: 80px; min-width: 80px;">
+                  <button @click="openDetail(item)" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" title="Detail">
+                    <i class="fas fa-eye small"></i>
+                  </button>
+                </td>
+                <td class="fixed-col" style="left: 130px; width: 100px; min-width: 100px;">
                   <span class="badge bg-info-soft text-info fw-700">{{ item.kd_penyakit }}</span>
                 </td>
-                <td class="fixed-col text-truncate" style="left: 150px; min-width: 300px; max-width: 450px; cursor: pointer;" :title="item.nm_penyakit">
+                <td class="fixed-col text-truncate shadow-right" style="left: 230px; min-width: 300px; max-width: 450px; cursor: pointer;" :title="item.nm_penyakit">
                   <span class="penyakit-name">{{ item.nm_penyakit }}</span>
                 </td>
                 
@@ -128,10 +136,10 @@
                   <td class="text-center" :class="{'val-nonzero': item[key + '_p'] > 0}">{{ item[key + '_p'] || 0 }}</td>
                 </template>
 
-                <!-- Kasus Baru -->
+                <!-- Kasus Baru JK -->
                 <td class="text-center border-start-item fw-700 bg-success-soft">{{ item.total_l_baru || 0 }}</td>
                 <td class="text-center fw-700 bg-success-soft">{{ item.total_p_baru || 0 }}</td>
-                <td class="text-center fw-bold bg-success text-white">{{ item.total_baru || 0 }}</td>
+                <td class="text-center fw-bold bg-success text-white border-end-item">{{ item.total_baru || 0 }}</td>
 
                 <!-- Kunjungan -->
                 <td class="text-center border-start-item fw-700 bg-info-soft">{{ item.total_l_kunjungan || 0 }}</td>
@@ -150,18 +158,23 @@
           <div v-else-if="!results.length" class="text-center py-5 text-muted">
             Kosong
           </div>
-          <div v-else v-for="(item, index) in results" :key="item.kd_penyakit" class="mobile-item p-3 border-bottom">
+          <div v-else v-for="(item, index) in results" :key="item.kd_penyakit" class="mobile-item p-3 border-bottom shadow-sm mb-2 mx-2 rounded-3">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-dark rounded-circle" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center">{{ index + 1 }}</span>
                 <span class="badge bg-info-soft text-info fw-700">{{ item.kd_penyakit }}</span>
               </div>
               <div class="d-flex flex-column align-items-end">
-                <span class="badge bg-success rounded-pill px-3 mb-1">Baru: {{ item.total_baru }}</span>
-                <span class="badge bg-info rounded-pill px-3">Kunjungan: {{ item.total_kunjungan }}</span>
+                <button @click="openDetail(item)" class="btn btn-sm btn-primary rounded-pill px-3 mb-1">
+                  <i class="fas fa-eye me-1"></i>Detail
+                </button>
               </div>
             </div>
             <h6 class="mb-3 fw-bold">{{ item.nm_penyakit }}</h6>
+            <div class="d-flex gap-2 mb-3">
+                <span class="badge bg-success rounded-pill px-3">Baru: {{ item.total_baru }}</span>
+                <span class="badge bg-info rounded-pill px-3">Kunjungan: {{ item.total_kunjungan }}</span>
+            </div>
             <div class="age-summary-grid">
                <div v-for="(group, key) in ageGroups" :key="key" 
                     v-if="(item[key + '_l'] || 0) + (item[key + '_p'] || 0) > 0"
@@ -177,6 +190,73 @@
         </div>
       </div>
     </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade show" v-if="showDetailModal" tabindex="-1" style="display: block; background: rgba(15, 23, 42, 0.6); z-index: 1060;">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered px-3">
+        <div class="modal-content border-0 elevation-lg overflow-hidden" style="border-radius: 20px;">
+          <div class="modal-header border-0 bg-primary-gradient text-white p-4">
+            <div>
+              <h5 class="modal-title fw-800 mb-1 d-flex align-items-center">
+                <i class="fas fa-users-viewfinder me-3 fa-lg"></i>
+                Detail Pasien
+              </h5>
+              <p class="mb-0 opacity-90 small fw-500">{{ selectedDisease.kd_penyakit }} &bull; {{ selectedDisease.nm_penyakit }}</p>
+            </div>
+            <button type="button" class="btn-close btn-close-white shadow-none opacity-100" @click="showDetailModal = false"></button>
+          </div>
+          <div class="modal-body p-0 custom-scrollbar">
+            <div v-if="loadingDetail" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-2 text-muted fw-500">Mengambil data detail...</p>
+            </div>
+            <div v-else class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light sticky-top">
+                  <tr>
+                    <th class="ps-4">Tgl. Registrasi</th>
+                    <th>No. RM</th>
+                    <th>Nama Pasien</th>
+                    <th class="text-center">JK</th>
+                    <th>Umur</th>
+                    <th>Poliklinik</th>
+                    <th>Dokter</th>
+                    <th class="text-center pe-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="p in detailResults" :key="p.no_rawat" class="small">
+                    <td class="ps-4">
+                      <div class="fw-bold">{{ p.tgl_registrasi }}</div>
+                      <div class="text-muted smallest">{{ p.jam_reg }}</div>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ p.no_rkm_medis }}</span></td>
+                    <td class="fw-600">{{ p.nm_pasien }}</td>
+                    <td class="text-center">
+                      <i v-if="p.jk === 'L'" class="fas fa-mars text-info"></i>
+                      <i v-else class="fas fa-venus text-pink"></i>
+                    </td>
+                    <td>{{ p.umurdaftar }} {{ p.sttsumur }}</td>
+                    <td>{{ p.nm_poli }}</td>
+                    <td>{{ p.nm_dokter }}</td>
+                    <td class="text-center pe-4">
+                      <span v-if="p.is_kasus_baru" class="badge bg-success-soft text-success rounded-pill px-3">Kasus Baru</span>
+                      <span v-else class="badge bg-info-soft text-info rounded-pill px-3">Lama</span>
+                    </td>
+                  </tr>
+                  <tr v-if="!detailResults.length">
+                    <td colspan="8" class="text-center py-4 text-muted">Tidak ada rincian data ditemukan</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0 p-3">
+            <button type="button" class="btn btn-dark rounded-pill px-4 shadow-none" @click="showDetailModal = false">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -186,9 +266,14 @@ import { morbiditasRalanService } from '@/services/laporan/morbiditasRalanServic
 import * as XLSX from 'xlsx'
 
 const loading = ref(false)
+const loadingDetail = ref(false)
 const viewMode = ref('table') 
 const results = ref([])
 const ageGroups = ref({})
+const showDetailModal = ref(false)
+const detailResults = ref([])
+const selectedDisease = ref({})
+
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const currentYear = new Date().getFullYear()
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
@@ -210,6 +295,29 @@ const loadData = async () => {
     console.error('Error loading ralan morbiditas data:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const openDetail = async (item) => {
+  selectedDisease.value = item
+  showDetailModal.value = true
+  loadingDetail.value = true
+  detailResults.value = []
+  
+  try {
+    const response = await morbiditasRalanService.getDetails({
+      kd_penyakit: item.kd_penyakit,
+      month: filters.month,
+      year: filters.year
+    })
+    
+    if (response.data.success) {
+      detailResults.value = response.data.data.results
+    }
+  } catch (error) {
+    console.error('Error loading detail patients:', error)
+  } finally {
+    loadingDetail.value = false
   }
 }
 
@@ -274,9 +382,13 @@ onMounted(() => {
 }
 
 .page-header {
-  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   border-radius: 0 0 40px 40px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
+}
+
+.bg-primary-gradient {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
 }
 
 .page-title { color: white; font-weight: 800; font-size: 1.75rem; }
@@ -309,6 +421,9 @@ onMounted(() => {
 .bg-danger-soft { background-color: #fef2f2; }
 .bg-info-soft { background-color: #ecf8ff; }
 .text-pink { color: #db2777; }
+.smallest { font-size: 0.7rem; }
+.fw-600 { font-weight: 600; }
+.fw-800 { font-weight: 800; }
 
 .table-responsive-modern { max-height: 70vh; overflow-y: auto; font-size: 0.85rem; }
 .sticky-thead { position: sticky; top: 0; z-index: 100; }
@@ -326,7 +441,7 @@ onMounted(() => {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-.fixed-col:nth-of-type(3) {
+.fixed-col:nth-of-type(4) {
   border-right: 2px solid #cbd5e1 !important;
   box-shadow: 4px 0 8px -4px rgba(0,0,0,0.1);
 }
@@ -343,6 +458,7 @@ thead .header-fixed {
 
 .val-nonzero { color: #1e293b; font-weight: 700; background: #fffcf0; }
 .border-start-item { border-left: 1.5px solid #e2e8f0 !important; }
+.border-end-item { border-right: 1.5px solid #e2e8f0 !important; }
 .penyakit-name { font-weight: 600; color: #1e293b; display: block; }
 
 .age-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
