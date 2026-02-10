@@ -16,6 +16,39 @@
           <label class="form-label-custom">Tanggal End</label>
           <input v-model="filters.tgl_end" type="date" class="form-control modern-input date-input">
         </div>
+        <div class="filter-item">
+          <label class="form-label-custom">Spesialis</label>
+          <select v-model="filters.kd_sps" class="form-select modern-input" style="min-width: 150px">
+            <option value="">Semua Spesialis</option>
+            <option v-for="sps in spesialisOptions" :key="sps.kd_sps" :value="sps.kd_sps">
+              {{ sps.nm_sps }}
+            </option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="form-label-custom">Dokter</label>
+          <SearchableSelect
+            v-model="filters.kd_dokter"
+            :options="dokterOptions"
+            labelKey="nm_dokter"
+            valueKey="kd_dokter"
+            placeholder="Semua Dokter"
+            style="min-width: 250px"
+          />
+        </div>
+        <div class="filter-item flex-grow-1" style="min-width: 200px">
+          <label class="form-label-custom">Cari Pasien (Nama, RM, Rawat)</label>
+          <div class="position-relative">
+            <input 
+              v-model="filters.search" 
+              type="text" 
+              class="form-control modern-input ps-4" 
+              placeholder="Ketik kriteria cari..."
+              @keyup.enter="fetchData"
+            >
+            <i class="fas fa-search position-absolute start-0 top-50 translate-middle-y ms-2 text-muted" style="font-size: 12px;"></i>
+          </div>
+        </div>
         <div class="filter-actions d-flex gap-2">
           <button class="btn btn-primary ripple" @click="fetchData" :disabled="loading">
             <i class="fas fa-search me-1"></i> Tampilkan
@@ -23,6 +56,43 @@
           <button class="btn btn-success ripple" @click="exportToExcel" :disabled="reportData.length === 0">
             <i class="fas fa-file-excel me-1"></i> Export Excel
           </button>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- Summary Cards -->
+    <div v-if="reportData.length > 0" class="row mb-4 animate-fade px-1">
+      <div class="col-md-4 mb-3 mb-md-0">
+        <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-primary">
+          <div class="summary-icon bg-soft-primary text-primary">
+            <i class="fas fa-users"></i>
+          </div>
+          <div>
+            <div class="text-muted small fw-bold text-uppercase">Total Pasien</div>
+            <div class="h4 mb-0 fw-bold">{{ summaryStats.totalPatient }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3 mb-md-0">
+        <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-success">
+          <div class="summary-icon bg-soft-success text-success">
+            <i class="fas fa-pills"></i>
+          </div>
+          <div>
+            <div class="text-muted small fw-bold text-uppercase">Total DDD</div>
+            <div class="h4 mb-0 fw-bold">{{ summaryStats.totalDDD }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-warning">
+          <div class="summary-icon bg-soft-warning text-warning">
+            <i class="fas fa-hourglass-half"></i>
+          </div>
+          <div>
+            <div class="text-muted small fw-bold text-uppercase">Rerata LOS</div>
+            <div class="h4 mb-0 fw-bold">{{ summaryStats.avgLOS }} Hari</div>
+          </div>
         </div>
       </div>
     </div>
@@ -44,31 +114,56 @@
           <thead>
             <tr class="bg-light">
               <th width="50" class="text-center">No</th>
-              <th>Nama Pasien</th>
-              <th width="100">No. RM</th>
+              <th>Informasi Pasien</th>
               <th>Diagnosa</th>
-              <th>Jenis Ab</th>
-              <th width="80" class="text-center">Rute</th>
-              <th width="100">LOS (Hari)</th>
+              <th width="80">Jenis Ab</th>
+              <th width="100">Tgl Beri</th>
+              <th width="60" class="text-center">Rute</th>
+              <th width="70">LOS</th>
               <th>Aturan Pakai</th>
-              <th>Total Pakai</th>
-              <th width="100" class="text-center">Total DDD</th>
+              <th width="80" class="text-center">Status</th>
+              <th width="80">Total Pakai</th>
+              <th width="70" class="text-center">WHO (DDD)</th>
+              <th width="80" class="text-center">Total DDD</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in reportData" :key="index" :class="{'new-patient-row': item.is_new_patient}">
-              <td class="text-center">{{ item.is_new_patient ? getPatientIndex(index) : '' }}</td>
-              <td :class="{'fw-bold': item.is_new_patient}">{{ item.nm_pasien }}</td>
-              <td class="text-muted">{{ item.no_rkm_medis }}</td>
-              <td class="small diagnosa-cell">{{ item.diagnosa }}</td>
+            <tr v-for="(item, pIndex) in paginatedData" :key="(currentPage - 1) * itemsPerPage + pIndex" :class="{'new-patient-row': item.is_new_patient}">
+              <td class="text-center">{{ item.is_new_patient ? getPatientIndex((currentPage - 1) * itemsPerPage + pIndex) : '' }}</td>
+              <td>
+                <div v-if="item.is_new_patient || pIndex === 0" class="d-flex flex-column animate-fade">
+                  <span class="fw-bold text-dark">{{ item.nm_pasien }}</span>
+                  <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                    <span class="badge bg-light text-primary border px-2">RM: {{ item.no_rkm_medis }}</span>
+                    <span class="badge bg-light text-secondary border px-2">No: {{ item.no_rawat }}</span>
+                    <span class="text-muted" style="font-size: 11px;">
+                      <i class="far fa-calendar-alt me-1"></i>{{ item.tgl_masuk }}
+                    </span>
+                  </div>
+                  <div class="mt-1 d-flex align-items-center gap-1">
+                    <i class="fas fa-user-md text-primary" style="font-size: 11px;"></i>
+                    <span class="text-primary fw-medium" style="font-size: 11px;">DPJP: {{ item.nm_dokter }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="small diagnosa-cell">
+                <div v-if="item.is_new_patient || pIndex === 0" class="animate-fade">
+                  {{ item.diagnosa }}
+                </div>
+              </td>
               <td>{{ item.jenis_ab }}</td>
+              <td class="text-muted small">{{ item.tgl_pemberian }}</td>
               <td class="text-center"><span class="badge badge-rute">{{ item.rute }}</span></td>
-              <td>{{ item.los }}</td>
+              <td>
+                <div v-if="item.is_new_patient || pIndex === 0" class="animate-fade">
+                  {{ item.los }}
+                </div>
+              </td>
               <td class="small editable-cell aturan-pakai-cell" @click="openAdjustmentModal(item)">
                 {{ item.penggunaan_harian || '-' }}
                 <i class="fas fa-edit ms-1 opacity-25 edit-icon"></i>
               </td>
-              <td class="small">
+              <td>
                 <div class="d-flex flex-column gap-1">
                   <span :class="getStatusBadgeClass(item.status_telaah, 'telaah')" style="font-size: 10px; padding: 2px 5px;">
                     T: {{ item.status_telaah }}
@@ -78,11 +173,36 @@
                   </span>
                 </div>
               </td>
-              <td class="fw-bold">{{ item.total_pakai }}</td>
-              <td class="text-center bg-soft-primary fw-bold text-primary">{{ item.total_ddd }}</td>
+              <td class="small">{{ item.total_pakai }}</td>
+              <td class="text-center fw-bold text-muted" style="font-size: 11px;">{{ item.ddd_factor }}</td>
+              <td class="text-center fw-bold text-primary">{{ item.total_ddd }}</td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="reportData.length > itemsPerPage" class="d-flex justify-content-between align-items-center mt-4 p-3 glass-effect animate-fade">
+      <div class="text-muted small">
+        Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, reportData.length) }} dari {{ reportData.length }} data
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-light border" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="d-flex gap-1">
+          <button v-for="page in totalPages" :key="page" 
+            v-show="page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1"
+            class="btn btn-sm" 
+            :class="page === currentPage ? 'btn-primary' : 'btn-light border'"
+            @click="changePage(page)">
+            {{ page }}
+          </button>
+        </div>
+        <button class="btn btn-sm btn-light border" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
     </div>
 
@@ -137,6 +257,31 @@
             <div class="mb-0">
               <label class="form-label-custom">Keterangan Tambahan</label>
               <textarea v-model="adjustmentForm.keterangan" class="form-control modern-input" style="height: 100px" placeholder="Beri catatan jika diperlukan..."></textarea>
+            </div>
+
+            <!-- SMART LOOKUP: SOAP RTL -->
+            <div class="mt-4 pt-3 border-top">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="small fw-bold text-muted uppercase-tracking">
+                  <i class="fas fa-magic me-1"></i> Smart Lookup (SOAP RTL)
+                </label>
+                <div v-if="loadingSuggestions" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+              </div>
+              
+              <div v-if="soapSuggestions.length > 0" class="suggestion-container animate-fade">
+                <div v-for="(sug, sIndex) in soapSuggestions" :key="sIndex" 
+                  class="suggestion-item p-2 mb-2 rounded border bg-light-hover cursor-pointer"
+                  @click="applySoapSuggestion(sug.suggestion)">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="small fw-bold text-primary">{{ sug.suggestion }}</span>
+                    <span class="text-muted" style="font-size: 10px;">{{ sug.tgl }}</span>
+                  </div>
+                  <div class="text-muted small italic truncate-text">"{{ sug.raw_text }}"</div>
+                </div>
+              </div>
+              <div v-else-if="!loadingSuggestions" class="text-center py-3 bg-light rounded border-dashed">
+                <span class="text-muted small">Tidak ditemukan isian dosis di SOAP RTL untuk obat ini.</span>
+              </div>
             </div>
           </div>
 
@@ -193,7 +338,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
+import SearchableSelect from '@/components/ui/SearchableSelect.vue';
 import ppraService from '@/services/ppraService';
 import { utils, writeFile } from 'xlsx';
 import dayjs from 'dayjs';
@@ -205,10 +351,51 @@ const showModal = ref(false);
 const reportData = ref([]);
 const filters = reactive({
   tgl_start: dayjs().startOf('month').format('YYYY-MM-DD'),
-  tgl_end: dayjs().format('YYYY-MM-DD')
+  tgl_end: dayjs().format('YYYY-MM-DD'),
+  kd_sps: '',
+  kd_dokter: '',
+  search: ''
 });
 
+const spesialisOptions = ref([]);
+const dokterOptions = ref([]);
+
+const currentPage = ref(1);
+const itemsPerPage = ref(25);
+
+const summaryStats = computed(() => {
+  if (!reportData.value.length) return { totalPatient: 0, totalDDD: '0.00', avgLOS: 0 };
+  
+  const totalPatient = reportData.value.filter(i => i.is_new_patient).length;
+  const totalDDD = reportData.value.reduce((acc, curr) => acc + parseFloat(curr.total_ddd || 0), 0);
+  const totalLOS = reportData.value.filter(i => i.is_new_patient).reduce((acc, curr) => acc + parseInt(curr.los || 0), 0);
+  const avgLOS = totalPatient > 0 ? (totalLOS / totalPatient).toFixed(1) : 0;
+  
+  return {
+    totalPatient,
+    totalDDD: totalDDD.toFixed(2),
+    avgLOS
+  };
+});
+
+const totalPages = computed(() => Math.ceil(reportData.value.length / itemsPerPage.value));
+
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return reportData.value.slice(start, end);
+});
+
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+
 const editingItem = ref(null);
+const activeTab = ref('adjustment');
+
 const adjustmentForm = reactive({
   no_resep: '',
   kode_brng: '',
@@ -216,11 +403,31 @@ const adjustmentForm = reactive({
   keterangan: ''
 });
 
+const soapSuggestions = ref([]);
+const loadingSuggestions = ref(false);
+
+const telaahForm = reactive({
+  status_telaah: 'SESUAI',
+  catatan_telaah: ''
+});
+
+const approveForm = reactive({
+  status_persetujuan: 'PENDING',
+  catatan_persetujuan: ''
+});
+
 const fetchData = async () => {
   loading.value = true;
   try {
-    const response = await ppraService.getLaporan(filters);
+    const response = await ppraService.getLaporan({
+      tgl_awal: filters.tgl_start,
+      tgl_akhir: filters.tgl_end,
+      kd_sps: filters.kd_sps,
+      kd_dokter: filters.kd_dokter,
+      search: filters.search
+    });
     reportData.value = response.data.data || [];
+    currentPage.value = 1; // Reset to first page on new search
   } catch (error) {
     console.error('Failed to fetch report:', error);
     Swal.fire('Gagal', 'Tidak dapat mengambil data laporan', 'error');
@@ -246,10 +453,9 @@ const openAdjustmentModal = (item) => {
   adjustmentForm.no_resep = item.no_resep;
   adjustmentForm.kode_brng = item.kode_brng;
   adjustmentForm.aturan_pakai = item.penggunaan_harian === '-' ? '' : item.penggunaan_harian;
-  adjustmentForm.frekuensi = '';
-  adjustmentForm.dosis = '';
-  adjustmentForm.satuan = 'mg';
   adjustmentForm.keterangan = '';
+
+  fetchSoapSuggestions(item);
 
   telaahForm.status_telaah = item.status_telaah !== 'BELUM' ? item.status_telaah : 'SESUAI';
   telaahForm.catatan_telaah = item.catatan_telaah || '';
@@ -261,13 +467,50 @@ const openAdjustmentModal = (item) => {
   showModal.value = true;
 };
 
+const fetchSoapSuggestions = async (item) => {
+  loadingSuggestions.value = true;
+  soapSuggestions.value = [];
+  try {
+    const response = await ppraService.getSoapSuggestions({
+      no_rawat: item.no_rawat,
+      kode_brng: item.kode_brng
+    });
+    soapSuggestions.value = response.data.data || [];
+  } catch (error) {
+    console.error('Failed to fetch SOAP suggestions:', error);
+  } finally {
+    loadingSuggestions.value = false;
+  }
+};
+
+const fetchSpesialis = async () => {
+  try {
+    const response = await ppraService.getSpesialisasi();
+    spesialisOptions.value = response.data.data || [];
+  } catch (error) {
+    console.error('Failed to fetch spesialis:', error);
+  }
+};
+
+const fetchDokter = async () => {
+  try {
+    const response = await ppraService.getDokter({ limit: 500 }); // Increase limit to fetch more doctors
+    dokterOptions.value = response.data.data || [];
+  } catch (error) {
+    console.error('Failed to fetch doctors:', error);
+  }
+};
+
+const applySoapSuggestion = (val) => {
+  adjustmentForm.aturan_pakai = val;
+};
+
 const closeModal = () => {
   showModal.value = false;
   editingItem.value = null;
 };
 
 const saveAdjustment = async () => {
-    // ... same as before but keeping it clean ...
   saving.value = true;
   try {
     await ppraService.storeVerifikasi(adjustmentForm);
@@ -330,12 +573,19 @@ const exportToExcel = () => {
     'No': item.is_new_patient ? getPatientIndex(index) : '',
     'Nama Pasien': item.nm_pasien,
     'No. RM': item.no_rkm_medis,
+    'DPJP': item.nm_dokter,
+    'No. Rawat': item.no_rawat,
+    'Tgl Masuk': item.tgl_masuk,
     'Diagnosa': item.diagnosa,
     'Jenis Ab': item.jenis_ab,
+    'Tgl Beri': item.tgl_pemberian,
     'Rute': item.rute,
     'LOS (Hari)': item.los,
-    'Penggunaan Per Hari': item.penggunaan_harian,
+    'Aturan Pakai': item.penggunaan_harian,
+    'Status Telaah': item.status_telaah,
+    'Status Persetujuan': item.status_persetujuan,
     'Total Pakai': item.total_pakai,
+    'WHO DDD': item.ddd_factor,
     'Total DDD': item.total_ddd
   }));
 
@@ -349,6 +599,8 @@ const exportToExcel = () => {
 
 onMounted(() => {
   fetchData();
+  fetchSpesialis();
+  fetchDokter();
 });
 </script>
 
@@ -364,11 +616,12 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   border: 1px solid #e2e8f0;
-  overflow: hidden;
 }
 
 .filter-card {
   padding: 20px;
+  position: relative;
+  z-index: 50;
 }
 
 .form-label-custom {
@@ -401,6 +654,10 @@ onMounted(() => {
 }
 
 .ppra-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   padding: 15px;
   font-weight: 700;
   color: #475569;
@@ -434,6 +691,33 @@ onMounted(() => {
   border-radius: 4px;
   font-weight: 700;
 }
+
+.summary-card {
+  height: 100%;
+  transition: transform 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+}
+
+.summary-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.border-start-primary { border-left: 4px solid #3b82f6; }
+.border-start-success { border-left: 4px solid #10b981; }
+.border-start-warning { border-left: 4px solid #f59e0b; }
+
+.bg-soft-success { background: #ecfdf5; }
+.bg-soft-warning { background: #fffbeb; }
 
 .bg-soft-primary { background: #eff6ff; }
 
@@ -490,6 +774,10 @@ onMounted(() => {
   max-width: 500px;
   max-height: 90vh;
   margin: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
 }
 
 .modal-header {
@@ -498,6 +786,17 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.modal-footer {
+  flex-shrink: 0;
 }
 
 .patient-info-brief {
@@ -553,5 +852,40 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Suggestion Styling */
+.suggestion-container {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.suggestion-item {
+  transition: all 0.2s;
+  border-color: #e2e8f0 !important;
+}
+
+.suggestion-item:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #3b82f6 !important;
+  transform: translateX(4px);
+}
+
+.bg-light-hover:hover {
+  background-color: #f1f5f9;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.border-dashed {
+  border-style: dashed !important;
+}
+
+.uppercase-tracking {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 </style>

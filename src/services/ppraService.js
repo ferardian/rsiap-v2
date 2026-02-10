@@ -67,7 +67,10 @@ export default {
     },
 
     getLaporan(params) {
-        return api.get('/ppra/laporan', { params });
+        return api.get('/ppra/laporan', {
+            params,
+            timeout: 30000 // 30 seconds for yearly report
+        });
     },
 
     storeVerifikasi(data) {
@@ -76,5 +79,17 @@ export default {
 
     getVerifikasi(params) {
         return api.get('/ppra/verifikasi', { params });
+    },
+
+    getSoapSuggestions(params) {
+        return api.get('/ppra/laporan/soap-suggestions', { params })
+    },
+
+    getSpesialisasi() {
+        return api.get('/sdi/dokter/spesialisasi')
+    },
+
+    getDokter(params) {
+        return api.get('/sdi/dokter', { params })
     }
 }
