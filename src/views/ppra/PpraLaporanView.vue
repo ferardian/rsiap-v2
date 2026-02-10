@@ -5,8 +5,22 @@
       <p class="text-muted">Laporan Penggunaan Antibiotik (Antibiotic Use Report)</p>
     </div>
 
-    <!-- Filter Card -->
-    <div class="filter-card glass-effect mb-4 animate-fade">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 shadow-sm border" style="width: fit-content;">
+      <li class="nav-item">
+        <a class="nav-link px-4 py-2" :class="{ active: reportTab === 'detail' }" href="#" @click.prevent="reportTab = 'detail'">
+          <i class="fas fa-list-alt me-2"></i> Detail Laporan
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-4 py-2" :class="{ active: reportTab === 'rekap' }" href="#" @click.prevent="reportTab = 'rekap'">
+          <i class="fas fa-chart-bar me-2"></i> Rekap Bulanan (DDD)
+        </a>
+      </li>
+    </ul>
+
+    <!-- Filter Card (Detail Mode) -->
+    <div v-if="reportTab === 'detail'" class="filter-card glass-effect mb-4 animate-fade">
       <div class="d-flex flex-wrap align-items-end gap-3">
         <div class="filter-item">
           <label class="form-label-custom">Tanggal Start</label>
@@ -59,9 +73,25 @@
         </div>
       </div>
     </div>
+    <!-- Filter Card (Rekap Mode) -->
+    <div v-if="reportTab === 'rekap'" class="filter-card glass-effect mb-4 animate-fade">
+      <div class="d-flex align-items-end gap-3">
+        <div class="filter-item">
+          <label class="form-label-custom">Pilih Tahun</label>
+          <select v-model="rekapYear" class="form-select modern-input" style="min-width: 120px">
+            <option v-for="y in [2024, 2025, 2026]" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary ripple px-4" @click="fetchRekapBulanan" :disabled="loadingRekap">
+            <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loadingRekap }"></i> Refresh Data
+          </button>
+        </div>
+      </div>
+    </div>
  
-    <!-- Summary Cards -->
-    <div v-if="reportData.length > 0" class="row mb-4 animate-fade px-1">
+    <!-- Summary Cards (Only in Detail Mode) -->
+    <div v-if="reportTab === 'detail' && reportData.length > 0" class="row mb-4 animate-fade px-1">
       <div class="col-md-4 mb-3 mb-md-0">
         <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-primary">
           <div class="summary-icon bg-soft-primary text-primary">
@@ -97,16 +127,17 @@
       </div>
     </div>
 
-    <!-- Report Table -->
-    <div class="report-table-wrapper glass-effect animate-fade">
-      <div v-if="loading" class="loading-state py-5 text-center">
+    <!-- Report Table (Detail Mode) -->
+    <div v-if="reportTab === 'detail'" class="report-table-section animate-fade border rounded-4 overflow-hidden shadow-sm bg-white">
+      <div v-if="loading" class="loading-overlay d-flex flex-column align-items-center justify-content-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
         <p class="mt-3 text-muted">Menganalisis data antibiotik...</p>
       </div>
 
-      <div v-else-if="reportData.length === 0" class="empty-state py-5 text-center">
-        <i class="fas fa-notes-medical fa-3x text-muted opacity-50"></i>
-        <p class="mt-3">Tidak ada data antibiotik terhubung PPRA untuk periode ini.</p>
+      <div v-if="!loading && reportData.length === 0" class="empty-state py-5 text-center">
+        <i class="fas fa-folder-open text-muted mb-3" style="font-size: 48px;"></i>
+        <h5>Belum Ada Data</h5>
+        <p class="text-muted">Gunakan filter untuk menampilkan laporan.</p>
       </div>
 
       <div v-else class="table-responsive">
@@ -128,54 +159,68 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, pIndex) in paginatedData" :key="(currentPage - 1) * itemsPerPage + pIndex" :class="{'new-patient-row': item.is_new_patient}">
-              <td class="text-center">{{ item.is_new_patient ? getPatientIndex((currentPage - 1) * itemsPerPage + pIndex) : '' }}</td>
-              <td>
-                <div v-if="item.is_new_patient || pIndex === 0" class="d-flex flex-column animate-fade">
-                  <span class="fw-bold text-dark">{{ item.nm_pasien }}</span>
-                  <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
-                    <span class="badge bg-light text-primary border px-2">RM: {{ item.no_rkm_medis }}</span>
-                    <span class="badge bg-light text-secondary border px-2">No: {{ item.no_rawat }}</span>
-                    <span class="text-muted" style="font-size: 11px;">
-                      <i class="far fa-calendar-alt me-1"></i>{{ item.tgl_masuk }}
+            <tr v-for="(item, pIndex) in paginatedData" :key="pIndex" :class="{'new-patient-row': item.is_new_patient, 'sub-total-row bg-light-subtle': item.isSubTotal}">
+              <template v-if="!item.isSubTotal">
+                <td class="text-center">{{ item.is_new_patient ? getPatientIndex(item.original_index) : '' }}</td>
+                <td>
+                  <div v-if="item.is_new_patient || (pIndex === 0 && !item.isSubTotal)" class="d-flex flex-column animate-fade">
+                    <span class="fw-bold text-dark">{{ item.nm_pasien }}</span>
+                    <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                      <span class="badge bg-light text-primary border px-2">RM: {{ item.no_rkm_medis }}</span>
+                      <span class="badge bg-light text-secondary border px-2">No: {{ item.no_rawat }}</span>
+                      <span class="text-muted" style="font-size: 11px;">
+                        <i class="far fa-calendar-alt me-1"></i>{{ item.tgl_masuk }}
+                      </span>
+                    </div>
+                    <div class="mt-1 d-flex align-items-center gap-1">
+                      <i class="fas fa-user-md text-primary" style="font-size: 11px;"></i>
+                      <span class="text-primary fw-medium" style="font-size: 11px;">DPJP: {{ item.nm_dokter }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="small diagnosa-cell">
+                  <div v-if="item.is_new_patient || (pIndex === 0 && !item.isSubTotal)" class="animate-fade">
+                    {{ item.diagnosa }}
+                  </div>
+                </td>
+                <td>{{ item.jenis_ab }}</td>
+                <td class="text-muted small">{{ item.tgl_pemberian }}</td>
+                <td class="text-center"><span class="badge badge-rute">{{ item.rute }}</span></td>
+                <td>
+                  <div v-if="item.is_new_patient || (pIndex === 0 && !item.isSubTotal)" class="animate-fade">
+                    {{ item.los }}
+                  </div>
+                </td>
+                <td class="small editable-cell aturan-pakai-cell" @click="openAdjustmentModal(item)">
+                  {{ item.penggunaan_harian || '-' }}
+                  <i class="fas fa-edit ms-1 opacity-25 edit-icon"></i>
+                </td>
+                <td>
+                  <div class="d-flex flex-column gap-1">
+                    <span :class="getStatusBadgeClass(item.status_telaah, 'telaah')" style="font-size: 10px; padding: 2px 5px;">
+                      T: {{ item.status_telaah }}
+                    </span>
+                    <span :class="getStatusBadgeClass(item.status_persetujuan, 'approve')" style="font-size: 10px; padding: 2px 5px;">
+                      P: {{ item.status_persetujuan }}
                     </span>
                   </div>
-                  <div class="mt-1 d-flex align-items-center gap-1">
-                    <i class="fas fa-user-md text-primary" style="font-size: 11px;"></i>
-                    <span class="text-primary fw-medium" style="font-size: 11px;">DPJP: {{ item.nm_dokter }}</span>
-                  </div>
-                </div>
-              </td>
-              <td class="small diagnosa-cell">
-                <div v-if="item.is_new_patient || pIndex === 0" class="animate-fade">
-                  {{ item.diagnosa }}
-                </div>
-              </td>
-              <td>{{ item.jenis_ab }}</td>
-              <td class="text-muted small">{{ item.tgl_pemberian }}</td>
-              <td class="text-center"><span class="badge badge-rute">{{ item.rute }}</span></td>
-              <td>
-                <div v-if="item.is_new_patient || pIndex === 0" class="animate-fade">
-                  {{ item.los }}
-                </div>
-              </td>
-              <td class="small editable-cell aturan-pakai-cell" @click="openAdjustmentModal(item)">
-                {{ item.penggunaan_harian || '-' }}
-                <i class="fas fa-edit ms-1 opacity-25 edit-icon"></i>
-              </td>
-              <td>
-                <div class="d-flex flex-column gap-1">
-                  <span :class="getStatusBadgeClass(item.status_telaah, 'telaah')" style="font-size: 10px; padding: 2px 5px;">
-                    T: {{ item.status_telaah }}
-                  </span>
-                  <span :class="getStatusBadgeClass(item.status_persetujuan, 'approve')" style="font-size: 10px; padding: 2px 5px;">
-                    P: {{ item.status_persetujuan }}
-                  </span>
-                </div>
-              </td>
-              <td class="small">{{ item.total_pakai }}</td>
-              <td class="text-center fw-bold text-muted" style="font-size: 11px;">{{ item.ddd_factor }}</td>
-              <td class="text-center fw-bold text-primary">{{ item.total_ddd }}</td>
+                </td>
+                <td class="small">{{ item.total_pakai }}</td>
+                <td class="text-center fw-bold text-muted" style="font-size: 11px;">{{ item.ddd_factor }}</td>
+                <td class="text-center fw-bold text-primary">{{ item.total_ddd ?? '-' }}</td>
+              </template>
+              <template v-else>
+                <td colspan="9" class="text-end fw-bold bg-soft-secondary py-2 border-end italic" style="font-size: 12px;">
+                  <i class="fas fa-calculator me-2"></i> {{ item.jenis_ab }}
+                </td>
+                <td class="text-center fw-bold bg-soft-secondary text-dark py-2 border-end">
+                  {{ item.total_pakai }}
+                </td>
+                <td class="bg-soft-secondary border-end"></td>
+                <td class="text-center fw-bold bg-primary text-white py-2 shadow-sm">
+                  {{ item.total_ddd }}
+                </td>
+              </template>
             </tr>
           </tbody>
         </table>
@@ -183,7 +228,7 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="reportData.length > itemsPerPage" class="d-flex justify-content-between align-items-center mt-4 p-3 glass-effect animate-fade">
+    <div v-if="reportTab === 'detail' && reportData.length > itemsPerPage" class="d-flex justify-content-between align-items-center mt-4 p-3 glass-effect animate-fade">
       <div class="text-muted small">
         Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, reportData.length) }} dari {{ reportData.length }} data
       </div>
@@ -203,6 +248,53 @@
         <button class="btn btn-sm btn-light border" :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">
           <i class="fas fa-chevron-right"></i>
         </button>
+      </div>
+    </div>
+
+    <!-- Rekap Bulanan Table (Rekap Mode) -->
+    <div v-if="reportTab === 'rekap'" class="rekap-section animate-fade">
+      <div class="table-responsive border rounded-4 shadow-sm bg-white overflow-hidden">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light sticky-top" style="z-index: 10;">
+            <tr>
+              <th rowspan="2" class="text-center align-middle bg-light" width="50" style="border-bottom: 1px solid #dee2e6;">No</th>
+              <th rowspan="2" class="align-middle bg-light" style="border-bottom: 1px solid #dee2e6;">Nama Antibiotik</th>
+              <th colspan="12" class="text-center bg-light" style="border-bottom: 1px solid #dee2e6;">Bulan (Total DDD)</th>
+              <th rowspan="2" class="text-center align-middle bg-primary text-white" width="100" style="border-bottom: 1px solid #dee2e6;">Total</th>
+            </tr>
+            <tr class="bg-light-subtle">
+              <th v-for="m in monthNames" :key="m" class="text-center small py-1" style="font-size: 10px; border-bottom: 1px solid #dee2e6;">{{ m }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loadingRekap">
+              <td colspan="15" class="text-center py-5">
+                <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                <span class="text-muted">Sedang memproses data rekap bulanan...</span>
+              </td>
+            </tr>
+            <tr v-else-if="rekapData.length === 0">
+              <td colspan="15" class="text-center py-5">
+                <div class="empty-state">
+                  <i class="fas fa-chart-line text-muted mb-3" style="font-size: 40px; opacity: 0.3;"></i>
+                  <p class="text-muted mb-0">Data rekap DDD tidak ditemukan untuk tahun {{ rekapYear }}</p>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="(item, idx) in rekapData" :key="item.kode_brng" v-else>
+              <td class="text-center text-muted small" style="background: #f8fafc;">{{ idx + 1 }}</td>
+              <td class="fw-medium text-dark">{{ item.nama_brng }}</td>
+              <td v-for="m in 12" :key="m" class="text-center small" 
+                  :class="{ 'text-muted opacity-25': item.months[m] === 0, 'fw-bold text-success': item.months[m] > 0 }" 
+                  style="font-size: 11px;">
+                {{ item.months[m] > 0 ? item.months[m] : '0' }}
+              </td>
+              <td class="text-center fw-bold text-primary bg-soft-primary">
+                {{ Object.values(item.months).reduce((a, b) => a + b, 0).toFixed(2) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -357,6 +449,13 @@ const filters = reactive({
   search: ''
 });
 
+// Rekap Bulanan States
+const reportTab = ref('detail');
+const rekapYear = ref(dayjs().format('YYYY'));
+const rekapData = ref([]);
+const loadingRekap = ref(false);
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
 const spesialisOptions = ref([]);
 const dokterOptions = ref([]);
 
@@ -378,12 +477,67 @@ const summaryStats = computed(() => {
   };
 });
 
-const totalPages = computed(() => Math.ceil(reportData.value.length / itemsPerPage.value));
+const reportTableRows = computed(() => {
+  const rawRows = reportData.value;
+  if (!rawRows.length) return [];
+
+  const processedRows = [];
+  let medicineGroup = [];
+
+  const addSubTotalRow = (group) => {
+    if (group.length === 0) return;
+    
+    // Check if ANY row in group has empty dosage rules OR if any row has 0 DDD
+    const hasEmptyDosage = group.some(r => !r.penggunaan_harian || r.penggunaan_harian === '-' || r.penggunaan_harian.trim() === '');
+    
+    // Sum quantity and DDD
+    const totalJml = group.reduce((sum, r) => sum + (r.jml_total || 0), 0);
+    const totalDdd = group.reduce((sum, r) => sum + (parseFloat(r.total_ddd) || 0), 0);
+    const lastRow = group[group.length - 1];
+
+    // Hide DDD if any row lacks dosage OR if total is 0
+    const shouldHideDdd = hasEmptyDosage || totalDdd === 0;
+
+    processedRows.push({
+      isSubTotal: true,
+      jenis_ab: `TOTAL ${lastRow.jenis_ab}`,
+      total_pakai: `${totalJml} ${lastRow.satuan}`,
+      total_ddd: shouldHideDdd ? '-' : totalDdd.toFixed(2),
+      // Empty fields for other columns to prevent template errors
+      no_rawat: '', nm_pasien: '', no_rkm_medis: '', nm_dokter: '', tgl_pemberian: '', 
+      rute: '', penggunaan_harian: '', status_telaah: '', status_persetujuan: '', 
+      ddd_factor: '', original_index: -1, is_new_patient: false
+    });
+  };
+
+  for (let i = 0; i < rawRows.length; i++) {
+    const row = rawRows[i];
+    const nextRow = rawRows[i + 1];
+
+    // Store original index for the 'No' column
+    processedRows.push({ ...row, isSubTotal: false, original_index: i });
+    medicineGroup.push(processedRows[processedRows.length - 1]);
+
+    // Check if group ends (Change in patient or medicine)
+    const isLastInGroup = !nextRow || 
+                          nextRow.no_rkm_medis !== row.no_rkm_medis || 
+                          nextRow.jenis_ab !== row.jenis_ab;
+
+    if (isLastInGroup) {
+      addSubTotalRow(medicineGroup);
+      medicineGroup = [];
+    }
+  }
+
+  return processedRows;
+});
+
+const totalPages = computed(() => Math.ceil(reportTableRows.value.length / itemsPerPage.value));
 
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
-  return reportData.value.slice(start, end);
+  return reportTableRows.value.slice(start, end);
 });
 
 const changePage = (page) => {
@@ -433,6 +587,21 @@ const fetchData = async () => {
     Swal.fire('Gagal', 'Tidak dapat mengambil data laporan', 'error');
   } finally {
     loading.value = false;
+  }
+};
+
+const fetchRekapBulanan = async () => {
+  loadingRekap.value = true;
+  try {
+    const response = await ppraService.getRekapBulanan({
+      tahun: rekapYear.value
+    });
+    rekapData.value = response.data.data || [];
+  } catch (error) {
+    console.error('Failed to fetch rekap bulanan:', error);
+    Swal.fire('Gagal', 'Tidak dapat mengambil data rekap bulanan', 'error');
+  } finally {
+    loadingRekap.value = false;
   }
 };
 
@@ -601,6 +770,7 @@ onMounted(() => {
   fetchData();
   fetchSpesialis();
   fetchDokter();
+  fetchRekapBulanan();
 });
 </script>
 
@@ -682,6 +852,27 @@ onMounted(() => {
 
 .new-patient-row {
   border-top: 2px solid #cbd5e1;
+}
+
+.sub-total-row td {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.bg-soft-primary {
+  background-color: #e0f2fe;
+}
+
+.bg-soft-secondary {
+  background-color: #f1f5f9;
+}
+
+.bg-light-subtle {
+  background-color: #f8fafc !important;
+}
+
+.italic {
+  font-style: italic;
 }
 
 .badge-rute {

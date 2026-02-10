@@ -73,6 +73,10 @@ export default {
         });
     },
 
+    getRekapBulanan(params) {
+        return api.get('/ppra/rekap-bulanan', { params });
+    },
+
     storeVerifikasi(data) {
         return api.post('/ppra/verifikasi', data);
     },
