@@ -72,9 +72,9 @@
           <table class="table table-hover table-bordered mb-0 align-middle">
             <thead class="sticky-thead">
               <tr class="header-row-1">
-                <th rowspan="3" class="text-center align-middle bg-light-soft fixed-col">No.</th>
-                <th rowspan="3" class="align-middle bg-light-soft fixed-col" style="left: 50px;">Kode ICD-10</th>
-                <th rowspan="3" class="align-middle bg-light-soft fixed-col" style="left: 150px; min-width: 250px;">Diagnosis Penyakit</th>
+                <th rowspan="3" class="text-center align-middle fixed-col header-fixed">No.</th>
+                <th rowspan="3" class="align-middle fixed-col header-fixed" style="left: 50px; width: 100px; min-width: 100px;">Kode ICD-10</th>
+                <th rowspan="3" class="align-middle fixed-col header-fixed" style="left: 150px; min-width: 300px; max-width: 450px;">Diagnosis Penyakit</th>
                 <th :colspan="Object.keys(ageGroups).length * 2" class="text-center bg-primary-soft text-primary py-2 border-bottom-0">
                   Jumlah Pasien Hidup dan Mati Menurut Kelompok Umur & Jenis Kelamin
                 </th>
@@ -114,11 +114,11 @@
                 </td>
               </tr>
               <tr v-for="(item, index) in results" :key="item.kd_penyakit" class="data-row">
-                <td class="text-center fixed-col">{{ index + 1 }}</td>
-                <td class="fixed-col" style="left: 50px;">
+                <td class="text-center fixed-col" style="width: 50px; min-width: 50px;">{{ index + 1 }}</td>
+                <td class="fixed-col" style="left: 50px; width: 100px; min-width: 100px;">
                   <span class="badge bg-info-soft text-info fw-700">{{ item.kd_penyakit }}</span>
                 </td>
-                <td class="fixed-col text-truncate" style="left: 150px; cursor: pointer;" :title="item.nm_penyakit">
+                <td class="fixed-col text-truncate" style="left: 150px; min-width: 300px; max-width: 450px; cursor: pointer;" :title="item.nm_penyakit">
                   <span class="penyakit-name">{{ item.nm_penyakit }}</span>
                 </td>
                 <template v-for="(group, key) in ageGroups" :key="key">
@@ -382,13 +382,20 @@ onMounted(() => {
   position: sticky !important;
   left: 0;
   z-index: 20;
-  background-color: #fff !important; /* Ensure solid background to hide columns scrolling underneath */
+  background-color: #ffffff !important; 
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+.fixed-col:nth-of-type(3) {
+  border-right: 2px solid #cbd5e1 !important;
+  box-shadow: 4px 0 8px -4px rgba(0,0,0,0.1);
 }
 
 /* Ensure header fixed columns stay above everything */
-thead .fixed-col {
-  z-index: 110;
-  background-color: #f8fafc !important;
+thead .header-fixed {
+  z-index: 150 !important;
+  background-color: #f1f5f9 !important;
+  border-bottom: 2px solid #e2e8f0 !important;
 }
 
 .data-row td { 
