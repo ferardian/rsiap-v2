@@ -13,7 +13,16 @@
         
         <div class="header-filters p-3 p-md-4">
           <div class="row g-2 align-items-end">
-            <div class="col-6 col-md-auto">
+            <div class="col-12 col-md-auto">
+              <label class="filter-label">MODE LAPORAN</label>
+              <div class="btn-group w-100 rounded-12 overflow-hidden">
+                <button @click="filters.mode = 'bulanan'" class="btn btn-sm py-2 px-3 border-0 transition-all" 
+                  :class="filters.mode === 'bulanan' ? 'btn-primary shadow' : 'bg-white text-dark border-end'"> BULANAN </button>
+                <button @click="filters.mode = 'tahunan'" class="btn btn-sm py-2 px-3 border-0 transition-all" 
+                  :class="filters.mode === 'tahunan' ? 'btn-primary shadow' : 'bg-white text-dark'"> TAHUNAN </button>
+              </div>
+            </div>
+            <div class="col-6 col-md-auto" v-if="filters.mode === 'bulanan'">
               <label class="filter-label">BULAN</label>
               <select v-model="filters.month" class="form-select-modern">
                 <option v-for="(name, index) in months" :key="index" :value="String(index + 1).padStart(2, '0')">
@@ -25,6 +34,15 @@
               <label class="filter-label">TAHUN</label>
               <select v-model="filters.year" class="form-select-modern">
                 <option v-for="y in years" :key="y" :value="String(y)">{{ y }}</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-auto">
+              <label class="filter-label">JENIS PASIEN</label>
+              <select v-model="filters.kd_sps" class="form-select-modern">
+                <option value="">SEMUA PASIEN</option>
+                <option v-for="sps in specialties" :key="sps.kd_sps" :value="sps.kd_sps">
+                  {{ sps.nm_sps }}
+                </option>
               </select>
             </div>
             <div class="col-12 col-md-auto d-grid">
@@ -147,6 +165,35 @@
                 <td class="text-center fw-bold bg-info text-white">{{ item.total_kunjungan || 0 }}</td>
               </tr>
             </tbody>
+            <tfoot v-if="results.length">
+              <tr class="footer-row-lp fw-bold">
+                <td colspan="4" class="text-center fixed-col footer-fixed">TOTAL (LAKI-LAKI & PEREMPUAN)</td>
+                <template v-for="(group, key) in ageGroups" :key="'total-lp-'+key">
+                  <td class="text-center border-start-item" :class="{'bg-yellow-soft': totals[key + '_l'] > 0}">{{ totals[key + '_l'] }}</td>
+                  <td class="text-center" :class="{'bg-yellow-soft': totals[key + '_p'] > 0}">{{ totals[key + '_p'] }}</td>
+                </template>
+                <td class="text-center border-start-item bg-success-soft">{{ totals.total_l_baru }}</td>
+                <td class="text-center bg-success-soft">{{ totals.total_p_baru }}</td>
+                <td class="text-center bg-success text-white border-end-item fw-800" rowspan="2" style="vertical-align: middle;">{{ totals.total_baru }}</td>
+                <td class="text-center border-start-item bg-info-soft">{{ totals.total_l_kunjungan }}</td>
+                <td class="text-center bg-info-soft">{{ totals.total_p_kunjungan }}</td>
+                <td class="text-center bg-info text-white fw-800" rowspan="2" style="vertical-align: middle;">{{ totals.total_kunjungan }}</td>
+              </tr>
+              <tr class="footer-row-combined fw-800">
+                <td colspan="4" class="text-center fixed-col footer-fixed bg-light">JUMLAH (L + P)</td>
+                <template v-for="(group, key) in ageGroups" :key="'sum-'+key">
+                  <td colspan="2" class="text-center border-start-item bg-primary-soft text-primary">
+                    {{ totals[key + '_l'] + totals[key + '_p'] }}
+                  </td>
+                </template>
+                <td colspan="2" class="text-center border-start-item bg-success text-white">
+                  {{ totals.total_l_baru + totals.total_p_baru }}
+                </td>
+                <td colspan="2" class="text-center border-start-item bg-info text-white">
+                  {{ totals.total_l_kunjungan + totals.total_p_kunjungan }}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -261,8 +308,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { morbiditasRalanService } from '@/services/laporan/morbiditasRalanService'
+import { dokterService } from '@/services/dokterService'
 import * as XLSX from 'xlsx'
 
 const loading = ref(false)
@@ -270,23 +318,74 @@ const loadingDetail = ref(false)
 const viewMode = ref('table') 
 const results = ref([])
 const ageGroups = ref({})
+const specialties = ref([])
 const showDetailModal = ref(false)
 const detailResults = ref([])
 const selectedDisease = ref({})
 
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const currentYear = new Date().getFullYear()
-const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+const years = Array.from({ length: currentYear - 2020 + 1 }, (_, i) => currentYear - i)
 
 const filters = reactive({
+  mode: 'bulanan',
   month: String(new Date().getMonth() + 1).padStart(2, '0'),
-  year: String(currentYear)
+  year: String(currentYear),
+  kd_sps: ''
 })
+
+const totals = computed(() => {
+  const t = {
+    total_l_baru: 0,
+    total_p_baru: 0,
+    total_baru: 0,
+    total_l_kunjungan: 0,
+    total_p_kunjungan: 0,
+    total_kunjungan: 0
+  }
+  
+  Object.keys(ageGroups.value).forEach(key => {
+    t[key + '_l'] = 0
+    t[key + '_p'] = 0
+  })
+
+  results.value.forEach(item => {
+    t.total_l_baru += parseInt(item.total_l_baru || 0)
+    t.total_p_baru += parseInt(item.total_p_baru || 0)
+    t.total_baru += parseInt(item.total_baru || 0)
+    t.total_l_kunjungan += parseInt(item.total_l_kunjungan || 0)
+    t.total_p_kunjungan += parseInt(item.total_p_kunjungan || 0)
+    t.total_kunjungan += parseInt(item.total_kunjungan || 0)
+    
+    Object.keys(ageGroups.value).forEach(key => {
+      t[key + '_l'] += parseInt(item[key + '_l'] || 0)
+      t[key + '_p'] += parseInt(item[key + '_p'] || 0)
+    })
+  })
+  
+  return t
+})
+
+const loadSpecialties = async () => {
+  try {
+    const response = await dokterService.getSpesialisasi()
+    if (response.data.success) {
+      specialties.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error loading specialties:', error)
+  }
+}
 
 const loadData = async () => {
   loading.value = true
   try {
-    const response = await morbiditasRalanService.getData(filters)
+    const params = {
+      month: filters.mode === 'tahunan' ? 'annual' : filters.month,
+      year: filters.year,
+      kd_sps: filters.kd_sps
+    }
+    const response = await morbiditasRalanService.getData(params)
     if (response.data.success) {
       results.value = response.data.data.results
       ageGroups.value = response.data.data.age_groups
@@ -308,7 +407,8 @@ const openDetail = async (item) => {
     const response = await morbiditasRalanService.getDetails({
       kd_penyakit: item.kd_penyakit,
       month: filters.month,
-      year: filters.year
+      year: filters.year,
+      kd_sps: filters.kd_sps
     })
     
     if (response.data.success) {
@@ -367,10 +467,14 @@ const exportToExcel = () => {
   ws['!merges'] = merges
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, "Morbiditas Ralan")
-  XLSX.writeFile(wb, `Morbiditas_Ralan_${filters.month}_${filters.year}.xlsx`)
+  const filename = filters.mode === 'tahunan' 
+    ? `Morbiditas_Ralan_${filters.year}.xlsx` 
+    : `Morbiditas_Ralan_${filters.month}_${filters.year}.xlsx`
+  XLSX.writeFile(wb, filename)
 }
 
 onMounted(() => {
+  loadSpecialties()
   loadData()
 })
 </script>
@@ -412,6 +516,10 @@ onMounted(() => {
   font-weight: 700; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); transition: all 0.3s;
 }
 
+.rounded-12 { border-radius: 12px; }
+.transition-all { transition: all 0.2s ease; }
+.btn-primary.shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; }
+
 .btn-refresh-modern:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
 .report-card { border-radius: 24px; background: white; overflow: hidden; box-shadow: 0 4px 25px rgba(0,0,0,0.05); }
@@ -451,6 +559,51 @@ thead .header-fixed {
   background-color: #f1f5f9 !important;
   border-bottom: 2px solid #e2e8f0 !important;
 }
+
+tfoot {
+  position: sticky;
+  bottom: 0;
+  z-index: 200 !important; /* Higher than header-fixed to be safe */
+  background-color: #ffffff !important;
+}
+
+tfoot tr {
+  background-color: #ffffff !important;
+}
+
+tfoot .footer-fixed {
+  z-index: 110 !important;
+  background-color: #f8fafc !important;
+  border-top: 2px solid #cbd5e1 !important;
+}
+
+.footer-row-lp td, .footer-row-combined td {
+  padding: 0.75rem 0.5rem;
+  border-top: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  position: relative; /* Create stacking context */
+}
+
+.footer-row-lp td {
+  border-top: 2px solid #cbd5e1 !important;
+}
+
+.footer-row-combined td {
+  font-size: 0.9rem;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+/* Specific background overrides for total columns and sum columns */
+.footer-row-lp .bg-yellow-soft { background-color: #fffbeb !important; }
+.footer-row-lp .bg-success-soft { background-color: #f0fdf4 !important; }
+.footer-row-lp .bg-info-soft { background-color: #ecf8ff !important; }
+
+.footer-row-combined .bg-primary-soft { background-color: #eef2ff !important; }
+.footer-row-combined .bg-success { background-color: #198754 !important; }
+.footer-row-combined .bg-info { background-color: #0dcaf0 !important; }
+
+.bg-yellow-soft { background-color: #fffbeb; }
 
 .data-row td { border-color: #f1f5f9; padding: 0.75rem 0.5rem; }
 .data-row:hover td { background: #f8fafc; }
