@@ -388,7 +388,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import MenuManagementModal from '../components/MenuManagementModal.vue'
@@ -418,6 +418,13 @@ const selectedPeriod = ref('today')
 const customStartDate = ref('')
 const customEndDate = ref('')
 const isFilterOpen = ref(false)
+
+// Watch for changes in user department (e.g. after refreshUserData)
+watch(() => authStore.user?.data?.detail?.departemen, (newVal) => {
+  if (newVal) {
+    fetchDepartmentName()
+  }
+})
 
 const periodLabels = {
   today: 'Hari Ini',
