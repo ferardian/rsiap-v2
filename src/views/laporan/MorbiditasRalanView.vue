@@ -603,6 +603,8 @@ tfoot .footer-fixed {
 .footer-row-combined .bg-success { background-color: #198754 !important; }
 .footer-row-combined .bg-info { background-color: #0dcaf0 !important; }
 
+.footer-row-lp .bg-dark { background-color: #1e293b !important; color: #ffffff !important; }
+
 .bg-yellow-soft { background-color: #fffbeb; }
 
 .data-row td { border-color: #f1f5f9; padding: 0.75rem 0.5rem; }

@@ -406,9 +406,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/laporan/operasi',
-    name: 'LaporanOperasi',
-    component: () => import('../views/laporan/OperasiReportView.vue'),
+    path: '/laporan/persalinan',
+    name: 'LaporanPersalinan',
+    component: () => import('../views/laporan/PersalinanReportView.vue'),
     meta: { requiresAuth: true }
   },
   {

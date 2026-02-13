@@ -545,6 +545,8 @@ tfoot .footer-fixed {
 .footer-row-combined .bg-success { background-color: #198754 !important; }
 .footer-row-combined .bg-danger { background-color: #dc3545 !important; }
 
+.footer-row-lp .bg-dark { background-color: #1e293b !important; color: #ffffff !important; }
+
 .bg-yellow-soft { background-color: #fffbeb; }
 
 .data-row td { 
