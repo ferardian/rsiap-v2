@@ -27,7 +27,7 @@
           <div class="user-info">
             <div class="user-details">
               <span class="user-name">{{ userName }}</span>
-              <span class="user-dept">{{ userDepartment }}</span>
+              <span class="user-dept">{{ departmentName }}</span>
             </div>
             <div class="user-avatar">
               <i class="fas fa-user-circle"></i>
@@ -68,6 +68,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import Sidebar from '../components/layout/Sidebar.vue'
+import departemenService from '../services/departemenService'
 
 const router = useRouter()
 const route = useRoute()
@@ -75,6 +76,7 @@ const authStore = useAuthStore()
 
 // State
 const isSidebarCollapsed = ref(false)
+const departmentName = ref('')
 
 // Computed
 const userRole = computed(() => authStore.userRole)
@@ -122,11 +124,33 @@ const breadcrumbs = computed(() => {
 const userName = computed(() => {
   return authStore.userName
 })
-const userDepartment = computed(() => {
+const userDepartmentCode = computed(() => {
   return authStore.userDepartment
 })
 
 // Methods
+const fetchDepartmentName = async () => {
+  const depCode = userDepartmentCode.value
+  
+  // If no code or invalid, just set as is or empty
+  if (!depCode || depCode === '-' || depCode === 'Unknown') {
+    departmentName.value = depCode
+    return
+  }
+
+  try {
+    const response = await departemenService.show(depCode)
+    if (response.data && response.data.data) {
+      departmentName.value = response.data.data.nama
+    } else {
+      departmentName.value = depCode
+    }
+  } catch (err) {
+    // console.error('Failed to fetch department name', err)
+    departmentName.value = depCode // Fallback to code
+  }
+}
+
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
 }
@@ -141,6 +165,15 @@ const checkScreenSize = () => {
     isSidebarCollapsed.value = true
   }
 }
+
+// Watchers
+watch(userDepartmentCode, (newVal) => {
+  if (newVal) {
+    fetchDepartmentName()
+  } else {
+    departmentName.value = ''
+  }
+}, { immediate: true })
 
 // Watcher for Mobile Sidebar to prevent body scroll
 watch(isSidebarCollapsed, (val) => {
@@ -159,6 +192,7 @@ watch(isSidebarCollapsed, (val) => {
 onMounted(() => {
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
+  fetchDepartmentName()
 })
 
 onUnmounted(() => {
