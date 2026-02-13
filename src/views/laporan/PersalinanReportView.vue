@@ -956,28 +956,45 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #eff6ff;
-  color: #3b82f6;
-  padding: 6px 10px;
-  border-radius: 10px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   width: 65px;
+  border: 1px solid #e2e8f0;
+  padding: 0;
+  transition: transform 0.2s;
 }
 
-.date-badge.partus {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.date-badge .day {
-  font-size: 1.1rem;
-  font-weight: 800;
-  line-height: 1;
+.date-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .date-badge .month {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  width: 100%;
+  text-align: center;
   font-size: 0.6rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
+  padding: 4px 0;
+  letter-spacing: 0.05em;
+  line-height: normal;
+}
+
+.date-badge .day {
+  background: white;
+  color: #1e293b;
+  font-size: 1.4rem;
+  font-weight: 900;
+  padding: 6px 0;
+  line-height: 1;
+}
+
+.date-badge.partus .month {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .patient-info .rm {
@@ -1898,30 +1915,52 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .filter-grid {
-    grid-template-columns: 1fr;
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .filter-group,
+  .filter-group.date-range,
+  .filter-group-toggle {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0; /* Prevent flex item overflow */
+  }
+
+  /* Reset locked width for date group on mobile */
+  .filter-group.date-range {
+    flex: 1 1 100%;
+    max-width: 100%;
   }
 
   .date-input-group {
     flex-direction: column;
     height: auto;
+    width: 100%;
+    min-width: 0; /* Override the desktop min-width of 320px */
   }
   
-  .filter-group.date-range {
-    flex: 0 0 auto;
-  }
-
   .date-input-group > div {
     width: 100%;
-    height: 46px;
+    height: 52px; /* Taller inputs */
     border-bottom: 1px solid #f1f5f9;
+    border-right: none;
+    flex: 1; /* let it grow */
   }
 
   .date-separator {
     width: 100%;
     justify-content: center;
     border: none;
-    height: 30px;
+    height: 22px; /* Even smaller separator */
+    min-height: 22px; /* Enforce height */
+    border-left: none;
+    border-right: none;
+    background: #f8fafc;
+    font-size: 0.6rem;
+    padding: 0;
+    margin: 0; /* ensure no margin */
   }
 
   .pagination-footer {
@@ -1929,10 +1968,74 @@ onMounted(() => {
     gap: 1.5rem;
     padding: 2rem 1.5rem !important;
   }
+
+  .pagination-info {
+    flex-wrap: wrap;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
   
   .pagination-controls {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .page-header {
+    padding: 1.5rem 1rem 3rem 1rem;
+    border-radius: 0 0 30px 30px;
+  }
+
+  .header-actions {
+    padding: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  /* Mobile Modal Adjustments */
+  .modal-backdrop-premium {
+    padding: 0.5rem; /* Reduce backdrop padding */
+    align-items: flex-end; /* Bottom sheet align optionally, or center */
+  }
+
+  .modal-dialog-premium {
+    max-height: 95vh;
+    border-radius: 20px;
+    width: 100%;
+  }
+
+  .modal-header-premium {
+    padding: 1.25rem;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+
+  .modal-body-premium {
+    padding: 1.25rem;
+  }
+
+  .info-grid-premium {
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+  }
+
+  .info-card-modern {
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+  }
+  
+  .modal-title-modern {
+    font-size: 0.75rem;
+  }
+  
+  .modal-title-procedure {
+    font-size: 1.1rem;
+  }
+  
+  .btn-close-premium-scoped {
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
   }
 }
 </style>
