@@ -167,9 +167,6 @@ const validateForm = () => {
   if (!form.password.trim()) {
     errors.password = 'Password harus diisi'
     isValid = false
-  } else if (form.password.trim().length < 4) {
-    errors.password = 'Password minimal 4 karakter'
-    isValid = false
   }
 
   return isValid
