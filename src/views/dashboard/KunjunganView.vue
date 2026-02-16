@@ -188,143 +188,233 @@
         </div>
       </div>
 
-      <div class="visuals-grid">
-        <!-- Gender & Status Breakdown -->
-        <div class="visual-card">
-          <h4 class="card-title">Baru vs Lama (Per Gender)</h4>
-          <div class="gender-breakdown-container">
-               <div class="breakdown-item">
-                    <span class="label">Baru (L)</span>
-                    <div class="bar-container">
-                         <div class="bar blue" :style="{ width: getPercentage(getData('Baru', 'L'), summary.total) + '%' }"></div>
-                         <span class="value">{{ getData('Baru', 'L') }}</span>
-                    </div>
-               </div>
-               <div class="breakdown-item">
-                    <span class="label">Baru (P)</span>
-                    <div class="bar-container">
-                         <div class="bar pink" :style="{ width: getPercentage(getData('Baru', 'P'), summary.total) + '%' }"></div>
-                         <span class="value">{{ getData('Baru', 'P') }}</span>
-                    </div>
-               </div>
-               <div class="breakdown-item mt-4">
-                    <span class="label">Lama (L)</span>
-                    <div class="bar-container">
-                         <div class="bar cyan" :style="{ width: getPercentage(getData('Lama', 'L'), summary.total) + '%' }"></div>
-                         <span class="value">{{ getData('Lama', 'L') }}</span>
-                    </div>
-               </div>
-               <div class="breakdown-item">
-                    <span class="label">Lama (P)</span>
-                    <div class="bar-container">
-                         <div class="bar purple" :style="{ width: getPercentage(getData('Lama', 'P'), summary.total) + '%' }"></div>
-                         <span class="value">{{ getData('Lama', 'P') }}</span>
-                    </div>
-               </div>
-          </div>
-        </div>
-
-        <!-- Cara Bayar -->
-        <div class="visual-card">
-          <h4 class="card-title">Berdasarkan Cara Bayar</h4>
-          <div class="list-visual">
-            <div v-for="item in visitData.cara_bayar" :key="item.label" class="list-item">
-              <div class="item-header">
-                <span class="item-label">{{ item.label }}</span>
-                <span class="item-value">{{ item.total }} ({{ getPercentage(item.total, summary.total) }}%)</span>
+        <!-- Trends & Charts Section -->
+        <div class="visuals-grid mb-4">
+          <!-- Daily/Monthly Trend Chart -->
+          <div class="visual-card full-width">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="card-title mb-0">Tren Kunjungan {{ filters.mode === 'tahunan' ? 'Bulanan' : 'Harian' }}</h4>
+              <div v-if="visitData.trend" class="trend-badge" :class="visitData.trend.percent >= 0 ? 'up' : 'down'">
+                 <i class="fas" :class="visitData.trend.percent >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'"></i>
+                 {{ Math.abs(visitData.trend.percent) }}% dibanding {{ visitData.trend.label }}
               </div>
-              <div class="bar-container-mini">
-                <div class="bar-mini primary" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
-              </div>
+            </div>
+            <div class="chart-container" style="position: relative; height:300px;">
+              <Line v-if="chartDataReady" :data="lineChartData" :options="lineChartOptions" />
+              <div v-else class="chart-placeholder">Menyiapkan grafik...</div>
             </div>
           </div>
         </div>
 
-        <!-- Poli / Unit / Bangsal -->
-        <div class="visual-card full-width">
-          <h4 class="card-title">
-            {{ filters.status_lanjut === 'Ranap' ? 'Berdasarkan Bangsal / Kamar' : 'Berdasarkan Unit / Poliklinik' }}
-          </h4>
-          <div class="poli-grid">
-            <template v-if="filters.status_lanjut === 'Ranap'">
-              <div v-for="item in visitData.bangsal" :key="item.label" class="poli-item">
-                <span class="poli-name">{{ item.label }}</span>
-                <div class="poli-bar-wrapper">
-                    <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                         <span class="poli-val">{{ item.total }}</span>
-                    </div>
+        <div class="visuals-grid">
+          <!-- Left Column -->
+          <div class="d-flex flex-column gap-4">
+            <!-- Gender & Status Breakdown -->
+            <div class="visual-card">
+              <h4 class="card-title">Baru vs Lama (Per Gender)</h4>
+              <div class="gender-breakdown-container">
+                   <div class="breakdown-item">
+                        <span class="label">Baru (L)</span>
+                        <div class="bar-container">
+                             <div class="bar blue" :style="{ width: getPercentage(getData('Baru', 'L'), summary.total) + '%' }"></div>
+                             <span class="value">{{ getData('Baru', 'L') }}</span>
+                        </div>
+                   </div>
+                   <div class="breakdown-item">
+                        <span class="label">Baru (P)</span>
+                        <div class="bar-container">
+                             <div class="bar pink" :style="{ width: getPercentage(getData('Baru', 'P'), summary.total) + '%' }"></div>
+                             <span class="value">{{ getData('Baru', 'P') }}</span>
+                        </div>
+                   </div>
+                   <div class="breakdown-item mt-4">
+                        <span class="label">Lama (L)</span>
+                        <div class="bar-container">
+                             <div class="bar cyan" :style="{ width: getPercentage(getData('Lama', 'L'), summary.total) + '%' }"></div>
+                             <span class="value">{{ getData('Lama', 'L') }}</span>
+                        </div>
+                   </div>
+                   <div class="breakdown-item">
+                        <span class="label">Lama (P)</span>
+                        <div class="bar-container">
+                             <div class="bar purple" :style="{ width: getPercentage(getData('Lama', 'P'), summary.total) + '%' }"></div>
+                             <span class="value">{{ getData('Lama', 'P') }}</span>
+                        </div>
+                   </div>
+              </div>
+            </div>
+
+            <!-- Age Distribution -->
+            <div class="visual-card">
+              <h4 class="card-title">Distribusi Usia</h4>
+              <div class="chart-container-mini">
+                <Bar v-if="chartDataReady" :data="ageChartData" :options="barOptions" />
+              </div>
+            </div>
+
+            <!-- Cara Bayar -->
+            <div class="visual-card">
+              <h4 class="card-title">Berdasarkan Cara Bayar</h4>
+              <div class="list-visual">
+                <div v-for="item in visitData.cara_bayar" :key="item.label" class="list-item">
+                  <div class="item-header">
+                    <span class="item-label">{{ item.label }}</span>
+                    <span class="item-value">{{ item.total }} ({{ getPercentage(item.total, summary.total) }}%)</span>
+                  </div>
+                  <div class="bar-container-mini">
+                    <div class="bar-mini primary" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                  </div>
                 </div>
               </div>
-            </template>
-            <template v-else>
-              <div v-for="item in visitData.poli" :key="item.label" class="poli-item">
-                <span class="poli-name">{{ item.label }}</span>
-                <div class="poli-bar-wrapper">
-                    <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                         <span class="poli-val">{{ item.total }}</span>
-                    </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="d-flex flex-column gap-4">
+            <!-- Domicile / Origin -->
+            <div class="visual-card">
+              <h4 class="card-title">Top 10 Domisili (Kecamatan)</h4>
+              <div class="domisili-list">
+                <div v-for="(item, index) in visitData.domisili" :key="item.label" class="list-item mb-3">
+                  <div class="item-header">
+                    <span class="item-label"><small class="text-muted mr-2">{{ index + 1 }}.</small> {{ item.label }}</span>
+                    <span class="item-value fw-bold">{{ item.total }}</span>
+                  </div>
+                  <div class="bar-container-mini">
+                    <div class="bar-mini bg-info" :style="{ width: (item.total / (visitData.domisili[0]?.total || 1) * 100) + '%' }"></div>
+                  </div>
                 </div>
               </div>
-            </template>
-          </div>
-        </div>
- 
-        <!-- Kategori Pasien (Hanya Ranap) -->
-        <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card full-width">
-          <h4 class="card-title">Berdasarkan Kategori Pasien</h4>
-          <div class="poli-grid">
-            <div v-for="item in visitData.kategori" :key="item.label" class="poli-item">
-              <span class="poli-name">{{ item.label }}</span>
-              <div class="poli-bar-wrapper">
-                  <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                       <span class="poli-val">{{ item.total }}</span>
-                  </div>
-              </div>
             </div>
-          </div>
-        </div>
- 
-        <!-- Kelas Pasien (Hanya Ranap) -->
-        <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card full-width">
-          <h4 class="card-title">Berdasarkan Kelas Perawatan</h4>
-          <div class="poli-grid">
-            <div v-for="item in visitData.kelas" :key="item.label" class="poli-item">
-              <span class="poli-name">{{ item.label }}</span>
-              <div class="poli-bar-wrapper">
-                  <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                       <span class="poli-val">{{ item.total }}</span>
-                  </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Top Dokter -->
-        <div class="visual-card full-width">
-          <h4 class="card-title">10 Dokter Teratas (Jumlah Pasien)</h4>
-          <div class="doctor-list">
-               <div v-for="(item, index) in visitData.dokter" :key="item.label" class="doctor-row">
-                    <span class="doc-rank">{{ index + 1 }}</span>
-                    <div class="doc-info">
-                         <span class="doc-name">{{ item.label }}</span>
-                         <div class="doc-bar-container">
-                              <div class="doc-bar" :style="{ width: (item.total / (visitData.dokter[0]?.total || 1) * 100) + '%' }"></div>
-                         </div>
-                    </div>
-                    <span class="doc-count">{{ item.total }} Pasien</span>
-               </div>
+            <!-- Cancellation Analysis -->
+            <div v-if="visitData.batal && visitData.batal.total > 0" class="visual-card">
+              <h4 class="card-title text-danger">Analisis Pembatalan (Total: {{ visitData.batal.total }})</h4>
+              <div class="batal-analysis">
+                <div v-for="item in visitData.batal.by_poli" :key="item.label" class="list-item">
+                  <div class="item-header">
+                    <span class="item-label">{{ item.label }}</span>
+                    <span class="item-value text-danger">{{ item.total }}</span>
+                  </div>
+                  <div class="bar-container-mini">
+                    <div class="bar-mini bg-danger" :style="{ width: (item.total / visitData.batal.total * 100) + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Dokter -->
+            <div class="visual-card">
+              <h4 class="card-title">10 Dokter Teratas</h4>
+              <div class="doctor-list">
+                   <div v-for="(item, index) in visitData.dokter" :key="item.label" class="doctor-row">
+                        <span class="doc-rank">{{ index + 1 }}</span>
+                        <div class="doc-info">
+                             <span class="doc-name">{{ item.label }}</span>
+                             <div class="doc-bar-container">
+                                  <div class="doc-bar" :style="{ width: (item.total / (visitData.dokter[0]?.total || 1) * 100) + '%' }"></div>
+                             </div>
+                        </div>
+                        <span class="doc-count">{{ item.total }}</span>
+                   </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Poli / Unit / Bangsal (Bottom Full Width) -->
+          <div class="visual-card full-width mt-4">
+            <h4 class="card-title">
+              {{ filters.status_lanjut === 'Ranap' ? 'Berdasarkan Bangsal / Kamar' : 'Berdasarkan Unit / Poliklinik' }}
+            </h4>
+            <div class="poli-grid">
+              <template v-if="filters.status_lanjut === 'Ranap'">
+                <div v-for="item in visitData.bangsal" :key="item.label" class="poli-item">
+                  <span class="poli-name">{{ item.label }}</span>
+                  <div class="poli-bar-wrapper">
+                      <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                           <span class="poli-val">{{ item.total }}</span>
+                      </div>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <div v-for="item in visitData.poli" :key="item.label" class="poli-item">
+                  <span class="poli-name">{{ item.label }}</span>
+                  <div class="poli-bar-wrapper">
+                      <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                           <span class="poli-val">{{ item.total }}</span>
+                      </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+  
+          <!-- Kategori & Kelas Pasien (Ranap Only) -->
+          <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
+            <h4 class="card-title">Kategori Pasien</h4>
+            <div class="list-visual">
+              <div v-for="item in visitData.kategori" :key="item.label" class="list-item">
+                <div class="item-header">
+                  <span class="item-label">{{ item.label }}</span>
+                  <span class="item-value">{{ item.total }}</span>
+                </div>
+                <div class="bar-container-mini">
+                  <div class="bar-mini bg-warning" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
+            <h4 class="card-title">Kelas Perawatan</h4>
+            <div class="list-visual">
+              <div v-for="item in visitData.kelas" :key="item.label" class="list-item">
+                <div class="item-header">
+                  <span class="item-label">{{ item.label }}</span>
+                  <span class="item-value">{{ item.total }}</span>
+                </div>
+                <div class="bar-container-mini">
+                  <div class="bar-mini bg-success" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import dashboardVisitService from '../../services/dashboardVisitService'
 import poliklinikService from '../../services/poliklinikService'
 import SearchableSelect from '../../components/ui/SearchableSelect.vue'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js'
+import { Line, Bar } from 'vue-chartjs'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+)
 
 const loading = ref(true)
 const isFilterVisible = ref(false)
@@ -346,7 +436,7 @@ const yearOptions = ref(
 
 const filters = ref({
   mode: 'harian', // 'harian' or 'tahunan'
-  tgl_awal: new Date().toISOString().substr(0, 10),
+  tgl_awal: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`,
   tgl_akhir: new Date().toISOString().substr(0, 10),
   tahun: currentYear,
   status_lanjut: 'all',
@@ -365,14 +455,96 @@ const fetchPoliklinik = async () => {
   }
 }
 
+const chartDataReady = ref(false)
+
+const lineChartData = computed(() => {
+    const data = filters.value.mode === 'tahunan' 
+        ? (visitData.value.monthly_breakdown || []) 
+        : (visitData.value.charts || [])
+    
+    return {
+        labels: data.map(item => filters.value.mode === 'tahunan' ? item.nama_bulan : item.date.split('-').slice(1).reverse().join('/')),
+        datasets: [
+            {
+                label: 'Kunjungan',
+                data: data.map(item => item.total || (item.ralan + item.ranap)),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }
+        ]
+    }
+})
+
+const ageChartData = computed(() => {
+    const data = visitData.value.usia || []
+    return {
+        labels: data.map(i => i.label),
+        datasets: [{
+            label: 'Total Pasien',
+            data: data.map(i => i.total),
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            borderRadius: 6
+        }]
+    }
+})
+
+const lineChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            titleColor: '#1e293b',
+            bodyColor: '#475569',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 4,
+            usePointStyle: true
+        }
+    },
+    scales: {
+        y: { 
+            beginAtZero: true,
+            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+            ticks: { color: '#94a3b8', font: { size: 11 } }
+        },
+        x: {
+            grid: { display: false },
+            ticks: { color: '#94a3b8', font: { size: 10 } }
+        }
+    }
+}
+
+const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+        y: { beginAtZero: true, grid: { display: false }, ticks: { display: false } },
+        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+    }
+}
+
 const fetchData = async () => {
   loading.value = true
+  chartDataReady.value = false
   try {
     const response = await dashboardVisitService.getVisitStats(filters.value)
     const data = response.data.data
     visitData.value = data
     summary.value = data.summary
     inpatientCare.value = data.inpatient_care || null
+    
+    setTimeout(() => { chartDataReady.value = true }, 300)
   } catch (error) {
     console.error('Failed to fetch visit stats:', error)
   } finally {
@@ -420,14 +592,16 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.poli-filter {
-  min-width: 250px;
+.filter-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
-@media (max-width: 992px) {
-  .poli-filter {
-    min-width: 100%;
-  }
+.poli-filter {
+  flex: 1;
+  min-width: 200px;
 }
 
 /* Header */
@@ -679,6 +853,37 @@ onUnmounted(() => {
 .stat-card.care-days { border-bottom: 4px solid #8b5cf6; }
 .stat-card.lama-inap { border-bottom: 4px solid #f59e0b; }
 .stat-card.avg-stay { border-bottom: 4px solid #06b6d4; }
+
+/* Trend Badge */
+.trend-badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.trend-badge.up { background: #dcfce7; color: #15803d; }
+.trend-badge.down { background: #fee2e2; color: #b91c1c; }
+
+/* Chart Container */
+.chart-container-mini {
+    height: 200px;
+    margin-top: 1rem;
+}
+
+.chart-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 12px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
 
 
 .stat-card {
