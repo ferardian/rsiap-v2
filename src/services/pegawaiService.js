@@ -17,7 +17,7 @@ export const pegawaiService = {
         return api.get(`/sdi/pegawai/${nik}`, {
             params: {
                 select: '*',
-                include: 'petugas,dep,statusKerja,email'
+                include: 'petugas,dep,statusKerja,email,nomorKartu'
             }
         })
     },

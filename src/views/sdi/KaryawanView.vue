@@ -152,6 +152,9 @@
                 </td>
                 <td>
                   <div class="action-buttons">
+                    <button class="btn-detail" @click="openDetailModal(pegawai)" title="Detail">
+                      <i class="fas fa-eye"></i>
+                    </button>
                     <button v-if="canUpdate" class="btn-edit" @click="openEditModal(pegawai)" title="Edit">
                       <i class="fas fa-edit"></i>
                     </button>
@@ -208,6 +211,13 @@
         :pegawai-data="selectedPegawai"
         @close="showFormModal = false"
         @saved="loadPegawai"
+      />
+
+      <!-- Pegawai Detail Modal -->
+      <PegawaiDetailModal 
+        :show="showDetailModal"
+        :pegawai="selectedPegawai"
+        @close="showDetailModal = false"
       />
 
       <!-- Update Email Modal -->
@@ -291,6 +301,7 @@ import { pegawaiService } from '../../services/pegawaiService'
 import StafKlinisTab from './components/StafKlinisTab.vue'
 import StatistikTab from './components/StatistikTab.vue'
 import PegawaiFormModal from './components/PegawaiFormModal.vue'
+import PegawaiDetailModal from './components/PegawaiDetailModal.vue' // Added
 import CommitteeTab from './components/CommitteeTab.vue'
 import { useToast } from 'vue-toastification'
 
@@ -322,6 +333,7 @@ const pagination = ref({
 })
 const showDeleteModal = ref(false)
 const showFormModal = ref(false)
+const showDetailModal = ref(false) // Added
 const isEditMode = ref(false)
 const selectedPegawai = ref(null)
 const pegawaiTanpaEmail = ref([])
@@ -467,6 +479,22 @@ const openEditModal = async (pegawai) => {
       selectedPegawai.value = response.data.data
       isEditMode.value = true
       showFormModal.value = true
+    }
+  } catch (error) {
+    console.error('Error fetching employee detail:', error)
+    toast.error('Gagal mengambil detail data karyawan')
+  } finally {
+    loadingDetail.value = false
+  }
+}
+
+const openDetailModal = async (pegawai) => {
+  loadingDetail.value = true
+  try {
+    const response = await pegawaiService.getPegawaiById(pegawai.nip)
+    if (response.data.success) {
+      selectedPegawai.value = response.data.data
+      showDetailModal.value = true
     }
   } catch (error) {
     console.error('Error fetching employee detail:', error)
@@ -1318,7 +1346,27 @@ onMounted(() => {
 .alert-table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #fef3c7;
+  color: #451a03;
   font-size: 0.875rem;
+}
+
+.btn-detail {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #e0f2fe;
+  color: #0ea5e9;
+}
+
+.btn-detail:hover {
+  background: #0ea5e9;
+  color: white;
 }
 
 .alert-table tr:last-child td {

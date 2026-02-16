@@ -321,6 +321,22 @@
                 <label>Wajib Masuk (Hari) <span class="required">*</span></label>
                 <input type="number" v-model="form.wajibmasuk" required />
               </div>
+              <div class="form-group">
+                <label>No. BPJS Kesehatan</label>
+                <input 
+                  type="text" 
+                  v-model="form.no_bpjs" 
+                  placeholder="Nomor BPJS Kesehatan"
+                />
+              </div>
+              <div class="form-group">
+                <label>No. BPJS Ketenagakerjaan</label>
+                <input 
+                  type="text" 
+                  v-model="form.no_bpjstk" 
+                  placeholder="Nomor BPJS Ketenagakerjaan"
+                />
+              </div>
             </div>
           </div>
         </form>
@@ -398,6 +414,8 @@ const form = ref({
   no_ktp: '',
   no_telp: '',
   email: '',
+  no_bpjs: '',
+  no_bpjstk: '',
   gol_darah: '-',
   agama: 'ISLAM',
   stts_nikah: 'BELUM MENIKAH'
@@ -456,6 +474,8 @@ const resetForm = () => {
     no_ktp: '',
     no_telp: '',
     email: '',
+    no_bpjs: '',
+    no_bpjstk: '',
     gol_darah: '-',
     agama: 'ISLAM',
     stts_nikah: 'BELUM MENIKAH'
@@ -482,6 +502,17 @@ watch(() => props.pegawaiData, (newVal) => {
     } else if (newVal.no_telp) {
         // Fallback for no_telp from join
         form.value.no_telp = newVal.no_telp
+    }
+
+    // Handle Card Numbers
+    const cardData = newVal.nomorKartu || newVal.nomor_kartu
+    if (cardData) {
+      form.value.no_bpjs = cardData.no_bpjs || (newVal.no_bpjs || '')
+      form.value.no_bpjstk = cardData.no_bpjstk || (newVal.no_bpjstk || '')
+    } else {
+      // Fallback for flat structure
+      form.value.no_bpjs = newVal.no_bpjs || ''
+      form.value.no_bpjstk = newVal.no_bpjstk || ''
     }
 
     // Handle Email relationship mapping

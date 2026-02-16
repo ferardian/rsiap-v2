@@ -1,0 +1,441 @@
+<template>
+  <div v-if="show" class="modal-overlay" @click="$emit('close')">
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h3>Detail Pegawai</h3>
+        <button class="btn-close" @click="$emit('close')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" v-if="pegawai">
+        <div class="employee-header mb-4">
+          <div class="avatar-large">
+            <span class="initials">{{ getInitials(pegawai.nama) }}</span>
+          </div>
+          <div class="employee-title">
+            <h2>{{ pegawai.nama }}</h2>
+            <span class="badge-role">{{ pegawai.jbtn }}</span>
+            <div class="status-badge" :class="pegawai.stts_aktif === 'AKTIF' ? 'active' : 'inactive'">
+              {{ pegawai.stts_aktif }}
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <!-- Personal Info -->
+          <div class="detail-section">
+            <h4><i class="fas fa-user"></i> Data Pribadi</h4>
+            <div class="info-group">
+              <label>NIK / NIP</label>
+              <span>{{ pegawai.nik || pegawai.nip }}</span>
+            </div>
+            <div class="info-group">
+              <label>Jenis Kelamin</label>
+              <span>{{ pegawai.jk }}</span>
+            </div>
+            <div class="info-group">
+              <label>Tempat, Tgl Lahir</label>
+              <span>{{ pegawai.tmp_lahir }}, {{ formatDate(pegawai.tgl_lahir) }}</span>
+            </div>
+            <div class="info-group">
+              <label>Alamat</label>
+              <span>{{ pegawai.alamat }}</span>
+            </div>
+            <div class="info-group">
+              <label>No. KTP</label>
+              <span>{{ pegawai.no_ktp }}</span>
+            </div>
+            <div class="info-group">
+              <label>No. Telepon</label>
+              <span>{{ pegawai.no_telp }}</span>
+            </div>
+             <div class="info-group">
+              <label>Email</label>
+              <span>{{ getEmailValue(pegawai.email) }}</span>
+            </div>
+          </div>
+
+          <!-- Employment Info -->
+          <div class="detail-section">
+            <h4><i class="fas fa-briefcase"></i> Data Kepegawaian</h4>
+            <div class="info-group">
+              <label>Departemen</label>
+              <span>{{ pegawai.dep?.nama || pegawai.departemen }}</span>
+            </div>
+            <div class="info-group">
+              <label>Pendidikan</label>
+              <span>{{ pegawai.pendidikan }}</span>
+            </div>
+            <div class="info-group">
+              <label>Mulai Kerja</label>
+              <span>{{ formatDate(pegawai.mulai_kerja) }}</span>
+            </div>
+            <div class="info-group">
+              <label>Status Kerja</label>
+              <span>{{ pegawai.status_kerja?.ktg || pegawai.stts_kerja }}</span>
+            </div>
+             <div class="info-group">
+              <label>Status Wajib Pajak</label>
+              <span>{{ pegawai.stts_wp || '-' }}</span>
+            </div>
+             <div class="info-group">
+              <label>NPWP</label>
+              <span>{{ pegawai.npwp || '-' }}</span>
+            </div>
+          </div>
+
+          <!-- Insurance Info (New) -->
+          <div class="detail-section full-width">
+            <h4><i class="fas fa-id-card"></i> Data Jaminan Sosial</h4>
+            <div class="insurance-grid">
+              <div class="insurance-card bpjs">
+                <div class="icon">
+                  <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="details">
+                  <label>BPJS Kesehatan</label>
+                  <span class="number">{{ pegawai.nomor_kartu?.no_bpjs || pegawai.nomorKartu?.no_bpjs || pegawai.no_bpjs || 'Belum Terdaftar' }}</span>
+                </div>
+              </div>
+              <div class="insurance-card bpjstk">
+                <div class="icon">
+                  <i class="fas fa-hard-hat"></i>
+                </div>
+                <div class="details">
+                  <label>BPJS Ketenagakerjaan</label>
+                  <span class="number">{{ pegawai.nomor_kartu?.no_bpjstk || pegawai.nomorKartu?.no_bpjstk || pegawai.no_bpjstk || 'Belum Terdaftar' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-close-modal" @click="$emit('close')">Tutup</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+
+const props = defineProps({
+  show: Boolean,
+  pegawai: Object
+})
+
+defineEmits(['close'])
+
+const getPhotoUrl = (photo) => {
+  return `/storage/pegawai/${photo}`
+}
+
+const formatDate = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+const getInitials = (name) => {
+  if (!name) return '?'
+  return name
+    .match(/(^\S\S?|\s\S)?/g)
+    .map(v => v.trim())
+    .join('')
+    .match(/(^\S|\S$)?/g)
+    .join('')
+    .toLocaleUpperCase()
+    .substring(0, 2)
+}
+
+const getEmailValue = (email) => {
+  if (!email) return '-'
+  
+  // Check if it's a string that looks like JSON
+  if (typeof email === 'string' && (email.startsWith('{') || email.startsWith('['))) {
+    try {
+      const parsed = JSON.parse(email)
+      return parsed.email || '-'
+    } catch (e) {
+      return email
+    }
+  }
+  
+  // Check if it's already an object
+  if (typeof email === 'object') {
+    return email.email || '-'
+  }
+  
+  return email
+}
+</script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-close:hover {
+  color: #ef4444;
+}
+
+.modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.employee-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 4px solid white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-large .initials {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.employee-title h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.badge-role {
+  background: #eff6ff;
+  color: #3b82f6;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.detail-section h4 {
+  color: #64748b;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-group {
+  margin-bottom: 1rem;
+}
+
+.info-group label {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+.info-group span {
+  color: #334155;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.detail-section.full-width {
+  grid-column: span 2;
+  margin-top: 1rem;
+}
+
+.insurance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.insurance-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.insurance-card.bpjs .icon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.insurance-card.bpjstk .icon {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.insurance-card .icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.insurance-card .details {
+  display: flex;
+  flex-direction: column;
+}
+
+.insurance-card .details label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.insurance-card .details .number {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-close-modal {
+  padding: 0.75rem 2rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-close-modal:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .detail-section.full-width {
+    grid-column: span 1;
+  }
+
+  .insurance-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .employee-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+</style>
