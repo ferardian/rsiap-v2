@@ -231,6 +231,13 @@
                     >
                       <i class="fas" :class="bulkSyncLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
                     </button>
+                    <button 
+                      class="btn btn-cancel-task" 
+                      title="Batalkan Antrean"
+                      @click="cancelQueue(item)"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -544,6 +551,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import bpjsAntrolService from '@/services/bpjsAntrolService'
 import { useToast } from 'vue-toastification'
+import Swal from 'sweetalert2'
 
 const toast = useToast()
 const loading = ref(false)
@@ -796,6 +804,64 @@ const showAdjustmentModal = async (item) => {
     toast.error('Gagal mengambil data adjustment')
   } finally {
     syncLoading.value = false
+  }
+}
+
+const cancelQueue = async (item) => {
+  const result = await Swal.fire({
+    title: 'Batalkan Antrean?',
+    text: `Anda yakin ingin membatalkan antrean ${item.noantrean} (${item.kodebooking})?`,
+    icon: 'warning',
+    input: 'text',
+    inputLabel: 'Alasan Pembatalan',
+    inputPlaceholder: 'Masukan alasan pembatalan...',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Ya, Batalkan!',
+    cancelButtonText: 'Batal',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Alasan pembatalan wajib diisi!'
+      }
+    }
+  })
+
+  if (result.isConfirmed) {
+    loading.value = true // Use main loading or specific loading state
+    try {
+      const payload = {
+        kodebooking: item.kodebooking,
+        keterangan: result.value
+      }
+      
+      const response = await bpjsAntrolService.cancelAntrean(payload)
+      
+      if (response.data.metadata.code === 200) {
+        Swal.fire(
+          'Dibatalkan!',
+          'Antrean berhasil dibatalkan.',
+          'success'
+        )
+        // Refresh data
+        fetchAntrolData()
+      } else {
+        Swal.fire(
+          'Gagal!',
+          response.data.metadata.message || 'Gagal membatalkan antrean.',
+          'error'
+        )
+      }
+    } catch (error) {
+      console.error(error)
+      Swal.fire(
+        'Error!',
+        'Terjadi kesalahan saat menghubungi server.',
+        'error'
+      )
+    } finally {
+      loading.value = false
+    }
   }
 }
 
@@ -1372,6 +1438,26 @@ onMounted(() => {
 .btn-cancel:hover {
   background: #f1f5f9;
   border-color: #94a3b8;
+}
+
+.btn-cancel-task {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.btn-cancel-task:hover {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+  transform: scale(1.1);
 }
 
 .btn-confirm {

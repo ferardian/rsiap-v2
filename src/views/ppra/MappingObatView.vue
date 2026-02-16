@@ -39,7 +39,8 @@
             <th width="15%">Kode Barang</th>
             <th width="35%">Nama Obat</th>
             <th width="20%">Rute Pemberian</th>
-            <th width="15%">Nilai DDD WHO</th>
+            <th width="10%">DDD WHO</th>
+            <th width="10%">Notif</th>
             <th width="10%">Aksi</th>
           </tr>
         </thead>
@@ -54,6 +55,13 @@
             <td><span class="badge-route">{{ item.rute_pemberian || '-' }}</span></td>
             <td>{{ item.nilai_ddd_who || '-' }}</td>
             <td>
+              <div class="status-notif">
+                <span :class="['badge-status', item.status_notif == 1 ? 'status-active' : 'status-inactive']">
+                  {{ item.status_notif == 1 ? 'ON' : 'OFF' }}
+                </span>
+              </div>
+            </td>
+            <td>
               <div class="action-buttons">
                 <button @click="openEditModal(item)" class="btn-icon btn-edit" title="Edit">
                   <i class="fas fa-edit"></i>
@@ -65,7 +73,7 @@
             </td>
           </tr>
           <tr v-if="tableData.length === 0">
-            <td colspan="6" class="text-center py-5">
+            <td colspan="7" class="text-center py-5">
               <div class="empty-state">
                 <i class="fas fa-prescription-bottle-alt"></i>
                 <p>Belum ada data mapping obat</p>
@@ -160,7 +168,7 @@
           </div>
 
           <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-5">
                 <div class="form-group mb-4">
                     <label class="form-label">Rute Pemberian</label>
                     <VueSelect
@@ -172,12 +180,26 @@
                     ></VueSelect>
                </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="form-group mb-4">
                     <label class="form-label">Nilai DDD WHO</label>
                     <div class="input-with-icon">
                         <i class="fas fa-weight-hanging"></i>
-                        <input type="text" v-model="formData.nilai_ddd_who" class="form-control" placeholder="Nilai angka (contoh: 1.5)">
+                        <input type="text" v-model="formData.nilai_ddd_who" class="form-control" placeholder="Angka">
+                    </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group mb-4">
+                    <label class="form-label">Status Notif</label>
+                    <div class="toggle-container mt-2">
+                        <label class="switch">
+                            <input type="checkbox" v-model="formData.status_notif" :true-value="1" :false-value="0">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="ms-2 fw-bold" :class="formData.status_notif == 1 ? 'text-primary' : 'text-muted'">
+                            {{ formData.status_notif == 1 ? 'AKTIF' : 'NONAKTIF' }}
+                        </span>
                     </div>
                 </div>
               </div>
@@ -224,7 +246,8 @@ const formData = reactive({
   id: null,
   kode_brng: '',
   rute_pemberian: '',
-  nilai_ddd_who: ''
+  nilai_ddd_who: '',
+  status_notif: 1
 });
 
 // Methods
@@ -281,6 +304,7 @@ const openAddModal = () => {
   formData.kode_brng = '';
   formData.rute_pemberian = '';
   formData.nilai_ddd_who = '';
+  formData.status_notif = 1;
   showModal.value = true;
 };
 
@@ -290,6 +314,7 @@ const openEditModal = (item) => {
   formData.kode_brng = item.kode_brng;
   formData.rute_pemberian = item.rute_pemberian;
   formData.nilai_ddd_who = item.nilai_ddd_who;
+  formData.status_notif = item.status_notif;
   editObatName.value = item.barang?.nama_brng;
   showModal.value = true;
 };
@@ -318,13 +343,15 @@ const saveMapping = async () => {
     if (isEditMode.value) {
       await ppraService.updateMapping(formData.id, {
         rute_pemberian: formData.rute_pemberian,
-        nilai_ddd_who: safeDDD
+        nilai_ddd_who: safeDDD,
+        status_notif: formData.status_notif
       });
     } else {
       await ppraService.storeMapping({
         kode_brng: selectedObat.value,
         rute_pemberian: formData.rute_pemberian,
-        nilai_ddd_who: safeDDD
+        nilai_ddd_who: safeDDD,
+        status_notif: formData.status_notif
       });
     }
     Swal.fire('Sukses', 'Data berhasil disimpan', 'success');
@@ -366,6 +393,88 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Added Toggle Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #3498db;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #3498db;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(24px);
+  -ms-transform: translateX(24px);
+  transform: translateX(24px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+}
+
+.badge-status {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.status-active {
+    background: #e8f4fd;
+    color: #3498db;
+}
+
+.status-inactive {
+    background: #fdf2f2;
+    color: #e74c3c;
+}
+
 .ppra-mapping-page {
   padding: 1.5rem;
   background-color: #f0f2f5;

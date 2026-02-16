@@ -441,6 +441,12 @@ const routes = [
     component: () => import('../views/pasien/DataPasienView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/pasien/transfer-imunisasi',
+    name: 'TransferImunisasi',
+    component: () => import('../views/pasien/TransferImunisasiView.vue'),
+    meta: { requiresAuth: true }
+  },
 ]
 
 const router = createRouter({

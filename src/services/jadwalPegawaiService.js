@@ -60,7 +60,10 @@ export const jadwalPegawaiService = {
                     'Content-Type': 'application/json',
                     'X-AI-KEY': 'schedule-ai-123'
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    ...data,
+                    prompt: data.prompt || '' // Ensure prompt is sent
+                })
             })
 
             const text = await response.text()

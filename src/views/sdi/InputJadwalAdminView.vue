@@ -325,7 +325,7 @@ const filteredEmployees = computed(() => {
   return employees.value
 })
 
-const summaryTypes = ['Pagi', 'Siang', 'Malam', 'Cuti'] // Main categories to summarize
+const summaryTypes = ['Pagi', 'Siang', 'Malam', 'Cuti', 'Libur'] // Main categories to summarize
 
 const shiftSummary = computed(() => {
   const summary = {}
@@ -346,10 +346,11 @@ const shiftSummary = computed(() => {
         // Simple matching logic
         let type = null
         const lower = shiftCode.toLowerCase()
-        if (lower.includes('pagi')) type = 'Pagi'
-        else if (lower.includes('siang')) type = 'Siang'
-        else if (lower.includes('malam')) type = 'Malam'
-        else if (lower.includes('cuti')) type = 'Cuti'
+        if (lower.includes('pagi') || lower === 'p' || lower.startsWith('pagi')) type = 'Pagi'
+        else if (lower.includes('siang') || lower === 's' || lower.startsWith('siang')) type = 'Siang'
+        else if (lower.includes('malam') || lower === 'm' || lower.startsWith('malam')) type = 'Malam'
+        else if (lower.includes('cuti') || lower === 'c') type = 'Cuti'
+        else if (lower.includes('libur') || lower === 'l') type = 'Libur'
         
         if (type) {
           summary[type][d]++
@@ -663,102 +664,223 @@ const generateAiSchedule = async () => {
     return
   }
 
-  // Premium Confirm action
-  const result = await Swal.fire({
-    title: 'Rekomendasi Penjadwalan AI',
-    html: `
-      <div class="ai-confirm-content">
-        <div class="ai-icon-container mb-4">
-          <div class="ai-pulse-hologram"></div>
-          <i class="fas fa-brain ai-fancy-icon-premium"></i>
-        </div>
-        <div class="ai-text-info-premium">
-          <p class="subtitle-premium">AI Core Engine Ready</p>
-          <div class="ai-details-card-premium mt-3">
-             <div class="card-glass-glow"></div>
-             <div class="d-flex justify-content-between px-3 py-2 border-bottom border-white-50">
-                <span class="label-premium">Analisis Objek:</span>
-                <span class="value-premium">${filteredEmployees.value.length} Pegawai</span>
-             </div>
-             <div class="d-flex justify-content-between px-3 py-2">
-                <span class="label-premium">Periode Target:</span>
-                <span class="value-premium">${months[filter.value.month - 1]} ${filter.value.year}</span>
-             </div>
-          </div>
-          <p class="mt-2 desc-premium">Sistem akan mengoptimalkan sebaran shift berdasarkan aturan unit dan meminimalisir bentrok jadwal.</p>
-        </div>
-      </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: 'Execute Analysis ⚡',
-    cancelButtonText: 'Cancel Operation',
-    reverseButtons: true,
-    customClass: {
-      popup: 'ai-ultra-premium-popup glass-morphism-2',
-      title: 'ai-ultra-premium-title',
-      confirmButton: 'btn-premium-action',
-      cancelButton: 'btn-premium-secondary'
-    },
-    buttonsStyling: false,
-    showClass: {
-      popup: 'swal2-noanimation',
-      backdrop: 'swal2-noanimation'
-    },
-    hideClass: {
-      popup: '',
-      backdrop: ''
-    }
-  })
-
-  if (!result.isConfirmed) return
-
-  analyzing.value = true
-  
   try {
     // Get Department Name
     let deptName = 'Unknown Department'
     const selectedDept = departmentOptions.value.find(d => d.id === filter.value.department)
     if (selectedDept) deptName = selectedDept.name
-    else if (employees.value.length > 0) deptName = employees.value[0].departemen // Fallback
 
+    const result = await Swal.fire({
+      title: 'AI Workload Optimizer',
+      html: `
+        <div class="ai-premium-container">
+          <div class="ai-header-fancy animate-pulse-slow">
+            <i class="fas fa-microchip ai-chip-icon"></i>
+          </div>
+          <div class="ai-stats-card-premium mb-4">
+             <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-400 text-xs">Objek Analisis</span>
+                <span class="text-white font-bold text-xs">${filteredEmployees.value.length} Pegawai</span>
+             </div>
+             <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-400 text-xs">Target Periode</span>
+                <span class="text-white font-bold text-xs">${months[filter.value.month - 1]} ${filter.value.year}</span>
+             </div>
+             <div class="pt-2 border-t border-white/10 flex justify-between items-center">
+                <span class="text-slate-400 text-xs text-left">Internal Unit</span>
+                <span class="text-indigo-400 font-bold text-xs">${deptName}</span>
+             </div>
+          </div>
+          <p class="text-slate-300 text-[13px] leading-relaxed mb-4">Optimization Engine siap menyusun strategi shift. Masukkan instruksi khusus di bawah.</p>
+        </div>
+      `,
+      input: 'textarea',
+      inputPlaceholder: 'Contoh: Setiap shift min 4 orang, Ririn tidak boleh dinas malam...',
+      inputAttributes: {
+        'style': 'border-radius: 12px; border: 1px solid #334155; font-size: 13px; min-height: 90px; padding: 12px; background: #1e293b; color: #f1f5f9; font-family: inherit;'
+      },
+      showCancelButton: true,
+      showCloseButton: true,
+      confirmButtonText: 'Generate Strategy ⚡',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+      customClass: {
+        popup: 'ai-dark-premium-popup',
+        title: 'ai-dark-premium-title',
+        actions: 'ai-dark-premium-actions',
+        confirmButton: 'ai-dark-premium-confirm',
+        cancelButton: 'ai-dark-premium-cancel'
+      }
+    })
+
+  if (!result.isConfirmed) return
+  analyzing.value = true
+
+    const userPrompt = result.value || ''
+    const days = new Date(filter.value.year, filter.value.month, 0).getDate()
+    
+    // Create Employee List for AI to map names to IDs
+    const employeeListTxt = filteredEmployees.value.map(e => `${e.id}: ${e.nama} (${e.jbtn})`).join('\n')
+    const shiftListTxt = shifts.value.map(s => s.shift).join(', ')
+
+    // Create a precise mapping so AI knows who's who
+    const mappingTxt = filteredEmployees.value.map(e => `- ${e.nama} (ID: ${e.id})`).join('\n')
+
+    // Create a calendar guide (h1: Minggu, h2: Senin, etc.)
+    const calendarGuideTxt = Array.from({ length: days }, (_, i) => {
+      const d = i + 1
+      const dayName = new Date(filter.value.year, filter.value.month - 1, d).toLocaleDateString('id-ID', { weekday: 'long' })
+      return `h${d}:${dayName}`
+    }).join(', ')
+
+    const totalEmployees = filteredEmployees.value.length
+
+    // This goes into {{ $json.prompt }} in n8n
+    const finalPrompt = `
+Calendar Info (${months[filter.value.month - 1]} ${filter.value.year}):
+${calendarGuideTxt}
+
+Employee Mapping (Total Staff: ${totalEmployees}):
+${mappingTxt}
+
+Available Shift Codes for this Unit:
+${shiftListTxt}
+
+STRICT STAFFING QUOTA (NON-NEGOTIABLE):
+Every single day (h1 to h${days}) must satisfy the 4-4-4 requirement:
+- Morning (Pagi): MINIMUM 4 staff.
+- Afternoon (Siang): MINIMUM 4 staff.
+- Night (Malam): MINIMUM 4 staff.
+- TOTAL LIBUR: MAX 11 people per day (since you have ${totalEmployees} total).
+
+ASSIGNMENT LOGIC (STEP-BY-STEP):
+1. REASONING FIRST: For each day, write down how many people you are assigning to Pagi, Siang, and Malam.
+2. MALAM FIRST: Fill the 4 Malam slots first, as they have the strictest rest rules.
+3. SIANG SECOND: Fill the 4 Siang slots.
+4. PAGI THIRD: Fill the 4 Pagi slots.
+5. BALANCE: Distribute the remaining staff across shifts, keeping Pagi <= 8.
+
+HIERARCHY OF RULES:
+1. HEADCOUNT INTEGRITY (4-4-4): PRIORITY #1. Never leave a shift with < 4 people.
+2. INDIVIDUAL MANDATES: ${userPrompt || 'No specific individual overrides.'} (Absolute priority).
+3. NIGHT REST RULES: 2 nights = 2 days off. If this rule causes a shift to fall below 4 people, YOU MUST IGNORE THE REST RULE. Filling the shift is more important than rest.
+4. CODE CONSISTENCY: Keep specific codes (Pagi7 stays Pagi7 for that person). DO NOT use abbreviations like "P", "S", "M", or "L". You MUST use the full codes provided (e.g., "Pagi8", "Siang3").
+
+CRITICAL OUTPUT FORMAT:
+You MUST finish with a RAW JSON array: [{"id": <ID>, "schedule": [...]}, ...]
+DO NOT use single letter codes in the final JSON. Use full code names.
+    `.trim()
+
+    // Prepare Payload for AI
     const payload = {
       month: filter.value.month,
       year: filter.value.year,
-      department: filter.value.department // This is already dep_id from filter
+      daysInMonth: days,
+      department: filter.value.department,
+      department_name: deptName,
+      employees: filteredEmployees.value.map(e => ({ id: e.id, nama: e.nama, jbtn: e.jbtn })),
+      shifts: shifts.value,
+      prompt: finalPrompt
     }
 
-    console.log('📡 Generating Schedule with Backend:', payload)
+    console.log('📡 Sending to AI Webhook:', payload)
 
-    const response = await jadwalPegawaiService.generateSchedule(payload)
-    console.log('✅ Backend Response:', response.data)
-    
-    // Backend returns clean JSON: { success: true, data: [...] }
-    if (!response.data.success) {
-      throw new Error(response.data.message || 'Gagal generate jadwal')
+    // Call AI Service (n8n) instead of Backend
+    const responseData = await jadwalPegawaiService.getAiRecommendation(payload)
+    console.log('✅ AI Response:', responseData)
+
+    if (!responseData) throw new Error('Penghitungan AI gagal (Layanan tidak merespon).')
+
+    // Helper to salvage partially generated JSON if truncated
+    const tryRecoverTruncatedJson = (str) => {
+        try {
+            console.log('🩹 Attempting to salvage truncated JSON...')
+            // Find last complete object closing
+            const lastObjEnd = str.lastIndexOf('}')
+            if (lastObjEnd === -1) return null
+            
+            let salvaged = str.substring(0, lastObjEnd + 1).trim()
+            
+            // Remove trailing comma if it exists after the last object
+            if (salvaged.endsWith(',')) {
+                salvaged = salvaged.substring(0, salvaged.length - 1).trim()
+            }
+            
+            // Ensure it's wrapped correctly as an array
+            const startsWithArray = salvaged.startsWith('[')
+            if (startsWithArray && !salvaged.endsWith(']')) {
+                salvaged += ']'
+            } else if (!startsWithArray) {
+                salvaged = '[' + salvaged + ']'
+            }
+            
+            console.log('✅ Salvaged JSON string length:', salvaged.length)
+            return JSON.parse(salvaged)
+        } catch (e) {
+            console.error('❌ Salvage failed:', e.message)
+            return null
+        }
     }
-
-    const results = response.data.data
 
     // Helper to find array recursively or parse from string
     const extractResults = (input) => {
-        // If it's the schedule array we want
-        if (Array.isArray(input) && input.length > 0 && (input[0].id || input[0].id_pegawai)) {
+        if (!input) return null
+
+        // If it's the schedule array we want (check for key fields)
+        if (Array.isArray(input) && input.length > 0 && (input[0].id || input[0].id_pegawai || input[0].schedule || input[0].h1)) {
             return input
         }
 
         // If it's a string, try parsing it
         if (typeof input === 'string') {
-            try {
-                const clean = input.replace(/```json|```/g, '').trim()
-                const parsed = JSON.parse(clean)
-                return extractResults(parsed) // Recurse to check if inside is an array
-            } catch (e) { return null }
+            let clean = input.trim()
+            
+            // Aggressive Markdown Block Stripping
+            if (clean.includes('```')) {
+                clean = clean.replace(/```json\n?|```/g, '').trim()
+            }
+            
+            // Find actual JSON start/end if there's thinking noise or prefix text
+            const firstBracket = clean.indexOf('[')
+            const firstBrace = clean.indexOf('{')
+            let start = -1
+            if (firstBracket !== -1 && firstBrace !== -1) start = Math.min(firstBracket, firstBrace)
+            else if (firstBracket !== -1) start = firstBracket
+            else if (firstBrace !== -1) start = firstBrace
+
+            if (start !== -1) {
+                const lastBracket = clean.lastIndexOf(']')
+                const lastBrace = clean.lastIndexOf('}')
+                const end = Math.max(lastBracket, lastBrace)
+                
+                if (end > start) {
+                    clean = clean.substring(start, end + 1).trim()
+                }
+            }
+            
+            if (clean.startsWith('[') || clean.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(clean)
+                    return extractResults(parsed) // Recurse
+                } catch (e) { 
+                    // Attempt recovery if it looks truncated
+                    console.warn('⚠️ JSON Parse failed, attempting recovery for:', clean.substring(0, 50) + '...')
+                    const recovered = tryRecoverTruncatedJson(clean)
+                    if (recovered) return extractResults(recovered)
+                    
+                    console.warn('JSON Parse Error:', e)
+                    return null 
+                }
+            }
+            return null
         }
 
         // If it's an object, check known fields
         if (typeof input === 'object' && input !== null) {
-            // Check nested fields
-            const fields = ['output', 'text', 'data', 'content', 'response']
+            // Check nested fields commonly used by n8n/AI nodes
+            const fields = ['output', 'text', 'data', 'content', 'response', 'result', 'generations']
             for (const f of fields) {
                 if (input[f]) {
                     const found = extractResults(input[f])
@@ -766,8 +888,15 @@ const generateAiSchedule = async () => {
                 }
             }
 
-            // Handle the [{ output: "..." }] case from n8n
+            // Handle the [{ output: "..." }] or [{ response: ... }] case
             if (Array.isArray(input) && input.length > 0) {
+                // If it's an array of arrays (like in generations)
+                if (Array.isArray(input[0])) {
+                    for (const item of input[0]) {
+                        const found = extractResults(item)
+                        if (found) return found
+                    }
+                }
                 return extractResults(input[0])
             }
         }
@@ -775,10 +904,11 @@ const generateAiSchedule = async () => {
         return null
     }
 
+    const results = extractResults(responseData)
 
     if (!Array.isArray(results) || results.length === 0) {
-        console.error('❌ Backend returned invalid data:', results)
-        throw new Error('Backend tidak mengembalikan data jadwal yang valid.')
+        console.error('❌ AI Extraction Fail. Raw Response:', responseData)
+        throw new Error('AI tidak memberikan hasil (Output Kosong). \n\nTips: Coba sederhanakan instruksi tambahan Anda atau pastikan data pegawai sudah benar.')
     }
 
     // Apply Changes
@@ -797,13 +927,25 @@ const generateAiSchedule = async () => {
             return
         }
 
-        // Iterate keys h1..h31
-        for (let d = 1; d <= daysInMonth.value; d++) {
-            const dayKey = `h${d}`
-            if (row[dayKey] !== undefined) { // Allow empty string for Libur
-                const key = `${empId}_${d}`
-                pendingChanges.value[key] = row[dayKey]
-                appliedCount++
+        // Iterate schedule (prefer array format for token efficiency)
+        if (Array.isArray(row.schedule)) {
+            row.schedule.forEach((shift, index) => {
+                const d = index + 1
+                if (d <= daysInMonth.value) {
+                    const key = `${empId}_${d}`
+                    pendingChanges.value[key] = shift
+                    appliedCount++
+                }
+            })
+        } else {
+            // Fallback for key-value format
+            for (let d = 1; d <= daysInMonth.value; d++) {
+                const dayKey = `h${d}`
+                if (row[dayKey] !== undefined) { 
+                    const key = `${empId}_${d}`
+                    pendingChanges.value[key] = row[dayKey]
+                    appliedCount++
+                }
             }
         }
     })
@@ -813,11 +955,7 @@ const generateAiSchedule = async () => {
           icon: 'warning',
           title: 'Pegawai Tidak Cocok',
           text: `${mismatchCount} pegawai dari respon AI tidak dikenali sistem.`,
-          customClass: {
-            popup: 'ai-ultra-premium-popup glass-morphism-2',
-            confirmButton: 'btn-premium-action'
-          },
-          buttonsStyling: false
+          confirmButtonText: 'Tutup'
         })
     }
 
@@ -826,50 +964,35 @@ const generateAiSchedule = async () => {
           icon: 'info',
           title: 'Tidak Ada Perubahan',
           text: 'Respon AI valid tapi tidak ada data shift yang bisa diterapkan.',
-          customClass: {
-            popup: 'ai-ultra-premium-popup glass-morphism-2',
-            confirmButton: 'btn-premium-action'
-          },
-          buttonsStyling: false
+          confirmButtonText: 'OK'
         })
     } else if (appliedCount > 0) {
         hasChanges.value = true
         Swal.fire({
-          title: 'Rekomendasi Selesai',
-          html: `
-            <div class="ai-success-content">
-              <div class="success-glow-icon mb-4">
-                 <i class="fas fa-check-double ai-icon-glow"></i>
-              </div>
-              <h4 class="success-title-premium">Optimization Complete!</h4>
-              <p class="success-desc-premium">Sistem AI telah berhasil menyusun strategi shift.</p>
-              <div class="stats-badge-premium mt-3">
-                 <strong>${appliedCount}</strong> Data Shift Terintegrasi
-              </div>
-              <p class="mt-4 text-muted small fst-italic">Tinjau hasil pada tabel dan klik "Simpan Changes" untuk finalisasi.</p>
-            </div>
-          `,
-          showConfirmButton: true,
-          confirmButtonText: 'Konfirmas & Lihat',
-          customClass: {
-            popup: 'ai-ultra-premium-popup glass-morphism-2',
-            confirmButton: 'btn-premium-action'
-          },
-          buttonsStyling: false
+            icon: 'success',
+            title: 'Jadwal AI Berhasil Disiapkan',
+            html: `
+                Berhasil menyusun jadwal untuk <b>${Math.ceil(appliedCount / daysInMonth.value)}</b> pegawai.<br>
+                <small>(Total ${appliedCount} data shift diterapkan)</small><br>
+                ${mismatchCount > 0 ? `<br><span style="color: #f59e0b">⚠️ ${mismatchCount} data pegawai tidak cocok.</span>` : ''}
+                <br>
+                <small>Silakan tinjau tabel dan klik <b>Simpan Changes</b>.</small>
+            `,
+            confirmButtonText: 'Tinjau Sekarang',
+            customClass: {
+                popup: 'ai-dark-premium-popup',
+                title: 'ai-dark-premium-title',
+                confirmButton: 'ai-dark-premium-confirm'
+            }
         })
     }
-
   } catch (err) {
     console.error('AI Generation Error', err)
     Swal.fire({
       icon: 'error',
       title: 'Operational Failure',
       text: err.message || 'Unknown exception during AI inference.',
-      customClass: {
-        popup: 'ai-ultra-premium-popup glass-morphism-2',
-        confirmButton: 'btn-premium-action'
-      },
-      buttonsStyling: false
+      confirmButtonColor: '#ef4444'
     })
   } finally {
     analyzing.value = false
@@ -1683,10 +1806,12 @@ thead .sticky-col {
 }
 
 .glass-morphism-2 {
-  background: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(25px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+  background: #ffffff !important; /* Solid background for now to fix click bugs */
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.ai-confirm-content {
+  pointer-events: auto !important; /* Restore auto to be safe */
 }
 
 .ai-ultra-premium-title {
@@ -1697,243 +1822,80 @@ thead .sticky-col {
   margin-bottom: 0.5rem !important;
 }
 
-.subtitle-premium {
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: #6366f1;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
+</style>
+
+<style scoped>
+/* AI Premium UI Structure */
+.ai-premium-container {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #f1f5f9;
 }
 
-.ai-details-card-premium {
-  position: relative;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
-}
-
-.card-glass-glow {
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at center, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.label-premium {
-  color: #475569;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.value-premium {
-  color: #1e293b;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.desc-premium {
-  color: #64748b;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.btn-premium-action {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-  color: white !important;
-  font-weight: 700 !important;
-  padding: 1rem 2.5rem !important;
-  border-radius: 16px !important;
-  border: none !important;
-  cursor: pointer !important;
-  box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4) !important;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-}
-
-.btn-premium-action:hover {
-  transform: translateY(-4px) scale(1.02) !important;
-  box-shadow: 0 20px 30px -10px rgba(79, 70, 229, 0.5) !important;
-}
-
-.btn-premium-secondary {
-  background: #f8fafc !important;
-  color: #475569 !important;
-  font-weight: 600 !important;
-  padding: 1rem 2rem !important;
-  border-radius: 16px !important;
-  border: 1px solid #e2e8f0 !important;
-  cursor: pointer !important;
-  transition: all 0.3s !important;
-}
-
-.btn-premium-secondary:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-/* Force side-by-side buttons */
-.swal2-actions {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: 12px !important;
-  margin-top: 1.25rem !important;
-  width: 100% !important;
-}
-
-/* Ensure buttons don't stack on small screens and have consistent width */
-.swal2-confirm, .swal2-cancel, .btn-premium-action, .btn-premium-secondary {
-  margin: 0 !important;
-  flex: 1 !important;
-  max-width: 180px !important;
-  min-width: 140px !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  white-space: nowrap !important;
-}
-
-/* Animations */
-.ai-icon-container {
-  height: 100px;
+.ai-header-fancy {
+  height: 80px;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.ai-fancy-icon-premium {
-  font-size: 4rem;
+.ai-chip-icon {
+  font-size: 3.5rem;
   background: linear-gradient(135deg, #6366f1 0%, #c084fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: ai-float 3s ease-in-out infinite;
-  filter: drop-shadow(0 10px 15px rgba(99, 102, 241, 0.2));
+  filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));
 }
 
-.ai-pulse-hologram {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  border: 2px solid rgba(99, 102, 241, 0.3);
-  border-radius: 50%;
-  animation: pulse-hologram 2s ease-out infinite;
+.ai-stats-card-premium {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
 }
 
-@keyframes ai-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
+/* Stable Popup Styling (Dark Theme for "AI" feel) */
+:global(.ai-dark-premium-popup) {
+  background: #0f172a !important;
+  border-radius: 24px !important;
+  border: 1px solid #1e293b !important;
+  padding: 2rem !important;
 }
 
-@keyframes pulse-hologram {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(2.5); opacity: 0; }
+:global(.ai-dark-premium-title) {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 1.6rem !important;
+  letter-spacing: -0.02em !important;
 }
 
-@keyframes premium-appearance {
-  0% { opacity: 0; transform: scale(0.85) translateY(20px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+:global(.ai-dark-premium-actions) {
+  margin-top: 1.5rem !important;
 }
 
-/* Mobile Optimizations for Premium Modal */
-@media (max-width: 768px) {
-  .ai-ultra-premium-popup {
-    padding: 1.25rem !important;
-    border-radius: 20px !important;
-  }
-
-  .ai-ultra-premium-title {
-    font-size: 1.25rem !important;
-    margin-bottom: 0.25rem !important;
-  }
-
-  .subtitle-premium {
-    font-size: 0.65rem !important;
-    margin-bottom: 0.75rem !important;
-  }
-
-  .ai-icon-container {
-    height: 70px !important;
-    margin-bottom: 1rem !important;
-  }
-
-  .ai-fancy-icon-premium {
-    font-size: 2.75rem !important;
-  }
-
-  .ai-pulse-hologram {
-    width: 55px !important;
-    height: 55px !important;
-  }
-
-  .ai-details-card-premium {
-    border-radius: 12px !important;
-  }
-
-  .label-premium, .value-premium {
-    font-size: 0.8rem !important;
-  }
-
-  .desc-premium {
-    font-size: 0.8rem !important;
-    line-height: 1.4 !important;
-    margin-top: 0.75rem !important;
-  }
-
-  .swal2-actions {
-    margin-top: 1rem !important;
-    gap: 8px !important;
-  }
-
-  .btn-premium-action, .btn-premium-secondary {
-    padding: 0.75rem 1rem !important;
-    font-size: 0.8rem !important;
-    min-width: 120px !important;
-    border-radius: 12px !important;
-  }
-  
-  /* success/error screen adjustments */
-  .success-glow-icon {
-    font-size: 3rem !important;
-  }
-  .success-title-premium {
-    font-size: 1.2rem !important;
-  }
-  .success-desc-premium {
-    font-size: 0.8rem !important;
-  }
-  .stats-badge-premium {
-    padding: 0.5rem 1.25rem !important;
-    font-size: 0.85rem !important;
-  }
+:global(.ai-dark-premium-confirm) {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  border-radius: 14px !important;
+  padding: 12px 24px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
 }
 
-/* Success UI */
-.success-glow-icon {
-  font-size: 4.5rem;
-  color: #10b981;
-  text-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+:global(.ai-dark-premium-cancel) {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border-radius: 14px !important;
+  padding: 12px 20px !important;
+  font-weight: 600 !important;
 }
 
-.success-title-premium {
-  font-weight: 800;
-  color: #064e3b;
-  margin-top: -1rem;
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite;
 }
 
-.stats-badge-premium {
-  display: inline-block;
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  padding: 0.75rem 2rem;
-  border-radius: 9999px;
-  font-weight: 700;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
 }
 </style>

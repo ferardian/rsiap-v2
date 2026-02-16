@@ -56,6 +56,11 @@ const bpjsAntrolService = {
      * @param {string} tglAkhir - YYYY-MM-DD
      */
     getSepCountByRange: (tglAwal, tglAkhir) => api.get(`/bpjs/antrol/sep/range/${tglAwal}/${tglAkhir}`),
+    /**
+     * Cancel queue in BPJS
+     * @param {object} payload { kodebooking, keterangan }
+     */
+    cancelAntrean: (payload) => api.post('/bpjs/antrol/antrean/batal', payload),
 };
 
 export default bpjsAntrolService;

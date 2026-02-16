@@ -106,21 +106,21 @@
                 <th class="px-3 py-3">Poliklinik</th>
                 <th class="px-3 py-3">Dokter</th>
                 <th class="px-3 py-3">Alamat</th>
-
+                <th class="px-3 py-3">Bayar</th>
                 <th class="px-3 py-3">Status</th>
                 <th class="px-3 py-3 text-end">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="7" class="text-center py-5">
+                <td colspan="8" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="7" class="text-center py-5 text-muted">
+                <td colspan="8" class="text-center py-5 text-muted">
                   <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
                   Data tidak ditemukan
                 </td>
@@ -147,7 +147,11 @@
                 <td class="px-3 py-3 text-truncate" style="max-width: 150px;">
                   {{ item.pasien?.alamat }}
                 </td>
-
+                <td class="px-3 py-3">
+                   <span class="badge rounded-pill" :class="getBayarClass(item.cara_bayar?.png_jawab)">
+                     {{ item.cara_bayar?.png_jawab }}
+                   </span>
+                </td>
                 <td class="px-3 py-3">
                   <span 
                     class="badge rounded-pill"
@@ -1053,6 +1057,7 @@ const fetchData = async (reset = false) => {
        const paginationData = response.data.data
        
        items.value = paginationData.data
+       console.log('Data Rawat Jalan Loaded:', items.value)
        
        pagination.value = {
          current_page: paginationData.current_page,
@@ -1103,6 +1108,19 @@ const getStatusClass = (status) => {
     case 'Dirujuk': return 'bg-info text-white'
     default: return 'bg-secondary text-white'
   }
+}
+
+const getBayarClass = (bayar) => {
+  if (!bayar) return 'bg-light text-dark border'
+  
+  const b = bayar.toLowerCase()
+  if (b.includes('bpjs')) return 'bg-success text-white'
+  if (b.includes('umum')) return 'bg-danger text-white' // or warning/info
+  if (b.includes('asuransi')) return 'bg-primary text-white'
+  if (b.includes('perusahaan')) return 'bg-info text-white'
+  if (b.includes('karyawan')) return 'bg-secondary text-white'
+
+  return 'bg-light text-dark border'
 }
 
 // Modal Logic
@@ -1525,6 +1543,7 @@ const formatDataForExport = (data) => {
     'JK': item.pasien?.jk,
     'Poliklinik': item.poliklinik?.nm_poli,
     'Dokter': item.dokter?.nm_dokter,
+    'Cara Bayar': item.cara_bayar?.png_jawab,
     'Status': item.stts,
     'Alamat': item.pasien?.alamat
   }))

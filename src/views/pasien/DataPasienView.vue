@@ -80,6 +80,9 @@
                   <div class="address-info">{{ patient.alamat || '-' }}</div>
                 </td>
                 <td>
+                    <button class="btn-action" @click="viewHistory(patient)" title="Riwayat Pemeriksaan">
+                        <i class="fas fa-history text-primary"></i>
+                    </button>
                     <button class="btn-action" @click="viewDetail(patient)" title="Lihat Detail">
                         <i class="fas fa-eye"></i>
                     </button>
@@ -111,9 +114,14 @@
             </div>
           </div>
           <div class="card-footer">
-             <button class="btn-detail-mobile" @click="viewDetail(patient)">
-                Lihat Detail <i class="fas fa-chevron-right"></i>
-             </button>
+             <div class="d-flex gap-2">
+                <button class="btn-detail-mobile flex-grow-1" @click="viewHistory(patient)">
+                    <i class="fas fa-history text-primary"></i> Riwayat
+                </button>
+                <button class="btn-detail-mobile flex-grow-1" @click="viewDetail(patient)">
+                    Detail <i class="fas fa-chevron-right"></i>
+                </button>
+             </div>
           </div>
         </div>
       </div>
@@ -149,6 +157,13 @@
       :patient="selectedPatient" 
       @close="showDetailModal = false" 
     />
+
+    <RiwayatPemeriksaanModal
+      :show="showHistoryModal"
+      :noMskMedis="selectedPatient?.no_rkm_medis"
+      :patientName="selectedPatient?.nm_pasien"
+      @close="showHistoryModal = false"
+    />
   </div>
 </template>
 
@@ -156,6 +171,7 @@
 import { ref, onMounted, watch } from 'vue';
 import pasienService from '../../services/pasienService';
 import PatientDetailModal from './components/PatientDetailModal.vue';
+import RiwayatPemeriksaanModal from './components/RiwayatPemeriksaanModal.vue';
 import { debounce } from 'lodash';
 
 // State
@@ -163,6 +179,7 @@ const patients = ref([]);
 const loading = ref(false);
 const searchQuery = ref('');
 const showDetailModal = ref(false);
+const showHistoryModal = ref(false);
 const selectedPatient = ref(null);
 const pagination = ref({
   current_page: 1,
@@ -259,6 +276,11 @@ const formatDate = (dateString) => {
 const viewDetail = (patient) => {
   selectedPatient.value = patient;
   showDetailModal.value = true;
+};
+
+const viewHistory = (patient) => {
+  selectedPatient.value = patient;
+  showHistoryModal.value = true;
 };
 
 onMounted(() => {
