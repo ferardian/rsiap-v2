@@ -21,28 +21,31 @@
           </label>
         </div>
 
-        <div class="input-group date-filter" style="max-width: 250px;">
-          <span class="input-group-text bg-white border-end-0">
-             <i class="fas fa-calendar-alt text-muted"></i>
-          </span>
-          <input type="date" class="form-control border-start-0 ps-0" v-model="filters.tgl_transaksi" @change="fetchIndicators">
+        <div class="filter-item">
+          <div class="filter-label">Tanggal Transaksi</div>
+          <div class="custom-input-group">
+            <i class="fas fa-calendar-alt icon-prefix"></i>
+            <input type="date" class="custom-date-input" v-model="filters.tgl_transaksi" @change="fetchIndicators">
+          </div>
         </div>
         
-        <v-select 
-            :options="units" 
-            label="nama_ruang" 
-            v-model="filters.unit"
-            :reduce="unit => unit.dep_id"
-            placeholder="Pilih Unit / Ruang"
-            class="style-chooser unit-select"
-            style="min-width: 250px;"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-            @update:modelValue="fetchIndicators"
-        >
-             <template #no-options="{ search, searching, loading }">
-                No unit found
-            </template>
-        </v-select>
+        <div class="filter-item">
+          <div class="filter-label">Unit / Ruangan</div>
+          <v-select 
+              :options="units" 
+              label="nama_ruang" 
+              v-model="filters.unit"
+              :reduce="unit => unit.dep_id"
+              placeholder="Pilih Unit / Ruang"
+              class="style-chooser unit-select"
+              :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+              @update:modelValue="fetchIndicators"
+          >
+               <template #no-options="{ search, searching, loading }">
+                  <div class="p-2 small text-muted">No unit found</div>
+              </template>
+          </v-select>
+        </div>
       </div>
     </div>
 
@@ -50,31 +53,22 @@
     <!-- Content -->
     <div class="card shadow-sm border-0">
       <div class="card-header py-3 d-flex justify-content-between align-items-center border-bottom" style="background-color: #fff !important; color: #212529 !important;">
-        <div class="btn-group" role="group">
-            <button 
-                type="button" 
-                class="btn btn-sm" 
-                :class="viewMode === 'daily' ? 'btn-primary' : 'btn-light border'"
-                @click="viewMode = 'daily'"
+        <div class="mode-segmented-control">
+            <div 
+                v-for="mode in [
+                    { id: 'daily', label: 'Harian', icon: 'fa-list' },
+                    { id: 'monthly', label: 'Bulanan', icon: 'fa-calendar-alt' },
+                    { id: 'analisa', label: 'Analisa', icon: 'fa-chart-line' }
+                ]" 
+                :key="mode.id"
+                class="mode-option"
+                :class="{ 'active': viewMode === mode.id }"
+                @click="viewMode = mode.id"
             >
-                <i class="fas fa-list me-1"></i> Harian
-            </button>
-            <button 
-                type="button" 
-                class="btn btn-sm" 
-                :class="viewMode === 'monthly' ? 'btn-primary' : 'btn-light border'"
-                @click="viewMode = 'monthly'"
-            >
-                <i class="fas fa-calendar-alt me-1"></i> Bulanan (Bulk)
-            </button>
-            <button 
-                type="button" 
-                class="btn btn-sm" 
-                :class="viewMode === 'analisa' ? 'btn-primary' : 'btn-light border'"
-                @click="viewMode = 'analisa'"
-            >
-                <i class="fas fa-chart-line me-1"></i> Analisa
-            </button>
+                <i class="fas" :class="mode.icon"></i>
+                <span>{{ mode.label }}</span>
+            </div>
+            <div class="mode-glider" :style="gliderStyle"></div>
         </div>
         
         <!-- Indicator Selector for Monthly Mode -->
@@ -438,6 +432,15 @@ const isUnitLocked = ref(false)
 const filters = reactive({
     tgl_transaksi: new Date().toISOString().slice(0, 10),
     unit: null
+})
+
+// === MODE GLIDER LOGIC ===
+const gliderStyle = computed(() => {
+    const modes = ['daily', 'monthly', 'analisa']
+    const activeIndex = modes.indexOf(viewMode.value)
+    return {
+        transform: `translateX(${activeIndex * 100}%)`
+    }
 })
 
 // === CONTEXT MODE STATE ===
@@ -1060,29 +1063,176 @@ onMounted(() => {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
 }
-
 .calendar-day.has-data {
     border-color: #198754;
+}
+
+/* Premium Filter Styles */
+.filter-container {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 220px;
+    max-width: 300px;
+}
+
+.filter-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.custom-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    height: 38px;
+}
+
+.custom-input-group:focus-within {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.icon-prefix {
+    padding: 0 12px;
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+
+.custom-date-input {
+    border: none;
+    background: transparent;
+    padding: 6px 12px 6px 0;
+    font-size: 0.9rem;
+    color: #212529;
+    width: 100%;
+    outline: none;
+    font-weight: 500;
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+.context-toggle .btn {
+    border-radius: 8px !important;
+    font-weight: 600;
+}
+
+/* Segmented Control Styles */
+.mode-segmented-control {
+    position: relative;
+    display: flex;
+    background-color: #f1f3f5;
+    padding: 4px;
+    border-radius: 12px;
+    width: fit-content;
+    user-select: none;
+    border: 1px solid #e9ecef;
+}
+
+.mode-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #6c757d;
+    cursor: pointer;
+    z-index: 2;
+    transition: color 0.3s ease;
+    min-width: 100px;
+}
+
+.mode-option i {
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+}
+
+.mode-option.active {
+    color: #ffffff;
+}
+
+.mode-option:hover:not(.active) {
+    color: #34495e;
+}
+
+.mode-option:hover i {
+    transform: translateY(-1px);
+}
+
+.mode-glider {
+    position: absolute;
+    height: calc(100% - 8px);
+    width: calc(33.33% - 4px); /* Fallback, computed is better but fitting this layout */
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border-radius: 10px;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+/* Adjust glider width based on number of options */
+.mode-segmented-control .mode-option {
+    width: 120px; /* Fixed width for symmetry */
+}
+
+.mode-glider {
+    width: 120px;
 }
 
 </style>
 
 <style>
 /* Global overrides for this component's v-select to ensure it works */
-.style-chooser .vs__search::placeholder,
 .style-chooser .vs__dropdown-toggle,
 .style-chooser .vs__dropdown-menu {
   background: #ffffff !important;
   border: 1px solid #dee2e6 !important;
-  border-radius: 6px;
+  border-radius: 8px !important;
   color: #212529 !important;
   text-transform: none !important;
+  min-height: 38px !important;
+}
+
+.style-chooser .vs__dropdown-toggle:hover {
+    border-color: #ced4da !important;
+}
+
+.style-chooser .vs__search::placeholder {
+    color: #adb5bd !important;
+    font-size: 0.9rem;
 }
 
 .style-chooser .vs__dropdown-option {
     white-space: normal !important;
-    padding: 8px 10px !important;
-    line-height: 1.4 !important;
+    padding: 10px 12px !important;
+    line-height: normal !important;
+    font-size: 0.9rem;
 }
 
 .style-chooser .vs__selected,
@@ -1093,11 +1243,16 @@ onMounted(() => {
 }
 
 .style-chooser .vs__open-indicator {
-    fill: #212529 !important;
+    fill: #adb5bd !important;
+    transform: scale(0.8);
 }
 
 .style-chooser .vs__actions {
-    padding-top: 0 !important;
+    padding: 0 8px !important;
+}
+
+.style-chooser .vs__clear {
+    fill: #adb5bd !important;
 }
 
 /* Mobile Responsive */
@@ -1142,6 +1297,27 @@ onMounted(() => {
     padding: 0.4rem 0.6rem !important;
     border-radius: 6px !important;
     font-weight: 500 !important;
+  }
+
+  /* Segmented Control Mobile Fixes */
+  .mode-segmented-control {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    padding: 3px !important;
+    gap: 0 !important;
+  }
+
+  .mode-segmented-control .mode-option {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 10px 4px !important;
+    font-size: 0.75rem !important;
+    gap: 4px !important;
+  }
+
+  .mode-glider {
+    width: calc(33.33% - 2px) !important;
   }
 
   /* Softer colors for inactive tabs */
