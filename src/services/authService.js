@@ -60,7 +60,11 @@ export const authService = {
   // Get user detail
   async getUserDetail() {
     try {
-      const response = await api.get('/user/auth/detail')
+      const response = await api.get('/user/auth/detail', {
+        params: {
+          include: 'dep,petugas,email,statusKerja,keluarga'
+        }
+      })
       return response.data
     } catch (error) {
       throw error

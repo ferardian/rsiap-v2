@@ -24,15 +24,17 @@
         </div>
         <div class="header-right">
           <!-- User Info -->
-          <div class="user-info">
-            <div class="user-details">
-              <span class="user-name">{{ userName }}</span>
-              <span class="user-dept">{{ departmentName }}</span>
+          <router-link to="/profil" class="user-info-link">
+            <div class="user-info">
+              <div class="user-details">
+                <span class="user-name">{{ userName }}</span>
+                <span class="user-dept">{{ departmentName }}</span>
+              </div>
+              <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+              </div>
             </div>
-            <div class="user-avatar">
-              <i class="fas fa-user-circle"></i>
-            </div>
-          </div>
+          </router-link>
 
           <!-- Logout Button -->
           <div class="user-actions">
@@ -371,7 +373,17 @@ onUnmounted(() => {
   gap: 1.5rem;
 }
 
-/* User Info Section */
+.user-info-link {
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.user-info-link:hover .user-info {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -381,6 +393,7 @@ onUnmounted(() => {
   border-radius: 50px;
   border: 1px solid #e2e8f0;
   height: 44px; /* Fixed height */
+  transition: all 0.2s ease;
 }
 
 .user-details {

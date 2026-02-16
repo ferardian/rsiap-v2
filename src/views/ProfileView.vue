@@ -172,16 +172,178 @@
             </div>
           </template>
         </div>
+      </div> <!-- End of Main Profile Card -->
+
+      <!-- Separate Section for Family -->
+      <div v-if="profileData" class="profile-card family-card animate-fade-in-up mt-8" :class="{ 'is-loading': loading }">
+          <div class="card-header">
+            <div class="header-icon family">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="header-info">
+              <h3>Anggota Keluarga</h3>
+              <p>Daftar anggota keluarga yang terdaftar dalam tanggungan Anda.</p>
+            </div>
+            <button class="btn-add-family" @click="showAddFamilyModal = true">
+              <i class="fas fa-plus"></i>
+              Tambah Anggota
+            </button>
+          </div>
+
+          <div class="card-body p-0">
+            <div v-if="familyMembers.length === 0" class="empty-family">
+              <div class="empty-icon">
+                <i class="fas fa-user-friends"></i>
+              </div>
+              <p>Belum ada anggota keluarga yang ditambahkan.</p>
+            </div>
+            <div v-else class="family-list">
+              <div v-for="member in familyMembers" :key="member.id" class="family-item">
+                <div class="member-icon" :class="member.jk === 'P' ? 'pink' : 'blue'">
+                  <i class="fas" :class="member.jk === 'P' ? 'fa-female' : 'fa-male'"></i>
+                </div>
+                <div class="member-info">
+                  <div class="member-name">{{ member.nama }}</div>
+                  <div class="member-meta">
+                    <span class="badge-hubungan">{{ member.hubungan }}</span>
+                    <span class="meta-sep">•</span>
+                    <span>{{ calculateAge(member.tgl_lahir) }}</span>
+                  </div>
+                  <div v-if="member.no_bpjs" class="member-bpjs">
+                    <i class="fas fa-id-card-alt"></i>
+                    {{ member.no_bpjs }}
+                  </div>
+                </div>
+                <div class="member-actions">
+                  <button class="btn-delete-member" @click="confirmDeleteMember(member)" title="Hapus">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    <!-- Modal Tambah Keluarga -->
+    <div v-if="showAddFamilyModal" class="modal-overlay" @click.self="closeFamilyModal">
+      <div class="modal-container animate-scale-in">
+        <div class="modal-header">
+          <h3>Tambah Anggota Keluarga</h3>
+          <button class="close-btn" @click="closeFamilyModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="bpjs-lookup-wrapper mb-10">
+            <div class="bpjs-lookup-box">
+              <div class="lookup-header">
+                <div class="lookup-badge">
+                  <i class="fas fa-shield-alt"></i>
+                  <span>BPJS Kesehatan</span>
+                </div>
+                <p>Punya kartu BPJS? Masukkan NIK atau No. BPJS untuk pengisian otomatis:</p>
+              </div>
+              
+              <div class="lookup-form">
+                <div class="query-input-wrapper">
+                  <i class="fas fa-search query-icon"></i>
+                  <input 
+                    type="text" 
+                    v-model="vclaimQuery" 
+                    placeholder="Masukkan NIK atau No. Kartu"
+                    @keypress.enter="lookupVclaim"
+                  >
+                </div>
+                <button 
+                  class="btn-lookup-premium" 
+                  @click="lookupVclaim" 
+                  :disabled="isSearchingVclaim || !vclaimQuery"
+                >
+                  <i v-if="isSearchingVclaim" class="fas fa-spinner fa-spin mr-2"></i>
+                  <i v-else class="fas fa-bolt mr-2"></i>
+                  {{ isSearchingVclaim ? 'Mencari...' : 'Cek BPJS Sekarang' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <form @submit.prevent="handleAddFamily" class="row">
+            <div class="form-group col-md-12">
+              <label class="required">Nama Lengkap</label>
+              <input type="text" v-model="familyForm.nama" class="form-control" required>
+            </div>
+            
+            <div class="form-group col-md-6 mt-3">
+              <label class="required">Hubungan</label>
+              <select v-model="familyForm.hubungan" class="form-select" required>
+                <option value="Suami">Suami</option>
+                <option value="Istri">Istri</option>
+                <option value="Anak">Anak</option>
+                <option value="Ayah">Ayah</option>
+                <option value="Ibu">Ibu</option>
+                <option value="Saudara">Saudara</option>
+              </select>
+            </div>
+
+            <div class="form-group col-md-6 mt-3">
+              <label class="required">Jenis Kelamin</label>
+              <div class="jk-selector mt-1">
+                <label class="jk-opt">
+                  <input type="radio" v-model="familyForm.jk" value="L" name="jk" required>
+                  <span class="jk-box">Laki-laki</span>
+                </label>
+                <label class="jk-opt">
+                  <input type="radio" v-model="familyForm.jk" value="P" name="jk" required>
+                  <span class="jk-box">Perempuan</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group col-md-6 mt-3">
+              <label>No. KTP (NIK)</label>
+              <input type="text" v-model="familyForm.no_ktp" class="form-control">
+            </div>
+
+            <div class="form-group col-md-6 mt-3">
+              <label>No. BPJS</label>
+              <input type="text" v-model="familyForm.no_bpjs" class="form-control">
+            </div>
+
+            <div class="form-group col-md-6 mt-3">
+              <label>Tanggal Lahir</label>
+              <input type="date" v-model="familyForm.tgl_lahir" class="form-control">
+            </div>
+
+            <div class="form-group col-md-6 mt-3">
+              <label>Pekerjaan</label>
+              <input type="text" v-model="familyForm.pekerjaan" class="form-control">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel-modal" @click="closeFamilyModal">Batal</button>
+          <button 
+            class="btn-save-modal" 
+            @click="handleAddFamily" 
+            :disabled="isSubmittingFamily || !familyForm.nama"
+          >
+            <i v-if="isSubmittingFamily" class="fas fa-spinner fa-spin mr-2"></i>
+            {{ isSubmittingFamily ? 'Menyimpan...' : 'Simpan Anggota' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { pegawaiService } from '../services/pegawaiService'
+import bpjsVclaimService from '../services/bpjsVclaimService'
 import { useToast } from 'vue-toastification'
+import Swal from 'sweetalert2'
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -211,6 +373,137 @@ const isDataChanged = computed(() => {
          telpToUpdate.value !== currentTelp || 
          alamatToUpdate.value !== currentAlamat
 })
+
+// Family Member Logic
+const familyMembers = computed(() => {
+  return profileData.value.keluarga || []
+})
+
+const showAddFamilyModal = ref(false)
+const isSubmittingFamily = ref(false)
+const isSearchingVclaim = ref(false)
+const vclaimQuery = ref('')
+
+const familyForm = reactive({
+  nama: '',
+  hubungan: 'Anak',
+  no_ktp: '',
+  no_bpjs: '',
+  tgl_lahir: '',
+  jk: 'L',
+  pekerjaan: '',
+  keterangan: ''
+})
+
+const calculateAge = (tglLahir) => {
+  if (!tglLahir) return '-'
+  const birth = new Date(tglLahir)
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--
+  }
+  return `${age} Tahun`
+}
+
+const lookupVclaim = async () => {
+    if (!vclaimQuery.value) return
+    
+    isSearchingVclaim.value = true
+    try {
+        const today = new Date().toISOString().split('T')[0]
+        let response
+        
+        if (vclaimQuery.value.length === 16) {
+            response = await bpjsVclaimService.getPesertaByNik(vclaimQuery.value, today)
+        } else {
+            response = await bpjsVclaimService.getPesertaByNoKartu(vclaimQuery.value, today)
+        }
+        
+        if (response.data && response.data.response && response.data.response.peserta) {
+            const p = response.data.response.peserta
+            familyForm.nama = p.nama
+            familyForm.no_ktp = p.nik
+            familyForm.no_bpjs = p.noKartu
+            familyForm.tgl_lahir = p.tglLahir
+            familyForm.jk = p.sex === 'L' ? 'L' : 'P'
+            toast.success('Data ditemukan dari BPJS!')
+        } else {
+            const msg = response.data?.metaData?.message || 'Data tidak ditemukan'
+            toast.warning(msg)
+        }
+    } catch (error) {
+        console.error('VClaim lookup error:', error)
+        toast.error('Gagal terhubung ke layanan VClaim')
+    } finally {
+        isSearchingVclaim.value = false
+    }
+}
+
+const closeFamilyModal = () => {
+  showAddFamilyModal.value = false
+  // Reset form
+  Object.assign(familyForm, {
+    nama: '',
+    hubungan: 'Anak',
+    no_ktp: '',
+    no_bpjs: '',
+    tgl_lahir: '',
+    jk: 'L',
+    pekerjaan: '',
+    keterangan: ''
+  })
+  vclaimQuery.value = ''
+}
+
+const handleAddFamily = async () => {
+  if (!familyForm.nama) return
+
+  isSubmittingFamily.value = true
+  try {
+    const nikPegawai = profileData.value.nik
+    const response = await pegawaiService.addFamilyMember(nikPegawai, familyForm)
+    
+    if (response.data.success) {
+      toast.success('Anggota keluarga berhasil ditambahkan')
+      await authStore.refreshUserData()
+      closeFamilyModal()
+    }
+  } catch (error) {
+    console.error('Add family error:', error)
+    toast.error(error.response?.data?.message || 'Gagal menambahkan anggota keluarga')
+  } finally {
+    isSubmittingFamily.value = false
+  }
+}
+
+const confirmDeleteMember = (member) => {
+  Swal.fire({
+    title: 'Hapus Anggota Keluarga?',
+    text: `Apakah Anda yakin ingin menghapus ${member.nama} dari daftar keluarga?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Ya, Hapus',
+    cancelButtonText: 'Batal',
+    reverseButtons: true
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const nikPegawai = profileData.value.nik
+        const response = await pegawaiService.deleteFamilyMember(nikPegawai, member.id)
+        if (response.data.success) {
+          toast.success('Berhasil dihapus')
+          await authStore.refreshUserData()
+        }
+      } catch (error) {
+        toast.error('Gagal menghapus data')
+      }
+    }
+  })
+}
 
 const formatGender = (jk) => {
   if (!jk) return '-'
@@ -322,7 +615,10 @@ onMounted(async () => {
   loading.value = true
   try {
     // Force refresh to get latest detail data (KTP, etc)
-    await authStore.refreshUserData()
+    const res = await authStore.refreshUserData()
+    console.log('Profile Data loaded:', profileData.value)
+    console.log('Family members count:', profileData.value.keluarga?.length || 0)
+    
     // Set initial values from profile data after refresh
     emailToUpdate.value = profileData.value.email_resmi || ''
     telpToUpdate.value = profileData.value.no_telp || ''
@@ -342,9 +638,19 @@ onMounted(async () => {
   min-height: calc(100vh - 64px);
 }
 
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 1rem 0.75rem;
+  }
+}
+
 .profile-container {
   max-width: 900px;
   margin: 0 auto;
+}
+
+.mb-10 {
+  margin-bottom: 2.5rem !important;
 }
 
 .page-title {
@@ -408,6 +714,16 @@ onMounted(async () => {
   gap: 1.5rem;
 }
 
+@media (max-width: 640px) {
+  .card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+}
+
 .header-icon {
   width: 64px;
   height: 64px;
@@ -435,6 +751,12 @@ onMounted(async () => {
 
 .card-body {
   padding: 2.5rem;
+}
+
+@media (max-width: 640px) {
+  .card-body {
+    padding: 1.5rem;
+  }
 }
 
 .form-row {
@@ -617,5 +939,413 @@ label.required::after {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.family-card {
+  margin-top: 3rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 2rem;
+  position: relative;
+}
+
+.family-card::before {
+  content: '';
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+/* Family Section Styles */
+.header-icon.family {
+  background: #f0fdf4;
+  color: #22c55e;
+}
+
+.btn-add-family {
+  padding: 0.6rem 1.25rem;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .btn-add-family {
+    margin: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.btn-add-family:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.empty-family {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.family-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.family-item {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.2s;
+}
+
+@media (max-width: 640px) {
+  .family-item {
+    padding: 1.25rem 1rem;
+    gap: 1rem;
+  }
+}
+
+.family-item:last-child {
+  border-bottom: none;
+}
+
+.family-item:hover {
+  background: #f8fafc;
+}
+
+.member-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-right: 1.25rem;
+}
+
+.member-icon.blue { background: #eff6ff; color: #3b82f6; }
+.member-icon.pink { background: #fdf2f8; color: #ec4899; }
+
+.member-info {
+  flex: 1;
+}
+
+.member-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.member-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.badge-hubungan {
+  background: #f1f5f9;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.meta-sep {
+  opacity: 0.5;
+}
+
+.member-bpjs {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #059669;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Larger gap for better readability */
+}
+
+.btn-delete-member {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #fee2e2;
+  color: #ef4444;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-member:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.modal-container {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 2rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .modal-body {
+    padding: 1.25rem;
+  }
+}
+
+.bpjs-lookup-box {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 100%);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #ccfbf1;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+.lookup-header {
+  margin-bottom: 1.25rem;
+}
+
+.lookup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #10b981;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}
+
+.lookup-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #065f46;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.lookup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.query-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.query-icon {
+  position: absolute;
+  left: 1.25rem;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.query-input-wrapper input {
+  width: 100%;
+  padding: 0.875rem 1.25rem 0.875rem 3rem;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #1e293b;
+  transition: all 0.2s;
+}
+
+.query-input-wrapper input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.btn-lookup-premium {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.btn-lookup-premium:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
+  filter: brightness(1.1);
+}
+
+.btn-lookup-premium:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-lookup-premium:disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.jk-selector {
+  display: flex;
+  gap: 1rem;
+}
+
+.jk-opt {
+  flex: 1;
+  cursor: pointer;
+}
+
+.jk-opt input {
+  display: none;
+}
+
+.jk-box {
+  display: block;
+  padding: 0.6rem;
+  text-align: center;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.jk-opt input:checked + .jk-box {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.btn-cancel-modal, .btn-save-modal {
+  padding: 0.75rem 1.75rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-cancel-modal {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.btn-save-modal {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>

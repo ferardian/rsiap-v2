@@ -130,5 +130,19 @@ export const pegawaiService = {
      */
     updateProfile(data) {
         return api.post('/sdi/pegawai/update-profile', data)
+    },
+
+    /**
+     * Add family member
+     */
+    addFamilyMember(nik, data) {
+        return api.post(`/sdi/pegawai/${nik}/keluarga`, data)
+    },
+
+    /**
+     * Delete family member
+     */
+    deleteFamilyMember(nik, id) {
+        return api.delete(`/sdi/pegawai/${nik}/keluarga/${id}`)
     }
 }
