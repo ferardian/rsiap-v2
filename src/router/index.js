@@ -78,6 +78,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/informasi/hfis',
+    name: 'HfisSchedule',
+    component: () => import('../views/informasi/HfisScheduleView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dokumen-surat',
     name: 'DokumenSurat',
     component: () => import('../views/dokumen-surat/DokumenSuratView.vue'),
