@@ -1048,7 +1048,7 @@ onUnmounted(() => {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   padding-top: 2rem;
 }
@@ -1108,7 +1108,7 @@ onUnmounted(() => {
 /* Dashboard Sections */
 .dashboard-sections {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -1125,6 +1125,7 @@ onUnmounted(() => {
 
 .quick-stats-section {
   align-self: start;
+  grid-column: span 2;
 }
 
 .quick-stats-section h3,
@@ -1869,11 +1870,21 @@ onUnmounted(() => {
   .dashboard-sections {
     grid-template-columns: 1fr 1fr;
   }
+  .quick-stats-section {
+    grid-column: span 2;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
   .dashboard-sections {
     grid-template-columns: 1fr;
+  }
+
+  .quick-stats-section {
+    grid-column: span 1;
   }
 
   .dashboard-header {
