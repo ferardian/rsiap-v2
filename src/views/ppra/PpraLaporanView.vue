@@ -162,6 +162,19 @@
         </div>
       </div>
     </div>
+    <!-- Missing Aturan Pakai Alert -->
+    <div v-if="reportTab === 'detail' && missingDosageCount > 0" class="alert d-flex align-items-center justify-content-between gap-2 mb-3 mx-1 rounded-3 shadow-sm" :class="filterMissingDosage ? 'alert-primary' : 'alert-warning'" style="font-size: 13px;">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-exclamation-triangle" :class="filterMissingDosage ? 'text-primary' : 'text-warning'" style="font-size: 16px;"></i>
+        <div>
+          <strong>{{ missingDosageCount }} pemberian</strong> belum memiliki aturan pakai — DDD tidak dapat dihitung.
+        </div>
+      </div>
+      <button class="btn btn-sm fw-semibold" :class="filterMissingDosage ? 'btn-primary' : 'btn-warning text-dark'" @click="toggleMissingDosageFilter" style="white-space: nowrap; font-size: 12px;">
+        <i class="fas" :class="filterMissingDosage ? 'fa-list' : 'fa-filter'"></i>
+        {{ filterMissingDosage ? 'Tampilkan Semua' : 'Tampilkan Yang Kosong' }}
+      </button>
+    </div>
 
     <!-- Report Table (Detail Mode) -->
     <div v-if="reportTab === 'detail'" class="report-table-section animate-fade border rounded-4 overflow-hidden shadow-sm bg-white">
@@ -195,7 +208,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, pIndex) in paginatedData" :key="pIndex" :class="{'new-patient-row': item.is_new_patient, 'sub-total-row bg-light-subtle': item.isSubTotal}">
+            <tr v-for="(item, pIndex) in paginatedData" :key="pIndex" :class="{'new-patient-row': item.is_new_patient, 'sub-total-row bg-light-subtle': item.isSubTotal, 'missing-dosage-row': !item.isSubTotal && (!item.penggunaan_harian || item.penggunaan_harian === '-' || item.penggunaan_harian.trim() === '')}">
               <template v-if="!item.isSubTotal">
                 <td class="text-center">{{ item.is_new_patient ? getPatientIndex(item.original_index) : '' }}</td>
                 <td>
@@ -497,6 +510,7 @@ const filters = reactive({
 // Rekap Bulanan States
 const reportTab = ref('detail');
 const rekapYear = ref(dayjs().format('YYYY'));
+const filterMissingDosage = ref(false);
 const rekapData = ref([]);
 const loadingRekap = ref(false);
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -528,6 +542,10 @@ const summaryStats = computed(() => {
     verification: reportMetrics.value.verification,
     approval: reportMetrics.value.approval
   };
+});
+
+const missingDosageCount = computed(() => {
+  return reportData.value.filter(r => !r.penggunaan_harian || r.penggunaan_harian === '-' || r.penggunaan_harian.trim() === '').length;
 });
 
 const reportTableRows = computed(() => {
@@ -585,12 +603,20 @@ const reportTableRows = computed(() => {
   return processedRows;
 });
 
-const totalPages = computed(() => Math.ceil(reportTableRows.value.length / itemsPerPage.value));
+const filteredTableRows = computed(() => {
+  if (!filterMissingDosage.value) return reportTableRows.value;
+  return reportTableRows.value.filter(row => {
+    if (row.isSubTotal) return false;
+    return !row.penggunaan_harian || row.penggunaan_harian === '-' || row.penggunaan_harian.trim() === '';
+  });
+});
+
+const totalPages = computed(() => Math.ceil(filteredTableRows.value.length / itemsPerPage.value));
 
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
-  return reportTableRows.value.slice(start, end);
+  return filteredTableRows.value.slice(start, end);
 });
 
 const changePage = (page) => {
@@ -657,7 +683,13 @@ const fetchData = async () => {
 
 const handleSearch = () => {
   currentPage.value = 1; // Reset to first page on new search
+  filterMissingDosage.value = false; // Reset filter on new search
   fetchData();
+};
+
+const toggleMissingDosageFilter = () => {
+  filterMissingDosage.value = !filterMissingDosage.value;
+  currentPage.value = 1;
 };
 
 const fetchRekapBulanan = async () => {
@@ -924,6 +956,14 @@ onMounted(() => {
 
 .new-patient-row {
   border-top: 2px solid #cbd5e1;
+}
+
+.missing-dosage-row {
+  background-color: #fff8e1 !important;
+}
+
+.missing-dosage-row:hover {
+  background-color: #fff3cd !important;
 }
 
 .sub-total-row td {
