@@ -2218,6 +2218,8 @@ onUnmounted(() => {
 .review-rating {
   color: #d1d5db; /* Inactive star color */
   font-size: 0.875rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .review-rating .active {
