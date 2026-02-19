@@ -21,6 +21,11 @@ const dashboardService = {
         return api.post('/codeblue/schedule', data);
     },
 
+    // Get Google Reviews
+    getReviews() {
+        return api.get('/dashboard/reviews');
+    },
+
     // Delete code blue schedule
     deleteCodeBlueSchedule(date) {
         return api.delete(`/codeblue/schedule/${date}`);

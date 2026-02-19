@@ -341,6 +341,48 @@
             </div>
           </div>
         </div>
+
+        <!-- Patient Reviews -->
+        <div class="reviews-section">
+          <h3><i class="fas fa-star" style="color: #f59e0b;"></i> Ulasan Pasien (Google Maps)</h3>
+          <div v-if="placeRating > 0" class="place-rating-summary">
+            <div class="place-rating-score">
+              <span class="rating-number">{{ placeRating }}</span>
+              <div class="rating-stars">
+                <i v-for="n in 5" :key="n" class="fas fa-star" :class="n <= Math.round(placeRating) ? 'active' : ''"></i>
+              </div>
+            </div>
+            <span class="rating-total">dari {{ totalRatings.toLocaleString() }} ulasan</span>
+          </div>
+
+          <div v-if="loadingReviews" class="stats-loading">
+            <i class="fas fa-spinner fa-spin"></i> Memuat ulasan...
+          </div>
+
+          <div v-else-if="reviews.length === 0" class="empty-state">
+            <p>Belum ada ulasan yang ditampilkan.</p>
+          </div>
+
+          <div v-else class="reviews-list">
+            <div v-for="(review, index) in reviews" :key="index" class="review-card">
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <img :src="review.profile_photo_url" alt="Profile" class="reviewer-avatar" referrerpolicy="no-referrer">
+                  <div class="reviewer-meta">
+                    <a :href="review.author_url" target="_blank" class="reviewer-name">{{ review.author_name }}</a>
+                    <span class="review-time">{{ review.relative_time_description }}</span>
+                  </div>
+                </div>
+                <div class="review-rating">
+                  <i v-for="n in 5" :key="n" class="fas fa-star" :class="n <= review.rating ? 'active' : ''"></i>
+                </div>
+              </div>
+              <div class="review-body">
+                <p>{{ review.text }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- System Status -->
@@ -462,6 +504,12 @@ const codeBlueSchedule = ref({
   siang: {},
   malam: {}
 })
+
+// Google Reviews
+const reviews = ref([])
+const placeRating = ref(0)
+const totalRatings = ref(0)
+const loadingReviews = ref(false)
 
 // Computed properties
 const getUserInitials = computed(() => {
@@ -606,6 +654,22 @@ const fetchCodeBlueSchedule = async () => {
   }
 }
 
+const fetchReviews = async () => {
+  loadingReviews.value = true
+  try {
+    const response = await dashboardService.getReviews()
+    if (response.data && response.data.data) {
+      reviews.value = response.data.data.reviews || []
+      placeRating.value = response.data.data.rating || 0
+      totalRatings.value = response.data.data.user_ratings_total || 0
+    }
+  } catch (error) {
+    console.error('Error fetching reviews:', error)
+  } finally {
+    loadingReviews.value = false
+  }
+}
+
 const fetchPegawaiTanpaEmail = async () => {
   loadingTanpaEmail.value = true
   try {
@@ -709,6 +773,7 @@ onMounted(() => {
   fetchDashboardStats() // Initial load (defaults to today in backend if no params, or we can explicit pass today)
   fetchCodeBlueSchedule() // Load code blue schedule
   fetchDepartmentName() // Fetch real department name
+  fetchReviews() // Fetch Google Reviews
   startAutoReload() // Start auto reload
 })
 
@@ -1043,18 +1108,23 @@ onUnmounted(() => {
 /* Dashboard Sections */
 .dashboard-sections {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .quick-stats-section,
 /* Code Blue Schedule Section */
-.codeblue-schedule-section {
+.codeblue-schedule-section,
+.reviews-section {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.quick-stats-section {
+  align-self: start;
 }
 
 .quick-stats-section h3,
@@ -1797,11 +1867,15 @@ onUnmounted(() => {
 /* Responsive Design */
 @media (max-width: 1024px) {
   .dashboard-sections {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
 @media (max-width: 768px) {
+  .dashboard-sections {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-header {
     flex-direction: column;
     gap: 1rem;
@@ -2018,5 +2092,154 @@ onUnmounted(() => {
   .status-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Reviews Section - inside dashboard-sections */
+.reviews-section {
+  align-self: start;
+}
+
+.reviews-section h3 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  position: sticky;
+  top: 0;
+  background: white;
+  padding-bottom: 0.5rem;
+  z-index: 1;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.place-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #fde68a;
+}
+
+.place-rating-score {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rating-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.rating-stars .fa-star {
+  font-size: 0.75rem;
+  color: #d1d5db;
+}
+
+.rating-stars .fa-star.active {
+  color: #f59e0b;
+}
+
+.rating-total {
+  font-size: 0.8rem;
+  color: #92400e;
+  opacity: 0.8;
+}
+
+.review-card {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: background 0.2s;
+  border: 1px solid #f1f5f9;
+}
+
+.review-card:hover {
+  background: #f1f5f9;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.reviewer-info {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.reviewer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.reviewer-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewer-name {
+  font-weight: 600;
+  color: #1f2937;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.reviewer-name:hover {
+  text-decoration: underline;
+  color: #2563eb;
+}
+
+.review-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.review-rating {
+  color: #d1d5db; /* Inactive star color */
+  font-size: 0.875rem;
+}
+
+.review-rating .active {
+  color: #f59e0b; /* Active star color */
+}
+
+.review-body p {
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  background: white;
+  border-radius: 12px;
 }
 </style>

@@ -37,6 +37,7 @@ const bpjsAntrolService = {
      * @param {string} kodebooking 
      */
     syncTaskQueue: (kodebooking) => api.post('/bpjs/antrol/antrean/sync-queue', { kodebooking }),
+    syncTaskQueueBulk: (kodebookings) => api.post('/bpjs/antrol/antrean/sync-queue/bulk', { kodebookings }),
 
     /**
      * Get Outpatient SEP count (excluding IGD) for a given date

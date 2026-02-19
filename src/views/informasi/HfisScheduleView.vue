@@ -68,6 +68,9 @@
               <button @click="downloadPdf(cert.id)" class="btn-icon btn-pdf" title="Download PDF">
                 <i class="fas fa-file-pdf"></i>
               </button>
+              <button @click="openSyncHfisModal(cert)" class="btn-icon btn-sync" title="Sync ke HFIS">
+                <i class="fas fa-sync-alt"></i>
+              </button>
               <button @click="openEditModal(cert)" class="btn-icon btn-edit" title="Edit">
                 <i class="fas fa-edit"></i>
               </button>
@@ -206,6 +209,98 @@
           <button @click="saveCertificate" class="btn-save" :disabled="saving">
             <i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
             {{ saving ? 'Menyimpan...' : 'Simpan Pengajuan' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sync HFIS Modal -->
+    <div v-if="showSyncModal" class="modal-overlay" @click.self="closeSyncModal">
+      <div class="modal-content large">
+        <div class="modal-header">
+          <h2><i class="fas fa-sync-alt text-primary"></i> Sync Jadwal ke HFIS</h2>
+          <button @click="closeSyncModal" class="btn-close"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-info mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            Pastikan Kode Dokter, Poli, dan Subspesialis sesuai dengan referensi BPJS.
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-title">Data Referensi BPJS</h3>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>Dokter (BPJS)</label>
+                <div class="input-group">
+                  <input type="text" :value="syncData.nm_dokter" readonly class="bg-gray-100">
+                  <input type="text" v-model="syncData.kodedokter" placeholder="Kode Dokter BPJS" class="font-bold">
+                </div>
+                <small class="text-muted">Kode Dokter BPJS wajib diisi.</small>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label>Poli (BPJS)</label>
+                <VueSelect
+                  v-model="syncData.kodepoli"
+                  :options="poliList"
+                  :reduce="p => p.kd_poli_bpjs"
+                  label="nm_poli_bpjs"
+                  placeholder="Pilih Poli BPJS"
+                >
+                  <template #option="{ kd_poli_bpjs, nm_poli_bpjs }">
+                    <span><strong>{{ kd_poli_bpjs }}</strong> - {{ nm_poli_bpjs }}</span>
+                  </template>
+                </VueSelect>
+              </div>
+              <div class="form-group flex-1">
+                <label>Subspesialis (BPJS)</label>
+                <input type="text" v-model="syncData.kodesubspesialis" placeholder="Kode Subspesialis (ex: 008)">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-title">Preview Jadwal Parsed</h3>
+            <div class="table-responsive">
+              <table class="grid-table">
+                <thead>
+                  <tr>
+                    <th>Hari (Angka)</th>
+                    <th>Hari</th>
+                    <th>Jam Buka</th>
+                    <th>Jam Tutup</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(sch, idx) in syncData.jadwal_parsed" :key="idx">
+                    <td>{{ sch.hari }}</td>
+                    <td>{{ sch.hari_nama }}</td>
+                    <td><input type="time" v-model="sch.buka" class="form-control-sm"></td>
+                    <td><input type="time" v-model="sch.tutup" class="form-control-sm"></td>
+                  </tr>
+                  <tr v-if="syncData.jadwal_parsed.length === 0">
+                    <td colspan="4" class="text-center p-3 text-muted">
+                      Tidak ada jadwal yang terdeteksi valid (Format: HH:mm - HH:mm)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="helper-text text-warning mt-2" v-if="syncData.jadwal_parsed.length === 0">
+              <i class="fas fa-exclamation-triangle"></i> Format jam praktek di SK harus "HH:mm - HH:mm" (contoh: 08:00 - 12:00) agar terdeteksi.
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button @click="closeSyncModal" class="btn-cancel">Batal</button>
+          <button @click="confirmSyncHfis" class="btn-save" :disabled="syncLoading || syncData.jadwal_parsed.length === 0">
+            <i class="fas" :class="syncLoading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'"></i>
+            {{ syncLoading ? 'Mengirim...' : 'Kirim ke HFIS' }}
           </button>
         </div>
       </div>
@@ -454,8 +549,113 @@ const loadMasterData = async () => {
   try {
     const resDokter = await hfisScheduleService.getDokter()
     dokterList.value = resDokter.data.data
+
+    const resPoli = await hfisScheduleService.getPoliMappings()
+    poliList.value = resPoli.data.data.poli
   } catch (err) {
     console.error('Error loading master data', err)
+  }
+}
+
+// Sync HFIS Logic
+const showSyncModal = ref(false)
+const syncLoading = ref(false)
+const poliList = ref([])
+const syncData = ref({
+  id: '',
+  kodedokter: '',
+  kodepoli: '',
+  kodesubspesialis: '',
+  nm_dokter: '',
+  jadwal_parsed: []
+})
+
+const openSyncHfisModal = (cert) => {
+  // Parse schedule from details
+  // Group by day to create the array expected by API
+  // Map day names to numbers: Senin=1... Minggu=7, Libur=8
+  const daysMap = {
+    'Senin': 1, 'Selasa': 2, 'Rabu': 3, 'Kamis': 4, 'Jumat': 5, 'Sabtu': 6, 'Minggu': 7, 'Cuti/Libur': 8
+  }
+
+  const parsedSchedule = []
+  
+  cert.detail.forEach(d => {
+    // Check sip1_jam_praktek
+    // Format expected: 08:00 - 10:00 (multiple lines possible)
+    const times = d.sip1_jam_praktek ? d.sip1_jam_praktek.split('\n') : []
+    
+    times.forEach(timeRange => {
+      // Basic parser for "HH:mm - HH:mm"
+      // Remove text like "WIB", etc if simple
+      const cleanTime = timeRange.replace(/[a-zA-Z]/g, '').trim()
+      const parts = cleanTime.split('-').map(t => t.trim())
+      
+      if (parts.length >= 2) {
+        // Validation simple
+        if (parts[0].length === 5 && parts[1].length === 5) {
+             parsedSchedule.push({
+               hari: daysMap[d.hari],
+               hari_nama: d.hari,
+               buka: parts[0],
+               tutup: parts[1]
+             })
+        }
+      }
+    })
+  })
+
+  syncData.value = {
+    id: cert.id,
+    kodedokter: cert.dokter?.mapping_bpjs?.kd_dokter_bpjs || '', 
+    // Auto-fill poli if available from first schedule
+    kodepoli: cert.dokter?.jadwal?.[0]?.poliklinik?.mapping_bpjs?.kd_poli_bpjs || '',
+    kodesubspesialis: cert.dokter?.jadwal?.[0]?.poliklinik?.mapping_bpjs?.kd_poli_bpjs || '',
+    nm_dokter: cert.dokter?.nm_dokter,
+    jadwal_parsed: parsedSchedule
+  }
+
+  showSyncModal.value = true
+}
+
+const closeSyncModal = () => {
+  showSyncModal.value = false
+}
+
+const confirmSyncHfis = async () => {
+  if (!syncData.value.kodedokter || !syncData.value.kodepoli || !syncData.value.kodesubspesialis) {
+    Swal.fire('Oops!', 'Semua field (Dokter, Poli, Subspesialis) harus diisi.', 'warning')
+    return
+  }
+  
+  if (syncData.value.jadwal_parsed.length === 0) {
+    Swal.fire('Oops!', 'Tidak ada jadwal yang terdeteksi untuk disync.', 'warning')
+    return
+  }
+
+  syncLoading.value = true
+  try {
+    const payload = {
+      kodedokter: syncData.value.kodedokter,
+      kodepoli: syncData.value.kodepoli,
+      kodesubspesialis: syncData.value.kodesubspesialis,
+      jadwal: syncData.value.jadwal_parsed.map(j => ({
+        hari: j.hari,
+        buka: j.buka,
+        tutup: j.tutup
+      }))
+    }
+    
+    await hfisScheduleService.updateHfis(payload)
+    
+    Swal.fire('Berhasil!', 'Jadwal dokter berhasil diupdate ke HFIS.', 'success')
+    closeSyncModal()
+  } catch (error) {
+    console.error('Sync Error:', error)
+    const msg = error.response?.data?.message || 'Gagal update jadwal ke HFIS.'
+    Swal.fire('Gagal!', msg, 'error')
+  } finally {
+    syncLoading.value = false
   }
 }
 
@@ -815,6 +1015,10 @@ onMounted(() => {
   .grid-table th {
     padding: 0.5rem 0.25rem;
     font-size: 0.7rem;
+  }
+  .grid-table th:first-child,
+  .grid-table td:first-child {
+    width: 60px;
   }
 }
 </style>

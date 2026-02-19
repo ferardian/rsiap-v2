@@ -131,7 +131,18 @@
     <div class="card border-0 shadow-sm glass-card mb-4 mt-3">
       <div class="card-body p-4">
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
-          <h5 class="m-0 fw-bold"><i class="fas fa-list-ul text-primary me-2"></i>Daftar Antrean Online</h5>
+          <div class="d-flex align-items-center gap-3">
+             <h5 class="m-0 fw-bold"><i class="fas fa-list-ul text-primary me-2"></i>Daftar Antrean Online</h5>
+             <button 
+               v-if="filteredAntrol.length > 0"
+               class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3" 
+               @click="bulkSyncAllShown"
+               :disabled="isBulkingAll || loading"
+             >
+               <i class="fas me-1" :class="isBulkingAll ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
+               Sync Semua yang Tampil ({{ filteredAntrol.length }})
+             </button>
+          </div>
           <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="status-filter">
               <select v-model="filters.status" class="form-select premium-input-sm" style="min-width: 154px;">
@@ -560,6 +571,7 @@ const antrolList = ref([])
 const taskLoading = ref(null)
 const syncLoading = ref(null)
 const bulkSyncLoading = ref(null)
+const isBulkingAll = ref(false)
 const showBulkSyncModal = ref(false)
 const selectedBulkSyncItem = ref(null)
 const taskList = ref([])
@@ -900,6 +912,41 @@ const bulkSyncTask = async () => {
     toast.error('Gagal melakukan bulk sync')
   } finally {
     bulkSyncLoading.value = null
+  }
+}
+
+const bulkSyncAllShown = async () => {
+  if (filteredAntrol.value.length === 0) return
+
+  const result = await Swal.fire({
+    title: 'Sync Semua Data?',
+    text: `Anda yakin ingin menyinkronkan semua (${filteredAntrol.value.length}) data task yang tampil saat ini? Proses ini mungkin memakan waktu beberapa saat.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#aaa',
+    confirmButtonText: 'Ya, Sync Semua!',
+    cancelButtonText: 'Batal'
+  })
+
+  if (result.isConfirmed) {
+    isBulkingAll.value = true
+    try {
+      const kodebookings = filteredAntrol.value.map(item => item.kodebooking)
+      const response = await bpjsAntrolService.syncTaskQueueBulk(kodebookings)
+      
+      if (response.data.metadata.code === 200) {
+        toast.success(`Berhasil sinkronisasi bulk ${kodebookings.length} data!`)
+        await fetchAntrolData()
+      } else {
+        toast.warning(response.data.metadata.message)
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Gagal melakukan sinkronisasi bulk')
+    } finally {
+      isBulkingAll.value = false
+    }
   }
 }
 

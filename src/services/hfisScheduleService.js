@@ -41,6 +41,14 @@ const hfisScheduleService = {
 
     getDokter() {
         return api.get('/sdi/dokter');
+    },
+
+    getPoliMappings() {
+        return api.get('/sdi/hfis/sk-jadwal/resource/poli-mappings');
+    },
+
+    updateHfis(payload) {
+        return api.post('/sdi/hfis/sk-jadwal/update-jadwal', payload);
     }
 };
 
