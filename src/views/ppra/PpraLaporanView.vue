@@ -50,6 +50,24 @@
             style="min-width: 250px"
           />
         </div>
+        <div class="filter-item">
+          <label class="form-label-custom">Status Verifikasi</label>
+          <select v-model="filters.status_telaah" class="form-select modern-input" style="min-width: 140px">
+            <option value="">Semua</option>
+            <option value="BELUM">Belum Ditelaah</option>
+            <option value="SESUAI">Sesuai</option>
+            <option value="TIDAK SESUAI">Tidak Sesuai</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="form-label-custom">Status Persetujuan</label>
+          <select v-model="filters.status_persetujuan" class="form-select modern-input" style="min-width: 140px">
+            <option value="">Semua</option>
+            <option value="PENDING">Pending</option>
+            <option value="ACC">ACC</option>
+            <option value="REJECT">Reject</option>
+          </select>
+        </div>
         <div class="filter-item flex-grow-1" style="min-width: 200px">
           <label class="form-label-custom">Cari Pasien (Nama, RM, Rawat)</label>
           <div class="position-relative">
@@ -471,7 +489,9 @@ const filters = reactive({
   tgl_end: dayjs().format('YYYY-MM-DD'),
   kd_sps: '',
   kd_dokter: '',
-  search: ''
+  search: '',
+  status_telaah: '',
+  status_persetujuan: ''
 });
 
 // Rekap Bulanan States
@@ -611,7 +631,9 @@ const fetchData = async () => {
       tgl_akhir: filters.tgl_end,
       kd_sps: filters.kd_sps,
       kd_dokter: filters.kd_dokter,
-      search: filters.search
+      search: filters.search,
+      status_telaah: filters.status_telaah,
+      status_persetujuan: filters.status_persetujuan
     });
     
     // Handle new response structure with data and metrics
