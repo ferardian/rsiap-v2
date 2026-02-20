@@ -967,7 +967,7 @@ onMounted(() => {
 .action-bar {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
-  padding: 2.25rem 1.5rem 1.5rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-radius: 20px;
   border: 1px solid white;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
@@ -977,7 +977,7 @@ onMounted(() => {
   flex-wrap: wrap;
   margin: 0 1rem 1.5rem 1rem;
   position: relative;
-  z-index: 5;
+  z-index: 20;
   gap: 1rem;
 }
 
@@ -1644,11 +1644,12 @@ onMounted(() => {
 
   .action-bar { 
     margin: 0 0 1.25rem 0; 
-    padding: 2.25rem 1rem 1.25rem 1rem; 
+    padding: 1.25rem; 
     flex-direction: column; 
     align-items: stretch;
     gap: 1rem;
     border-radius: 16px;
+    z-index: 20;
   }
   .filter-group { flex-direction: column; width: 100%; gap: 1rem; }
   .search-box { width: 100%; }
