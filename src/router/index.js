@@ -187,6 +187,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/approval/nomor-surat',
+    name: 'ApprovalNomorSurat',
+    component: () => import('../views/approval/NomorSuratView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/aproval-jadwal-tambahan',
     name: 'ApprovalJadwalTambahan',
     component: () => import('../views/sdi/ApprovalJadwalTambahanView.vue'),
@@ -451,6 +457,37 @@ const routes = [
     path: '/pasien/transfer-imunisasi',
     name: 'TransferImunisasi',
     component: () => import('../views/pasien/TransferImunisasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  // === CNS ===
+  {
+    path: '/cns/dokter-off',
+    name: 'CnsDokterOff',
+    component: () => import('../views/cns/DokterOffView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/cns/jam-poli',
+    name: 'CnsJamPoli',
+    component: () => import('../views/cns/JamPoliView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/cns/konfirmasi-hadir',
+    name: 'CnsKonfirmasiHadir',
+    component: () => import('../views/cns/KonfirmasiHadirView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/cns/kontrol',
+    name: 'CnsKontrol',
+    component: () => import('../views/cns/KontrolView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/internal',
+    name: 'CentralArchiveInternal',
+    component: () => import('../views/central-archive/InternalView.vue'),
     meta: { requiresAuth: true }
   },
 ]

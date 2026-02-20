@@ -144,6 +144,18 @@
              </button>
           </div>
           <div class="d-flex flex-wrap gap-2 align-items-center">
+            <div class="poli-filter">
+              <select v-model="filters.poli" class="form-select premium-input-sm" style="min-width: 154px;">
+                <option value="">Semua Poli</option>
+                <option v-for="poli in uniquePoliList" :key="poli" :value="poli">{{ poli }}</option>
+              </select>
+            </div>
+            <div class="dokter-filter">
+              <select v-model="filters.dokter" class="form-select premium-input-sm" style="min-width: 180px;">
+                <option value="">Semua Dokter</option>
+                <option v-for="dokter in uniqueDokterList" :key="dokter" :value="dokter">{{ dokter }}</option>
+              </select>
+            </div>
             <div class="status-filter">
               <select v-model="filters.status" class="form-select premium-input-sm" style="min-width: 154px;">
                 <option value="">Semua Status</option>
@@ -326,14 +338,22 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="item in filteredComparisonData" :key="item.kodebooking || item.no_sep">
-                      <td class="ps-3 fw-bold">{{ item.nokapst ? (item.noantrean || '-') : item.nama_pasien }}</td>
+                    <tr v-for="item in filteredComparisonData" :key="item.kodebooking || item.no_sep"
+                        :class="{
+                          'border-start border-3 border-success bg-success-subtle bg-opacity-10': comparisonTab === 'matching' && isUniqueInMatching(item),
+                          'border-start border-3 border-warning bg-warning-subtle bg-opacity-10': comparisonTab === 'matching' && !isUniqueInMatching(item)
+                        }">
+                      <td class="ps-3 fw-bold">
+                        {{ item.nokapst ? (item.noantrean || '-') : item.nama_pasien }}
+                        <span v-if="comparisonTab === 'matching' && isUniqueInMatching(item)" class="badge bg-success-subtle text-success ms-1" style="font-size: 0.65rem;" title="Unik"><i class="fas fa-check"></i></span>
+                        <span v-else-if="comparisonTab === 'matching' && !isUniqueInMatching(item)" class="badge bg-warning-subtle text-warning ms-1" style="font-size: 0.65rem;" :title="getDuplicateCount(item) + 'x duplikat'">{{ getDuplicateCount(item) }}x</span>
+                      </td>
                       <td class="text-muted">{{ item.nokapst || item.no_kartu }}</td>
                       <td v-if="comparisonTab !== 'no-antrol'">{{ item.norekammedis || '-' }}</td>
                       <td v-if="comparisonTab === 'no-antrol'">{{ item.no_rawat }}</td>
                       <td v-if="comparisonTab !== 'no-sep'" class="small text-blue-600 fw-bold">{{ item.no_sep || '-' }}</td>
                       <td class="text-center">
-                         <span v-if="comparisonTab === 'matching'" class="badge bg-success-subtle text-success rounded-pill px-3">Sudah SEP</span>
+                         <span v-if="comparisonTab === 'matching'" class="badge-status" :class="getStatusClass(item.status)">{{ item.status || 'Sudah SEP' }}</span>
                          <span v-else-if="comparisonTab === 'no-sep'" class="badge bg-warning-subtle text-warning rounded-pill px-3">Belum SEP</span>
                          <span v-else class="badge bg-danger-subtle text-danger rounded-pill px-3">Gagal Antrol</span>
                       </td>
@@ -559,7 +579,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import bpjsAntrolService from '@/services/bpjsAntrolService'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
@@ -597,7 +617,14 @@ const filters = reactive({
   tanggal: new Date().toISOString().split('T')[0],
   tgl_akhir: new Date().toISOString().split('T')[0],
   keyword: '',
-  status: ''
+  status: '',
+  poli: '',
+  dokter: ''
+})
+
+// Reset dokter filter when poli changes (dokter list is poli-scoped)
+watch(() => filters.poli, () => {
+  filters.dokter = ''
 })
 
 const statusCounts = computed(() => {
@@ -622,6 +649,20 @@ const uniqueAntrolCount = computed(() => {
 const mobileJknCount = computed(() => {
   const list = Array.isArray(antrolList.value) ? antrolList.value : []
   return list.filter(item => String(item.sumberdata).toLowerCase().includes('mobile jkn')).length
+})
+
+const uniquePoliList = computed(() => {
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  const poliSet = new Set(list.filter(i => i.kodepoli).map(i => i.kodepoli))
+  return [...poliSet].sort()
+})
+
+const uniqueDokterList = computed(() => {
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  // If poli filter is active, only show doctors from that poli
+  const filtered = filters.poli ? list.filter(i => i.kodepoli === filters.poli) : list
+  const dokterSet = new Set(filtered.filter(i => i.nama_dokter).map(i => i.nama_dokter))
+  return [...dokterSet].sort()
 })
 
 const missingQueues = computed(() => {
@@ -649,6 +690,26 @@ const matchingData = computed(() => {
   const sepCards = new Set(seps.map(s => s.no_kartu))
   return list.filter(item => item.nokapst && sepCards.has(item.nokapst))
 })
+
+// Count occurrences of nokapst in matchingData for duplicate detection
+const matchingCardCounts = computed(() => {
+  const counts = {}
+  matchingData.value.forEach(item => {
+    const key = item.nokapst || ''
+    if (key) counts[key] = (counts[key] || 0) + 1
+  })
+  return counts
+})
+
+const isUniqueInMatching = (item) => {
+  const key = item.nokapst || item.no_kartu || ''
+  return key && (matchingCardCounts.value[key] || 0) === 1
+}
+
+const getDuplicateCount = (item) => {
+  const key = item.nokapst || item.no_kartu || ''
+  return matchingCardCounts.value[key] || 0
+}
 
 const filteredComparisonData = computed(() => {
   let source = []
@@ -690,6 +751,16 @@ const openComparison = (tab = 'matching') => {
 const filteredAntrol = computed(() => {
   let list = Array.isArray(antrolList.value) ? antrolList.value : []
   
+  // Filter by Poli
+  if (filters.poli) {
+    list = list.filter(item => item.kodepoli === filters.poli)
+  }
+
+  // Filter by Dokter
+  if (filters.dokter) {
+    list = list.filter(item => item.nama_dokter === filters.dokter)
+  }
+
   // Filter by Status
   if (filters.status) {
     list = list.filter(item => String(item.status).toLowerCase() === filters.status.toLowerCase())

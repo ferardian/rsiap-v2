@@ -4,9 +4,9 @@ export const pegawaiService = {
     /**
      * Get paginated list of employees
      */
-    getPegawai(page = 1, limit = 50) {
+    getPegawai(page = 1, limit = 50, params = {}) {
         return api.get('/sdi/pegawai', {
-            params: { page, limit }
+            params: { page, limit, ...params }
         })
     },
 
