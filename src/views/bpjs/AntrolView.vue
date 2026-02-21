@@ -10,7 +10,7 @@
       <div class="header-actions">
         <div class="date-filter-card glass-card shadow-sm">
           <label class="small-label mb-1 d-block text-muted">Rentang Tanggal</label>
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex flex-wrap flex-lg-nowrap align-items-center gap-2">
             <input 
               v-model="filters.tanggal" 
               type="date" 
@@ -32,9 +32,9 @@
       </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md">
+    <!-- General Quick Stats (Group 1) -->
+    <div class="row g-3 mb-4 mt-2">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100 cursor-pointer" 
              :class="{'border-start border-4 border-danger': missingQueues.length > 0}"
              @click="openComparison('no-antrol')">
@@ -48,42 +48,54 @@
           <div class="stat-footer mt-2 small text-muted">vs {{ uniqueAntrolCount }} Antrean Unik</div>
         </div>
       </div>
-      <div class="col-6 col-md">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100 cursor-pointer" @click="openComparison('matching')">
           <div class="text-muted small fw-bold mb-1">TOTAL ANTREAN</div>
           <div class="h3 fw-bold mb-0 text-primary">{{ antrolList.length }}</div>
           <div class="stat-footer mt-2 small text-muted">{{ uniqueAntrolCount }} Pasien Unik</div>
         </div>
       </div>
-      <div class="col-6 col-md">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
           <div class="text-muted small fw-bold mb-1">MOBILE JKN</div>
           <div class="h3 fw-bold mb-0 text-info">{{ mobileJknCount }}</div>
           <div class="stat-footer mt-2 small text-muted"><i class="fas fa-mobile-alt me-1"></i>Dari Mobile JKN</div>
         </div>
       </div>
-      <div class="col-6 col-md">
+      <div class="col-6 col-md-3">
+        <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
+          <div class="text-muted small fw-bold mb-1">BRIDGING</div>
+          <div class="h3 fw-bold mb-0 text-primary">{{ bridgingCount }}</div>
+          <div class="stat-footer mt-2 small text-muted"><i class="fas fa-desktop me-1"></i>Dari Bridging/Onsite</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Status Stats (Group 2) -->
+    <h6 class="fw-bold text-secondary mb-3 ms-1 mt-4 mt-md-2"><i class="fas fa-chart-line me-2"></i>Status Layanan</h6>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
           <div class="text-muted small fw-bold mb-1">BELUM LAYAN</div>
           <div class="h3 fw-bold mb-0 text-warning">{{ statusCounts.antrean }}</div>
           <div class="stat-footer mt-2 small text-muted">Akan dilayani</div>
         </div>
       </div>
-      <div class="col-6 col-md">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
           <div class="text-muted small fw-bold mb-1">SEDANG DILAYANI</div>
           <div class="h3 fw-bold mb-0 text-info">{{ statusCounts.checkin }}</div>
           <div class="stat-footer mt-2 small text-muted">Sedang dilayani</div>
         </div>
       </div>
-      <div class="col-6 col-md">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
           <div class="text-muted small fw-bold mb-1">SELESAI</div>
           <div class="h3 fw-bold mb-0 text-success">{{ statusCounts.selesai }}</div>
           <div class="stat-footer mt-2 small text-muted">Telah dilayani</div>
         </div>
       </div>
-      <div class="col-6 col-md">
+      <div class="col-6 col-md-3">
         <div class="stat-card glass-card p-3 shadow-sm border-0 h-100">
           <div class="text-muted small fw-bold mb-1">BATAL</div>
           <div class="h3 fw-bold mb-0 text-danger">{{ statusCounts.batal }}</div>
@@ -131,11 +143,11 @@
     <div class="card border-0 shadow-sm glass-card mb-4 mt-3">
       <div class="card-body p-4">
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
-          <div class="d-flex align-items-center gap-3">
-             <h5 class="m-0 fw-bold"><i class="fas fa-list-ul text-primary me-2"></i>Daftar Antrean Online</h5>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+             <h5 class="m-0 fw-bold me-2"><i class="fas fa-list-ul text-primary me-2"></i>Daftar Antrean Online</h5>
              <button 
                v-if="filteredAntrol.length > 0"
-               class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3" 
+               class="btn btn-sm btn-outline-primary text-nowrap fw-bold rounded-pill px-3 btn-bulk-sync-all" 
                @click="bulkSyncAllShown"
                :disabled="isBulkingAll || loading"
              >
@@ -208,7 +220,12 @@
                   <small class="text-muted d-block mt-1">{{ item.kodebooking }}</small>
                 </td>
                 <td>
-                  <div class="fw-bold text-dark">{{ item.nama_pasien || '-' }}</div>
+                  <div class="fw-bold text-dark">
+                    {{ item.nama_pasien || '-' }}
+                    <span v-if="item.is_duplicate" class="badge bg-warning text-dark ms-1 shadow-sm" style="font-size: 0.65rem;" title="Data Ganda dengan Poli/Waktu Berbeda">
+                      <i class="fas fa-copy"></i> Ganda
+                    </span>
+                  </div>
                   <div class="small text-muted mb-1">{{ item.nokapst }}</div>
                   <div class="small text-muted">RM: {{ item.norekammedis || '-' }}</div>
                 </td>
@@ -651,6 +668,11 @@ const mobileJknCount = computed(() => {
   return list.filter(item => String(item.sumberdata).toLowerCase().includes('mobile jkn')).length
 })
 
+const bridgingCount = computed(() => {
+  const list = Array.isArray(antrolList.value) ? antrolList.value : []
+  return list.filter(item => !String(item.sumberdata).toLowerCase().includes('mobile jkn')).length
+})
+
 const uniquePoliList = computed(() => {
   const list = Array.isArray(antrolList.value) ? antrolList.value : []
   const poliSet = new Set(list.filter(i => i.kodepoli).map(i => i.kodepoli))
@@ -791,7 +813,64 @@ const fetchAntrolData = async () => {
 
     if (antrolRes.data.metadata.code === 200) {
       const resData = antrolRes.data.response
-      antrolList.value = Array.isArray(resData) ? resData : (resData ? [resData] : [])
+      let rawList = Array.isArray(resData) ? resData : (resData ? [resData] : [])
+      
+      // Deduplicate by nokapst (BPJS card number)
+      // If a patient has multiple entries, prioritize "Mobile JKN" over onsite.
+      // However, if BOTH are Mobile JKN (e.g., dua poli berbeda), KEEP BOTH.
+      const processedPatients = new Map()
+      const finalAntrolList = []
+      
+      rawList.forEach(item => {
+        const key = item.nokapst || item.no_kartu
+        const currentSource = String(item.sumberdata || '').toLowerCase()
+        
+        // If we don't have a key, just add it directly 
+        if (!key) {
+           finalAntrolList.push(item)
+           return
+        }
+
+        if (processedPatients.has(key)) {
+           // Get the previously stored items for this patient
+           const existingItems = processedPatients.get(key)
+           
+           // Check if there's already a non-Mobile JKN entry we should replace
+           const nonMobileIndex = existingItems.findIndex(existing => !String(existing.sumberdata || '').toLowerCase().includes('mobile jkn'))
+           
+           if (currentSource.includes('mobile jkn')) {
+              if (nonMobileIndex !== -1) {
+                 // Replace the non-Mobile JKN one with this Mobile JKN one
+                 existingItems[nonMobileIndex] = item
+              } else {
+                 // All existing are ALSO Mobile JKN, so keep this one too (allow multiple MJKN)
+                 item.is_duplicate = true
+                 existingItems.forEach(ex => ex.is_duplicate = true)
+                 existingItems.push(item)
+              }
+           } else {
+              // Current is NOT Mobile JKN. 
+              // If there's already a Mobile JKN entry, we ignore this current one.
+              // If there is ONLY a non-Mobile JKN entry, we can keep it or ignore it (usually just keep the first one)
+              const hasMobileJkn = existingItems.some(existing => String(existing.sumberdata || '').toLowerCase().includes('mobile jkn'))
+              if (!hasMobileJkn) {
+                 // Just in case they have multiple onsite queues for different poli, let's keep them
+                 item.is_duplicate = true
+                 existingItems.forEach(ex => ex.is_duplicate = true)
+                 existingItems.push(item)
+              }
+           }
+        } else {
+           // First time seeing this patient, save as array
+           processedPatients.set(key, [item])
+        }
+      })
+      
+      // Flatten the map values back to a single array
+      processedPatients.forEach(items => finalAntrolList.push(...items))
+      
+      antrolList.value = finalAntrolList
+
     } else {
       antrolList.value = []
       if (antrolRes.data.metadata.code !== 201) { 
@@ -1605,4 +1684,14 @@ onMounted(() => {
   }
 }
 
+@media (max-width: 576px) {
+  .btn-bulk-sync-all {
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.75rem !important;
+    white-space: normal !important;
+    text-align: center;
+    line-height: 1.2;
+    margin-top: 0.5rem;
+  }
+}
 </style>

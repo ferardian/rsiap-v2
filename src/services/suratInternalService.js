@@ -9,11 +9,17 @@ export const suratInternalService = {
         // Ensure relations are included for detail view
         const relations = ['undangan', 'penanggungJawab', 'diajukanOleh']
 
-        return api.post('/surat/internal/search', payload, {
-            params: {
-                include: relations.join(',')
-            }
-        })
+        let params = {
+            include: relations.join(',')
+        }
+
+        // Pass department filter as URL param to avoid Orion whitelist error
+        if (payload.departemen) {
+            params.departemen = payload.departemen
+            delete payload.departemen
+        }
+
+        return api.post('/surat/internal/search', payload, { params })
     },
 
     /**
@@ -65,7 +71,7 @@ export const suratInternalService = {
     /**
      * Get statistics for internal letters
      */
-    getStats() {
-        return api.get('/surat/internal/stats')
+    getStats(params = {}) {
+        return api.get('/surat/internal/stats', { params })
     }
 }

@@ -490,6 +490,54 @@ const routes = [
     component: () => import('../views/central-archive/InternalView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/central-archive/eksternal',
+    name: 'CentralArchiveEksternal',
+    component: () => import('../views/central-archive/EksternalView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/masuk',
+    name: 'CentralArchiveMasuk',
+    component: () => import('../views/central-archive/MasukView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/spo',
+    name: 'CentralArchiveSpo',
+    component: () => import('../views/central-archive/SpoView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/spo/create',
+    name: 'CentralArchiveSpoCreate',
+    component: () => import('../views/central-archive/SpoCreateView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/spo/edit/:id',
+    name: 'CentralArchiveSpoEdit',
+    component: () => import('../views/central-archive/SpoEditView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/pks',
+    name: 'CentralArchivePks',
+    component: () => import('../views/central-archive/PksView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/pks/create',
+    name: 'CentralArchivePksCreate',
+    component: () => import('../views/central-archive/PksCreateView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/pks/edit/:id',
+    name: 'CentralArchivePksEdit',
+    component: () => import('../views/central-archive/PksEditView.vue'),
+    meta: { requiresAuth: true }
+  }
 ]
 
 const router = createRouter({

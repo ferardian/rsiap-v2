@@ -1,6 +1,9 @@
 import api from './api';
 
 const service = {
+    // Get list of SPO with Orion Search Pagination
+    searchSpo: (payload) => api.post('/berkas/spo/search', payload),
+
     // Get list of SPO with filters
     getSpo: (params) => api.get('/berkas/spo', { params }),
 
@@ -17,10 +20,10 @@ const service = {
     deleteSpo: (id) => api.delete(`/berkas/spo/${id}`),
 
     // Get units related to SPO
-    getSpoUnits: (id) => api.get(`/berkas/spo/${id}/units`),
+    getSpoUnits: (id, params = {}) => api.get(`/berkas/spo/${id}/units`, { params }),
 
-    // Get list of departments for unit selection (using indikator-mutu endpoint)
-    getUnits: () => api.get('/indikator-mutu/monitoring/units'),
+    // Get list of departments for unit selection
+    getUnits: () => api.get('/sdi/departemen'),
 };
 
 export default service;

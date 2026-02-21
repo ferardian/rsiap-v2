@@ -1,18 +1,18 @@
 <template>
-  <div class="internal-view-wrapper">
-    <div class="internal-container">
+  <div class="eksternal-view-wrapper">
+    <div class="eksternal-container">
       <!-- Hero Header -->
       <div class="hero-header">
         <div class="hero-content">
           <div class="hero-icon">
-            <i class="fas fa-file-signature"></i>
+            <i class="fas fa-envelope-open-text"></i>
           </div>
           <div>
             <h1 class="hero-title">
-              Surat Internal
+              Surat Eksternal
               <span class="mobile-stats-badge">{{ stats.total }} Surat</span>
             </h1>
-            <p class="hero-subtitle">Manajemen arsip surat internal dan undangan rapat RSIA Aisyiyah Pekajangan</p>
+            <p class="hero-subtitle">Manajemen arsip surat keluar ke instansi luar (eksternal) RSIA Aisyiyah Pekajangan</p>
           </div>
         </div>
         <div class="hero-stats">
@@ -39,7 +39,7 @@
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Cari perihal atau nomor surat..."
+              placeholder="Cari perihal, nomor surat, atau alamat tujuan..."
               @keyup.enter="handleSearch"
             >
           </div>
@@ -81,7 +81,7 @@
             <i class="fas fa-folder-open"></i>
           </div>
           <h3>Arsip Kosong</h3>
-          <p>Tidak ada data surat internal ditemukan untuk kriteria ini.</p>
+          <p>Tidak ada data surat eksternal ditemukan untuk kriteria ini.</p>
           <button class="btn-refresh-empty" @click="handleSearch">
             <i class="fas fa-sync-alt"></i> Segarkan Halaman
           </button>
@@ -93,7 +93,7 @@
             <thead>
               <tr>
                 <th width="150">No. Surat</th>
-                <th>Perihal</th>
+                <th>Perihal / Tujuan</th>
                 <th width="180">Tgl Terbit</th>
                 <th width="200">PJ</th>
                 <th width="120">Status</th>
@@ -103,7 +103,10 @@
             <tbody>
               <tr v-for="item in suratList" :key="item.id" @click="viewDetail(item)">
                 <td class="text-mono">{{ item.no_surat || '(Belum Terbit)' }}</td>
-                <td class="fw-bold">{{ item.perihal }}</td>
+                <td>
+                  <div class="fw-bold">{{ item.perihal }}</div>
+                  <small class="text-muted"><i class="fas fa-map-marker-alt mr-1"></i> {{ item.alamat || '-' }}</small>
+                </td>
                 <td>{{ formatDate(item.tgl_terbit) }}</td>
                 <td>
                   <div class="pj-info">
@@ -144,6 +147,10 @@
                 <div class="meta-item">
                   <i class="far fa-calendar-alt"></i>
                   {{ formatDate(item.tgl_terbit) }}
+                </div>
+                <div class="meta-item">
+                   <i class="fas fa-map-marker-alt"></i>
+                  {{ item.alamat || '-' }}
                 </div>
                 <div class="meta-item">
                   <i class="far fa-user"></i>
@@ -187,7 +194,7 @@
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-container main-modal">
         <div class="modal-header">
-          <h2>{{ isEdit ? 'Edit Surat Internal' : 'Tambah Surat Internal' }}</h2>
+          <h2>{{ isEdit ? 'Edit Surat Eksternal' : 'Tambah Surat Eksternal' }}</h2>
           <button class="btn-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
@@ -195,7 +202,14 @@
             <div class="form-row">
               <div class="form-group col-full">
                 <label>Perihal <span class="required">*</span></label>
-                <input v-model="formData.perihal" type="text" placeholder="Contoh: Undangan Rapat Koordinasi" required>
+                <input v-model="formData.perihal" type="text" placeholder="Contoh: Permohonan Kerjasama" required>
+              </div>
+            </div>
+
+             <div class="form-row">
+              <div class="form-group col-full">
+                <label>Alamat / Instansi Tujuan <span class="required">*</span></label>
+                <textarea v-model="formData.alamat" rows="2" placeholder="Masukkan alamat lengkap atau nama instansi tujuan..." required></textarea>
               </div>
             </div>
             
@@ -233,52 +247,6 @@
                 <textarea v-model="formData.catatan" rows="3" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
               </div>
             </div>
-
-            <!-- Undangan Toggle -->
-            <div class="undangan-toggle">
-              <label class="toggle-container">
-                <input type="checkbox" v-model="withUndangan">
-                <span class="checkmark"></span>
-                Sertakan Informasi Undangan / Pertemuan
-              </label>
-            </div>
-
-            <div v-if="withUndangan" class="undangan-section animate-slide-down">
-              <div class="form-row flex-row">
-                <div class="form-group flex-1">
-                  <label>Waktu Pertemuan <span class="required">*</span></label>
-                  <input v-model="formData.undangan.tanggal" type="datetime-local" :required="withUndangan">
-                </div>
-                <div class="form-group flex-1">
-                  <label>Lokasi <span class="required">*</span></label>
-                  <input v-model="formData.undangan.lokasi" type="text" placeholder="Ruang Pertemuan" :required="withUndangan">
-                </div>
-              </div>
-              <div class="form-group col-full">
-                <label>Deskripsi Acara</label>
-                <textarea v-model="formData.undangan.deskripsi" rows="2" placeholder="Agenda singkat pertemuan..."></textarea>
-              </div>
-
-              <!-- Recipient Selection in Form -->
-              <div class="recipient-form-section mt-3">
-                <div class="flex-between mb-2">
-                  <label class="info-label-mini">Penerima Undangan ({{ formRecipients.length }})</label>
-                  <button type="button" class="btn-manage-rec primary" @click="openFormRecipientModal">
-                    <i class="fas fa-users-plus"></i> Tambah / Pilih Penerima
-                  </button>
-                </div>
-                <div class="recipient-preview-container">
-                  <div v-if="formRecipients.length > 0" class="recipient-tag-container mini">
-                    <span v-for="nik in formRecipients" :key="nik" class="recipient-tag-modern mini">
-                      {{ getPegawaiName(nik) }}
-                    </span>
-                  </div>
-                  <div v-else class="empty-preview">
-                    Daftar penerima belum dipilih
-                  </div>
-                </div>
-              </div>
-            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -291,19 +259,18 @@
       </div>
     </div>
 
-    <!-- Detail & Recipient Drawer -->
+    <!-- Detail Drawer -->
     <div v-if="showDetail" class="drawer-overlay" @click.self="closeDetail">
       <div class="drawer-container animate-slide-left">
         <div class="drawer-header">
           <div class="drawer-header-content">
-            <span class="drawer-subtitle">Detail Surat Internal</span>
+            <span class="drawer-subtitle">Detail Surat Eksternal</span>
             <h2 class="drawer-title">{{ selectedItem?.perihal }}</h2>
           </div>
           <button class="btn-close-drawer" @click="closeDetail">&times;</button>
         </div>
         
         <div class="drawer-body">
-          <!-- Detail Card (Simulated as section for Drawer) -->
           <div class="card-section">
             <div class="card-section-header">
               <i class="fas fa-info-circle"></i>
@@ -334,82 +301,30 @@
                 </div>
               </div>
             </div>
+             <div class="mt-3">
+              <label class="info-label-mini">Tujuan / Alamat</label>
+              <div class="info-value">
+                <i class="fas fa-map-marker-alt mr-1 text-primary"></i>
+                {{ selectedItem?.alamat || '-' }}
+              </div>
+            </div>
             <div v-if="selectedItem?.catatan" class="mt-3">
               <label class="info-label-mini">Catatan</label>
               <p class="section-text-small text-muted">{{ selectedItem.catatan }}</p>
             </div>
           </div>
-
-          <!-- Recipient Card (Only if invitation) -->
-          <div v-if="selectedItem?.undangan" class="card-section mt-4">
-            <div class="card-section-header">
-              <div class="flex-grow">
-                <i class="fas fa-users"></i>
-                <span>Penerima Surat</span>
-              </div>
-              <button 
-                v-if="selectedItem?.undangan"
-                class="btn-add-mini modern" 
-                @click="openRecipientModal"
-              >
-                <i class="fas fa-user-plus"></i> Kelola
-              </button>
-            </div>
-
-            <div v-if="recipientLoading" class="mini-loading py-3">
-              <i class="fas fa-spinner fa-spin"></i> Memuat...
-            </div>
-            
-            <div v-else class="recipient-tag-container mt-3">
-              <div v-for="rec in recipients" :key="rec.penerima" class="recipient-tag-modern">
-                {{ rec.pegawai?.nama || rec.detail?.nama || rec.penerima }}
-              </div>
-              <div v-if="recipients.length === 0" class="empty-mini">
-                <i class="fas fa-user-slash"></i>
-                <p>Penerima belum ditambahkan</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Meeting Info if Undangan -->
-          <div v-if="selectedItem?.undangan" class="card-section mt-4 warning-light">
-            <div class="card-section-header">
-              <i class="fas fa-calendar-check"></i>
-              <span>Informasi Pertemuan</span>
-            </div>
-            <div class="info-grid mt-2">
-              <div class="info-item">
-                <label>Waktu</label>
-                <div class="info-value">{{ formatDateTime(selectedItem.undangan.tanggal) }}</div>
-              </div>
-              <div class="info-item">
-                <label>Lokasi</label>
-                <div class="info-value">{{ selectedItem.undangan.lokasi }}</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
-
-    <!-- Advanced Recipient Modal -->
-    <InternalRecipientModal
-      :show="showRecipientModal"
-      :initial-selected="recipients"
-      :loading="recipientSaving"
-      @close="showRecipientModal = false"
-      @save="saveBulkRecipients"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { suratInternalService } from '@/services/suratInternalService'
+import { ref, onMounted, computed } from 'vue'
+import { suratEksternalService } from '@/services/suratEksternalService'
 import { pegawaiService } from '@/services/pegawaiService'
 import { useAuthStore } from '@/stores/auth'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
-import InternalRecipientModal from './components/InternalRecipientModal.vue'
 import Swal from 'sweetalert2'
 
 // State
@@ -438,30 +353,19 @@ const stats = ref({
 // Modal & Form State
 const showModal = ref(false)
 const isEdit = ref(false)
-const withUndangan = ref(false)
 const formData = ref({
   id: null,
   perihal: '',
+  alamat: '',
   tgl_terbit: new Date().toISOString().split('T')[0],
   pj: '',
   status: 'pengajuan',
-  catatan: '',
-  undangan: {
-    tanggal: '',
-    lokasi: '',
-    deskripsi: ''
-  }
+  catatan: ''
 })
 
-// Detail & Recipient State
+// Detail State
 const showDetail = ref(false)
 const selectedItem = ref(null)
-const recipients = ref([])
-const recipientLoading = ref(false)
-const recipientSaving = ref(false)
-const showRecipientModal = ref(false)
-const isFormRecipient = ref(false)
-const formRecipients = ref([])
 const pegawaiList = ref([])
 
 const isKoordinator = computed(() => {
@@ -498,13 +402,12 @@ const fetchData = async (page = 1) => {
     // Auto-filter by User's Department
     const userDept = authStore.userDepartment
     if (!isKoordinator.value && userDept && userDept !== '-') {
-      payload.departemen = userDept // Send as custom property, not inside Orion filters
+      payload.departemen = userDept
     }
 
-    const response = await suratInternalService.getSuratInternal(payload)
+    const response = await suratEksternalService.getSuratEksternal(payload)
     suratList.value = response.data.data || []
     
-    // Orion uses 'meta' for pagination, while some v2 endpoints might use 'pagination' or the root object
     const meta = response.data.meta || response.data.pagination || response.data
     pagination.value = {
       current_page: meta.current_page || 1,
@@ -514,7 +417,7 @@ const fetchData = async (page = 1) => {
   } catch (error) {
     console.error('Error fetching data:', error)
     if (error.response?.status !== 401) {
-      Swal.fire('Error', 'Gagal memuat data surat internal', 'error')
+      Swal.fire('Error', 'Gagal memuat data surat eksternal', 'error')
     }
   } finally {
     loading.value = false
@@ -529,7 +432,7 @@ const fetchStats = async () => {
       params.departemen = userDept
     }
     
-    const response = await suratInternalService.getStats(params)
+    const response = await suratEksternalService.getStats(params)
     if (response.data.success) {
       stats.value = response.data.data
     }
@@ -564,61 +467,57 @@ const changePage = (page) => {
 
 const openAddModal = () => {
   isEdit.value = false
-  withUndangan.value = false
-  formRecipients.value = []
   formData.value = {
     id: null,
     perihal: '',
+    alamat: '',
     tgl_terbit: new Date().toISOString().split('T')[0],
     pj: '',
     status: 'pengajuan',
-    catatan: '',
-    undangan: {
-      tanggal: '',
-      lokasi: '',
-      deskripsi: ''
-    }
+    catatan: ''
   }
   showModal.value = true
 }
 
 const openEditModal = (item) => {
   isEdit.value = true
-  withUndangan.value = !!item.undangan
-  formRecipients.value = []
   
-  // If invitation exists, load recipients for preview
-  if (item.undangan) {
-    loadFormRecipients(item.undangan.id)
+  // Robust Date Parsing
+  let tgl = ''
+  if (item.tgl_terbit) {
+    const dateObj = new Date(item.tgl_terbit)
+    if (!isNaN(dateObj.getTime())) {
+      const offset = dateObj.getTimezoneOffset()
+      const adjustedDate = new Date(dateObj.getTime() - (offset * 60 * 1000))
+      tgl = adjustedDate.toISOString().split('T')[0]
+    } else if (typeof item.tgl_terbit === 'string') {
+      tgl = item.tgl_terbit.split(' ')[0]
+    }
+  }
+
+  // Robust PJ Mapping
+  const pjNik = item.pj || item.penanggung_jawab?.nik || item.penanggungJawab?.nik || ''
+  const nikStr = pjNik ? String(pjNik).trim() : ''
+
+  // Ensure PJ is in the list so SearchableSelect can show the label
+  if (nikStr && !pegawaiList.value.some(p => String(p.nik).trim() === nikStr)) {
+    const pjName = item.penanggung_jawab?.nama || item.penanggungJawab?.nama || nikStr
+    pegawaiList.value.push({
+      nik: nikStr,
+      nama: pjName
+    })
   }
 
   formData.value = {
     id: item.id,
     perihal: item.perihal,
-    tgl_terbit: item.tgl_terbit,
-    pj: item.pj,
+    alamat: item.alamat,
+    tgl_terbit: tgl,
+    pj: nikStr,
     status: item.status,
-    catatan: item.catatan,
-    undangan: item.undangan ? {
-      tanggal: item.undangan.tanggal.replace(' ', 'T').substring(0, 16),
-      lokasi: item.undangan.lokasi,
-      deskripsi: item.undangan.deskripsi
-    } : {
-      tanggal: '',
-      lokasi: '',
-      deskripsi: ''
-    }
+    catatan: item.catatan
   }
   showModal.value = true
-}
-
-const loadFormRecipients = async (undanganId) => {
-  try {
-    const response = await suratInternalService.getPenerima(undanganId)
-    formRecipients.value = (response.data.data || []).map(r => r.penerima)
-  } catch (err) {
-    console.error('Error loading form recipients:', err)
-  }
 }
 
 const closeModal = () => {
@@ -629,40 +528,11 @@ const saveSurat = async () => {
   submitting.value = true
   try {
     const payload = { ...formData.value }
-    if (!withUndangan.value) {
-      delete payload.undangan
-    }
 
-    let response
     if (isEdit.value) {
-      response = await suratInternalService.updateSuratInternal(payload.id, payload)
+      await suratEksternalService.updateSuratEksternal(payload.id, payload)
     } else {
-      response = await suratInternalService.storeSuratInternal(payload)
-    }
-
-    // Handle Recipients after Surat/Undangan saved
-    // We need to re-fetch the item to get the invitation ID if it's new
-    if (withUndangan.value && formRecipients.value.length > 0) {
-      // For Orion/v2 updateOrCreate logic, we might need a moment to let the hook finish
-      // or directly use the response if it includes the created undagan
-      const savedItem = response.data.data
-      let invitationId = savedItem.undangan?.id
-      
-      // If invitation ID not present (hooks are async sometimes), we might need to search for it
-      // But usually Orion returns the saved entity with relations if requested?
-      // Let's try to get it from the item
-      if (!invitationId) {
-        // Fallback: search for the surat again to get invitation
-        const detailRes = await suratInternalService.getSuratInternalById(savedItem.id)
-        invitationId = detailRes.data.data.undangan?.id
-      }
-
-      if (invitationId) {
-        await suratInternalService.storePenerima({
-          undangan_id: invitationId,
-          penerima: formRecipients.value
-        })
-      }
+      await suratEksternalService.storeSuratEksternal(payload)
     }
 
     const Toast = Swal.mixin({
@@ -670,23 +540,16 @@ const saveSurat = async () => {
       position: 'top-end',
       showConfirmButton: false,
       timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
+      timerProgressBar: true
     })
 
     Toast.fire({
       icon: 'success',
       title: 'Berhasil',
-      text: `Surat internal berhasil ${isEdit.value ? 'diperbarui' : 'disimpan'}`,
+      text: `Surat eksternal berhasil ${isEdit.value ? 'diperbarui' : 'disimpan'}`,
       background: '#f0fdf4',
       color: '#166534',
-      iconColor: '#22c55e',
-      customClass: {
-        container: 'swal-highest'
-      }
+      iconColor: '#22c55e'
     })
     closeModal()
     fetchData(pagination.value.current_page)
@@ -697,26 +560,6 @@ const saveSurat = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-const openFormRecipientModal = () => {
-  isFormRecipient.value = true
-  // Mock recipients for modal preview
-  recipients.value = formRecipients.value.map(nik => ({
-    penerima: nik,
-    pegawai: pegawaiList.value.find(p => p.nik === nik)
-  }))
-  showRecipientModal.value = true
-}
-
-const getPegawaiName = (nik) => {
-  if (!nik) return '-'
-  const p = pegawaiList.value.find(p => p.nik === nik)
-  if (p) return p.nama
-  
-  // Fallback find in current recipients
-  const rec = recipients.value.find(r => (r.penerima === nik || r.nik === nik))
-  return rec?.detail?.nama || rec?.pegawai?.nama || rec?.nama || nik
 }
 
 const confirmDelete = (item) => {
@@ -732,7 +575,7 @@ const confirmDelete = (item) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await suratInternalService.deleteSuratInternal(item.id)
+        await suratEksternalService.deleteSuratEksternal(item.id)
         Swal.fire('Terhapus!', 'Surat berhasil dihapus.', 'success')
         fetchData(pagination.value.current_page)
         fetchStats()
@@ -746,105 +589,16 @@ const confirmDelete = (item) => {
 const viewDetail = async (item) => {
   selectedItem.value = item
   showDetail.value = true
-  recipients.value = []
-  
-  if (item.undangan && item.undangan.id) {
-    fetchRecipients(item.undangan.id)
-  }
 }
 
 const closeDetail = () => {
   showDetail.value = false
-  showRecipientModal.value = false
 }
 
-const fetchRecipients = async (undanganId) => {
-  recipientLoading.value = true
-  try {
-    const response = await suratInternalService.getPenerima(undanganId)
-    // Response data for CompleteCollection is in data.data
-    recipients.value = response.data.data || []
-  } catch (error) {
-    console.error('Error fetching recipients:', error)
-    recipients.value = []
-  } finally {
-    recipientLoading.value = false
-  }
-}
-
-const openRecipientModal = () => {
-  isFormRecipient.value = false
-  showRecipientModal.value = true
-}
-
-const saveBulkRecipients = async (nikList) => {
-  if (isFormRecipient.value) {
-    formRecipients.value = nikList
-    showRecipientModal.value = false
-    isFormRecipient.value = false
-    return
-  }
-
-  if (!selectedItem.value?.undangan) return
-  
-  recipientSaving.value = true
-  try {
-    const payload = {
-      undangan_id: selectedItem.value.undangan.id,
-      penerima: nikList
-    }
-    await suratInternalService.storePenerima(payload)
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    })
-
-    Toast.fire({
-      icon: 'success',
-      title: 'Penerima diperbarui',
-      background: '#f0fdf4',
-      color: '#166534',
-      iconColor: '#22c55e',
-      customClass: {
-        container: 'swal-highest'
-      }
-    })
-    fetchRecipients(selectedItem.value.undangan.id)
-    showRecipientModal.value = false
-  } catch (error) {
-    console.error('Error saving bulk recipients:', error)
-    Swal.fire('Gagal', 'Gagal menyimpan daftar penerima', 'error')
-  } finally {
-    recipientSaving.value = false
-  }
-}
-
-const removeRecipient = (rec) => {
-  // Logic to remove recipient if endpoint exists
-  // For now simple placeholder as per adopt requirement
-  Swal.fire('Info', 'Fitur hapus penerima akan segera tersedia', 'info')
-}
-
-// Helpers
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('id-ID', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }) + ' WIB'
 }
 
 const capitalize = (str) => {
@@ -860,29 +614,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* CSS Variables */
-:root {
-  --primary: #3b82f6;
-  --primary-dark: #1d4ed8;
-  --secondary: #64748b;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --bg-app: #f1f5f9;
-  --surface: #ffffff;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-}
-
-.internal-view-wrapper {
+.eksternal-view-wrapper {
   background-color: #f8fafc;
   min-height: 100vh;
   padding: 0.5rem 1rem;
   color: #1e293b;
 }
 
-.internal-container {
+.eksternal-container {
   max-width: 100%;
   margin: 0 auto;
 }
@@ -1040,12 +779,6 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.search-box input:focus {
-  border-color: #3b82f6;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
 .date-filter {
   display: flex;
   align-items: center;
@@ -1066,14 +799,8 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.filter-input.status-select {
-  min-width: 160px;
-}
-
-.btn-filter {
+.btn-filter, .btn-add {
   padding: 0.625rem 1.25rem;
-  background: #f1f5f9;
-  color: #475569;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -1082,38 +809,25 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s;
-  flex-shrink: 0;
   white-space: nowrap;
 }
 
-.btn-filter:hover {
-  background: #e2e8f0;
-  color: #1e293b;
+.btn-filter {
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .btn-add {
-  padding: 0.625rem 1.5rem;
   background: #3b82f6;
   color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
   box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-  transition: all 0.2s;
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .btn-add:hover {
   background: #2563eb;
-  transform: translateY(-1px);
 }
 
-/* Modern Table */
+/* Table */
 .content-area {
   background: white;
   border-radius: 12px;
@@ -1134,7 +848,6 @@ onMounted(() => {
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
   border-bottom: 2px solid #f1f5f9;
 }
 
@@ -1145,28 +858,9 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.modern-table tbody tr:hover {
-  background: #fbfdff;
-}
-
 .text-mono {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: monospace;
   font-size: 0.85rem;
-  color: #475569;
-}
-
-.pj-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.pj-name {
-  font-weight: 500;
-  color: #1e293b;
-}
-
-.pj-nik {
-  font-size: 0.75rem;
 }
 
 .status-badge {
@@ -1174,7 +868,6 @@ onMounted(() => {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 700;
-  display: inline-block;
 }
 
 .status-badge.pengajuan { background: #fee2e2; color: #991b1b; }
@@ -1196,129 +889,9 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.btn-icon.edit:hover { border-color: #3b82f6; color: #3b82f6; }
-.btn-icon.delete:hover { border-color: #ef4444; color: #ef4444; }
-
-.status-badge-mini {
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.status-badge-mini.pengajuan { background: #fee2e2; color: #b91c1c; }
-.status-badge-mini.disetujui { background: #dcfce7; color: #15803d; }
-.status-badge-mini.ditolak { background: #f1f5f9; color: #64748b; }
-
-/* Unified Loading & Empty States */
-.loading-state-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 5rem 2rem;
-  color: #3b82f6;
-}
-
-.spinner-container {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
-}
-
-.empty-state-unified {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 5rem 2rem;
-  text-align: center;
-}
-
-.empty-icon-container {
-  width: 80px;
-  height: 80px;
-  background: #f8fafc;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  color: #cbd5e1;
-  margin-bottom: 1.5rem;
-}
-
-.empty-state-unified h3 {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #334155;
-  margin: 0 0 0.5rem 0;
-}
-
-.empty-state-unified p {
-  color: #94a3b8;
-  font-size: 0.95rem;
-  margin-bottom: 2rem;
-  max-width: 300px;
-}
-
-.btn-refresh-empty {
-  padding: 0.75rem 1.75rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-weight: 700;
-  color: #475569;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
-
-.btn-refresh-empty:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1e293b;
-}
-
-/* Pagination */
-.pagination-footer {
-  padding: 1.25rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1.5rem;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-page {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-page:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #64748b;
-}
-
-/* Modal Styles */
+/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -1328,7 +901,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
 }
 
 .modal-container {
@@ -1339,7 +911,6 @@ onMounted(() => {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .modal-header {
@@ -1350,18 +921,24 @@ onMounted(() => {
   align-items: center;
 }
 
-.modal-header h2 {
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin: 0;
-}
-
 .btn-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
   color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: #f1f5f9;
+  color: #ef4444;
 }
 
 .modal-body {
@@ -1378,50 +955,13 @@ onMounted(() => {
   font-size: 0.8125rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #475569;
 }
 
-.form-group input, 
-.form-group select, 
-.form-group textarea {
+.form-group input, .form-group select, .form-group textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-.flex-row {
-  display: flex;
-  gap: 1rem;
-}
-
-.flex-1 { flex: 1; }
-
-.required { color: #ef4444; }
-
-.undangan-toggle {
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 12px;
-  margin: 1.5rem 0;
-}
-
-.toggle-container {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #334155;
-}
-
-.undangan-section {
-  border: 1px dashed #cbd5e1;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-top: 1rem;
 }
 
 .modal-footer {
@@ -1435,10 +975,17 @@ onMounted(() => {
 .btn-cancel {
   padding: 0.75rem 1.5rem;
   background: #f1f5f9;
+  color: #475569;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #e2e8f0;
+  color: #1e293b;
 }
 
 .btn-save-modal {
@@ -1449,9 +996,15 @@ onMounted(() => {
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* Drawer Styles */
+.btn-save-modal:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Drawer */
 .drawer-overlay {
   position: fixed;
   top: 0; right: 0; bottom: 0; left: 0;
@@ -1467,7 +1020,6 @@ onMounted(() => {
   max-width: 500px;
   background: #f8fafc;
   height: 100%;
-  box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
 }
@@ -1481,26 +1033,36 @@ onMounted(() => {
   align-items: center;
 }
 
-.drawer-title {
+.btn-close-drawer {
+  background: #f1f5f9;
+  border: none;
   font-size: 1.25rem;
-  font-weight: 800;
-  color: #1e293b;
-  margin: 0;
-  line-height: 1.2;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #64748b;
 }
 
-.drawer-subtitle {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #3b82f6;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.btn-close-drawer:hover {
+  background: #e2e8f0;
+  color: #ef4444;
 }
 
 .drawer-body {
   padding: 1.5rem;
   overflow-y: auto;
-  flex: 1;
+}
+
+.card-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
 }
 
 .info-grid {
@@ -1515,142 +1077,58 @@ onMounted(() => {
   font-weight: 700;
   color: #94a3b8;
   text-transform: uppercase;
-  margin-bottom: 0.25rem;
 }
 
 .info-value {
   font-size: 0.875rem;
   color: #1e293b;
-  word-break: break-all;
 }
 
-.info-label-mini {
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
-
-.section-text-small {
-  font-size: 0.8rem;
-  line-height: 1.5;
-  margin-top: 0.25rem;
-}
-
-/* Card Sections in Drawer */
-.card-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border: 1px solid #e2e8f0;
-}
-
-.card-section.warning-light {
-  background: #fffbeb;
-  border-color: #fde68a;
-}
-
-.card-section-header {
+/* Pagination */
+.pagination-footer {
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+  background: white;
 }
 
-.card-section-header i {
-  color: #3b82f6;
-}
-
-.card-section-header span {
-  font-weight: 700;
-  color: #334155;
-  font-size: 0.95rem;
-}
-
-/* Recipient Tags Modern */
-.recipient-tag-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.recipient-tag-modern {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #475569;
-}
-
-.btn-add-mini.modern {
-  padding: 0.4rem 0.8rem;
-  background: #eff6ff;
-  color: #3b82f6;
-  border: 1px solid #dbeafe;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-add-mini.modern:hover {
-  background: #3b82f6;
-  color: white;
-}
-
-.empty-mini {
-  text-align: center;
-  padding: 1.5rem;
-  color: #94a3b8;
-}
-
-.empty-mini i {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-  opacity: 0.5;
-}
-
-.empty-mini p {
-  font-size: 0.75rem;
-  margin: 0;
-}
-
-.btn-close-drawer {
-  background: #f1f5f9;
-  border: none;
-  font-size: 1.5rem;
+.btn-page {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-close-drawer:hover {
-  background: #e2e8f0;
-  color: #ef4444;
-}
-
-.mini-loading {
-  text-align: center;
+.btn-page:hover:not(:disabled) {
+  background: #f1f5f9;
   color: #3b82f6;
-  font-size: 0.875rem;
+  border-color: #cbd5e1;
 }
 
-/* Mobile View Adjustments */
-.mobile-view { display: none; }
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
 
+.page-info {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* Mobile */
 @media (max-width: 1024px) {
-  .internal-view-wrapper {
+  .eksternal-view-wrapper {
     padding: 0.75rem 0.6rem 2rem 0.6rem;
     min-height: calc(100vh - 80px);
     background: #f8fafc;
@@ -1704,7 +1182,7 @@ onMounted(() => {
   .filter-group { 
     flex-direction: column; 
     width: 100%; 
-    gap: 0.85rem; 
+    gap: 0.75rem; 
   }
   .search-box { 
     width: 100%; 
@@ -1716,19 +1194,19 @@ onMounted(() => {
   }
   .search-box i {
     position: absolute;
-    left: 0.85rem;
+    left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
     z-index: 10;
     pointer-events: none;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     margin: 0;
   }
   .search-box input { 
     width: 100%; 
     height: 100%;
-    padding: 0 0.85rem 0 2.25rem !important;
+    padding: 0 0.75rem 0 2rem !important;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -1749,7 +1227,7 @@ onMounted(() => {
   .date-filter .filter-input { 
     flex: 1;
     min-width: 0;
-    height: 38px;
+    height: 36px;
     background: white; 
     border: 1px solid #e2e8f0; 
     padding: 0 0.25rem; 
@@ -1775,11 +1253,13 @@ onMounted(() => {
   .btn-filter { 
     width: 100%; 
     justify-content: center; 
-    padding: 0.85rem; 
-    border-radius: 12px; 
+    padding: 0.75rem; 
+    border-radius: 8px; 
     background: #f1f5f9;
     color: #475569;
     font-weight: 700;
+    height: 36px;
+    font-size: 0.85rem;
   }
   .btn-add { 
     width: 100%; 
@@ -1790,6 +1270,10 @@ onMounted(() => {
     margin-bottom: 0.15rem;
     font-size: 0.9rem;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    background: #3b82f6;
+    color: white;
+    border: none;
+    font-weight: 700;
   }
 
   .content-area {
@@ -1798,60 +1282,39 @@ onMounted(() => {
     border: none !important;
     overflow: visible;
   }
-  
+
   .desktop-view { display: none; }
-  .mobile-view { display: block; padding: 0.25rem 0; }
+  .mobile-view { display: block !important; padding: 0.25rem 0; }
   
   .pagination-footer { 
     border-top: none; 
     margin-top: 1rem;
     padding: 1.25rem 0 3rem 0;
+    background: transparent;
   }
 
   .mobile-card {
     background: white;
-    border-radius: 20px;
-    padding: 1.5rem;
+    border-radius: 16px;
+    padding: 1.25rem;
     margin-bottom: 1.25rem;
     border: 1px solid #f1f5f9;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
-  }
-
-  .mobile-card:active {
-    transform: scale(0.98);
-    background: #fbfdff;
-  }
-
-  .mobile-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px dashed #e2e8f0;
-    background: transparent;
-  }
-
-  .mobile-card-no {
-    font-size: 0.75rem;
-    color: #64748b;
-    font-weight: 600;
   }
 
   .mobile-card-perihal {
     font-size: 1.1rem;
     font-weight: 800;
-    margin: 0 0 0.75rem 0;
+    margin: 0.5rem 0 1rem 0;
     color: #1e293b;
     line-height: 1.3;
   }
 
   .mobile-card-meta {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
     margin-bottom: 1.25rem;
   }
@@ -1874,145 +1337,39 @@ onMounted(() => {
     gap: 0.75rem;
     padding-top: 1rem;
     border-top: 1px solid #f8fafc;
-    background: transparent;
   }
 
   .btn-mobile-edit, .btn-mobile-delete {
     flex: 1;
-    padding: 0.75rem;
-    border-radius: 12px;
+    padding: 0.65rem;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 700;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    transition: all 0.2s;
   }
 
-  .btn-mobile-edit {
-    background: #f1f5f9;
-    color: #475569;
-    border: none;
-  }
-
-  .btn-mobile-edit:hover { background: #e2e8f0; }
-
-  .btn-mobile-delete {
-    background: #fffafa;
-    color: #ef4444;
-    border: 1px solid #fee2e2;
-  }
-
-  .btn-mobile-delete:hover { background: #fee2e2; }
+  .btn-mobile-edit { background: #f1f5f9; color: #475569; border: none; }
+  .btn-mobile-delete { background: #fffafa; color: #ef4444; border: 1px solid #fee2e2; }
 }
 
-/* Recipient Form Section */
-.recipient-form-section {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 1rem;
-}
-
-.btn-manage-rec {
-  padding: 0.4rem 0.75rem;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #475569;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-manage-rec:hover {
-  background: #e2e8f0;
-  color: #1e293b;
-}
-
-.recipient-preview-container {
-  min-height: 40px;
-  max-height: 120px;
-  overflow-y: auto;
-  border: 1px dashed #e2e8f0;
-  border-radius: 8px;
-  padding: 0.5rem;
-  background: #fbfdff;
-}
-
-.recipient-tag-modern.mini {
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-}
-
-.empty-preview {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-style: italic;
-  text-align: center;
-  padding-top: 0.25rem;
-}
-
-.flex-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.flex-grow {
-  flex: 1;
-}
-
-.btn-manage-rec.primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  font-weight: 700;
-  padding: 0.5rem 1rem;
-}
-
-.btn-manage-rec.primary:hover {
-  background: #2563eb;
-}
-
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 0.75rem; }
-.mt-4 { margin-top: 1rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.ml-2 { margin-left: 0.5rem; }
-.mr-2 { margin-right: 0.5rem; }
-.p-3 { padding: 0.75rem; }
-.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.mobile-view { display: none; }
+.pj-info { display: flex; flex-direction: column; }
+.pj-name { font-weight: 500; }
+.pj-nik { font-size: 0.75rem; }
+.required { color: #ef4444; }
 .fw-bold { font-weight: 700; }
-.flex-row { display: flex; gap: 1rem; }
-.flex-1 { flex: 1; }
-
-/* Animations */
-.animate-slide-down {
-  animation: slideDown 0.3s ease-out;
+.mr-2 { margin-right: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.status-badge-mini {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
 }
-
-.animate-slide-left {
-  animation: slideLeft 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideLeft {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-</style>
-
-<style>
-.swal2-container {
-  z-index: 100000 !important;
-}
+.status-badge-mini.pengajuan { background: #fee2e2; color: #b91c1c; }
+.status-badge-mini.disetujui { background: #dcfce7; color: #15803d; }
+.status-badge-mini.ditolak { background: #f1f5f9; color: #64748b; }
 </style>
