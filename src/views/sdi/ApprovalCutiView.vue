@@ -135,6 +135,7 @@ import { useAuthStore } from '../../stores/auth'
 import cutiApprovalService from '../../services/cutiApprovalService'
 import SearchableSelect from '../../components/ui/SearchableSelect.vue'
 import { showToast } from '../../utils/notification'
+import Swal from 'sweetalert2'
 
 const authStore = useAuthStore()
 
@@ -246,7 +247,19 @@ const loadData = async () => {
 }
 
 const handleApprove = async (id) => {
-  if (!confirm('Apakah Anda yakin ingin menyetujui pengajuan cuti ini?')) return
+  const result = await Swal.fire({
+    title: 'Setujui Pengajuan?',
+    text: "Apakah Anda yakin ingin menyetujui pengajuan cuti ini?",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#10b981',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: '<i class="fas fa-check"></i> Ya, Setujui',
+    cancelButtonText: 'Batal',
+    reverseButtons: true
+  })
+
+  if (!result.isConfirmed) return
   
   try {
     await cutiApprovalService.approveLeave(nik.value, id)
@@ -259,7 +272,19 @@ const handleApprove = async (id) => {
 }
 
 const handleReject = async (id) => {
-  if (!confirm('Apakah Anda yakin ingin menolak pengajuan cuti ini?')) return
+  const result = await Swal.fire({
+    title: 'Tolak Pengajuan?',
+    text: "Apakah Anda yakin ingin menolak pengajuan cuti ini?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: '<i class="fas fa-times"></i> Ya, Tolak',
+    cancelButtonText: 'Batal',
+    reverseButtons: true
+  })
+
+  if (!result.isConfirmed) return
   
   try {
     await cutiApprovalService.rejectLeave(nik.value, id)

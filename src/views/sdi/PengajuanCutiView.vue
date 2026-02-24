@@ -172,8 +172,8 @@
               />
             </div>
 
-            <!-- Date Range Grid -->
-            <div class="grid grid-cols-2 gap-4">
+            <!-- Date Range Grid (For non-Annual Leave) -->
+            <div v-if="form.jenis !== 'Cuti Tahunan'" class="grid grid-cols-2 gap-4">
               <!-- Tanggal Mulai -->
               <div class="form-group">
                 <label class="form-label">
@@ -198,6 +198,47 @@
                   class="form-input" 
                   required
                 >
+              </div>
+            </div>
+
+            <!-- Multi-Date Selection (For Annual Leave) -->
+            <div v-else class="form-group">
+              <div class="flex justify-between items-center mb-3">
+                <label class="form-label mb-0">Pilih Tanggal Cuti</label>
+                <button type="button" class="btn-add-date" @click="addDateRow">
+                  <i class="fas fa-plus-circle"></i>
+                  <span>Tambah Tanggal</span>
+                </button>
+              </div>
+              
+              <div class="date-rows-container">
+                <div v-for="(dateObj, index) in form.selectedDates" :key="index" class="date-row animate-fade-in">
+                  <div class="date-input-wrapper">
+                    <i class="fas fa-calendar-alt input-icon"></i>
+                    <input 
+                      type="date" 
+                      v-model="dateObj.date" 
+                      class="form-input-with-icon" 
+                      required
+                    >
+                  </div>
+                  <button 
+                    v-if="form.selectedDates.length > 1" 
+                    type="button" 
+                    class="btn-remove-date"
+                    title="Hapus Tanggal"
+                    @click="removeDateRow(index)"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="multi-date-info">
+                <div class="info-icon">
+                  <i class="fas fa-lightbulb"></i>
+                </div>
+                <p>Anda bisa memilih beberapa tanggal sekaligus (tidak harus berurutan) untuk cuti tahunan.</p>
               </div>
             </div>
 
@@ -309,7 +350,10 @@ const form = reactive({
   tanggal_cuti: {
     start: '',
     end: ''
-  }
+  },
+  selectedDates: [
+    { date: '' }
+  ]
 })
 
 const jenisCutiOptions = [
@@ -354,7 +398,16 @@ const openRequestModal = () => {
   form.jenis = ''
   form.tanggal_cuti.start = ''
   form.tanggal_cuti.end = ''
+  form.selectedDates = [{ date: '' }]
   showModal.value = true
+}
+
+const addDateRow = () => {
+  form.selectedDates.push({ date: '' })
+}
+
+const removeDateRow = (index) => {
+  form.selectedDates.splice(index, 1)
 }
 
 const closeModal = () => {
@@ -370,16 +423,32 @@ const submitRequest = async () => {
   submitting.value = true
   try {
     const payload = {
-      jenis: form.jenis,
-      tanggal_cuti: {
+      jenis: form.jenis
+    }
+
+    if (form.jenis === 'Cuti Tahunan') {
+      // Filter out empty dates and send as array
+      const validDates = form.selectedDates
+        .map(d => d.date)
+        .filter(d => !!d)
+      
+      if (validDates.length === 0) {
+        showToast('Pilih minimal satu tanggal', 'error')
+        submitting.value = false
+        return
+      }
+
+      payload.dates = validDates
+    } else {
+      payload.tanggal_cuti = {
         start: form.tanggal_cuti.start,
         end: form.tanggal_cuti.end
       }
-    }
-    
-    // Add tanggal_selesai for Cuti Bersalin
-    if (form.jenis === 'Cuti Bersalin') {
-      payload.tanggal_selesai = form.tanggal_cuti.end
+
+      // Add tanggal_selesai for Cuti Bersalin (compatibility with backend check)
+      if (form.jenis === 'Cuti Bersalin') {
+        payload.tanggal_selesai = form.tanggal_cuti.end
+      }
     }
     
     await cutiPegawaiService.createCuti(nik.value, payload)
@@ -799,8 +868,125 @@ input[type="date"]:focus, select:focus {
   background: linear-gradient(to right, #eff6ff, #f0f9ff);
   border-left: 4px solid #3b82f6;
   padding: 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+  margin-top: 1rem;
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Multi Date Styles */
+.btn-add-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.2s;
+  border: 1px solid #dbeafe;
+}
+
+.btn-add-date:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.date-rows-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.date-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+  font-size: 0.875rem;
+}
+
+.form-input-with-icon {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  background-color: #f8fafc;
+  transition: all 0.2s;
+  color: #1e293b;
+}
+
+.form-input-with-icon:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.btn-remove-date {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-remove-date:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+.multi-date-info {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.info-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fef9c3;
+  color: #ca8a04;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.multi-date-info p {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .form-actions {
