@@ -49,6 +49,10 @@ const hfisScheduleService = {
 
     updateHfis(payload) {
         return api.post('/sdi/hfis/sk-jadwal/update-jadwal', payload);
+    },
+
+    getJadwalDokter(poli, tanggal) {
+        return api.get(`/sdi/hfis/sk-jadwal/jadwal-dokter/${poli}/tanggal/${tanggal}`);
     }
 };
 

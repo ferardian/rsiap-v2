@@ -17,7 +17,7 @@ export const pegawaiService = {
         return api.get(`/sdi/pegawai/${nik}`, {
             params: {
                 select: '*',
-                include: 'petugas,dep,statusKerja,email,nomorKartu'
+                include: 'petugas,dep,statusKerja,email,nomorKartu,keluarga'
             }
         })
     },
@@ -144,5 +144,48 @@ export const pegawaiService = {
      */
     deleteFamilyMember(nik, id) {
         return api.delete(`/sdi/pegawai/${nik}/keluarga/${id}`)
+    },
+
+    // ========== Berkas Pegawai (Employee Documents) ==========
+
+    /**
+     * Get employee documents
+     */
+    getBerkas(nik) {
+        return api.post('/sdi/pegawai/get/berkas', { nik })
+    },
+
+    /**
+     * Get document categories
+     */
+    getBerkasKategori() {
+        return api.get('/sdi/pegawai/berkas/kategori')
+    },
+
+    /**
+     * Get document names by category
+     */
+    getNamaBerkas(kategori) {
+        return api.get('/sdi/pegawai/berkas/nama-berkas', {
+            params: { kategori }
+        })
+    },
+
+    /**
+     * Upload employee document
+     */
+    uploadBerkas(formData) {
+        return api.post('/sdi/pegawai/upload/berkas', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    },
+
+    /**
+     * Delete employee document
+     */
+    deleteBerkas(nik, kode, berkas) {
+        return api.post('/sdi/pegawai/delete/berkas', { nik, kode, berkas })
     }
 }

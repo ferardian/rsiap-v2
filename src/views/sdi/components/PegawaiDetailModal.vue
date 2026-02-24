@@ -109,6 +109,46 @@
               </div>
             </div>
           </div>
+          
+          <!-- Family Info (New) -->
+          <div class="detail-section full-width">
+            <h4><i class="fas fa-users"></i> DATA KELUARGA</h4>
+            <div v-if="pegawai.keluarga && pegawai.keluarga.length > 0" class="table-container-minimal mt-3">
+              <table class="family-table">
+                <thead>
+                  <tr>
+                    <th>Nama Lengkap</th>
+                    <th>No. KTP / NIK</th>
+                    <th>Tanggal Lahir</th>
+                    <th>Pekerjaan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="fam in pegawai.keluarga" :key="fam.id || fam.no_ktp">
+                    <td>
+                      <div class="fw-medium text-dark">{{ fam.nama }}</div>
+                      <span class="badge-hubungan">{{ fam.hubungan || fam.hubungan_keluarga || '-' }}</span>
+                    </td>
+                    <td>
+                      <span class="text-pink">{{ fam.no_ktp || '-' }}</span>
+                      <div v-if="fam.no_bpjs" class="text-muted small-text mt-1">BPJS: {{ fam.no_bpjs }}</div>
+                    </td>
+                    <td>{{ formatDate(fam.tgl_lahir) }}</td>
+                    <td>{{ fam.pekerjaan || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="empty-state-mini mt-3">
+              <i class="fas fa-user-slash"></i>
+              <p>Tidak ada data keluarga</p>
+            </div>
+          </div>
+
+          <!-- Berkas Pegawai (New) -->
+          <div class="detail-section full-width">
+            <PegawaiBerkasSection :nik="pegawai.nik || pegawai.nip" :auto-open-upload="autoOpenUpload" />
+          </div>
         </div>
       </div>
       
@@ -121,10 +161,12 @@
 
 <script setup>
 import { computed } from 'vue'
+import PegawaiBerkasSection from './PegawaiBerkasSection.vue'
 
 const props = defineProps({
   show: Boolean,
-  pegawai: Object
+  pegawai: Object,
+  autoOpenUpload: Boolean
 })
 
 defineEmits(['close'])
@@ -416,6 +458,86 @@ const getEmailValue = (email) => {
 .btn-close-modal:hover {
   background: #e2e8f0;
   color: #1e293b;
+}
+
+/* Family Table Styles */
+.family-table {
+  width: 100%;
+  border-collapse: collapse; /* Match screenshot which uses flat borders */
+  font-size: 0.875rem;
+}
+
+.family-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.family-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  color: #334155;
+}
+
+.family-table tbody tr:hover {
+  background: #fcfcfc;
+}
+
+.badge-hubungan {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+.text-dark {
+  color: #475569;
+}
+
+.text-pink {
+  color: #db2777; /* Match pink KTP number from screenshot */
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.small-text {
+  font-size: 0.75rem;
+}
+
+.table-container-minimal {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.empty-state-mini {
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+}
+
+.empty-state-mini i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
+}
+
+.empty-state-mini p {
+  margin: 0;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {

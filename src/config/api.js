@@ -1,29 +1,35 @@
-// API Configuration
 const getApiV2Url = () => {
   const envUrl = import.meta.env.VITE_API_V2_URL;
-
-  // Deteksi Hostname secara dinamis
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     const protocol = window.location.protocol;
-
-    // Jika diakses via IP Lokal atau Domain Publik
     if (host === '192.168.100.33' || host === 'sim.rsiaaisyiyah.com') {
       return `${protocol}//${host}/rsiapi-v2/api/v2`;
     }
   }
-
-  // Fallback ke ENV atau Default Localhost
   return envUrl || 'http://localhost:8010/api/v2';
 };
 
+const getBaseBerkasUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const protocol = window.location.protocol;
+    if (host === '192.168.100.33' || host === 'sim.rsiaaisyiyah.com') {
+      return `${protocol}//${host}/webapps`;
+    }
+  }
+  return import.meta.env.VITE_BASE_BERKAS_URL || 'http://192.168.100.33/webapps';
+};
+
 const DYNAMIC_API_V2_URL = getApiV2Url();
+const DYNAMIC_BASE_BERKAS_URL = getBaseBerkasUrl();
 
 export const config = {
   // Public API URLs
   public: {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8010',
     API_V2_URL: DYNAMIC_API_V2_URL,
+    BASE_BERKAS_URL: DYNAMIC_BASE_BERKAS_URL,
     API_VERSION: import.meta.env.VITE_API_VERSION || 'v2',
     APP_NAME: import.meta.env.VITE_APP_NAME || 'RSIA - Sistem Informasi Rumah Sakit',
     APP_VERSION: import.meta.env.VITE_APP_VERSION || '2.0.0'

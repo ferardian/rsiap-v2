@@ -568,7 +568,7 @@ const approveSchedule = async () => {
   
   saving.value = true
   try {
-    const res = await jadwalTambahanService.approveSchedule(filter.value.month, filter.value.year, filter.value.department)
+    const res = await jadwalTambahanService.approveSchedule(filter.value.month, filter.value.year, filter.value.department, props.allowAllDepartments ? 'admin' : null)
     
     if (res.status === 200) {
       alert('Jadwal tambahan berhasil disetujui & dipublikasikan!')

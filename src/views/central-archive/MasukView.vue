@@ -125,6 +125,12 @@
                 </td>
                 <td @click.stop>
                   <div class="action-buttons">
+                    <button class="btn-icon edit" title="Edit" @click="openEditModal(item)">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon upload" title="Upload Berkas Baru" @click="openUploadModal(item)">
+                      <i class="fas fa-file-upload"></i>
+                    </button>
                     <button class="btn-icon delete" title="Hapus" @click="confirmDelete(item)">
                       <i class="fas fa-trash"></i>
                     </button>
@@ -158,16 +164,22 @@
               </div>
             </div>
             <div class="mobile-card-footer" @click.stop>
-              <button 
-                v-if="item.berkas" 
-                class="btn-mobile-edit" 
-                @click="openBerkas(item.berkas)"
-              >
-                <i class="fas fa-file-alt"></i> Berkas
-              </button>
-              <button class="btn-mobile-delete" @click="confirmDelete(item)">
-                <i class="fas fa-trash"></i> Hapus
-              </button>
+              <div class="mobile-actions-left">
+                <button v-if="item.berkas" class="btn-mobile-edit" @click="openBerkas(item.berkas)">
+                  <i class="fas fa-file-alt"></i> Berkas
+                </button>
+              </div>
+              <div class="mobile-actions-right">
+                <button class="btn-mobile-action edit" @click="openEditModal(item)" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-mobile-action upload" @click="openUploadModal(item)" title="Upload">
+                  <i class="fas fa-file-upload"></i>
+                </button>
+                <button class="btn-mobile-action mr-0 delete" @click="confirmDelete(item)" title="Hapus">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -197,7 +209,7 @@
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-container main-modal">
         <div class="modal-header">
-          <h2>Tambah Surat Masuk</h2>
+          <h2>{{ isEdit ? 'Edit Surat Masuk' : 'Tambah Surat Masuk' }}</h2>
           <button class="btn-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
@@ -263,9 +275,12 @@
 
             <div class="form-row">
               <div class="form-group col-full">
-                <label>File Berkas Surat</label>
-                <input type="file" ref="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="file-input">
-                <small class="text-muted">Maksimal ukuran file 10MB</small>
+                <label>File Berkas Surat <span v-if="!isEdit" class="required">*</span></label>
+                <input type="file" ref="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="file-input" :required="!isEdit && !formData.berkas">
+                <small class="text-muted" v-if="!isEdit">Maksimal ukuran file 10MB. Wajib diisi untuk surat baru.</small>
+                <small class="text-warning mt-1 d-block" v-else>
+                  <i class="fas fa-info-circle"></i> Biarkan kosong jika tidak ingin mengubah berkas yang sudah ada.
+                </small>
               </div>
             </div>
           </form>
@@ -274,7 +289,7 @@
           <button class="btn-cancel" @click="closeModal">Batal</button>
           <button type="submit" form="suratForm" class="btn-save-modal" :disabled="submitting">
             <span v-if="submitting"><i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...</span>
-            <span v-else><i class="fas fa-paper-plane mr-1"></i> Simpan Surat</span>
+            <span v-else><i class="fas fa-save mr-1"></i> {{ isEdit ? 'Simpan Perubahan' : 'Simpan Surat' }}</span>
           </button>
         </div>
       </div>
@@ -349,6 +364,41 @@
         </div>
       </div>
     </div>
+    <!-- Upload Modal -->
+    <div v-if="showUploadModal" class="modal-overlay" @click.self="closeUploadModal">
+      <div class="modal-container main-modal" style="max-width: 500px;">
+        <div class="modal-header">
+          <h2>
+            <i class="fas fa-file-upload text-primary mr-2"></i>
+            Upload Berkas
+          </h2>
+          <button class="btn-close" @click="closeUploadModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="warning-box mb-4">
+            <div class="warning-icon"><i class="fas fa-info-circle"></i></div>
+            <div class="warning-text">
+              Upload berkas ini akan menimpa berkas lama jika sebelumnya sudah ada berkas yang ter-upload untuk surat <strong>{{ uploadItem?.perihal }}</strong>.
+            </div>
+          </div>
+          
+          <form @submit.prevent="submitUpload" id="uploadForm">
+            <div class="form-group">
+              <label>Pilih File PDF/Gambar <span class="required">*</span></label>
+              <input type="file" ref="uploadInput" accept=".pdf,.jpg,.jpeg,.png" class="file-input" required>
+              <small class="text-muted mt-1 d-block">Maksimal ukuran file: 10MB.</small>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeUploadModal">Batal</button>
+          <button type="submit" form="uploadForm" class="btn-save-modal bg-primary" :disabled="uploadingFile">
+            <span v-if="uploadingFile"><i class="fas fa-spinner fa-spin mr-1"></i> Mengupload...</span>
+            <span v-else><i class="fas fa-cloud-upload-alt mr-1"></i> Upload Berkas</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -375,6 +425,9 @@ const pagination = ref({
 
 // Modal & Form State
 const showModal = ref(false)
+const isEdit = ref(false)
+const editId = ref(null)
+
 const formData = ref({
   no_simrs: new Date().toISOString().split('T')[0],
   no_surat: '-',
@@ -384,9 +437,16 @@ const formData = ref({
   pelaksanaan: '',
   pelaksanaan_end: '',
   tempat: '',
-  ket: '-'
+  ket: '-',
+  berkas: ''
 })
 const fileInput = ref(null)
+
+// Upload Modal State
+const showUploadModal = ref(false)
+const uploadItem = ref(null)
+const uploadInput = ref(null)
+const uploadingFile = ref(false)
 
 // Detail State
 const showDetail = ref(false)
@@ -449,6 +509,8 @@ const changePage = (page) => {
 }
 
 const openAddModal = () => {
+  isEdit.value = false
+  editId.value = null
   formData.value = {
     no_simrs: new Date().toISOString().split('T')[0],
     no_surat: '-',
@@ -458,7 +520,30 @@ const openAddModal = () => {
     pelaksanaan: '',
     pelaksanaan_end: '',
     tempat: '',
-    ket: '-'
+    ket: '-',
+    berkas: ''
+  }
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+  showModal.value = true
+}
+
+const openEditModal = (item) => {
+  isEdit.value = true
+  editId.value = item.no
+  
+  formData.value = {
+    no_simrs: item.no_simrs ? item.no_simrs.split('T')[0] : '',
+    no_surat: item.no_surat || '-',
+    perihal: item.perihal || '',
+    pengirim: item.pengirim || '',
+    tgl_surat: item.tgl_surat ? item.tgl_surat.split('T')[0] : '',
+    pelaksanaan: item.pelaksanaan && item.pelaksanaan !== '0000-00-00' ? item.pelaksanaan.split('T')[0] : '',
+    pelaksanaan_end: item.pelaksanaan_end && item.pelaksanaan_end !== '0000-00-00' ? item.pelaksanaan_end.split('T')[0] : '',
+    tempat: item.tempat || '',
+    ket: item.ket || '-',
+    berkas: item.berkas || ''
   }
   if (fileInput.value) {
     fileInput.value.value = ''
@@ -477,6 +562,9 @@ const saveSurat = async () => {
     
     // Append standard fields
     Object.keys(formData.value).forEach(key => {
+      // Don't append empty berkas string as it's not a real file field
+      if (key === 'berkas') return
+      
       const val = formData.value[key]
       if (val) {
         data.append(key, val)
@@ -487,9 +575,16 @@ const saveSurat = async () => {
     if (fileInput.value && fileInput.value.files[0]) {
       data.append('file', fileInput.value.files[0])
     }
-
-    // Call service to post (this matches filetrack which uses formData)
-    await suratMasukService.storeSuratMasuk(data)
+    
+    // Send request
+    let actionTxt = ''
+    if (isEdit.value && editId.value) {
+      await suratMasukService.updateSuratMasuk(editId.value, data)
+      actionTxt = 'diperbarui'
+    } else {
+      await suratMasukService.storeSuratMasuk(data)
+      actionTxt = 'disimpan'
+    }
 
     const Toast = Swal.mixin({
       toast: true,
@@ -502,7 +597,7 @@ const saveSurat = async () => {
     Toast.fire({
       icon: 'success',
       title: 'Berhasil',
-      text: `Surat Masuk berhasil disimpan`,
+      text: `Surat Masuk berhasil ${actionTxt}`,
       background: '#f0fdf4',
       color: '#166534',
       iconColor: '#22c55e'
@@ -553,6 +648,52 @@ const closeDetail = () => {
   showDetail.value = false
 }
 
+// Upload File
+const openUploadModal = (item) => {
+  uploadItem.value = item
+  if (uploadInput.value) {
+    uploadInput.value.value = ''
+  }
+  showUploadModal.value = true
+}
+
+const closeUploadModal = () => {
+  showUploadModal.value = false
+  uploadItem.value = null
+}
+
+const submitUpload = async () => {
+  if (!uploadInput.value || !uploadInput.value.files[0]) {
+    Swal.fire({ toast: true, position: 'top', icon: 'warning', title: 'Silakan pilih file!', showConfirmButton: false, timer: 3000 })
+    return
+  }
+
+  uploadingFile.value = true
+  try {
+    const data = new FormData()
+    data.append('file', uploadInput.value.files[0])
+    
+    // To satisfy validation / backend requirement we may need to append the required basic fields
+    data.append('no_simrs', uploadItem.value.no_simrs.split('T')[0])
+    data.append('no_surat', uploadItem.value.no_surat || '-')
+    data.append('perihal', uploadItem.value.perihal)
+    data.append('pengirim', uploadItem.value.pengirim)
+    data.append('tgl_surat', uploadItem.value.tgl_surat.split('T')[0])
+    data.append('ket', uploadItem.value.ket || '-')
+
+    await suratMasukService.updateSuratMasuk(uploadItem.value.no, data)
+
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Berkas berhasil diupload', showConfirmButton: false, timer: 3000 })
+    closeUploadModal()
+    fetchData(pagination.value.current_page)
+  } catch (error) {
+    console.error('Upload error:', error)
+    Swal.fire('Gagal', error.response?.data?.message || 'Gagal mengupload berkas', 'error')
+  } finally {
+    uploadingFile.value = false
+  }
+}
+
 // Formatters & Helpers
 const formatDateFull = (dateStr) => {
   if (!dateStr || dateStr === '0000-00-00') return '-'
@@ -575,7 +716,9 @@ const getViaIcon = (ket) => {
 }
 
 const openBerkas = (filename) => {
-  const url = `http://192.168.100.33/webapps/rsia_surat_masuk/${filename}`
+  const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
+  const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
+  const url = `${baseUrl}/webapps/rsia_surat_masuk/${filename}`
   window.open(url, '_blank')
 }
 
@@ -962,7 +1105,14 @@ onMounted(() => {
 }
 
 .btn-icon:hover { background: #e2e8f0; color: #334155; }
-.btn-icon.delete:hover { background: #fee2e2; color: #ef4444; }
+.btn-icon.edit { color: #0ea5e9; background: #e0f2fe; }
+.btn-icon.edit:hover { background: #0ea5e9; color: white; }
+
+.btn-icon.upload { color: #eab308; background: #fef9c3; }
+.btn-icon.upload:hover { background: #eab308; color: white; }
+
+.btn-icon.delete { color: #ef4444; background: #fee2e2; }
+.btn-icon.delete:hover { background: #ef4444; color: white; }
 
 /* Mobile View Elements */
 .desktop-view { display: block; }

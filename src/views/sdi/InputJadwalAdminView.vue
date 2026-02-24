@@ -1135,15 +1135,19 @@ watch([
 }
 
 .btn {
-  padding: 0.5rem 1rem;
+  height: 38px; /* Fixed height for consistency */
+  padding: 0 1rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   transition: all 0.2s;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -1189,10 +1193,10 @@ watch([
     max-width: none !important;
     min-width: 0 !important;
     margin: 0 !important;
-    padding: 0.75rem !important;
+    padding: 0 !important;
     font-size: 1rem !important;
     box-sizing: border-box !important;
-    height: auto !important;
+    height: 45px !important;
   }
   
   /* Hide search input min-width on mobile */

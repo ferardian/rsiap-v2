@@ -81,7 +81,7 @@
                 </div>
 
                 <!-- Penanggung Jawab -->
-                <div class="col-md-8">
+                <div class="col-md-4">
                   <label class="form-label small fw-bold text-muted">Penanggung Jawab <span class="text-danger">*</span></label>
                   <v-select
                     v-model="state.pj_model"
@@ -99,6 +99,15 @@
                     </template>
                   </v-select>
                   <div v-if="errors.pj" class="text-danger x-small mt-1">{{ errors.pj }}</div>
+                </div>
+
+                <!-- Jenis -->
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold text-muted">Jenis PKS <span class="text-danger">*</span></label>
+                  <select v-model="state.jenis" class="form-select">
+                    <option value="A">Internal (A)</option>
+                    <option value="B">Eksternal (B)</option>
+                  </select>
                 </div>
 
                 <!-- Status -->
@@ -159,6 +168,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import pksService from '@/services/pksService'
+import { pegawaiService } from '@/services/pegawaiService'
 import api from '@/services/api'
 import Swal from 'sweetalert2'
 
@@ -176,7 +186,8 @@ const state = reactive({
   file: null,
   pj: '',
   pj_model: null,
-  status: '1'
+  status: '1',
+  jenis: 'A'
 })
 
 const errors = reactive({
@@ -213,15 +224,10 @@ const formatFileSize = (bytes) => {
 
 const fetchEmployees = async () => {
   try {
-    // Reusing the employee fetcher from SPO module logic if applicable, 
-    // or searching for specialized pegawai service.
-    // Assuming getUnits/getPegawai can be used. 
-    // In many projects, employees are available via a dedicated endpoint.
-    const response = await api.get('/pegawai', { params: { limit: 100 } })
+    const response = await pegawaiService.getKaryawanList({ limit: 500 })
     pegawaiDict.value = response.data?.data || []
   } catch (err) {
     console.warn("Could not fetch employee list", err)
-    // Fallback or empty
   }
 }
 
@@ -244,15 +250,17 @@ const submitPks = async () => {
   try {
     const formData = new FormData()
     Object.keys(state).forEach(key => {
-        if (key === 'pj_model') return
+        if (key === 'pj_model' || key === 'pj') return // Skip explicitly handled keys
         if (key === 'file') {
             if (state.file) formData.append('file', state.file)
-        } else if (state[key] !== null && state[key] !== undefined) {
+        } else if (state[key] !== null && state[key] !== undefined && state[key] !== '') {
              formData.append(key, state[key])
         }
     })
     
-    formData.append('pj', state.pj_model?.nik || state.pj_model || '')
+    // Fix PJ data: must be NIK string
+    const pjValue = state.pj_model?.nik || state.pj_model?.nip || state.pj_model || ''
+    formData.append('pj', pjValue)
 
     await pksService.createPks(formData)
     

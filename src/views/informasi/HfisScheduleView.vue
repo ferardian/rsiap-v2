@@ -6,10 +6,16 @@
           <h1><i class="fas fa-file-medical"></i> SK Jadwal Praktik (HFIS)</h1>
           <p>Pembuatan data jadwal praktik untuk pengajuan BPJS (HFIS 6.1)</p>
         </div>
-        <button @click="openAddModal" class="btn-add">
-          <i class="fas fa-plus"></i>
-          <span>Buat Pengajuan Baru</span>
-        </button>
+        <div class="header-actions" style="display: flex; gap: 0.75rem;">
+          <button @click="openHfisCheckModal" class="btn-check-hfis" style="padding: 0.75rem 1.5rem; background: #0ea5e9; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+            <i class="fas fa-search-plus"></i>
+            <span>Cek Jadwal BPJS</span>
+          </button>
+          <button @click="openAddModal" class="btn-add">
+            <i class="fas fa-plus"></i>
+            <span>Buat Pengajuan Baru</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -305,6 +311,116 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Cek Jadwal HFIS -->
+    <div v-if="showHfisCheckModal" class="modal-overlay" @click.self="closeHfisCheckModal">
+      <div class="modal-content large" style="max-width: 900px;">
+        <div class="modal-header shadow-sm" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white;">
+          <h2 style="color: white; margin: 0;"><i class="fas fa-search text-white"></i> Cek Jadwal Praktik BPJS (HFIS)</h2>
+          <button @click="closeHfisCheckModal" class="btn-close" style="color: white; opacity: 0.8;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="modal-body bg-light">
+          <div class="search-hfis-card p-4 bg-white rounded-3 shadow-sm mb-4 border">
+             <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                   <label class="form-label small fw-bold text-muted mb-1">Pilih Poli (Wajib)</label>
+                   <VueSelect
+                      v-model="hfisCheckForm.poli"
+                      :options="poliList"
+                      :reduce="p => p.kd_poli_bpjs"
+                      label="nm_poli_bpjs"
+                      placeholder="Pilih Poli BPJS"
+                   >
+                     <template #option="{ kd_poli_bpjs, nm_poli_bpjs }">
+                       <span><strong>{{ kd_poli_bpjs }}</strong> - {{ nm_poli_bpjs }}</span>
+                     </template>
+                   </VueSelect>
+                </div>
+                <div class="col-md-4">
+                   <label class="form-label small fw-bold text-muted mb-1">Tanggal (Wajib)</label>
+                   <input type="date" v-model="hfisCheckForm.tanggal" class="form-control" style="height: 38px;">
+                </div>
+                <div class="col-md-3">
+                   <button @click="fetchHfisSchedule" class="btn btn-primary w-100 fw-bold" style="height: 38px;" :disabled="hfisCheckLoading">
+                     <i class="fas" :class="hfisCheckLoading ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+                     {{ hfisCheckLoading ? 'Mencari...' : 'Cari Jadwal' }}
+                   </button>
+                </div>
+             </div>
+          </div>
+          
+          <div class="result-hfis-card bg-white rounded-3 shadow-sm border p-0 overflow-hidden">
+             <!-- Loading State -->
+             <div v-if="hfisCheckLoading" class="text-center p-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-3 small">Menghubungi WebService BPJS...</p>
+             </div>
+             
+             <!-- Empty State (No Search Yet / No Result) -->
+             <div v-else-if="!hfisCheckResult && !hfisCheckHasSearched" class="text-center p-5 text-muted">
+                <i class="fas fa-stethoscope fa-3x mb-3 opacity-25"></i>
+                <p class="m-0">Silakan pilih poli dan tanggal untuk melihat jadwal pelayanan dokter pada Aplikasi HFIS BPJS.</p>
+             </div>
+             
+             <!-- Error State -->
+             <div v-else-if="hfisCheckHasSearched && hfisCheckResult.length === 0" class="text-center p-5">
+                <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle mb-3" style="width: 60px; height: 60px;">
+                    <i class="fas fa-info-circle fa-2x"></i>
+                </div>
+                <h6 class="fw-bold">Tidak Ada Jadwal</h6>
+                <p class="text-muted small">Mungkin tidak ada dokter yang melayani di Poli tersebut pada hari spesifik ini.</p>
+             </div>
+             
+             <!-- Result Table -->
+             <div v-else-if="hfisCheckHasSearched && hfisCheckResult.length > 0" class="table-responsive">
+                <div class="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark"><i class="fas fa-list-alt text-primary me-2"></i>Daftar Dokter Praktik</span>
+                    <span class="badge bg-primary rounded-pill px-3">{{ hfisCheckResult.length }} Jadwal</span>
+                </div>
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                   <thead class="table-light text-muted">
+                      <tr>
+                         <th class="ps-4 py-3">Dokter & Spesialis</th>
+                         <th class="py-3">Poli</th>
+                         <th class="py-3">Hari & Jadwal Praktek</th>
+                         <th class="py-3 text-center">Kapasitas</th>
+                         <th class="py-3 text-center">Status</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      <tr v-for="(item, idx) in hfisCheckResult" :key="idx">
+                         <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ item.namadokter }}</div>
+                            <div class="small text-muted">Subspesialis: {{ item.namasubspesialis }} ({{ item.kodesubspesialis }})</div>
+                         </td>
+                         <td>
+                            <div class="fw-bold">{{ item.namapoli }}</div>
+                            <div class="small text-muted">{{ item.kodepoli }}</div>
+                         </td>
+                         <td>
+                            <div class="fw-bold text-primary">{{ item.namahari }}</div>
+                            <div class="small"><i class="far fa-clock me-1"></i>{{ item.jadwal }}</div>
+                         </td>
+                         <td class="text-center">
+                            <span class="badge bg-secondary-subtle text-dark border">{{ item.kapasitaspasien }} Pasien</span>
+                         </td>
+                         <td class="text-center">
+                            <span v-if="item.libur == 1" class="badge bg-danger">Libur</span>
+                            <span v-else class="badge bg-success">Buka</span>
+                         </td>
+                      </tr>
+                   </tbody>
+                </table>
+             </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer bg-light border-top p-3">
+          <button @click="closeHfisCheckModal" class="btn btn-secondary px-4 fw-bold">Tutup</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -326,10 +442,20 @@ const searchQuery = ref('')
 const currentPage = ref(1)
 const totalPages = ref(1)
 const showModal = ref(false)
+const showHfisCheckModal = ref(false)
 const isEditMode = ref(false)
 const dokterList = ref([])
 const selectedIds = ref([])
 const bulkLoading = ref(false)
+
+// HFIS Check Schedule State
+const hfisCheckLoading = ref(false)
+const hfisCheckHasSearched = ref(false)
+const hfisCheckResult = ref(null)
+const hfisCheckForm = ref({
+  poli: '',
+  tanggal: new Date().toISOString().split('T')[0]
+})
 
 const formData = ref({
   kd_dokter: '',
@@ -656,6 +782,57 @@ const confirmSyncHfis = async () => {
     Swal.fire('Gagal!', msg, 'error')
   } finally {
     syncLoading.value = false
+  }
+}
+
+// Check HFIS Schedule Methods
+const openHfisCheckModal = () => {
+  showHfisCheckModal.value = true
+  hfisCheckHasSearched.value = false
+  hfisCheckResult.value = null
+  hfisCheckForm.value.poli = ''
+}
+
+const closeHfisCheckModal = () => {
+  showHfisCheckModal.value = false
+}
+
+const fetchHfisSchedule = async () => {
+  if (!hfisCheckForm.value.poli || !hfisCheckForm.value.tanggal) {
+    Swal.fire('Perhatian', 'Poli dan Tanggal wajib diisi', 'warning')
+    return
+  }
+  
+  hfisCheckLoading.value = true
+  hfisCheckHasSearched.value = true
+  
+  try {
+    const res = await hfisScheduleService.getJadwalDokter(hfisCheckForm.value.poli, hfisCheckForm.value.tanggal)
+    
+    if (res.data.status === 'success' && res.data.data?.response) {
+      const respData = res.data.data.response
+      if (Array.isArray(respData)) {
+        hfisCheckResult.value = respData
+      } else if (respData && Array.isArray(respData.list)) {
+        hfisCheckResult.value = respData.list
+      } else {
+        hfisCheckResult.value = []
+      }
+      
+      if (hfisCheckResult.value.length === 0) {
+        Swal.fire('Informasi', 'Tidak ada jadwal ditemukan', 'info')
+      }
+    } else {
+      hfisCheckResult.value = []
+      Swal.fire('Informasi', res.data.message || 'Tidak ada jadwal ditemukan', 'info')
+    }
+  } catch (err) {
+    console.error('Error fetching HFIS schedule:', err)
+    hfisCheckResult.value = []
+    const msg = err.response?.data?.message || 'Gagal terhubung ke service BPJS'
+    Swal.fire('Error', msg, 'error')
+  } finally {
+    hfisCheckLoading.value = false
   }
 }
 

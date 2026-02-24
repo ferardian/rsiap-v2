@@ -28,6 +28,20 @@
           <button @click="fetchData" class="btn btn-primary">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
+          <button @click="openPatternModal" class="btn btn-secondary">
+            <i class="fas fa-magic"></i> Isi Pola
+          </button>
+          
+          <!-- AI Schedule Button -->
+          <button 
+            @click="generateAiSchedule" 
+            class="btn btn-ai"
+            :disabled="analyzing || loading"
+          >
+            <i v-if="analyzing" class="fas fa-spinner fa-spin"></i>
+            <i v-else class="fas fa-robot"></i>
+            <span class="desktop-text">{{ analyzing ? 'Menganalisis...' : 'Rekomendasi AI' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -152,6 +166,10 @@
         <i v-if="saving" class="fas fa-spinner fa-spin"></i>
         <span v-else>💾 Simpan Perubahan</span>
       </button>
+      <!-- Clear Changes Button -->
+      <button @click="clearPendingChanges" class="btn btn-secondary ml-2" :disabled="saving">
+          <i class="fas fa-undo"></i> Reset
+      </button>
     </div>
 
     <!-- Shift Selection Modal -->
@@ -187,6 +205,40 @@
       </div>
     </div>
 
+    <!-- Pattern Fill Modal -->
+    <div v-if="showPatternModal" class="modal-overlay" @click.self="closePatternModal">
+      <div class="modal-content pattern-modal">
+        <div class="modal-header">
+          <h3>Isi Pola Otomatis</h3>
+          <button @click="closePatternModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="text-sm text-gray-600 mb-4">
+            Atur pola shift berdasarkan hari. Pola akan diterapkan ke <strong>{{ filteredEmployees.length }} pegawai</strong> yang sedang tampil.
+          </p>
+          
+          <div class="pattern-grid">
+            <div v-for="(dayName, idx) in ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']" :key="idx" class="pattern-row">
+              <label>{{ dayName }}</label>
+              <select v-model="patternRules[idx]" class="form-select">
+                <option :value="null">- Tidak Diubah -</option>
+                <option value="EMPTY">❌ Libur / Kosong</option>
+                <option v-for="shift in shifts" :key="shift.shift" :value="shift.shift">
+                  {{ shift.shift }} ({{ shift.jam_masuk }}-{{ shift.jam_pulang }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closePatternModal">Batal</button>
+            <button class="btn btn-primary" @click="applyPattern">
+              <i class="fas fa-check"></i> Terapkan Pola
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -195,6 +247,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { jadwalPegawaiService } from '../../services/jadwalPegawaiService'
 import { useAuthStore } from '../../stores/auth'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
+import Swal from 'sweetalert2'
 
 const authStore = useAuthStore()
 
@@ -222,6 +275,7 @@ const initFilter = () => {
 }
 
 const loading = ref(false)
+const analyzing = ref(false) // AI Generating state
 const saving = ref(false)
 const employees = ref([])
 const shifts = ref([])
@@ -233,6 +287,10 @@ const pendingChanges = ref({}) // Map: "pegawaiId_day" -> "shiftCode"
 const showModal = ref(false)
 const selectedEmployee = ref(null)
 const selectedDay = ref(null)
+
+// Pattern Modal State
+const showPatternModal = ref(false)
+const patternRules = ref(new Array(7).fill(null)) // 0=Sun, 6=Sat
 
 // Computed
 const daysInMonth = computed(() => {
@@ -258,7 +316,7 @@ const filteredEmployees = computed(() => {
   return employees.value
 })
 
-const summaryTypes = ['Pagi', 'Siang', 'Malam', 'Cuti'] // Main categories to summarize
+const summaryTypes = ['Pagi', 'Siang', 'Malam', 'Cuti', 'Libur'] // Main categories to summarize
 
 const shiftSummary = computed(() => {
   const summary = {}
@@ -279,10 +337,11 @@ const shiftSummary = computed(() => {
         // Simple matching logic
         let type = null
         const lower = shiftCode.toLowerCase()
-        if (lower.includes('pagi')) type = 'Pagi'
-        else if (lower.includes('siang')) type = 'Siang'
-        else if (lower.includes('malam')) type = 'Malam'
-        else if (lower.includes('cuti')) type = 'Cuti'
+        if (lower.includes('pagi') || lower === 'p' || lower.startsWith('pagi')) type = 'Pagi'
+        else if (lower.includes('siang') || lower === 's' || lower.startsWith('siang')) type = 'Siang'
+        else if (lower.includes('malam') || lower === 'm' || lower.startsWith('malam')) type = 'Malam'
+        else if (lower.includes('cuti') || lower === 'c') type = 'Cuti'
+        else if (lower.includes('libur') || lower === 'l') type = 'Libur'
         
         if (type) {
           summary[type][d]++
@@ -322,9 +381,7 @@ const countTotalShifts = (emp) => {
   for (let d = 1; d <= daysInMonth.value; d++) {
     const shift = getShift(emp, d)
     // Count if shift exists and is not 'Cuti' and not 'Libur' (implies P/S/M/etc)
-    // Assuming 'Cuti' is excluded from "Total" work shifts based on image? 
-    // Image has P=0, S=0, M=0, Total=0.
-    if (shift && shift !== '-' && !shift.toLowerCase().includes('cuti')) {
+    if (shift && shift !== '-' && !shift.toLowerCase().includes('cuti') && !shift.toLowerCase().includes('libur')) {
       count++
     }
   }
@@ -335,7 +392,7 @@ const countLibur = (emp) => {
   let count = 0
   for (let d = 1; d <= daysInMonth.value; d++) {
     const shift = getShift(emp, d)
-    if (!shift || shift === '-') {
+    if (!shift || shift === '-' || shift.toLowerCase().includes('libur')) {
       count++
     }
   }
@@ -346,7 +403,6 @@ const SHIFT_HOURS = {
   'pagi': 7,
   'siang': 7,
   'malam': 10,
-  // Add other codes if known, else default
 }
 
 const calculateTotalHours = (emp) => {
@@ -355,7 +411,6 @@ const calculateTotalHours = (emp) => {
     const shift = getShift(emp, d)
     if (shift) {
       const lower = shift.toLowerCase()
-      // Check specific map key first
       let passed = false
       for (const [key, h] of Object.entries(SHIFT_HOURS)) {
         if (lower.includes(key)) {
@@ -365,9 +420,7 @@ const calculateTotalHours = (emp) => {
         }
       }
       
-      // If code exists but not in map (e.g. 'Office'), assume standard 7?
-      // Or 0? Let's assume 7 for generic work shifts if not Cuti.
-      if (!passed && !lower.includes('cuti') && shift !== '-') {
+      if (!passed && !lower.includes('cuti') && !lower.includes('libur') && shift !== '-') {
         hours += 7 
       }
     }
@@ -417,17 +470,12 @@ const fetchData = async () => {
   try {
     const [schedRes, shiftRes] = await Promise.all([
       jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search),
-      // Only fetch shifts once ideally, but ok for now
       jadwalPegawaiService.getShifts()
     ])
-    
-    // ApiResponse::success returns { message: ..., data: ... } WITHOUT 'success' boolean
     
     if (schedRes.data && schedRes.data.data) {
       employees.value = schedRes.data.data
       
-      // Handle Authorized Departments
-      // Check both locations just in case (meta or root)
       if (schedRes.data.authorized_departments || (schedRes.data.meta && schedRes.data.meta.authorized_departments)) {
           const authorized = schedRes.data.authorized_departments || schedRes.data.meta.authorized_departments
           departmentOptions.value = [
@@ -444,14 +492,18 @@ const fetchData = async () => {
     }
   } catch (err) {
     console.error('Failed to load schedule', err)
-    alert('Gagal memuat data jadwal.')
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Memuat Data',
+      text: 'Terjadi kesalahan saat memuat data jadwal.',
+      confirmButtonColor: '#3b82f6'
+    })
   } finally {
     loading.value = false
   }
 }
 
 const handleSearch = () => {
-  // Add debounce logic here ideally
   setTimeout(() => {
     fetchData()
   }, 500)
@@ -459,19 +511,13 @@ const handleSearch = () => {
 
 // Data Access
 const getShift = (pegawai, day) => {
-  // Check pending changes first
   const key = `${pegawai.id}_${day}`
   if (pendingChanges.value[key] !== undefined) {
     return pendingChanges.value[key]
   }
   
-  // Then check saved data
   if (pegawai.jadwal) {
-    // Backend returns h1...h31
-    const field = `h${day}` // Note: Backend controller returned standard object, we need to ensure casing
-    // Our Controller logic: 'h' . $currentDay maps to shift.
-    // The `jadwal` object attached to `pegawai` has keys like `h1`, `h2`...
-    // Let's assume lowercase 'h' as per our controller.
+    const field = `h${day}`
     return pegawai.jadwal[field]
   }
   return null
@@ -505,65 +551,338 @@ const closeModal = () => {
 const selectShift = (shiftCode) => {
   if (selectedEmployee.value && selectedDay.value) {
     const key = `${selectedEmployee.value.id}_${selectedDay.value}`
-    pendingChanges.value[key] = shiftCode
+    pendingChanges.value[key] = (shiftCode === 'EMPTY' ? '' : shiftCode)
     hasChanges.value = true
   }
   closeModal()
 }
 
+// Pattern Logic
+const openPatternModal = () => {
+  showPatternModal.value = true
+}
+
+const closePatternModal = () => {
+  showPatternModal.value = false
+}
+
+const applyPattern = async () => {
+  const result = await Swal.fire({
+    title: 'Terapkan Pola?',
+    text: `Pola ini akan diterapkan ke ${filteredEmployees.value.length} pegawai. Perubahan yang belum disimpan mungkin tertimpa.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, Terapkan',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#3b82f6',
+    cancelButtonColor: '#64748b'
+  })
+
+  if (!result.isConfirmed) return
+
+  const year = filter.value.year
+  const monthIdx = filter.value.month - 1
+  
+  filteredEmployees.value.forEach(emp => {
+    for (let d = 1; d <= daysInMonth.value; d++) {
+      const date = new Date(year, monthIdx, d)
+      const dayOfWeek = date.getDay()
+      
+      const rule = patternRules.value[dayOfWeek]
+      
+      if (rule !== null && rule !== undefined) {
+        const shiftVal = rule === 'EMPTY' ? '' : rule
+        const key = `${emp.id}_${d}`
+        pendingChanges.value[key] = shiftVal
+      }
+    }
+  })
+  
+  hasChanges.value = true
+  closePatternModal()
+  Swal.fire({
+    icon: 'success',
+    title: 'Pola Diterapkan',
+    text: 'Pola berhasil diterapkan! Jangan lupa klik Simpan untuk mempermanenkan perubahan.',
+    confirmButtonColor: '#3b82f6'
+  })
+}
+
+const clearPendingChanges = async () => {
+    const result = await Swal.fire({
+        title: 'Reset Perubahan?',
+        text: 'Apakah Anda yakin ingin mereset semua perubahan yang belum disimpan?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Reset',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b'
+    })
+
+    if (result.isConfirmed) {
+        pendingChanges.value = {}
+        hasChanges.value = false
+    }
+}
+
+// AI Schedule Generation
+const generateAiSchedule = async () => {
+  if (filteredEmployees.value.length === 0) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Data Tidak Tersedia',
+      text: 'Tidak ada data pegawai untuk dijadwalkan.',
+      confirmButtonColor: '#3b82f6'
+    })
+    return
+  }
+
+  try {
+    let deptName = 'Unknown Department'
+    const selectedDept = departmentOptions.value.find(d => d.id === filter.value.department)
+    if (selectedDept) deptName = selectedDept.name
+
+    const result = await Swal.fire({
+      title: 'AI Workload Optimizer',
+      html: `
+        <div class="ai-premium-container">
+          <div class="ai-header-fancy animate-pulse-slow">
+            <i class="fas fa-microchip ai-chip-icon"></i>
+          </div>
+          <div class="ai-stats-card-premium mb-4">
+             <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-400 text-xs">Objek Analisis</span>
+                <span class="text-white font-bold text-xs">${filteredEmployees.value.length} Pegawai</span>
+             </div>
+             <div class="flex justify-between items-center mb-2">
+                <span class="text-slate-400 text-xs">Target Periode</span>
+                <span class="text-white font-bold text-xs">${months[filter.value.month - 1]} ${filter.value.year}</span>
+             </div>
+             <div class="pt-2 border-t border-white/10 flex justify-between items-center">
+                <span class="text-slate-400 text-xs text-left">Internal Unit</span>
+                <span class="text-indigo-400 font-bold text-xs">${deptName}</span>
+             </div>
+          </div>
+          <p class="text-slate-300 text-[13px] leading-relaxed mb-4">Optimization Engine siap menyusun strategi shift. Masukkan instruksi khusus di bawah.</p>
+        </div>
+      `,
+      input: 'textarea',
+      inputPlaceholder: 'Contoh: Setiap shift min 4 orang, Ririn tidak boleh dinas malam...',
+      inputAttributes: {
+        'style': 'border-radius: 12px; border: 1px solid #334155; font-size: 13px; min-height: 90px; padding: 12px; background: #1e293b; color: #f1f5f9; font-family: inherit;'
+      },
+      showCancelButton: true,
+      showCloseButton: true,
+      confirmButtonText: 'Generate Strategy ⚡',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      allowOutsideClick: true,
+      allowEscapeKey: true,
+      customClass: {
+        popup: 'ai-dark-premium-popup',
+        title: 'ai-dark-premium-title',
+        actions: 'ai-dark-premium-actions',
+        confirmButton: 'ai-dark-premium-confirm',
+        cancelButton: 'ai-dark-premium-cancel'
+      }
+    })
+
+  if (!result.isConfirmed) return
+  analyzing.value = true
+
+    const userPrompt = result.value || ''
+    const days = new Date(filter.value.year, filter.value.month, 0).getDate()
+    const shiftListTxt = shifts.value.map(s => s.shift).join(', ')
+    const mappingTxt = filteredEmployees.value.map(e => `- ${e.nama} (ID: ${e.id})`).join('\n')
+
+    const calendarGuideTxt = Array.from({ length: days }, (_, i) => {
+      const d = i + 1
+      const dayName = new Date(filter.value.year, filter.value.month - 1, d).toLocaleDateString('id-ID', { weekday: 'long' })
+      return `h${d}:${dayName}`
+    }).join(', ')
+
+    const totalEmployees = filteredEmployees.value.length
+
+    const finalPrompt = `
+Calendar Info (${months[filter.value.month - 1]} ${filter.value.year}):
+${calendarGuideTxt}
+
+Employee Mapping (Total Staff: ${totalEmployees}):
+${mappingTxt}
+
+Available Shift Codes for this Unit:
+${shiftListTxt}
+
+STRICT STAFFING QUOTA (NON-NEGOTIABLE):
+Every single day (h1 to h${days}) must satisfy the staffing requirement appropriately.
+- TOTAL LIBUR: MAX around 1/3 of total staff per day.
+
+ASSIGNMENT LOGIC (STEP-BY-STEP):
+1. REASONING FIRST: For each day, write down how many people you are assigning.
+2. BALANCE: Distribute staff across shifts.
+3. INDIVIDUAL MANDATES: ${userPrompt || 'No specific individual overrides.'} (Absolute priority).
+4. NIGHT REST RULES: Avoid excessive nights.
+5. CODE CONSISTENCY: Use full codes provided (e.g., "Pagi8", "Siang3"). DO NOT use abbreviations.
+
+CRITICAL OUTPUT FORMAT:
+You MUST finish with a RAW JSON array: [{"id": <ID>, "schedule": [...]}, ...]
+DO NOT use single letter codes in the final JSON. Use full code names.
+    `.trim()
+
+    const payload = {
+      month: filter.value.month,
+      year: filter.value.year,
+      daysInMonth: days,
+      department: filter.value.department,
+      department_name: deptName,
+      employees: filteredEmployees.value.map(e => ({ id: e.id, nama: e.nama, jbtn: e.jbtn })),
+      shifts: shifts.value,
+      prompt: finalPrompt
+    }
+
+    const responseData = await jadwalPegawaiService.getAiRecommendation(payload)
+
+    if (!responseData) throw new Error('Penghitungan AI gagal (Layanan tidak merespon).')
+
+    const tryRecoverTruncatedJson = (str) => {
+        try {
+            const lastObjEnd = str.lastIndexOf('}')
+            if (lastObjEnd === -1) return null
+            let salvaged = str.substring(0, lastObjEnd + 1).trim()
+            if (salvaged.endsWith(',')) salvaged = salvaged.substring(0, salvaged.length - 1).trim()
+            const startsWithArray = salvaged.startsWith('[')
+            if (startsWithArray && !salvaged.endsWith(']')) salvaged += ']'
+            else if (!startsWithArray) salvaged = '[' + salvaged + ']'
+            return JSON.parse(salvaged)
+        } catch (e) { return null }
+    }
+
+    const extractResults = (input) => {
+        if (!input) return null
+        if (Array.isArray(input) && input.length > 0 && (input[0].id || input[0].id_pegawai || input[0].schedule)) return input
+        if (typeof input === 'string') {
+            let clean = input.trim()
+            if (clean.includes('```')) clean = clean.replace(/```json\n?|```/g, '').trim()
+            const firstBracket = clean.indexOf('[')
+            const firstBrace = clean.indexOf('{')
+            let start = -1
+            if (firstBracket !== -1 && firstBrace !== -1) start = Math.min(firstBracket, firstBrace)
+            else if (firstBracket !== -1) start = firstBracket
+            else if (firstBrace !== -1) start = firstBrace
+            if (start !== -1) {
+                const lastBracket = clean.lastIndexOf(']')
+                const lastBrace = clean.lastIndexOf('}')
+                const end = Math.max(lastBracket, lastBrace)
+                if (end > start) clean = clean.substring(start, end + 1).trim()
+            }
+            if (clean.startsWith('[') || clean.startsWith('{')) {
+                try { return extractResults(JSON.parse(clean)) }
+                catch (e) {
+                    const recovered = tryRecoverTruncatedJson(clean)
+                    if (recovered) return extractResults(recovered)
+                    return null 
+                }
+            }
+        }
+        if (typeof input === 'object' && input !== null) {
+            const fields = ['output', 'text', 'data', 'content', 'response', 'result', 'generations']
+            for (const f of fields) { if (input[f]) { const found = extractResults(input[f]); if (found) return found; } }
+            if (Array.isArray(input) && input.length > 0) return extractResults(input[0])
+        }
+        return null
+    }
+
+    const results = extractResults(responseData)
+
+    if (!Array.isArray(results) || results.length === 0) {
+        throw new Error('AI tidak memberikan hasil (Output Kosong).')
+    }
+
+    let appliedCount = 0
+    let mismatchCount = 0
+    
+    results.forEach(row => {
+        const empId = row.id || row.id_pegawai
+        if (!empId) return
+        const employeeExists = employees.value.some(e => String(e.id) === String(empId))
+        if (!employeeExists) { mismatchCount++; return; }
+        if (Array.isArray(row.schedule)) {
+            row.schedule.forEach((shift, index) => {
+                const d = index + 1
+                if (d <= daysInMonth.value) {
+                    pendingChanges.value[`${empId}_${d}`] = shift
+                    appliedCount++
+                }
+            })
+        }
+    })
+
+    if (appliedCount > 0) {
+        hasChanges.value = true
+        Swal.fire({
+            icon: 'success',
+            title: 'Jadwal AI Berhasil Disiapkan',
+            html: `Berhasil menyusun jadwal untuk <b>${Math.ceil(appliedCount / daysInMonth.value)}</b> pegawai.<br><small>Silakan tinjau tabel dan klik <b>Simpan Changes</b>.</small>`,
+            confirmButtonText: 'Tinjau Sekarang',
+            customClass: {
+                popup: 'ai-dark-premium-popup',
+                title: 'ai-dark-premium-title',
+                confirmButton: 'ai-dark-premium-confirm'
+            }
+        })
+    }
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'AI Error',
+      text: err.message || 'Gagal generate jadwal AI.',
+      confirmButtonColor: '#ef4444'
+    })
+  } finally {
+    analyzing.value = false
+  }
+}
+
 // Save
 const saveChanges = async () => {
   if (!hasChanges.value) return
-  
   saving.value = true
   try {
-    // Format data for backend
-    // Backend expects array of objects: { id: pegawaiId, h1: '...', h2: '...' }
-    // We need to group pending changes by employee
-    const updates = {} // { empId: { day: shift } }
-    
+    const updates = {}
     Object.keys(pendingChanges.value).forEach(key => {
       const [empId, day] = key.split('_')
       if (!updates[empId]) updates[empId] = {}
       updates[empId][`h${day}`] = pendingChanges.value[key]
     })
-    
-    // Transform to array
-    const payloadData = Object.keys(updates).map(empId => {
-      const schedule = updates[empId]
-      return {
-        id: empId,
-        ...schedule // Spreads h1: 'Pagi', h2: 'Siang'...
-      }
-    })
-    
+    const payloadData = Object.keys(updates).map(empId => ({ id: empId, ...updates[empId] }))
     const res = await jadwalPegawaiService.saveSchedule(filter.value.month, filter.value.year, payloadData)
-    
-    // ApiResponse return 200 on success
     if (res.status === 200) {
-      // alert('Jadwal berhasil disimpan!')
-      // Refresh data to secure state
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil Disimpan',
+        text: 'Jadwal berhasil disimpan!',
+        timer: 2000,
+        showConfirmButton: false
+      })
       await fetchData()
-    } else {
-      throw new Error(res.data.message || 'Gagal menyimpan')
-    }
-    
+    } else { throw new Error(res.data.message || 'Gagal menyimpan') }
   } catch (err) {
-    console.error('Save failed', err)
-    alert('Gagal menyimpan jadwal: ' + (err.response?.data?.message || err.message))
-  } finally {
-    saving.value = false
-  }
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Menyimpan',
+      text: 'Gagal menyimpan jadwal: ' + (err.response?.data?.message || err.message),
+      confirmButtonColor: '#ef4444'
+    })
+  } finally { saving.value = false }
 }
 
-// Init
 onMounted(() => {
   initFilter()
   fetchData()
 })
 
-// Watch filters
-watch([() => filter.value.month, () => filter.value.year], () => {
+watch([() => filter.value.month, () => filter.value.year, () => filter.value.department], () => {
   fetchData()
 })
 </script>
@@ -630,18 +949,6 @@ watch([() => filter.value.month, () => filter.value.year], () => {
   min-width: 200px;
 }
 
-.btn {
-  /* ... existing ... */
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
 
 /* ... Table Layout ... */
 
@@ -688,10 +995,10 @@ watch([() => filter.value.month, () => filter.value.year], () => {
     max-width: none !important;
     min-width: 0 !important;
     margin: 0 !important;
-    padding: 0.75rem !important;
+    padding: 0 !important;
     font-size: 1rem !important;
     box-sizing: border-box !important;
-    height: auto !important;
+    height: 45px !important;
   }
   
   /* Hide search input min-width on mobile */
@@ -700,15 +1007,160 @@ watch([() => filter.value.month, () => filter.value.year], () => {
   }
 }
 
+.btn {
+  height: 38px; /* Fixed height for consistency */
+  padding: 0 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
 
 .btn-primary {
   background: #3b82f6;
   color: white;
 }
 
+.btn-secondary {
+  background: #64748b;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #475569;
+}
+
+.btn-ai {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4), 0 2px 4px -1px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-ai:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5), 0 4px 6px -2px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-ai:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-primary:hover {
   background: #2563eb;
 }
+
+/* AI Premium Styles */
+.ai-premium-container {
+  padding: 1rem 0;
+}
+
+.ai-header-fancy {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+.ai-chip-icon {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.ai-stats-card-premium {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+:deep(.ai-dark-premium-popup) {
+  background: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f1f5f9 !important;
+  border-radius: 20px !important;
+}
+
+:deep(.ai-dark-premium-title) {
+  color: #f1f5f9 !important;
+  font-size: 1.5rem !important;
+}
+
+:deep(.ai-dark-premium-actions) {
+  margin-top: 1.5rem !important;
+}
+
+:deep(.ai-dark-premium-confirm) {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 2rem !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+}
+
+:deep(.ai-dark-premium-cancel) {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+/* Pattern Modal Styles */
+.pattern-modal {
+  max-width: 800px;
+  width: 95%;
+}
+.pattern-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.pattern-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+}
+.pattern-row label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+  width: 80px;
+  flex-shrink: 0;
+}
+.pattern-row .form-select {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.row-blue { background-color: #f0f9ff; }
+.row-yellow { background-color: #fffbeb; }
 
 /* Table Layout */
 .table-container {

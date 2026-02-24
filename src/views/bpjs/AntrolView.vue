@@ -1121,7 +1121,19 @@ const updateLocalTask = async (taskId) => {
     })
 
     if (response.data.metadata.code === 200) {
-      toast.success('Adjustment Task ' + taskId + ' Berhasil!')
+      // Periksa detail response dari BPJS (biasanya di response.data.response.metadata.code)
+      const bpjsMeta = response.data.response?.metadata
+      if (bpjsMeta) {
+        if (bpjsMeta.code === 200) {
+          toast.success(`Adjustment Task ${taskId} Berhasil: ${bpjsMeta.message || ''}`)
+        } else {
+          // BPJS merespon dengan selain 200 walau controller lokal sukses mengirim API (contoh error 201)
+          toast.warning(`Task ${taskId}: ${bpjsMeta.message || 'Gagal sinkron BPJS'}`)
+        }
+      } else {
+        // Fallback jika tidak ada format bersarang (seharusnya jarang terjadi dengan backend saat ini)
+        toast.success(`Adjustment Task ${taskId} Berhasil!`)
+      }
     } else {
       toast.error(response.data.metadata.message)
     }

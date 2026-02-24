@@ -537,6 +537,60 @@ const routes = [
     name: 'CentralArchivePksEdit',
     component: () => import('../views/central-archive/PksEditView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/sk',
+    name: 'CentralArchiveSk',
+    component: () => import('../views/central-archive/SkView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/keperawatan',
+    name: 'CentralArchiveKeperawatan',
+    component: () => import('../views/central-archive/KeperawatanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/kesehatan',
+    name: 'CentralArchiveKesehatan',
+    component: () => import('../views/central-archive/KesehatanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/medis',
+    name: 'CentralArchiveMedis',
+    component: () => import('../views/central-archive/MedisView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/ppi',
+    name: 'CentralArchivePpi',
+    component: () => import('../views/central-archive/PpiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/pmkp',
+    name: 'CentralArchivePmkp',
+    component: () => import('../views/central-archive/PmkpView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/iht',
+    name: 'CentralArchiveIht',
+    component: () => import('../views/central-archive/IhtView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/radiologi',
+    name: 'CentralArchiveRadiologi',
+    component: () => import('../views/central-archive/RadiologiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/central-archive/undangan',
+    name: 'CentralArchiveUndangan',
+    component: () => import('../views/central-archive/UndanganView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

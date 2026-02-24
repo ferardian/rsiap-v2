@@ -1,18 +1,23 @@
 <template>
-  <aside class="sidebar" :class="{ 'collapsed': isCollapsed }">
+  <aside class="sidebar" :class="{ 'collapsed': effectiveIsCollapsed }" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <!-- Brand -->
     <div class="sidebar-brand">
       <div class="brand-logo">
         <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="img-fluid logo-img">
       </div>
-      <div class="brand-text" v-if="!isCollapsed">
+      <div class="brand-text" v-if="!effectiveIsCollapsed">
         <h1 class="text-white">RSIA</h1>
         <p>Aisyiyah Pekajangan</p>
       </div>
+
+      <!-- Collapse Toggle Top -->
+      <button class="collapse-btn-top" @click="toggleCollapse">
+        <i class="fas" :class="effectiveIsCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+      </button>
     </div>
 
     <!-- User Profile Summary (Optional in Sidebar) -->
-    <div class="sidebar-profile" v-if="!isCollapsed">
+    <div class="sidebar-profile" v-if="!effectiveIsCollapsed">
       <div class="profile-info">
         <span class="profile-name">{{ userName }}</span>
         <span class="profile-role">{{ userRole }}</span>
@@ -30,16 +35,16 @@
             @click="handleMenuClick(menu)"
           >
             <span :class="getIconClass(menu.icon)">{{ getIconContent(menu.icon) }}</span>
-            <span class="nav-text" v-if="!isCollapsed">{{ menu.nama_menu }}</span>
+            <span class="nav-text" v-if="!effectiveIsCollapsed">{{ menu.nama_menu }}</span>
             <i 
-              v-if="menu.children && menu.children.length > 0 && !isCollapsed" 
+              v-if="menu.children && menu.children.length > 0 && !effectiveIsCollapsed" 
               class="fas fa-chevron-right arrow-icon"
               :class="{ 'rotated': expandedMenus.includes(menu.id_menu) }"
             ></i>
           </div>
 
           <!-- Children Submenu -->
-          <ul v-if="menu.children && menu.children.length > 0 && expandedMenus.includes(menu.id_menu) && !isCollapsed" class="nav-sublist">
+          <ul v-if="menu.children && menu.children.length > 0 && expandedMenus.includes(menu.id_menu) && !effectiveIsCollapsed" class="nav-sublist">
             <li v-for="child in menu.children" :key="child.id_menu" class="nav-item">
               <router-link :to="child.route" class="nav-link sub-link" active-class="active" @click="handleSubmenuClick">
                 <span :class="`${getIconClass(child.icon)} sub-icon`">{{ getIconContent(child.icon) }}</span>
@@ -50,13 +55,6 @@
         </li>
       </ul>
     </nav>
-
-    <!-- Footer / Collapse Toggle -->
-    <div class="sidebar-footer">
-      <button class="collapse-btn" @click="toggleCollapse">
-        {{ isCollapsed ? '▶' : '◀' }}
-      </button>
-    </div>
     
   </aside>
 </template>
@@ -82,14 +80,30 @@ const menuStore = useMenuStore()
 const authStore = useAuthStore()
 
 // State
+const isHovered = ref(false)
 const expandedMenus = ref([])
 
 // Computed
+const effectiveIsCollapsed = computed(() => {
+  return props.isCollapsed && !isHovered.value
+})
 const menuTree = computed(() => menuStore.menuTree || [])
 const userName = computed(() => authStore.userName)
 const userRole = computed(() => authStore.userRole)
 
 // Methods
+const handleMouseEnter = () => {
+  if (props.isCollapsed) {
+    isHovered.value = true
+  }
+}
+
+const handleMouseLeave = () => {
+  if (props.isCollapsed) {
+    isHovered.value = false
+  }
+}
+
 const toggleCollapse = () => {
   emit('toggle-collapse')
 }
@@ -202,7 +216,6 @@ onMounted(async () => {
   left: 0;
   top: 0;
   z-index: 1000;
-  overflow-y: auto;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -216,14 +229,14 @@ onMounted(async () => {
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5); /* Stronger shadow for overlay */
   }
 
-  .sidebar.collapsed {
+.sidebar.collapsed {
     transform: translateX(-100%); /* Hide completely off-screen */
     width: 280px; /* Keep full width when sliding out/in (hidden state doesn't matter much but cleaner) */
   }
-}
 
-.sidebar.collapsed .sidebar-footer {
-  justify-content: center;
+  .collapse-btn-top {
+    display: none !important;
+  }
 }
 
 /* Brand */
@@ -234,6 +247,39 @@ onMounted(async () => {
   gap: 1rem;
   background: rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
+  position: relative;
+  z-index: 2; /* Ensure brand is above scrolling content */
+}
+
+/* Collapse Button Top */
+.collapse-btn-top {
+  position: absolute;
+  right: -16px;
+  bottom: -16px; /* Positioned exactly at the bottom-right corner of the brand area, aligning with the gap */
+  width: 32px;
+  height: 32px;
+  background: #3b82f6; 
+  border: 4px solid #f8fafc; /* Matches body background to look like a cutout */
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.collapse-btn-top:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.sidebar.collapsed .collapse-btn-top {
+  right: -16px; /* Keep same right position relative to collapsed width */
 }
 
 .brand-logo {
@@ -318,6 +364,8 @@ onMounted(async () => {
 .sidebar-nav {
   flex: 1;
   padding: 0 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .nav-list {
@@ -475,53 +523,23 @@ onMounted(async () => {
     transform: rotate(90deg);
 }
 
-/* Footer */
-.sidebar-footer {
-  padding: 1rem;
-  margin-top: auto;
-  display: flex;
-  justify-content: flex-end; /* Align to right */
-  background: transparent;
-  border: none;
-}
-
-.collapse-btn {
-  background: #3b82f6; /* Brand Blue */
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.collapse-btn:hover {
-  background: #2563eb; /* Darker Blue */
-  transform: scale(1.1);
-  border-color: white;
-}
+/* Footer is removed but keeping comments consistent */
 
 /* Scrollbar */
-.sidebar::-webkit-scrollbar {
-  width: 5px;
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px; /* Thin modern scrollbar */
 }
 
-.sidebar::-webkit-scrollbar-track {
+.sidebar-nav::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 10px;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 </style>

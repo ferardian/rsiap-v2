@@ -26,10 +26,17 @@
             placeholder="Cari nama, NIP, atau jabatan..."
           />
         </div>
-        <button v-if="canCreate" class="btn-add" @click="openAddModal">
-          <i class="fas fa-plus"></i>
-          <span>Tambah Karyawan</span>
-        </button>
+        <div class="d-flex gap-2">
+          <button class="btn-export" @click="exportToExcel" :disabled="loadingExport">
+            <i v-if="loadingExport" class="fas fa-spinner fa-spin"></i>
+            <i v-else class="fas fa-file-excel"></i>
+            <span>Export Excel</span>
+          </button>
+          <button v-if="canCreate" class="btn-add" @click="openAddModal">
+            <i class="fas fa-plus"></i>
+            <span>Tambah Karyawan</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -102,6 +109,7 @@
                 <th>NIP</th>
                 <th>Jenis Kelamin</th>
                 <th>TTL</th>
+                <th>Jml. Keluarga</th>
                 <th>Alamat</th>
                 <th>Pendidikan</th>
                 <th>No. KTP</th>
@@ -114,7 +122,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="pegawai in pegawaiList" :key="pegawai.nip">
+              <tr v-for="pegawai in pegawaiList" :key="pegawai.nip" @contextmenu.prevent="showContextMenu($event, pegawai)">
                 <td>
                   <div class="employee-profile">
                     <div class="avatar">
@@ -135,6 +143,7 @@
                     {{ formatDate(pegawai.tgl_lahir) }}
                   </div>
                 </td>
+                <td class="text-center">{{ pegawai.jml_keluarga || 0 }}</td>
                 <td>
                   <div class="alamat-cell">{{ pegawai.alamat || '-' }}</div>
                 </td>
@@ -217,7 +226,8 @@
       <PegawaiDetailModal 
         :show="showDetailModal"
         :pegawai="selectedPegawai"
-        @close="showDetailModal = false"
+        :auto-open-upload="autoOpenUpload"
+        @close="handleCloseDetail"
       />
 
       <!-- Update Email Modal -->
@@ -290,11 +300,42 @@
 
     <!-- Komite Tab -->
     <CommitteeTab v-else-if="activeTab === 'komite'" />
+    <!-- Context Menu -->
+    <Transition name="fade">
+      <div 
+        v-if="contextMenu.visible"
+        ref="contextMenuRef"
+        class="context-menu"
+        :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }"
+      >
+        <div class="context-menu-item" @click="handleContextAction('detail')">
+          <i class="fas fa-eye text-primary"></i>
+          <span>Lihat Detail</span>
+        </div>
+        <div v-if="canUpdate" class="context-menu-item" @click="handleContextAction('edit')">
+          <i class="fas fa-edit text-info"></i>
+          <span>Edit Data</span>
+        </div>
+        <div class="context-menu-item" @click="handleContextAction('upload')">
+          <i class="fas fa-file-upload text-warning"></i>
+          <span>Unggah Berkas</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" @click="handleContextAction('copy_nik')">
+          <i class="fas fa-copy text-secondary"></i>
+          <span>Salin NIK</span>
+        </div>
+        <div class="context-menu-item" @click="handleContextAction('copy_nip')">
+          <i class="fas fa-id-badge text-secondary"></i>
+          <span>Salin NIP</span>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, reactive, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMenuStore } from '../../stores/menu'
 import { pegawaiService } from '../../services/pegawaiService'
@@ -304,6 +345,7 @@ import PegawaiFormModal from './components/PegawaiFormModal.vue'
 import PegawaiDetailModal from './components/PegawaiDetailModal.vue' // Added
 import CommitteeTab from './components/CommitteeTab.vue'
 import { useToast } from 'vue-toastification'
+import * as XLSX from 'xlsx'
 
 const toast = useToast()
 
@@ -323,6 +365,7 @@ const tabs = [
 const activeTab = ref(route.query.tab || 'data-karyawan')
 const loading = ref(false)
 const loadingDetail = ref(false)
+const loadingExport = ref(false)
 const searchQuery = ref('')
 const pegawaiList = ref([])
 const pagination = ref({
@@ -344,6 +387,16 @@ const emailToUpdate = ref('')
 const selectedNikForEmail = ref('')
 const selectedNamaForEmail = ref('')
 const submittingEmail = ref(false)
+const autoOpenUpload = ref(false)
+
+// Context Menu State
+const contextMenu = reactive({
+  visible: false,
+  x: 0,
+  y: 0,
+  item: null
+})
+const contextMenuRef = ref(null)
 
 // Computed - Permissions
 // MENU_ID 23 is for 'Data Karyawan'
@@ -401,6 +454,83 @@ const handleSearch = async () => {
     console.error('Error searching pegawai:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const exportToExcel = async () => {
+  if (loadingExport.value) return
+  
+  loadingExport.value = true
+  try {
+    // Fetch all records for the current search query
+    // Passing a large limit to get all data
+    let response
+    if (searchQuery.value.trim().length >= 2) {
+      response = await pegawaiService.searchPegawai(searchQuery.value, 10000)
+    } else {
+      response = await pegawaiService.getPegawai(1, 10000)
+    }
+    
+    if (response.data && response.data.success) {
+      const dataToExport = response.data.data
+      
+      if (dataToExport.length === 0) {
+        toast.warning('Tidak ada data karyawan untuk diexport.')
+        return
+      }
+
+      const wsData = []
+      wsData.push([
+        'No', 'NIP', 'Nama Lengkap', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 
+        'No KTP / NIK', 'No Telp', 'Jml. Keluarga', 'Departemen', 'Jabatan', 'Alamat', 
+        'Pendidikan', 'Tanggal Masuk', 'Masa Kerja'
+      ])
+
+      dataToExport.forEach((emp, index) => {
+        wsData.push([
+          index + 1,
+          emp.nip || '-',
+          emp.nama || '-',
+          emp.jk === 'L' ? 'Laki-Laki' : emp.jk === 'P' ? 'Perempuan' : (emp.jk || '-'),
+          emp.tmp_lahir || '-',
+          emp.tgl_lahir ? formatDate(emp.tgl_lahir) : '-',
+          emp.no_ktp || '-',
+          emp.no_telp || '-',
+          emp.jml_keluarga || 0,
+          emp.departemen || '-',
+          emp.jbtn || '-',
+          emp.alamat || '-',
+          emp.pendidikan || '-',
+          emp.mulai_kerja ? formatDate(emp.mulai_kerja) : '-',
+          emp.mulai_kerja ? calculateTenure(emp.mulai_kerja) : '-'
+        ])
+      })
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData)
+      
+      // Auto-size columns slightly
+      const wscols = [
+        {wch: 5}, {wch: 15}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 15},
+        {wch: 20}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 40}, 
+        {wch: 15}, {wch: 15}, {wch: 20}
+      ]
+      ws['!cols'] = wscols
+      
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, "Data Karyawan")
+      
+      const filename = `Data_Karyawan_${new Date().toISOString().slice(0, 10)}.xlsx`
+      XLSX.writeFile(wb, filename)
+      
+      toast.success('Data berhasil diexport')
+    } else {
+      toast.error('Gagal mengambil data untuk diexport')
+    }
+  } catch (error) {
+    console.error('Error exporting to excel:', error)
+    toast.error('Terjadi kesalahan saat mengekspor data')
+  } finally {
+    loadingExport.value = false
   }
 }
 
@@ -523,6 +653,94 @@ const deletePegawai = async () => {
   }
 }
 
+// Context Menu Methods
+const showContextMenu = async (e, pegawai) => {
+  contextMenu.item = pegawai
+  contextMenu.visible = true
+  
+  // Set initial position
+  contextMenu.x = e.clientX
+  contextMenu.y = e.clientY
+
+  await nextTick()
+
+  if (contextMenuRef.value) {
+    const menuWidth = contextMenuRef.value.offsetWidth
+    const menuHeight = contextMenuRef.value.offsetHeight
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+
+    // Adjust horizontal position
+    if (e.clientX + menuWidth > screenWidth) {
+      contextMenu.x = e.clientX - menuWidth
+    }
+
+    // Adjust vertical position
+    if (e.clientY + menuHeight > screenHeight) {
+      contextMenu.y = e.clientY - menuHeight
+    }
+
+    // Boundary check
+    contextMenu.x = Math.max(10, contextMenu.x)
+    contextMenu.y = Math.max(10, contextMenu.y)
+  }
+}
+
+const closeContextMenu = () => {
+  contextMenu.visible = false
+}
+
+const handleContextAction = async (action) => {
+  if (!contextMenu.item) return
+  
+  const item = contextMenu.item
+  
+  switch (action) {
+    case 'detail':
+      openDetailModal(item)
+      break
+    case 'edit':
+      if (canUpdate.value) {
+        openEditModal(item)
+      } else {
+        toast.warning('Anda tidak memiliki akses untuk mengubah data')
+      }
+      break
+    case 'upload':
+      autoOpenUpload.value = true
+      openDetailModal(item)
+      break
+    case 'copy_nik':
+      try {
+        await navigator.clipboard.writeText(item.nik || item.nip)
+        toast.success('NIK berhasil disalin')
+      } catch (e) {
+        toast.error('Gagal menyalin NIK')
+      }
+      break
+    case 'copy_nip':
+      try {
+        await navigator.clipboard.writeText(item.nip)
+        toast.success('NIP berhasil disalin')
+      } catch (e) {
+        toast.error('Gagal menyalin NIP')
+      }
+      break
+  }
+  closeContextMenu()
+}
+
+const handleCloseDetail = () => {
+  showDetailModal.value = false
+  autoOpenUpload.value = false
+}
+
+const onWindowClick = () => {
+  if (contextMenu.visible) {
+    closeContextMenu()
+  }
+}
+
 const getPhotoUrl = (photo) => {
   // Adjust this based on your photo storage location
   return `/storage/pegawai/${photo}`
@@ -591,6 +809,11 @@ const getInitials = (name) => {
 onMounted(() => {
   loadPegawai()
   fetchPegawaiTanpaEmail()
+  window.addEventListener('click', onWindowClick)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', onWindowClick)
 })
 </script>
 
@@ -646,6 +869,13 @@ onMounted(() => {
   font-size: 1rem;
 }
 
+.d-flex {
+  display: flex !important;
+}
+.gap-2 {
+  gap: 0.5rem !important;
+}
+
 .header-actions {
   display: flex;
   justify-content: space-between;
@@ -697,6 +927,30 @@ onMounted(() => {
 
 .btn-add:hover {
   transform: translateY(-2px);
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #10b981; /* Green color for Excel */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-export:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #059669;
+}
+
+.btn-export:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Loading */
@@ -1389,5 +1643,62 @@ onMounted(() => {
 .email-badge.invalid {
   background: #fef3c7;
   color: #92400e;
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  z-index: 10000;
+  min-width: 200px;
+  border: 1px solid #e2e8f0;
+  animation: contextFadeIn 0.2s ease-out;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #334155;
+  transition: all 0.2s;
+}
+
+.context-menu-item:hover {
+  background: #f1f5f9;
+  color: #3b82f6;
+}
+
+.context-menu-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 0.4rem 0.5rem;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.1s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+@keyframes contextFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>

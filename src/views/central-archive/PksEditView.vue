@@ -165,6 +165,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import pksService from '@/services/pksService'
+import { pegawaiService } from '@/services/pegawaiService'
 import api from '@/services/api'
 import Swal from 'sweetalert2'
 
@@ -225,7 +226,7 @@ const formatFileSize = (bytes) => {
 
 const fetchEmployees = async () => {
   try {
-    const response = await api.get('/pegawai', { params: { limit: 100 } })
+    const response = await pegawaiService.getKaryawanList({ limit: 500 })
     pegawaiDict.value = response.data?.data || []
   } catch (err) {
     console.warn("Could not fetch employee list", err)
@@ -296,15 +297,17 @@ const submitPks = async () => {
     const id = route.params.id
     const formData = new FormData()
     Object.keys(state).forEach(key => {
-        if (key === 'pj_model') return
+        if (key === 'pj_model' || key === 'pj') return // Skip explicitly handled keys
         if (key === 'file') {
              if (state.file) formData.append('file', state.file)
-        } else if (state[key] !== null && state[key] !== undefined) {
+        } else if (state[key] !== null && state[key] !== undefined && state[key] !== '') {
              formData.append(key, state[key])
         }
     })
     
-    formData.append('pj', state.pj_model?.nik || state.pj_model || '')
+    // Fix PJ data: must be NIK string
+    const pjValue = state.pj_model?.nik || state.pj_model?.nip || state.pj_model || ''
+    formData.append('pj', pjValue)
 
     await pksService.updatePks(id, formData)
     

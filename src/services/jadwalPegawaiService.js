@@ -35,12 +35,14 @@ export const jadwalPegawaiService = {
     },
 
     // Approve/Publish schedule
-    approveSchedule(month, year, department) {
-        return api.post('/sdi/jadwal-pegawai/approve', {
+    approveSchedule(month, year, department, mode = null) {
+        const payload = {
             bulan: month,
             tahun: year,
             departemen: department
-        })
+        }
+        if (mode) payload.mode = mode
+        return api.post('/sdi/jadwal-pegawai/approve', payload)
     },
 
     // Get all departments
