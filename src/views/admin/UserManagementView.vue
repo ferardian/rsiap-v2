@@ -37,7 +37,7 @@
             <label class="form-label">Filter Role</label>
             <v-select
               v-model="filterRole"
-              :options="roleStore.roles"
+              :options="roleOptions"
               label="nama_role"
               :reduce="role => role.id_role"
               placeholder="Semua Role"
@@ -311,13 +311,26 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <h6>Available Roles</h6>
-                <div v-if="availableRoles.length === 0" class="text-muted mb-3">
-                  Semua role sudah ditugaskan
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">Available Roles</h6>
+                  <div class="input-group input-group-sm w-50">
+                    <span class="input-group-text bg-white border-end-0">
+                      <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input
+                      v-model="availableRoleSearchQuery"
+                      type="text"
+                      class="form-control border-start-0 ps-0"
+                      placeholder="Cari role..."
+                    />
+                  </div>
                 </div>
-                <div v-else>
+                <div v-if="filteredAvailableRoles.length === 0" class="text-muted mb-3">
+                  {{ availableRoleSearchQuery ? 'Tidak ada role yang cocok' : 'Semua role sudah ditugaskan' }}
+                </div>
+                <div v-else class="available-roles-list">
                   <div
-                    v-for="role in availableRoles"
+                    v-for="role in filteredAvailableRoles"
                     :key="role.id_role"
                     class="form-check mb-2"
                   >
@@ -494,6 +507,7 @@ const showUserRolesModal = ref(false)
 const showBulkAssignModal = ref(false)
 const loading = ref(false)
 const error = ref(null)
+const availableRoleSearchQuery = ref('')
 
 const selectedUser = ref(null)
 const selectedRoles = ref([])
@@ -525,11 +539,17 @@ const filteredUsers = computed(() => {
 
   // Filter by role
   if (filterRole.value) {
-    users = users.filter(user =>
-      roleStore.userRoles.some(ur =>
-        ur.nip === user.nip && ur.id_role === filterRole.value
+    if (filterRole.value === 'none') {
+      users = users.filter(user =>
+        !roleStore.userRoles.some(ur => ur.nip === user.nip)
       )
-    )
+    } else {
+      users = users.filter(user =>
+        roleStore.userRoles.some(ur =>
+          ur.nip === user.nip && ur.id_role === filterRole.value
+        )
+      )
+    }
   }
 
   // Filter by status
@@ -599,6 +619,13 @@ const usersWithoutRoleList = computed(() => {
   )
 })
 
+const roleOptions = computed(() => {
+  return [
+    { id_role: 'none', nama_role: '🚫 Tanpa Role' },
+    ...roleStore.roles
+  ]
+})
+
 const currentUserRoles = computed(() => {
   if (!selectedUser.value) return []
   return roleStore.userRoles.filter(ur => ur.nip === selectedUser.value.nip)
@@ -608,6 +635,17 @@ const availableRoles = computed(() => {
   if (!selectedUser.value) return []
   const currentRoleIds = currentUserRoles.value.map(ur => ur.id_role)
   return roleStore.roles.filter(role => !currentRoleIds.includes(role.id_role))
+})
+
+const filteredAvailableRoles = computed(() => {
+  const roles = availableRoles.value
+  if (!availableRoleSearchQuery.value) return roles
+
+  const query = availableRoleSearchQuery.value.toLowerCase()
+  return roles.filter(role =>
+    role.nama_role.toLowerCase().includes(query) ||
+    (role.deskripsi && role.deskripsi.toLowerCase().includes(query))
+  )
 })
 
 // Get unique jabatan list for filter
@@ -863,6 +901,22 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.available-roles-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.available-roles-list::-webkit-scrollbar {
+  width: 5px;
+}
+.available-roles-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.available-roles-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
 .user-management {
   /* Removed fixed positioning to fit in MainLayout */
   display: flex;

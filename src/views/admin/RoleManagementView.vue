@@ -7,6 +7,19 @@
           <p class="page-subtitle">Manajemen role dan hak akses pengguna</p>
         </div>
         <div class="header-right">
+          <div class="search-box me-2">
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="fas fa-search text-muted"></i>
+              </span>
+              <input
+                v-model="roleSearchQuery"
+                type="text"
+                class="form-control border-start-0 ps-0"
+                placeholder="Cari role..."
+              />
+            </div>
+          </div>
           <button class="btn btn-secondary btn-assign-user" @click="showUserAssignmentModal = true">
             <i class="fas fa-user-plus"></i>
             <span>{{ isMobile ? 'Assign' : 'Assign User' }}</span>
@@ -32,15 +45,15 @@
       <i class="fas fa-exclamation-triangle"></i> {{ error }}
     </div>
 
-    <div v-else-if="roleStore.roles.length === 0" class="text-center py-5">
-      <i class="fas fa-users fa-3x text-muted mb-3"></i>
-      <h5 class="text-muted">Belum ada data role</h5>
-      <p class="text-muted">Klik tombol "Tambah Role" untuk membuat role baru</p>
+    <div v-else-if="filteredRoles.length === 0" class="text-center py-5">
+      <i class="fas fa-search fa-3x text-muted mb-3"></i>
+      <h5 class="text-muted">Tidak ada role yang ditemukan</h5>
+      <p class="text-muted">Coba gunakan kata kunci pencarian lain</p>
     </div>
 
     <div v-else class="row g-4 flex-grow-1" style="overflow-y: auto;">
       <div
-        v-for="role in roleStore.rolesWithUserCount"
+        v-for="role in filteredRoles"
         :key="role.id_role"
         class="col-lg-4 col-md-6"
       >
@@ -448,6 +461,7 @@ const showMenusModal = ref(false)
 const showUserAssignmentModal = ref(false)
 const isEditing = ref(false)
 const error = ref(null)
+const roleSearchQuery = ref('')
 const userSearchQuery = ref('')
 
 const formData = ref({
@@ -472,6 +486,17 @@ const roleMenus = ref([])
 const getUserCountForRole = (roleId) => {
   return roleStore.userRoles.filter(ur => ur.id_role === roleId).length
 }
+
+const filteredRoles = computed(() => {
+  const roles = roleStore.rolesWithUserCount
+  if (!roleSearchQuery.value) return roles
+
+  const query = roleSearchQuery.value.toLowerCase()
+  return roles.filter(role =>
+    role.nama_role.toLowerCase().includes(query) ||
+    (role.deskripsi && role.deskripsi.toLowerCase().includes(query))
+  )
+})
 
 const filteredRoleUsers = computed(() => {
   if (!userSearchQuery.value) return roleUsers.value
@@ -782,6 +807,25 @@ onUnmounted(() => {
   color: #64748b;
   margin-bottom: 0;
   font-size: 0.875rem;
+}
+
+.search-box {
+  min-width: 250px;
+}
+
+.search-box .input-group {
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+
+.search-box .form-control {
+  border: none;
+  padding: 0.5rem 0.75rem;
+}
+
+.search-box .form-control:focus {
+  box-shadow: none;
 }
 
 .btn-assign-user {
@@ -1165,8 +1209,8 @@ onUnmounted(() => {
   }
 
   .header-container {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch !important;
   }
 
   .page-title {
@@ -1175,6 +1219,12 @@ onUnmounted(() => {
 
   .page-subtitle {
     font-size: 0.75rem;
+  }
+
+  .search-box {
+    width: 100%;
+    margin-right: 0 !important;
+    margin-bottom: 0.75rem;
   }
 
   .btn-assign-user, .btn-add-role {
