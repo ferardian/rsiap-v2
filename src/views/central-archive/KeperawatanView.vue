@@ -24,6 +24,28 @@
       </div>
     </div>
 
+    <!-- Tabs Navigation -->
+    <div class="tabs-container mb-4">
+      <div class="capsule-tabs">
+        <button 
+          type="button" 
+          class="capsule-tab" 
+          :class="{ 'active': activeTab === 'standar' }"
+          @click="changeTab('standar')"
+        >
+          <i class="fas fa-file-alt me-2"></i> Data Berkas (Standar)
+        </button>
+        <button 
+          type="button" 
+          class="capsule-tab" 
+          :class="{ 'active': activeTab === 'kredensial' }"
+          @click="changeTab('kredensial')"
+        >
+          <i class="fas fa-id-badge me-2"></i> Pengajuan Kredensial
+        </button>
+      </div>
+    </div>
+
     <!-- Action Bar -->
     <div class="action-bar-modern">
       <div class="action-bar-row">
@@ -60,7 +82,7 @@
         <div class="action-buttons">
           <button class="btn-primary" @click="openCreateModal">
             <i class="fas fa-plus"></i>
-            <span>Tambah Berkas</span>
+            <span>{{ activeTab === 'standar' ? 'Tambah Berkas' : 'Buat Pengajuan Kredensial' }}</span>
           </button>
         </div>
       </div>
@@ -79,8 +101,8 @@
           <thead>
             <tr>
               <th width="5%">No</th>
-              <th width="20%">Nomor Surat</th>
-              <th width="30%">Perihal</th>
+              <th width="20%">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status/Nomor' }}</th>
+              <th width="30%">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
               <th width="15%">Tanggal Terbit</th>
               <th width="20%">Penanggung Jawab</th>
               <th width="10%" class="text-center">Aksi</th>
@@ -90,12 +112,15 @@
             <tr v-for="(berkas, index) in berkasList" :key="index" class="table-row-hover">
               <td class="text-muted">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
               <td>
-                <div class="badge-nomor">
+                <div v-if="activeTab === 'kredensial' && berkas.status_approval === 'pengajuan'" class="badge badge-warning">
+                  <i class="fas fa-clock fs-xs me-1"></i> Menunggu Approval
+                </div>
+                <div v-else class="badge-nomor">
                   {{ formatNomorSurat(berkas) }}
                 </div>
               </td>
               <td>
-                <div class="fw-medium text-dark">{{ berkas.perihal }}</div>
+                <div class="fw-medium text-dark">{{ activeTab === 'standar' ? berkas.perihal : berkas.judul }}</div>
               </td>
               <td>
                 <div class="date-cell">
@@ -114,12 +139,27 @@
                   <button class="btn-action btn-view" @click="openDetailModal(berkas)" title="Detail">
                     <i class="fas fa-eye"></i>
                   </button>
+                  <template v-if="activeTab === 'kredensial' && berkas.status_approval === 'disetujui'">
+                    <button v-if="berkas.berkas" class="btn-action btn-file" @click="openFile(berkas.berkas)" title="Lihat Berkas">
+                      <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button v-else disabled class="btn-action btn-file-disabled" title="Berkas Belum Diupload">
+                       <i class="fas fa-file-excel"></i>
+                    </button>
+                  </template>
                   <div class="dropdown-more">
                     <button class="btn-action btn-more" @click="toggleMenu(index)" title="Lainnya">
                       <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <!-- Dropdown Menu -->
                     <div v-if="activeMenu === index" class="dropdown-menu-custom">
+                      <button 
+                        v-if="activeTab === 'kredensial' && berkas.status_approval === 'disetujui'"
+                        class="dropdown-item" 
+                        @click="openUploadModal(berkas); activeMenu = null"
+                      >
+                        <i class="fas fa-upload text-success"></i> Upload Berkas
+                      </button>
                       <button class="dropdown-item" @click="openEditModal(berkas); activeMenu = null">
                         <i class="fas fa-edit text-primary"></i> Edit Berkas
                       </button>
@@ -141,7 +181,7 @@
             <i class="fas fa-file-contract"></i>
           </div>
           <h3>Pencarian Tidak Ditemukan</h3>
-          <p>Belum ada data Berkas Komite Keperawatan yang terdaftar atau sesuai kriteria pencarian.</p>
+          <p>Belum ada data {{ activeTab === 'standar' ? 'Berkas Komite Keperawatan' : 'Pengajuan Kredensial' }} yang terdaftar atau sesuai kriteria pencarian.</p>
           <button v-if="searchQuery || filterDate" class="btn-outline-primary mt-3" @click="resetFilters">
             <i class="fas fa-sync-alt mr-2"></i>Reset Pencarian
           </button>
@@ -192,6 +232,7 @@
       :show="showFormModal"
       :is-edit="isEditMode"
       :data="selectedBerkas"
+      :is-kredensial="activeTab === 'kredensial'"
       @close="showFormModal = false"
       @saved="loadData"
     />
@@ -228,21 +269,32 @@
         </div>
       </div>
     </div>
+
+    <SkUploadModal 
+      :show="showUploadModal"
+      :sk="selectedBerkas"
+      @close="showUploadModal = false"
+      @uploaded="loadData"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/auth'
 import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
+import { skService } from '@/services/skService'
 import debounce from 'lodash/debounce'
 import { format } from 'date-fns'
 
 // Import Modals (will be created in next steps)
 import KeperawatanFormModal from './components/KeperawatanFormModal.vue'
 import KeperawatanDetailModal from './components/KeperawatanDetailModal.vue'
+import SkUploadModal from './components/SkUploadModal.vue'
 
 const toast = useToast()
+const authStore = useAuthStore()
 
 // State
 const berkasList = ref([])
@@ -250,6 +302,7 @@ const loading = ref(true)
 const searchQuery = ref('')
 const filterDate = ref('')
 const activeMenu = ref(null)
+const activeTab = ref('standar') // 'standar' | 'kredensial'
 
 const pagination = ref({
   current_page: 1,
@@ -262,6 +315,7 @@ const pagination = ref({
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
+const showUploadModal = ref(false)
 const isEditMode = ref(false)
 const selectedBerkas = ref(null)
 const deleting = ref(false)
@@ -291,9 +345,14 @@ const toggleMenu = (index) => {
 }
 
 const buildFilters = () => {
-  const filters = [
-    { field: 'status', operator: '=', value: '1' }
-  ]
+  const filters = []
+  
+  if (activeTab.value === 'standar') {
+    filters.push({ field: 'status', operator: '=', value: '1' })
+  } else {
+    // Kredensial only shows records where the judul contains "SPK RKK"
+    // (Ignorning jenis letter type per user request)
+  }
   
   if (filterDate.value) {
     // Add 1 day to match backend logic based on Filetrack pattern
@@ -310,7 +369,16 @@ const loadData = async (page = 1) => {
   loading.value = true
   try {
     const filters = buildFilters()
-    const response = await komiteKeperawatanService.search(searchQuery.value, pagination.value.per_page, page, filters)
+    let response;
+    
+    if (activeTab.value === 'standar') {
+      response = await komiteKeperawatanService.search(searchQuery.value, pagination.value.per_page, page, filters)
+    } else {
+      const combinedSearch = searchQuery.value 
+        ? `SPK RKK ${searchQuery.value}` 
+        : 'SPK RKK'
+      response = await skService.searchSk(combinedSearch, pagination.value.per_page, page, filters)
+    }
     
     if (response.data) {
       berkasList.value = response.data.data || []
@@ -334,6 +402,15 @@ const handleSearch = debounce(() => {
   loadData(1)
 }, 500)
 
+const changeTab = (tab) => {
+  if (activeTab.value !== tab) {
+    activeTab.value = tab
+    searchQuery.value = ''
+    filterDate.value = ''
+    loadData(1)
+  }
+}
+
 const clearSearch = () => {
   searchQuery.value = ''
   handleSearch()
@@ -348,6 +425,16 @@ const resetFilters = () => {
   searchQuery.value = ''
   filterDate.value = ''
   handleSearch()
+}
+
+const openUploadModal = (berkas) => {
+  selectedBerkas.value = berkas
+  showUploadModal.value = true
+}
+
+const openFile = (filename) => {
+  const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/arsip/berkas/${filename}`
+  window.open(fileUrl, '_blank')
 }
 
 const changePage = (page) => {
@@ -387,10 +474,13 @@ const formatDate = (dateString) => {
 
 const formatNomorSurat = (berkas) => {
   if (!berkas) return '-'
+  if (berkas.status_approval === 'pengajuan') return 'Menunggu Approval'
+  
   try {
     const tglPattern = berkas.tgl_terbit ? format(new Date(berkas.tgl_terbit.replace(' ', 'T').split('.')[0]), 'ddMMyy') : ''
-    const no = String(berkas.nomor).padStart(3, '0')
-    return `${no}/${berkas.prefix}/${tglPattern}`
+    const no = String(berkas.nomor || '').padStart(3, '0')
+    const pref = berkas.prefix || 'SK-RSIA'
+    return `${no}/${pref}/${tglPattern}`
   } catch (e) {
     return `${berkas.nomor}/${berkas.prefix}`
   }
@@ -431,11 +521,13 @@ const executeDelete = async () => {
   
   deleting.value = true
   try {
-    const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit}`)
-    
-    // As per the filetrack implementation, delete is a PUT with status 0
-    // But rsia-api-v2 has a specific DELETE endpoint we can use based on the code
-    await komiteKeperawatanService.delete(identifier)
+    if (activeTab.value === 'standar') {
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit}`)
+      await komiteKeperawatanService.delete(identifier)
+    } else {
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+      await skService.deleteSk(identifier, selectedBerkas.value)
+    }
     
     toast.success('Berkas berhasil dihapus')
     showDeleteModal.value = false
@@ -683,6 +775,46 @@ const displayedPages = computed(() => {
   appearance: none;
 }
 
+/* Capsule Tabs */
+.tabs-container {
+  display: flex;
+}
+
+.capsule-tabs {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 0.35rem;
+  border-radius: 50px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.capsule-tab {
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #64748b;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+}
+
+.capsule-tab:hover:not(.active) {
+  color: #3b82f6;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.capsule-tab.active {
+  background: white;
+  color: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+  transform: scale(1.02);
+}
+
+/* Original Buttons (modified specifically for Action Bar if needed) */
 .btn-primary {
   display: flex;
   align-items: center;
@@ -813,14 +945,24 @@ const displayedPages = computed(() => {
 
 .badge-nomor {
   display: inline-flex;
-  font-family: monospace;
-  background: #f1f5f9;
-  color: #475569;
+  background: #eff6ff;
+  color: #2563eb;
   padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #dbeafe;
+}
+
+.badge-warning {
+  background: #fffbeb;
+  color: #d97706;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #fef3c7;
 }
 
 .date-cell {

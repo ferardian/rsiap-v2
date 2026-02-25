@@ -39,8 +39,15 @@ export const skService = {
     /**
      * Delete SK (set status to 0)
      */
-    deleteSk(identifier, data) {
-        // API requires PUT method to change status to 0
-        return api.post(`/berkas/sk/${identifier}?_method=PUT`, data)
+    deleteSk(identifier) {
+        // API requires DELETE method to hit destroy endpoint
+        return api.delete(`/berkas/sk/${identifier}`)
+    },
+
+    /**
+     * Approve SK Kredensial
+     */
+    approveKredensial(identifier) {
+        return api.post(`/berkas/sk/${identifier}/approve-kredensial`)
     }
 }

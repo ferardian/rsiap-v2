@@ -193,6 +193,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { suratInternalService } from '@/services/suratInternalService'
 import { suratEksternalService } from '@/services/suratEksternalService'
+import { skService } from '@/services/skService'
 import Swal from 'sweetalert2'
 
 // State
@@ -202,19 +203,25 @@ const suratList = ref([])
 const activeTab = ref('internal')
 const internalStats = ref({})
 const eksternalStats = ref({})
+const kredensialStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 
 const tabs = [
   { id: 'internal', label: 'Internal', icon: 'fa-building' },
-  { id: 'eksternal', label: 'Eksternal', icon: 'fa-globe' }
+  { id: 'eksternal', label: 'Eksternal', icon: 'fa-globe' },
+  { id: 'kredensial', label: 'SK Kredensial', icon: 'fa-id-badge' }
 ]
 
 // Computed
 const activeTabLabel = computed(() => {
-  return activeTab.value === 'internal' ? 'Surat Internal' : 'Surat Eksternal'
+  if (activeTab.value === 'internal') return 'Surat Internal'
+  if (activeTab.value === 'eksternal') return 'Surat Eksternal'
+  return 'SK Kredensial'
 })
 
 const currentStats = computed(() => {
-  return activeTab.value === 'internal' ? internalStats.value : eksternalStats.value
+  if (activeTab.value === 'internal') return internalStats.value
+  if (activeTab.value === 'eksternal') return eksternalStats.value
+  return kredensialStats.value
 })
 
 const service = computed(() => {
@@ -230,24 +237,47 @@ watch(activeTab, () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const payload = {
-      sort: [{ field: 'created_at', direction: 'desc' }],
-      filters: [
-        { field: 'status', operator: '=', value: 'pengajuan' }
-      ]
-    }
-    
-    // Load Stats & Data in Parallel
-    const [dataRes, statsRes] = await Promise.all([
-      service.value.getSuratInternal ? service.value.getSuratInternal(payload) : service.value.getSuratEksternal(payload),
-      service.value.getStats()
-    ])
+    if (activeTab.value === 'kredensial') {
+      const res = await skService.searchSk('SPK RKK', 100, 1, [
+        { field: 'status_approval', operator: '=', value: 'pengajuan' }
+      ])
+      
+      const rawData = res.data?.data || []
+      suratList.value = rawData.map(item => ({
+        id: btoa(`${item.nomor}.${item.jenis}.${item.tgl_terbit.split(' ')[0]}`),
+        perihal: item.judul,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.penanggung_jawab,
+        pj: item.pj,
+        status: item.status_approval,
+        no_surat: null,
+        _original: item
+      }))
 
-    suratList.value = dataRes.data.data || []
-    if (activeTab.value === 'internal') {
-      internalStats.value = statsRes.data.data
+      kredensialStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
     } else {
-      eksternalStats.value = statsRes.data.data
+      const payload = {
+        sort: [{ field: 'created_at', direction: 'desc' }],
+        filters: [
+          { field: 'status', operator: '=', value: 'pengajuan' }
+        ]
+      }
+      
+      const [dataRes, statsRes] = await Promise.all([
+        service.value.getSuratInternal ? service.value.getSuratInternal(payload) : service.value.getSuratEksternal(payload),
+        service.value.getStats()
+      ])
+
+      suratList.value = dataRes.data.data || []
+      if (activeTab.value === 'internal') {
+        internalStats.value = statsRes.data.data
+      } else {
+        eksternalStats.value = statsRes.data.data
+      }
     }
   } catch (error) {
     console.error('Error fetching data:', error)
@@ -279,11 +309,20 @@ const handleAction = async (surat, status) => {
 
   processingId.value = surat.id
   try {
-    const updateFn = activeTab.value === 'internal' ? suratInternalService.updateSuratInternal : suratEksternalService.updateSuratEksternal
-    await updateFn(surat.id, {
-      ...surat,
-      status: status
-    })
+    if (activeTab.value === 'kredensial') {
+      if (status === 'disetujui') {
+        await skService.approveKredensial(surat.id)
+      } else {
+        // Fallback for rejected credential drafts
+        await skService.updateSk(surat.id, { status_approval: 'ditolak' })
+      }
+    } else {
+      const updateFn = activeTab.value === 'internal' ? suratInternalService.updateSuratInternal : suratEksternalService.updateSuratEksternal
+      await updateFn(surat.id, {
+        ...surat,
+        status: status
+      })
+    }
 
     const Toast = Swal.mixin({
       toast: true,

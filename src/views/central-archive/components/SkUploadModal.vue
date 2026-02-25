@@ -11,7 +11,7 @@
         </button>
       </div>
 
-      <div class="modal-body" v-if="skData">
+      <div class="modal-body" v-if="sk">
         <div class="warning-box mb-4">
           <div class="warning-icon"><i class="fas fa-info-circle"></i></div>
           <div class="warning-text">
@@ -19,9 +19,34 @@
           </div>
         </div>
         
-        <div class="info-badge-box mb-4">
-          <span class="text-muted small-text">Nomor SK:</span>
-          <strong>{{ formatNomorSk(skData) }}</strong>
+        <div class="sk-detail-card mb-4" v-if="sk">
+          <div class="detail-header">
+            <span class="badge-nomor">
+              <i class="fas fa-hashtag text-primary mr-1"></i> {{ formatNomorSk(sk) }}
+            </span>
+            <span class="status-badge" :class="sk.status === 'disetujui' ? 'bg-success-light text-success' : 'bg-warning-light text-warning'">
+              {{ sk.status_approval || sk.status || 'Draft' }}
+            </span>
+          </div>
+          <div class="detail-body">
+            <h4 class="sk-judul">{{ sk.judul || sk.perihal || 'Tanpa Judul' }}</h4>
+            <div class="detail-grid mt-3">
+              <div class="detail-item">
+                <i class="fas fa-user-tie text-gray-400"></i>
+                <div>
+                  <div class="detail-label">Penanggung Jawab</div>
+                  <div class="detail-value">{{ sk.penanggung_jawab?.nama || sk.pj }}</div>
+                </div>
+              </div>
+              <div class="detail-item">
+                <i class="fas fa-calendar-alt text-gray-400"></i>
+                <div>
+                  <div class="detail-label">Tanggal Terbit</div>
+                  <div class="detail-value">{{ formatDateLocal(sk.tgl_terbit) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <form @submit.prevent="submitForm">
@@ -61,10 +86,11 @@ import { ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { skService } from '@/services/skService'
 import { format } from 'date-fns'
+import id from 'date-fns/locale/id'
 
 const props = defineProps({
   show: Boolean,
-  skData: Object
+  sk: Object
 })
 
 const emit = defineEmits(['close', 'uploaded'])
@@ -117,6 +143,16 @@ const handleFileChange = (e) => {
   }
 }
 
+const formatDateLocal = (dateString) => {
+  if (!dateString) return '-'
+  try {
+    const d = new Date(dateString.replace(' ', 'T').split('.')[0])
+    return format(d, 'dd MMMM yyyy', { locale: id })
+  } catch (e) {
+    return dateString
+  }
+}
+
 const submitForm = async () => {
   if (!fileSelected.value || !fileInput.value.files[0]) {
     toast.warning('Silakan pilih file terlebih dahulu')
@@ -127,7 +163,7 @@ const submitForm = async () => {
   
   loading.value = true
   try {
-    const d = props.skData
+    const d = props.sk
     const identifier = btoa(`${d.nomor}.${d.jenis}.${d.tgl_terbit}`)
     
     // Create form data
@@ -238,14 +274,83 @@ const submitForm = async () => {
   line-height: 1.4;
 }
 
-.info-badge-box {
+.sk-detail-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.detail-header {
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  background: #f1f5f9;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  border-left: 3px solid #64748b;
+}
+
+.badge-nomor {
+  font-family: monospace;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.bg-success-light { background: #dcfce7; }
+.text-success { color: #166534; }
+.bg-warning-light { background: #fef9c3; }
+.text-warning { color: #854d0e; }
+
+.detail-body {
+  padding: 1.25rem;
+}
+
+.sk-judul {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.detail-item i {
+  margin-top: 0.25rem;
+  font-size: 1.1rem;
+}
+
+.text-gray-400 { color: #94a3b8; }
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.detail-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #334155;
 }
 
 .row-group {

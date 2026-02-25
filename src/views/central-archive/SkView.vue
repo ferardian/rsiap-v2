@@ -225,7 +225,7 @@
 
     <SkUploadModal 
       :show="showUploadModal"
-      :sk-data="selectedSk"
+      :sk="selectedSk"
       @close="showUploadModal = false"
       @uploaded="loadSk"
     />

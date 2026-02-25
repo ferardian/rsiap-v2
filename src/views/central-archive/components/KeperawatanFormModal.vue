@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3 class="modal-title">
           <i class="fas" :class="isEdit ? 'fa-edit text-primary' : 'fa-plus-circle text-success'"></i>
-          {{ isEdit ? 'Edit Berkas Komite Keperawatan' : 'Buat Berkas Komite Keperawatan' }}
+          {{ isEdit ? (isKredensial ? 'Edit Pengajuan Kredensial' : 'Edit Berkas Komite Keperawatan') : (isKredensial ? 'Buat Pengajuan Kredensial' : 'Buat Berkas Komite Keperawatan') }}
         </h3>
         <button class="btn-close-icon" @click="$emit('close')">
           <i class="fas fa-times"></i>
@@ -45,8 +45,8 @@
           </div>
 
           <div class="form-group">
-            <label>Perihal Surat <span>*</span></label>
-            <input type="text" v-model="formData.perihal" class="form-control" placeholder="Contoh: Rapat Koordinasi Anggota" required>
+            <label>{{ isKredensial ? 'Judul Pengajuan' : 'Perihal Surat' }} <span>*</span></label>
+            <input type="text" v-model="formData.perihal" class="form-control" :placeholder="isKredensial ? 'Contoh: Pengajuan Kredensial' : 'Contoh: Rapat Koordinasi Anggota'" required>
           </div>
 
           <div class="form-group has-search">
@@ -105,6 +105,15 @@
               <i class="fas fa-check-circle text-success ml-auto"></i>
             </div>
           </div>
+
+          <div v-if="isKredensial && !isEdit" class="form-group">
+            <label>Jenis SK <span>*</span></label>
+            <select v-model="formData.jenis" class="form-control" required>
+              <option value="" disabled>Pilih Jenis SK</option>
+              <option value="A">SK Dokumen</option>
+              <option value="B">SK Pengangkatan Jabatan</option>
+            </select>
+          </div>
         </form>
       </div>
 
@@ -113,7 +122,7 @@
         <button type="submit" form="keperawatanForm" class="btn-submit" :disabled="loading || (isSubmitted && !selectedPj?.nik)">
           <i class="fas fa-save" v-if="!loading"></i>
           <span class="spinner-border spinner-border-sm" v-else></span>
-          {{ loading ? 'Menyimpan...' : (isEdit ? 'Update Berkas' : 'Buat Berkas') }}
+          {{ loading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Buat') }}
         </button>
       </div>
     </div>
@@ -128,6 +137,7 @@ import { format } from 'date-fns'
 
 // Services
 import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
+import { skService } from '@/services/skService'
 import { pegawaiService } from '@/services/pegawaiService'
 
 const props = defineProps({
@@ -136,6 +146,10 @@ const props = defineProps({
     default: false
   },
   isEdit: {
+    type: Boolean,
+    default: false
+  },
+  isKredensial: {
     type: Boolean,
     default: false
   },
@@ -154,7 +168,8 @@ const isSubmitted = ref(false)
 const formData = ref({
   pj: '',
   perihal: '',
-  tgl_terbit: new Date().toISOString().split('T')[0]
+  tgl_terbit: new Date().toISOString().split('T')[0],
+  jenis: ''
 })
 
 // Max date for Tgl Terbit is usually today or slightly in future, let's leave flexible for now
@@ -184,9 +199,10 @@ watch(() => props.show, (newVal) => {
         nomor: props.data.nomor,
         prefix: props.data.prefix,
         pj: props.data.pj || '',
-        perihal: props.data.perihal || '',
+        perihal: props.data.perihal || props.data.judul || '',
         tgl_terbit: tgl,
-        status: props.data.status || '1'
+        status: props.data.status || '1',
+        jenis: props.data.jenis || ''
       }
       
       // Initialize PJ search field
@@ -206,7 +222,8 @@ watch(() => props.show, (newVal) => {
       formData.value = {
         pj: '',
         perihal: '',
-        tgl_terbit: new Date().toISOString().split('T')[0]
+        tgl_terbit: new Date().toISOString().split('T')[0],
+        jenis: ''
       }
       searchPj.value = ''
       selectedPj.value = null
@@ -329,19 +346,48 @@ const submitForm = async () => {
   
   try {
     if (props.isEdit) {
-      const identifier = btoa(`${props.data.nomor}.${formData.value.tgl_terbit}`)
-      const updateData = {
-        nomor: props.data.nomor,
-        tgl_terbit: formData.value.tgl_terbit,
-        pj: formData.value.pj,
-        perihal: formData.value.perihal,
-        status: formData.value.status || '1'
+      if (props.isKredensial) {
+        const identifier = btoa(`${props.data.nomor}.${props.data.jenis}.${formData.value.tgl_terbit}`)
+        const updateData = {
+          nomor: props.data.nomor,
+          jenis: props.data.jenis,
+          tgl_terbit: formData.value.tgl_terbit,
+          pj: formData.value.pj,
+          judul: formData.value.perihal,
+          status: formData.value.status || '1'
+        }
+        await skService.updateSk(identifier, updateData)
+      } else {
+        const identifier = btoa(`${props.data.nomor}.${formData.value.tgl_terbit}`)
+        const updateData = {
+          nomor: props.data.nomor,
+          tgl_terbit: formData.value.tgl_terbit,
+          pj: formData.value.pj,
+          perihal: formData.value.perihal,
+          status: formData.value.status || '1'
+        }
+        await komiteKeperawatanService.update(identifier, updateData)
       }
-      await komiteKeperawatanService.update(identifier, updateData)
-      toast.success('Berkas berhasil diperbarui')
+      toast.success(props.isKredensial ? 'Pengajuan berhasil diperbarui' : 'Berkas berhasil diperbarui')
     } else {
-      await komiteKeperawatanService.store(formData.value)
-      toast.success('Berkas berhasil dibuat')
+      if (props.isKredensial) {
+        if (!formData.value.jenis) {
+          toast.warning('Silakan pilih Jenis SK terlebih dahulu')
+          loading.value = false
+          return
+        }
+        const skPayload = {
+          tgl_terbit: formData.value.tgl_terbit,
+          pj: formData.value.pj,
+          judul: formData.value.perihal,
+          status_approval: 'pengajuan',
+          jenis: formData.value.jenis
+        }
+        await skService.createSk(skPayload)
+      } else {
+        await komiteKeperawatanService.store(formData.value)
+      }
+      toast.success(props.isKredensial ? 'Pengajuan berhasil dibuat' : 'Berkas berhasil dibuat')
     }
     
     emit('saved')
@@ -440,7 +486,7 @@ const submitForm = async () => {
 
 .modal-body {
   padding: 2rem;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* Form Styles */
@@ -495,7 +541,7 @@ select.form-control {
   appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
-  background-repeat: no- অনন্ত;
+  background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
   padding-right: 2.5rem;
 }
