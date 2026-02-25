@@ -68,7 +68,7 @@
               <th>Kategori Profesi</th>
               <th>Nomor STR</th>
               <th>Tanggal STR</th>
-              <th>Tanggal Akhir STR</th>
+              <th>Tanggal Akhir SIP</th>
               <th>Nomor SIP</th>
               <th>Tanggal Izin Praktek</th>
               <th>Perguruan Tinggi</th>
@@ -218,7 +218,7 @@
                 <input type="date" v-model="form.tanggal_str" required>
               </div>
               <div class="form-group full-width">
-                <label>Tanggal Akhir STR <span class="required">*</span></label>
+                <label>Tanggal Akhir SIP <span class="required">*</span></label>
                 <input type="date" v-model="form.tanggal_akhir_str" required>
                 <small class="help-text">Tanggal berakhirnya masa berlaku STR</small>
               </div>
@@ -380,7 +380,7 @@
                 <div class="detail-value">{{ formatDate(selectedStaf.tanggal_str) }}</div>
               </div>
               <div class="detail-item">
-                <label>Tanggal Akhir STR</label>
+                <label>Tanggal Akhir SIP</label>
                 <div class="detail-value">
                   {{ formatDate(selectedStaf.tanggal_akhir_str) }}
                   <span v-if="isExpiringSoon(selectedStaf.tanggal_akhir_str)" class="badge badge-warning ms-2">
