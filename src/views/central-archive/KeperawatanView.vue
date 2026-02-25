@@ -433,8 +433,17 @@ const openUploadModal = (berkas) => {
 }
 
 const openFile = (filename) => {
-  const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/arsip/berkas/${filename}`
-  window.open(fileUrl, '_blank')
+  if (!filename) return
+  
+  if (activeTab.value === 'kredensial') {
+    const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
+    const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
+    const url = `${baseUrl}/webapps/rsia_sk/${filename}`
+    window.open(url, '_blank')
+  } else {
+    const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/arsip/berkas/${filename}`
+    window.open(fileUrl, '_blank')
+  }
 }
 
 const changePage = (page) => {
