@@ -448,4 +448,67 @@ const submitForm = async () => {
   color: #854d0e;
   cursor: not-allowed;
 }
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-content {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-radius: 0;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .warning-box {
+    padding: 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  .sk-detail-card {
+    border-radius: 8px;
+  }
+
+  .detail-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .sk-judul {
+    font-size: 1rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .modal-footer {
+    padding: 1.25rem 1.5rem;
+    border-radius: 0;
+    gap: 0.75rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0));
+  }
+
+  .btn-cancel, .btn-submit {
+    flex: 1;
+    justify-content: center;
+    padding: 0.85rem 1rem;
+  }
+}
 </style>

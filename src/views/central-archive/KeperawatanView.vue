@@ -27,30 +27,32 @@
     <!-- Tabs Navigation -->
     <div class="tabs-container mb-4">
       <div class="capsule-tabs">
-        <button 
-          type="button" 
-          class="capsule-tab" 
-          :class="{ 'active': activeTab === 'standar' }"
-          @click="changeTab('standar')"
-        >
-          <i class="fas fa-file-alt me-2"></i> Data Berkas (Standar)
-        </button>
-        <button 
-          type="button" 
-          class="capsule-tab" 
-          :class="{ 'active': activeTab === 'kredensial' }"
-          @click="changeTab('kredensial')"
-        >
-          <i class="fas fa-id-badge me-2"></i> Pengajuan Kredensial
-        </button>
-        <button 
-          type="button" 
-          class="capsule-tab" 
-          :class="{ 'active': activeTab === 'staf' }"
-          @click="changeTab('staf')"
-        >
-          <i class="fas fa-user-md me-2"></i> Data Perawat & Ners
-        </button>
+        <div class="capsule-tabs-wrapper">
+          <button 
+            type="button" 
+            class="capsule-tab" 
+            :class="{ 'active': activeTab === 'standar' }"
+            @click="changeTab('standar')"
+          >
+            <i class="fas fa-file-alt me-2"></i> <span>Data Berkas (Standar)</span>
+          </button>
+          <button 
+            type="button" 
+            class="capsule-tab" 
+            :class="{ 'active': activeTab === 'kredensial' }"
+            @click="changeTab('kredensial')"
+          >
+            <i class="fas fa-id-badge me-2"></i> <span>Pengajuan Kredensial</span>
+          </button>
+          <button 
+            type="button" 
+            class="capsule-tab" 
+            :class="{ 'active': activeTab === 'staf' }"
+            @click="changeTab('staf')"
+          >
+            <i class="fas fa-user-md me-2"></i> <span>Data Perawat & Ners</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -108,23 +110,23 @@
         <table v-else-if="berkasList.length > 0" class="modern-table">
           <thead>
             <tr v-if="activeTab !== 'staf'">
-              <th width="5%">No</th>
-              <th width="15%">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status / No' }}</th>
-              <th width="25%">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
-              <th v-if="activeTab === 'kredensial'" width="20%">Pegawai</th>
-              <th width="12%">Tgl Terbit</th>
-              <th :width="activeTab === 'kredensial' ? '13%' : '23%'">Penanggung Jawab</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="5%" class="text-center">No</th>
+              <th style="min-width: 180px;">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status / No' }}</th>
+              <th style="min-width: 250px;">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
+              <th v-if="activeTab === 'kredensial'" style="min-width: 200px;">Pegawai</th>
+              <th style="min-width: 130px;">Tgl Terbit</th>
+              <th :style="{ minWidth: activeTab === 'kredensial' ? '180px' : '220px' }">Penanggung Jawab</th>
+              <th width="100" class="text-center">Aksi</th>
             </tr>
             <tr v-else>
-              <th width="5%">No</th>
-              <th width="15%">NIK / Nama</th>
-              <th width="15%">Profesi</th>
-              <th width="15%">Unit</th>
-              <th width="15%">Pendidikan / Prodi</th>
-              <th width="12%">Tanggal Lulus</th>
-              <th width="13%">Bukti</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="50" class="text-center">No</th>
+              <th style="min-width: 200px;">NIK / Nama</th>
+              <th style="min-width: 150px;">Profesi</th>
+              <th style="min-width: 150px;">Unit</th>
+              <th style="min-width: 200px;">Pendidikan / Prodi</th>
+              <th style="min-width: 130px;">Tanggal Lulus</th>
+              <th style="min-width: 100px;">Bukti</th>
+              <th width="100" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -1602,48 +1604,121 @@ const displayedPages = computed(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .hero-header {
+    padding: 1.5rem 1rem;
+  }
+
   .hero-content {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
   
+  .title-text h1 {
+    font-size: 1.5rem;
+  }
+
+  .title-text p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
   .stats-section {
     width: 100%;
   }
   
   .stat-card {
     flex: 1;
+    padding: 1rem;
+  }
+
+  .capsule-tabs {
+    padding: 0.5rem 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    position: relative;
+    background: transparent;
+    box-shadow: none;
+    margin: 0 -1rem;
+  }
+
+  .capsule-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, etc */
+  }
+
+  .capsule-tabs-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    width: max-content;
+    gap: 0.5rem;
+    background: #f1f5f9;
+    padding: 0.35rem;
+    border-radius: 50px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .capsule-tab {
+    padding: 0.75rem 1.25rem;
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+
+  .capsule-tab span {
+    display: inline-block;
   }
   
+  .action-bar-modern {
+    padding: 1rem;
+  }
+
   .action-bar-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
   }
   
   .search-filter-group {
     flex-direction: column;
+    gap: 0.75rem;
   }
   
   .search-box {
     max-width: 100%;
+    width: 100%;
+  }
+
+  .filter-box {
+    width: 100%;
+  }
+
+  .date-input {
+    flex: 1;
+    width: 100% !important;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
   }
 
   .pagination-container {
     flex-direction: column;
     gap: 1rem;
-    padding: 1rem;
+    padding: 1.25rem 1rem;
   }
   
   .pagination-info {
     text-align: center;
     width: 100%;
+    font-size: 0.85rem;
   }
 
   .pagination-controls {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
+    gap: 0.5rem;
   }
 }
 

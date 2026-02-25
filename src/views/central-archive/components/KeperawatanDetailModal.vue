@@ -382,16 +382,60 @@ const getInitials = (name) => {
 }
 
 @media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-content {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-radius: 0;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .nomor-badge-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .badge-value {
+    font-size: 1.25rem;
+  }
+
   .detail-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
     padding: 1.5rem;
   }
-  
-  .modal-content {
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
+
+  .detail-label {
+    font-size: 0.75rem;
+  }
+
+  .detail-value {
+    font-size: 0.95rem;
+  }
+
+  .text-lg {
+    font-size: 1.1rem;
+  }
+
+  .member-card {
+    padding: 0.85rem;
+  }
+
+  .member-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
   }
 }
 </style>

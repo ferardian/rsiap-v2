@@ -896,23 +896,86 @@ select.form-control {
 .font-monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 
 @media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-content {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-radius: 0;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+
   .form-row {
     flex-direction: column;
     gap: 0;
   }
-  
-  .modal-content {
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
+
+  .form-group {
+    margin-bottom: 1.25rem;
   }
-  
-  .modal-header {
-    border-radius: 0;
+
+  .info-alert {
+    padding: 0.85rem;
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
   }
-  
+
+  /* Prevent search results from being clipped by overflow-y: auto */
+  .search-results-dropdown {
+    position: relative;
+    top: 0;
+    margin-top: 0.5rem;
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+    max-height: 200px;
+    z-index: 100;
+  }
+
+  /* Ensure the body doesn't clip children when list is open */
+  .modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pegawai-name {
+    font-size: 0.95rem;
+  }
+
+  .pegawai-nik {
+    font-size: 0.85rem;
+  }
+
   .modal-footer {
+    padding: 1.25rem 1.5rem;
     border-radius: 0;
+    gap: 0.75rem;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0));
+  }
+
+  .btn-cancel, .btn-submit {
+    flex: 1;
+    justify-content: center;
+    padding: 0.85rem 1rem;
   }
 }
 </style>
