@@ -92,6 +92,17 @@ export const pegawaiService = {
     },
 
     /**
+     * Upload Bukti Kelulusan for clinical staff
+     */
+    uploadBuktiKelulusan(nik, formData) {
+        return api.post(`/sdi/kualifikasi-staf/${nik}/upload-bukti-kelulusan`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    },
+
+    /**
      * Get list of employees for dropdown (simplified data)
      */
     getKaryawanList(params = {}) {

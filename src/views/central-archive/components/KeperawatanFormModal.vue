@@ -114,6 +114,58 @@
               <option value="B">SK Pengangkatan Jabatan</option>
             </select>
           </div>
+
+          <!-- Target Pegawai (Only for Kredensial) -->
+          <div v-if="isKredensial" class="form-group has-search mt-4">
+            <label>Target Pegawai (Penerima SPK/RKK) <span>*</span></label>
+            <div class="search-wrapper">
+              <i class="fas fa-user search-icon"></i>
+              <input 
+                type="text" 
+                v-model="searchTarget" 
+                class="form-control" 
+                placeholder="Cari NIK atau Nama Pegawai..." 
+                @input="handleSearchTarget"
+                @focus="showTargetList = true"
+              >
+              <button 
+                v-if="searchTarget && selectedTarget" 
+                type="button" 
+                class="btn-clear" 
+                @click="clearSelectedTarget"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <!-- Dropdown Hasil Pencarian Target -->
+            <div v-if="showTargetList && searchListTarget.length > 0" class="search-results-dropdown">
+              <div 
+                v-for="pegawai in searchListTarget" 
+                :key="pegawai.nik" 
+                class="search-result-item"
+                @click="selectTarget(pegawai)"
+              >
+                <div class="pegawai-info">
+                  <div class="pegawai-name">{{ pegawai.nama }}</div>
+                  <div class="pegawai-nik">NIK: {{ pegawai.nik }} &bull; {{ pegawai.jbtn || '-' }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Target Validation/Display -->
+            <div v-if="selectedTarget?.nik" class="selected-pj-badge mt-2 bg-success-light border-success-light">
+              <div class="pj-avatar bg-success-light text-success">{{ getInitials(selectedTarget.nama) }}</div>
+              <div class="pj-details">
+                <span class="pj-nama">{{ selectedTarget.nama }}</span>
+                <span class="pj-nik">{{ selectedTarget.nik }}</span>
+              </div>
+              <i class="fas fa-check-circle text-success ml-auto"></i>
+            </div>
+            <small v-else-if="isSubmitted" class="text-danger mt-1 d-block">
+              <i class="fas fa-exclamation-circle"></i> Target Pegawai wajib dipilih untuk Pengajuan Kredensial.
+            </small>
+          </div>
         </form>
       </div>
 
@@ -167,6 +219,7 @@ const loading = ref(false)
 const isSubmitted = ref(false)
 const formData = ref({
   pj: '',
+  nik: '',
   perihal: '',
   tgl_terbit: new Date().toISOString().split('T')[0],
   jenis: ''
@@ -185,6 +238,13 @@ const searchingPegawai = ref(false)
 const searchList = ref([])
 const showPegawaiList = ref(false)
 const selectedPj = ref(null)
+
+// Target Pegawai Search State
+const searchTarget = ref('')
+const searchingTarget = ref(false)
+const searchListTarget = ref([])
+const showTargetList = ref(false)
+const selectedTarget = ref(null)
 
 // Initialize form when modal opens or edits change
 watch(() => props.show, (newVal) => {
@@ -213,24 +273,35 @@ watch(() => props.show, (newVal) => {
           jbtn: props.data.penanggung_jawab.jbtn
         }
         searchPj.value = props.data.penanggung_jawab.nama
-      } else if (props.data.pj) {
-        selectedPj.value = { nik: props.data.pj, nama: props.data.pj }
-        searchPj.value = props.data.pj
       }
     } else {
       // Create Mode Initialization
       formData.value = {
         pj: '',
+        nik: '',
         perihal: '',
         tgl_terbit: new Date().toISOString().split('T')[0],
         jenis: ''
       }
       searchPj.value = ''
       selectedPj.value = null
+      searchTarget.value = ''
+      selectedTarget.value = null
+    }
+
+    if (props.isEdit && props.data?.target_pegawai) {
+        selectedTarget.value = {
+            nik: props.data.target_pegawai.nik,
+            nama: props.data.target_pegawai.nama,
+            jbtn: props.data.target_pegawai.jbtn
+        }
+        searchTarget.value = props.data.target_pegawai.nama
     }
     
     searchList.value = []
+    searchListTarget.value = []
     showPegawaiList.value = false
+    showTargetList.value = false
   }
 })
 
@@ -238,6 +309,7 @@ watch(() => props.show, (newVal) => {
 const handleClickOutside = (e) => {
   if (!e.target.closest('.search-wrapper') && !e.target.closest('.search-results-dropdown')) {
     showPegawaiList.value = false
+    showTargetList.value = false
   }
 }
 
@@ -297,6 +369,48 @@ const clearSelectedPj = () => {
   }, 50)
 }
 
+// Search Target Pegawai Logic
+const handleSearchTarget = debounce(async () => {
+  if (!searchTarget.value || searchTarget.value.length < 3) {
+    searchListTarget.value = []
+    if (!searchTarget.value && selectedTarget.value) {
+       clearSelectedTarget()
+    }
+    return
+  }
+  
+  searchingTarget.value = true
+  showTargetList.value = true
+  
+  try {
+    const res = await pegawaiService.searchPegawai(searchTarget.value, 10)
+    searchListTarget.value = res.data?.data || []
+  } catch (error) {
+    console.error('Error searching target:', error)
+    searchListTarget.value = []
+  } finally {
+    searchingTarget.value = false
+  }
+}, 300)
+
+const selectTarget = (pegawai) => {
+  selectedTarget.value = {
+    nik: pegawai.nik,
+    nama: pegawai.nama,
+    jbtn: pegawai.jbtn
+  }
+  formData.value.nik = pegawai.nik
+  searchTarget.value = pegawai.nama
+  showTargetList.value = false
+}
+
+const clearSelectedTarget = () => {
+  selectedTarget.value = null
+  formData.value.nik = ''
+  searchTarget.value = ''
+  searchListTarget.value = []
+}
+
 // Formatters for Read-only Edit fields
 const formatNomorSurat = (data) => {
   if (!data || !data.nomor) return '-'
@@ -339,9 +453,18 @@ const submitForm = async () => {
     toast.warning('Penanggung Jawab harus dipilih dari daftar pegawai')
     return
   }
+
+  if (props.isKredensial && (!selectedTarget.value || !selectedTarget.value.nik)) {
+    toast.warning('Target Pegawai (Penerima SPK/RKK) harus dipilih')
+    return
+  }
   
   // Refresh PJ value from selection to be safe
   formData.value.pj = selectedPj.value.nik
+  if (selectedTarget.value) {
+    formData.value.nik = selectedTarget.value.nik
+  }
+  
   loading.value = true
   
   try {
@@ -353,6 +476,7 @@ const submitForm = async () => {
           jenis: props.data.jenis,
           tgl_terbit: formData.value.tgl_terbit,
           pj: formData.value.pj,
+          nik: formData.value.nik,
           judul: formData.value.perihal,
           status: formData.value.status || '1'
         }
@@ -379,6 +503,7 @@ const submitForm = async () => {
         const skPayload = {
           tgl_terbit: formData.value.tgl_terbit,
           pj: formData.value.pj,
+          nik: formData.value.nik,
           judul: formData.value.perihal,
           status_approval: 'pengajuan',
           jenis: formData.value.jenis
@@ -686,6 +811,9 @@ select.form-control {
   font-weight: 600;
   font-size: 0.85rem;
 }
+
+.bg-success-light { background-color: #f0fdf4 !important; }
+.border-success-light { border-color: #dcfce7 !important; }
 
 .pj-details {
   display: flex;

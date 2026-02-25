@@ -74,6 +74,7 @@
               <th>Perguruan Tinggi</th>
               <th>Program Studi</th>
               <th>Tanggal Lulus</th>
+              <th>Bukti Kelulusan</th>
               <th>Tanggal Update</th>
               <th class="sticky-col-right">Aksi</th>
             </tr>
@@ -114,6 +115,12 @@
               <td>{{ staf.perguruan_tinggi || '-' }}</td>
               <td>{{ staf.prodi || '-' }}</td>
               <td>{{ formatDate(staf.tanggal_lulus) || '-' }}</td>
+              <td>
+                <a v-if="staf.bukti_kelulusan" :href="getBuktiKelulusanUrl(staf.bukti_kelulusan)" target="_blank" class="badge bg-success text-white text-decoration-none px-2 py-1">
+                  <i class="fas fa-file-pdf me-1"></i> Lihat
+                </a>
+                <span v-else class="text-muted">-</span>
+              </td>
               <td>{{ formatDate(staf.tgl_update) || '-' }}</td>
               <td class="sticky-col-right">
                 <div class="action-buttons">
@@ -128,6 +135,9 @@
                     </button>
                     <button class="btn-detail" @click="showDetail(staf)" title="Detail">
                       <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-upload" @click="openUploadBuktiModal(staf)" title="Upload Bukti Kelulusan">
+                      <i class="fas fa-upload"></i>
                     </button>
                     <button class="btn-delete" @click="confirmDelete(staf)" title="Hapus">
                       <i class="fas fa-trash"></i>
@@ -302,6 +312,46 @@
       </div>
     </div>
 
+    <!-- Upload Bukti Kelulusan Modal -->
+    <div v-if="showUploadBuktiModal" class="modal-overlay" @click="closeUploadBuktiModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Upload Bukti Kelulusan</h3>
+          <button class="btn-close" @click="closeUploadBuktiModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Karyawan: <strong>{{ selectedStaf?.nama }}</strong></p>
+          <div class="form-group">
+            <label>Pilih File PDF/JPG/PNG (Max 10MB)</label>
+            <div class="upload-area" :class="{ 'has-file': buktiFile }">
+              <input type="file" ref="fileInput" @change="handleBuktiFileChange" accept=".pdf,.jpg,.jpeg,.png" class="file-input" />
+              <div class="upload-placeholder" v-if="!buktiFile">
+                <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                <p>Klik atau seret file ke sini</p>
+              </div>
+              <div class="file-preview" v-else>
+                <i :class="getFileIcon(buktiFile.name)"></i>
+                <span>{{ buktiFile.name }}</span>
+                <button type="button" class="btn-remove-file" @click.stop="buktiFile = null; $refs.fileInput.value = ''">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeUploadBuktiModal" :disabled="uploadingBukti">Batal</button>
+          <button class="btn-save" @click="submitUploadBukti" :disabled="!buktiFile || uploadingBukti">
+            <i v-if="uploadingBukti" class="fas fa-spinner fa-spin"></i>
+            <i v-else class="fas fa-upload"></i>
+            {{ uploadingBukti ? 'Mengupload...' : 'Upload' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Detail Modal -->
     <div v-if="showDetailModal" class="modal-overlay" @click="showDetailModal = false">
       <div class="modal-content detail-modal" @click.stop>
@@ -431,6 +481,15 @@
                 <label>Tanggal Lulus</label>
                 <div class="detail-value">{{ formatDate(selectedStaf.tanggal_lulus) }}</div>
               </div>
+              <div class="detail-item full-width">
+                <label>Bukti Kelulusan</label>
+                <div class="detail-value">
+                  <a v-if="selectedStaf.bukti_kelulusan" :href="getBuktiKelulusanUrl(selectedStaf.bukti_kelulusan)" target="_blank" class="badge bg-success text-white text-decoration-none px-3 py-2">
+                    <i class="fas fa-file-pdf me-1"></i> Lihat Bukti Kelulusan
+                  </a>
+                  <span v-else class="text-muted">-</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -482,6 +541,9 @@ const selectedStaf = ref(null)
 const searchQuery = ref('')
 const showEmployeeList = ref(false)
 const showDetailModal = ref(false)
+const showUploadBuktiModal = ref(false)
+const uploadingBukti = ref(false)
+const buktiFile = ref(null)
 let searchTimeout = null
 
 const form = ref({
@@ -597,6 +659,69 @@ const resetForm = () => {
     tanggal_lulus: '',
     status: '1'
   }
+}
+
+const openUploadBuktiModal = (staf) => {
+  selectedStaf.value = staf
+  buktiFile.value = null
+  showUploadBuktiModal.value = true
+}
+
+const closeUploadBuktiModal = () => {
+  showUploadBuktiModal.value = false
+  buktiFile.value = null
+}
+
+const handleBuktiFileChange = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (file.size > maxSize) {
+    toast.error('Ukuran file maksimal 10MB')
+    event.target.value = ''
+    return
+  }
+
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Tipe file tidak didukung. Gunakan PDF, JPG, atau PNG')
+    event.target.value = ''
+    return
+  }
+
+  buktiFile.value = file
+}
+
+const submitUploadBukti = async () => {
+  if (!buktiFile.value || !selectedStaf.value) return
+
+  uploadingBukti.value = true
+  const formData = new FormData()
+  formData.append('file', buktiFile.value)
+
+  try {
+    await pegawaiService.uploadBuktiKelulusan(selectedStaf.value.nik, formData)
+    toast.success('Bukti Kelulusan berhasil diupload')
+    closeUploadBuktiModal()
+    loadStafKlinis()
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    toast.error('Gagal mengupload file: ' + (error.response?.data?.message || ''))
+  } finally {
+    uploadingBukti.value = false
+  }
+}
+
+const getBuktiKelulusanUrl = (filename) => {
+  return `http://192.168.100.33/webapps/rsia_kualifikasi/${filename}`
+}
+
+const getFileIcon = (filename) => {
+  const ext = filename.split('.').pop().toLowerCase()
+  if (ext === 'pdf') return 'fas fa-file-pdf text-danger fa-2x'
+  if (['jpg', 'jpeg', 'png'].includes(ext)) return 'fas fa-file-image text-primary fa-2x'
+  return 'fas fa-file text-secondary fa-2x'
 }
 
 const saveKualifikasi = async () => {
@@ -1567,5 +1692,102 @@ tbody tr:hover .sticky-col-right {
 
 .ms-2 {
   margin-left: 0.5rem;
+}
+
+/* Upload Action Button */
+.btn-upload {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3b82f6;
+  font-size: 1rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-upload:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Upload Area Styling */
+.upload-area {
+  position: relative;
+  width: 100%;
+  min-height: 150px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.upload-area:hover, .upload-area.has-file {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  z-index: 15;
+  color: #334155;
+  font-weight: 500;
+  text-align: center;
+  word-break: break-all;
+}
+
+.btn-remove-file {
+  margin-top: 10px;
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 20;
+  position: relative;
+}
+
+.btn-remove-file:hover {
+  background: #fca5a5;
+  color: #b91c1c;
 }
 </style>
