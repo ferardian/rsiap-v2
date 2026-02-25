@@ -19,8 +19,19 @@
       </li>
     </ul>
 
+    <!-- Mobile Filter Toggle -->
+    <div class="mobile-filter-toggle d-md-none mb-3">
+      <button class="btn w-100 d-flex justify-content-between align-items-center py-2 px-3 border shadow-sm rounded-3" 
+        :class="showFiltersMobile ? 'btn-primary text-white' : 'bg-white text-primary'"
+        @click="showFiltersMobile = !showFiltersMobile"
+      >
+        <span class="fw-bold"><i class="fas fa-filter me-2"></i> {{ showFiltersMobile ? 'Sembunyikan Filter' : 'Tampilkan Filter' }}</span>
+        <i class="fas" :class="showFiltersMobile ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+    </div>
+
     <!-- Filter Card (Detail Mode) -->
-    <div v-if="reportTab === 'detail'" class="filter-card glass-effect mb-4 animate-fade">
+    <div v-if="reportTab === 'detail'" class="filter-card glass-effect mb-4 animate-fade" :class="{ 'd-none d-md-block': !showFiltersMobile }">
       <div class="d-flex flex-wrap align-items-end gap-3">
         <div class="filter-item">
           <label class="form-label-custom">Tanggal Start</label>
@@ -92,7 +103,7 @@
       </div>
     </div>
     <!-- Filter Card (Rekap Mode) -->
-    <div v-if="reportTab === 'rekap'" class="filter-card glass-effect mb-4 animate-fade">
+    <div v-if="reportTab === 'rekap'" class="filter-card glass-effect mb-4 animate-fade" :class="{ 'd-none d-md-block': !showFiltersMobile }">
       <div class="d-flex align-items-end gap-3">
         <div class="filter-item">
           <label class="form-label-custom">Pilih Tahun</label>
@@ -177,7 +188,7 @@
     </div>
 
     <!-- Report Table (Detail Mode) -->
-    <div v-if="reportTab === 'detail'" class="report-table-section animate-fade border rounded-4 overflow-hidden shadow-sm bg-white">
+    <div v-if="reportTab === 'detail'" class="report-table-section animate-fade border rounded-4 shadow-sm bg-white">
       <div v-if="loading" class="loading-overlay d-flex flex-column align-items-center justify-content-center py-5">
         <div class="spinner-border text-primary" role="status"></div>
         <p class="mt-3 text-muted">Menganalisis data antibiotik...</p>
@@ -194,13 +205,13 @@
           <thead>
             <tr class="bg-light">
               <th width="50" class="text-center">No</th>
-              <th>Informasi Pasien</th>
+              <th style="min-width: 250px;">Informasi Pasien</th>
               <th>Diagnosa</th>
               <th width="80">Jenis Ab</th>
               <th width="100">Tgl Beri</th>
               <th width="60" class="text-center">Rute</th>
               <th width="70">LOS</th>
-              <th>Aturan Pakai</th>
+              <th style="min-width: 150px;">Aturan Pakai</th>
               <th width="80" class="text-center">Status</th>
               <th width="80">Total Pakai</th>
               <th width="70" class="text-center">WHO (DDD)</th>
@@ -309,17 +320,17 @@
 
     <!-- Rekap Bulanan Table (Rekap Mode) -->
     <div v-if="reportTab === 'rekap'" class="rekap-section animate-fade">
-      <div class="table-responsive border rounded-4 shadow-sm bg-white overflow-hidden">
+      <div class="table-responsive border rounded-4 shadow-sm bg-white">
         <table class="table table-hover align-middle mb-0">
           <thead class="bg-light sticky-top" style="z-index: 10;">
             <tr>
               <th rowspan="2" class="text-center align-middle bg-light" width="50" style="border-bottom: 1px solid #dee2e6;">No</th>
-              <th rowspan="2" class="align-middle bg-light" style="border-bottom: 1px solid #dee2e6;">Nama Antibiotik</th>
+              <th rowspan="2" class="align-middle bg-light" style="border-bottom: 1px solid #dee2e6; min-width: 250px;">Nama Antibiotik</th>
               <th colspan="12" class="text-center bg-light" style="border-bottom: 1px solid #dee2e6;">Bulan (Total DDD)</th>
               <th rowspan="2" class="text-center align-middle bg-primary text-white" width="100" style="border-bottom: 1px solid #dee2e6;">Total</th>
             </tr>
             <tr class="bg-light-subtle">
-              <th v-for="m in monthNames" :key="m" class="text-center small py-1" style="font-size: 10px; border-bottom: 1px solid #dee2e6;">{{ m }}</th>
+              <th v-for="m in monthNames" :key="m" class="text-center small py-1" style="font-size: 10px; border-bottom: 1px solid #dee2e6; min-width: 45px;">{{ m }}</th>
             </tr>
           </thead>
           <tbody>
@@ -518,6 +529,8 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep
 const spesialisOptions = ref([]);
 const dokterOptions = ref([]);
 
+const showFiltersMobile = ref(false);
+
 const currentPage = ref(1);
 const itemsPerPage = ref(25);
 
@@ -684,6 +697,7 @@ const fetchData = async () => {
 const handleSearch = () => {
   currentPage.value = 1; // Reset to first page on new search
   filterMissingDosage.value = false; // Reset filter on new search
+  showFiltersMobile.value = false; // Hide mobile filters after search
   fetchData();
 };
 
@@ -699,6 +713,7 @@ const fetchRekapBulanan = async () => {
       tahun: rekapYear.value
     });
     rekapData.value = response.data.data || [];
+    showFiltersMobile.value = false; // Hide mobile filters after refresh
   } catch (error) {
     console.error('Failed to fetch rekap bulanan:', error);
     Swal.fire('Gagal', 'Tidak dapat mengambil data rekap bulanan', 'error');

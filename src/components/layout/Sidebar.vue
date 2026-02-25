@@ -233,7 +233,7 @@ onMounted(async () => {
     width: 280px; /* Keep full width when sliding out/in (hidden state doesn't matter much but cleaner) */
   }
 
-  .collapse-btn-cutout {
+  .collapse-btn-top {
     display: none !important;
   }
 }
