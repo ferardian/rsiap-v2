@@ -9,7 +9,6 @@
         <h1 class="text-white">RSIA</h1>
         <p>Aisyiyah Pekajangan</p>
       </div>
-
       <!-- Collapse Toggle Top -->
       <button class="collapse-btn-top" @click="toggleCollapse">
         <i class="fas" :class="effectiveIsCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
@@ -234,7 +233,7 @@ onMounted(async () => {
     width: 280px; /* Keep full width when sliding out/in (hidden state doesn't matter much but cleaner) */
   }
 
-  .collapse-btn-top {
+  .collapse-btn-cutout {
     display: none !important;
   }
 }

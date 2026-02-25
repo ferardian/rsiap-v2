@@ -15,16 +15,17 @@
               v-model="filters.tanggal" 
               type="date" 
               class="form-control premium-input-sm" 
-              @change="fetchAntrolData"
             >
             <span class="text-muted small">s/d</span>
             <input 
               v-model="filters.tgl_akhir" 
               type="date" 
               class="form-control premium-input-sm" 
-              @change="fetchAntrolData"
             >
-            <button class="btn btn-premium-refresh" @click="fetchAntrolData" :disabled="loading">
+            <button class="btn btn-primary premium-input-sm text-nowrap fw-bold shadow-sm" style="border-radius: 10px;" @click="fetchAntrolData" :disabled="loading">
+              <i class="fas fa-search me-1"></i> Get Antrean
+            </button>
+            <button class="btn btn-premium-refresh" @click="fetchAntrolData" :disabled="loading" title="Refresh Data">
               <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
             </button>
           </div>
@@ -837,10 +838,15 @@ const fetchAntrolData = async () => {
            
            // Check if there's already a non-Mobile JKN entry we should replace
            const nonMobileIndex = existingItems.findIndex(existing => !String(existing.sumberdata || '').toLowerCase().includes('mobile jkn'))
-           
            if (currentSource.includes('mobile jkn')) {
-              if (nonMobileIndex !== -1) {
-                 // Replace the non-Mobile JKN one with this Mobile JKN one
+              if (String(item.status || '').toLowerCase() === 'batal') {
+                 // The incoming Mobile JKN is cancelled. 
+                 // Do not overwrite active non-Mobile JKN entries. Just append it alongside for record-keeping.
+                 item.is_duplicate = true
+                 existingItems.forEach(ex => ex.is_duplicate = true)
+                 existingItems.push(item)
+              } else if (nonMobileIndex !== -1) {
+                 // Incoming Mobile JKN is active. Replace the non-Mobile JKN one with this Mobile JKN one
                  existingItems[nonMobileIndex] = item
               } else {
                  // All existing are ALSO Mobile JKN, so keep this one too (allow multiple MJKN)
@@ -849,12 +855,15 @@ const fetchAntrolData = async () => {
                  existingItems.push(item)
               }
            } else {
-              // Current is NOT Mobile JKN. 
-              // If there's already a Mobile JKN entry, we ignore this current one.
-              // If there is ONLY a non-Mobile JKN entry, we can keep it or ignore it (usually just keep the first one)
-              const hasMobileJkn = existingItems.some(existing => String(existing.sumberdata || '').toLowerCase().includes('mobile jkn'))
-              if (!hasMobileJkn) {
-                 // Just in case they have multiple onsite queues for different poli, let's keep them
+              // Current is NOT Mobile JKN (e.g., Onsite/Bridging). 
+              // We should only ignore it if there's an ACTIVE Mobile JKN entry.
+              const hasActiveMobileJkn = existingItems.some(existing => 
+                  String(existing.sumberdata || '').toLowerCase().includes('mobile jkn') && 
+                  String(existing.status || '').toLowerCase() !== 'batal'
+              )
+              
+              if (!hasActiveMobileJkn) {
+                 // Even if there's a cancelled MJKN or other onsite queues, keep this active bridging queue
                  item.is_duplicate = true
                  existingItems.forEach(ex => ex.is_duplicate = true)
                  existingItems.push(item)
