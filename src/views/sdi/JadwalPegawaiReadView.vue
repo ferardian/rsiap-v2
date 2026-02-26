@@ -587,11 +587,89 @@ thead .sticky-col {
 .text-red-600 { color: #dc2626; }
 
 @media (max-width: 768px) {
-  .desktop-text { display: none; }
-  .mobile-text { display: inline; }
-  .controls { flex-direction: column; align-items: stretch; width: 100%; }
-  .filter-group { flex-direction: column; }
-  .month-select, .search-input, .btn { width: 100%; }
-  .sticky-col { width: 150px; min-width: 150px; }
+  .desktop-text {
+    display: none;
+  }
+  .mobile-text {
+    display: inline;
+  }
+  
+  .jadwal-page {
+    height: auto;
+    overflow: visible;
+    padding: 0 !important; /* Remove view padding to allow edge-to-edge */
+  }
+  
+  .controls {
+    flex-direction: column; /* Stack vertically */
+    align-items: stretch;
+    gap: 0.75rem; /* Add spacing between items */
+    width: 100%;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .month-select,
+  .search-input,
+  .btn {
+    width: 100% !important; /* Full width for easy tapping */
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  .table-container {
+    margin-left: 0; /* Keep left spacing */
+    margin-right: -1rem; /* Flush to right edge */
+    width: calc(100% + 1rem); /* Extend only to right */
+    border-radius: 0;
+    border-left: 1px solid #e2e8f0; /* Restore left border */
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  th, td {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .sticky-col {
+    position: sticky !important; /* Re-stick on mobile */
+    left: 0;
+    width: 100px !important; /* Keep compact width */
+    min-width: 100px !important;
+    max-width: 100px !important;
+    background: white; /* Opaque bg needed for sticky */
+    border-right: 1px solid #e2e8f0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05) !important; /* Shadow separator */
+    z-index: 20 !important;
+    word-break: break-word; 
+  }
+
+  /* Ensure the header of the restricted column stays on top */
+  thead .sticky-col {
+    z-index: 50 !important;
+    background: #f8fafc; /* Match header bg */
+  }
+
+  .employee-info, .emp-name, .emp-dept {
+    font-size: 0.75rem !important; /* Slightly smaller */
+    white-space: normal !important; 
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  
+  .shift-cell {
+    min-width: 35px; /* Reduce cell width */
+  }
+
+  /* Summary Table Mobile */
+  .summary-table th, .summary-table td {
+     font-size: 0.7rem;
+     padding: 0.25rem;
+  }
 }
 </style>
