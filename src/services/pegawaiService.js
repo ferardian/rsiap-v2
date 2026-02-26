@@ -48,9 +48,9 @@ export const pegawaiService = {
     /**
      * Search employees
      */
-    searchPegawai(query, limit = 20) {
+    searchPegawai(query, limit = 20, params = {}) {
         return api.get('/sdi/pegawai/search', {
-            params: { q: query, limit }
+            params: { q: query, limit, ...params }
         })
     },
 

@@ -17,14 +17,27 @@
 
       <!-- Search and Add (only for Data Karyawan tab) -->
       <div v-if="activeTab === 'data-karyawan'" class="header-actions">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            @input="handleSearch"
-            placeholder="Cari nama, NIP, atau jabatan..."
-          />
+        <div class="search-filter-wrapper">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input 
+              type="text" 
+              v-model="searchQuery" 
+              @input="handleSearch"
+              placeholder="Cari nama, NIP, atau jabatan..."
+            />
+          </div>
+          <div class="filter-group">
+            <select 
+            v-model="statusFilter" 
+            @change="loadPegawai(1)"
+            :class="['filter-select', statusFilter.toLowerCase()]"
+          >
+              <option value="AKTIF">Status: Aktif</option>
+              <option value="NON-AKTIF">Status: Tidak Aktif</option>
+              <option value="ALL">Status: Semua</option>
+            </select>
+          </div>
         </div>
         <div class="d-flex gap-2">
           <button class="btn-export" @click="exportToExcel" :disabled="loadingExport">
@@ -118,6 +131,7 @@
                 <th>Departemen</th>
                 <th>Mulai Kerja</th>
                 <th>Masa Kerja</th>
+                <th>Status</th>
                 <th>Aksi</th>
               </tr>
             </thead>
@@ -158,6 +172,12 @@
                     <i class="fas fa-history"></i>
                     {{ calculateTenure(pegawai.mulai_kerja) }}
                   </div>
+                </td>
+                <td>
+                  <span :class="['status-badge', getStatusClass(pegawai.stts_aktif)]">
+                    <i :class="getStatusIcon(pegawai.stts_aktif)"></i>
+                    {{ pegawai.stts_aktif }}
+                  </span>
                 </td>
                 <td>
                   <div class="action-buttons">
@@ -374,6 +394,7 @@ const pagination = ref({
   per_page: 50,
   total: 0
 })
+const statusFilter = ref('AKTIF')
 const showDeleteModal = ref(false)
 const showFormModal = ref(false)
 const showDetailModal = ref(false) // Added
@@ -418,14 +439,17 @@ const canDelete = computed(() => {
 const loadPegawai = async (page = 1) => {
   loading.value = true
   try {
-    const response = await pegawaiService.getPegawai(page, 50)
+    const params = {
+      stts_aktif: statusFilter.value
+    }
+    const response = await pegawaiService.getPegawai(page, 50, params)
     if (response.data.success) {
       pegawaiList.value = response.data.data
       pagination.value = response.data.pagination
     }
   } catch (error) {
     console.error('Error loading pegawai:', error)
-    alert('Gagal memuat data karyawan')
+    toast.error('Gagal memuat data karyawan')
   } finally {
     loading.value = false
   }
@@ -439,7 +463,10 @@ const handleSearch = async () => {
   
   loading.value = true
   try {
-    const response = await pegawaiService.searchPegawai(searchQuery.value)
+    const params = {
+      stts_aktif: statusFilter.value
+    }
+    const response = await pegawaiService.searchPegawai(searchQuery.value, 50, params)
     if (response.data.success) {
       pegawaiList.value = response.data.data
       // Reset pagination for search results
@@ -462,13 +489,15 @@ const exportToExcel = async () => {
   
   loadingExport.value = true
   try {
-    // Fetch all records for the current search query
-    // Passing a large limit to get all data
+    const params = {
+      stts_aktif: statusFilter.value
+    }
+    
     let response
     if (searchQuery.value.trim().length >= 2) {
-      response = await pegawaiService.searchPegawai(searchQuery.value, 10000)
+      response = await pegawaiService.searchPegawai(searchQuery.value, 10000, params)
     } else {
-      response = await pegawaiService.getPegawai(1, 10000)
+      response = await pegawaiService.getPegawai(1, 10000, params)
     }
     
     if (response.data && response.data.success) {
@@ -483,7 +512,7 @@ const exportToExcel = async () => {
       wsData.push([
         'No', 'NIP', 'Nama Lengkap', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 
         'No KTP / NIK', 'No Telp', 'Jml. Keluarga', 'Departemen', 'Jabatan', 'Alamat', 
-        'Pendidikan', 'Tanggal Masuk', 'Masa Kerja'
+        'Pendidikan', 'Tanggal Masuk', 'Masa Kerja', 'Status'
       ])
 
       dataToExport.forEach((emp, index) => {
@@ -502,7 +531,8 @@ const exportToExcel = async () => {
           emp.alamat || '-',
           emp.pendidikan || '-',
           emp.mulai_kerja ? formatDate(emp.mulai_kerja) : '-',
-          emp.mulai_kerja ? calculateTenure(emp.mulai_kerja) : '-'
+          emp.mulai_kerja ? calculateTenure(emp.mulai_kerja) : '-',
+          emp.stts_aktif || '-'
         ])
       })
 
@@ -793,6 +823,28 @@ const calculateTenure = (startDate) => {
   return parts.join(' ')
 }
 
+const getStatusClass = (status) => {
+  if (!status) return ''
+  switch (status.toUpperCase()) {
+    case 'AKTIF': return 'active'
+    case 'KELUAR': return 'inactive'
+    case 'CUTI': return 'warning'
+    case 'TENAGA LUAR': return 'info'
+    default: return ''
+  }
+}
+
+const getStatusIcon = (status) => {
+  if (!status) return 'fas fa-question-circle'
+  switch (status.toUpperCase()) {
+    case 'AKTIF': return 'fas fa-check-circle'
+    case 'KELUAR': return 'fas fa-times-circle'
+    case 'CUTI': return 'fas fa-clock'
+    case 'TENAGA LUAR': return 'fas fa-user-tag'
+    default: return 'fas fa-info-circle'
+  }
+}
+
 const getInitials = (name) => {
   if (!name) return '?'
   return name
@@ -884,10 +936,15 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
+.search-filter-wrapper {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
 .search-box {
-  flex: 1;
-  max-width: 400px;
   position: relative;
+  min-width: 300px;
 }
 
 .search-box i {
@@ -909,6 +966,55 @@ onBeforeUnmount(() => {
 .search-box input:focus {
   outline: none;
   border-color: #667eea;
+}
+
+.filter-group {
+  min-width: 150px;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  background-color: white;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.filter-select.aktif {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+  color: #065f46;
+}
+
+.filter-select.non-aktif {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+.filter-select.all {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.filter-select:hover {
+  transform: translateY(-1px);
 }
 
 .btn-add {
@@ -1143,14 +1249,45 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.status-badge i {
+  font-size: 0.875rem;
+}
+
 .status-badge.active {
-  background: #dcfce7;
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
   color: #166534;
+  border: 1px solid #86efac;
 }
 
 .status-badge.inactive {
-  background: #fee2e2;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.status-badge.warning {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  color: #9a3412;
+  border: 1px solid #fdba74;
+}
+
+.status-badge.info {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
 }
 
 .action-buttons {
