@@ -18,6 +18,15 @@
             placeholder="Pilih Tahun"
             :disabled="loading"
           />
+          <SearchableSelect 
+            v-if="allowAllDepartments"
+            v-model="filter.department" 
+            :options="departmentOptions"
+            placeholder="Pilih Unit"
+            class="dept-select"
+            :disabled="loading"
+            @change="fetchData"
+          />
           <input 
             v-model="filter.search" 
             type="text" 
@@ -151,6 +160,13 @@ import { jadwalPegawaiService } from '../../services/jadwalPegawaiService'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import Swal from 'sweetalert2'
 
+const props = defineProps({
+  allowAllDepartments: {
+    type: Boolean,
+    default: false
+  }
+})
+
 const months = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
@@ -164,12 +180,18 @@ const filter = ref({
   month: new Date().getMonth() + 1,
   year: currentYear,
   search: '',
-  department: 'all'
+  department: props.allowAllDepartments ? 'all' : ''
 })
+
+// Sync department filter if prop changes (e.g. route navigation)
+watch(() => props.allowAllDepartments, (newVal) => {
+  filter.value.department = newVal ? 'all' : ''
+}, { immediate: true })
 
 const loading = ref(false)
 const employees = ref([])
 const shifts = ref([])
+const departmentOptions = ref([])
 
 // Computed
 const daysInMonth = computed(() => {
@@ -324,14 +346,47 @@ const getDayName = (day) => {
 }
 
 const fetchData = async () => {
+  if (loading.value) return
+  
   loading.value = true
+  employees.value = [] // Reset to show loading state or empty result
+  
+  console.log('📡 [SDI SCHEDULE] Fetching with filter:', { 
+    month: filter.value.month, 
+    year: filter.value.year, 
+    department: filter.value.department, 
+    search: filter.value.search,
+    mode: props.allowAllDepartments ? 'admin' : 'default'
+  })
+
   try {
+    const fetchMode = props.allowAllDepartments ? 'admin' : null
     const [schedRes, shiftRes] = await Promise.all([
-      jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search),
+      jadwalPegawaiService.getSchedule(
+        filter.value.month, 
+        filter.value.year, 
+        filter.value.department, 
+        filter.value.search,
+        fetchMode
+      ),
       jadwalPegawaiService.getShifts()
     ])
     if (schedRes.data && schedRes.data.data) {
       employees.value = schedRes.data.data
+      console.log(`✅ [SDI SCHEDULE] Loaded ${employees.value.length} employees`)
+      
+      // Populate department options
+      if (schedRes.data.authorized_departments || (schedRes.data.meta && schedRes.data.meta.authorized_departments)) {
+          const authorized = schedRes.data.authorized_departments || schedRes.data.meta.authorized_departments
+          departmentOptions.value = [
+              { id: 'all', name: 'Semua Unit' },
+              ...authorized
+          ]
+          
+          if (!filter.value.department && authorized.length > 0) {
+              filter.value.department = authorized[0].id
+          }
+      }
     }
     if (shiftRes.data && shiftRes.data.data) {
       shifts.value = shiftRes.data.data
@@ -379,9 +434,11 @@ onMounted(() => {
   fetchData()
 })
 
-watch([() => filter.value.month, () => filter.value.year, () => filter.value.department], () => {
-  fetchData()
-})
+// Individual watchers for cleaner reactivity
+watch(() => filter.value.month, () => fetchData())
+watch(() => filter.value.year, () => fetchData())
+watch(() => filter.value.department, () => fetchData())
+// Search is handled separately via handleSearch to avoid too many requests
 </script>
 
 <style scoped>
@@ -429,6 +486,10 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 
 .month-select {
   min-width: 150px;
+}
+
+.dept-select {
+  min-width: 180px;
 }
 
 .search-input {
@@ -586,7 +647,25 @@ thead .sticky-col {
 .text-green-600 { color: #16a34a; }
 .text-red-600 { color: #dc2626; }
 
+/* Selection fix for desktop */
+.name-col .mobile-text {
+  display: none !important;
+}
+
+.name-col .desktop-text {
+  display: inline-block !important;
+}
+
 @media (max-width: 768px) {
+  .name-col .mobile-text {
+    display: block !important;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .name-col .desktop-text {
+    display: none !important;
+  }
   .desktop-text {
     display: none;
   }

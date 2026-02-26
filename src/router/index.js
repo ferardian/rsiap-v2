@@ -150,6 +150,13 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/jadwal-pegawai-all',
+    name: 'JadwalPegawaiReadAll',
+    component: () => import('../views/sdi/JadwalPegawaiReadView.vue'),
+    props: { allowAllDepartments: true },
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/input-jadwal-admin',
     name: 'InputJadwalAdmin',
     component: () => import('../views/sdi/InputJadwalAdminView.vue'),
