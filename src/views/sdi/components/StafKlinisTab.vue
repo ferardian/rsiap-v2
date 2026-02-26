@@ -74,7 +74,7 @@
               <th>Perguruan Tinggi</th>
               <th>Program Studi</th>
               <th>Tanggal Lulus</th>
-              <th>Bukti Kelulusan</th>
+              <th>Verifikasi Ijazah</th>
               <th>Tanggal Update</th>
               <th class="sticky-col-right">Aksi</th>
             </tr>
@@ -136,7 +136,7 @@
                     <button class="btn-detail" @click="showDetail(staf)" title="Detail">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-upload" @click="openUploadBuktiModal(staf)" title="Upload Bukti Kelulusan">
+                    <button class="btn-upload" @click="openUploadBuktiModal(staf)" title="Upload Verifikasi Ijazah">
                       <i class="fas fa-upload"></i>
                     </button>
                     <button class="btn-delete" @click="confirmDelete(staf)" title="Hapus">
@@ -312,11 +312,11 @@
       </div>
     </div>
 
-    <!-- Upload Bukti Kelulusan Modal -->
+    <!-- Upload Verifikasi Ijazah Modal -->
     <div v-if="showUploadBuktiModal" class="modal-overlay" @click="closeUploadBuktiModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>Upload Bukti Kelulusan</h3>
+          <h3>Upload Verifikasi Ijazah</h3>
           <button class="btn-close" @click="closeUploadBuktiModal">
             <i class="fas fa-times"></i>
           </button>
@@ -482,10 +482,10 @@
                 <div class="detail-value">{{ formatDate(selectedStaf.tanggal_lulus) }}</div>
               </div>
               <div class="detail-item full-width">
-                <label>Bukti Kelulusan</label>
+                <label>Verifikasi Ijazah</label>
                 <div class="detail-value">
                   <a v-if="selectedStaf.bukti_kelulusan" :href="getBuktiKelulusanUrl(selectedStaf.bukti_kelulusan)" target="_blank" class="badge bg-success text-white text-decoration-none px-3 py-2">
-                    <i class="fas fa-file-pdf me-1"></i> Lihat Bukti Kelulusan
+                    <i class="fas fa-file-pdf me-1"></i> Lihat Verifikasi Ijazah
                   </a>
                   <span v-else class="text-muted">-</span>
                 </div>
@@ -702,7 +702,7 @@ const submitUploadBukti = async () => {
 
   try {
     await pegawaiService.uploadBuktiKelulusan(selectedStaf.value.nik, formData)
-    toast.success('Bukti Kelulusan berhasil diupload')
+    toast.success('Verifikasi Ijazah berhasil diupload')
     closeUploadBuktiModal()
     loadStafKlinis()
   } catch (error) {
