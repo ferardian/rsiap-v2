@@ -889,7 +889,7 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 
 <style scoped>
 .jadwal-page {
-  padding: 1.5rem;
+  padding: 0.75rem; /* Reduced from 1.5rem */
   height: calc(100vh - 64px); /* Adjust based on header height */
   display: flex;
   flex-direction: column;
@@ -899,14 +899,15 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
   display: flex;
   flex-direction: column; /* Stack title and controls vertically */
   align-items: flex-start; /* Align to left */
-  margin-bottom: 1.5rem;
-  gap: 1rem;
+  margin-bottom: 0.75rem; /* Reduced from 1.5rem */
+  gap: 0.5rem; /* Reduced from 1rem */
 }
 
 .page-header h2 {
   color: #1e40af;
   font-weight: 600;
   margin: 0;
+  font-size: 1.25rem; /* Slightly smaller */
 }
 
 .controls {
@@ -1207,9 +1208,9 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 .schedule-table th, 
 .schedule-table td {
   border: 1px solid #e2e8f0;
-  padding: 0.5rem;
+  padding: 0.25rem 0.4rem; /* Reduced from 0.5rem */
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem; /* Reduced from 0.85rem */
   min-width: 60px;
 }
 
@@ -1282,10 +1283,12 @@ thead .sticky-col {
 .emp-name {
   font-weight: 600;
   color: #1e293b;
+  font-size: 0.85rem; /* Smaller name */
+  line-height: 1.2;
 }
 
 .emp-dept {
-  font-size: 0.75rem;
+  font-size: 0.7rem; /* Smaller dept */
   color: #64748b;
 }
 
@@ -1316,9 +1319,9 @@ thead .sticky-col {
 /* Shift Badges */
 .shift-badge {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 2px 4px; /* More compact */
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   min-width: 40px;
 }
