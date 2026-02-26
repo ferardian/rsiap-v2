@@ -478,7 +478,7 @@ const fetchData = async () => {
                 if (deptRes.data && deptRes.data.data) {
                     authorizedDepartments.value = deptRes.data.data.map(d => ({
                         id: d.dep_id, 
-                        name: d.nama_ruang
+                        name: d.nama
                     }))
                 }
             } catch (deptErr) {

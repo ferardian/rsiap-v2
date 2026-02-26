@@ -1091,15 +1091,23 @@ const displayedPages = computed(() => {
 }
 
 .capsule-tabs {
-  display: inline-flex;
-  background: #f1f5f9;
-  padding: 0.35rem;
+  display: flex;
+  background: white;
+  padding: 0.4rem;
   border-radius: 50px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eef2f6;
+  width: fit-content;
+}
+
+.capsule-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .capsule-tab {
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1.75rem;
   border-radius: 50px;
   font-weight: 700;
   font-size: 0.9rem;
@@ -1110,18 +1118,31 @@ const displayedPages = computed(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
+  white-space: nowrap;
+}
+
+.capsule-tab i {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
 }
 
 .capsule-tab:hover:not(.active) {
   color: #3b82f6;
-  background: rgba(255, 255, 255, 0.5);
+  background: #f8fafc;
+}
+
+.capsule-tab:hover i {
+  transform: translateY(-1px);
 }
 
 .capsule-tab.active {
-  background: white;
-  color: #2563eb;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
-  transform: scale(1.02);
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.capsule-tab.active i {
+  color: white !important;
 }
 
 /* Original Buttons (modified specifically for Action Bar if needed) */
@@ -1633,18 +1654,20 @@ const displayedPages = computed(() => {
   }
 
   .capsule-tabs {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     position: relative;
     background: transparent;
     box-shadow: none;
-    margin: 0 -1rem;
+    border: none;
+    margin: 0;
+    width: 100%;
   }
 
   .capsule-tabs::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, etc */
+    display: none;
   }
 
   .capsule-tabs-wrapper {
@@ -1652,20 +1675,17 @@ const displayedPages = computed(() => {
     flex-wrap: nowrap;
     width: max-content;
     gap: 0.5rem;
-    background: #f1f5f9;
-    padding: 0.35rem;
+    padding: 0.4rem;
+    background: white;
     border-radius: 50px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef2f6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
   }
 
   .capsule-tab {
     padding: 0.75rem 1.25rem;
     white-space: nowrap;
     font-size: 0.85rem;
-  }
-
-  .capsule-tab span {
-    display: inline-block;
   }
   
   .action-bar-modern {

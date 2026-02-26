@@ -47,7 +47,12 @@ export const jadwalPegawaiService = {
 
     // Get all departments
     getDepartments() {
-        return api.get('/indikator-mutu/monitoring/units')
+        return api.post('/sdi/master/departemen/search', {
+            limit: 100,
+            filters: [
+                { field: 'aktif', operator: '=', value: '1' }
+            ]
+        })
     },
 
     // AI Schedule Recommendation

@@ -230,7 +230,7 @@
               <div class="form-group full-width">
                 <label>Tanggal Akhir SIP <span class="required">*</span></label>
                 <input type="date" v-model="form.tanggal_akhir_str" required>
-                <small class="help-text">Tanggal berakhirnya masa berlaku STR</small>
+                <small class="help-text">Tanggal berakhirnya masa berlaku SIP</small>
               </div>
             </div>
           </div>
