@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3 class="modal-title">
           <i class="fas" :class="isEdit ? 'fa-edit text-primary' : 'fa-plus-circle text-success'"></i>
-          {{ isEdit ? (isKredensial ? 'Edit Pengajuan Kredensial' : 'Edit Berkas Komite Keperawatan') : (isKredensial ? 'Buat Pengajuan Kredensial' : 'Buat Berkas Komite Keperawatan') }}
+          {{ isEdit ? (isKredensial ? 'Edit Pengajuan SPK RKK' : 'Edit Berkas Komite Keperawatan') : (isKredensial ? 'Pengajuan SPK RKK' : 'Buat Berkas Komite Keperawatan') }}
         </h3>
         <button class="btn-close-icon" @click="$emit('close')">
           <i class="fas fa-times"></i>

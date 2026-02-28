@@ -92,7 +92,7 @@
         <div class="action-buttons">
           <button v-if="activeTab !== 'staf'" class="btn-primary" @click="openCreateModal">
             <i class="fas fa-plus"></i>
-            <span>{{ activeTab === 'standar' ? 'Tambah Berkas' : 'Buat Pengajuan Kredensial' }}</span>
+            <span>{{ activeTab === 'standar' ? 'Tambah Berkas' : 'Pengajuan SPK RKK' }}</span>
           </button>
         </div>
       </div>

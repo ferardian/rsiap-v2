@@ -11,7 +11,12 @@
           placeholder="Cari NIK, nama, jabatan, atau nomor STR/SIP..."
         />
       </div>
-      <div class="info-card" @click="toggleEmployeeList" :class="{ active: showEmployeeList }">
+      <div class="header-buttons" style="display: flex; gap: 1rem; align-items: center;">
+        <button class="btn-export-excel" @click="exportExcel">
+          <i class="fas fa-file-excel"></i>
+          <span>Export Excel</span>
+        </button>
+        <div class="info-card" @click="toggleEmployeeList" :class="{ active: showEmployeeList }">
         <div class="info-icon">
           <i class="fas fa-user-clock"></i>
         </div>
@@ -20,6 +25,7 @@
           <div class="info-value">{{ employeesWithoutKualifikasi }} Karyawan</div>
         </div>
         <i class="fas fa-chevron-down dropdown-icon" :class="{ rotated: showEmployeeList }"></i>
+        </div>
       </div>
     </div>
 
@@ -562,6 +568,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { pegawaiService } from '../../../services/pegawaiService'
+import * as XLSX from 'xlsx'
 import { useToast } from 'vue-toastification'
 
 const toast = useToast()
@@ -608,6 +615,77 @@ const employeesWithoutKualifikasiList = computed(() => {
 
 const toggleEmployeeList = () => {
   showEmployeeList.value = !showEmployeeList.value
+}
+
+const exportExcel = () => {
+  if (!stafList.value || stafList.value.length === 0) {
+    toast.warning('Tidak ada data untuk diekspor')
+    return
+  }
+
+  // Format data for Excel
+  const exportData = stafList.value.map((staf, index) => {
+    const kredensial = calculateKredensial(staf);
+    return {
+      'No': index + 1,
+      'NIK': staf.nik,
+      'Nama': staf.nama,
+      'Jabatan': staf.jabatan || '-',
+      'Pendidikan': staf.pendidikan || '-',
+      'Tingkat Kredensial': kredensial || '-',
+      'Tanggal Kredensial': staf.tgl_terbit_sk ? formatDate(staf.tgl_terbit_sk) : '-',
+      'Status Anggota': staf.status_anggota || '-',
+      'No. Telp': staf.no_telp || '-',
+      'Kategori Profesi': staf.has_kualifikasi ? staf.kategori_profesi : 'Belum Ada',
+      'Nomor STR': staf.has_kualifikasi ? staf.nomor_str : '-',
+      'Tanggal Terbit STR': staf.has_kualifikasi ? formatDate(staf.tanggal_str) : '-',
+      'Tanggal Akhir SIP': staf.has_kualifikasi ? formatDate(staf.tanggal_akhir_str) : '-',
+      'Nomor SIP': staf.has_kualifikasi ? staf.nomor_sip : '-',
+      'Tanggal Izin Praktek': staf.has_kualifikasi ? formatDate(staf.tanggal_izin_praktek) : '-',
+      'Perguruan Tinggi': staf.has_kualifikasi ? staf.perguruan_tinggi : '-',
+      'Prodi': staf.has_kualifikasi ? staf.prodi : '-',
+      'Tanggal Lulus': staf.has_kualifikasi ? formatDate(staf.tanggal_lulus) : '-',
+    }
+  })
+
+  // Create worksheet
+  const ws = XLSX.utils.json_to_sheet(exportData)
+  
+  // Set column widths
+  const colWidths = [
+    { wch: 5 },  // No
+    { wch: 15 }, // NIK
+    { wch: 30 }, // Nama
+    { wch: 20 }, // Jabatan
+    { wch: 20 }, // Pendidikan
+    { wch: 20 }, // Tingkat Kredensial
+    { wch: 15 }, // Tanggal Kredensial
+    { wch: 15 }, // Status Anggota
+    { wch: 15 }, // No. Telp
+    { wch: 20 }, // Kategori Profesi
+    { wch: 20 }, // Nomor STR
+    { wch: 15 }, // Tanggal Terbit STR
+    { wch: 15 }, // Tanggal Akhir SIP
+    { wch: 20 }, // Nomor SIP
+    { wch: 15 }, // Tanggal Izin Praktek
+    { wch: 25 }, // Perguruan Tinggi
+    { wch: 20 }, // Prodi
+    { wch: 15 }, // Tanggal Lulus
+  ]
+  ws['!cols'] = colWidths
+
+  // Create workbook and append worksheet
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, "Staf Klinis")
+
+  // Generate filename with current date
+  const date = new Date()
+  const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`
+  const fileName = `Data_Staf_Klinis_${dateStr}.xlsx`
+
+  // Save file
+  XLSX.writeFile(wb, fileName)
+  toast.success('File Excel berhasil diunduh')
 }
 
 // Methods
@@ -1543,6 +1621,31 @@ tbody tr:hover .sticky-col-right {
   font-size: 0.875rem;
   transition: all 0.2s;
   background: white;
+}
+
+.btn-export-excel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.btn-export-excel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -2px rgba(16, 185, 129, 0.3);
+}
+
+.btn-export-excel i {
+  font-size: 1.125rem;
 }
 
 .form-group input:focus,
