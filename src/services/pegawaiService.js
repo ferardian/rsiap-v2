@@ -198,5 +198,12 @@ export const pegawaiService = {
      */
     deleteBerkas(nik, kode, berkas) {
         return api.post('/sdi/pegawai/delete/berkas', { nik, kode, berkas })
+    },
+
+    /**
+     * Get employee credential information
+     */
+    getKredensial(nik) {
+        return api.get(`/sdi/pegawai/kredensial/${nik}`)
     }
 }

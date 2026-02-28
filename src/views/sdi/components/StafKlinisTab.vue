@@ -64,6 +64,7 @@
               <th class="sticky-col col-employee">NIK / Nama</th>
               <th>Jabatan</th>
               <th>Pendidikan</th>
+              <th>Kredensial</th>
               <th>No. Telp</th>
               <th>Kategori Profesi</th>
               <th>Nomor STR</th>
@@ -89,6 +90,19 @@
               </td>
               <td>{{ staf.jbtn || '-' }}</td>
               <td>{{ staf.pendidikan || '-' }}</td>
+              <td>
+                <div v-if="staf.judul_sk" class="kredensial-cell-premium" :title="staf.judul_sk">
+                  <div class="level-pill" :class="getLevelClass(calculateKredensial(staf))">
+                    <i class="fas fa-award"></i>
+                    <span>{{ calculateKredensial(staf) }}</span>
+                  </div>
+                  <div class="sk-date-wrapper">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>{{ formatDate(staf.tgl_terbit_sk) }}</span>
+                  </div>
+                </div>
+                <span v-else class="text-muted">-</span>
+              </td>
               <td>{{ staf.no_telp || '-' }}</td>
               <td>
                 <span v-if="staf.has_kualifikasi" class="badge bg-info bg-opacity-10 text-info px-2 py-1">
@@ -385,13 +399,36 @@
                 <label>Nama</label>
                 <div class="detail-value">{{ selectedStaf.nama }}</div>
               </div>
-              <div class="detail-item">
-                <label>Jabatan</label>
-                <div class="detail-value">{{ selectedStaf.jbtn || '-' }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Pendidikan</label>
-                <div class="detail-value">{{ selectedStaf.pendidikan || '-' }}</div>
+              <div class="detail-item full-width" v-if="selectedStaf.judul_sk">
+                <label>Kredensial Terakhir</label>
+                <div class="kredensial-card-mini">
+                  <div class="k-card-header">
+                    <div class="level-badge-premium" :class="getLevelClass(calculateKredensial(selectedStaf))">
+                      <i class="fas fa-shield-alt"></i>
+                      {{ calculateKredensial(selectedStaf) }}
+                    </div>
+                  </div>
+                  <div class="k-card-body">
+                    <div class="sk-title">{{ selectedStaf.judul_sk }}</div>
+                    <div class="sk-meta">
+                      <div class="meta-item">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Terbit: {{ formatDate(selectedStaf.tgl_terbit_sk) }}</span>
+                      </div>
+                      <div class="meta-item border-left-mini">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span>Masa Kerja: {{ (new Date(selectedStaf.tgl_terbit_sk).getFullYear() - 2017) }} Tahun</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="k-card-footer" v-if="selectedStaf.berkas_sk">
+                    <a :href="`http://192.168.100.33/webapps/rsia_sk/${selectedStaf.berkas_sk}`" target="_blank" class="btn-preview-sk-mini">
+                      <i class="fas fa-file-pdf"></i>
+                      <span>Lihat Lampiran SK</span>
+                      <i class="fas fa-arrow-right arrow"></i>
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -711,6 +748,48 @@ const submitUploadBukti = async () => {
   } finally {
     uploadingBukti.value = false
   }
+}
+
+const calculateKredensial = (staf) => {
+  if (!staf.tgl_terbit_sk) return '-'
+  
+  const pendidikan = (staf.pendidikan || '').toUpperCase()
+  const tglTerbit = new Date(staf.tgl_terbit_sk)
+  const tahunTerbit = tglTerbit.getFullYear()
+  const tahunAwal = 2017
+  const masaKerja = tahunTerbit - tahunAwal
+
+  if (pendidikan.includes('D3') || pendidikan.includes('DIII')) {
+    if (masaKerja >= 22) return 'PK V (≥ 22 Tahun)'
+    if (masaKerja >= 19) return 'PK IV (≥ 19 Tahun)'
+    if (masaKerja > 9) return 'PK III (> 9 - 12 Tahun)'
+    if (masaKerja > 6) return 'PK II (> 6 - 9 Tahun)'
+    if (masaKerja >= 3) return 'PK I (3 - 6 Tahun)'
+    return 'PRA PK (0 - 3 Tahun)'
+  } else if (pendidikan.includes('NERS')) {
+    if (masaKerja > 12) return 'Utama (> 12 tahun)'
+    if (masaKerja >= 6) return 'Madya (6 - 12 tahun)'
+    if (masaKerja >= 2) return 'Muda (2 - 6 tahun)'
+    return 'Pratama (0 - 2 tahun)'
+  }
+  
+  return '-'
+}
+
+const getLevelClass = (level) => {
+  if (!level || level === '-') return ''
+  const upperLevel = level.toUpperCase()
+  if (upperLevel.includes('PK V')) return 'level-pk-v'
+  if (upperLevel.includes('PK IV')) return 'level-pk-iv'
+  if (upperLevel.includes('PK III')) return 'level-pk-iii'
+  if (upperLevel.includes('PK II')) return 'level-pk-ii'
+  if (upperLevel.includes('PK I')) return 'level-pk-i'
+  if (upperLevel.includes('PRA PK')) return 'level-pra-pk'
+  if (upperLevel.includes('UTAMA')) return 'level-ners-utama'
+  if (upperLevel.includes('MADYA')) return 'level-ners-madya'
+  if (upperLevel.includes('MUDA')) return 'level-ners-muda'
+  if (upperLevel.includes('PRATAMA')) return 'level-ners-pratama'
+  return 'level-default'
 }
 
 const getBuktiKelulusanUrl = (filename) => {
@@ -1789,5 +1868,163 @@ tbody tr:hover .sticky-col-right {
 .btn-remove-file:hover {
   background: #fca5a5;
   color: #b91c1c;
+}
+
+/* Kredensial Premium Styles */
+.kredensial-cell-premium {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.level-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: fit-content;
+}
+
+.level-pill i {
+  font-size: 0.875rem;
+}
+
+.sk-date-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+  padding-left: 4px;
+}
+
+/* Level Variants */
+.level-pk-v { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; border: 1px solid #f87171; }
+.level-pk-iv { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; border: 1px solid #fb923c; }
+.level-pk-iii { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 1px solid #fbbf24; }
+.level-pk-ii { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46; border: 1px solid #34d399; }
+.level-pk-i { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); color: #166534; border: 1px solid #4ade80; }
+.level-pra-pk { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #475569; border: 1px solid #cbd5e1; }
+
+.level-ners-utama { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; border: 1px solid #818cf8; }
+.level-ners-madya { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); color: #075985; border: 1px solid #38bdf8; }
+.level-ners-muda { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); color: #0369a1; border: 1px solid #7dd3fc; }
+.level-ners-pratama { background: linear-gradient(135deg, #fafaf9 0%, #f5f5f4 100%); color: #44403c; border: 1px solid #d6d3d1; }
+.level-default { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+
+/* Kredensial Card Mini (Detail Modal) */
+.kredensial-card-mini {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kredensial-card-mini:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.k-card-header {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.level-badge-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.k-card-body {
+  padding: 16px;
+}
+
+.sk-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.sk-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.meta-item i {
+  color: #3b82f6;
+}
+
+.border-left-mini {
+  padding-left: 12px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.k-card-footer {
+  padding: 12px 16px;
+  background: #f1f5f9;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-preview-sk-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1e293b;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.btn-preview-sk-mini:hover {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  transform: translateX(4px);
+}
+
+.btn-preview-sk-mini .arrow {
+  margin-left: auto;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.btn-preview-sk-mini:hover .arrow {
+  opacity: 1;
+  transform: translateX(4px);
 }
 </style>

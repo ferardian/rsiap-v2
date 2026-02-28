@@ -145,6 +145,47 @@
             </div>
           </div>
 
+          <!-- Data Kredensial (New) -->
+          <div v-if="kredensialData" class="detail-section full-width">
+            <h4><i class="fas fa-certificate text-primary"></i> Data Kredensial</h4>
+            <div class="kredensial-card">
+              <div class="kredensial-content">
+                <div class="kredensial-main">
+                  <div class="kredensial-level">
+                    <span class="label">Tingkat Kredensial</span>
+                    <div class="level-badge" :class="getLevelClass(kredensialData.kredensial)">
+                      <i class="fas fa-award animate-bounce-slow"></i>
+                      {{ kredensialData.kredensial }}
+                    </div>
+                  </div>
+                  <div class="kredensial-info">
+                    <div class="info-item">
+                      <label><i class="fas fa-file-signature me-1"></i> Judul SK</label>
+                      <span class="fw-bold text-dark">{{ kredensialData.judul_sk }}</span>
+                    </div>
+                    <div class="info-grid mt-3">
+                      <div class="info-item">
+                        <label><i class="fas fa-calendar-alt me-1"></i> Tanggal Terbit</label>
+                        <span>{{ formatDate(kredensialData.tgl_terbit) }}</span>
+                      </div>
+                      <div class="info-item border-left ps-3">
+                        <label>Masa Kerja (SK)</label>
+                        <span>{{ kredensialData.masa_kerja_sk }} Tahun</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="kredensial-footer" v-if="kredensialData.berkas">
+                  <button class="btn-preview-sk" @click="previewSK(kredensialData.berkas)">
+                    <i class="fas fa-file-pdf text-danger"></i> 
+                    <span>Pratinjau SK Kredensial</span>
+                    <i class="fas fa-external-link-alt ms-auto small opacity-50"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Berkas Pegawai (New) -->
           <div class="detail-section full-width">
             <PegawaiBerkasSection :nik="pegawai.nik || pegawai.nip" :auto-open-upload="autoOpenUpload" />
@@ -160,8 +201,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import PegawaiBerkasSection from './PegawaiBerkasSection.vue'
+import { pegawaiService } from '../../../services/pegawaiService'
+import config from '../../../config/api'
 
 const props = defineProps({
   show: Boolean,
@@ -170,6 +213,67 @@ const props = defineProps({
 })
 
 defineEmits(['close'])
+
+const kredensialData = ref(null)
+const loadingKredensial = ref(false)
+
+const fetchKredensial = async () => {
+  if (!props.pegawai?.nik && !props.pegawai?.nip) {
+    kredensialData.value = null
+    return
+  }
+
+  const nik = props.pegawai.nik || props.pegawai.nip
+  loadingKredensial.value = true
+  try {
+    const response = await pegawaiService.getKredensial(nik)
+    if (response.data.success) {
+      kredensialData.value = response.data.data
+    } else {
+      kredensialData.value = null
+    }
+  } catch (error) {
+    console.error('Error fetching kredensial:', error)
+    kredensialData.value = null
+  } finally {
+    loadingKredensial.value = false
+  }
+}
+
+const getLevelClass = (level) => {
+  if (!level) return ''
+  const upperLevel = level.toUpperCase()
+  if (upperLevel.includes('PK V')) return 'pk-high'
+  if (upperLevel.includes('PK IV')) return 'pk-high'
+  if (upperLevel.includes('PK III')) return 'pk-mid'
+  if (upperLevel.includes('PK II')) return 'pk-mid'
+  if (upperLevel.includes('PK I')) return 'pk-low'
+  if (upperLevel.includes('PRA PK')) return 'pk-low'
+  if (upperLevel.includes('UTAMA')) return 'ner-high'
+  if (upperLevel.includes('MADYA')) return 'ner-high'
+  if (upperLevel.includes('MUDA')) return 'ner-low'
+  if (upperLevel.includes('PRATAMA')) return 'ner-low'
+  return ''
+}
+
+const previewSK = (berkas) => {
+  if (!berkas) return
+  const baseUrl = config.public.BASE_BERKAS_URL
+  const url = `${baseUrl}/rsia_sk/${berkas}`
+  window.open(url, '_blank')
+}
+
+watch(() => props.show, (newVal) => {
+  if (newVal && props.pegawai) {
+    fetchKredensial()
+  }
+})
+
+watch(() => props.pegawai, (newVal) => {
+  if (props.show && newVal) {
+    fetchKredensial()
+  }
+}, { deep: true })
 
 const getPhotoUrl = (photo) => {
   return `/storage/pegawai/${photo}`
@@ -540,6 +644,122 @@ const getEmailValue = (email) => {
   font-size: 0.875rem;
 }
 
+/* Kredensial Section Styles */
+.kredensial-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.kredensial-main {
+  padding: 1.5rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  background: linear-gradient(to right, #ffffff, #f8fafc);
+}
+
+.kredensial-level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.level-badge {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.level-badge.pk-high { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; border: 1px solid #f87171; }
+.level-badge.pk-mid { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 1px solid #fbbf24; }
+.level-badge.pk-low { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); color: #166534; border: 1px solid #4ade80; }
+.level-badge.ner-high { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; border: 1px solid #818cf8; }
+.level-badge.ner-low { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); color: #0369a1; border: 1px solid #7dd3fc; }
+
+.kredensial-info {
+  flex: 1;
+}
+
+.info-grid {
+  display: flex;
+  gap: 2rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.info-item span {
+  color: #334155;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.border-left {
+  border-left: 1px solid #e2e8f0;
+}
+
+.kredensial-footer {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-preview-sk {
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #475569;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-preview-sk:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+}
+
+.animate-bounce-slow {
+  animation: bounce 3s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
 @media (max-width: 768px) {
   .detail-grid {
     grid-template-columns: 1fr;
@@ -550,6 +770,27 @@ const getEmailValue = (email) => {
     grid-column: span 1;
   }
 
+  .kredensial-main {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .kredensial-level {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .info-grid {
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .border-left {
+    border-left: none;
+    padding-left: 0 !important;
+  }
+  
   .insurance-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
