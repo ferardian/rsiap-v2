@@ -168,7 +168,7 @@ export const config = {
 
   // Default request configuration
   requestConfig: {
-    timeout: 10000,
+    timeout: 300000, // 5 Menit (untuk sync data BPJS yang lama)
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'

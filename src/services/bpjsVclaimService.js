@@ -33,6 +33,18 @@ const bpjsVclaimService = {
      * Check participant data by NIK
      */
     getPesertaByNik: (nik, tgl_sep) => api.get(`/bpjs/vclaim/peserta/nik/${nik}/${tgl_sep}`),
+
+    /**
+     * Get Monitoring Klaim VClaim
+     * @param {Object} params - { tanggal, jenis_pelayanan, status_klaim }
+     */
+    getMonitoringKlaim: (params) => api.get('/bpjs/vclaim/monitoring/klaim', { params }),
+
+    /**
+     * Sync Monitoring Klaim VClaim
+     * @param {Object} data - { tahun, bulan, tanggal, jenis_pelayanan, status_klaim }
+     */
+    syncMonitoringKlaim: (data) => api.post('/bpjs/vclaim/monitoring/sync', data),
 };
 
 export default bpjsVclaimService;
