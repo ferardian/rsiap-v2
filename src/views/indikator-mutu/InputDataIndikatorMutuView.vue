@@ -1,103 +1,140 @@
 <template>
   <div class="container-fluid p-0">
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <h3 class="fw-bold text-primary mb-1">
-          <i class="fas fa-edit me-2"></i>Input Data Indikator Mutu
-        </h3>
-        <p class="text-muted mb-0">Input data realisasi indikator mutu harian</p>
-      </div>
-      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2 filter-container">
-        <!-- Context Toggle -->
-        <div v-if="isCommitteeMember" class="btn-group context-toggle me-2" role="group">
-          <input type="radio" class="btn-check" name="inputMode" id="modeUnit" value="unit" v-model="inputMode" @change="handleModeChange">
-          <label class="btn btn-outline-primary btn-sm px-3" for="modeUnit">
-            <i class="fas fa-hospital me-1"></i> Unit
-          </label>
-          
-          <input type="radio" class="btn-check" name="inputMode" id="modeKomite" value="komite" v-model="inputMode" @change="handleModeChange">
-          <label class="btn btn-outline-primary btn-sm px-3" for="modeKomite">
-            <i class="fas fa-users-cog me-1"></i> Komite
-          </label>
-        </div>
-
-        <div class="filter-item">
-          <div class="filter-label">Tanggal Transaksi</div>
-          <div class="custom-input-group">
-            <i class="fas fa-calendar-alt icon-prefix"></i>
-            <input type="date" class="custom-date-input" v-model="filters.tgl_transaksi" @change="fetchIndicators">
-          </div>
-        </div>
-        
-        <div class="filter-item">
-          <div class="filter-label">Unit / Ruangan</div>
-          <v-select 
-              :options="units" 
-              label="nama_ruang" 
-              v-model="filters.unit"
-              :reduce="unit => unit.dep_id"
-              placeholder="Pilih Unit / Ruang"
-              class="style-chooser unit-select"
-              :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-              @update:modelValue="fetchIndicators"
-          >
-               <template #no-options="{ search, searching, loading }">
-                  <div class="p-2 small text-muted">No unit found</div>
-              </template>
-          </v-select>
-        </div>
-      </div>
+    <div class="header-title-section mb-3">
+      <h3 class="fw-bold text-primary mb-1">
+        <i class="fas fa-edit me-2"></i>Input Data Indikator Mutu
+      </h3>
+      <p class="text-muted mb-0">Input data realisasi indikator mutu harian</p>
     </div>
 
     <!-- Content -->
     <!-- Content -->
-    <div class="card shadow-sm border-0">
-      <div class="card-header py-3 d-flex justify-content-between align-items-center border-bottom" style="background-color: #fff !important; color: #212529 !important;">
-        <div class="mode-segmented-control">
-            <div 
-                v-for="mode in [
-                    { id: 'daily', label: 'Harian', icon: 'fa-list' },
-                    { id: 'monthly', label: 'Bulanan', icon: 'fa-calendar-alt' },
-                    { id: 'analisa', label: 'Analisa', icon: 'fa-chart-line' }
-                ]" 
-                :key="mode.id"
-                class="mode-option"
-                :class="{ 'active': viewMode === mode.id }"
-                @click="viewMode = mode.id"
-            >
-                <i class="fas" :class="mode.icon"></i>
-                <span>{{ mode.label }}</span>
-            </div>
-            <div class="mode-glider" :style="gliderStyle"></div>
+    <div class="card shadow-md border-0 overflow-hidden">
+      <div class="card-header premium-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="mode-segmented-control">
+              <div 
+                  v-for="mode in [
+                      { id: 'daily', label: 'Harian', icon: 'fa-list' },
+                      { id: 'monthly', label: 'Bulanan', icon: 'fa-calendar-alt' },
+                      { id: 'analisa', label: 'Analisa', icon: 'fa-chart-line' }
+                  ]" 
+                  :key="mode.id"
+                  class="mode-option"
+                  :class="{ 'active': viewMode === mode.id }"
+                  @click="viewMode = mode.id"
+              >
+                  <i class="fas" :class="mode.icon"></i>
+                  <span>{{ mode.label }}</span>
+              </div>
+              <div class="mode-glider" :style="gliderStyle"></div>
+          </div>
+
+          <!-- Context Toggle inside blue header -->
+          <div v-if="isCommitteeMember" class="btn-group context-toggle-premium" role="group">
+            <input type="radio" class="btn-check" name="inputMode" id="modeUnit" value="unit" v-model="inputMode" @change="handleModeChange">
+            <label class="btn btn-outline-light btn-sm px-3" for="modeUnit">
+              <i class="fas fa-hospital me-1"></i> Unit
+            </label>
+            
+            <input type="radio" class="btn-check" name="inputMode" id="modeKomite" value="komite" v-model="inputMode" @change="handleModeChange">
+            <label class="btn btn-outline-light btn-sm px-3" for="modeKomite">
+              <i class="fas fa-users-cog me-1"></i> Komite
+            </label>
+          </div>
         </div>
         
-        <!-- Indicator Selector for Monthly Mode -->
-        <div v-if="viewMode === 'monthly'" class="flex-grow-1 ms-3" style="max-width: 600px;">
-            <v-select 
-                :options="indicators" 
-                label="nama_inmut" 
-                v-model="selectedIndicator"
-                placeholder="Pilih Indikator untuk Entri..."
-                class="style-chooser"
-            />
-        </div>
+        <!-- Filters Area -->
+        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
+            <!-- DAILY MODE FILTERS -->
+            <template v-if="viewMode === 'daily'">
+                <div class="header-filter-item">
+                    <div class="header-filter-label">Tanggal Transaksi</div>
+                    <input type="date" class="form-control form-control-sm header-input" v-model="filters.tgl_transaksi" @change="fetchIndicators">
+                </div>
+                <div class="header-filter-item unit-select-container">
+                    <div class="header-filter-label">Unit / Ruangan</div>
+                    <v-select 
+                        :options="units" 
+                        label="nama_ruang" 
+                        v-model="filters.unit"
+                        :reduce="unit => unit.dep_id"
+                        placeholder="Pilih Unit"
+                        class="header-vselect unit-select"
+                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+                        @update:modelValue="fetchIndicators"
+                    />
+                </div>
+            </template>
 
-        <!-- Indicator & Month Selector for Analisa Mode -->
-        <div v-if="viewMode === 'analisa'" class="d-flex gap-2 ms-3 flex-grow-1" style="max-width: 800px;">
-            <v-select 
-                :options="indicators" 
-                label="nama_inmut" 
-                v-model="selectedIndicatorAnalisa"
-                placeholder="Pilih Indikator..."
-                class="style-chooser flex-grow-1"
-                @update:modelValue="fetchAnalisaData"
-            />
-            <input 
-                type="month" 
-                class="form-control" 
-                v-model="analisaFilters.bulan"
-                style="max-width: 200px;"
-            >
+            <!-- MONTHLY MODE FILTERS -->
+            <template v-else-if="viewMode === 'monthly'">
+                <div class="header-filter-item">
+                    <div class="header-filter-label">Bulan & Tahun</div>
+                    <input type="month" class="form-control form-control-sm header-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
+                </div>
+                <div class="header-filter-item unit-select-container">
+                    <div class="header-filter-label">Unit / Ruangan</div>
+                    <v-select 
+                        :options="units" 
+                        label="nama_ruang" 
+                        v-model="filters.unit"
+                        :reduce="unit => unit.dep_id"
+                        placeholder="Pilih Unit"
+                        class="header-vselect unit-select"
+                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+                        @update:modelValue="fetchMonthlyData"
+                    />
+                </div>
+                <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
+                    <div class="header-filter-label">Pilih Indikator</div>
+                    <v-select 
+                        :options="indicators" 
+                        label="nama_inmut" 
+                        v-model="selectedIndicator"
+                        placeholder="Pilih Indikator untuk Entri..."
+                        class="header-vselect"
+                        @update:modelValue="fetchMonthlyData"
+                    />
+                </div>
+            </template>
+
+            <!-- ANALISA MODE FILTERS -->
+            <template v-else-if="viewMode === 'analisa'">
+                <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
+                    <div class="header-filter-label">Pilih Indikator</div>
+                    <v-select 
+                        :options="indicators" 
+                        label="nama_inmut" 
+                        v-model="selectedIndicator"
+                        placeholder="Pilih Indikator..."
+                        class="header-vselect"
+                        @update:modelValue="fetchAnalisaData"
+                    />
+                </div>
+                <div class="header-filter-item">
+                    <div class="header-filter-label">Bulan & Tahun</div>
+                    <input 
+                        type="month" 
+                        class="form-control form-control-sm header-input" 
+                        v-model="monthlyFilterDate"
+                        @change="handleMonthlyDateChange"
+                    >
+                </div>
+                <div class="header-filter-item unit-select-container">
+                    <div class="header-filter-label">Unit / Ruangan</div>
+                    <v-select 
+                        :options="units" 
+                        label="nama_ruang" 
+                        v-model="filters.unit"
+                        :reduce="unit => unit.dep_id"
+                        placeholder="Pilih Unit"
+                        class="header-vselect unit-select"
+                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+                        @update:modelValue="fetchAnalisaData"
+                    />
+                </div>
+            </template>
         </div>
       </div>
       <div class="card-body p-0">
@@ -235,176 +272,263 @@
 
         <!-- ANALISA VIEW -->
         <div v-else-if="viewMode === 'analisa'" class="p-3">
-            <div v-if="!selectedIndicatorAnalisa" class="text-center py-5 text-muted">
-                <i class="fas fa-chart-bar fa-3x mb-3 opacity-50"></i>
-                <p>Pilih Indikator dan Bulan untuk mulai mengisi analisa</p>
+            <!-- ALL INDICATORS VIEW (DEFAULT) -->
+            <div v-if="!selectedIndicator">
+                <div class="d-flex align-items-center justify-content-between mb-4 px-1">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Status Analisa Unit</h5>
+                        <p class="text-muted small mb-0">Periode {{ formatMonthYear(analisaFilters.bulan) }}</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="badge bg-success-light text-success px-3 py-2 rounded-pill border">
+                            {{ allIndicatorStats.filter(s => s.isAnalyzed).length }} Selesai
+                        </div>
+                        <div class="badge bg-primary-light text-primary px-3 py-2 rounded-pill border">
+                            {{ allIndicatorStats.length }} Total
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="loading" class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                    <p class="text-muted">Memproses data indikator...</p>
+                </div>
+
+                <div v-else class="row g-3">
+                    <div v-for="item in allIndicatorStats" :key="item.id_inmut" class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm hover-elevate overflow-hidden" 
+                             style="border-radius: 12px; cursor: pointer; transition: all 0.3s ease;"
+                             @click="selectedIndicator = item">
+                            <div :class="item.isAnalyzed ? 'bg-success' : (item.isComplete ? 'bg-primary' : 'bg-warning')" style="height: 4px;"></div>
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-1 text-dark text-truncate-2" style="font-size: 0.9rem; min-height: 2.7rem;">
+                                            {{ item.nama_inmut }}
+                                        </h6>
+                                    </div>
+                                    <div class="ms-2">
+                                        <span v-if="item.isAnalyzed" class="badge bg-success rounded-pill extra-small">
+                                            <i class="fas fa-check-double"></i> Selesai
+                                        </span>
+                                        <span v-else-if="item.isComplete" class="badge bg-primary rounded-pill extra-small">
+                                            <i class="fas fa-edit"></i> Siap Analisa
+                                        </span>
+                                        <span v-else class="badge bg-warning text-dark rounded-pill extra-small">
+                                            <i class="fas fa-clock"></i> Belum Lengkap
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between align-items-end mb-1">
+                                        <small class="text-muted extra-small fw-bold text-uppercase">Data Terisi</small>
+                                        <small class="fw-bold" :class="item.isComplete ? 'text-primary' : 'text-warning-dark'">{{ item.progress }}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px; border-radius: 3px; background-color: rgba(0,0,0,0.05);">
+                                        <div class="progress-bar" 
+                                             :class="item.isComplete ? 'bg-primary' : 'bg-warning'"
+                                             :style="{ width: item.progress + '%' }"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                                    <div class="text-start">
+                                        <small class="text-muted d-block extra-small">CAPAIAN</small>
+                                        <span class="fw-bold text-dark">{{ item.score }}%</span>
+                                    </div>
+                                    <div v-if="item.isAnalyzed" class="text-end">
+                                        <i class="fas fa-chevron-right text-success opacity-50"></i>
+                                    </div>
+                                    <div v-else-if="item.isComplete" class="text-end">
+                                        <button class="btn btn-primary btn-xs py-1 px-2 rounded-pill extra-small">
+                                            Input Analisa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+
+            <!-- SELECTED INDICATOR VIEW -->
             <div v-else>
-                <!-- Header Info -->
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-chart-line me-2"></i> {{ selectedIndicatorAnalisa.nama_inmut }}
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <small class="text-muted d-block">Periode</small>
-                                <strong>{{ formatMonthYear(analisaFilters.bulan) }}</strong>
-                            </div>
-                            <div class="col-md-3">
-                                <small class="text-muted d-block">Total Numerator</small>
-                                <strong class="text-success">{{ monthlyStats.totalNum }}</strong>
-                            </div>
-                            <div class="col-md-3">
-                                <small class="text-muted d-block">Total Denominator</small>
-                                <strong class="text-info">{{ monthlyStats.totalDenum }}</strong>
-                            </div>
-                            <div class="col-md-3">
-                                <small class="text-muted d-block">Capaian</small>
-                                <strong class="text-primary">{{ monthlyStats.score }}%</strong>
-                            </div>
-                        </div>
-                        
-                        <!-- Data Completeness Warning -->
-                        <div v-if="!monthlyStats.isComplete && !analisaForm.id_analisa" class="alert alert-warning mt-3 mb-0">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Data belum lengkap!</strong> 
-                            Terdapat {{ monthlyStats.missingDays.length }} tanggal yang belum diisi: 
-                            <span class="badge bg-warning text-dark ms-2">{{ monthlyStats.missingDays.join(', ') }}</span>
-                        </div>
-                    </div>
+                <!-- BACK BUTTON -->
+                <div class="mb-3">
+                    <button class="btn btn-link text-decoration-none p-0 text-muted hover-primary transition-all" @click="selectedIndicator = null">
+                        <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar Indikator
+                    </button>
                 </div>
 
-                <!-- Form Analisa -->
-                <div class="card">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Analisa <span class="text-danger">*</span></label>
-                            <textarea 
-                                class="form-control" 
-                                rows="4" 
-                                v-model="analisaForm.analisa"
-                                placeholder="Tuliskan analisa capaian indikator mutu untuk bulan ini..."
-                                :disabled="!monthlyStats.isComplete"
-                            ></textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Tindak Lanjut <span class="text-danger">*</span></label>
-                            <textarea 
-                                class="form-control" 
-                                rows="4" 
-                                v-model="analisaForm.tindak_lanjut"
-                                placeholder="Tuliskan rencana tindak lanjut..."
-                                :disabled="!monthlyStats.isComplete"
-                            ></textarea>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <button 
-                                class="btn btn-secondary" 
-                                @click="resetAnalisaForm"
-                            >
-                                <i class="fas fa-times me-2"></i> Batal
-                            </button>
-                            <button 
-                                class="btn btn-primary" 
-                                @click="saveAnalisa"
-                                :disabled="!monthlyStats.isComplete || analisaSaving"
-                            >
-                                <i class="fas fa-save me-2"></i>
-                                {{ analisaSaving ? 'Menyimpan...' : (analisaForm.id_analisa ? 'Update' : 'Simpan') }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Existing Analisa List -->
-                <div v-if="existingAnalisa.length > 0" class="card mt-3">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-history me-2"></i> Riwayat Analisa</h6>
-                    </div>
+                <!-- DATA ENTRY PROGRESS CARD -->
+                <div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-radius: 15px;">
                     <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th width="5%" class="text-center">#</th>
-                                        <th width="25%">Indikator</th>
-                                        <th width="30%">Capaian & Periode</th>
-                                        <th width="30%">Analisa & Tindak Lanjut</th>
-                                        <th width="10%" class="text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(item, index) in existingAnalisa" :key="item.id_analisa">
-                                        <td class="text-center">{{ index + 1 }}</td>
-                                        <td>
-                                            <div class="fw-bold text-primary">
-                                                {{ item.nama_inmut || selectedIndicatorAnalisa?.nama_inmut || '-' }}
-                                            </div>
-                                            <small class="text-muted">{{ getUnitName() }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="mb-2">
-                                                <small class="text-secondary d-block">PERIODE</small>
-                                                <span class="fw-bold">{{ formatDate(item.tanggal_awal) }} - {{ formatDate(item.tanggal_akhir) }}</span>
-                                            </div>
-                                            
-                                            <div class="row g-2" style="font-size: 0.85rem;">
-                                                <div class="col-12">
-                                                    <div class="d-flex align-items-center justify-content-between border-bottom pb-1 mb-1">
-                                                        <span class="text-secondary">Target</span>
-                                                        <span class="fw-bold text-dark">{{ getTargetDisplayFromItem(item) }}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="p-1 bg-light rounded text-center border">
-                                                        <small class="d-block text-secondary" style="font-size: 0.7rem;">NUMERATOR</small>
-                                                        <span class="fw-bold">{{ item.jml_num }}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="p-1 bg-light rounded text-center border">
-                                                        <small class="d-block text-secondary" style="font-size: 0.7rem;">DENOMINATOR</small>
-                                                        <span class="fw-bold">{{ item.jml_denum }}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-12 mt-2">
-                                                    <div class="d-flex align-items-center justify-content-between p-2 rounded" 
-                                                         :class="isTargetMet(item) ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'">
-                                                        <span class="fw-bold">Score: {{ calculateCapaian(item.jml_num, item.jml_denum) }}%</span>
-                                                        <span class="badge" :class="isTargetMet(item) ? 'bg-success' : 'bg-danger'">
-                                                            {{ isTargetMet(item) ? 'Tercapai' : 'Tidak Tercapai' }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="mb-2">
-                                                <strong class="d-block text-secondary" style="font-size: 0.8rem;">ANALISA:</strong>
-                                                <span>{{ item.analisa.substring(0, 100) }}{{ item.analisa.length > 100 ? '...' : '' }}</span>
-                                            </div>
-                                            <div>
-                                                <strong class="d-block text-secondary" style="font-size: 0.8rem;">TINDAK LANJUT:</strong>
-                                                <span>{{ item.tindak_lanjut.substring(0, 100) }}{{ item.tindak_lanjut.length > 100 ? '...' : '' }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group-vertical gap-1">
-                                                <button class="btn btn-sm btn-outline-primary" @click="editAnalisa(item)">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-danger" @click="deleteAnalisaItem(item.id_analisa)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="p-4" :class="monthlyStats.isComplete ? 'bg-success-light' : 'bg-warning-light'">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1" :class="monthlyStats.isComplete ? 'text-success' : 'text-warning-dark'">
+                                        <i class="fas" :class="monthlyStats.isComplete ? 'fa-check-circle' : 'fa-tasks'"></i>
+                                        Status Pengisian Data
+                                    </h5>
+                                    <p class="text-muted small mb-0">{{ selectedIndicator.nama_inmut }}</p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="display-6 fw-bold" :class="monthlyStats.isComplete ? 'text-success' : 'text-warning-dark'">
+                                        {{ monthlyStats.fillPercentage }}%
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="progress mb-3" style="height: 12px; border-radius: 6px; background-color: rgba(0,0,0,0.05);">
+                                <div 
+                                    class="progress-bar progress-bar-striped progress-bar-animated" 
+                                    role="progressbar" 
+                                    :style="{ width: monthlyStats.fillPercentage + '%' }"
+                                    :class="monthlyStats.isComplete ? 'bg-success' : 'bg-warning'"
+                                ></div>
+                            </div>
+
+                            <!-- Missing Days Info -->
+                            <div v-if="!monthlyStats.isComplete" class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 border">
+                                <div class="badge bg-warning text-dark p-2 rounded-circle">
+                                    <i class="fas fa-exclamation"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-1 fw-bold text-dark small">Data Belum Lengkap</p>
+                                    <p class="mb-0 text-muted extra-small">
+                                        Terdapat <span class="fw-bold text-danger">{{ monthlyStats.missingDays.length }} tanggal</span> yang belum diisi. Lengkapi semua data untuk memberikan analisa.
+                                    </p>
+                                    <div class="mt-2 d-flex flex-wrap gap-1">
+                                        <span v-for="day in monthlyStats.missingDays" :key="day" class="badge bg-light text-dark border extra-small">
+                                            Tgl {{ day }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 border">
+                                <div class="badge bg-success p-2 rounded-circle text-white">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-1 fw-bold text-dark small">Data Siap Dianalisa</p>
+                                    <p class="mb-0 text-muted extra-small">Seluruh data pada periode {{ formatMonthYear(analisaFilters.bulan) }} telah terisi lengkap.</p>
+                                </div>
+                                <div v-if="!showAnalisaForm && existingAnalisa.length === 0" class="ms-auto">
+                                    <button class="btn btn-primary btn-sm px-4 rounded-pill" @click="showAnalisaForm = true">
+                                        <i class="fas fa-pen-fancy me-2"></i> Beri Analisa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Summary Bar -->
+                        <div class="bg-white border-top p-3 d-flex justify-content-around text-center">
+                            <div>
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold">Numerator</small>
+                                <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalNum }}</span>
+                            </div>
+                            <div class="vr mx-2"></div>
+                            <div>
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold">Denominator</small>
+                                <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalDenum }}</span>
+                            </div>
+                            <div class="vr mx-2"></div>
+                            <div>
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold">Capaian</small>
+                                <span class="fw-bold text-primary h5 mb-0">{{ monthlyStats.score }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM ANALISA (EXPANDABLE) -->
+                <Transition name="fade-slide">
+                    <div v-if="showAnalisaForm" class="card border-primary shadow-sm mb-4" style="border-left: 5px solid var(--bs-primary); border-radius: 12px;">
+                        <div class="card-header bg-white border-0 pt-3">
+                            <h6 class="fw-bold text-primary mb-0">
+                                <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Analisa Capaian <span class="text-danger">*</span></label>
+                                <textarea 
+                                    class="form-control premium-textarea" 
+                                    rows="4" 
+                                    v-model="analisaForm.analisa"
+                                    placeholder="Tuliskan analisa mengapa capaian target terpenuhi atau tidak..."
+                                ></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small">Rencana Tindak Lanjut <span class="text-danger">*</span></label>
+                                <textarea 
+                                    class="form-control premium-textarea" 
+                                    rows="4" 
+                                    v-model="analisaForm.tindak_lanjut"
+                                    placeholder="Tuliskan langkah konkret perbaikan atau pengembangan ke depan..."
+                                ></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button class="btn btn-light btn-sm px-4" @click="showAnalisaForm = false">
+                                    <i class="fas fa-times me-2"></i> Batal
+                                </button>
+                                <button 
+                                    class="btn btn-primary btn-sm px-4" 
+                                    @click="saveAnalisa"
+                                    :disabled="analisaSaving"
+                                >
+                                    <i v-if="analisaSaving" class="fas fa-spinner fa-spin me-2"></i>
+                                    <i v-else class="fas fa-save me-2"></i>
+                                    {{ analisaForm.id_analisa ? 'Update Analisa' : 'Simpan Analisa' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Transition>
+
+                <!-- EXISTING ANALISA RESULTS -->
+                <div v-if="existingAnalisa.length > 0 && !showAnalisaForm">
+                    <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                        <h6 class="fw-bold text-dark mb-0">
+                            <i class="fas fa-file-alt text-primary me-2"></i> Hasil Analisa
+                        </h6>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="showAnalisaForm = true">
+                            <i class="fas fa-edit me-2"></i> Edit Analisa
+                        </button>
+                    </div>
+                    
+                    <div v-for="item in existingAnalisa" :key="item.id_analisa" class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px;">
+                        <div class="bg-primary p-2"></div>
+                        <div class="card-body p-4">
+                            <div class="row">
+                                <div class="col-md-6 border-end">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="badge bg-primary-light text-primary p-2 rounded-3 me-3">
+                                            <i class="fas fa-search"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0">Analisa</h6>
+                                    </div>
+                                    <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
+                                        {{ item.analisa }}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="badge bg-success-light text-success p-2 rounded-3 me-3">
+                                            <i class="fas fa-rocket"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-success">Tindak Lanjut</h6>
+                                    </div>
+                                    <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
+                                        {{ item.tindak_lanjut }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -434,6 +558,12 @@ const filters = reactive({
     unit: null
 })
 
+// === VIEW MODE STATE ===
+const viewMode = ref('daily') // 'daily' | 'monthly' | 'analisa'
+const selectedIndicator = ref(null)
+const bulkSaving = ref(false)
+const calendarData = ref([])
+
 // === MODE GLIDER LOGIC ===
 const gliderStyle = computed(() => {
     const modes = ['daily', 'monthly', 'analisa']
@@ -448,12 +578,44 @@ const inputMode = ref('unit') // 'unit' | 'komite'
 const isCommitteeMember = ref(false)
 const userCommittees = ref([])
 
+// === INDICATOR SYNC ===
+// selectedIndicator is already defined above in VIEW MODE STATE
+
 // === ANALISA MODE STATE ===
-const selectedIndicatorAnalisa = ref(null)
 const analisaSaving = ref(false)
+const showAnalisaForm = ref(false) // Toggle for showing/hiding input form
 const existingAnalisa = ref([])
 const analisaFilters = reactive({
     bulan: new Date().toISOString().slice(0, 7) // YYYY-MM format
+})
+
+// === MONTHLY DATE SYNC ===
+const monthlyFilterDate = ref(filters.tgl_transaksi.slice(0, 7))
+const handleMonthlyDateChange = () => {
+    if (monthlyFilterDate.value) {
+        filters.tgl_transaksi = `${monthlyFilterDate.value}-01`
+        analisaFilters.bulan = monthlyFilterDate.value
+        if (viewMode.value === 'monthly') {
+            fetchMonthlyData()
+        } else if (viewMode.value === 'analisa') {
+            fetchAnalisaData()
+        }
+    }
+}
+
+const fetchCorrectData = () => {
+    if (viewMode.value === 'daily') fetchIndicators()
+    else if (viewMode.value === 'monthly') fetchMonthlyData()
+    else if (viewMode.value === 'analisa') fetchAnalisaData()
+}
+
+// Watch viewMode to sync and auto-fetch
+watch(viewMode, (newMode) => {
+    if (newMode === 'monthly' || newMode === 'analisa') {
+        monthlyFilterDate.value = filters.tgl_transaksi.slice(0, 7)
+        analisaFilters.bulan = monthlyFilterDate.value
+    }
+    fetchCorrectData()
 })
 
 const analisaForm = reactive({
@@ -472,6 +634,7 @@ const monthlyStats = ref({
 })
 
 const isEditingAnalisa = ref(false)
+const allIndicatorStats = ref([]) // For the "All Indicators" summary view
 
 const fetchUnits = async () => {
     try {
@@ -642,12 +805,6 @@ const saveItem = async (item) => {
 }
 
 // === BULK MODE LOGIC ===
-const viewMode = ref('daily') // 'daily' | 'monthly'
-const selectedIndicator = ref(null)
-const bulkSaving = ref(false)
-const calendarData = ref([])
-
-// Generate days for the selected month
 const calendarDays = computed(() => {
     if (!filters.tgl_transaksi) return []
     const date = new Date(filters.tgl_transaksi)
@@ -762,56 +919,107 @@ const saveBulk = async () => {
 
 // === ANALISA MODE FUNCTIONS ===
 const fetchAnalisaData = async () => {
-    if (!selectedIndicatorAnalisa.value || !analisaFilters.bulan || !filters.unit) return
+    if (!analisaFilters.bulan || !filters.unit) return
+    
+    const isSpecialized = !!selectedIndicator.value
+    
+    // Clear previous data while loading to avoid mismatch/stale data
+    resetAnalisaForm()
+    isEditingAnalisa.value = false
+    showAnalisaForm.value = false // Hide form on indicator change
+    monthlyStats.value = {
+        totalNum: 0,
+        totalDenum: 0,
+        score: 0,
+        isComplete: false,
+        missingDays: [],
+        fillPercentage: 0 // Track data entry progress
+    }
+    existingAnalisa.value = []
     
     loading.value = true
     try {
-        // Fetch monthly data to calculate stats
         const [year, month] = analisaFilters.bulan.split('-')
-        const realisasiRes = await api.getRealisasi({
-            dep_id: filters.unit,
-            bulan: parseInt(month),
-            tahun: parseInt(year),
-            id_inmut: selectedIndicatorAnalisa.value.id_inmut
-        })
+        const y = parseInt(year)
+        const m = parseInt(month)
+        const daysInMonth = new Date(y, m, 0).getDate()
         
-        const realisasiData = realisasiRes.data.data || []
-        
-        // Calculate total num/denum
-        let totalNum = 0
-        let totalDenum = 0
-        
-        realisasiData.forEach(r => {
-            totalNum += parseInt(r.num) || 0
-            totalDenum += parseInt(r.denum) || 0
-        })
-        
-        const score = totalDenum > 0 ? ((totalNum / totalDenum) * 100).toFixed(2) : 0
-        
-        // Check for missing days
-        const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate()
-        const filledDays = new Set(realisasiData.map(r => new Date(r.tanggal_inmut).getDate()))
-        const missingDays = []
-        for (let d = 1; d <= daysInMonth; d++) {
-            if (!filledDays.has(d)) missingDays.push(d)
-        }
-        
-        monthlyStats.value = {
-            totalNum,
-            totalDenum,
-            score,
-            isComplete: missingDays.length === 0,
-            missingDays
-        }
-        
-        // Fetch existing analisa
-        const analisaRes = await api.getAnalisa({
-            dep_id: filters.unit,
-            bulan: analisaFilters.bulan,
-            id_inmut: selectedIndicatorAnalisa.value.id_inmut
-        })
-        
+        // Fetch existing analisa (either filtered by id_inmut or all)
+        const analisaParams = { dep_id: filters.unit, bulan: analisaFilters.bulan }
+        if (isSpecialized) analisaParams.id_inmut = selectedIndicator.value.id_inmut
+        const analisaRes = await api.getAnalisa(analisaParams)
         existingAnalisa.value = analisaRes.data.data.data || []
+
+        if (isSpecialized) {
+            // Fetch monthly data for a SPECIFIC indicator
+            const realisasiRes = await api.getRealisasi({ dep_id: filters.unit, bulan: m, tahun: y, id_inmut: selectedIndicator.value.id_inmut })
+            const currentIndRealisasi = (realisasiRes.data.data || []).filter(r => r.id_inmut === selectedIndicator.value.id_inmut)
+            
+            let totalNum = 0, totalDenum = 0
+            currentIndRealisasi.forEach(r => {
+                totalNum += parseInt(r.num) || 0
+                totalDenum += parseInt(r.denum) || 0
+            })
+            
+            const filledDays = new Set(currentIndRealisasi.map(r => new Date(r.tanggal_inmut).getDate()))
+            const missingDays = []
+            for (let d = 1; d <= daysInMonth; d++) if (!filledDays.has(d)) missingDays.push(d)
+            
+            monthlyStats.value = {
+                totalNum, totalDenum,
+                score: totalDenum > 0 ? ((totalNum / totalDenum) * 100).toFixed(2) : 0,
+                isComplete: missingDays.length === 0,
+                missingDays,
+                fillPercentage: Math.round(((daysInMonth - missingDays.length) / daysInMonth) * 100)
+            }
+
+            // Auto-populate form
+            if (existingAnalisa.value.length > 0) {
+                const data = existingAnalisa.value[0]
+                analisaForm.id_analisa = data.id_analisa
+                analisaForm.analisa = data.analisa
+                analisaForm.tindak_lanjut = data.tindak_lanjut
+                isEditingAnalisa.value = true
+                showAnalisaForm.value = true
+            }
+        } else {
+            // Fetch ALL realisasi for the unit to calculate progress for ALL indicators
+            const allRealisasiRes = await api.getRealisasi({ dep_id: filters.unit, bulan: m, tahun: y })
+            const allRealisasi = allRealisasiRes.data.data || []
+            
+            // Group realisasi by id_inmut
+            const groupedRealisasi = {}
+            allRealisasi.forEach(r => {
+                if (!groupedRealisasi[r.id_inmut]) groupedRealisasi[r.id_inmut] = []
+                groupedRealisasi[r.id_inmut].push(r)
+            })
+
+            // Map indicators to their current stats
+            allIndicatorStats.value = indicators.value.map(ind => {
+                const indRealisasi = groupedRealisasi[ind.id_inmut] || []
+                const filledDays = new Set(indRealisasi.map(r => new Date(r.tanggal_inmut).getDate()))
+                const filledCount = filledDays.size
+                const progress = Math.round((filledCount / daysInMonth) * 100)
+                const isComplete = filledCount === daysInMonth
+                
+                // Calculate current score
+                let tNum = 0, tDenum = 0
+                indRealisasi.forEach(r => { tNum += parseInt(r.num) || 0; tDenum += parseInt(r.denum) || 0 })
+                const score = tDenum > 0 ? ((tNum / tDenum) * 100).toFixed(2) : 0
+
+                // Check if already analyzed
+                const analyzis = existingAnalisa.value.find(ans => ans.id_inmut === ind.id_inmut)
+
+                return {
+                    ...ind,
+                    progress,
+                    isComplete,
+                    score,
+                    isAnalyzed: !!analyzis,
+                    analysisId: analyzis?.id_analisa
+                }
+            })
+        }
         
     } catch (error) {
         console.error(error)
@@ -830,7 +1038,7 @@ const saveAnalisa = async () => {
     analisaSaving.value = true
     try {
         const payload = {
-            id_inmut: selectedIndicatorAnalisa.value.id_inmut,
+            id_inmut: selectedIndicator.value.id_inmut,
             analisa: analisaForm.analisa,
             tindak_lanjut: analisaForm.tindak_lanjut,
             jml_num: monthlyStats.value.totalNum,
@@ -849,6 +1057,7 @@ const saveAnalisa = async () => {
         }
         
         resetAnalisaForm()
+        showAnalisaForm.value = false // Close form after success
         fetchAnalisaData()
     } catch (error) {
         console.error(error)
@@ -876,10 +1085,10 @@ const editAnalisa = async (item) => {
     const matchingIndicator = indicators.value.find(ind => ind.id_inmut === item.id_inmut)
     
     if (matchingIndicator) {
-        selectedIndicatorAnalisa.value = matchingIndicator
+        selectedIndicator.value = matchingIndicator
     } else if (item.indikator) {
         // If not found in list, use the indicator data from item
-        selectedIndicatorAnalisa.value = {
+        selectedIndicator.value = {
             id_inmut: item.id_inmut,
             nama_inmut: item.nama_inmut || item.indikator.nama_inmut,
             dep_id: filters.unit,
@@ -889,7 +1098,7 @@ const editAnalisa = async (item) => {
         }
     } else {
         // Fallback: create minimal indicator object
-        selectedIndicatorAnalisa.value = {
+        selectedIndicator.value = {
             id_inmut: item.id_inmut,
             nama_inmut: item.nama_inmut,
             dep_id: filters.unit
@@ -907,10 +1116,11 @@ const editAnalisa = async (item) => {
     
     // Set flag and update filter in nextTick to prevent race condition
     isEditingAnalisa.value = true
+    showAnalisaForm.value = true // Ensure form opens when editing
     await nextTick()
     analisaFilters.bulan = itemBulan
     
-    // Scroll to top so user can see the form
+    // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -920,6 +1130,8 @@ const deleteAnalisaItem = async (id) => {
     try {
         await api.deleteAnalisa(id)
         toast.success('Analisa berhasil dihapus')
+        resetAnalisaForm()
+        showAnalisaForm.value = false
         fetchAnalisaData()
     } catch (error) {
         console.error(error)
@@ -947,7 +1159,7 @@ const getTargetDisplay = (indicator) => {
 const getTargetDisplayFromItem = (item) => {
     // Try to get from item.indikator.master_utama first (like in monitoring)
     const ind = item?.indikator
-    if (!ind) return getTargetDisplay(selectedIndicatorAnalisa.value)
+    if (!ind) return getTargetDisplay(selectedIndicator.value)
     
     const utama = ind.master_utama || ind.masterUtama
     const std = (utama && utama.standar) ? utama.standar : ind.standar
@@ -973,8 +1185,8 @@ const isTargetMet = (item) => {
         target = parseFloat((utama && utama.standar) ? utama.standar : ind.standar)
         rumus = String((utama && utama.rumus) ? utama.rumus : ind.rumus)
         score = parseFloat(item.jumlah || calculateCapaian(item.jml_num, item.jml_denum))
-    } else if (selectedIndicatorAnalisa.value) {
-        const indicator = selectedIndicatorAnalisa.value
+    } else if (selectedIndicator.value) {
+        const indicator = selectedIndicator.value
         score = parseFloat(calculateCapaian(item.jml_num, item.jml_denum))
         target = parseFloat(indicator.standar)
         rumus = String(indicator.rumus)
@@ -1003,6 +1215,8 @@ const formatMonthYear = (monthStr) => {
     return `${monthNames[parseInt(month) - 1]} ${year}`
 }
 
+const formatDateFull = formatMonthYear
+
 const handleModeChange = () => {
     if (inputMode.value === 'unit') {
         const userDepNameOrId = authStore.user?.data?.detail?.departemen || 
@@ -1022,9 +1236,18 @@ const handleModeChange = () => {
     fetchIndicators()
 }
 
-// Watchers for Bulk Mode
-watch(() => selectedIndicator.value, fetchMonthlyData)
-// Re-fetch monthly data if month changes while in monthly mode
+// Unified Watchers
+watch(() => selectedIndicator.value, () => {
+    if (viewMode.value === 'monthly') fetchMonthlyData()
+    if (viewMode.value === 'analisa') fetchAnalisaData()
+})
+
+watch(() => viewMode.value, (newMode) => {
+    if (newMode === 'monthly') fetchMonthlyData()
+    if (newMode === 'analisa') fetchAnalisaData()
+})
+
+// Re-fetch data if filters change
 watch(() => filters.tgl_transaksi, () => {
     if (viewMode.value === 'monthly') fetchMonthlyData()
 })
@@ -1114,42 +1337,97 @@ onMounted(() => {
     font-size: 0.9rem;
 }
 
-.custom-date-input {
-    border: none;
-    background: transparent;
-    padding: 6px 12px 6px 0;
-    font-size: 0.9rem;
-    color: #212529;
-    width: 100%;
-    outline: none;
+/* Modern Color Tokens for Workflow */
+.bg-success-light { background-color: #f0fdf4 !important; }
+.bg-warning-light { background-color: #fffbeb !important; }
+.bg-primary-light { background-color: #eff6ff !important; }
+.text-warning-dark { color: #92400e !important; }
+
+.extra-small {
+    font-size: 0.75rem !important;
+}
+
+.premium-textarea {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    transition: all 0.3s ease !important;
+    font-size: 0.95rem !important;
+}
+
+.premium-textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Animations */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.premium-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%) !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.header-filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-filter-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 5px;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.header-input {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: #2c3e50 !important;
+    border-radius: 8px !important;
+    font-weight: 500;
+    height: 38px !important;
+}
+
+.header-input:focus {
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important;
+}
+
+.context-toggle-premium .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.3) !important;
     font-weight: 500;
 }
 
-.custom-date-input::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-}
-
-.custom-date-input::-webkit-calendar-picker-indicator:hover {
-    opacity: 1;
-}
-
-.context-toggle .btn {
-    border-radius: 8px !important;
-    font-weight: 600;
+.context-toggle-premium .btn-check:checked + .btn {
+    background-color: #ffffff !important;
+    color: #1e3c72 !important;
+    border-color: #ffffff !important;
 }
 
 /* Segmented Control Styles */
 .mode-segmented-control {
     position: relative;
     display: flex;
-    background-color: #f1f3f5;
+    background-color: rgba(255, 255, 255, 0.1);
     padding: 4px;
     border-radius: 12px;
     width: fit-content;
     user-select: none;
-    border: 1px solid #e9ecef;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .mode-option {
@@ -1161,7 +1439,7 @@ onMounted(() => {
     padding: 8px 18px;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     z-index: 2;
     transition: color 0.3s ease;
@@ -1174,11 +1452,11 @@ onMounted(() => {
 }
 
 .mode-option.active {
-    color: #ffffff;
+    color: #1e40af; /* Matches sidebar dark blue */
 }
 
 .mode-option:hover:not(.active) {
-    color: #34495e;
+    color: #ffffff;
 }
 
 .mode-option:hover i {
@@ -1189,11 +1467,11 @@ onMounted(() => {
     position: absolute;
     height: calc(100% - 8px);
     width: calc(33.33% - 4px); /* Fallback, computed is better but fitting this layout */
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: #ffffff;
     border-radius: 10px;
     z-index: 1;
     transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Adjust glider width based on number of options */
@@ -1205,12 +1483,91 @@ onMounted(() => {
     width: 120px;
 }
 
+/* Premium V-Select for Header */
+.header-vselect .vs__dropdown-toggle {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    min-height: 38px !important;
+    padding: 0 4px !important;
+    transition: all 0.2s ease;
+}
+
+/* Force white background for all children of dropdown-toggle */
+.header-vselect .vs__dropdown-toggle * {
+    background-color: transparent !important;
+}
+
+.header-vselect.vs--open .vs__dropdown-toggle {
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.header-vselect .vs__selected {
+    color: #212529 !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    margin: 4px 2px !important;
+    background: transparent !important;
+}
+
+.header-vselect .vs__search {
+    color: #212529 !important;
+    font-size: 0.9rem !important;
+    margin: 4px 2px !important;
+    background: transparent !important;
+}
+
+.header-vselect .vs__search::placeholder {
+    color: #adb5bd !important;
+    font-size: 0.85rem !important;
+}
+
+.header-vselect .vs__open-indicator {
+    fill: #6c757d !important;
+    transform: scale(0.8) !important;
+}
+
+.header-vselect .vs__actions {
+    padding: 0 8px !important;
+    background: transparent !important;
+}
+
+.header-vselect .vs__clear {
+    fill: #6c757d !important;
+}
+
+.header-vselect .vs__dropdown-menu {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    z-index: 1050 !important;
+    margin-top: -1px !important;
+    padding: 5px 0 !important;
+}
+
+.header-vselect .vs__dropdown-option {
+    color: #212529 !important;
+    padding: 10px 15px !important;
+    font-size: 0.85rem !important;
+    white-space: normal !important;
+}
+
+.header-vselect .vs__dropdown-option--highlight {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
 </style>
 
 <style>
 /* Global overrides for this component's v-select to ensure it works */
-.style-chooser .vs__dropdown-toggle,
-.style-chooser .vs__dropdown-menu {
+.vs__dropdown-toggle,
+.vs__dropdown-menu {
   background: #ffffff !important;
   border: 1px solid #dee2e6 !important;
   border-radius: 8px !important;
@@ -1219,39 +1576,39 @@ onMounted(() => {
   min-height: 38px !important;
 }
 
-.style-chooser .vs__dropdown-toggle:hover {
+.vs__dropdown-toggle:hover {
     border-color: #ced4da !important;
 }
 
-.style-chooser .vs__search::placeholder {
+.vs__search::placeholder {
     color: #adb5bd !important;
     font-size: 0.9rem;
 }
 
-.style-chooser .vs__dropdown-option {
+.vs__dropdown-option {
     white-space: normal !important;
     padding: 10px 12px !important;
     line-height: normal !important;
     font-size: 0.9rem;
 }
 
-.style-chooser .vs__selected,
-.style-chooser .vs__search {
+.vs__selected,
+.vs__search {
     color: #212529 !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-.style-chooser .vs__open-indicator {
+.vs__open-indicator {
     fill: #adb5bd !important;
     transform: scale(0.8);
 }
 
-.style-chooser .vs__actions {
+.vs__actions {
     padding: 0 8px !important;
 }
 
-.style-chooser .vs__clear {
+.vs__clear {
     fill: #adb5bd !important;
 }
 
