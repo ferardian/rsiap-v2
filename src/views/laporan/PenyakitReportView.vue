@@ -178,6 +178,7 @@
                     <th class="text-end">Total</th>
                     <th class="text-end">L</th>
                     <th class="text-end">P</th>
+                    <th class="text-end">Total (B + L)</th>
                     <th class="text-end">Mati</th>
                   </tr>
                 </thead>
@@ -194,6 +195,9 @@
                       <span class="badge bg-pink-soft text-pink">{{ item.total_p || 0 }}</span>
                     </td>
                     <td class="text-end">
+                      <span class="badge bg-success-soft text-success">{{ item.grand_total || 0 }}</span>
+                    </td>
+                    <td class="text-end">
                       <span 
                         :class="['badge', item.total_mati > 0 ? 'bg-danger-soft text-danger clickable' : 'text-muted']"
                         @click="item.total_mati > 0 ? showDeathDetails(item) : null"
@@ -204,7 +208,7 @@
                     </td>
                   </tr>
                   <tr v-if="top10.length === 0">
-                    <td colspan="7" class="text-center py-5 text-muted">Belum ada data tersedia</td>
+                    <td colspan="8" class="text-center py-5 text-muted">Belum ada data tersedia</td>
                   </tr>
                 </tbody>
               </table>
@@ -804,6 +808,22 @@ onMounted(() => {
 
 .text-pink {
   color: #db2777;
+}
+
+.bg-success-soft {
+  background-color: #ecfdf5;
+}
+
+.text-success {
+  color: #059669;
+}
+
+.bg-warning-soft {
+  background-color: #fffbeb;
+}
+
+.text-warning {
+  color: #d97706;
 }
 
 .font-500 {
