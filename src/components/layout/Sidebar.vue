@@ -362,7 +362,7 @@ onMounted(async () => {
 /* Navigation */
 .sidebar-nav {
   flex: 1;
-  padding: 0 1rem;
+  padding: 0 1rem 4rem 1rem; /* Added bottom padding to prevent last item from being cut off on mobile */
   overflow-y: auto;
   overflow-x: hidden;
 }

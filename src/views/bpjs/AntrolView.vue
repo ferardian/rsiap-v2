@@ -557,15 +557,15 @@
           <div class="task-list">
             <div class="task-item">
               <span class="task-number">3</span>
-              <span class="task-name">Mulai Pemeriksaan</span>
+              <span class="task-name">Mulai Pemeriksaan <span class="text-danger small ms-1">*Wajib</span></span>
             </div>
             <div class="task-item">
               <span class="task-number">4</span>
-              <span class="task-name">Estimasi Selesai</span>
+              <span class="task-name">Estimasi Selesai <span class="text-danger small ms-1">*Wajib</span></span>
             </div>
             <div class="task-item">
               <span class="task-number">5</span>
-              <span class="task-name">Selesai Pemeriksaan</span>
+              <span class="task-name">Selesai Pemeriksaan <span class="text-danger small ms-1">*Wajib</span></span>
             </div>
             <div class="task-item conditional">
               <span class="task-number">6</span>
@@ -578,7 +578,7 @@
           </div>
           <div class="info-note">
             <i class="fas fa-info-circle"></i>
-            <span>Sistem akan otomatis mendeteksi task yang tersedia di SIMRS</span>
+            <span>Pastikan Task 3, 4, dan 5 sudah terisi di SIMRS sebelum sinkronisasi.</span>
           </div>
         </div>
       </div>
@@ -1068,7 +1068,11 @@ const bulkSyncTask = async () => {
     }
   } catch (error) {
     console.error(error)
-    toast.error('Gagal melakukan bulk sync')
+    if (error.response && error.response.status === 422) {
+      toast.warning(error.response.data.metadata.message || 'Data task belum lengkap')
+    } else {
+      toast.error('Gagal melakukan bulk sync')
+    }
   } finally {
     bulkSyncLoading.value = null
   }
@@ -1102,7 +1106,11 @@ const bulkSyncAllShown = async () => {
       }
     } catch (error) {
       console.error(error)
-      toast.error('Gagal melakukan sinkronisasi bulk')
+      if (error.response && error.response.status === 422) {
+        toast.warning(error.response.data.metadata.message || 'Data task belum lengkap')
+      } else {
+        toast.error('Gagal melakukan sinkronisasi bulk')
+      }
     } finally {
       isBulkingAll.value = false
     }
