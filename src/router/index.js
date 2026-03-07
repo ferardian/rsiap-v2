@@ -284,6 +284,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/farmasi/penerimaan-obat',
+    name: 'PenerimaanObat',
+    component: () => import('../views/farmasi/PenerimaanObatView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/farmasi/stok-opname',
     name: 'StokOpname',
     component: () => import('../views/farmasi/StokOpnameView.vue'),
