@@ -462,29 +462,23 @@ const processScan = async () => {
   formData.append('image', scanFile.value);
   
   try {
-    console.log("Memulai proses upload ke n8n...");
     const { data } = await api.post('/farmasi/penerimaan-obat/scan-faktur', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-    
-    console.log("DATA DARI API:", data);
-    
+        
     // Asumsi balikan: data.data.items = array objek {kode_brng, nama_brng, jumlah, h_pesan}
     if (data.success) {
        if (!data.data || !data.data.items) {
-           console.log("Warning: data.items kosong atau bukan array");
            Swal.fire('Data Kosong', 'AI tidak berhasil mengekstrak data obat dari faktur.', 'warning');
            return;
        }
        
        let addedCount = 0;
-       console.log("Jumlah item dari AI:", data.data.items.length);
        
        // Handle mapping data
        for (const scanItem of data.data.items) {
-           console.log("Memproses item:", scanItem);
            // Fitur popup 'Tambah Obat Baru' sementara DIMATIKAN agar tidak nge-block
            // Biarkan semua item dari AI mengalir bebas masuk ke tabel walau kodenya kosong
        
@@ -504,15 +498,13 @@ const processScan = async () => {
                   subtotal: 0,
                   total: 0,
                   no_batch: '',
-                  kadaluarsa: dateToISO(new Date(new Date().setFullYear(new Date().getFullYear() + 2)))
+                  kadaluarsa: dateToISO(new Date(new Date().setFullYear(new Date().getFullYear() + 2))),
+                  is_new_item: scanItem.is_new_item
                });
                addedCount++;
-           } else {
-               console.log("Item duplikat di-skip:", scanItem.kode_brng);
            }
        }
        
-       console.log("Total ditambahkan ke tabel:", addedCount);
        recalculate();
        
        Swal.fire({
@@ -532,9 +524,7 @@ const processScan = async () => {
        // Menutup Paksa Modal (Bypass limitasi isScanning di dalam closeScanModal)
        showScanModal.value = false;
        removeScanFile();
-    } else {
-       console.log("API mereturn success=false", data);
-       Swal.fire('Info AI', data.message || 'Respons tidak valid', 'info');
+    } else {       Swal.fire('Info AI', data.message || 'Respons tidak valid', 'info');
     }
   } catch(err) {
      console.error("CATCH ERROR:", err);
