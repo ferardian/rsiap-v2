@@ -223,16 +223,20 @@
             </div>
             
             <div class="upload-container text-center p-4 border rounded" :class="{'border-primary bg-light': scanPreview, 'border-dashed border-secondary': !scanPreview}" style="border-width: 2px !important; position: relative;">
-               <input type="file" ref="fakturFileInput" class="d-none" accept="image/*" @change="handleFakturFileSelect" :disabled="isScanning">
+               <input type="file" ref="fakturFileInput" class="d-none" accept="image/*,.pdf" @change="handleFakturFileSelect" :disabled="isScanning">
                
                <div v-if="!scanPreview" class="py-3 cursor-pointer" @click="triggerFileInput">
                   <i class="fas fa-camera fa-3x text-secondary mb-3"></i>
                   <h6 class="fw-semibold">Ambil Foto / Pilih File</h6>
-                  <p class="small text-muted mb-0">Sistem mendukung JPG dan PNG.</p>
+                  <p class="small text-muted mb-0">Sistem mendukung JPG, PNG, dan PDF.</p>
                </div>
                
                <div v-else>
-                  <img :src="scanPreview" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px; object-fit: contain;">
+                  <img v-if="!isPdf" :src="scanPreview" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px; object-fit: contain;">
+                  <div v-else class="py-4 bg-white rounded mb-3 border">
+                     <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                     <div class="small fw-bold text-dark text-truncate px-3">{{ scanFile?.name }}</div>
+                  </div>
                   <div>
                     <button class="btn btn-sm btn-outline-danger me-2" @click="removeScanFile" :disabled="isScanning">
                       <i class="fas fa-times me-1"></i> Ganti Foto
@@ -243,8 +247,8 @@
             
             <div v-if="isScanning" class="text-center mt-4">
                <div class="spinner-border text-warning mb-2" role="status"></div>
-               <p class="fw-bold text-dark mb-0 animate-pulse">AI sedang menganalisa faktur...</p>
-               <span class="small text-muted">Bisa memakan waktu memanggil Webhook n8n dan DeepSeek.</span>
+                <p class="fw-bold text-dark mb-0 animate-pulse">AI sedang bekerja...</p>
+                <span class="small text-muted">Mohon menunggu, sedang menganalisa data faktur.</span>
             </div>
           </div>
           <div class="modal-footer bg-light border-top-0">
@@ -435,11 +439,17 @@ const triggerFileInput = () => {
     fakturFileInput.value.click()
   }
 }
+const isPdf = ref(false)
 const handleFakturFileSelect = (e) => {
   const file = e.target.files[0]
   if (file) {
     scanFile.value = file
-    scanPreview.value = URL.createObjectURL(file)
+    isPdf.value = file.type === 'application/pdf'
+    if (isPdf.value) {
+        scanPreview.value = 'PDF_MODAL' // Placeholder to trigger preview UI
+    } else {
+        scanPreview.value = URL.createObjectURL(file)
+    }
   }
 }
 const removeScanFile = () => {
