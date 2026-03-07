@@ -618,7 +618,7 @@ onMounted(() => {
 .role-menu-management {
   background-color: #f1f5f9;
   min-height: 100%;
-  padding-bottom: 2rem;
+  padding-bottom: 6rem;
 }
 
 /* Standard Page Header */

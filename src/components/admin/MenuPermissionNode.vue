@@ -115,7 +115,6 @@ const updatePermission = (key, value) => {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   margin-bottom: 1rem;
-  overflow: hidden;
   transition: border-color 0.2s;
 }
 
