@@ -2,7 +2,11 @@
   <div class="jadwal-page">
     <!-- Header -->
     <div class="page-header">
-      <h2>📅 Jadwal Pegawai</h2>
+      <div class="print-title">
+        <h2>JADWAL PEGAWAI - {{ months[filter.month - 1] }} {{ filter.year }}</h2>
+        <p v-if="filter.department && filter.department !== 'all'">Unit: {{ departmentOptions.find(d => d.id === filter.department)?.name }}</p>
+      </div>
+      <h2 class="no-print">📅 Jadwal Pegawai</h2>
       <div class="controls">
         <div class="filter-group">
           <SearchableSelect 
@@ -34,9 +38,17 @@
             class="form-input search-input"
             @input="handleSearch"
           >
-          <button @click="fetchData" class="btn btn-primary">
+          <button @click="fetchData" class="btn btn-primary" :disabled="loading">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
+          <div class="export-buttons">
+            <button @click="exportToExcel" class="btn btn-success" :disabled="loading || employees.length === 0">
+              <i class="fas fa-file-excel"></i> Excel
+            </button>
+            <button @click="exportToPdf" class="btn btn-danger" :disabled="loading || employees.length === 0">
+              <i class="fas fa-file-pdf"></i> PDF
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -63,8 +75,8 @@
                 :class="{ 'sunday': isSunday(day) }"
                 class="date-col"
               >
-                {{ day }}
-                <div class="day-name">{{ getDayName(day) }}</div>
+                <div class="day-name">({{ getDayName(day) }})</div>
+                <div class="day-number">{{ day }}</div>
               </th>
               <!-- Summary Columns -->
               <th class="stats-header">Pagi</th>
@@ -159,6 +171,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { jadwalPegawaiService } from '../../services/jadwalPegawaiService'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 
 const props = defineProps({
   allowAllDepartments: {
@@ -428,6 +441,74 @@ const getShiftColorClass = (shiftCode) => {
   if (code.includes('libur')) return 'shift-libur'
   if (code.includes('midle')) return 'shift-midle'
   return 'shift-default'
+}
+
+const getShortCode = (shiftCode) => {
+  if (!shiftCode || shiftCode === '-') return '-'
+  const lower = shiftCode.toLowerCase()
+  if (lower.includes('pagi')) return 'P'
+  if (lower.includes('siang')) return 'S'
+  if (lower.includes('malam')) return 'M'
+  if (lower.includes('cuti')) return 'C'
+  if (lower.includes('libur')) return 'L'
+  if (lower.includes('i')) return 'I' // Izin
+  if (lower.includes('s')) return 'S' // Sakit (overlap with siang, but check priority)
+  return shiftCode.charAt(0).toUpperCase()
+}
+
+const exportToExcel = () => {
+  try {
+    const wsData = []
+    
+    // Header 1: Month & Year
+    wsData.push([`JADWAL PEGAWAI - ${months[filter.value.month - 1]} ${filter.value.year}`])
+    wsData.push([]) // empty row
+
+    // Header 2: Main Table Header
+    const headers = ['No', 'Nama Pegawai', 'Unit']
+    for (let d = 1; d <= daysInMonth.value; d++) {
+      headers.push(d.toString())
+    }
+    headers.push('Pagi', 'Siang', 'Malam', 'Total', 'Libur', 'Cuti', 'Jam')
+    wsData.push(headers)
+
+    // Data rows
+    employees.value.forEach((emp, index) => {
+      const row = [
+        index + 1,
+        emp.nama,
+        emp.departemen
+      ]
+      
+      for (let d = 1; d <= daysInMonth.value; d++) {
+        row.push(getShortCode(getShift(emp, d)))
+      }
+
+      row.push(
+        countShiftByType(emp, 'Pagi'),
+        countShiftByType(emp, 'Siang'),
+        countShiftByType(emp, 'Malam'),
+        countTotalShifts(emp),
+        countLibur(emp),
+        countShiftByType(emp, 'Cuti'),
+        calculateTotalHours(emp)
+      )
+      wsData.push(row)
+    })
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Jadwal")
+    
+    const filename = `Jadwal_${months[filter.value.month - 1]}_${filter.value.year}.xlsx`
+    XLSX.writeFile(wb, filename)
+  } catch (err) {
+    console.error('Export Excel failed:', err)
+  }
+}
+
+const exportToPdf = () => {
+  window.print()
 }
 
 onMounted(() => {
@@ -751,4 +832,120 @@ thead .sticky-col {
      padding: 0.25rem;
   }
 }
+
+/* Print Styles & Vertical Header */
+@media print {
+  @page {
+    size: landscape;
+    margin: 1cm;
+  }
+
+  .page-header, .controls, .summary-section, .btn, .btn-primary, .export-buttons {
+    display: none !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .jadwal-page, .jadwal-page * {
+    visibility: visible;
+  }
+
+  .jadwal-page {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .table-container {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .schedule-table th, .schedule-table td {
+    border: 1px solid #000;
+    color: #000 !important;
+    font-size: 8px !important;
+    padding: 2px !important;
+  }
+
+  .sticky-col {
+    position: static !important;
+    width: auto !important;
+    min-width: 100px !important;
+    box-shadow: none !important;
+  }
+
+  /* Vertical Day Headers */
+  .date-col {
+    height: 85px;
+    vertical-align: bottom;
+    padding: 0 !important;
+    position: relative;
+  }
+
+  .day-name {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: left;
+    height: 65px;
+    margin: 0 auto;
+    font-weight: normal;
+    font-size: 8px;
+    display: block;
+    padding-top: 5px;
+  }
+
+  .day-number {
+    display: block;
+    height: 20px;
+    line-height: 20px;
+    font-weight: bold;
+    border-top: 1px solid #000;
+  }
+
+  .print-title {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .print-title h2 { margin: 0; font-size: 14px; }
+  .print-title p { margin: 5px 0 0 0; font-size: 11px; }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .sunday {
+    background-color: #ffcc80 !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .shift-badge {
+    background: transparent !important;
+    color: #000 !important;
+    padding: 0;
+    font-weight: normal;
+  }
+}
+
+.print-title { display: none; }
+
+.export-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-success { background-color: #10b981; color: white; }
+.btn-danger { background-color: #ef4444; color: white; }
 </style>

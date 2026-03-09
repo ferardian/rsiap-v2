@@ -518,14 +518,19 @@ onUnmounted(() => {
   }
 }
 
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
+@media print {
+  .sidebar, .top-header, .sidebar-backdrop, .btn-logout {
+    display: none !important;
+  }
+  
+  .content-wrapper {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+  .main-content {
+    padding: 0 !important;
+  }
 }
 </style>
