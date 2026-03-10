@@ -431,6 +431,7 @@ const sendNotification = async () => {
       kd_dokter: filters.kd_dokter,
       tgl_registrasi: filters.tgl_registrasi,
       no_rkm_medis: selectedRows.value,
+      kd_poli: filters.kd_poli || undefined
     })
     toast.success(res.data?.metadata?.message || 'Notifikasi berhasil dikirim')
     selectedRows.value = []
