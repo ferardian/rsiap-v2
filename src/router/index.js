@@ -344,6 +344,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/monitoring-rm',
+    name: 'MonitoringRM',
+    component: () => import('../views/dashboard/MonitoringRMView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/akred/spo',
     name: 'SpoManagement',
     component: () => import('../views/akred/SpoView.vue'),

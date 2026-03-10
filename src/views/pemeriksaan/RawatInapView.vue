@@ -596,133 +596,282 @@
               <p>Belum ada data tagihan masuk.</p>
              </div>
 
-             <div v-else>
-               <!-- Grand Total Card -->
-               <div class="card bg-primary text-white border-0 shadow-sm mb-4">
-                  <div class="card-body d-flex justify-content-between align-items-center p-3">
-                     <div>
-                        <h6 class="mb-0 opacity-75">Estimasi Total Biaya</h6>
-                        <small class="opacity-50 text-xs">Belum termasuk retur/potongan lain</small>
+             <div v-else class="billing-content">
+               <!-- Header Billing -->
+               <div class="card border-0 shadow-sm mb-4">
+                  <div class="card-body p-4">
+                     <div class="row align-items-center">
+                        <div class="col-md-8">
+                           <h5 class="fw-bold text-primary mb-1">{{ selectedItem?.reg_periksa?.pasien?.nm_pasien }}</h5>
+                           <p class="text-muted mb-0">
+                              <span class="badge bg-light text-dark border me-2">{{ selectedItem?.reg_periksa?.no_rkm_medis }}</span>
+                              <span class="badge bg-light text-dark border me-2">{{ selectedItem?.no_rawat }}</span>
+                              <span v-if="billingExtra?.nota" class="badge bg-blue-100 text-blue-600 border border-blue-200">
+                                 <i class="fas fa-receipt me-1"></i> {{ billingExtra.nota.no_nota }}
+                              </span>
+                           </p>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                           <h3 class="fw-bold text-primary mb-0">{{ formatCurrency(grandTotal) }}</h3>
+                           <small class="text-muted text-xs">Total Tagihan Keseluruhan</small>
+                        </div>
                      </div>
-                     <h3 class="fw-bold mb-0">{{ formatCurrency(grandTotal) }}</h3>
                   </div>
                </div>
 
-
-               <!-- Mother Total Card -->
-               <div v-if="billingGabung && billingGabung.length > 0" class="card bg-success text-white border-0 shadow-sm mb-4">
-                  <div class="card-body d-flex justify-content-between align-items-center p-3">
-                     <div>
-                        <h6 class="mb-0 opacity-90"><i class="fas fa-user-injured me-2"></i>Tagihan Pasien: {{ selectedItem?.reg_periksa?.pasien?.nm_pasien }}</h6>
-                        <small class="opacity-75 text-xs">{{ selectedItem?.reg_periksa?.no_rawat }}</small>
+               <!-- Ruang Rawat -->
+               <div v-if="billingExtra?.ruang && billingExtra.ruang.length > 0" class="card border-0 shadow-sm mb-4">
+                   <div class="card-header bg-primary py-3">
+                      <h6 class="fw-bold mb-0 text-white"><i class="fas fa-bed me-2"></i>Ruang Rawat</h6>
+                  </div>
+                  <div class="card-body p-0">
+                     <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                               <tr class="bg-light">
+                                  <th class="ps-4">Kamar / Bangsal</th>
+                                  <th class="text-center">Masuk</th>
+                                  <th class="text-center">Keluar</th>
+                                  <th class="text-center">Lama</th>
+                                  <th class="text-end">Tarif/Hari</th>
+                                  <th class="text-end pe-4">Total</th>
+                               </tr>
+                            </thead>
+                            <tbody>
+                               <tr v-for="(r, idx) in billingExtra.ruang" :key="idx">
+                                  <td class="ps-4 py-2">
+                                     <div class="fw-bold">{{ r.kamar?.bangsal?.nm_bangsal || '-' }}</div>
+                                     <div class="text-muted smaller" style="font-size: 0.75rem;">{{ r.kd_kamar }}</div>
+                                  </td>
+                                  <td class="text-center small py-2">{{ r.tgl_masuk }} {{ r.jam_masuk }}</td>
+                                  <td class="text-center small py-2">{{ r.tgl_keluar !== '0000-00-00' ? (r.tgl_keluar + ' ' + r.jam_keluar) : '-' }}</td>
+                                  <td class="text-center py-2">{{ r.lama }} hr</td>
+                                  <td class="text-end py-2 text-muted small">{{ formatCurrency(r.trf_kamar) }}</td>
+                                  <td class="text-end pe-4 py-2 fw-bold">{{ formatCurrency(r.ttl_biaya) }}</td>
+                               </tr>
+                            </tbody>
+                            <tfoot>
+                               <tr class="bg-light">
+                                  <td class="ps-4 py-2 fw-bold" colspan="5">Total Ruang Rawat</td>
+                                  <td class="text-end pe-4 py-2 fw-bold text-primary">{{ formatCurrency(billingExtra.ruang.reduce((s, r) => s + parseFloat(r.ttl_biaya || 0), 0)) }}</td>
+                               </tr>
+                            </tfoot>
+                         </table>
                      </div>
-                     <h3 class="fw-bold mb-0">{{ formatCurrency(Object.values(billingData).reduce((acc, items) => acc + calculateCategoryTotal(items), 0)) }}</h3>
                   </div>
                </div>
 
-               <div v-for="(items, category) in billingData" :key="category" class="card border-0 shadow-sm mb-4">
-                 <div class="card-header bg-primary text-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                   <h6 class="fw-bold mb-0 text-white">{{ category }}</h6>
-                   <span class="badge bg-white text-primary rounded-pill">{{ formatCurrency(calculateCategoryTotal(items)) }}</span>
+               <!-- Dokter Rawat -->
+               <div v-if="billingExtra?.dokters && Object.keys(billingExtra.dokters).length > 0" class="card border-0 shadow-sm mb-4">
+                     <div class="card-header bg-primary py-3">
+                        <h6 class="fw-bold mb-0 text-white"><i class="fas fa-user-md me-2"></i>Dokter Rawat</h6>
+                  </div>
+                  <div class="card-body p-3">
+                     <div class="row g-2">
+                        <div v-for="(docs, kd) in billingExtra.dokters" :key="kd" class="col-md-6">
+                           <div class="d-flex align-items-center p-2 rounded bg-light border">
+                              <div class="avatar-circle-sm bg-blue-100 text-blue-600 me-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                                 <i class="fas fa-user-md"></i>
+                              </div>
+                              <div>
+                                 <div class="fw-bold small">{{ docs[0]?.dokter?.nm_dokter }}</div>
+                                 <div class="text-muted smaller" style="font-size: 0.7rem;">{{ docs[0]?.dokter?.spesialis?.nm_sps }} <span class="ms-1 fw-bold text-primary">({{ docs.length }}x visit)</span></div>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Rincian Biaya (per no_rawat) -->
+               <template v-for="(categories, noRawat) in billingData" :key="noRawat">
+                 <div class="mb-2">
+                   <h6 class="fw-bold text-dark mb-3 border-bottom pb-2">
+                     <i class="fas fa-receipt me-2 text-primary"></i>Rincian Biaya : <span class="text-muted float-end small">{{ noRawat }}</span>
+                   </h6>
                  </div>
-                 <div class="card-body p-0">
-                   <div class="table-responsive">
-                     <table class="table table-hover mb-0">
-                       <thead class="bg-light">
-                         <tr>
-                            <th class="ps-4">Item Transaksi</th>
-                            <th class="text-end pe-4" width="150">Biaya</th>
-                         </tr>
-                       </thead>
-                       <tbody>
-                          <template v-for="(subItems, key) in items" :key="key">
-                             <!-- Simple Item -->
-                             <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total">
-                                <td class="ps-4">
-                                  {{ key }} 
-                                  <span v-if="Array.isArray(subItems) && subItems.length > 1" class="badge bg-secondary rounded-pill ms-2">{{ subItems.length }}x</span>
-                                </td>
-                                <td class="text-end pe-4 fw-medium">
-                                  {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
-                                </td>
-                             </tr>
-                             
-                             <!-- Nested Group -->
-                             <tr v-else-if="Array.isArray(subItems)">
-                                <td colspan="2" class="p-0">
-                                   <div class="d-flex justify-content-between px-4 py-2 border-bottom border-light">
-                                      <span>{{ key }} <small class="text-muted ms-1" v-if="subItems.length > 1">({{ subItems.length }}x)</small></span>
-                                      <span class="fw-medium">{{ formatCurrency(subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.totalbiaya || i.total || 0), 0)) }}</span>
-                                   </div>
-                                </td>
-                             </tr>
-                          </template>
-                       </tbody>
-                     </table>
+                 <div v-for="(items, category) in categories" :key="category" class="card border-0 shadow-sm mb-3">
+                   <div class="card-header bg-primary border-bottom py-2 d-flex justify-content-between align-items-center">
+                     <h6 class="fw-bold mb-0 text-white small">{{ category }}</h6>
+                     <span class="badge bg-white text-primary rounded-pill">{{ formatCurrency(calculateCategoryTotal(items)) }}</span>
                    </div>
+                    <div class="card-body p-0">
+                      <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0">
+                          <thead class="bg-light">
+                            <tr>
+                               <th class="ps-4 py-2">Item Transaksi</th>
+                               <th class="text-center py-2" width="60">Jml</th>
+                               <th class="text-end py-2" width="130">Biaya Satuan</th>
+                               <th class="text-end pe-4 py-2" width="130">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                             <template v-for="(subItems, key) in items" :key="key">
+                                <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya">
+                                   <td class="ps-4 py-2">
+                                     <div class="fw-medium">{{ key }}</div>
+                                   </td>
+                                   <td class="text-center py-2 text-muted">
+                                     {{ Array.isArray(subItems) ? subItems.length : 1 }}x
+                                   </td>
+                                   <td class="text-end py-2 text-muted small">
+                                     <template v-if="Array.isArray(subItems) && subItems.length > 0">
+                                       {{ formatCurrency(parseFloat(subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya || 0)) }}
+                                     </template>
+                                     <template v-else>
+                                       {{ formatCurrency(parseFloat(subItems.biaya_rawat || subItems.total || subItems.biaya || 0)) }}
+                                     </template>
+                                   </td>
+                                   <td class="text-end pe-4 fw-bold align-middle">
+                                     {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
+                                   </td>
+                                </tr>
+                             </template>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                  </div>
+               </template>
+
+               <!-- Resep Pulang -->
+               <template v-if="billingExtra?.resepPulang">
+                  <template v-for="(grouped, rpNoRawat) in billingExtra.resepPulang" :key="rpNoRawat">
+                     <div class="card border-0 shadow-sm mb-4 border-start border-warning border-4">
+                        <div class="card-header bg-warning py-3 d-flex justify-content-between align-items-center">
+                           <h6 class="fw-bold mb-0 text-white"><i class="fas fa-pills me-2"></i>Resep Pulang</h6>
+                           <small class="text-white opacity-75">{{ rpNoRawat }}</small>
+                        </div>
+                        <div class="card-body p-0">
+                           <table class="table table-sm table-hover mb-0">
+                              <thead class="bg-light">
+                                 <tr>
+                                    <th class="ps-4 py-2">Obat</th>
+                                    <th class="text-center py-2">Jml</th>
+                                    <th class="text-end pe-4 py-2">Total</th>
+                                 </tr>
+                              </thead>
+                              <tbody>
+                                 <template v-for="(rpItems, kodeBrng) in grouped" :key="kodeBrng">
+                                    <tr>
+                                       <td class="ps-4 py-2">{{ rpItems[0]?.obat?.nama_brng || kodeBrng }}</td>
+                                       <td class="text-center py-2">{{ rpItems.reduce((s, i) => s + parseFloat(i.jml_barang || 0), 0) }}</td>
+                                       <td class="text-end pe-4 py-2 fw-bold">{{ formatCurrency(rpItems.reduce((s, i) => s + parseFloat(i.total || 0), 0)) }}</td>
+                                    </tr>
+                                 </template>
+                              </tbody>
+                               <tfoot>
+                                  <tr class="bg-light">
+                                     <td class="ps-4 py-2 fw-bold">Total Resep Pulang</td>
+                                     <td class="text-center py-2"></td>
+                                     <td class="text-end pe-4 py-2 fw-bold text-primary">{{ formatCurrency(Object.values(grouped).reduce((s, rpItems) => s + rpItems.reduce((s2, i) => s2 + parseFloat(i.total || 0), 0), 0)) }}</td>
+                                  </tr>
+                               </tfoot>
+                           </table>
+                        </div>
+                     </div>
+                  </template>
+               </template>
+
+
+               <!-- Tambahan & Potongan Biaya -->
+               <div v-if="(billingExtra?.tambahanBiaya?.length > 0) || (billingExtra?.potonganBiaya?.length > 0)" class="row g-3 mb-4">
+                  <div class="col-md-6" v-if="billingExtra?.tambahanBiaya?.length > 0">
+                     <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+                         <div class="card-header bg-success py-3">
+                            <h6 class="fw-bold mb-0 text-white"><i class="fas fa-plus-circle me-1"></i>Tambahan Biaya</h6>
+                         </div>
+                        <div class="card-body p-3">
+                           <div v-for="(t, idx) in billingExtra.tambahanBiaya" :key="idx" class="d-flex justify-content-between border-bottom pb-2 mb-2 px-1">
+                              <span class="small">{{ t.nama_biaya }}</span>
+                              <span class="small fw-bold text-success">+{{ formatCurrency(t.besar_biaya) }}</span>
+                           </div>
+                           <div class="d-flex justify-content-between px-1 pt-1">
+                              <span class="small fw-bold">Total Tambahan</span>
+                              <span class="fw-bold text-success">+{{ formatCurrency(billingExtra.tambahanBiaya.reduce((s, t) => s + parseFloat(t.besar_biaya || 0), 0)) }}</span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-md-6" v-if="billingExtra?.potonganBiaya?.length > 0">
+                     <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
+                         <div class="card-header bg-danger py-3">
+                            <h6 class="fw-bold mb-0 text-white"><i class="fas fa-minus-circle me-1"></i>Potongan Biaya</h6>
+                         </div>
+                        <div class="card-body p-3">
+                           <div v-for="(p, idx) in billingExtra.potonganBiaya" :key="idx" class="d-flex justify-content-between border-bottom pb-2 mb-2 px-1">
+                              <span class="small">{{ p.nama_pengurangan }}</span>
+                              <span class="small fw-bold text-danger">-{{ formatCurrency(p.besar_pengurangan) }}</span>
+                           </div>
+                           <div class="d-flex justify-content-between px-1 pt-1">
+                              <span class="small fw-bold">Total Potongan</span>
+                              <span class="fw-bold text-danger">-{{ formatCurrency(billingExtra.potonganBiaya.reduce((s, p) => s + parseFloat(p.besar_pengurangan || 0), 0)) }}</span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Infant Section -->
+               <template v-if="billingGabung && billingGabung.length > 0">
+                  <div class="mt-5 mb-3 border-top border-4 pt-4">
+                     <h5 class="fw-bold text-info"><i class="fas fa-baby me-2"></i>Tagihan Bayi Gabung</h5>
+                  </div>
+                  <div v-for="(bayi, idx) in billingGabung" :key="idx" class="mb-4">
+                     <div class="card bg-info text-white border-0 shadow-sm mb-3">
+                        <div class="card-body d-flex justify-content-between align-items-center p-3">
+                           <div>
+                              <h6 class="mb-0 fw-bold">{{ bayi.nama }}</h6>
+                              <small class="opacity-75 text-xs">{{ bayi.no_rawat }}</small>
+                           </div>
+                           <h4 class="fw-bold mb-0">{{ formatCurrency(Object.values(bayi.billing).reduce((acc, cat) => acc + calculateCategoryTotal(cat), 0)) }}</h4>
+                        </div>
+                     </div>
+                     
+                     <div v-for="(items, category) in bayi.billing" :key="category" class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+                           <h6 class="fw-bold mb-0 text-info small">{{ category }}</h6>
+                           <span class="badge bg-info bg-opacity-10 text-info rounded-pill small">{{ formatCurrency(calculateCategoryTotal(items)) }}</span>
+                        </div>
+                        <div class="card-body p-0">
+                           <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
+                              <tbody>
+                                 <template v-for="(subItems, key) in items" :key="key">
+                                    <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total">
+                                       <td class="ps-3 py-2">
+                                          <div>{{ key }}</div>
+                                          <div v-if="Array.isArray(subItems) && subItems.length > 1" class="text-muted smaller" style="font-size: 0.7rem;">{{ subItems.length }}x visit</div>
+                                       </td>
+                                       <td class="text-end pe-3 fw-bold align-middle">
+                                          {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
+                                       </td>
+                                    </tr>
+                                 </template>
+                              </tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </div>
+               </template>
+
+               <!-- Footer info -->
+               <div v-if="billingExtra?.kasir || billingExtra?.asmenKeuangan" class="mt-5 p-4 bg-white rounded border border-info border-opacity-25 text-center shadow-sm">
+                  <div class="row">
+                     <div class="col-6">
+                        <p class="mb-1 text-muted small fw-bold text-uppercase tracking-wider">Asisten Manajer Keuangan</p>
+                        <div class="mt-4 pt-2 fw-bold text-dark border-top d-inline-block px-4">{{ billingExtra.asmenKeuangan?.nama || '-' }}</div>
+                     </div>
+                     <div class="col-6">
+                        <p class="mb-1 text-muted small fw-bold text-uppercase tracking-wider">Petugas Kasir</p>
+                        <div class="mt-4 pt-2 fw-bold text-dark border-top d-inline-block px-4">{{ billingExtra.kasir?.nama || '-' }}</div>
+                     </div>
+                  </div>
                </div>
              </div>
-          </div>
-         <template v-if="billingGabung && billingGabung.length > 0">
-           <div v-for="(bayi, idx) in billingGabung" :key="idx" class="mt-4 pt-4 border-top border-4">
-              <!-- Bayi Header & Total -->
-              <div class="card bg-info text-white border-0 shadow-sm mb-4">
-                 <div class="card-body d-flex justify-content-between align-items-center p-3">
-                    <div>
-                       <h6 class="mb-0 opacity-90"><i class="fas fa-baby me-2"></i>Tagihan Bayi: {{ bayi.nama }}</h6>
-                       <small class="opacity-75 text-xs">{{ bayi.no_rawat }}</small>
-                    </div>
-                    <h3 class="fw-bold mb-0">{{ formatCurrency(Object.values(bayi.billing).reduce((acc, cat) => acc + calculateCategoryTotal(cat), 0)) }}</h3>
-                 </div>
-              </div>
-
-              <!-- Bayi Billing Details -->
-              <div v-for="(items, category) in bayi.billing" :key="category" class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-info text-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                  <h6 class="fw-bold mb-0 text-white">{{ category }}</h6>
-                  <span class="badge bg-white text-info rounded-pill">{{ formatCurrency(calculateCategoryTotal(items)) }}</span>
-                </div>
-                <div class="card-body p-0">
-                  <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                      <thead class="bg-light">
-                        <tr>
-                           <th class="ps-4">Item Transaksi</th>
-                           <th class="text-end pe-4" width="150">Biaya</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                         <template v-for="(subItems, key) in items" :key="key">
-                            <!-- Simple Item -->
-                            <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total">
-                               <td class="ps-4">
-                                 {{ key }} 
-                                 <span v-if="Array.isArray(subItems) && subItems.length > 1" class="badge bg-secondary rounded-pill ms-2">{{ subItems.length }}x</span>
-                               </td>
-                               <td class="text-end pe-4 fw-medium">
-                                 {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
-                               </td>
-                            </tr>
-                            
-                            <!-- Nested Group -->
-                            <tr v-else-if="Array.isArray(subItems)">
-                               <td colspan="2" class="p-0">
-                                  <div class="d-flex justify-content-between px-4 py-2 border-bottom border-light">
-                                     <span>{{ key }} <small class="text-muted ms-1" v-if="subItems.length > 1">({{ subItems.length }}x)</small></span>
-                                     <span class="fw-medium">{{ formatCurrency(subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.totalbiaya || i.total || 0), 0)) }}</span>
-                                  </div>
-                               </td>
-                            </tr>
-                         </template>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
            </div>
-         </template>
-       </div>
+
+         </div>
          <div class="modal-footer-custom">
         </div>
       </div>
@@ -1641,6 +1790,8 @@ const hasMore = ref(true)
 const rmeData = ref(null)
 const billingData = ref(null)
 const billingGabung = ref([])
+const billingExtra = ref(null)
+const serverGrandTotal = ref(0)
 const penunjangData = ref(null)
 const isLoadingRme = ref(false)
 const isLoadingBilling = ref(false)
@@ -1931,6 +2082,8 @@ const closeModal = () => {
     rmeData.value = null
     billingData.value = null
     billingGabung.value = []
+    billingExtra.value = null
+    serverGrandTotal.value = 0
     penunjangData.value = null
   }, 300)
 }
@@ -2253,11 +2406,15 @@ const fetchBilling = async () => {
    try {
      const response = await rawatInapService.getBilling(selectedItem.value.no_rawat)
      if (response.data && response.data.success) {
-       billingData.value = response.data.data
-       billingGabung.value = response.data.gabung || []
+        billingData.value = response.data.data
+        billingGabung.value = response.data.gabung || []
+        billingExtra.value = response.data.extra || null
+        serverGrandTotal.value = response.data.grandTotal || 0
      } else {
        billingData.value = null
        billingGabung.value = []
+       billingExtra.value = null
+       serverGrandTotal.value = 0 // Reset serverGrandTotal
      }
    } catch (error) {
      console.error('Error fetching billing:', error)
@@ -2354,27 +2511,8 @@ const calculateCategoryTotal = (items) => {
 }
 
 const grandTotal = computed(() => {
-  let total = 0
-  
-  // Hitung total Ibu
-  if (billingData.value) {
-    Object.values(billingData.value).forEach(items => {
-        total += calculateCategoryTotal(items)
-    })
-  }
-
-  // Hitung total Bayi (Gabung)
-  if (billingGabung.value && billingGabung.value.length > 0) {
-    billingGabung.value.forEach(bayi => {
-       if (bayi.billing) {
-         Object.values(bayi.billing).forEach(items => {
-           total += calculateCategoryTotal(items)
-         })
-       }
-    })
-  }
-
-  return total
+  // Use server-computed grand total (matches billing.blade.php exactly)
+  return serverGrandTotal.value
 })
 
 onMounted(() => {
