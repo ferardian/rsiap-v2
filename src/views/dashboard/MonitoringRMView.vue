@@ -154,7 +154,10 @@
                   <span v-else class="empty-dash">—</span>
                 </td>
                 <td class="cell-catatan">
-                  <span v-if="row.catatan && row.catatan !== '-'" class="catatan-text">{{ row.catatan }}</span>
+                  <div v-if="row.catatan && row.catatan !== '-'" class="catatan-wrapper">
+                    <span class="catatan-text">{{ row.catatan }}</span>
+                    <div class="catatan-tooltip">{{ row.catatan }}</div>
+                  </div>
                   <span v-else class="empty-dash">—</span>
                 </td>
                 <td class="cell-updated">{{ formatDate(row.updated_at) }}</td>
@@ -1419,6 +1422,11 @@ tr:hover td {
   line-height: 1.4;
 }
 
+.catatan-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
 .catatan-text {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1426,6 +1434,53 @@ tr:hover td {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.catatan-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 320px;
+  min-width: 180px;
+  z-index: 50;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.catatan-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+}
+
+.catatan-wrapper:hover .catatan-tooltip {
+  display: block;
+  animation: tooltipFadeIn 0.2s ease;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .form-group textarea {

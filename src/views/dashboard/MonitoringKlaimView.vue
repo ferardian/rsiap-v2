@@ -19,16 +19,16 @@
         <div class="col-md-5 mt-3 mt-md-0 d-flex justify-content-md-end">
           <div class="mode-toggle-group glass-effect rounded-pill p-1">
             <button 
-              @click="setYearlyMode(false)" 
-              :class="['mode-pill-btn', { active: !filters.isYearlyMode }]"
-            >
-              <i class="fas fa-calendar-day me-1"></i> Per Bulan
-            </button>
-            <button 
               @click="setYearlyMode(true)" 
               :class="['mode-pill-btn', { active: filters.isYearlyMode }]"
             >
-              <i class="fas fa-calendar-alt me-1"></i> Sepanjang Tahun
+              <i class="fas fa-calendar-alt me-1"></i> Tahun
+            </button>
+            <button 
+              @click="setYearlyMode(false)" 
+              :class="['mode-pill-btn', { active: !filters.isYearlyMode }]"
+            >
+              <i class="fas fa-calendar-day me-1"></i> Bulan
             </button>
           </div>
         </div>
@@ -74,7 +74,7 @@
           </div>
 
           <div class="col-md-3 ms-auto d-flex gap-2 justify-content-end">
-            <button class="btn btn-outline-success btn-sm rounded-3 px-3 shadow-sm" @click="syncData" :disabled="syncing" title="Tarik Data Terbaru dari BPJS">
+            <button v-if="!filters.isYearlyMode" class="btn btn-outline-success btn-sm rounded-3 px-3 shadow-sm" @click="syncData" :disabled="syncing" title="Tarik Data Terbaru dari BPJS">
               <i v-if="syncing" class="spinner-border spinner-border-sm me-1"></i>
               <i v-else class="fas fa-sync-alt me-1"></i>
               Sync BPJS
@@ -87,7 +87,7 @@
           </div>
         </div>
         
-        <div class="alert alert-info py-2 px-3 mt-3 mb-0 text-sm border-0 shadow-sm d-flex align-items-center gap-2">
+        <div v-if="!filters.isYearlyMode" class="alert alert-info py-2 px-3 mt-3 mb-0 text-sm border-0 shadow-sm d-flex align-items-center gap-2">
           <i class="fas fa-info-circle"></i>
           <span>Data ditarik dari sinkronisasi internal yang dijalankan oleh IT, menampilkan riwayat lengkap klaim Anda tanpa batasan API BPJS. Jika butuh data terbaru, klik tombol <span class="badge bg-success ms-1"><i class="fas fa-sync-alt"></i> Sync BPJS</span></span>
         </div>
@@ -260,8 +260,14 @@
                   <div class="text-xs text-muted">Kelas: {{ claim.kelasRawat || '-' }}</div>
                 </td>
                 <td>
-                  <div class="fw-bold text-dark">{{ claim.Inacbg?.kode || '-' }}</div>
-                  <div class="text-xs text-muted text-truncate" style="max-width:150px;" :title="claim.Inacbg?.nama">{{ claim.Inacbg?.nama || '-' }}</div>
+                  <div v-if="claim.Inacbg?.kode" class="inacbg-wrapper">
+                    <div class="fw-bold text-dark">{{ claim.Inacbg.kode }}</div>
+                    <div class="text-xs text-muted text-truncate" style="max-width:150px;">
+                      {{ claim.Inacbg.nama || '-' }}
+                    </div>
+                    <div class="inacbg-tooltip">{{ claim.Inacbg.nama }}</div>
+                  </div>
+                  <div v-else class="text-muted">—</div>
                 </td>
                 <td class="text-end fw-medium">{{ formatRupiah(claim.biaya?.byTarifRS || 0) }}</td>
                 <td class="text-end fw-bold text-orange">{{ formatRupiah(claim.biaya?.byPengajuan || 0) }}</td>
@@ -318,7 +324,7 @@ const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 
 const yearRange = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)
 
 const filters = reactive({
-  isYearlyMode: false,
+  isYearlyMode: true,
   bulan: new Date().getMonth() + 1,
   tahun: new Date().getFullYear(),
   jenis_pelayanan: "1", // 1=Inap
@@ -441,7 +447,7 @@ const donutChartOptions = computed(() => ({
 // Actions
 const setYearlyMode = (val) => {
   filters.isYearlyMode = val
-  if (dataLoaded.value) fetchData()
+  fetchData()
 }
 
 const syncData = async () => {
@@ -680,6 +686,57 @@ onMounted(() => {
 }
 .table-responsive::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Custom Tooltip for INA-CBG */
+.inacbg-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.inacbg-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 320px;
+  min-width: 180px;
+  z-index: 50;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.inacbg-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+}
+
+.inacbg-wrapper:hover .inacbg-tooltip {
+  display: block;
+  animation: tooltipFadeIn 0.2s ease;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 768px) {
