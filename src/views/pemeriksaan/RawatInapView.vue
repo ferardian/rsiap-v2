@@ -708,7 +708,7 @@
                           </thead>
                           <tbody>
                              <template v-for="(subItems, key) in items" :key="key">
-                                <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya">
+                                 <tr v-if="subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya || subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya || subItems[0]?.totalbiaya">
                                    <td class="ps-4 py-2">
                                      <div class="fw-medium">{{ key }}</div>
                                    </td>
@@ -717,14 +717,14 @@
                                    </td>
                                    <td class="text-end py-2 text-muted small">
                                      <template v-if="Array.isArray(subItems) && subItems.length > 0">
-                                       {{ formatCurrency(parseFloat(subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya || 0)) }}
+                                       {{ formatCurrency(parseFloat(subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya || subItems[0]?.totalbiaya || 0)) }}
                                      </template>
                                      <template v-else>
-                                       {{ formatCurrency(parseFloat(subItems.biaya_rawat || subItems.total || subItems.biaya || 0)) }}
+                                       {{ formatCurrency(parseFloat(subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya || 0)) }}
                                      </template>
                                    </td>
                                    <td class="text-end pe-4 fw-bold align-middle">
-                                     {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
+                                      {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || i.biaya || i.totalbiaya || 0), 0) : (subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya)) }}
                                    </td>
                                 </tr>
                              </template>
@@ -749,7 +749,7 @@
                                  <tr>
                                     <th class="ps-4 py-2">Obat</th>
                                     <th class="text-center py-2">Jml</th>
-                                    <th class="text-end pe-4 py-2">Total</th>
+                                    <th class="text-end py-2">Harga</th><th class="text-end pe-4 py-2">Total</th>
                                  </tr>
                               </thead>
                               <tbody>
@@ -757,7 +757,7 @@
                                     <tr>
                                        <td class="ps-4 py-2">{{ rpItems[0]?.obat?.nama_brng || kodeBrng }}</td>
                                        <td class="text-center py-2">{{ rpItems.reduce((s, i) => s + parseFloat(i.jml_barang || 0), 0) }}</td>
-                                       <td class="text-end pe-4 py-2 fw-bold">{{ formatCurrency(rpItems.reduce((s, i) => s + parseFloat(i.total || 0), 0)) }}</td>
+                                       <td class="text-end py-2 text-muted small">{{ formatCurrency(rpItems[0]?.harga || 0) }}</td><td class="text-end pe-4 py-2 fw-bold">{{ formatCurrency(rpItems.reduce((s, i) => s + parseFloat(i.total || 0), 0)) }}</td>
                                     </tr>
                                  </template>
                               </tbody>
@@ -765,7 +765,7 @@
                                   <tr class="bg-light">
                                      <td class="ps-4 py-2 fw-bold">Total Resep Pulang</td>
                                      <td class="text-center py-2"></td>
-                                     <td class="text-end pe-4 py-2 fw-bold text-primary">{{ formatCurrency(Object.values(grouped).reduce((s, rpItems) => s + rpItems.reduce((s2, i) => s2 + parseFloat(i.total || 0), 0), 0)) }}</td>
+                                     <td class="text-end pe-4 py-2 fw-bold text-primary" colspan="2">{{ formatCurrency(Object.values(grouped).reduce((s, rpItems) => s + rpItems.reduce((s2, i) => s2 + parseFloat(i.total || 0), 0), 0)) }}</td>
                                   </tr>
                                </tfoot>
                            </table>
@@ -838,13 +838,13 @@
                            <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
                               <tbody>
                                  <template v-for="(subItems, key) in items" :key="key">
-                                    <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total">
+                                     <tr v-if="subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya || subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya || subItems[0]?.totalbiaya">
                                        <td class="ps-3 py-2">
                                           <div>{{ key }}</div>
                                           <div v-if="Array.isArray(subItems) && subItems.length > 1" class="text-muted smaller" style="font-size: 0.7rem;">{{ subItems.length }}x visit</div>
                                        </td>
                                        <td class="text-end pe-3 fw-bold align-middle">
-                                          {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
+                                          {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || i.biaya || i.totalbiaya || 0), 0) : (subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya)) }}
                                        </td>
                                     </tr>
                                  </template>
@@ -2502,9 +2502,9 @@ const calculateCategoryTotal = (items) => {
   let total = 0
   Object.values(items).forEach(item => {
     if (Array.isArray(item)) {
-       item.forEach(sub => total += parseFloat(sub.biaya_rawat || sub.totalbiaya || sub.total || 0))
+       item.forEach(sub => total += parseFloat(sub.biaya_rawat || sub.totalbiaya || sub.total || sub.biaya || 0))
     } else {
-       total += parseFloat(item.biaya_rawat || item.totalbiaya || item.total || 0)
+       total += parseFloat(item.biaya_rawat || item.totalbiaya || item.total || item.biaya || 0)
     }
   })
   return total
