@@ -24,17 +24,17 @@ export const monitoringRMService = {
         })
     },
 
-    update(kode, data) {
+    update(id, data) {
         return api({
-            url: `/monitoring/rm/${kode}`,
+            url: `/monitoring/rm/${id}`,
             method: 'put',
             data
         })
     },
 
-    delete(kode) {
+    delete(id) {
         return api({
-            url: `/monitoring/rm/${kode}`,
+            url: `/monitoring/rm/${id}`,
             method: 'delete'
         })
     },

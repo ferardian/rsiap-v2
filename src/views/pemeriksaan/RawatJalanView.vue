@@ -604,34 +604,36 @@
                      <table class="table table-hover mb-0">
                        <thead class="bg-light">
                          <tr>
-                            <th class="ps-4">Item Transaksi</th>
-                            <th class="text-end pe-4" width="150">Biaya</th>
+                             <th class="ps-4">Item Transaksi</th>
+                             <th class="text-center" width="80">Jml</th>
+                             <th class="text-end" width="110">Harga</th>
+                             <th class="text-end" width="110">Tambahan</th>
+                             <th class="text-end pe-4" width="130">Total</th>
                          </tr>
                        </thead>
-                       <tbody>
-                          <template v-for="(subItems, key) in items" :key="key">
-                             <!-- Simple Item -->
-                             <tr v-if="subItems.biaya_rawat || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.total">
-                                <td class="ps-4">
-                                  {{ key }} 
-                                  <span v-if="Array.isArray(subItems) && subItems.length > 1" class="badge bg-secondary rounded-pill ms-2">{{ subItems.length }}x</span>
-                                </td>
-                                <td class="text-end pe-4 fw-medium">
-                                  {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || 0), 0) : (subItems.biaya_rawat || subItems.total)) }}
-                                </td>
-                             </tr>
-                             
-                             <!-- Nested Group -->
-                             <tr v-else-if="Array.isArray(subItems)">
-                                <td colspan="2" class="p-0">
-                                   <div class="d-flex justify-content-between px-4 py-2 border-bottom border-light">
-                                      <span>{{ key }} <small class="text-muted ms-1" v-if="subItems.length > 1">({{ subItems.length }}x)</small></span>
-                                      <span class="fw-medium">{{ formatCurrency(subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.totalbiaya || i.total || 0), 0)) }}</span>
-                                   </div>
-                                </td>
-                             </tr>
-                          </template>
-                       </tbody>
+                        <tbody>
+                           <template v-for="(subItems, key) in items" :key="key">
+                              <!-- Transaction Item (Single or Grouped) -->
+                              <tr v-if="subItems.biaya_rawat || subItems.biaya || subItems.totalbiaya || subItems.total || subItems[0]?.biaya_rawat || subItems[0]?.biaya || subItems[0]?.totalbiaya || subItems[0]?.total">
+                                 <td class="ps-4">
+                                   {{ key }} 
+                                   <span v-if="Array.isArray(subItems) && subItems.length > 1" class="badge bg-secondary rounded-pill ms-2">{{ subItems.length }}x</span>
+                                 </td>
+                                 <td class="text-center">
+                                   {{ Array.isArray(subItems) ? subItems.reduce((s, i) => s + parseFloat(i.jml || 1), 0) : (subItems.jml || 1) }}
+                                 </td>
+                                 <td class="text-end text-muted small">
+                                   {{ formatCurrency(Array.isArray(subItems) ? (subItems[0].biaya_obat || subItems[0].biaya || subItems[0].biaya_rawat || 0) : (subItems.biaya_obat || subItems.biaya || subItems.biaya_rawat || 0)) }}
+                                 </td>
+                                 <td class="text-end text-muted small">
+                                   {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + getTambahan(i), 0) : getTambahan(subItems)) }}
+                                 </td>
+                                 <td class="text-end pe-4 fw-medium">
+                                   {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + getLineTotal(i), 0) : getLineTotal(subItems)) }}
+                                 </td>
+                              </tr>
+                           </template>
+                        </tbody>
                      </table>
                    </div>
                  </div>
@@ -1364,18 +1366,38 @@ const getLabResultBadgeClass = (keterangan) => {
   return 'bg-secondary text-white'
 }
 
+const getLineTotal = (i) => {
+  const total = parseFloat(i.total || i.total_obat || i.totalbiaya || 0)
+  if (total > 0) return total
+  
+  // Fallback: price * quantity
+  const price = parseFloat(i.biaya_obat || i.biaya || i.biaya_rawat || i.harga || 0)
+  const quantity = parseFloat(i.jml || 1)
+  return price * quantity
+}
+
+const getTambahan = (i) => {
+  const total = parseFloat(i.total || i.total_obat || i.totalbiaya || 0)
+  if (total === 0) return 0 // Assuming no "tambahan" if total is not explicitly provided
+  
+  const price = parseFloat(i.biaya_obat || i.biaya || i.biaya_rawat || i.harga || 0)
+  const quantity = parseFloat(i.jml || 1)
+  const base = price * quantity
+  
+  return total - base
+}
+
 const calculateCategoryTotal = (items) => {
   if (Array.isArray(items)) {
-     return items.reduce((sum, item) => sum + parseFloat(item.biaya_rawat || item.total || 0), 0)
+     return items.reduce((sum, item) => sum + getLineTotal(item), 0)
   }
-  // Handle object grouping if necessary, but usually items is array of items
-  // If items is object (Key -> Item/Array), we sum values
+  
   if (typeof items === 'object' && items !== null) {
       return Object.values(items).reduce((sum, sub) => {
           if (Array.isArray(sub)) {
-              return sum + sub.reduce((s, i) => s + parseFloat(i.biaya_rawat || i.total || 0), 0)
+              return sum + sub.reduce((s, i) => s + getLineTotal(i), 0)
           }
-          return sum + parseFloat(sub.biaya_rawat || sub.total || 0)
+          return sum + getLineTotal(sub)
       }, 0)
   }
   return 0
@@ -1660,17 +1682,26 @@ onUnmounted(() => {
 }
 
 :deep(.vs__dropdown-toggle) {
-  height: 38px;
-  border-color: #dee2e6;
+  height: 42px !important;
+  min-height: 42px !important;
+  border-color: #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  display: flex !important;
+  align-items: center !important;
 }
 
 :deep(.vs__selected-options) {
-  padding: 0 4px;
+  padding: 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
 }
 
 :deep(.vs__actions) {
-  padding-top: 0;
-  padding-bottom: 0;
+  padding: 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* Modal Styles */
@@ -1853,35 +1884,28 @@ onUnmounted(() => {
 
 /* Filter Styles */
 .form-control-custom {
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  transition: all 0.2s;
+  height: 42px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 0 0.75rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s !important;
+  display: flex !important;
+  align-items: center !important;
+  background-color: #fff !important;
 }
 
 .form-control-custom:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.style-chooser-custom :deep(.vs__dropdown-toggle) {
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  padding: 4px;
-  background: white;
-}
-
-.style-chooser-custom :deep(.vs__selected) {
-  font-size: 0.875rem;
-  color: #334155;
-  font-weight: 500;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  outline: none !important;
 }
 
 .style-chooser-custom :deep(.vs__search) {
-  font-size: 0.875rem;
-  margin: 0;
-  padding: 0;
+  font-size: 0.875rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
 }
 
 .search-input-wrapper {
@@ -2260,11 +2284,41 @@ onUnmounted(() => {
 .icon-dark { background-color: #f1f5f9; color: #334155; }
 .icon-light { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
 
-@media (min-width: 768px) {
-  .action-sheet-container {
-    max-width: 400px;
-    margin-bottom: 2rem;
-    border-radius: 20px;
+@media (max-width: 768px) {
+  /* Font Scale Adjustments */
+  .page-title {
+    font-size: 1.25rem !important;
+  }
+  .page-subtitle {
+    font-size: 0.75rem !important;
+  }
+  .table thead th {
+    font-size: 0.7rem !important;
+    padding: 0.5rem 0.25rem !important;
+  }
+  .table tbody td {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.25rem !important;
+  }
+  .fw-bold, 
+  .fw-semibold,
+  .fw-medium {
+    font-size: inherit !important;
+  }
+  .small.text-muted {
+    font-size: 0.7rem !important;
+  }
+  .badge {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  /* Filter Padding */
+  .card-body {
+    padding: 1rem !important;
+  }
+  .form-label {
+    font-size: 0.7rem !important;
   }
 }
 </style>

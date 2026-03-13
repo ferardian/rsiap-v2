@@ -100,6 +100,7 @@
     <LaporanOperasiModal 
         :show="showModal"
         :form="laporanForm"
+        :pasien="pasienInfo"
         :dokter-list="dokterList"
         :pegawai-list="pegawaiList"
         :loading="isSaving"
@@ -137,6 +138,7 @@ const filters = reactive({
   end: ''
 })
 const pagination = ref({})
+const pasienInfo = ref(null)
 
 // Permissions
 const currentMenu = computed(() => {
@@ -272,14 +274,14 @@ const changePage = (page) => {
     }
 }
 
-const onEdit = (item) => {
+const onEdit = async (item) => {
     isReadonly.value = false
-    openModal(item)
+    await openModal(item)
 }
 
-const onDetail = (item) => {
+const onDetail = async (item) => {
     isReadonly.value = true
-    openModal(item)
+    await openModal(item)
 }
 
 const onDelete = async (item) => {
@@ -315,27 +317,57 @@ const onDelete = async (item) => {
     }
 }
 
-const openModal = (item) => {
+const openModal = async (item) => {
     resetForm()
-    // Populate form
-    Object.keys(laporanForm).forEach(key => {
-        if (item[key] !== undefined) {
-             laporanForm[key] = item[key]
-        }
-    })
-    // Ensure dates are formatted for input datetime-local if needed?
-    // tgl_selesai is datetime-local. Need YYYY-MM-DDTHH:mm
-    if (item.tgl_selesai) {
-         // Assuming DB returns YYYY-MM-DD HH:mm:ss
-         // Convert to T format
-         laporanForm.tgl_selesai = item.tgl_selesai.replace(' ', 'T')
-    }
     
-    // Explicitly set Keys
+    // 1. Pre-populate from list item (Operasi table data)
     laporanForm.no_rawat = item.no_rawat
     laporanForm.tgl_operasi = item.tgl_operasi
     laporanForm.kode_paket = item.kode_paket
+    
+    if (item.jenis_anasthesi) {
+        laporanForm.jenis_anestesi = item.jenis_anasthesi
+    }
+    if (item.kategori) {
+        laporanForm.kategori = item.kategori
+    }
 
+    // 2. Fetch full clinical data from API (Fuzzy matching)
+    try {
+        const params = {
+            no_rawat: item.no_rawat,
+            tgl_operasi: item.tgl_operasi,
+            kode_paket: item.kode_paket
+        }
+        const response = await operasiService.getLaporan(params)
+        const detailedData = response.data.data
+
+        if (detailedData) {
+            // Populate all fields from the detailed clinical report
+            Object.keys(laporanForm).forEach(key => {
+                if (detailedData[key] !== undefined && detailedData[key] !== null && detailedData[key] !== '-') {
+                     laporanForm[key] = detailedData[key]
+                }
+            })
+            
+            // Special handling for naming mismatches if any in detailed data too
+            if (detailedData.jenis_anasthesi && !laporanForm.jenis_anestesi) {
+                laporanForm.jenis_anestesi = detailedData.jenis_anasthesi
+            }
+        }
+    } catch (e) {
+        console.error("Failed to fetch detailed laporan", e)
+        // We still have the basic data from the list
+    }
+    
+    // 3. Final formatting
+    if (laporanForm.tgl_selesai) {
+         laporanForm.tgl_selesai = laporanForm.tgl_selesai.replace(' ', 'T').substring(0, 16)
+    }
+
+    // 4. Set Patient Info for display
+    pasienInfo.value = item.reg_periksa?.pasien
+    
     showModal.value = true
 }
 
@@ -365,8 +397,13 @@ onMounted(() => {
     // Let's set start date to first day of month
     const date = new Date()
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
-    // Format YYYY-MM-DD
-    const formatDateInput = (d) => d.toISOString().split('T')[0]
+    // Format YYYY-MM-DD using local time to avoid timezone offset issues (e.g. 01 being converted to 28/29)
+    const formatDateInput = (d) => {
+        const year = d.getFullYear()
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+    }
     filters.start = formatDateInput(firstDay)
     filters.end = formatDateInput(date)
 

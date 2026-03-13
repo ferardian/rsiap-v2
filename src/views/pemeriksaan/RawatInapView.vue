@@ -98,17 +98,15 @@
           </div>
           <div class="col-md-4">
             <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Cari Pasien</label>
-            <div class="input-group">
-              <span class="input-group-text bg-white border-end-0 border-custom rounded-start-lg ps-3">
-                <i class="fas fa-search text-muted"></i>
-              </span>
+            <div class="search-input-wrapper">
               <input 
                 type="text" 
-                class="form-control border-start-0 border-custom rounded-end-lg ps-2 form-control-custom-search" 
+                class="form-control form-control-custom search-input" 
                 v-model="filters.keyword"
                 placeholder="No RM / Nama Pasien"
                 @keyup.enter="fetchData(true)"
               >
+              <i class="fas fa-search search-icon text-muted"></i>
             </div>
           </div>
         </div>
@@ -702,7 +700,8 @@
                             <tr>
                                <th class="ps-4 py-2">Item Transaksi</th>
                                <th class="text-center py-2" width="60">Jml</th>
-                               <th class="text-end py-2" width="130">Biaya Satuan</th>
+                               <th class="text-end py-2" width="110">Biaya Satuan</th>
+                               <th class="text-end py-2" width="110">Tambahan</th>
                                <th class="text-end pe-4 py-2" width="130">Total</th>
                             </tr>
                           </thead>
@@ -713,18 +712,16 @@
                                      <div class="fw-medium">{{ key }}</div>
                                    </td>
                                    <td class="text-center py-2 text-muted">
-                                     {{ Array.isArray(subItems) ? subItems.length : 1 }}x
+                                      {{ Array.isArray(subItems) ? subItems.reduce((s, i) => s + parseFloat(i.jml || i.jml_barang || 1), 0) : (subItems.jml || subItems.jml_barang || 1) }}
                                    </td>
                                    <td class="text-end py-2 text-muted small">
-                                     <template v-if="Array.isArray(subItems) && subItems.length > 0">
-                                       {{ formatCurrency(parseFloat(subItems[0]?.biaya_rawat || subItems[0]?.total || subItems[0]?.biaya || subItems[0]?.totalbiaya || 0)) }}
-                                     </template>
-                                     <template v-else>
-                                       {{ formatCurrency(parseFloat(subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya || 0)) }}
-                                     </template>
+                                      {{ formatCurrency(Array.isArray(subItems) ? (subItems[0].biaya_obat || subItems[0].biaya || subItems[0].biaya_rawat || 0) : (subItems.biaya_obat || subItems.biaya || subItems.biaya_rawat || 0)) }}
+                                   </td>
+                                   <td class="text-end py-2 text-muted small">
+                                      {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + getTambahan(i), 0) : getTambahan(subItems)) }}
                                    </td>
                                    <td class="text-end pe-4 fw-bold align-middle">
-                                      {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + parseFloat(i.biaya_rawat || i.total || i.biaya || i.totalbiaya || 0), 0) : (subItems.biaya_rawat || subItems.total || subItems.biaya || subItems.totalbiaya)) }}
+                                      {{ formatCurrency(Array.isArray(subItems) ? subItems.reduce((sum, i) => sum + getLineTotal(i), 0) : getLineTotal(subItems)) }}
                                    </td>
                                 </tr>
                              </template>
@@ -749,7 +746,9 @@
                                  <tr>
                                     <th class="ps-4 py-2">Obat</th>
                                     <th class="text-center py-2">Jml</th>
-                                    <th class="text-end py-2">Harga</th><th class="text-end pe-4 py-2">Total</th>
+                                    <th class="text-end py-2">Harga</th>
+                                    <th class="text-end py-2">Tambahan</th>
+                                    <th class="text-end pe-4 py-2">Total</th>
                                  </tr>
                               </thead>
                               <tbody>
@@ -757,7 +756,9 @@
                                     <tr>
                                        <td class="ps-4 py-2">{{ rpItems[0]?.obat?.nama_brng || kodeBrng }}</td>
                                        <td class="text-center py-2">{{ rpItems.reduce((s, i) => s + parseFloat(i.jml_barang || 0), 0) }}</td>
-                                       <td class="text-end py-2 text-muted small">{{ formatCurrency(rpItems[0]?.harga || 0) }}</td><td class="text-end pe-4 py-2 fw-bold">{{ formatCurrency(rpItems.reduce((s, i) => s + parseFloat(i.total || 0), 0)) }}</td>
+                                       <td class="text-end py-2 text-muted small">{{ formatCurrency(rpItems[0]?.harga || rpItems[0]?.biaya_obat || 0) }}</td>
+                                       <td class="text-end py-2 text-muted small">{{ formatCurrency(rpItems.reduce((s, i) => s + getTambahan(i), 0)) }}</td>
+                                       <td class="text-end pe-4 py-2 fw-bold">{{ formatCurrency(rpItems.reduce((s, i) => s + getLineTotal(i), 0)) }}</td>
                                     </tr>
                                  </template>
                               </tbody>
@@ -765,7 +766,7 @@
                                   <tr class="bg-light">
                                      <td class="ps-4 py-2 fw-bold">Total Resep Pulang</td>
                                      <td class="text-center py-2"></td>
-                                     <td class="text-end pe-4 py-2 fw-bold text-primary" colspan="2">{{ formatCurrency(Object.values(grouped).reduce((s, rpItems) => s + rpItems.reduce((s2, i) => s2 + parseFloat(i.total || 0), 0), 0)) }}</td>
+                                     <td class="text-end pe-4 py-2 fw-bold text-primary" colspan="3">{{ formatCurrency(Object.values(grouped).reduce((s, rpItems) => s + rpItems.reduce((s2, i) => s2 + getLineTotal(i), 0), 0)) }}</td>
                                   </tr>
                                </tfoot>
                            </table>
@@ -2498,13 +2499,35 @@ const calculateLamaInap = (dateStr) => {
   }
 }
 
+const getLineTotal = (i) => {
+  const total = parseFloat(i.total || i.total_obat || i.totalbiaya || 0)
+  if (total > 0) return total
+  
+  // Fallback: price * quantity
+  const price = parseFloat(i.biaya_obat || i.biaya || i.biaya_rawat || i.harga || 0)
+  const quantity = parseFloat(i.jml || i.jml_barang || 1)
+  return price * quantity
+}
+
+const getTambahan = (i) => {
+  const total = parseFloat(i.total || i.total_obat || i.totalbiaya || 0)
+  if (total === 0) return 0
+  
+  const price = parseFloat(i.biaya_obat || i.biaya || i.biaya_rawat || i.harga || 0)
+  const quantity = parseFloat(i.jml || i.jml_barang || 1)
+  const base = price * quantity
+  
+  return total - base
+}
+
 const calculateCategoryTotal = (items) => {
+  if (!items) return 0
   let total = 0
   Object.values(items).forEach(item => {
     if (Array.isArray(item)) {
-       item.forEach(sub => total += parseFloat(sub.biaya_rawat || sub.totalbiaya || sub.total || sub.biaya || 0))
+       item.forEach(sub => total += getLineTotal(sub))
     } else {
-       total += parseFloat(item.biaya_rawat || item.totalbiaya || item.total || item.biaya || 0)
+       total += getLineTotal(item)
     }
   })
   return total
@@ -2980,17 +3003,18 @@ onUnmounted(() => {
 }
 
 /* Strict Standardized Height & Style */
-.style-chooser-custom .vs__dropdown-toggle,
-.input-group,
-input[type="date"].form-control-custom {
+.style-chooser-custom :deep(.vs__dropdown-toggle),
+.form-control-custom {
   background-color: #fff !important;
-  border: 1px solid #e2e8f0; /* Matches typical border color */
-  height: 42px !important; /* Standard height */
+  border: 1px solid #e2e8f0 !important;
+  height: 42px !important;
   min-height: 42px !important;
   max-height: 42px !important;
-  border-radius: 8px; /* Consistent radius */
-  box-sizing: border-box;
-  transition: border-color 0.2s;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* V-Select Internals - Reset & Center */
@@ -3026,43 +3050,26 @@ input[type="date"].form-control-custom {
   margin-left: 4px;
 }
 
-/* Search Group Internals - Reset & Center */
-.input-group {
-  display: flex !important;
-  align-items: center !important;
-  padding: 0 12px; /* Internal padding for the group wrapper */
-  flex-wrap: nowrap !important; /* PREVENT WRAPPING */
+.search-input-wrapper {
+  position: relative;
 }
-.input-group-text,
-.form-control-custom-search {
-  border: none !important;
-  background-color: transparent !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  height: 100% !important;
-  display: flex;
-  align-items: center;
-  box-shadow: none !important;
+
+.search-input {
+  padding-right: 2.5rem !important;
 }
-.input-group-text {
-  margin-right: 8px !important;
-  color: #94a3b8;
-  white-space: nowrap;
-  width: auto;
-  flex-shrink: 0; /* Keep icon sizing */
-}
-.form-control-custom-search {
-  flex: 1 !important; /* Take remaining space */
-  width: auto !important; /* Stop forcing 100% */
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 0.875rem;
-  color: #334155;
-  min-width: 0; /* Allow shrinking if needed */
+  z-index: 4;
 }
 
 /* Focus States */
-.style-chooser-custom.vs--open .vs__dropdown-toggle,
-.input-group:focus-within,
-input[type="date"].form-control-custom:focus {
+.style-chooser-custom.vs--open :deep(.vs__dropdown-toggle),
+.form-control-custom:focus {
   border-color: #3b82f6 !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   background-color: #fff !important;
@@ -3086,10 +3093,10 @@ input[type="date"].form-control-custom {
 }
 
 /* Hover effects */
-.input-group:hover,
-.style-chooser-custom:hover .vs__dropdown-toggle,
-input[type="date"].form-control-custom:hover {
-  border-color: #cbd5e1;
+.search-input-wrapper:hover .form-control-custom,
+.style-chooser-custom:hover :deep(.vs__dropdown-toggle),
+.form-control-custom:hover {
+  border-color: #cbd5e1 !important;
 }
 
 /* Helpers */
@@ -3126,6 +3133,34 @@ input[type="date"].form-control-custom:hover {
   /* Form labels */
   .form-label {
     font-size: 0.7rem !important;
+  }
+
+  /* Font Scale Adjustments */
+  .page-title {
+    font-size: 1.25rem !important;
+  }
+  .page-subtitle {
+    font-size: 0.75rem !important;
+  }
+  .table thead th {
+    font-size: 0.7rem !important;
+    padding: 0.5rem 0.25rem !important;
+  }
+  .table tbody td {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.25rem !important;
+  }
+  .fw-bold.text-primary, 
+  .fw-semibold,
+  .fw-medium {
+    font-size: inherit !important;
+  }
+  .small.text-muted {
+    font-size: 0.7rem !important;
+  }
+  .badge {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.5rem !important;
   }
 }
 

@@ -11,6 +11,12 @@ const pasienService = {
      * Get single patient by No RM
      */
     getPasienByNoRm: (noRm) => api.get(`/pasien/${noRm}`),
+
+    /**
+     * Create a new patient
+     * @param {Object} data - Patient data payload
+     */
+    createPasien: (data) => api.post('/pasien', data),
 };
 
 export default pasienService;

@@ -68,7 +68,7 @@
                 type="text" 
                 class="form-control form-control-custom search-input" 
                 v-model="filters.keyword"
-                placeholder="No. Rawat / Nama Pasien"
+                placeholder="No. RM / Nama Pasien"
                 @keyup.enter="fetchData(true)"
               >
               <i class="fas fa-search search-icon text-muted"></i>
@@ -500,7 +500,7 @@ const laporanForm = reactive({
 
 // Methods
 const fetchData = async (reset = false) => {
-  if (loading.value) return
+  if (loading.value && !reset) return
   
   if (reset) {
     items.value = []
@@ -518,9 +518,10 @@ const fetchData = async (reset = false) => {
       tgl_akhir: filters.tgl_akhir
     }
     
+    if (filters.keyword) params.keyword = filters.keyword
+    
     if (filters.status) params.status = filters.status
     if (filters.kd_dokter) params.kd_dokter = filters.kd_dokter
-    if (filters.keyword) params.keyword = filters.keyword
     
     const response = await operasiService.getBooking(params)
     

@@ -111,6 +111,17 @@
             <option v-for="y in [2024, 2025, 2026]" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>
+        <div class="filter-item">
+          <label class="form-label-custom">Dokter</label>
+          <SearchableSelect
+            v-model="rekapKdDokter"
+            :options="dokterOptions"
+            labelKey="nm_dokter"
+            valueKey="kd_dokter"
+            placeholder="Semua Dokter"
+            style="min-width: 250px"
+          />
+        </div>
         <div class="filter-actions">
           <button class="btn btn-primary ripple px-4" @click="fetchRekapBulanan" :disabled="loadingRekap">
             <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loadingRekap }"></i> Refresh Data
@@ -523,6 +534,7 @@ const reportTab = ref('detail');
 const rekapYear = ref(dayjs().format('YYYY'));
 const filterMissingDosage = ref(false);
 const rekapData = ref([]);
+const rekapKdDokter = ref('');
 const loadingRekap = ref(false);
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -710,7 +722,8 @@ const fetchRekapBulanan = async () => {
   loadingRekap.value = true;
   try {
     const response = await ppraService.getRekapBulanan({
-      tahun: rekapYear.value
+      tahun: rekapYear.value,
+      kd_dokter: rekapKdDokter.value
     });
     rekapData.value = response.data.data || [];
     showFiltersMobile.value = false; // Hide mobile filters after refresh

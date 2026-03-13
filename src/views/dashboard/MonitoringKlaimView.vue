@@ -6,7 +6,7 @@
         <div class="col-md-7">
           <div class="d-flex align-items-center mb-2">
             <div class="header-icon-bg me-3 glass-effect">
-              <i class="fas fa-file-invoice-dollar fa-2x"></i>
+              <i class="fas fa-file-invoice-dollar"></i>
             </div>
             <div>
               <h3 class="mb-0 fw-bold tracking-tight">Monitoring Klaim BPJS</h3>
@@ -557,18 +557,34 @@ onMounted(() => {
 }
 
 .glass-effect {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
 }
 
 .header-icon-bg {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 16px; /* Squircle look for more modern feel */
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.header-icon-bg:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.header-icon-bg i {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .tracking-tight { letter-spacing: -0.025em; }

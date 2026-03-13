@@ -8,11 +8,29 @@
            </div>
            <div class="modal-body p-4" style="max-height: 80vh; overflow-y: auto;">
               <form @submit.prevent="$emit('submit')">
-                 
-                 <!-- Identitas & Waktu -->
-                 <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Data Operasi</h6>
-                 <div class="row g-3 mb-4">
-                    <div class="col-md-3">
+                                  <!-- Patient Identity -->
+                  <div class="bg-light p-3 rounded-3 mb-4 border-start border-primary border-4 shadow-sm">
+                      <div class="row align-items-center">
+                          <div class="col-auto">
+                              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                  <i class="fas fa-user-injured fa-lg"></i>
+                              </div>
+                          </div>
+                          <div class="col">
+                              <h5 class="fw-bold m-0 text-dark">{{ pasien?.nm_pasien || '-' }}</h5>
+                              <div class="d-flex gap-3 text-muted small mt-1">
+                                  <span><i class="fas fa-id-card me-1"></i> No. RM: <strong>{{ pasien?.no_rkm_medis || '-' }}</strong></span>
+                                  <span><i class="fas fa-birthday-cake me-1"></i> Tgl. Lahir: {{ pasien?.tgl_lahir || '-' }}</span>
+                                  <span><i class="fas fa-venus-mars me-1"></i> JK: {{ pasien?.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Identitas & Waktu -->
+                  <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Informasi Waktu & Kategori</h6>
+                  <div class="row g-3 mb-4">
+                     <div class="col-md-3">
                        <label class="form-label small fw-bold">No. Rawat</label>
                        <input type="text" class="form-control" v-model="form.no_rawat" readonly disabled>
                     </div>
@@ -197,6 +215,7 @@ import { defineProps, defineEmits } from 'vue'
 const props = defineProps({
   show: Boolean,
   form: Object,
+  pasien: Object,
   dokterList: Array,
   pegawaiList: Array,
   loading: Boolean,

@@ -485,6 +485,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/pasien/registrasi',
+    name: 'RegistrasiPasien',
+    component: () => import('../views/pasien/RegistrasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/pasien/transfer-imunisasi',
     name: 'TransferImunisasi',
     component: () => import('../views/pasien/TransferImunisasiView.vue'),

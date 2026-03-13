@@ -133,7 +133,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in filteredData" :key="row.kode">
+              <tr v-for="row in filteredData" :key="row.id">
                 <td class="cell-kode">{{ row.kode }}</td>
                 <td class="cell-nama">{{ row.nama }}</td>
                 <td class="cell-unit">
@@ -207,7 +207,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label>Kode RM</label>
-              <input v-model="formData.kode" type="text" placeholder="Contoh: RM001" :disabled="isEdit" required>
+              <input v-model="formData.kode" type="text" placeholder="Contoh: RM001" required>
             </div>
             <div class="form-group">
               <label>Nama Berkas</label>
@@ -293,6 +293,7 @@ const statsData = ref({
 })
 
 const formData = reactive({
+  id: null,
   kode: '',
   nama: '',
   dep_ids: [],
@@ -308,8 +309,8 @@ const filters = reactive({
 })
 
 const sort = reactive({
-  column: 'kode',
-  direction: 'asc'
+  column: 'id',
+  direction: 'desc'
 })
 
 // Computed values
@@ -438,6 +439,7 @@ const openModal = (item = null) => {
   deptSearch.value = ''
   if (item) {
     isEdit.value = true
+    formData.id = item.id
     formData.kode = item.kode
     formData.nama = item.nama
     formData.dep_ids = item.departemen?.map(d => d.dep_id) || []
@@ -446,6 +448,7 @@ const openModal = (item = null) => {
     formData.tabel = item.tabel === '-' ? '' : item.tabel
   } else {
     isEdit.value = false
+    formData.id = null
     formData.kode = ''
     formData.nama = ''
     formData.dep_ids = []
@@ -464,7 +467,7 @@ const saveData = async () => {
     
     let res
     if (isEdit.value) {
-      res = await monitoringRMService.update(payload.kode, payload)
+      res = await monitoringRMService.update(payload.id, payload)
     } else {
       res = await monitoringRMService.create(payload)
     }
@@ -504,7 +507,7 @@ const confirmDelete = (item) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const res = await monitoringRMService.delete(item.kode)
+        const res = await monitoringRMService.delete(item.id)
         if (res.data.success) {
           Swal.fire('Terhapus!', res.data.message, 'success')
           fetchData()
@@ -1503,5 +1506,153 @@ tr:hover td {
 
 .mb-2 {
   margin-bottom: 0.5rem;
+}
+@media (max-width: 768px) {
+  .monitoring-rm-page {
+    padding: 0.25rem;
+  }
+
+  .page-header {
+    padding: 1.25rem 1rem;
+    margin-bottom: 1.25rem;
+    border-radius: 1rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.75rem;
+    max-width: 100%;
+  }
+
+  .completion-card {
+    width: 100%;
+    min-width: auto;
+    padding: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    padding: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .charts-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .chart-container {
+    padding: 1.25rem;
+  }
+
+  .radial-group {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .radial-progress {
+    width: 70px;
+    height: 70px;
+  }
+
+  .radial-inner {
+    width: 54px;
+    height: 54px;
+  }
+
+  .radial-value {
+    font-size: 1.1rem;
+  }
+
+  .bar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    padding: 1.25rem;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: stretch;
+    margin-bottom: 1.25rem;
+  }
+
+  .search-wrapper {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 1rem;
+  }
+
+  .select-input {
+    width: 100%;
+    min-width: auto;
+    font-size: 0.8rem;
+  }
+
+  .status-tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.25rem;
+    justify-content: flex-start;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+    order: -1; /* Keep "Tambah" button on top in mobile */
+  }
+
+  .monitoring-table {
+    font-size: 0.75rem;
+  }
+
+  th, td {
+    padding: 0.75rem 1rem;
+  }
+
+  .cell-catatan {
+    max-width: 150px;
+  }
+
+  .page-footer-info {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .legend {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
 }
 </style>
