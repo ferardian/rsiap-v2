@@ -36,23 +36,29 @@
               <tr>
                 <th>Kode</th>
                 <th>Nama Perawatan</th>
-                <th>Kategori / Poli</th>
-                <th class="text-end">Tarif Dr</th>
-                <th class="text-end">Tarif Pr</th>
-                <th class="text-end">Tarif DR & PR</th>
-                <th class="text-center">Status</th>
+                <th>Kategori</th>
+                <th class="text-end">J.S.Rmh Sakit</th>
+                <th class="text-end">BHP/Paket Obat</th>
+                <th class="text-end">J.Medis Dr</th>
+                <th class="text-end">J.Medis Pr</th>
+                <th class="text-end">KSO</th>
+                <th class="text-end">Menejemen</th>
+                <th class="text-end text-nowrap">Ttl Biaya Dr</th>
+                <th class="text-end text-nowrap">Ttl Biaya Pr</th>
+                <th class="text-end text-nowrap">Ttl Biaya Dr & Pr</th>
+                <th>Jenis Bayar</th>
                 <th class="text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="8" class="text-center py-5">
+                <td colspan="14" class="text-center py-5">
                   <div class="spinner-border text-primary spinner-sm"></div>
                   <p class="mt-2 text-muted small">Memuat data tarif rawat jalan...</p>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="8" class="text-center py-5 text-muted">
+                <td colspan="14" class="text-center py-5 text-muted">
                   <i class="fas fa-folder-open fa-3x mb-3 text-light"></i>
                   <p class="mb-0">Tidak ditemukan data tarif rawat jalan.</p>
                 </td>
@@ -61,25 +67,22 @@
                 <td>
                   <span class="badge bg-light text-dark border fw-bold">{{ item.kd_jenis_prw }}</span>
                 </td>
-                <td class="fw-bold text-dark">{{ item.nm_perawatan }}</td>
+                <td class="fw-bold text-dark" style="font-size: 0.8rem; white-space: normal; min-width: 250px;">{{ item.nm_perawatan }}</td>
                 <td>
                   <div class="small fw-bold text-primary">{{ item.kategori?.nm_kategori || item.kd_kategori }}</div>
                   <div class="small text-muted"><i class="fas fa-clinic-medical me-1"></i>{{ item.poliklinik?.nm_poli || item.kd_poli }}</div>
                 </td>
-                <td class="text-end numeric-text">
-                  {{ formatRupiah(item.total_byrdr) }}
-                </td>
-                <td class="text-end numeric-text">
-                  {{ formatRupiah(item.total_byrpr) }}
-                </td>
-                <td class="text-end">
-                  <span class="fw-bold text-success">{{ formatRupiah(item.total_byrdrpr) }}</span>
-                </td>
-                <td class="text-center">
-                  <span class="badge" :class="item.status === '1' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
-                    <i class="fas" :class="item.status === '1' ? 'fa-check' : 'fa-times'"></i> 
-                    {{ item.status === '1' ? 'Aktif' : 'Non-Aktif' }}
-                  </span>
+                <td class="text-end numeric-text">{{ formatRupiah(item.material) }}</td>
+                <td class="text-end numeric-text">{{ formatRupiah(item.bhp) }}</td>
+                <td class="text-end numeric-text">{{ formatRupiah(item.tarif_tindakandr) }}</td>
+                <td class="text-end numeric-text">{{ formatRupiah(item.tarif_tindakanpr) }}</td>
+                <td class="text-end numeric-text">{{ formatRupiah(item.kso) }}</td>
+                <td class="text-end numeric-text">{{ formatRupiah(item.menejemen) }}</td>
+                <td class="text-end numeric-text fw-bold text-primary">{{ formatRupiah(item.total_byrdr) }}</td>
+                <td class="text-end numeric-text fw-bold text-primary">{{ formatRupiah(item.total_byrpr) }}</td>
+                <td class="text-end numeric-text fw-bold text-success">{{ formatRupiah(item.total_byrdrpr) }}</td>
+                <td>
+                  <div class="small fw-bold">{{ item.penjab?.png_jawab || item.kd_pj || '-' }}</div>
                 </td>
               </tr>
             </tbody>
@@ -366,21 +369,31 @@ onMounted(() => {
   background: white;
   border-radius: 12px;
   border: 1px solid #f1f5f9;
-  overflow: hidden;
+}
+.premium-table table {
+  margin-bottom: 0;
 }
 .premium-table thead th {
   background: #f8fafc;
   color: #64748b;
-  font-size: 0.75rem;
+  font-size: 0.70rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
 }
 .premium-table tbody td {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  white-space: nowrap;
+}
+.table-responsive.premium-table {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .hover-row:hover {
   background-color: #f8fafc;

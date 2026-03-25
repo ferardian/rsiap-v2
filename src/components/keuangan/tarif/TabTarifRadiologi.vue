@@ -44,18 +44,17 @@
                 <th class="text-end">Tarif Dokter</th>
                 <th class="text-end">Tarif Petugas</th>
                 <th class="text-end">Tarif DR & PR</th>
-                <th class="text-center">Status</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="7" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                   <div class="spinner-border text-warning spinner-sm"></div>
                   <p class="mt-2 text-muted small">Memuat data tarif radiologi...</p>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="7" class="text-center py-5 text-muted">
+                <td colspan="6" class="text-center py-5 text-muted">
                   <i class="fas fa-folder-open fa-3x mb-3 text-light"></i>
                   <p class="mb-0">Tidak ditemukan data tarif radiologi.</p>
                 </td>
@@ -64,7 +63,7 @@
                 <td>
                   <span class="badge bg-light text-dark border fw-bold">{{ item.kd_jenis_prw }}</span>
                 </td>
-                <td class="fw-bold text-dark">{{ item.nm_perawatan }}</td>
+                <td class="fw-bold text-dark" style="font-size: 0.8rem; white-space: normal; min-width: 250px;">{{ item.nm_perawatan }}</td>
                 <td>
                   <div class="small fw-bold text-muted">{{ item.kelas }}</div>
                 </td>
@@ -76,11 +75,6 @@
                 </td>
                 <td class="text-end">
                   <span class="fw-bold text-success">{{ formatRupiah(item.total_byr) }}</span>
-                </td>
-                <td class="text-center">
-                  <span class="badge" :class="item.status === '1' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
-                    <i class="fas" :class="item.status === '1' ? 'fa-check' : 'fa-times'"></i> 
-                  </span>
                 </td>
               </tr>
             </tbody>
@@ -193,9 +187,11 @@ onMounted(() => {
 .premium-input-sm { border-radius: 8px; border: 1px solid #e2e8f0; padding: 0.4rem 0.8rem; font-size: 0.85rem; transition: all 0.2s; }
 .premium-input-sm:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); outline: none; }
 .premium-btn-sm { border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 600; }
-.premium-table { background: white; border-radius: 12px; border: 1px solid #f1f5f9; overflow: hidden; }
-.premium-table thead th { background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; border-bottom: 2px solid #e2e8f0; }
-.premium-table tbody td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.premium-table { background: white; border-radius: 12px; border: 1px solid #f1f5f9; }
+.premium-table table { margin-bottom: 0; }
+.premium-table thead th { background: #f8fafc; color: #64748b; font-size: 0.70rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+.premium-table tbody td { padding: 0.75rem 1rem; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: nowrap; }
+.table-responsive.premium-table { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
 .hover-row:hover { background-color: #f8fafc; }
 .numeric-text { font-family: inherit; font-weight: 500; }
 .badge { padding: 0.4em 0.8em; font-weight: 700; }
