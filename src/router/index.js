@@ -386,6 +386,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/keuangan/tarif',
+    name: 'MasterTarif',
+    component: () => import('../views/keuangan/MasterTarifView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/helpdesk/tiket-masuk',
     name: 'TiketMasukHelpdesk',
     component: () => import('../views/helpdesk/TiketMasukView.vue'),
