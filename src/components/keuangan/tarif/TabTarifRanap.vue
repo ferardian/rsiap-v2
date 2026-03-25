@@ -44,7 +44,7 @@
                 <th>Kelas / Bangsal</th>
                 <th class="text-end">Tarif Dr</th>
                 <th class="text-end">Tarif Pr</th>
-                <th class="text-end">Total Biaya</th>
+                <th class="text-end">Tarif DR & PR</th>
                 <th class="text-center">Status</th>
               </tr>
             </thead>

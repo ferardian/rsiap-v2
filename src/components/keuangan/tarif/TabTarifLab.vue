@@ -49,7 +49,7 @@
                 <th>Kategori & Kelas</th>
                 <th class="text-end">Tarif Dokter</th>
                 <th class="text-end">Tarif Petugas</th>
-                <th class="text-end">Total Biaya</th>
+                <th class="text-end">Tarif DR & PR</th>
                 <th class="text-center">Status</th>
               </tr>
             </thead>

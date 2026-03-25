@@ -226,6 +226,9 @@
                     <span v-if="item.is_duplicate" class="badge bg-warning text-dark ms-1 shadow-sm" style="font-size: 0.65rem;" title="Data Ganda dengan Poli/Waktu Berbeda">
                       <i class="fas fa-copy"></i> Ganda
                     </span>
+                    <span v-if="item.nokapst && !sepCardSet.has(item.nokapst)" class="badge bg-danger-subtle text-danger ms-1 shadow-sm px-2 animate__animated animate__pulse animate__infinite" style="font-size: 0.65rem;" title="Belum Memiliki SEP Rawat Jalan">
+                      <i class="fas fa-exclamation-triangle"></i> No SEP
+                    </span>
                   </div>
                   <div class="small text-muted mb-1">{{ item.nokapst }}</div>
                   <div class="small text-muted">RM: {{ item.norekammedis || '-' }}</div>
@@ -698,20 +701,19 @@ const missingQueues = computed(() => {
   return seps.filter(sep => sep.no_kartu && !antrolCards.has(sep.no_kartu))
 })
 
-const antrolWithoutSep = computed(() => {
+const sepCardSet = computed(() => {
   const seps = Array.isArray(sepList.value) ? sepList.value : []
+  return new Set(seps.map(s => s.no_kartu).filter(Boolean))
+})
+
+const antrolWithoutSep = computed(() => {
   const list = Array.isArray(antrolList.value) ? antrolList.value : []
-  
-  const sepCards = new Set(seps.map(s => s.no_kartu))
-  return list.filter(item => item.nokapst && !sepCards.has(item.nokapst))
+  return list.filter(item => item.nokapst && !sepCardSet.value.has(item.nokapst))
 })
 
 const matchingData = computed(() => {
-  const seps = Array.isArray(sepList.value) ? sepList.value : []
   const list = Array.isArray(antrolList.value) ? antrolList.value : []
-  
-  const sepCards = new Set(seps.map(s => s.no_kartu))
-  return list.filter(item => item.nokapst && sepCards.has(item.nokapst))
+  return list.filter(item => item.nokapst && sepCardSet.value.has(item.nokapst))
 })
 
 // Count occurrences of nokapst in matchingData for duplicate detection

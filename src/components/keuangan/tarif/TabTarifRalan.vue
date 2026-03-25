@@ -39,7 +39,7 @@
                 <th>Kategori / Poli</th>
                 <th class="text-end">Tarif Dr</th>
                 <th class="text-end">Tarif Pr</th>
-                <th class="text-end">Total Biaya</th>
+                <th class="text-end">Tarif DR & PR</th>
                 <th class="text-center">Status</th>
                 <th class="text-center">Aksi</th>
               </tr>
@@ -149,7 +149,7 @@
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                   <div class="p-2 border rounded w-100 bg-light">
-                    <div class="small text-muted">Total Biaya:</div>
+                    <div class="small text-muted">Tarif DR & PR:</div>
                     <div class="fw-bold text-success">{{ formatRupiah((form.total_byrdr || 0) + (form.total_byrpr || 0)) }}</div>
                   </div>
                 </div>
