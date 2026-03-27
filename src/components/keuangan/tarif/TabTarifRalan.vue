@@ -3,7 +3,7 @@
     <div class="card glass-card border-0 shadow-sm mt-2">
       <div class="card-body p-4">
         <!-- Toolbar -->
-        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
+        <div class="d-flex flex-column flex-md-row gap-3 align-items-start align-items-md-center justify-content-between mb-4">
           <h5 class="m-0 fw-bold d-flex align-items-center">
             <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3">
               <i class="fas fa-stethoscope"></i>
@@ -11,20 +11,18 @@
             Tarif Rawat Jalan
           </h5>
           <div class="d-flex flex-wrap gap-2 align-items-center">
-            <button class="btn btn-success premium-btn-sm" @click="openModal('add')">
-              <i class="fas fa-plus me-1"></i> Tambah
-            </button>
-            <div class="search-box">
+            <div class="premium-search-wrapper">
+              <i class="fas fa-search search-icon"></i>
               <input 
                 v-model="filters.keyword" 
                 type="text" 
-                class="form-control premium-input-sm" 
+                class="form-control premium-search-input" 
                 placeholder="Cari nama perawatan / kode..."
                 @keyup.enter="fetchData"
               >
             </div>
-            <button class="btn btn-primary premium-btn-sm" @click="fetchData" :disabled="loading">
-              <i class="fas fa-search me-1"></i> Cari
+            <button class="btn btn-success premium-add-btn" @click="openModal('add')">
+              <i class="fas fa-plus me-2"></i> Tambah
             </button>
           </div>
         </div>
@@ -84,6 +82,14 @@
                 <td>
                   <div class="small fw-bold">{{ item.penjab?.png_jawab || item.kd_pj || '-' }}</div>
                 </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-light text-primary me-1" @toggle="tooltip" title="Edit" @click="openModal('edit', item)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-light text-danger" @toggle="tooltip" title="Nonaktifkan" @click="confirmDelete(item)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -125,36 +131,73 @@
                   <input v-model="form.kd_jenis_prw" type="text" class="form-control" :readonly="modalMode === 'edit'" required>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label small fw-bold">Penjab (Kode PJ)</label>
-                  <input v-model="form.kd_pj" type="text" class="form-control" required placeholder="Contoh: BPJ">
+                  <label class="form-label small fw-bold">Penjab</label>
+                  <select v-model="form.kd_pj" class="form-select" required>
+                    <option value="" disabled>Pilih Penjab...</option>
+                    <option v-for="pj in listPenjab" :key="pj.kd_pj" :value="pj.kd_pj">
+                      {{ pj.png_jawab }} ({{ pj.kd_pj }})
+                    </option>
+                  </select>
                 </div>
                 <div class="col-md-12">
                   <label class="form-label small fw-bold">Nama Perawatan</label>
                   <input v-model="form.nm_perawatan" type="text" class="form-control" required>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label small fw-bold">Kategori (Kode)</label>
-                  <input v-model="form.kd_kategori" type="text" class="form-control" required>
+                  <label class="form-label small fw-bold">Kategori Perawatan</label>
+                  <select v-model="form.kd_kategori" class="form-select" required>
+                    <option value="" disabled>Pilih Kategori...</option>
+                    <option v-for="kat in listKategori" :key="kat.kd_kategori" :value="kat.kd_kategori">
+                      {{ kat.nm_kategori }} ({{ kat.kd_kategori }})
+                    </option>
+                  </select>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label small fw-bold">Poliklinik (Kode)</label>
-                  <input v-model="form.kd_poli" type="text" class="form-control" required>
+                  <label class="form-label small fw-bold">Poliklinik</label>
+                  <select v-model="form.kd_poli" class="form-select" required>
+                    <option value="" disabled>Pilih Poliklinik...</option>
+                    <option v-for="poli in listPoli" :key="poli.kd_poli" :value="poli.kd_poli">
+                      {{ poli.nm_poli }} ({{ poli.kd_poli }})
+                    </option>
+                  </select>
                 </div>
 
                 <div class="col-12 mt-4 mb-2"><hr class="m-0"><div class="small text-muted mt-2 fw-bold text-uppercase">Rincian Biaya</div></div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Jasa Dokter</label>
-                  <input v-model.number="form.total_byrdr" type="number" class="form-control">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">J.S.Rmh Sakit</label>
+                  <input v-model.number="form.material" type="number" class="form-control premium-input-sm" @input="calculateTotals">
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold">Jasa Perawat</label>
-                  <input v-model.number="form.total_byrpr" type="number" class="form-control">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">BHP / Paket Obat</label>
+                  <input v-model.number="form.bhp" type="number" class="form-control premium-input-sm" @input="calculateTotals">
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
-                  <div class="p-2 border rounded w-100 bg-light">
-                    <div class="small text-muted">Tarif DR & PR:</div>
-                    <div class="fw-bold text-success">{{ formatRupiah((form.total_byrdr || 0) + (form.total_byrpr || 0)) }}</div>
-                  </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">Jasa Medis Dr</label>
+                  <input v-model.number="form.tarif_tindakandr" type="number" class="form-control premium-input-sm" @input="calculateTotals">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">Jasa Medis Pr</label>
+                  <input v-model.number="form.tarif_tindakanpr" type="number" class="form-control premium-input-sm" @input="calculateTotals">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">KSO</label>
+                  <input v-model.number="form.kso" type="number" class="form-control premium-input-sm" @input="calculateTotals">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">Menejemen</label>
+                  <input v-model.number="form.menejemen" type="number" class="form-control premium-input-sm" @input="calculateTotals">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">Total Biaya Dr</label>
+                  <input v-model.number="form.total_byrdr" type="number" class="form-control premium-input-sm">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">Total Biaya Pr</label>
+                  <input v-model.number="form.total_byrpr" type="number" class="form-control premium-input-sm">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label small fw-bold">Total Biaya Dr & Pr</label>
+                  <input v-model.number="form.total_byrdrpr" type="number" class="form-control premium-input-sm">
                 </div>
               </div>
               <div class="mt-4 text-end">
@@ -174,13 +217,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import keuanganTarifService from '@/services/keuanganTarifService'
 import { useToast } from 'vue-toastification'
+import Swal from 'sweetalert2'
 
 const toast = useToast()
 const loading = ref(false)
 const items = ref([])
+const listKategori = ref([])
+const listPoli = ref([])
+const listPenjab = ref([])
 const modalMode = ref('add')
 const saving = ref(false)
 let modalInstance = null
@@ -191,9 +238,24 @@ const form = reactive({
   kd_kategori: '',
   kd_poli: '',
   kd_pj: '',
+  material: 0,
+  bhp: 0,
+  tarif_tindakandr: 0,
+  tarif_tindakanpr: 0,
+  kso: 0,
+  menejemen: 0,
   total_byrdr: 0,
-  total_byrpr: 0
+  total_byrpr: 0,
+  total_byrdrpr: 0
 })
+
+const calculateTotals = () => {
+  form.total_byrdr = (form.material || 0) + (form.bhp || 0) + (form.tarif_tindakandr || 0) + (form.kso || 0) + (form.menejemen || 0)
+  form.total_byrpr = (form.material || 0) + (form.bhp || 0) + (form.tarif_tindakanpr || 0) + (form.kso || 0) + (form.menejemen || 0)
+  form.total_byrdrpr = (form.material || 0) + (form.bhp || 0) + (form.tarif_tindakandr || 0) + (form.tarif_tindakanpr || 0) + (form.kso || 0) + (form.menejemen || 0)
+}
+
+// Total fields are manually editable as per user request "jangan di kunci, itu bisa diubah"
 
 const resetForm = () => {
   form.kd_jenis_prw = ''
@@ -201,22 +263,45 @@ const resetForm = () => {
   form.kd_kategori = ''
   form.kd_poli = ''
   form.kd_pj = ''
+  form.material = 0
+  form.bhp = 0
+  form.tarif_tindakandr = 0
+  form.tarif_tindakanpr = 0
+  form.kso = 0
+  form.menejemen = 0
   form.total_byrdr = 0
   form.total_byrpr = 0
+  form.total_byrdrpr = 0
 }
 
-const openModal = (mode, item = null) => {
+const openModal = async (mode, item = null) => {
   modalMode.value = mode
   resetForm()
-  if (mode === 'edit' && item) {
+  if (mode === 'add') {
+    try {
+      const res = await keuanganTarifService.getNextKodeRalan()
+      if (res.data.success) {
+        form.kd_jenis_prw = res.data.data
+      }
+    } catch (e) {
+      console.error('Failed to get next kode', e)
+    }
+  } else if (mode === 'edit' && item) {
     Object.assign(form, {
       kd_jenis_prw: item.kd_jenis_prw,
       nm_perawatan: item.nm_perawatan,
       kd_kategori: item.kd_kategori || item.kategori?.kd_kategori || '',
       kd_poli: item.kd_poli || item.poliklinik?.kd_poli || '',
       kd_pj: item.kd_pj || item.penjab?.kd_pj || '',
+      material: parseFloat(item.material) || 0,
+      bhp: parseFloat(item.bhp) || 0,
+      tarif_tindakandr: parseFloat(item.tarif_tindakandr) || 0,
+      tarif_tindakanpr: parseFloat(item.tarif_tindakanpr) || 0,
+      kso: parseFloat(item.kso) || 0,
+      menejemen: parseFloat(item.menejemen) || 0,
       total_byrdr: parseFloat(item.total_byrdr) || 0,
-      total_byrpr: parseFloat(item.total_byrpr) || 0
+      total_byrpr: parseFloat(item.total_byrpr) || 0,
+      total_byrdrpr: parseFloat(item.total_byrdrpr) || 0
     })
   }
   if (!modalInstance) {
@@ -249,18 +334,34 @@ const saveData = async () => {
   }
 }
 
-const confirmDelete = async (item) => {
-  if (confirm(`Yakin ingin menonaktifkan kode ${item.kd_jenis_prw}?`)) {
-    try {
-      const res = await keuanganTarifService.deleteTarifRalan(item.kd_jenis_prw)
-      if (res.data.success) {
-        toast.success(res.data.message || 'Data dinonaktifkan')
-        fetchData()
-      }
-    } catch (e) {
-      toast.error('Gagal menghapus data')
+const confirmDelete = (item) => {
+  Swal.fire({
+    title: 'Nonaktifkan Tarif?',
+    text: `Yakin ingin menonaktifkan kode ${item.kd_jenis_prw}? Ini hanya akan mengubah status tarif menjadi tidak aktif.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#94a3b8',
+    confirmButtonText: 'Ya, Nonaktifkan!',
+    cancelButtonText: 'Batal',
+    reverseButtons: true,
+    customClass: {
+      confirmButton: 'premium-btn-confirm',
+      cancelButton: 'premium-btn-cancel'
     }
-  }
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const res = await keuanganTarifService.deleteTarifRalan(item.kd_jenis_prw)
+        if (res.data.success) {
+          toast.success(res.data.message || 'Data dinonaktifkan')
+          fetchData()
+        }
+      } catch (e) {
+        toast.error('Gagal menonaktifkan data')
+      }
+    }
+  })
 }
 
 const filters = reactive({
@@ -327,8 +428,44 @@ const fetchData = async () => {
   }
 }
 
+const fetchKategori = async () => {
+  try {
+    const res = await keuanganTarifService.getKategoriPerawatan()
+    if (res.data.success) {
+      listKategori.value = res.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching kategori perawatan', error)
+  }
+}
+
+const fetchPoli = async () => {
+  try {
+    const res = await keuanganTarifService.getPoli()
+    if (res.data.success) {
+      listPoli.value = res.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching poliklinik', error)
+  }
+}
+
+const fetchPenjab = async () => {
+  try {
+    const res = await keuanganTarifService.getPenjab()
+    if (res.data.success) {
+      listPenjab.value = res.data.data
+    }
+  } catch (error) {
+    console.error('Error fetching penjab', error)
+  }
+}
+
 onMounted(() => {
   fetchData()
+  fetchKategori()
+  fetchPoli()
+  fetchPenjab()
 })
 </script>
 
@@ -345,24 +482,50 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
 }
-.premium-input-sm {
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-  min-width: 250px;
+.premium-search-wrapper {
+  position: relative;
+  width: 320px;
 }
-.premium-input-sm:focus {
+.premium-search-wrapper .search-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.premium-search-input {
+  border-radius: 50px;
+  padding-left: 3rem;
+  padding-right: 1.25rem;
+  border: 1px solid #e2e8f0;
+  height: 42px;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  background-color: #f8fafc;
+}
+.premium-search-input:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background-color: white;
   outline: none;
 }
-.premium-btn-sm {
-  border-radius: 8px;
-  padding: 0.4rem 1rem;
-  font-size: 0.85rem;
+.premium-add-btn {
+  border-radius: 50px;
+  padding: 0 1.5rem;
+  height: 42px;
   font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+}
+.premium-add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(16, 185, 129, 0.2);
 }
 /* Table Styles */
 .premium-table {
