@@ -10,7 +10,7 @@
             </div>
             Tarif Rawat Inap
           </h5>
-          <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="d-flex flex-wrap gap-2 align-items-center w-100-mobile">
              <select v-model="filters.kelas" class="form-select premium-select-pill">
                 <option value="">Semua Kelas</option>
                 <option value="Kelas 1">Kelas 1</option>
@@ -519,7 +519,8 @@ onMounted(() => {
 .text-purple { color: #9333ea; }
 .premium-search-wrapper {
   position: relative;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
 }
 .premium-search-wrapper .search-icon {
   position: absolute;
@@ -606,4 +607,12 @@ onMounted(() => {
 .badge { padding: 0.4em 0.8em; font-weight: 700; }
 .bg-success-subtle { background-color: #dcfce7; }
 .bg-danger-subtle { background-color: #fee2e2; }
+@media (max-width: 768px) {
+  .w-100-mobile {
+    width: 100% !important;
+  }
+  .premium-add-btn {
+    width: 100%;
+  }
+}
 </style>

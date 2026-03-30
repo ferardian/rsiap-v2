@@ -308,8 +308,11 @@
                                         </h6>
                                     </div>
                                     <div class="ms-2">
-                                        <span v-if="item.isAnalyzed" class="badge bg-success rounded-pill extra-small">
+                                        <span v-if="item.isAnalyzed" class="badge bg-success rounded-pill extra-small me-1">
                                             <i class="fas fa-check-double"></i> Selesai
+                                        </span>
+                                        <span v-if="item.hasFeedback" class="badge bg-info rounded-pill extra-small">
+                                            <i class="fas fa-comment-dots"></i> Feedback Komite
                                         </span>
                                         <span v-else-if="item.isComplete" class="badge bg-primary rounded-pill extra-small">
                                             <i class="fas fa-edit"></i> Siap Analisa
@@ -446,11 +449,16 @@
 
                 <!-- FORM ANALISA (EXPANDABLE) -->
                 <Transition name="fade-slide">
-                    <div v-if="showAnalisaForm" class="card border-primary shadow-sm mb-4" style="border-left: 5px solid var(--bs-primary); border-radius: 12px;">
-                        <div class="card-header bg-white border-0 pt-3">
-                            <h6 class="fw-bold text-primary mb-0">
-                                <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
-                            </h6>
+                    <div v-if="showAnalisaForm" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border-top: 4px solid #0d6efd !important;">
+                        <div class="card-header bg-white border-0 py-3 px-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h6 class="fw-bold text-primary mb-0">
+                                    <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
+                                </h6>
+                                <button class="btn btn-link text-muted p-0" @click="showAnalisaForm = false">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -491,42 +499,75 @@
                     </div>
                 </Transition>
 
-                <!-- EXISTING ANALISA RESULTS -->
-                <div v-if="existingAnalisa.length > 0 && !showAnalisaForm">
+                <!-- EXISTING ANALISA RESULTS & COMMITTEE FEEDBACK -->
+                <div v-if="existingAnalisa.length > 0">
                     <div class="d-flex align-items-center justify-content-between mb-3 px-1">
                         <h6 class="fw-bold text-dark mb-0">
-                            <i class="fas fa-file-alt text-primary me-2"></i> Hasil Analisa
+                            <i class="fas fa-file-alt text-primary me-2"></i> Hasil Analisa & Feedback
                         </h6>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="showAnalisaForm = true">
+                        <button v-if="!showAnalisaForm" class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="showAnalisaForm = true">
                             <i class="fas fa-edit me-2"></i> Edit Analisa
                         </button>
                     </div>
                     
-                    <div v-for="item in existingAnalisa" :key="item.id_analisa" class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px;">
-                        <div class="bg-primary p-2"></div>
-                        <div class="card-body p-4">
-                            <div class="row">
-                                <div class="col-md-6 border-end">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="badge bg-primary-light text-primary p-2 rounded-3 me-3">
-                                            <i class="fas fa-search"></i>
+                    <div v-for="item in existingAnalisa" :key="item.id_analisa">
+                        <!-- Unit Analysis Result -->
+                        <div class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px;">
+                            <div class="bg-primary p-2"></div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-6 border-end">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="badge bg-primary-light text-primary p-2 rounded-3 me-3">
+                                                <i class="fas fa-search"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-0">Analisa</h6>
                                         </div>
-                                        <h6 class="fw-bold mb-0">Analisa</h6>
+                                        <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
+                                            {{ item.analisa }}
+                                        </p>
                                     </div>
-                                    <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
-                                        {{ item.analisa }}
-                                    </p>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="badge bg-success-light text-success p-2 rounded-3 me-3">
+                                                <i class="fas fa-rocket"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-0 text-success">Tindak Lanjut</h6>
+                                        </div>
+                                        <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
+                                            {{ item.tindak_lanjut }}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="badge bg-success-light text-success p-2 rounded-3 me-3">
-                                            <i class="fas fa-rocket"></i>
+                            </div>
+                        </div>
+
+                        <!-- Committee Feedback Result (If Exists) -->
+                        <div v-if="item.feedback" class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px; border: 1px solid #0d6efd !important;">
+                            <div class="card-header bg-primary border-0 pt-3 pb-3 px-4">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <h6 class="fw-bold text-white mb-0 text-nowrap">
+                                        <i class="fas fa-comment-dots me-2"></i> Feedback Komite Mutu
+                                    </h6>
+                                    <span class="badge bg-white text-primary rounded-pill px-3 shadow-sm" style="font-size: 0.75rem;">
+                                        <i class="fas fa-check-circle me-1"></i> Review Selesai
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-md-6 border-end">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <small class="fw-bold text-primary text-uppercase tracking-wider" style="font-size: 0.7rem;">Supervisi</small>
                                         </div>
-                                        <h6 class="fw-bold mb-0 text-success">Tindak Lanjut</h6>
+                                        <div class="text-dark rich-content" v-html="item.feedback.supervisi"></div>
                                     </div>
-                                    <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
-                                        {{ item.tindak_lanjut }}
-                                    </p>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <small class="fw-bold text-primary text-uppercase tracking-wider" style="font-size: 0.7rem;">Rekomendasi / Saran</small>
+                                        </div>
+                                        <div class="text-dark rich-content" v-html="item.feedback.rekomendasi"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1016,7 +1057,8 @@ const fetchAnalisaData = async () => {
                     isComplete,
                     score,
                     isAnalyzed: !!analyzis,
-                    analysisId: analyzis?.id_analisa
+                    analysisId: analyzis?.id_analisa,
+                    hasFeedback: !!analyzis?.feedback
                 }
             })
         }
@@ -1052,8 +1094,37 @@ const saveAnalisa = async () => {
             toast.success('Analisa berhasil diperbarui')
         } else {
             // Create
-            await api.storeAnalisa(payload)
+            const response = await api.storeAnalisa(payload)
             toast.success('Analisa berhasil disimpan')
+        }
+
+        // Notification Integration (Now for both Create and Update)
+        try {
+            const unitName = getUnitName()
+            const indicatorName = selectedIndicator.value.nama_inmut
+            const monthYear = formatMonthYear(analisaFilters.bulan)
+            const actionText = analisaForm.id_analisa ? "memperbarui data analisa" : "menginput analisa baru";
+            
+            // Format updated for better mobile display (shortened lines and simpler title)
+            const message = `*🔔 NOTIFIKASI ANALISA MUTU*\n` +
+                            `_______________________________\n\n` +
+                            `Unit *${unitName}* telah *${actionText}*.\n\n` +
+                            `*📊 INDIKATOR:*\n` +
+                            `_"${indicatorName}"_\n\n` +
+                            `*📅 PERIODE:*\n` +
+                            `*${monthYear}*\n\n` +
+                            `_______________________________\n` +
+                            `Mohon segera ditindaklanjuti untuk *Supervisi & Rekomendasi* melalui menu:\n` +
+                            `*Monitoring Indikator Mutu -> Tab Analisa Data*\n\n` +
+                            `_Sistem Monitoring Indikator Mutu_`
+            
+            await api.sendAnalisaNotification({
+                message: message,
+                type: 'analisa_mutu'
+            })
+            console.log('WhatsApp notification sent')
+        } catch (notifError) {
+            console.error('Failed to send WhatsApp notification:', notifError)
         }
         
         resetAnalisaForm()
@@ -1341,7 +1412,20 @@ onMounted(() => {
 .bg-success-light { background-color: #f0fdf4 !important; }
 .bg-warning-light { background-color: #fffbeb !important; }
 .bg-primary-light { background-color: #eff6ff !important; }
+.bg-info-light { background-color: #e0f7fa !important; }
 .text-warning-dark { color: #92400e !important; }
+
+.rich-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+.rich-content :deep(p) {
+    margin-bottom: 0.5rem;
+}
+.rich-content :deep(ul), .rich-content :deep(ol) {
+    padding-left: 1.2rem;
+    margin-bottom: 0.5rem;
+}
 
 .extra-small {
     font-size: 0.75rem !important;

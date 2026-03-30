@@ -52,10 +52,48 @@ const keuanganTarifService = {
   getTarifOperasi: (params) => {
     return api.get('/keuangan/tarif/operasi', { params })
   },
+  getTarifOperasiNextKode: (params) => {
+    return api.get('/keuangan/tarif/operasi/kode', { params })
+  },
+  postTarifOperasi: (data) => {
+    return api.post('/keuangan/tarif/operasi', data)
+  },
+  putTarifOperasi: (id, data) => {
+    return api.post(`/keuangan/tarif/operasi/${id}`, data)
+  },
+  deleteTarifOperasi: (id) => {
+    return api.delete(`/keuangan/tarif/operasi/${id}`)
+  },
   
   // 4. Tarif Laboratorium
   getTarifLab: (params) => {
     return api.get('/keuangan/tarif/lab', { params })
+  },
+  getTarifLabNextKode: (params) => {
+    return api.get('/keuangan/tarif/lab/kode', { params })
+  },
+  postTarifLab: (data) => {
+    return api.post('/keuangan/tarif/lab', data)
+  },
+  putTarifLab: (id, data) => {
+    return api.post(`/keuangan/tarif/lab/${id}`, data)
+  },
+  deleteTarifLab: (id) => {
+    return api.delete(`/keuangan/tarif/lab/${id}`)
+  },
+  
+  // 4b. Template Laboratorium
+  getTemplateLab: (kd_jenis_prw) => {
+    return api.get(`/keuangan/tarif/lab/template/${kd_jenis_prw}`)
+  },
+  postTemplateLab: (data) => {
+    return api.post('/keuangan/tarif/lab/template', data)
+  },
+  putTemplateLab: (id, data) => {
+    return api.post(`/keuangan/tarif/lab/template/${id}`, data)
+  },
+  deleteTemplateLab: (id) => {
+    return api.delete(`/keuangan/tarif/lab/template/${id}`)
   },
   
   // 5. Tarif Radiologi

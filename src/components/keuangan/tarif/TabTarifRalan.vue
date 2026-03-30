@@ -10,7 +10,7 @@
             </div>
             Tarif Rawat Jalan
           </h5>
-          <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="d-flex flex-wrap gap-2 align-items-center w-100-mobile">
             <div class="premium-search-wrapper">
               <i class="fas fa-search search-icon"></i>
               <input 
@@ -484,7 +484,8 @@ onMounted(() => {
 }
 .premium-search-wrapper {
   position: relative;
-  width: 320px;
+  width: 100%;
+  max-width: 320px;
 }
 .premium-search-wrapper .search-icon {
   position: absolute;
@@ -572,4 +573,12 @@ onMounted(() => {
 .bg-success-subtle { background-color: #dcfce7; }
 .bg-danger-subtle { background-color: #fee2e2; }
 .bg-primary-subtle { background-color: #dbeafe; }
+@media (max-width: 768px) {
+  .w-100-mobile {
+    width: 100% !important;
+  }
+  .premium-add-btn {
+    width: 100%;
+  }
+}
 </style>

@@ -213,6 +213,51 @@
                                 <label class="form-label fw-bold text-primary">TINDAK LANJUT</label>
                                 <div class="p-3 bg-light border rounded" v-html="form.tindak_lanjut"></div>
                             </div>
+
+                            <hr class="my-4">
+
+                            <!-- FEEDBACK SECTION -->
+                            <div class="mb-4" :key="'feedback-' + form.id_analisa">
+                                <div class="d-flex align-items-center justify-content-between mb-3 p-2 bg-primary-light rounded border">
+                                    <h6 class="fw-bold mb-0 text-primary">
+                                        <i class="fas fa-comment-medical me-2"></i> SUPERVISI & REKOMENDASI KOMITE
+                                    </h6>
+                                    <span v-if="feedbackLoading" class="spinner-border spinner-border-sm text-primary"></span>
+                                </div>
+
+                                <div v-if="isCommitteeMember" class="feedback-edit-section">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small">Supervisi</label>
+                                        <QuillEditor theme="snow" toolbar="minimal" content-type="html" v-model:content="feedbackForm.supervisi" style="height: 120px; padding-bottom: 40px;" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small">Rekomendasi / Saran</label>
+                                        <QuillEditor theme="snow" toolbar="minimal" content-type="html" v-model:content="feedbackForm.rekomendasi" style="height: 120px; padding-bottom: 40px;" />
+                                    </div>
+                                    <div class="text-end">
+                                        <button class="btn btn-primary btn-sm px-4" @click="saveFeedback" :disabled="feedbackSaving">
+                                            <i v-if="feedbackSaving" class="fas fa-spinner fa-spin me-2"></i>
+                                            <i v-else class="fas fa-save me-2"></i>
+                                            {{ isFeedbackExists ? 'Update Feedback' : 'Simpan Feedback' }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div v-else class="feedback-view-section">
+                                    <div v-if="!feedbackForm.supervisi && !feedbackForm.rekomendasi" class="text-center py-3 text-muted border rounded bg-white">
+                                        <i class="fas fa-info-circle me-1"></i> Belum ada supervisi/rekomendasi dari Komite Mutu.
+                                    </div>
+                                    <div v-else>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small text-secondary">Supervisi:</label>
+                                            <div class="p-3 bg-white border rounded" v-html="feedbackForm.supervisi || '-'"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small text-secondary">Rekomendasi:</label>
+                                            <div class="p-3 bg-white border rounded" v-html="feedbackForm.rekomendasi || '-'"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div v-else>
@@ -228,12 +273,19 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @click="closeModal">Tutup</button>
-                    <button v-if="!isDetail" type="button" class="btn btn-primary" @click="submitForm" :disabled="submitting">
-                        <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
-                        Simpan
-                    </button>
+                <div class="modal-footer d-flex justify-content-between">
+                    <div class="footer-info">
+                        <span v-if="isCommitteeMember" class="badge bg-info-subtle text-info border px-3">
+                            <i class="fas fa-user-shield me-1"></i> Akses Komite Aktif
+                        </span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary" @click="closeModal">Tutup</button>
+                        <button v-if="!isDetail" type="button" class="btn btn-primary" @click="submitForm" :disabled="submitting">
+                            <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
+                            Simpan
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -243,12 +295,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { useToast } from 'vue-toastification'
 import { Modal } from 'bootstrap'
 import api from '@/services/indikatorMutuService'
+import committeeService from '@/services/committeeService'
+import { useAuthStore } from '@/stores/auth'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
+const authStore = useAuthStore()
 
 const toast = useToast()
 const items = ref([])
@@ -279,6 +335,37 @@ const form = reactive({
     analisa: '',
     tindak_lanjut: ''
 })
+
+// === FEEDBACK STATE ===
+const isCommitteeMember = ref(false)
+const feedbackSaving = ref(false)
+const feedbackLoading = ref(false)
+const isFeedbackExists = ref(false)
+const feedbackForm = reactive({
+    supervisi: '',
+    rekomendasi: ''
+})
+
+const checkCommittee = async () => {
+    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik
+    if (userNik) {
+        try {
+            const commRes = await committeeService.getByNik(userNik)
+            const committees = commRes.data.data || []
+            
+            // Check if user is in "PMKP" committee specifically
+            if (committees.length > 0) {
+                const isPmkp = committees.some(c => {
+                    const name = (c.komite?.nama || c.nama || '').toUpperCase()
+                    return name.includes('PMKP') || name.includes('MUTU')
+                })
+                isCommitteeMember.value = isPmkp
+            }
+        } catch (error) {
+            console.error('Error checking committee:', error)
+        }
+    }
+}
 
 const fetchUnits = async () => {
     try {
@@ -419,6 +506,9 @@ const openModal = async (item, detail = false) => {
         form.jml_denum = item.jml_denum
         form.analisa = item.analisa
         form.tindak_lanjut = item.tindak_lanjut
+        
+        // Fetch Feedback
+        await fetchFeedback(item.id_analisa)
     } else {
         isEdit.value = false
         // ... (reset form items)
@@ -430,6 +520,8 @@ const openModal = async (item, detail = false) => {
         form.jml_denum = 0
         form.analisa = ''
         form.tindak_lanjut = ''
+        
+        resetFeedbackForm()
     }
 
     if (!modalInstance) {
@@ -479,9 +571,53 @@ const deleteItem = async (id) => {
     }
 }
 
+const fetchFeedback = async (id_analisa) => {
+    resetFeedbackForm()
+    feedbackLoading.value = true
+    try {
+        const response = await api.getFeedback(id_analisa)
+        if (response.data.success && response.data.data) {
+            feedbackForm.supervisi = response.data.data.supervisi || ''
+            feedbackForm.rekomendasi = response.data.data.rekomendasi || ''
+            isFeedbackExists.value = true
+        }
+    } catch (error) {
+        console.error('Error fetching feedback:', error)
+    } finally {
+        feedbackLoading.value = false
+    }
+}
+
+const saveFeedback = async () => {
+    if (!form.id_analisa) return
+    
+    feedbackSaving.value = true
+    try {
+        const payload = {
+            id_analisa: form.id_analisa,
+            supervisi: feedbackForm.supervisi,
+            rekomendasi: feedbackForm.rekomendasi
+        }
+        await api.storeFeedback(payload)
+        toast.success('Supervisi & Rekomendasi berhasil disimpan')
+    } catch (error) {
+        console.error(error)
+        toast.error('Gagal menyimpan feedback')
+    } finally {
+        feedbackSaving.value = false
+    }
+}
+
+const resetFeedbackForm = () => {
+    feedbackForm.supervisi = ''
+    feedbackForm.rekomendasi = ''
+    isFeedbackExists.value = false
+}
+
 onMounted(() => {
     fetchUnits()
     fetchData()
+    checkCommittee()
 })
 </script>
 

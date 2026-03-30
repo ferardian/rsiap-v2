@@ -28,6 +28,13 @@ const service = {
     saveRealisasi: (data) => api.post('/indikator-mutu/realisasi', data),
     getRealisasi: (params) => api.get('/indikator-mutu/realisasi', { params }),
     saveRealisasiBulk: (data) => api.post('/indikator-mutu/realisasi/bulk', data),
+
+    // Feedback Analisa
+    getFeedback: (id_analisa) => api.get(`/indikator-mutu/analisa/feedback/${id_analisa}`),
+    storeFeedback: (data) => api.put('/indikator-mutu/analisa/feedback', data),
+    
+    // Notifications
+    sendAnalisaNotification: (data) => api.post('/indikator-mutu/analisa/notif', data),
 };
 
 // Export service for Indikator Mutu operations

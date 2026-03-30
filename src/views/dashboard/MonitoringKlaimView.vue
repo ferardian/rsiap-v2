@@ -186,7 +186,7 @@
       <!-- Donut Chart & Overview Row -->
       <div v-if="filteredClaims.length > 0" class="row mb-4">
         <!-- Monthly Trend Line Chart (Only in Yearly mode) -->
-        <div v-if="filters.isYearlyMode && chartSeries.length > 0" class="col-lg-8 mb-4 mb-lg-0">
+        <div v-if="filters.isYearlyMode && chartSeries.length > 0" class="col-lg-12 mb-4">
           <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
             <h5 class="card-title-sm mb-4">Tren Biaya Klaim {{ filters.tahun }}</h5>
             <div style="height: 300px;">
@@ -195,7 +195,17 @@
           </div>
         </div>
 
-        <div :class="[filters.isYearlyMode ? 'col-lg-4' : 'col-lg-12']">
+        <div v-if="filters.isYearlyMode" class="col-lg-8 mb-4">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="card-title-sm mb-4">Tren Status Klaim Bulanan {{ filters.tahun }}</h5>
+            <div v-if="statusTimelineSeries.length > 0" style="height: 300px;">
+              <apexchart type="line" height="100%" :options="statusLineChartOptions" :series="statusTimelineSeries"></apexchart>
+            </div>
+            <div v-else class="text-center text-muted mt-5">Tidak cukup data</div>
+          </div>
+        </div>
+
+        <div :class="[filters.isYearlyMode ? 'col-lg-4' : 'col-lg-12']" class="mb-4">
           <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
             <h5 class="card-title-sm mb-4">Distribusi INA-CBG Teratas</h5>
             <div v-if="donutSeries.length > 0" style="height: 300px; display: flex; align-items: center; justify-content: center;">
@@ -338,8 +348,9 @@ const formatRupiah = (angka) => {
 }
 
 const getStatusBadge = (status) => {
+  if (status.includes('Tidak Layak')) return 'bg-danger'
   if (status.includes('Proses')) return 'bg-warning text-dark'
-  if (status.includes('Pending')) return 'bg-danger'
+  if (status.includes('Pending')) return 'bg-indigo text-white'
   if (status.includes('Klaim') || status.includes('Selesai')) return 'bg-success'
   return 'bg-secondary'
 }
@@ -442,6 +453,65 @@ const donutChartOptions = computed(() => ({
       }
     }
   }
+}))
+
+const statusTimelineSeries = computed(() => {
+  if (!filters.isYearlyMode || claimsData.value.length === 0) return []
+
+  // Get all unique statuses
+  const statuses = [...new Set(claimsData.value.map(c => c.status || 'Tidak Diketahui'))]
+  
+  return statuses.map(statusName => {
+    const monthlyData = Array(12).fill(0)
+    claimsData.value.forEach(c => {
+      if (c.status === statusName && c.tglPulang) {
+        const month = parseInt(c.tglPulang.split('-')[1], 10) - 1
+        monthlyData[month]++
+      }
+    })
+    return {
+      name: statusName,
+      data: monthlyData
+    }
+  })
+})
+
+const statusLineChartOptions = computed(() => ({
+  chart: { 
+    type: 'line', 
+    fontFamily: 'Inter, sans-serif', 
+    toolbar: { show: false },
+    zoom: { enabled: false }
+  },
+  colors: statusTimelineSeries.value.map(s => {
+    const status = s.name;
+    if (status.includes('Tidak Layak')) return '#ef4444'
+    if (status.includes('Proses')) return '#f59e0b'
+    if (status.includes('Pending')) return '#4f46e5'
+    if (status.includes('Klaim') || status.includes('Selesai')) return '#10b981'
+    return '#64748b'
+  }),
+  stroke: { curve: 'smooth', width: 3 },
+  markers: { size: 4 },
+  dataLabels: { 
+    enabled: true,
+    style: { fontSize: '10px', fontWeight: 600 },
+    background: { enabled: true, padding: 4, borderRadius: 2, borderWidth: 0, opacity: 0.8 },
+    dropShadow: { enabled: false },
+    formatter: (val) => val > 0 ? val : '' // Hide zero values for cleaner look
+  },
+  xaxis: { 
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
+    labels: { style: { colors: '#94a3b8', fontWeight: 600 } }
+  },
+  yaxis: { 
+    title: { text: 'Jumlah Berkas', style: { color: '#64748b', fontWeight: 600 } },
+    labels: { formatter: (val) => Math.round(val) }
+  },
+  tooltip: {
+    y: { formatter: (val) => val + " Berkas" }
+  },
+  legend: { position: 'top', horizontalAlign: 'right' }
 }))
 
 // Actions
