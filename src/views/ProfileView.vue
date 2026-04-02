@@ -116,6 +116,25 @@
                 <small v-else class="text-muted">Gunakan email yang aktif untuk notifikasi sistem.</small>
               </div>
             </div>
+            <div class="form-row mt-4">
+              <div class="form-group col-md-6">
+                <label for="stts_nikah" class="required">Status Menikah</label>
+                <div class="input-wrapper" :class="{ 'has-error': sttsNikahError }">
+                  <i class="fas fa-ring input-icon"></i>
+                  <select 
+                    id="stts_nikah" 
+                    v-model="sttsNikahToUpdate" 
+                    class="form-control" 
+                    :disabled="!isEditing"
+                  >
+                    <option value="SINGLE">Single / Belum Menikah</option>
+                    <option value="MENIKAH">Menikah</option>
+                    <option value="JANDA">Janda</option>
+                    <option value="DUDHA">Dudha</option>
+                  </select>
+                </div>
+              </div>
+            </div>
 
             <div class="form-row mt-4">
               <div class="form-group col-md-12">
@@ -355,10 +374,12 @@ const profileData = computed(() => {
 const emailToUpdate = ref('')
 const telpToUpdate = ref('')
 const alamatToUpdate = ref('')
+const sttsNikahToUpdate = ref('')
 
 const emailError = ref('')
 const telpError = ref('')
 const alamatError = ref('')
+const sttsNikahError = ref('')
 
 const submitting = ref(false)
 const loading = ref(true)
@@ -368,10 +389,12 @@ const isDataChanged = computed(() => {
   const currentEmail = profileData.value.email_resmi || ''
   const currentTelp = profileData.value.no_telp || ''
   const currentAlamat = profileData.value.alamat || ''
+  const currentSttsNikah = profileData.value.stts_nikah || 'SINGLE'
   
   return emailToUpdate.value !== currentEmail || 
          telpToUpdate.value !== currentTelp || 
-         alamatToUpdate.value !== currentAlamat
+         alamatToUpdate.value !== currentAlamat ||
+         sttsNikahToUpdate.value !== currentSttsNikah
 })
 
 // Family Member Logic
@@ -569,11 +592,13 @@ const cancelEditing = () => {
   emailToUpdate.value = profileData.value.email_resmi || ''
   telpToUpdate.value = profileData.value.no_telp || ''
   alamatToUpdate.value = profileData.value.alamat || ''
+  sttsNikahToUpdate.value = profileData.value.stts_nikah || 'SINGLE'
   
   // Clear errors
   emailError.value = ''
   telpError.value = ''
   alamatError.value = ''
+  sttsNikahError.value = ''
   
   isEditing.value = false
 }
@@ -590,7 +615,8 @@ const handleUpdateProfile = async () => {
     const data = {
       email: emailToUpdate.value,
       no_telp: telpToUpdate.value,
-      alamat: alamatToUpdate.value
+      alamat: alamatToUpdate.value,
+      stts_nikah: sttsNikahToUpdate.value
     }
 
     const response = await pegawaiService.updateProfile(data)
@@ -623,6 +649,7 @@ onMounted(async () => {
     emailToUpdate.value = profileData.value.email_resmi || ''
     telpToUpdate.value = profileData.value.no_telp || ''
     alamatToUpdate.value = profileData.value.alamat || ''
+    sttsNikahToUpdate.value = profileData.value.stts_nikah || 'SINGLE'
   } catch (error) {
     console.error('Failed to load profile data:', error)
   } finally {

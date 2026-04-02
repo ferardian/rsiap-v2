@@ -470,11 +470,14 @@
              </div>
 
              <!-- Task 4 -->
-             <div class="adj-item mb-4" v-if="adjData.task4 !== null">
-                <label class="small-label text-success mb-2 d-block">Task 4: Estimasi Poli</label>
+             <div class="adj-item mb-4">
+                <label class="small-label text-success mb-2 d-block">
+                    Task 4: Estimasi Poli
+                    <span v-if="!adjData.task4" class="badge bg-warning text-dark ms-2" style="font-size: 0.65rem;">Belum Ada Data</span>
+                </label>
                 <div class="d-flex gap-2">
-                  <input type="datetime-local" v-model="adjData.task4_raw" class="form-control premium-input-sm">
-                  <button class="btn btn-sm btn-success fw-bold" @click="updateLocalTask(4)">Update</button>
+                  <input type="datetime-local" v-model="adjData.task4_raw" class="form-control premium-input-sm" placeholder="Pilih estimasi waktu selesai poli">
+                  <button class="btn btn-sm btn-success fw-bold" @click="updateLocalTask(4)" :disabled="!adjData.task4_raw">Simpan</button>
                 </div>
              </div>
 

@@ -416,6 +416,54 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/dashboard',
+    name: 'SatuSehatDashboard',
+    component: () => import('../views/satusehat/SatuSehatDashboardView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/encounter',
+    name: 'SatuSehatEncounter',
+    component: () => import('../views/satusehat/SatuSehatEncounterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/observation',
+    name: 'SatuSehatObservation',
+    component: () => import('../views/satusehat/SatuSehatObservationView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/condition',
+    name: 'SatuSehatCondition',
+    component: () => import('../views/satusehat/SatuSehatConditionView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/procedure',
+    name: 'SatuSehatProcedure',
+    component: () => import('../views/satusehat/SatuSehatProcedureView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/medication-request',
+    name: 'SatuSehatMedicationRequest',
+    component: () => import('../views/satusehat/SatuSehatMedicationRequestView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/medication',
+    name: 'SatuSehatMedication',
+    component: () => import('../views/satusehat/SatuSehatMedicationView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/patient',
+    name: 'SatuSehatPatient',
+    component: () => import('../views/satusehat/SatuSehatPatientView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/laporan/hais',
     name: 'LaporanHais',
     component: () => import('../views/laporan/HaisLaporanView.vue'),

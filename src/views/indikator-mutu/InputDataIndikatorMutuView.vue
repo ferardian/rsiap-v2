@@ -449,16 +449,11 @@
 
                 <!-- FORM ANALISA (EXPANDABLE) -->
                 <Transition name="fade-slide">
-                    <div v-if="showAnalisaForm" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border-top: 4px solid #0d6efd !important;">
-                        <div class="card-header bg-white border-0 py-3 px-4">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h6 class="fw-bold text-primary mb-0">
-                                    <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
-                                </h6>
-                                <button class="btn btn-link text-muted p-0" @click="showAnalisaForm = false">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                    <div v-if="showAnalisaForm" class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius: 12px;">
+                        <div class="card-header bg-primary border-0 py-3 px-4 text-start">
+                            <h6 class="fw-bold text-white mb-0">
+                                <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
+                            </h6>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -544,30 +539,25 @@
 
                         <!-- Committee Feedback Result (If Exists) -->
                         <div v-if="item.feedback" class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px; border: 1px solid #0d6efd !important;">
-                            <div class="card-header bg-primary border-0 pt-3 pb-3 px-4">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <h6 class="fw-bold text-white mb-0 text-nowrap">
+                            <div class="card-header bg-primary border-0 py-3 px-3">
+                                <div class="d-flex align-items-start flex-wrap gap-2 justify-content-between">
+                                    <h6 class="fw-bold text-white mb-0">
                                         <i class="fas fa-comment-dots me-2"></i> Feedback Komite Mutu
                                     </h6>
-                                    <span class="badge bg-white text-primary rounded-pill px-3 shadow-sm" style="font-size: 0.75rem;">
+                                    <span class="badge bg-white text-primary rounded-pill px-2 py-1 shadow-sm flex-shrink-0" style="font-size: 0.72rem;">
                                         <i class="fas fa-check-circle me-1"></i> Review Selesai
                                     </span>
                                 </div>
                             </div>
-                            <div class="card-body p-4">
-                                <div class="row g-4">
-                                    <div class="col-md-6 border-end">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <small class="fw-bold text-primary text-uppercase tracking-wider" style="font-size: 0.7rem;">Supervisi</small>
-                                        </div>
-                                        <div class="text-dark rich-content" v-html="item.feedback.supervisi"></div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <small class="fw-bold text-primary text-uppercase tracking-wider" style="font-size: 0.7rem;">Rekomendasi / Saran</small>
-                                        </div>
-                                        <div class="text-dark rich-content" v-html="item.feedback.rekomendasi"></div>
-                                    </div>
+                            <div class="card-body p-3">
+                                <div class="mb-3">
+                                    <small class="fw-bold text-primary text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Supervisi</small>
+                                    <div class="text-dark rich-content" v-html="item.feedback.supervisi"></div>
+                                </div>
+                                <hr class="my-2">
+                                <div>
+                                    <small class="fw-bold text-primary text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Rekomendasi / Saran</small>
+                                    <div class="text-dark rich-content" v-html="item.feedback.rekomendasi"></div>
                                 </div>
                             </div>
                         </div>
@@ -1520,14 +1510,15 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 8px 18px;
+    padding: 10px 20px;
     font-size: 0.85rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     z-index: 2;
-    transition: color 0.3s ease;
-    min-width: 100px;
+    transition: all 0.3s ease;
+    min-width: 110px;
+    flex: 1;
 }
 
 .mode-option i {
@@ -1549,22 +1540,25 @@ onMounted(() => {
 
 .mode-glider {
     position: absolute;
+    top: 4px;
+    left: 4px;
     height: calc(100% - 8px);
-    width: calc(33.33% - 4px); /* Fallback, computed is better but fitting this layout */
+    width: calc((100% - 8px) / 3);
     background: #ffffff;
     border-radius: 10px;
     z-index: 1;
-    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Adjust glider width based on number of options */
+/* Specific item width overrides for desktop to keep them centered */
 .mode-segmented-control .mode-option {
-    width: 120px; /* Fixed width for symmetry */
+    flex: 0 0 auto;
+    width: 110px;
 }
 
 .mode-glider {
-    width: 120px;
+    width: 110px;
 }
 
 /* Premium V-Select for Header */
@@ -1740,25 +1734,28 @@ onMounted(() => {
     font-weight: 500 !important;
   }
 
-  /* Segmented Control Mobile Fixes */
+  /* Segmented Control Mobile Fixes - High Precision */
   .mode-segmented-control {
     width: 100% !important;
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    padding: 3px !important;
+    display: flex !important;
+    padding: 4px !important;
     gap: 0 !important;
   }
 
   .mode-segmented-control .mode-option {
-    width: auto !important;
+    width: 33.333% !important;
+    flex: 1 1 0 !important;
     min-width: 0 !important;
-    padding: 10px 4px !important;
-    font-size: 0.75rem !important;
-    gap: 4px !important;
+    padding: 12px 4px !important;
+    font-size: 0.8rem !important;
+    gap: 6px !important;
   }
 
   .mode-glider {
-    width: calc(33.33% - 2px) !important;
+    width: calc((100% - 8px) / 3) !important;
+    top: 4px !important;
+    left: 4px !important;
+    border-radius: 10px !important;
   }
 
   /* Softer colors for inactive tabs */

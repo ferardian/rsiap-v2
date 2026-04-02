@@ -24,13 +24,29 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-2">
-            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Tanggal Periksa</label>
-            <input 
-              type="date" 
-              class="form-control form-control-custom" 
-              v-model="filters.tgl_periksa"
-              @change="fetchData(true)"
-            >
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Tanggal Awal</label>
+            <div class="date-input-wrapper">
+              <input 
+                type="date" 
+                class="form-control form-control-custom date-input" 
+                v-model="filters.tgl_awal"
+                @change="fetchData(true)"
+              >
+              <i class="fas fa-calendar-alt date-icon text-muted"></i>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Tanggal Akhir</label>
+            <div class="date-input-wrapper">
+              <input 
+                type="date" 
+                class="form-control form-control-custom date-input" 
+                v-model="filters.tgl_akhir"
+                :min="filters.tgl_awal"
+                @change="fetchData(true)"
+              >
+              <i class="fas fa-calendar-alt date-icon text-muted"></i>
+            </div>
           </div>
           <div class="col-md-2">
             <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Status</label>
@@ -43,7 +59,7 @@
               @update:modelValue="fetchData(true)"
             ></v-select>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Poliklinik</label>
             <v-select
               v-model="filters.kd_poli"
@@ -55,7 +71,7 @@
               @update:modelValue="fetchData(true)"
             />
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Dokter</label>
             <v-select
               v-model="filters.kd_dokter"
@@ -74,7 +90,7 @@
                 type="text" 
                 class="form-control form-control-custom search-input" 
                 v-model="filters.keyword"
-                placeholder="No RM / Nama"
+                placeholder="Nama / No RM / No Rawat"
                 @keyup.enter="fetchData(true)"
               >
               <i class="fas fa-search search-icon text-muted"></i>
@@ -1000,7 +1016,8 @@ const showFilters = ref(false)
 const isMobile = ref(false)
 
 const filters = reactive({
-  tgl_periksa: new Date().toISOString().split('T')[0],
+  tgl_awal: new Date().toISOString().split('T')[0],
+  tgl_akhir: new Date().toISOString().split('T')[0],
   status_lanjut: 'Ralan',
   kd_poli: null,
   kd_dokter: null,
@@ -1048,7 +1065,7 @@ const fetchData = async (reset = false) => {
   try {
     const params = {
       ...filters,
-      page: reset ? 1 : (pagination.value.current_page || 1)
+      page: reset === true ? 1 : (typeof reset === 'number' ? reset : (pagination.value.current_page || 1))
     }
     
     // Clean null values
@@ -1059,7 +1076,6 @@ const fetchData = async (reset = false) => {
        const paginationData = response.data.data
        
        items.value = paginationData.data
-       console.log('Data Rawat Jalan Loaded:', items.value)
        
        pagination.value = {
          current_page: paginationData.current_page,
@@ -1099,7 +1115,11 @@ const loadMasterData = async () => {
 }
 
 const changePage = (url) => {
-  if (url) fetchData(url)
+  if (!url) return
+  // Extract page number from the pagination URL
+  const urlObj = new URL(url)
+  const page = parseInt(urlObj.searchParams.get('page') || '1')
+  fetchData(page)
 }
 
 const getStatusClass = (status) => {
@@ -1913,7 +1933,7 @@ onUnmounted(() => {
 }
 
 .search-input {
-  padding-right: 2.5rem;
+  padding-right: 2.5rem !important;
 }
 
 .search-icon {
@@ -1922,6 +1942,36 @@ onUnmounted(() => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.875rem;
+  pointer-events: none;
+}
+
+/* Date input with icon on the right */
+.date-input-wrapper {
+  position: relative;
+}
+
+.date-input {
+  padding-right: 2.5rem !important;
+  cursor: pointer;
+}
+
+/* Hide the native browser calendar icon to use our custom one */
+.date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.date-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  pointer-events: none;
 }
 
 .tracking-wide {
