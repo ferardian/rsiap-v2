@@ -166,6 +166,8 @@ export default {
         { title: 'Condition', subtitle: 'Monitoring Diagnosa', path: '/satusehat/condition', icon: 'fa-diagnoses', colorClass: 'bg-info-soft text-info' },
         { title: 'Procedure', subtitle: 'Monitoring Tindakan', path: '/satusehat/procedure', icon: 'fa-clipboard-list', colorClass: 'bg-purple-soft text-purple' },
         { title: 'Medication', subtitle: 'Monitoring Resep Obat', path: '/satusehat/medication-request', icon: 'fa-pills', colorClass: 'bg-orange-soft text-orange', style: 'background-color: rgba(253, 126, 20, 0.1); color: #fd7e14;' },
+        { title: 'Dispense', subtitle: 'Serah Terima Obat', path: '/satusehat/medication-dispense', icon: 'fa-hand-holding-medical', colorClass: 'bg-success-soft text-success' },
+        { title: 'SR. Radiologi', subtitle: 'Permintaan Radiologi', path: '/satusehat/servicerequest-radiology', icon: 'fa-x-ray', colorClass: 'bg-primary-soft text-primary' },
         { title: 'Patient', subtitle: 'Registrasi Pasien', path: '/satusehat/patient', icon: 'fa-user-injured', colorClass: 'bg-warning-soft text-warning' }
       ]
     }

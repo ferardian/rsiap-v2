@@ -28,21 +28,24 @@
                 <tr>
                   <th class="fw-bold py-3">No. Rawat/RM</th>
                   <th class="fw-bold py-3">Pasien</th>
-                  <th class="fw-bold py-3">Paket Operasi</th>
+                  <th class="fw-bold py-3">Tindakan Operasi</th>
                   <th class="fw-bold py-3">Tgl Operasi</th>
+                  <th class="fw-bold py-3">Jam Mulai</th>
+                  <th class="fw-bold py-3">Jam Selesai</th>
                   <th class="fw-bold py-3 text-center" style="width: 150px;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="loading">
-                   <td colspan="5" class="text-center py-5">
-                      <div class="spinner-border text-primary" role="status"></div>
-                   </td>
-                </tr>
-                <tr v-else-if="items.length === 0">
-                   <td colspan="5" class="text-center py-5 text-muted">Belum ada data tindakan operasi</td>
-                </tr>
-                <tr v-else v-for="item in items" :key="item.no_rawat + item.tgl_operasi + item.kode_paket">
+                 <tr v-if="loading">
+                    <td colspan="7" class="text-center py-5">
+                       <div class="spinner-border text-primary" role="status"></div>
+                    </td>
+                 </tr>
+                 <tr v-else-if="items.length === 0">
+                    <td colspan="7" class="text-center py-5 text-muted">Belum ada data tindakan operasi</td>
+                 </tr>
+                 <!-- Gunakan tgl_operasi (datetime penuh) sebagai key agar 2 tindakan beda jam tidak tabrakan -->
+                 <tr v-else v-for="item in items" :key="item.no_rawat + '_' + item.tgl_operasi + '_' + item.kode_paket">
                    <td>
                       <div class="fw-bold text-dark">{{ item.no_rawat }}</div>
                       <small class="text-muted">{{ item.reg_periksa?.no_rkm_medis }}</small>
@@ -56,8 +59,13 @@
                       </span>
                    </td>
                    <td>
-                      <div>{{ formatDate(item.tgl_operasi) }}</div>
-                      <small class="text-muted">{{ formatTime(item.tgl_operasi) }}</small>
+                       <div>{{ formatDate(item.tgl_operasi) }}</div>
+                   </td>
+                   <td>
+                       <span class="text-muted small">{{ item.jam_mulai || formatTime(item.tgl_operasi) }}</span>
+                   </td>
+                   <td>
+                       <span class="text-muted small">{{ item.tgl_selesai ? formatTime(item.tgl_selesai) : (item.jam_selesai || '-') }}</span>
                    </td>
                    <td>
                       <div class="d-flex justify-content-center gap-2">
@@ -103,6 +111,8 @@
         :pasien="pasienInfo"
         :dokter-list="dokterList"
         :pegawai-list="pegawaiList"
+        :paket-list="paketList"
+        :jam-mulai="bookingJamMulai"
         :loading="isSaving"
         :readonly="isReadonly"
         @close="showModal = false"
@@ -165,6 +175,8 @@ const canDelete = computed(() => {
 
 const dokterList = ref([])
 const pegawaiList = ref([])
+const paketList = ref([])
+const bookingJamMulai = ref('')
 
 const laporanForm = reactive({
     no_rawat: '',
@@ -251,12 +263,14 @@ const fetchData = async (page = 1) => {
 
 const fetchMasterData = async () => {
     try {
-        const [dokterRes, pegawaiRes] = await Promise.all([
+        const [dokterRes, pegawaiRes, paketRes] = await Promise.all([
             operasiService.getDokter(),
-            operasiService.getPegawai()
+            operasiService.getPegawai(),
+            operasiService.getPaket()
         ])
         dokterList.value = dokterRes.data.data
         pegawaiList.value = pegawaiRes.data.data
+        paketList.value = paketRes.data.data || []
     } catch (e) {
         console.error("Failed master data", e)
         toast.error('Gagal memuat data master')
@@ -320,16 +334,35 @@ const onDelete = async (item) => {
 const openModal = async (item) => {
     resetForm()
     
-    // 1. Pre-populate from list item (Operasi table data)
-    laporanForm.no_rawat = item.no_rawat
-    laporanForm.tgl_operasi = item.tgl_operasi
-    laporanForm.kode_paket = item.kode_paket
-    
+    // 1. Pre-populate ALL available fields from list item (Operasi table data)
+    // Supaya Tim Operasi dsb langsung terisi walaupun db safe_operasi masih kosong
+    Object.keys(laporanForm).forEach(key => {
+        if (item[key] !== undefined && item[key] !== null && item[key] !== '') {
+             laporanForm[key] = item[key]
+        }
+    })
+
+    // Tangani mapping nama yang berbeda dari item
     if (item.jenis_anasthesi) {
         laporanForm.jenis_anestesi = item.jenis_anasthesi
     }
-    if (item.kategori) {
-        laporanForm.kategori = item.kategori
+
+    // Hindari tgl_operasi terformat salah oleh assignment di atas
+    if (item.tgl_operasi) {
+        // datetime-local butuh YYYY-MM-DDTHH:mm
+        laporanForm.tgl_operasi = item.tgl_operasi.replace(' ', 'T').substring(0, 16)
+    }
+
+    // Pastikan paket yang sedang dipilih ada di paketList agar v-select tampil nm_perawatan, bukan kode
+    const p = item.detail_paket || item.detailPaket
+    if (p && p.kode_paket) {
+        const exists = paketList.value.some(item => item.kode_paket === p.kode_paket)
+        if (!exists) {
+            paketList.value.unshift({
+                kode_paket: p.kode_paket,
+                nm_perawatan: p.nm_perawatan
+            })
+        }
     }
 
     // 2. Fetch full clinical data from API (Fuzzy matching)
@@ -354,15 +387,44 @@ const openModal = async (item) => {
             if (detailedData.jenis_anasthesi && !laporanForm.jenis_anestesi) {
                 laporanForm.jenis_anestesi = detailedData.jenis_anasthesi
             }
+
+            // Fill diagnosa awal dari data pendaftaran jika masih kosong (laporan baru)
+            if (!laporanForm.diagnosa_preop && detailedData.reg_periksa?.diagnosa_pasien?.length > 0) {
+                 laporanForm.diagnosa_preop = detailedData.reg_periksa.diagnosa_pasien
+                     .map(d => `${d.kd_penyakit} - ${d.penyakit?.nm_penyakit || ''}`)
+                     .join(', ')
+            }
+
+            // Pastikan format tanggal kembali ke datetime-local-friendly (diformat ulang karena ditimpa db raw text)
+            if (laporanForm.tgl_operasi) {
+                laporanForm.tgl_operasi = laporanForm.tgl_operasi.replace(' ', 'T').substring(0, 16)
+            }
+
+            // Tambahan: Pastikan paket dari data detail juga masuk ke paketList jika belum ada
+            // (Kasus di mana tindakan diubah dari jadwal aslinya)
+            const dp = detailedData.detail_paket || detailedData.detailPaket
+            if (dp && dp.kode_paket) {
+                const exists = paketList.value.some(item => item.kode_paket === dp.kode_paket)
+                if (!exists) {
+                    paketList.value.unshift({
+                        kode_paket: dp.kode_paket,
+                        nm_perawatan: dp.nm_perawatan
+                    })
+                }
+            }
         }
     } catch (e) {
         console.error("Failed to fetch detailed laporan", e)
         // We still have the basic data from the list
     }
     
-    // 3. Final formatting
-    if (laporanForm.tgl_selesai) {
-         laporanForm.tgl_selesai = laporanForm.tgl_selesai.replace(' ', 'T').substring(0, 16)
+    // 3. Final formatting datetime-local
+    if (laporanForm.tgl_selesai && laporanForm.tgl_selesai !== '-') {
+        laporanForm.tgl_selesai = laporanForm.tgl_selesai.replace(' ', 'T').substring(0, 16)
+    } else if (item.jam_selesai && item.tgl_operasi) {
+        // Jika belum ada laporannya, prefill tgl_selesai dari tanggal operasi + jam selesai booking
+        const tanggal = item.tgl_operasi.substring(0, 10)
+        laporanForm.tgl_selesai = `${tanggal}T${item.jam_selesai.substring(0, 5)}`
     }
 
     // 4. Set Patient Info for display

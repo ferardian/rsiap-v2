@@ -452,6 +452,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/medication-dispense',
+    name: 'SatuSehatMedicationDispense',
+    component: () => import('../views/satusehat/SatuSehatMedicationDispenseView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/satusehat/medication',
     name: 'SatuSehatMedication',
     component: () => import('../views/satusehat/SatuSehatMedicationView.vue'),
@@ -461,6 +467,18 @@ const routes = [
     path: '/satusehat/patient',
     name: 'SatuSehatPatient',
     component: () => import('../views/satusehat/SatuSehatPatientView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/servicerequest-radiology',
+    name: 'SatuSehatServiceRequestRadiology',
+    component: () => import('../views/satusehat/SatuSehatServiceRequestRadiologyView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/location',
+    name: 'SatuSehatLocation',
+    component: () => import('../views/satusehat/SatuSehatLocationView.vue'),
     meta: { requiresAuth: true }
   },
   {

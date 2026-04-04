@@ -38,12 +38,31 @@ export const satuSehatService = {
     return api.post('/satusehat/procedure/sync', data)
   },
 
+  // Service Requests
+  getServiceRequestRadiologi(params) {
+    return api.get('/satusehat/servicerequest-radiology', { params })
+  },
+  syncServiceRequestRadiologi(data) {
+    return api.post('/satusehat/servicerequest-radiology/sync', data)
+  },
+  pushOrthancRadiologi(data) {
+    return api.post('/satusehat/servicerequest-radiology/push-orthanc', data)
+  },
+
   // Medication Request
   getMedicationRequests(params) {
     return api.get('/satusehat/medication-request', { params })
   },
   syncMedicationRequest(data) {
     return api.post('/satusehat/medication-request/sync', data)
+  },
+
+  // Medication Dispense
+  getMedicationDispenses(params) {
+    return api.get('/satusehat/medication-dispense', { params })
+  },
+  syncMedicationDispense(data) {
+    return api.post('/satusehat/medication-dispense/sync', data)
   },
 
   // Dashboard
@@ -66,6 +85,29 @@ export const satuSehatService = {
   },
   syncKfaMedication(data) {
     return api.post('/satusehat/kfa/medication/sync', data)
+  },
+
+  // Location Mapping
+  getDepartmentsMapped() {
+    return api.get('/satusehat/location/departments')
+  },
+  getLocationRalan() {
+    return api.get('/satusehat/location/ralan')
+  },
+  getLocationRanap() {
+    return api.get('/satusehat/location/ranap')
+  },
+  getLocationGeneric() {
+    return api.get('/satusehat/location/generic')
+  },
+  getLocationFarmasi() {
+    return api.get('/satusehat/location/farmasi')
+  },
+  saveLocationMapping(data) {
+    return api.post('/satusehat/location/mapping', data)
+  },
+  deleteLocationMapping(params) {
+    return api.delete('/satusehat/location/mapping', { params })
   }
 }
 

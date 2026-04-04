@@ -35,11 +35,11 @@
                        <input type="text" class="form-control" v-model="form.no_rawat" readonly disabled>
                     </div>
                      <div class="col-md-3">
-                       <label class="form-label small fw-bold">Tanggal Operasi</label>
-                       <input type="text" class="form-control" :value="formatDate(form.tgl_operasi)" readonly disabled>
+                       <label class="form-label small fw-bold">Tgl & Jam Mulai</label>
+                       <input type="datetime-local" class="form-control" v-model="form.tgl_operasi" readonly disabled>
                     </div>
                     <div class="col-md-3">
-                       <label class="form-label small fw-bold">Jam Selesai <span class="text-danger">*</span></label>
+                       <label class="form-label small fw-bold">Tgl & Jam Selesai <span class="text-danger">*</span></label>
                        <input type="datetime-local" class="form-control" v-model="form.tgl_selesai" required :disabled="readonly">
                     </div>
                     <div class="col-md-3">
@@ -50,7 +50,21 @@
                           <option value="Emergency">Emergency</option>
                        </select>
                     </div>
-                    <div class="col-md-4">
+                    <!-- Paket/Tindakan Operasi -->
+                    <div class="col-md-6">
+                       <label class="form-label small fw-bold">Tindakan Operasi <span class="text-danger">*</span></label>
+                       <v-select
+                           v-if="!readonly"
+                           v-model="form.kode_paket"
+                           :options="paketList"
+                           :reduce="p => p.kode_paket"
+                           label="nm_perawatan"
+                           placeholder="Pilih atau cari tindakan operasi..."
+                           :filterable="true"
+                       ></v-select>
+                       <input v-else type="text" class="form-control" :value="form.kode_paket" disabled>
+                    </div>
+                    <div class="col-md-3">
                        <label class="form-label small fw-bold">Jenis Anestesi <span class="text-danger">*</span></label>
                        <input type="text" class="form-control" v-model="form.jenis_anestesi" placeholder="Contoh: General Anestesi" required :disabled="readonly">
                     </div>
@@ -218,6 +232,8 @@ const props = defineProps({
   pasien: Object,
   dokterList: Array,
   pegawaiList: Array,
+  paketList: { type: Array, default: () => [] },
+  jamMulai: { type: String, default: '' },
   loading: Boolean,
   readonly: {
       type: Boolean,

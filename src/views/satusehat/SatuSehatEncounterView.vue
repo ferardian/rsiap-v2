@@ -34,7 +34,7 @@
               >
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Status Sinkronisasi</label>
             <select class="form-select form-control-custom" v-model="filters.status" @change="fetchData(true)">
               <option value="">Semua Status</option>
@@ -43,7 +43,11 @@
               <option value="belum">Belum Sinkron</option>
             </select>
           </div>
-          <div class="col-md-5 d-flex align-items-end gap-2">
+          <div class="col-md-3">
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Cari Pasien / No. Rawat</label>
+            <input type="text" class="form-control form-control-custom" v-model="filters.keyword" placeholder="Nama / No. RM / No. Rawat..." @keyup.enter="fetchData(true)">
+          </div>
+          <div class="col-md-3 d-flex align-items-end gap-2">
             <button class="btn btn-primary flex-fill py-2" @click="fetchData(true)">
               <i class="fas fa-sync-alt me-2"></i> Refresh List
             </button>
@@ -173,7 +177,8 @@ export default {
       filters: {
         tgl_awal: dayjs().format('YYYY-MM-DD'),
         tgl_akhir: dayjs().format('YYYY-MM-DD'),
-        status: ''
+        status: '',
+        keyword: ''
       },
       syncLoading: false,
       pagination: {
@@ -214,6 +219,7 @@ export default {
           tglAwal: this.filters.tgl_awal,
           tglAkhir: this.filters.tgl_akhir,
           status: this.filters.status,
+          keyword: this.filters.keyword,
           page: this.pagination.current_page
         });
         

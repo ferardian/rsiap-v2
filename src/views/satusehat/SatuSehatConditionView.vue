@@ -70,9 +70,17 @@
               <tr v-for="(item, index) in items" :key="index" v-else>
                 <td class="ps-4">
                   <span class="fw-bold text-dark d-block mb-1">{{ item.no_rawat }}</span>
-                  <span class="text-xs text-muted">
+                  <span class="text-xs text-muted d-block">
                     <i class="fas fa-calendar-alt me-1"></i> {{ item.tgl_registrasi }}
                   </span>
+                  <div class="mt-2">
+                    <span v-if="item.id_encounter" class="badge bg-soft-success text-success text-xs border border-success border-opacity-25" :title="item.id_encounter">
+                      <i class="fas fa-link me-1"></i> Encounter
+                    </span>
+                    <span v-else class="badge bg-soft-danger text-danger text-xs border border-danger border-opacity-25">
+                      <i class="fas fa-unlink me-1"></i> No Encounter
+                    </span>
+                  </div>
                 </td>
                 <td>
                   <span class="d-block fw-bold text-dark mb-1">{{ item.nm_pasien }}</span>
@@ -231,6 +239,8 @@ export default {
 
 <style scoped>
 .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+.bg-soft-success { background-color: rgba(25, 135, 84, 0.1); }
+.bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
 .badge-success-glow {
   color: #198754;
   background-color: #d1e7dd;
