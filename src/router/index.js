@@ -458,6 +458,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/medication-statement',
+    name: 'SatuSehatMedicationStatement',
+    component: () => import('../views/satusehat/SatuSehatMedicationStatementView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/questionresponse',
+    name: 'SatuSehatQuestionResponseTelaahFarmasi',
+    component: () => import('../views/satusehat/SatuSehatQuestionResponseTelaahFarmasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/satusehat/medication',
     name: 'SatuSehatMedication',
     component: () => import('../views/satusehat/SatuSehatMedicationView.vue'),
@@ -476,9 +488,39 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/careplan',
+    name: 'SatuSehatCarePlan',
+    component: () => import('../views/satusehat/SatuSehatCarePlanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/specimen-radiology',
+    name: 'SatuSehatSpecimenRadiology',
+    component: () => import('../views/satusehat/SatuSehatSpecimenRadiologyView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/observation-radiology',
+    name: 'SatuSehatObservationRadiology',
+    component: () => import('../views/satusehat/SatuSehatObservationRadiologyView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/diagnosticreport-radiology',
+    name: 'SatuSehatDiagnosticReportRadiology',
+    component: () => import('../views/satusehat/SatuSehatDiagnosticReportRadiologyView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/satusehat/location',
     name: 'SatuSehatLocation',
     component: () => import('../views/satusehat/SatuSehatLocationView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/episodeofcare',
+    name: 'SatuSehatEpisodeOfCare',
+    component: () => import('../views/satusehat/SatuSehatEpisodeOfCareView.vue'),
     meta: { requiresAuth: true }
   },
   {

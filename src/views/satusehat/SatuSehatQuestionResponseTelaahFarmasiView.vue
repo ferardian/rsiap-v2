@@ -1,9 +1,9 @@
 <template>
-  <div class="satusehat-meddispense">
+  <div class="satusehat-qr">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h4 class="mb-1 text-dark fw-bold">Monitoring Pemberian Obat (Dispense)</h4>
-        <p class="text-muted mb-0">Manajemen sinkronisasi data serah terima obat ke pasien (Medication Dispense)</p>
+        <h4 class="mb-1 text-dark fw-bold">Monitoring Telaah Farmasi</h4>
+        <p class="text-muted mb-0">Manajemen sinkronisasi data Questionnaire Response (Telaah Farmasi) ke SatuSehat</p>
       </div>
       <div class="d-flex gap-2">
         <button class="btn btn-outline-secondary" @click="fetchData">
@@ -21,11 +21,11 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-3">
-            <label class="form-label text-muted text-xs fw-bold tracking-wider text-uppercase">Tgl Awal (Perawatan)</label>
+            <label class="form-label text-muted text-xs fw-bold tracking-wider text-uppercase">Tgl Awal (Peresepan)</label>
             <input type="date" class="form-control" v-model="filter.tglAwal" @change="fetchData" />
           </div>
           <div class="col-md-3">
-            <label class="form-label text-muted text-xs fw-bold tracking-wider text-uppercase">Tgl Akhir (Perawatan)</label>
+            <label class="form-label text-muted text-xs fw-bold tracking-wider text-uppercase">Tgl Akhir (Peresepan)</label>
             <input type="date" class="form-control" v-model="filter.tglAkhir" @change="fetchData" />
           </div>
           <div class="col-md-4">
@@ -34,7 +34,7 @@
               <span class="input-group-text bg-white border-end-0">
                 <i class="fas fa-search text-muted"></i>
               </span>
-              <input type="text" class="form-control border-start-0 ps-0" v-model="filter.keyword" placeholder="Cari No. Rawat, RM, Nama..." @keyup.enter="fetchData" />
+              <input type="text" class="form-control border-start-0 ps-0" v-model="filter.keyword" placeholder="Cari No. Rawat, Resep, Nama Pasien/Petugas..." @keyup.enter="fetchData" />
             </div>
           </div>
         </div>
@@ -51,26 +51,24 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-4">Waktu & Rawat</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No. Resep</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Pasien</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Obat Diberikan</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Petugas Telaah</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Encounter</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Mapping</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Request</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status Sync</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="8" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
               <tr v-else-if="!data.length">
-                <td colspan="8" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                   <div class="empty-state">
-                    <i class="fas fa-hand-holding-medical fa-3x text-muted mb-3"></i>
-                    <h6 class="text-dark">Tidak ada data pemberian obat</h6>
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h6 class="text-dark">Tidak ada data telaah farmasi</h6>
                     <p class="text-muted text-sm">Ganti filter tanggal atau keyword pencarian.</p>
                   </div>
                 </td>
@@ -78,7 +76,7 @@
               <tr v-for="(item, index) in data" :key="index">
                 <td class="ps-4">
                   <div class="d-flex flex-column">
-                    <span class="text-sm fw-bold text-dark">{{ item.tgl_perawatan }} {{ item.jam }}</span>
+                    <span class="text-sm fw-bold text-dark">{{ item.tgl_peresepan }} {{ item.jam_peresepan }}</span>
                     <span class="text-xs text-muted">{{ item.no_rawat }}</span>
                   </div>
                 </td>
@@ -92,10 +90,7 @@
                   </div>
                 </td>
                 <td>
-                  <div class="d-flex flex-column max-w-300">
-                    <span class="text-sm fw-bold text-dark text-truncate" :title="item.nm_obat">{{ item.nm_obat }}</span>
-                    <span class="text-xs text-muted">Jumlah: <strong>{{ item.jml }}</strong></span>
-                  </div>
+                  <span class="text-sm fw-bold text-dark">{{ item.petugas_telaah }}</span>
                 </td>
                 <td class="text-center">
                   <div v-if="item.id_encounter" class="badge bg-success-soft text-success" :title="item.id_encounter">
@@ -105,24 +100,8 @@
                     <i class="fas fa-unlink me-1"></i> Belum
                   </div>
                 </td>
-                 <td class="text-center">
-                  <div v-if="item.is_mapped" class="badge bg-success-soft text-success">
-                    <i class="fas fa-check-circle me-1"></i> Terpetakan
-                  </div>
-                  <div v-else class="badge bg-danger-soft text-danger">
-                    <i class="fas fa-exclamation-circle me-1"></i> Belum
-                  </div>
-                </td>
                 <td class="text-center">
-                  <div v-if="item.id_medicationrequest" class="badge bg-success-soft text-success" :title="item.id_medicationrequest">
-                    <i class="fas fa-check-circle me-1"></i> Ada
-                  </div>
-                  <div v-else class="badge bg-danger-soft text-danger">
-                    <i class="fas fa-times-circle me-1"></i> Belum
-                  </div>
-                </td>
-                <td class="text-center">
-                  <div v-if="item.id_medicationdispanse" class="d-flex align-items-center justify-content-center">
+                  <div v-if="item.id_questionresponse" class="d-flex align-items-center justify-content-center">
                     <span class="status-indicator bg-success"></span>
                     <span class="text-xs font-weight-bold ms-2 text-success">Terkirim</span>
                   </div>
@@ -130,8 +109,8 @@
                     <span class="status-indicator bg-warning"></span>
                     <span class="text-xs font-weight-bold ms-2 text-warning">Belum</span>
                   </div>
-                  <div v-if="item.id_medicationdispanse" class="text-xxs text-muted mt-1" :title="item.id_medicationdispanse">
-                    ID: {{ item.id_medicationdispanse.substring(0,8) }}...
+                  <div v-if="item.id_questionresponse" class="text-xxs text-muted mt-1" :title="item.id_questionresponse">
+                    ID: {{ item.id_questionresponse.substring(0,8) }}...
                   </div>
                 </td>
               </tr>
@@ -172,7 +151,7 @@ import satuSehatService from '@/services/satuSehatService'
 import Swal from 'sweetalert2'
 
 export default {
-  name: 'SatuSehatMedicationDispenseView',
+  name: 'SatuSehatQuestionResponseTelaahFarmasiView',
   data() {
     return {
       loading: false,
@@ -216,7 +195,7 @@ export default {
       
       this.loading = true
       try {
-        const response = await satuSehatService.getMedicationDispenses({
+        const response = await satuSehatService.getQuestionResponseTelaahFarmasi({
           tglAwal: this.filter.tglAwal,
           tglAkhir: this.filter.tglAkhir,
           keyword: this.filter.keyword,
@@ -258,8 +237,8 @@ export default {
     async handleSync() {
       try {
         const result = await Swal.fire({
-          title: 'Kirim Data Dispense Obat?',
-          text: `Sistem akan mengirimkan data Medication Dispense periode ${this.filter.tglAwal} sampai ${this.filter.tglAkhir} ke SatuSehat secara background.`,
+          title: 'Kirim Data Telaah Farmasi?',
+          text: `Sistem akan mengirimkan data Questionnaire Response (Telaah Farmasi) periode ${this.filter.tglAwal} sampai ${this.filter.tglAkhir} ke SatuSehat secara background.`,
           icon: 'question',
           showCancelButton: true,
           confirmButtonText: 'Ya, Kirim',
@@ -270,7 +249,7 @@ export default {
         if (!result.isConfirmed) return
 
         this.syncing = true
-        const response = await satuSehatService.syncMedicationDispense({
+        const response = await satuSehatService.syncQuestionResponseTelaahFarmasi({
           tglAwal: this.filter.tglAwal,
           tglAkhir: this.filter.tglAkhir
         })

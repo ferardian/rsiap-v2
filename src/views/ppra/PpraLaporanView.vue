@@ -92,6 +92,13 @@
             <i class="fas fa-search position-absolute start-0 top-50 translate-middle-y ms-2 text-muted" style="font-size: 12px;"></i>
           </div>
         </div>
+        <div class="filter-item">
+          <label class="form-label-custom">Filter Berdasarkan</label>
+          <select v-model="filters.filter_by" class="form-select modern-input" style="min-width: 160px">
+            <option value="tgl_pemberian">Tgl Pemberian</option>
+            <option value="tgl_keluar">Tgl Keluar (Pulang)</option>
+          </select>
+        </div>
         <div class="filter-actions d-flex gap-2">
           <button class="btn btn-primary ripple" @click="handleSearch" :disabled="loading">
             <i class="fas fa-search me-1"></i> Tampilkan
@@ -132,14 +139,25 @@
  
     <!-- Summary Cards (Only in Detail Mode) -->
     <div v-if="reportTab === 'detail' && reportData.length > 0" class="row mb-4 animate-fade px-1">
-      <div class="col-md-4 mb-3 mb-md-0">
+      <div class="col-md-2 mb-3 mb-md-0">
         <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-primary">
           <div class="summary-icon bg-soft-primary text-primary">
             <i class="fas fa-users"></i>
           </div>
           <div>
-            <div class="text-muted small fw-bold text-uppercase">Total Pasien</div>
-            <div class="h4 mb-0 fw-bold">{{ summaryStats.totalPatient }}</div>
+            <div class="text-muted small fw-bold text-uppercase" style="font-size: 10px;">Total Pasien</div>
+            <div class="h4 mb-0 fw-bold">{{ summaryStats.totalAll }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3 mb-md-0">
+        <div class="summary-card glass-effect p-3 d-flex align-items-center gap-3 border-start-danger">
+          <div class="summary-icon bg-soft-danger text-danger">
+            <i class="fas fa-pills"></i>
+          </div>
+          <div>
+            <div class="text-muted small fw-bold text-uppercase" style="font-size: 10px;">Pasien Antibiotik</div>
+            <div class="h4 mb-0 fw-bold">{{ summaryStats.totalAb }}</div>
           </div>
         </div>
       </div>
@@ -526,7 +544,8 @@ const filters = reactive({
   kd_dokter: '',
   search: '',
   status_telaah: '',
-  status_persetujuan: ''
+  status_persetujuan: '',
+  filter_by: 'tgl_pemberian'
 });
 
 // Rekap Bulanan States
@@ -554,16 +573,16 @@ const reportMetrics = ref({
 const summaryStats = computed(() => {
   if (!reportData.value.length) {
     return {
-      totalPatient: 0,
+      totalAll: reportMetrics.value.total_all_patients || 0,
+      totalAb: 0,
       verification: { verified: 0, pending: 0 },
       approval: { approved: 0, pending: 0 }
     };
   }
   
-  const totalPatient = reportData.value.filter(i => i.is_new_patient).length;
-  
   return {
-    totalPatient,
+    totalAll: reportMetrics.value.total_all_patients || 0,
+    totalAb: reportMetrics.value.total_ab_patients || 0,
     verification: reportMetrics.value.verification,
     approval: reportMetrics.value.approval
   };
@@ -684,13 +703,16 @@ const fetchData = async () => {
       kd_dokter: filters.kd_dokter,
       search: filters.search,
       status_telaah: filters.status_telaah,
-      status_persetujuan: filters.status_persetujuan
+      status_persetujuan: filters.status_persetujuan,
+      filter_by: filters.filter_by
     });
     
     // Handle new response structure with data and metrics
     if (response.data.data && Array.isArray(response.data.data.data)) {
       reportData.value = response.data.data.data || [];
       reportMetrics.value = response.data.data.metrics || {
+        total_all_patients: 0,
+        total_ab_patients: 0,
         verification: { verified: 0, pending: 0 },
         approval: { approved: 0, pending: 0 }
       };

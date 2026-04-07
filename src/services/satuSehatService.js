@@ -65,6 +65,54 @@ export const satuSehatService = {
     return api.post('/satusehat/medication-dispense/sync', data)
   },
 
+  // Medication Statement
+  getMedicationStatements(params) {
+    return api.get('/satusehat/medication-statement', { params })
+  },
+  syncMedicationStatement(data) {
+    return api.post('/satusehat/medication-statement/sync', data)
+  },
+
+  // Question Response Telaah Farmasi
+  getQuestionResponseTelaahFarmasi(params) {
+    return api.get('/satusehat/questionresponse-telaah-farmasi', { params })
+  },
+  syncQuestionResponseTelaahFarmasi(data) {
+    return api.post('/satusehat/questionresponse-telaah-farmasi/sync', data)
+  },
+
+  // CarePlan
+  getCarePlans(params) {
+    return api.get('/satusehat/careplan', { params })
+  },
+  syncCarePlan(data) {
+    return api.post('/satusehat/careplan/sync', data)
+  },
+
+  // Specimen Radiology
+  getSpecimenRadiology(params) {
+    return api.get('/satusehat/specimen-radiology', { params })
+  },
+  syncSpecimenRadiology(data) {
+    return api.post('/satusehat/specimen-radiology/sync', data)
+  },
+
+  // Observation Radiology
+  getObservationRadiology(params) {
+    return api.get('/satusehat/observation-radiology', { params })
+  },
+  syncObservationRadiology(data) {
+    return api.post('/satusehat/observation-radiology/sync', data)
+  },
+
+  // DiagnosticReport Radiology
+  getDiagnosticReportRadiology(params) {
+    return api.get('/satusehat/diagnosticreport-radiology', { params })
+  },
+  syncDiagnosticReportRadiology(data) {
+    return api.post('/satusehat/diagnosticreport-radiology/sync', data)
+  },
+
   // Dashboard
   getDashboard() {
     return api.get('/satusehat/dashboard')
@@ -108,6 +156,14 @@ export const satuSehatService = {
   },
   deleteLocationMapping(params) {
     return api.delete('/satusehat/location/mapping', { params })
+  },
+
+  // Episode of Care
+  getEpisodeOfCare(params) {
+    return api.get('/satusehat/episodeofcare', { params })
+  },
+  syncEpisodeOfCare(data) {
+    return api.post('/satusehat/episodeofcare/sync', data)
   }
 }
 
