@@ -1068,6 +1068,7 @@ onMounted(() => {
 .border-start-primary { border-left: 4px solid #3b82f6; }
 .border-start-success { border-left: 4px solid #10b981; }
 .border-start-warning { border-left: 4px solid #f59e0b; }
+.border-start-danger { border-left: 4px solid #ef4444; }
 .border-start-info { border-left: 4px solid #3b82f6; }
 
 .bg-soft-success { background: #ecfdf5; }
