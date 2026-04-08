@@ -1,28 +1,42 @@
 const getApiV2Url = () => {
-  const envUrl = import.meta.env.VITE_API_V2_URL;
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    const protocol = window.location.protocol;
-    if (host === '192.168.100.33' || host === 'sim.rsiaaisyiyah.com') {
-      return `${protocol}//${host}/rsiapi-v2/api/v2`;
+    if (host === '192.168.100.33') {
+      return `http://${host}/rsiapi-v2/api/v2`;
     }
+    // Default to rsiap.my.id for outside local network
+    return `https://rsiap.my.id/rsiapi-v2/api/v2`;
   }
-  return envUrl || 'http://localhost:8010/api/v2';
+  return import.meta.env.VITE_API_V2_URL || 'http://localhost:8010/api/v2';
 };
 
 const getBaseBerkasUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    const protocol = window.location.protocol;
-    if (host === '192.168.100.33' || host === 'sim.rsiaaisyiyah.com') {
-      return `${protocol}//${host}/webapps`;
+    if (host === '192.168.100.33') {
+      return `http://${host}/webapps`;
     }
+    // Default to rsiap.my.id for outside local network
+    return `https://rsiap.my.id/webapps`;
   }
   return import.meta.env.VITE_BASE_BERKAS_URL || 'http://192.168.100.33/webapps';
 };
 
+const getPhotoUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === '192.168.100.33') {
+      return `http://${host}/rsiap/file/pegawai/`;
+    }
+    // Default to rsiap.my.id for outside local network
+    return `https://rsiap.my.id/rsiap/file/pegawai/`;
+  }
+  return 'https://rsiap.my.id/rsiap/file/pegawai/';
+};
+
 const DYNAMIC_API_V2_URL = getApiV2Url();
 const DYNAMIC_BASE_BERKAS_URL = getBaseBerkasUrl();
+const DYNAMIC_PHOTO_URL = getPhotoUrl();
 
 export const config = {
   // Public API URLs
@@ -30,6 +44,7 @@ export const config = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8010',
     API_V2_URL: DYNAMIC_API_V2_URL,
     BASE_BERKAS_URL: DYNAMIC_BASE_BERKAS_URL,
+    PHOTO_URL: DYNAMIC_PHOTO_URL,
     API_VERSION: import.meta.env.VITE_API_VERSION || 'v2',
     APP_NAME: import.meta.env.VITE_APP_NAME || 'RSIA - Sistem Informasi Rumah Sakit',
     APP_VERSION: import.meta.env.VITE_APP_VERSION || '2.0.0'

@@ -26,6 +26,16 @@ const dashboardService = {
         return api.get('/dashboard/reviews');
     },
 
+    // Get all employee mood check-ins
+    getMoodAll(params) {
+        return api.get('/sdi/mood/all', { params });
+    },
+
+    // Get team mood statistics
+    getMoodStats() {
+        return api.get('/sdi/mood/team-stats');
+    },
+
     // Delete code blue schedule
     deleteCodeBlueSchedule(date) {
         return api.delete(`/codeblue/schedule/${date}`);

@@ -189,6 +189,9 @@
             <button class="shift-btn clear-btn" @click="selectShift(null)">
               ❌ Hapus / Kosong
             </button>
+            <button class="shift-btn shift-cuti" @click="selectShift('Cuti')">
+              🏖️ Cuti
+            </button>
             <button 
               v-for="shift in shifts" 
               :key="shift.shift"
@@ -223,6 +226,7 @@
               <select v-model="patternRules[idx]" class="form-select">
                 <option :value="null">- Tidak Diubah -</option>
                 <option value="EMPTY">❌ Libur / Kosong</option>
+                <option value="Cuti">🏖️ Cuti</option>
                 <option v-for="shift in shifts" :key="shift.shift" :value="shift.shift">
                   {{ shift.shift }} ({{ shift.jam_masuk }}-{{ shift.jam_pulang }})
                 </option>

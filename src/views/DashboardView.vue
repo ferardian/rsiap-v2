@@ -156,6 +156,11 @@
         </div>
       </section>
 
+      <!-- Employee Mood Slider -->
+      <section class="mood-section">
+        <MoodSlider />
+      </section>
+
       <!-- Dynamic Menu & Recent Activities -->
       <section class="dashboard-sections">
 
@@ -249,22 +254,20 @@
             </div>
             -->
 
-            <!-- 6. Stok Farmasi (Hidden) -->
-            <!--
-            <div class="quick-stat-card farmasi-card">
-              <div class="stat-icon-wrapper farmasi-gradient">
-                <i class="fas fa-pills"></i>
+            <!-- 6. Team Mood Summary -->
+            <div class="quick-stat-card mood-card">
+              <div class="stat-icon-wrapper mood-gradient">
+                <i class="fas fa-heart"></i>
               </div>
               <div class="stat-details">
-                <h4>{{ dashboardStats.farmasi?.stok_kritis || 0 }}</h4>
-                <p>Stok Kritis</p>
+                <h4>{{ dashboardStats.mood?.good || 0 }}</h4>
+                <p>Pegawai Bersemangat</p>
                 <div class="stat-breakdown">
-                  <span class="breakdown-item">Total Item: {{ dashboardStats.farmasi?.total_item || 0 }}</span>
-                  <span class="breakdown-item aman">Aman: {{ dashboardStats.farmasi?.stok_aman || 0 }}</span>
+                  <span class="breakdown-item available">Total: {{ dashboardStats.mood?.total || 0 }}</span>
+                  <span class="breakdown-item occupied">Butuh Dukungan: {{ dashboardStats.mood?.support_needed || 0 }}</span>
                 </div>
               </div>
             </div>
-            -->
           </div>
 
         </div>
@@ -439,6 +442,7 @@ import UserManagementModal from '../components/UserManagementModal.vue'
 import departemenService from '../services/departemenService'
 import dashboardService from '../services/dashboardService'
 import { pegawaiService } from '../services/pegawaiService'
+import MoodSlider from '../components/MoodSlider.vue'
 
 
 const router = useRouter()
@@ -487,7 +491,8 @@ const dashboardStats = ref({
   cuti: { bulan_ini: 0, pending: 0, approved: 0 },
   bed: { total: 0, terisi: 0, tersedia: 0, occupancy_rate: 0 },
   approval: { cuti_pending: 0, jadwal_pending: 0, total_pending: 0 },
-  farmasi: { total_item: 0, stok_kritis: 0, stok_aman: 0 }
+  farmasi: { total_item: 0, stok_kritis: 0, stok_aman: 0 },
+  mood: { total: 0, good: 0, okay: 0, support_needed: 0 }
 })
 
 // Statistics data
@@ -636,8 +641,15 @@ const navigateToRoleMenu = () => {
 const fetchDashboardStats = async (params = {}) => {
   loadingStats.value = true
   try {
-    const response = await dashboardService.getStats(params)
-    dashboardStats.value = response.data.data
+    const [statsRes, moodRes] = await Promise.all([
+      dashboardService.getStats(params),
+      dashboardService.getMoodStats()
+    ])
+    
+    dashboardStats.value = {
+      ...statsRes.data.data,
+      mood: moodRes.data.data
+    }
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
   } finally {
@@ -2254,5 +2266,26 @@ onUnmounted(() => {
   color: #6b7280;
   background: white;
   border-radius: 12px;
+}
+
+/* Mood Section Styles */
+.mood-section {
+  margin-bottom: 2rem;
+}
+
+.mood-gradient {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%);
+}
+
+.quick-stat-card.mood-card:hover {
+  border-color: #ff6b6b;
+}
+
+/* Ensure line-clamp for compatibility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>
