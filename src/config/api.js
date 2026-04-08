@@ -1,8 +1,11 @@
 const getApiV2Url = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host === '192.168.100.33') {
-      return `http://${host}/rsiapi-v2/api/v2`;
+    if (host === '192.168.100.33' || host === 'localhost' || host === '127.0.0.1') {
+      // Use local IP for 192.168.100.33, otherwise use localhost:8010 for local dev
+      return host === '192.168.100.33' 
+        ? `http://${host}/rsiapi-v2/api/v2` 
+        : `http://localhost:8010/api/v2`;
     }
     // Default to rsiap.my.id for outside local network
     return `https://rsiap.my.id/rsiapi-v2/api/v2`;

@@ -138,8 +138,8 @@ onMounted(() => {
 
 <style scoped>
 .mood-slider-container {
-  margin: 2rem 0;
-  padding: 1.5rem;
+  margin: 0;
+  padding: 1rem 0;
   background: transparent;
   border-radius: 24px;
   overflow: hidden;
@@ -154,14 +154,14 @@ onMounted(() => {
 }
 
 .premium-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .pulse-icon {
@@ -177,12 +177,13 @@ onMounted(() => {
 }
 
 .count-badge {
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0.4rem 0.8rem;
+  background: rgba(34, 197, 94, 0.08);
+  padding: 0.45rem 1rem;
   border-radius: 100px;
   font-size: 0.75rem;
-  color: #64748b;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.1);
 }
 
 .mood-slider-wrapper {
@@ -226,15 +227,21 @@ onMounted(() => {
 }
 
 .mood-card-glass {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
   padding: 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  gap: 1.25rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.mood-card-glass:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
 }
 
 .avatar-container {

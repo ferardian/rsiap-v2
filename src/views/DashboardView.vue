@@ -156,9 +156,82 @@
         </div>
       </section>
 
-      <!-- Employee Mood Slider -->
-      <section class="mood-section">
-        <MoodSlider />
+      <!-- 
+        Combined Mood & Sentiment Section 
+        Side-by-side layout for high-level metrics and individual updates
+      -->
+      <section class="mood-analytics-combined-section">
+        <div class="mood-analytics-wrapper">
+          <!-- Summary Side -->
+          <div class="mood-summary-side">
+            <div class="quick-stat-card mood-card analytic-mood-card" @click="navigateTo('/sdi/mood')">
+              <div class="card-glass-overlay"></div>
+              
+              <div class="stat-header-main">
+                <div class="mood-icon-bg">
+                  <i class="fas fa-heart"></i>
+                </div>
+                <div class="mood-badge-premium" v-if="dashboardStats.mood?.total > 0">
+                  {{ dashboardStats.mood?.baik_pct }}%
+                </div>
+              </div>
+
+              <div class="stat-content-premium">
+                <h3 class="sentiment-value">{{ dashboardStats.mood?.baik || 0 }}</h3>
+                <p class="sentiment-label">Pegawai Bersemangat</p>
+                
+                <div class="sentiment-progress-container">
+                  <!-- Progress Bar for Bersemangat (Baik) -->
+                  <div class="progress-segment-label">
+                    <span>Bersemangat</span>
+                    <span>{{ dashboardStats.mood?.baik_pct }}%</span>
+                  </div>
+                  <div class="premium-progress-bar">
+                    <div class="progress-fill positive" :style="{ width: (dashboardStats.mood?.baik_pct || 0) + '%' }"></div>
+                  </div>
+
+                  <!-- Progress Bar for Oke -->
+                  <div class="progress-segment-label">
+                    <span>Oke</span>
+                    <span>{{ dashboardStats.mood?.oke_pct }}%</span>
+                  </div>
+                  <div class="premium-progress-bar">
+                    <div class="progress-fill neutral" :style="{ width: (dashboardStats.mood?.oke_pct || 0) + '%' }"></div>
+                  </div>
+                </div>
+
+                <div class="mood-indicators-premium">
+                  <div class="indicator-chip energy" title="Energi rata-rata">
+                    <div class="chip-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="chip-text">
+                      <span class="chip-val">{{ dashboardStats.mood?.avg_energi || 0 }}</span>
+                      <span class="chip-lbl">Energy</span>
+                    </div>
+                  </div>
+                  <div class="indicator-chip focus" title="Fokus rata-rata">
+                    <div class="chip-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="chip-text">
+                      <span class="chip-val">{{ dashboardStats.mood?.avg_fokus || 0 }}</span>
+                      <span class="chip-lbl">Focus</span>
+                    </div>
+                  </div>
+                  <div class="indicator-chip stress" title="Stress rata-rata">
+                    <div class="chip-icon"><i class="fas fa-brain"></i></div>
+                    <div class="chip-text">
+                      <span class="chip-val">{{ dashboardStats.mood?.avg_stres || 0 }}</span>
+                      <span class="chip-lbl">Stress</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slider Side -->
+          <div class="mood-slider-side">
+            <MoodSlider />
+          </div>
+        </div>
       </section>
 
       <!-- Dynamic Menu & Recent Activities -->
@@ -254,20 +327,6 @@
             </div>
             -->
 
-            <!-- 6. Team Mood Summary -->
-            <div class="quick-stat-card mood-card">
-              <div class="stat-icon-wrapper mood-gradient">
-                <i class="fas fa-heart"></i>
-              </div>
-              <div class="stat-details">
-                <h4>{{ dashboardStats.mood?.good || 0 }}</h4>
-                <p>Pegawai Bersemangat</p>
-                <div class="stat-breakdown">
-                  <span class="breakdown-item available">Total: {{ dashboardStats.mood?.total || 0 }}</span>
-                  <span class="breakdown-item occupied">Butuh Dukungan: {{ dashboardStats.mood?.support_needed || 0 }}</span>
-                </div>
-              </div>
-            </div>
           </div>
 
         </div>
@@ -492,7 +551,7 @@ const dashboardStats = ref({
   bed: { total: 0, terisi: 0, tersedia: 0, occupancy_rate: 0 },
   approval: { cuti_pending: 0, jadwal_pending: 0, total_pending: 0 },
   farmasi: { total_item: 0, stok_kritis: 0, stok_aman: 0 },
-  mood: { total: 0, good: 0, okay: 0, support_needed: 0 }
+  mood: { total: 0, baik: 0, baik_pct: 0, oke: 0, oke_pct: 0, perlu_support: 0, perlu_support_pct: 0, avg_energi: 0, avg_stres: 0, avg_fokus: 0 }
 })
 
 // Statistics data
@@ -2268,7 +2327,219 @@ onUnmounted(() => {
   border-radius: 12px;
 }
 
-/* Mood Section Styles */
+/* Mood Combined Section Styles */
+.mood-analytics-combined-section {
+  margin-bottom: 3rem;
+  padding: 0 0.5rem;
+}
+
+.mood-analytics-wrapper {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.mood-summary-side {
+  flex: 0 0 340px;
+}
+
+.mood-slider-side {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Premium Analytic Mood Card */
+.analytic-mood-card {
+  position: relative;
+  height: 100%;
+  margin: 0 !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 32px !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04) !important;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.analytic-mood-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08) !important;
+}
+
+.card-glass-overlay {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255, 77, 77, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stat-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.mood-icon-bg {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #ff4d4d, #f97316);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+  box-shadow: 0 8px 16px rgba(255, 77, 77, 0.15);
+}
+
+.mood-badge-premium {
+  background: rgba(34, 197, 94, 0.08);
+  color: #16a34a;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1px solid rgba(34, 197, 94, 0.1);
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.05);
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.mood-badge-premium:hover {
+  background: rgba(34, 197, 94, 0.12);
+  transform: scale(1.05);
+}
+
+.stat-content-premium {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1;
+}
+
+.sentiment-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1;
+  text-align: left;
+}
+
+.sentiment-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0.4rem 0 1.25rem 0;
+  text-align: left;
+}
+
+.sentiment-progress-container {
+  margin-bottom: 1.25rem;
+}
+
+.progress-segment-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.4rem;
+}
+
+.premium-progress-bar {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1s ease-out;
+}
+
+.progress-fill.positive { background: linear-gradient(to right, #22c55e, #4ade80); }
+.progress-fill.neutral { background: linear-gradient(to right, #64748b, #94a3b8); }
+
+.mood-indicators-premium {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-top: auto;
+  width: 100%;
+}
+
+.indicator-chip {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  padding: 0.75rem 0.5rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.indicator-chip:hover {
+  background: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.06);
+  border-color: #e2e8f0;
+}
+
+.chip-icon {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.indicator-chip.energy .chip-icon { color: #f59e0b; }
+.indicator-chip.focus .chip-icon { color: #3b82f6; }
+.indicator-chip.stress .chip-icon { color: #ef4444; }
+
+.chip-val {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.chip-lbl {
+  font-size: 0.6rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Mobile responsive */
+@media (max-width: 1024px) {
+  .mood-analytics-wrapper {
+    flex-direction: column;
+  }
+  
+  .mood-summary-side {
+    flex: 1;
+    width: 100%;
+  }
+}
+
 .mood-section {
   margin-bottom: 2rem;
 }
@@ -2280,6 +2551,64 @@ onUnmounted(() => {
 .quick-stat-card.mood-card:hover {
   border-color: #ff6b6b;
 }
+
+.stat-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2px;
+}
+
+.stat-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+
+.stat-pct.positive { background: #dcfce7; color: #16a34a; }
+
+.stat-breakdown-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.breakdown-item-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.dot.neutral { background: #94a3b8; }
+.dot.negative { background: #fca5a5; }
+
+.mood-indicators-mini {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.indicator-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.indicator-item i { font-size: 0.65rem; }
+.indicator-item span { font-weight: 700; color: #1e293b; }
+
 
 /* Ensure line-clamp for compatibility */
 .line-clamp-2 {
