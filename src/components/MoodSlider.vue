@@ -45,7 +45,7 @@
                   :key="tag.id" 
                   class="mood-tag-mini"
                 >
-                  #{{ tag.name }}
+                  #{{ tag.nama }}
                 </span>
               </div>
               <span class="time-ago">{{ formatTime(item.created_at) }}</span>

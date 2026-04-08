@@ -164,7 +164,7 @@
         <div class="mood-analytics-wrapper">
           <!-- Summary Side -->
           <div class="mood-summary-side">
-            <div class="quick-stat-card mood-card analytic-mood-card" @click="navigateTo('/sdi/mood')">
+            <div class="quick-stat-card mood-card analytic-mood-card">
               <div class="card-glass-overlay"></div>
               
               <div class="stat-header-main">
@@ -2356,8 +2356,8 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  border-radius: 32px !important;
-  padding: 1.5rem !important;
+  border-radius: 24px !important;
+  padding: 1rem 1.25rem !important;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04) !important;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -2385,21 +2385,21 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.85rem;
   width: 100%;
 }
 
 .mood-icon-bg {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, #ff4d4d, #f97316);
-  border-radius: 16px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.25rem;
-  box-shadow: 0 8px 16px rgba(255, 77, 77, 0.15);
+  font-size: 1.1rem;
+  box-shadow: 0 6px 12px rgba(255, 77, 77, 0.15);
 }
 
 .mood-badge-premium {
@@ -2428,7 +2428,7 @@ onUnmounted(() => {
 }
 
 .sentiment-value {
-  font-size: 2.25rem;
+  font-size: 1.85rem;
   font-weight: 800;
   color: #1e293b;
   margin: 0;
@@ -2437,17 +2437,17 @@ onUnmounted(() => {
 }
 
 .sentiment-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  margin: 0.4rem 0 1.25rem 0;
+  margin: 0.2rem 0 0.85rem 0;
   text-align: left;
 }
 
 .sentiment-progress-container {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .progress-segment-label {
@@ -2460,11 +2460,11 @@ onUnmounted(() => {
 }
 
 .premium-progress-bar {
-  height: 8px;
+  height: 6px;
   background: #f1f5f9;
   border-radius: 100px;
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
 }
 
 .progress-fill {
@@ -2479,8 +2479,8 @@ onUnmounted(() => {
 .mood-indicators-premium {
   display: flex;
   justify-content: space-between;
-  gap: 1.25rem;
-  margin-top: auto;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
   width: 100%;
 }
 
@@ -2488,14 +2488,14 @@ onUnmounted(() => {
   flex: 1;
   background: #f8fafc;
   border: 1px solid #f1f5f9;
-  padding: 0.75rem 0.5rem;
-  border-radius: 16px;
+  padding: 0.5rem 0.25rem;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .indicator-chip:hover {
@@ -2537,6 +2537,39 @@ onUnmounted(() => {
   .mood-summary-side {
     flex: 1;
     width: 100%;
+  }
+
+  .analytic-mood-card {
+    height: auto !important;
+    padding: 1rem !important;
+  }
+
+  .stat-header-main {
+    margin-bottom: 0.75rem;
+  }
+
+  .sentiment-value {
+    font-size: 1.75rem;
+  }
+
+  .sentiment-label {
+    margin: 0.25rem 0 0.75rem 0;
+  }
+
+  .sentiment-progress-container {
+    margin-bottom: 0.75rem;
+  }
+
+  .premium-progress-bar {
+    margin-bottom: 0.5rem;
+  }
+
+  .mood-indicators-premium {
+    gap: 0.5rem;
+  }
+
+  .indicator-chip {
+    padding: 0.5rem 0.25rem;
   }
 }
 
