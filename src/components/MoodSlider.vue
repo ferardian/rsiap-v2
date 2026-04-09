@@ -18,6 +18,7 @@
         ref="sliderTrack"
         class="mood-slider-track" 
         :class="{ 'is-paused': isPaused }"
+        :style="{ animation: shouldAnimate ? 'scroll 40s linear infinite' : 'none' }"
       >
         <!-- Double the list for infinite scroll effect -->
         <div 
@@ -80,10 +81,15 @@ const loading = ref(false)
 const isPaused = ref(false)
 const sliderTrack = ref(null)
 
+const shouldAnimate = computed(() => moods.value.length > 5)
+
 const displayMoods = computed(() => {
   if (moods.value.length === 0) return []
-  // Repeat items to ensure smooth infinite loop if there's enough data
-  return [...moods.value, ...moods.value, ...moods.value]
+  // Only repeat items if we want to animate (for infinite scroll effect)
+  if (shouldAnimate.value) {
+    return [...moods.value, ...moods.value, ...moods.value]
+  }
+  return moods.value
 })
 
 const fetchMoods = async () => {

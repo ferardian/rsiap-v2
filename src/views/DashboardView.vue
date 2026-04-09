@@ -198,6 +198,15 @@
                   <div class="premium-progress-bar">
                     <div class="progress-fill neutral" :style="{ width: (dashboardStats.mood?.oke_pct || 0) + '%' }"></div>
                   </div>
+
+                  <!-- Progress Bar for Perlu Support -->
+                  <div class="progress-segment-label">
+                    <span>Perlu Support</span>
+                    <span>{{ dashboardStats.mood?.perlu_support_pct || 0 }}%</span>
+                  </div>
+                  <div class="premium-progress-bar">
+                    <div class="progress-fill negative" :style="{ width: (dashboardStats.mood?.perlu_support_pct || 0) + '%' }"></div>
+                  </div>
                 </div>
 
                 <div class="mood-indicators-premium">
@@ -2330,7 +2339,7 @@ onUnmounted(() => {
 /* Mood Combined Section Styles */
 .mood-analytics-combined-section {
   margin-bottom: 3rem;
-  padding: 0 0.5rem;
+  padding: 0;
 }
 
 .mood-analytics-wrapper {
@@ -2340,7 +2349,8 @@ onUnmounted(() => {
 }
 
 .mood-summary-side {
-  flex: 0 0 340px;
+  flex: 0 0 calc(25% - 1.5rem);
+  max-width: calc(25% - 1.5rem);
 }
 
 .mood-slider-side {
@@ -2475,6 +2485,7 @@ onUnmounted(() => {
 
 .progress-fill.positive { background: linear-gradient(to right, #22c55e, #4ade80); }
 .progress-fill.neutral { background: linear-gradient(to right, #64748b, #94a3b8); }
+.progress-fill.negative { background: linear-gradient(to right, #ef4444, #f87171); }
 
 .mood-indicators-premium {
   display: flex;
@@ -2570,6 +2581,12 @@ onUnmounted(() => {
 
   .indicator-chip {
     padding: 0.5rem 0.25rem;
+  }
+
+  .mood-summary-side {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    width: 100%;
   }
 }
 
