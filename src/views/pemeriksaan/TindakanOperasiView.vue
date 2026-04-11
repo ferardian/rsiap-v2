@@ -26,60 +26,68 @@
             <table class="table table-hover align-middle">
               <thead class="bg-light text-secondary">
                 <tr>
-                  <th class="fw-bold py-3">No. Rawat/RM</th>
+                  <th class="fw-bold py-3" style="width: 180px;">No. Rawat/RM</th>
                   <th class="fw-bold py-3">Pasien</th>
                   <th class="fw-bold py-3">Tindakan Operasi</th>
-                  <th class="fw-bold py-3">Tgl Operasi</th>
-                  <th class="fw-bold py-3">Jam Mulai</th>
-                  <th class="fw-bold py-3">Jam Selesai</th>
+                  <th class="fw-bold py-3">Tanggal Op</th>
+                  <th class="fw-bold py-3">Selesai Op</th>
+                  <th class="fw-bold py-3">Durasi</th>
+                  <th class="fw-bold py-3">Pembiayaan</th>
                   <th class="fw-bold py-3 text-center" style="width: 150px;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                 <tr v-if="loading">
-                    <td colspan="7" class="text-center py-5">
-                       <div class="spinner-border text-primary" role="status"></div>
-                    </td>
-                 </tr>
-                 <tr v-else-if="items.length === 0">
-                    <td colspan="7" class="text-center py-5 text-muted">Belum ada data tindakan operasi</td>
-                 </tr>
-                 <!-- Gunakan tgl_operasi (datetime penuh) sebagai key agar 2 tindakan beda jam tidak tabrakan -->
-                 <tr v-else v-for="item in items" :key="item.no_rawat + '_' + item.tgl_operasi + '_' + item.kode_paket">
-                   <td>
-                      <div class="fw-bold text-dark">{{ item.no_rawat }}</div>
-                      <small class="text-muted">{{ item.reg_periksa?.no_rkm_medis }}</small>
-                   </td>
-                   <td>
-                      <div class="fw-bold">{{ item.reg_periksa?.pasien?.nm_pasien }}</div>
-                   </td>
-                   <td>
-                      <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
-                         {{ item.detail_paket?.nm_perawatan || item.kode_paket }}
-                      </span>
-                   </td>
-                   <td>
-                       <div>{{ formatDate(item.tgl_operasi) }}</div>
-                   </td>
-                   <td>
-                       <span class="text-muted small">{{ item.jam_mulai || formatTime(item.tgl_operasi) }}</span>
-                   </td>
-                   <td>
-                       <span class="text-muted small">{{ item.tgl_selesai ? formatTime(item.tgl_selesai) : (item.jam_selesai || '-') }}</span>
-                   </td>
-                   <td>
-                      <div class="d-flex justify-content-center gap-2">
-                         <button class="btn btn-sm btn-outline-info" @click="onDetail(item)" title="Detail Laporan">
-                            <i class="fas fa-file-alt"></i> Detail
-                         </button>
-                         <button class="btn btn-sm btn-outline-warning" @click="onEdit(item)" title="Edit Laporan">
-                            <i class="fas fa-edit"></i> Edit
-                         </button>
-                         <button v-if="canDelete" class="btn btn-sm btn-outline-danger" @click="onDelete(item)" title="Hapus Laporan">
-                            <i class="fas fa-trash"></i> Hapus
-                         </button>
-                      </div>
-                   </td>
+                <tr v-if="loading">
+                  <td colspan="8" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                  </td>
+                </tr>
+                <tr v-else-if="items.length === 0">
+                  <td colspan="8" class="text-center py-5 text-muted">Belum ada data tindakan operasi</td>
+                </tr>
+                <tr v-else v-for="item in items" :key="item.no_rawat + '_' + item.tgl_operasi + '_' + item.kode_paket">
+                  <td>
+                    <div class="fw-bold text-dark">{{ item.no_rawat }}</div>
+                    <small class="text-muted">{{ item.reg_periksa?.no_rkm_medis || '-' }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-bold">{{ item.reg_periksa?.pasien?.nm_pasien || '-' }}</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
+                      {{ item.detail_paket?.nm_perawatan || item.kode_paket }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="small fw-bold">{{ formatDate(item.tgl_operasi) }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">{{ formatTime(item.tgl_operasi) }}</div>
+                  </td>
+                  <td>
+                    <div v-if="item.tgl_selesai && item.tgl_selesai !== '-'">
+                      <div class="small fw-bold">{{ formatDate(item.tgl_selesai) }}</div>
+                      <div class="text-muted" style="font-size: 0.75rem;">{{ formatTime(item.tgl_selesai) }}</div>
+                    </div>
+                    <span v-else class="text-muted">-</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-soft-success text-success">{{ item.durasi || '-' }}</span>
+                  </td>
+                  <td>
+                    <span class="small text-muted fw-bold">{{ item.reg_periksa?.cara_bayar?.png_jawab || '-' }}</span>
+                  </td>
+                  <td>
+                    <div class="d-flex justify-content-center gap-2">
+                      <button class="btn btn-sm btn-outline-info" @click="onDetail(item)" title="Detail Laporan">
+                        <i class="fas fa-file-alt"></i> Detail
+                      </button>
+                      <button class="btn btn-sm btn-outline-warning" @click="onEdit(item)" title="Edit Laporan">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button v-if="canDelete" class="btn btn-sm btn-outline-danger" @click="onDelete(item)" title="Hapus Laporan">
+                        <i class="fas fa-trash"></i> Hapus
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>

@@ -97,7 +97,8 @@ const currentPageTitle = computed(() => {
     '/admin/menu': 'Admin > Manajemen Menu',
     '/admin/role': 'Admin > Manajemen Role',
     '/admin/user': 'Admin > Manajemen User',
-    '/admin/role-menu': 'Admin > Manajemen Role-Menu'
+    '/admin/role-menu': 'Admin > Manajemen Role-Menu',
+    '/satusehat/mapping-radiology': 'SatuSehat > Mapping Radiologi'
   }
   
   // Check if exact match exists

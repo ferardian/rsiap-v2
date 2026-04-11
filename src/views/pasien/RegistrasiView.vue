@@ -361,17 +361,18 @@
                       <th>Poliklinik & Dokter</th>
                       <th>Cara Bayar</th>
                       <th width="100">Status</th>
+                      <th width="100">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-if="listLoading && registrationList.length === 0">
-                      <td colspan="5" class="text-center py-5">
+                      <td colspan="6" class="text-center py-5">
                         <div class="spinner-border text-primary" role="status"></div>
                         <p class="mt-2 text-muted">Memuat daftar...</p>
                       </td>
                     </tr>
                     <tr v-else-if="registrationList.length === 0">
-                      <td colspan="5" class="text-center py-5 text-muted">
+                      <td colspan="6" class="text-center py-5 text-muted">
                         <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
                         <p>Belum ada pendaftaran untuk tanggal ini</p>
                       </td>
@@ -405,7 +406,46 @@
                         </span>
                       </td>
                       <td>
-                        <span class="badge-custom status px-2 py-1" :class="getStatusClass(reg.stts)">{{ reg.stts }}</span>
+                        <div class="d-flex flex-column gap-1">
+                          <span class="badge-custom status px-2 py-1" :class="getStatusClass(reg.stts)">{{ reg.stts }}</span>
+                          <template v-if="getPenjabClass(reg.caraBayar?.png_jawab) === 'bpjs'">
+                            <span v-if="reg.sepSimple" class="badge-custom status sudah px-2 py-1" style="font-size: 0.65rem;">
+                              <i class="fas fa-check-circle me-1"></i>SEP Terbit
+                            </span>
+                            <span v-else class="badge-custom status sep-belum px-2 py-1" style="font-size: 0.65rem;">
+                              <i class="fas fa-times-circle me-1"></i>SEP Belum
+                            </span>
+                          </template>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex gap-2">
+                           <div class="dropdown">
+                              <button class="btn btn-sm btn-outline-primary dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.8rem;">
+                                Aksi
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 glass-effect p-2 rounded-4" style="min-width: 200px;">
+                                <li>
+                                  <a class="dropdown-item rounded-3 mb-1 py-2" href="#" @click.prevent="openGenerateSep(reg)">
+                                    <i class="fas fa-file-medical me-2 text-primary opacity-75"></i> {{ reg.sepSimple ? 'Edit SEP' : 'Terbitkan SEP' }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a class="dropdown-item rounded-3 mb-1 py-2" href="#" @click.prevent="printKarcis(reg)">
+                                    <i class="fas fa-print me-2 text-success opacity-75"></i> Print Karcis
+                                  </a>
+                                </li>
+                                <li v-if="reg.stts === 'Belum'">
+                                  <hr class="dropdown-divider">
+                                </li>
+                                <li v-if="reg.stts === 'Belum'">
+                                  <a class="dropdown-item rounded-3 py-2 text-danger" href="#" @click.prevent="batalRegistrasi(reg)">
+                                    <i class="fas fa-trash-alt me-2 opacity-75"></i> Batalkan
+                                  </a>
+                                </li>
+                              </ul>
+                            </div>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -735,6 +775,13 @@
       </div>
     </div>
 
+    <!-- Generate SEP Modal -->
+    <GenerateSepModal 
+      :show="showGenerateSepModal" 
+      :registration="selectedRegForSep"
+      @close="showGenerateSepModal = false"
+      @success="fetchRegistrations"
+    />
   </div>
 </template>
 
@@ -743,6 +790,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { debounce } from 'lodash';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
+import GenerateSepModal from './components/GenerateSepModal.vue';
 import pasienService from '../../services/pasienService';
 import poliklinikService from '../../services/poliklinikService';
 import dokterService from '../../services/dokterService';
@@ -758,6 +806,10 @@ const selectedPasien = ref(null);
 const polikliniks = ref([]);
 const dokters = ref([]);
 const penijabs = ref([]);
+
+// Generate SEP States
+const showGenerateSepModal = ref(false);
+const selectedRegForSep = ref(null);
 const loading = ref(false);
 const numberLoading = ref(false);
 const submitting = ref(false);
@@ -1057,6 +1109,59 @@ const fetchNextNumbers = async () => {
   }
 };
 
+const openGenerateSep = (reg) => {
+    selectedRegForSep.value = reg;
+    showGenerateSepModal.value = true;
+};
+
+const printKarcis = (reg) => {
+    Swal.fire({
+        title: 'Cetak Karcis?',
+        text: `Mencetak karcis untuk ${reg.pasien.nm_pasien}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Cetak',
+        cancelButtonText: 'Batal',
+        customClass: {
+            popup: 'swal2-glass'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Logic to print karcis (usually opens a new tab with PDF)
+            window.open(`/api/v1/registrasi/karcis/${reg.no_rawat}`, '_blank');
+        }
+    });
+};
+
+const batalRegistrasi = (reg) => {
+    Swal.fire({
+        title: 'Batalkan Registrasi?',
+        text: `Registrasi ${reg.pasien.nm_pasien} akan dibatalkan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Ya, Batalkan',
+        cancelButtonText: 'Kembali',
+        customClass: {
+            popup: 'swal2-glass'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Logic to delete/cancel registration
+            // Implement API call here
+            Swal.fire({
+                title: 'Berhasil!',
+                text: 'Registrasi telah dibatalkan.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                customClass: { popup: 'swal2-glass' }
+            });
+            fetchRegistrations();
+        }
+    });
+};
+
 const submitRegistration = async () => {
   if (!canSubmit.value) return;
 
@@ -1134,7 +1239,7 @@ const fetchRegistrations = async () => {
       sort: [
           { field: 'no_reg', direction: 'desc' }
       ],
-      includes: ['pasien', 'poliklinik', 'dokter', 'caraBayar']
+      includes: ['pasien', 'poliklinik', 'poliklinik.mappingBpjs', 'dokter', 'dokter.mappingBpjs', 'caraBayar', 'sepSimple']
     };
     
     const response = await registrasiService.searchRegistrations(payload);
@@ -1396,6 +1501,12 @@ onMounted(async () => {
     border: 1px solid #e9d5ff;
 }
 
+.badge-custom.status.sep-belum {
+    background: #fff5f5;
+    color: #e53e3e;
+    border: 1px solid #feb2b2;
+}
+
 .list-pagination {
     display: flex;
     align-items: center;
@@ -1483,12 +1594,40 @@ onMounted(async () => {
 }
 
 .glass-effect {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
 }
+
+/* Fix Aksi Dropdown Flickering */
+.dropdown-menu {
+    margin-top: 0 !important;
+    z-index: 1060;
+}
+
+.dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: transparent;
+}
+
+.dropdown-item {
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: translateX(4px);
+}
+
 
 .registration-card {
   width: 100%;

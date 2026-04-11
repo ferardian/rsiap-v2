@@ -518,6 +518,24 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/mapping-radiology',
+    name: 'SatuSehatMappingRadiologi',
+    component: () => import('../views/satusehat/SatuSehatMappingRadiologiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/mapping-lab',
+    name: 'SatuSehatMappingLab',
+    component: () => import('@/views/satusehat/SatuSehatMappingLabView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/servicerequest-lab',
+    name: 'SatuSehatServiceRequestLab',
+    component: () => import('@/views/satusehat/SatuSehatServiceRequestLabView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/satusehat/episodeofcare',
     name: 'SatuSehatEpisodeOfCare',
     component: () => import('../views/satusehat/SatuSehatEpisodeOfCareView.vue'),
@@ -608,6 +626,12 @@ const routes = [
     path: '/pasien/transfer-imunisasi',
     name: 'TransferImunisasi',
     component: () => import('../views/pasien/TransferImunisasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/pasien/sep',
+    name: 'PasienSep',
+    component: () => import('../views/pasien/SepView.vue'),
     meta: { requiresAuth: true }
   },
   // === CNS ===

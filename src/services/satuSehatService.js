@@ -164,6 +164,48 @@ export const satuSehatService = {
   },
   syncEpisodeOfCare(data) {
     return api.post('/satusehat/episodeofcare/sync', data)
+  },
+
+  // Mapping Radiologi
+  getMappingRadiologi(params) {
+    return api.get('/satusehat/mapping-radiologi', { params })
+  },
+  showMappingRadiologi(id) {
+    return api.get(`/satusehat/mapping-radiologi/${id}`)
+  },
+  saveMappingRadiologi(data) {
+    return api.post('/satusehat/mapping-radiologi', data)
+  },
+  deleteMappingRadiologi(id) {
+    return api.delete(`/satusehat/mapping-radiologi/${id}`)
+  },
+  searchAiRadiologi(data) {
+    return api.post('/satusehat/mapping-radiologi/ai-search', data)
+  },
+
+  // Mapping Lab
+  getMappingLab(params) {
+    return api.get('/satusehat/mapping-lab', { params })
+  },
+  saveMappingLab(data) {
+    return api.post('/satusehat/mapping-lab', data)
+  },
+  deleteMappingLab(id) {
+    return api.delete(`/satusehat/mapping-lab/${id}`)
+  },
+  searchAiLab(data) {
+    return api.post('/satusehat/mapping-lab/ai-search', data)
+  },
+
+  // ServiceRequest Lab
+  getServiceRequestLab(params) {
+    return api.get('/satusehat/servicerequest-lab', { params })
+  },
+  sendServiceRequestLab(data) {
+    return api.post('/satusehat/servicerequest-lab/send', data)
+  },
+  syncServiceRequestLab(data) {
+    return api.post('/satusehat/servicerequest-lab/sync', data)
   }
 }
 

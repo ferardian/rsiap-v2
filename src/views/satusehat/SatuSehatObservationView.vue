@@ -23,17 +23,25 @@
               <input type="date" class="form-control form-control-custom" v-model="filters.tgl_akhir" :min="filters.tgl_awal" @change="fetchData(true)">
             </div>
           </div>
+          <div class="col-md-2">
+            <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Status Sinkronisasi</label>
+            <select class="form-select form-control-custom" v-model="filters.syncStatus" @change="fetchData(true)">
+              <option value="">Semua (Status)</option>
+              <option value="sent">Sudah Terkirim</option>
+              <option value="unsent">Belum Terkirim</option>
+            </select>
+          </div>
           <div class="col-md-3">
             <label class="form-label text-xs fw-bold text-uppercase text-muted mb-2 tracking-wide">Cari Pasien / No. Rawat</label>
             <input type="text" class="form-control form-control-custom" v-model="filters.keyword" placeholder="Nama / No. Rawat..." @keyup.enter="fetchData(true)">
           </div>
-          <div class="col-md-5 d-flex align-items-end gap-2">
-            <button class="btn btn-primary flex-fill py-2" @click="fetchData(true)">
-              <i class="fas fa-sync-alt me-2"></i> Refresh List
+          <div class="col-md-3 d-flex align-items-end gap-1">
+            <button class="btn btn-primary flex-fill py-2 px-1" @click="fetchData(true)" title="Refresh List">
+              <i class="fas fa-sync-alt"></i>
             </button>
-            <button class="btn btn-success flex-fill py-2" @click="handleSync" :disabled="syncLoading">
-              <span v-if="syncLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-              <i v-else class="fas fa-paper-plane me-2"></i> Kirim Data
+            <button class="btn btn-success flex-fill py-2 px-2 text-nowrap" @click="handleSync" :disabled="syncLoading">
+              <span v-if="syncLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              <i v-else class="fas fa-paper-plane me-1"></i> Kirim Data
             </button>
           </div>
         </div>
@@ -140,7 +148,8 @@ export default {
       filters: {
         tgl_awal: dayjs().format('YYYY-MM-DD'),
         tgl_akhir: dayjs().format('YYYY-MM-DD'),
-        keyword: ''
+        keyword: '',
+        syncStatus: ''
       },
       syncLoading: false,
       pagination: {
@@ -192,6 +201,7 @@ export default {
           tglAwal: this.filters.tgl_awal,
           tglAkhir: this.filters.tgl_akhir,
           keyword: this.filters.keyword,
+          sync_status: this.filters.syncStatus,
           page: this.pagination.current_page
         });
         if (response.data && response.data.data) {
