@@ -143,6 +143,15 @@
                 Detail Registrasi
               </h3>
 
+              <!-- Fast Track BPJS Candidate -->
+              <FastTrackCard 
+                v-if="fastTrackCandidate"
+                :data="fastTrackCandidate"
+                v-model:ignoreError="ignoreBpjsError"
+                :loading="processingFastTrack"
+                @process="handleFastTrackProcess"
+              />
+
               <div class="row g-3 mt-2">
                 <!-- Date Selection -->
                 <div class="col-md-6">
@@ -268,9 +277,18 @@
                     Memproses...
                   </span>
                   <span v-else>
-                    <i class="fas fa-check-circle me-2"></i>
-                    Daftarkan Sekarang
+                    <i :class="isEditMode ? 'fas fa-save me-2' : 'fas fa-check-circle me-2'"></i>
+                    {{ isEditMode ? 'Simpan Perubahan' : 'Daftarkan Sekarang' }}
                   </span>
+                </button>
+
+                <button 
+                  v-if="isEditMode"
+                  @click="cancelEdit"
+                  class="btn btn-outline-secondary w-100 rounded-4 py-2 mt-3 fw-bold border-2 d-flex align-items-center justify-content-center"
+                >
+                  <i class="fas fa-times me-2"></i>
+                  Batalkan Edit
                 </button>
               </div>
             </div>
@@ -425,6 +443,11 @@
                                 Aksi
                               </button>
                               <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 glass-effect p-2 rounded-4" style="min-width: 200px;">
+                                <li>
+                                  <a class="dropdown-item rounded-3 mb-1 py-2 text-primary" href="#" @click.prevent="handleEditRegistrasi(reg)">
+                                    <i class="fas fa-edit me-2 opacity-75"></i> Edit Registrasi
+                                  </a>
+                                </li>
                                 <li>
                                   <a class="dropdown-item rounded-3 mb-1 py-2" href="#" @click.prevent="openGenerateSep(reg)">
                                     <i class="fas fa-file-medical me-2 text-primary opacity-75"></i> {{ reg.sepSimple ? 'Edit SEP' : 'Terbitkan SEP' }}
@@ -796,6 +819,8 @@ import poliklinikService from '../../services/poliklinikService';
 import dokterService from '../../services/dokterService';
 import registrasiService from '../../services/registrasiService';
 import wilayahService from '../../services/wilayahService';
+import FastTrackCard from './components/FastTrackCard.vue';
+import api from '../../services/api';
 
 // State
 const searchQuery = ref('');
@@ -813,6 +838,16 @@ const selectedRegForSep = ref(null);
 const loading = ref(false);
 const numberLoading = ref(false);
 const submitting = ref(false);
+
+// Fast Track State
+const fastTrackCandidate = ref(null);
+const checkingFastTrack = ref(false);
+
+// Edit Mode State
+const isEditMode = ref(false);
+const currentNoRawat = ref('');
+const ignoreBpjsError = ref(true); // Default to true for staff
+const processingFastTrack = ref(false);
 
 const riwayatRegistrasi = ref([]);
 const loadingRiwayat = ref(false);
@@ -1051,12 +1086,138 @@ const selectPasien = (pasien) => {
   searchQuery.value = '';
   searchResults.value = [];
   fetchRiwayat(pasien.no_rkm_medis);
+  checkFastTrackBPJS(pasien);
+};
+
+const checkFastTrackBPJS = async (pasien) => {
+  fastTrackCandidate.value = null;
+  
+  // If no card number, attempt to search by RM or KTP if possible, 
+  // but usually we need some BPJS context.
+  // The anjungan/identitas endpoint handles RM/NIK/NoKartu.
+  
+  checkingFastTrack.value = true;
+  try {
+    const response = await api.post('/anjungan/identitas', {
+      tipe: 'bpjs',
+      nomor: pasien.no_rkm_medis
+    });
+
+    if (response.data.success && response.data.data) {
+      const data = response.data.data;
+      // We are looking for a candidate that has either a rujukan or a surat_kontrol
+      if (data.rujukan || data.surat_kontrol) {
+        fastTrackCandidate.value = data;
+      }
+    }
+  } catch (error) {
+    console.error('Fast track check error:', error);
+    // Silent fail for check
+  } finally {
+    checkingFastTrack.value = false;
+  }
+};
+
+const handleEditRegistrasi = (reg) => {
+  isEditMode.value = true;
+  currentNoRawat.value = reg.no_rawat;
+
+  selectedPasien.value = reg.pasien;
+  form.no_rkm_medis = reg.no_rkm_medis;
+  form.kd_poli = reg.kd_poli;
+  form.kd_dokter = reg.kd_dokter;
+  form.kd_pj = reg.kd_pj;
+
+  if (getPenjabClass(reg.caraBayar?.png_jawab) === 'bpjs') {
+    checkFastTrackBPJS(reg.pasien);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const cancelEdit = () => {
+  resetForm();
+};
+
+const handleFastTrackProcess = async (payloadFromCard) => {
+    const candidate = payloadFromCard || fastTrackCandidate.value;
+    if (!candidate) return;
+
+    const isRecovery = candidate.existing_reg?.stts === 'Batal';
+    const confirmTitle = isRecovery ? 'Pemulihan Registrasi' : 'Konfirmasi Fast Track';
+    const confirmText = isRecovery 
+        ? `Aktifkan kembali pendaftaran ${candidate.pasien.nm_pasien} di Poli ${candidate.poli?.nm_poli}? SEP akan diterbitkan.`
+        : `Daftarkan ${candidate.pasien.nm_pasien} ke Poli ${candidate.poli?.nm_poli}? SEP akan otomatis diterbitkan.`;
+
+    const confirm = await Swal.fire({
+        title: confirmTitle,
+        text: confirmText,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: isRecovery ? 'Ya, Aktifkan' : 'Ya, Proses Cepat',
+        cancelButtonText: 'Batal',
+        customClass: { popup: 'swal2-glass' }
+    });
+
+    if (confirm.isConfirmed) {
+        processingFastTrack.value = true;
+        try {
+            const payload = {
+                tipe: 'bpjs',
+                no_rkm_medis: candidate.pasien.no_rkm_medis,
+                kd_poli: candidate.poli?.kd_poli,
+                kd_dokter: candidate.dokter?.kd_dokter,
+                tgl_registrasi: dayjs().format('YYYY-MM-DD'),
+                kd_pj: candidate.kd_pj || 'A05',
+                jenis_kunjungan: candidate.rujukan ? 'rujukan' : 'kontrol',
+                rujukan: candidate.rujukan,
+                surat_kontrol: candidate.surat_kontrol,
+                diag_awal: candidate.diag_awal?.kode || candidate.rujukan?.diagnosa?.kode || '',
+                ignore_bpjs_error: ignoreBpjsError.value
+            };
+
+            const response = await api.post('/anjungan/register', payload);
+
+            if (response.data.success) {
+                const warnings = response.data.warnings || [];
+                
+                if (warnings.length > 0) {
+                    await Swal.fire({
+                        title: 'Terdaftar dengan Catatan',
+                        html: `Pendaftaran berhasil disimpan, namun ada kendala BPJS:<br><ul class="text-start mt-2"><li>${warnings.join('</li><li>')}</li></ul>`,
+                        icon: 'warning',
+                        confirmButtonText: 'Oke'
+                    });
+                } else {
+                    await Swal.fire({
+                        title: 'Berhasil!',
+                        text: 'Pasien telah terdaftar dan SEP berhasil diterbitkan.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+
+                resetForm();
+                fetchRegistrations();
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Gagal',
+                text: error.response?.data?.message || 'Terjadi kesalahan sistem saat Fast Track.',
+                icon: 'error'
+            });
+        } finally {
+            processingFastTrack.value = false;
+        }
+    }
 };
 
 const clearSelectedPasien = () => {
   selectedPasien.value = null;
   form.no_rkm_medis = '';
   riwayatRegistrasi.value = [];
+  fastTrackCandidate.value = null;
 };
 
 const fetchRiwayat = async (noRmk) => {
@@ -1166,13 +1327,15 @@ const submitRegistration = async () => {
   if (!canSubmit.value) return;
 
   const result = await Swal.fire({
-    title: 'Konfirmasi Registrasi',
-    text: `Daftarkan ${selectedPasien.value.nm_pasien} ke ${getNmPoli(form.kd_poli)}?`,
+    title: isEditMode.value ? 'Konfirmasi Update' : 'Konfirmasi Registrasi',
+    text: isEditMode.value 
+          ? `Perbarui pendaftaran ${selectedPasien.value.nm_pasien}?` 
+          : `Daftarkan ${selectedPasien.value.nm_pasien} ke ${getNmPoli(form.kd_poli)}?`,
     icon: 'question',
     showCancelButton: true,
-    confirmButtonText: 'Ya, Daftar',
+    confirmButtonText: isEditMode.value ? 'Ya, Update' : 'Ya, Daftar',
     cancelButtonText: 'Batal',
-    confirmButtonColor: '#27ae60',
+    confirmButtonColor: isEditMode.value ? '#3498db' : '#27ae60',
     background: '#ffffff',
     customClass: {
       popup: 'swal2-glass'
@@ -1182,21 +1345,32 @@ const submitRegistration = async () => {
   if (result.isConfirmed) {
     submitting.value = true;
     try {
-      const response = await registrasiService.register({
-        ...form,
-        limit_reg: parseInt(form.limit_reg)
-      });
+      let response;
+      if (isEditMode.value) {
+        response = await registrasiService.updateRegistrasi(currentNoRawat.value, {
+          kd_dokter: form.kd_dokter,
+          kd_poli: form.kd_poli,
+          kd_pj: form.kd_pj
+        });
+      } else {
+        response = await registrasiService.register({
+          ...form,
+          limit_reg: parseInt(form.limit_reg)
+        });
+      }
 
       if (response.data.success) {
         await Swal.fire({
           title: 'Berhasil!',
-          text: 'Pasien telah berhasil terdaftar.',
+          text: isEditMode.value ? 'Data registrasi berhasil diperbarui.' : 'Pasien telah berhasil terdaftar.',
           icon: 'success',
           timer: 2000,
           showConfirmButton: false
         });
         resetForm();
-        fetchRiwayat(form.no_rkm_medis);
+        if (form.no_rkm_medis) {
+          fetchRiwayat(form.no_rkm_medis);
+        }
       }
     } catch (error) {
       Swal.fire({
@@ -1216,6 +1390,8 @@ const resetForm = () => {
   form.kd_poli = '';
   form.no_reg = '';
   form.no_rawat = '';
+  isEditMode.value = false;
+  currentNoRawat.value = '';
   fetchRegistrations(); // Refresh list after reset/success
 };
 

@@ -45,6 +45,16 @@ const registrasiService = {
             payload.includes = payload.includes.map(rel => typeof rel === 'string' ? { relation: rel } : rel);
         }
         return api.post('/registrasi/periksa/search', payload)
+    },
+
+    /**
+     * Update existing registration
+     * @param {string} noRawat 
+     * @param {Object} data 
+     */
+    updateRegistrasi(noRawat, data) {
+        const id = btoa(noRawat);
+        return api.put(`/registrasi/booking/registrasi/${id}`, data)
     }
 }
 
