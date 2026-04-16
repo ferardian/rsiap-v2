@@ -118,17 +118,28 @@
               <td>
                 <div class="badge-sep">{{ item.no_sep }}</div>
                 <small class="text-muted d-block mt-1">{{ item.no_rawat }}</small>
+                <div v-if="item.user" class="mt-1">
+                  <span class="badge rounded-pill bg-light text-dark border fw-normal" style="font-size: 0.7rem;">
+                    <i class="fas fa-user-edit me-1 text-muted"></i>
+                    {{ item.user }}
+                  </span>
+                </div>
               </td>
               <td>
                 <div class="fw-bold">{{ item.nama_pasien }}</div>
                 <div class="small text-muted">
                   RM: {{ item.nomr }} | Kartu: {{ item.no_kartu }}
                 </div>
+                <div v-if="item.reg_periksa && item.reg_periksa.stts_daftar" class="mt-1">
+                  <span :class="['badge rounded-pill fw-normal', item.reg_periksa.stts_daftar === 'Baru' ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-secondary-subtle text-secondary border-secondary-subtle']" style="font-size: 0.7rem;">
+                    {{ item.reg_periksa.stts_daftar }}
+                  </span>
+                </div>
               </td>
               <td>
                 <div>{{ formatDate(item.tglsep) }}</div>
-                <small v-if="item.tglpulang" class="text-success text-xs">
-                   Keulhar: {{ formatDate(item.tglpulang) }}
+                <small v-if="formatDate(item.tglpulang)" class="text-success text-xs d-block">
+                   Tgl. Pulang: {{ formatDate(item.tglpulang) }}
                 </small>
               </td>
               <td>
@@ -391,8 +402,11 @@ const deleteSep = async (item) => {
 }
 
 const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('id-ID', {
+  if (!dateString || dateString === '0000-00-00' || dateString === '0000-00-00 00:00:00') return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  
+  return date.toLocaleDateString('id-ID', {
     day: '2-digit',
     month: 'short',
     year: 'numeric'

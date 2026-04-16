@@ -231,7 +231,18 @@
                     </span>
                   </div>
                   <div class="small text-muted mb-1">{{ item.nokapst }}</div>
-                  <div class="small text-muted">RM: {{ item.norekammedis || '-' }}</div>
+                  <div class="small text-muted">
+                    RM: {{ item.norekammedis || '-' }}
+                    <span v-if="item.stts_daftar" :class="['badge rounded-pill fw-normal ms-1', item.stts_daftar === 'Baru' ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-secondary-subtle text-secondary border-secondary-subtle']" style="font-size: 0.65rem;">
+                      {{ item.stts_daftar }}
+                    </span>
+                  </div>
+                  <div v-if="item.nokapst && sepMap[item.nokapst] && sepMap[item.nokapst].user" class="mt-1">
+                    <span class="badge rounded-pill bg-light text-dark border fw-normal" style="font-size: 0.65rem;">
+                      <i class="fas fa-user-edit me-1 text-muted"></i>
+                      {{ sepMap[item.nokapst].user }}
+                    </span>
+                  </div>
                 </td>
                 <td>
                   <div class="fw-bold">{{ item.kodepoli }}</div>
@@ -369,7 +380,15 @@
                         <span v-if="comparisonTab === 'matching' && isUniqueInMatching(item)" class="badge bg-success-subtle text-success ms-1" style="font-size: 0.65rem;" title="Unik"><i class="fas fa-check"></i></span>
                         <span v-else-if="comparisonTab === 'matching' && !isUniqueInMatching(item)" class="badge bg-warning-subtle text-warning ms-1" style="font-size: 0.65rem;" :title="getDuplicateCount(item) + 'x duplikat'">{{ getDuplicateCount(item) }}x</span>
                       </td>
-                      <td class="text-muted">{{ item.nokapst || item.no_kartu }}</td>
+                      <td class="text-muted">
+                        {{ item.nokapst || item.no_kartu }}
+                        <div v-if="item.user" class="mt-1">
+                          <span class="badge rounded-pill bg-light text-dark border fw-normal" style="font-size: 0.6rem;">
+                            <i class="fas fa-user-edit me-1 text-muted"></i>
+                            {{ item.user }}
+                          </span>
+                        </div>
+                      </td>
                       <td v-if="comparisonTab !== 'no-antrol'">{{ item.norekammedis || '-' }}</td>
                       <td v-if="comparisonTab === 'no-antrol'">{{ item.no_rawat }}</td>
                       <td v-if="comparisonTab !== 'no-sep'" class="small text-blue-600 fw-bold">{{ item.no_sep || '-' }}</td>
@@ -457,6 +476,29 @@
           <div v-else class="adjustment-form">
              <div class="alert alert-info border-0 shadow-none small mb-4">
                <i class="fas fa-info-circle me-2"></i> Mengubah waktu di sini akan mengupdate data tabel SIMRS dan langsung mengirim update ke BPJS.
+             </div>
+
+             <!-- Task 1 -->
+             <div class="adj-item mb-4">
+                <label class="small-label text-success mb-2 d-block">
+                   Task 1: Mulai Antrean 
+                   <span class="badge bg-danger-subtle text-danger ms-2" style="font-size: 0.6rem;">No Sync to Local</span>
+                </label>
+                <div class="row g-2">
+                  <div class="col-7"><input type="date" v-model="adjData.task1.tgl" class="form-control premium-input-sm"></div>
+                  <div class="col-5"><input type="time" step="1" v-model="adjData.task1.jam" class="form-control premium-input-sm"></div>
+                </div>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(1)">Sync Task 1 ke BPJS</button>
+             </div>
+
+             <!-- Task 2 -->
+             <div class="adj-item mb-4">
+                <label class="small-label text-success mb-2 d-block">Task 2: Selesai Admisi (SEP)</label>
+                <div class="row g-2">
+                  <div class="col-7"><input type="date" v-model="adjData.task2.tgl" class="form-control premium-input-sm"></div>
+                  <div class="col-5"><input type="time" step="1" v-model="adjData.task2.jam" class="form-control premium-input-sm"></div>
+                </div>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(2)">Simpan & Sync Task 2</button>
              </div>
 
              <!-- Task 3 -->
@@ -627,6 +669,8 @@ const selectedBooking = ref(null)
 const adjData = reactive({
   no_rawat: '',
   nm_pasien: '',
+  task1: { tgl: '', jam: '' },
+  task2: { tgl: '', jam: '' },
   task3: { tgl: '', jam: '' },
   task4: null,
   task4_raw: '',
@@ -704,9 +748,17 @@ const missingQueues = computed(() => {
   return seps.filter(sep => sep.no_kartu && !antrolCards.has(sep.no_kartu))
 })
 
-const sepCardSet = computed(() => {
+const sepMap = computed(() => {
+  const map = {}
   const seps = Array.isArray(sepList.value) ? sepList.value : []
-  return new Set(seps.map(s => s.no_kartu).filter(Boolean))
+  seps.forEach(s => {
+    if (s.no_kartu) map[s.no_kartu] = s
+  })
+  return map
+})
+
+const sepCardSet = computed(() => {
+  return new Set(Object.keys(sepMap.value))
 })
 
 const antrolWithoutSep = computed(() => {
@@ -960,6 +1012,8 @@ const showAdjustmentModal = async (item) => {
       const res = response.data.response
       adjData.no_rawat = res.no_rawat
       adjData.nm_pasien = res.nm_pasien
+      adjData.task1 = res.task1 || { tgl: '', jam: '' }
+      adjData.task2 = res.task2 || { tgl: '', jam: '' }
       adjData.task3 = res.task3 || { tgl: '', jam: '' }
       adjData.task4 = res.task4
       adjData.task4_raw = res.task4 ? res.task4.replace(' ', 'T') : ''
@@ -1124,7 +1178,9 @@ const bulkSyncAllShown = async () => {
 
 const updateLocalTask = async (taskId) => {
   let waktuValue = null
-  if (taskId === 3) waktuValue = adjData.task3
+  if (taskId === 1) waktuValue = adjData.task1
+  else if (taskId === 2) waktuValue = adjData.task2
+  else if (taskId === 3) waktuValue = adjData.task3
   else if (taskId === 4) waktuValue = adjData.task4_raw.replace('T', ' ')
   else if (taskId === 5) {
     waktuValue = adjData.has_resep ? adjData.task5 : (adjData.task5_raw ? adjData.task5_raw.replace('T', ' ') : null)
