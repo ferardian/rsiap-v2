@@ -72,7 +72,10 @@
             </button>
           </div>
 
-          <div class="action-buttons">
+          <div class="action-buttons d-flex gap-2">
+            <button @click="exportToExcel" class="btn btn-success d-flex align-items-center gap-2 rounded-lg px-4 fw-bold shadow-sm py-2" :disabled="loading || responseList.length === 0">
+              <i class="fas fa-file-excel"></i> Export XLSX
+            </button>
             <button @click="$router.push('/central-archive/pks/create')" class="btn btn-primary d-flex align-items-center gap-2 rounded-lg px-4 fw-bold shadow-sm py-2">
               <i class="fas fa-plus-circle"></i> Tambah PKS
             </button>
@@ -194,23 +197,71 @@
           </div>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="pagination.last_page > 1" class="pagination-footer">
-          <button 
-            :disabled="pagination.current_page === 1" 
-            @click="changePage(pagination.current_page - 1)"
-            class="btn-page"
-          >
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="page-info">Halaman {{ pagination.current_page }} dari {{ pagination.last_page }}</span>
-          <button 
-            :disabled="pagination.current_page === pagination.last_page" 
-            @click="changePage(pagination.current_page + 1)"
-            class="btn-page"
-          >
-            <i class="fas fa-chevron-right"></i>
-          </button>
+        <!-- Advanced Pagination -->
+        <div v-if="pagination.total > 0" class="pagination-footer-advanced">
+          <div class="pagination-info">
+            Menampilkan <strong>{{ showingFrom }}</strong> sampai <strong>{{ showingTo }}</strong> dari <strong>{{ pagination.total }}</strong> entri
+          </div>
+          
+          <div class="pagination-controls-wrapper">
+            <div class="per-page-selector">
+              <span>Baris per halaman:</span>
+              <select v-model="pagination.per_page" @change="handlePerPageChange" class="form-select-sm border-0 bg-light rounded-pill px-3">
+                <option :value="10">10</option>
+                <option :value="25">25</option>
+                <option :value="50">50</option>
+                <option :value="100">100</option>
+              </select>
+            </div>
+
+            <nav v-if="pagination.last_page > 1" class="pagination-nav">
+              <button 
+                :disabled="pagination.current_page === 1" 
+                @click="changePage(1)"
+                class="btn-nav"
+                title="Halaman Pertama"
+              >
+                <i class="fas fa-angle-double-left"></i>
+              </button>
+              <button 
+                :disabled="pagination.current_page === 1" 
+                @click="changePage(pagination.current_page - 1)"
+                class="btn-nav"
+                title="Sebelumnya"
+              >
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              
+              <div class="page-numbers">
+                <button 
+                  v-for="page in displayedPages" 
+                  :key="page"
+                  @click="page !== '...' && changePage(page)"
+                  class="btn-page-num"
+                  :class="{ 'active': page === pagination.current_page, 'dots': page === '...' }"
+                >
+                  {{ page }}
+                </button>
+              </div>
+
+              <button 
+                :disabled="pagination.current_page === pagination.last_page" 
+                @click="changePage(pagination.current_page + 1)"
+                class="btn-nav"
+                title="Berikutnya"
+              >
+                <i class="fas fa-chevron-right"></i>
+              </button>
+              <button 
+                :disabled="pagination.current_page === pagination.last_page" 
+                @click="changePage(pagination.last_page)"
+                class="btn-nav"
+                title="Halaman Terakhir"
+              >
+                <i class="fas fa-angle-double-right"></i>
+              </button>
+            </nav>
+          </div>
         </div>
       </div>
     </div>
@@ -289,11 +340,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import pksService from '@/services/pksService'
 import api from '@/services/api'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
+import { format } from 'date-fns'
+import { id } from 'date-fns/locale'
 
 const router = useRouter()
 
@@ -310,6 +364,7 @@ const filters = ref({
 const pagination = ref({
   current_page: 1,
   last_page: 1,
+  per_page: 10,
   total: 0
 })
 
@@ -323,7 +378,7 @@ const fetchData = async (page = 1) => {
   try {
     const payload = {
       page: page,
-      limit: 10,
+      limit: pagination.value.per_page,
       sort: [{ field: 'tanggal_awal', direction: 'desc' }],
       filters: [],
       // Always include Penanggung Jawab
@@ -354,8 +409,9 @@ const fetchData = async (page = 1) => {
     
     const meta = resData.meta || resData.pagination || resData
     pagination.value = {
+      ...pagination.value,
       current_page: meta.current_page || 1,
-      last_page: meta.last_page || Math.ceil((meta.total || 0) / (meta.per_page || 10)) || 1,
+      last_page: meta.last_page || Math.ceil((meta.total || 0) / (meta.per_page || pagination.value.per_page)) || 1,
       total: meta.total || 0
     }
   } catch (error) {
@@ -406,6 +462,117 @@ const handleOpenFile = (berkas) => {
 
 const handleEdit = (id) => {
     router.push(`/central-archive/pks/edit/${id}`)
+}
+
+const handlePerPageChange = () => {
+    pagination.value.current_page = 1
+    fetchData(1)
+}
+
+const showingFrom = computed(() => {
+    if (pagination.value.total === 0) return 0
+    return (pagination.value.current_page - 1) * pagination.value.per_page + 1
+})
+
+const showingTo = computed(() => {
+    const to = pagination.value.current_page * pagination.value.per_page
+    return to > pagination.value.total ? pagination.value.total : to
+})
+
+const displayedPages = computed(() => {
+    const total = pagination.value.last_page
+    const current = pagination.value.current_page
+    const delta = 2
+    const range = []
+    const rangeWithDots = []
+    let l
+
+    for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+            range.push(i)
+        }
+    }
+
+    for (let i of range) {
+        if (l) {
+            if (i - l === 2) {
+                rangeWithDots.push(l + 1)
+            } else if (i - l !== 1) {
+                rangeWithDots.push('...')
+            }
+        }
+        rangeWithDots.push(i)
+        l = i
+    }
+
+    return rangeWithDots
+})
+
+const exportToExcel = async () => {
+    loading.value = true
+    try {
+        // Fetch all data matching the current filters without pagination
+        const payload = {
+            page: 1,
+            limit: 5000, // Reasonable high limit for export
+            sort: [{ field: 'tanggal_awal', direction: 'desc' }],
+            filters: [],
+            include: ['penanggungJawab']
+        }
+
+        if (searchQuery.value) {
+            payload.search = { value: searchQuery.value }
+        }
+
+        if (filters.value.status !== '') {
+            payload.filters.push({ field: 'status', operator: '=', value: filters.value.status })
+        }
+
+        if (filters.value.kategori) {
+            payload.filters.push({ field: 'no_pks_internal', operator: 'like', value: `%/${filters.value.kategori}/%` })
+        }
+
+        if (filters.value.tanggal_awal) {
+            payload.filters.push({ field: 'tanggal_awal', operator: '>=', value: filters.value.tanggal_awal })
+        }
+
+        const response = await pksService.searchPks(payload)
+        const allData = response.data.data
+
+        if (!allData || allData.length === 0) {
+            Swal.fire('Info', 'Tidak ada data untuk diekspor.', 'info')
+            return
+        }
+
+        // Prepare data for Excel
+        const excelData = allData.map((item, index) => ({
+            'No': index + 1,
+            'No. Internal': item.no_pks_internal || '-',
+            'No. Eksternal': item.no_pks_eksternal || '-',
+            'Judul PKS': item.judul,
+            'Penanggung Jawab': item.penanggung_jawab?.nama || item.pj || '-',
+            'Tanggal Terbit': item.tgl_terbit && item.tgl_terbit !== '0000-00-00' ? format(new Date(item.tgl_terbit), 'dd MMM yyyy', { locale: id }) : '-',
+            'Tanggal Awal': item.tanggal_awal && item.tanggal_awal !== '0000-00-00' ? format(new Date(item.tanggal_awal), 'dd MMM yyyy', { locale: id }) : '-',
+            'Tanggal Akhir': item.tanggal_akhir && item.tanggal_akhir !== '0000-00-00' ? format(new Date(item.tanggal_akhir), 'dd MMM yyyy', { locale: id }) : '-',
+            'Status': getStatusLabel(item)
+        }))
+
+        // Create workbook and worksheet
+        const worksheet = XLSX.utils.json_to_sheet(excelData)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Data PKS')
+
+        // Generate and download
+        const timestamp = format(new Date(), 'yyyyMMdd_HHmm')
+        XLSX.writeFile(workbook, `Data_PKS_${timestamp}.xlsx`)
+
+        Swal.fire('Berhasil', 'Data PKS telah berhasil diekspor ke Excel.', 'success')
+    } catch (error) {
+        console.error('Export Excel Error:', error)
+        Swal.fire('Error', 'Gagal mengekspor data ke Excel.', 'error')
+    } finally {
+        loading.value = false
+    }
 }
 
 const handleDelete = async (id) => {
@@ -888,6 +1055,99 @@ onMounted(() => {
 }
 
 /* Mobile responsive */
+/* Advanced Pagination Styles */
+.pagination-footer-advanced {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.pagination-controls-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.per-page-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.per-page-selector select {
+  cursor: pointer;
+  outline: none;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-nav, .btn-page-num {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-nav:hover:not(:disabled), .btn-page-num:hover:not(.dots) {
+  background: #f1f5f9;
+  color: #0ea5e9;
+  border-color: #0ea5e9;
+  transform: translateY(-1px);
+}
+
+.btn-page-num.active {
+  background: #0ea5e9;
+  color: white;
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.3);
+}
+
+.btn-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.btn-page-num.dots {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
 @media (max-width: 1024px) {
   .pks-view-wrapper {
     padding: 0.75rem 0.6rem 2rem 0.6rem;
@@ -895,6 +1155,30 @@ onMounted(() => {
     background: #f8fafc;
   }
   
+  .pagination-footer-advanced {
+    padding: 1.25rem 0.5rem 3rem 0.5rem !important;
+    flex-direction: column;
+    align-items: center !important;
+    text-align: center;
+    background: transparent !important;
+    border-top: none;
+  }
+
+  .pagination-controls-wrapper {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .per-page-selector {
+    justify-content: center;
+  }
+
+  .btn-page-num {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+
   .hero-header { 
     padding: 1rem 1.25rem; 
     border-radius: 12px; 
@@ -1054,15 +1338,15 @@ onMounted(() => {
     width: 100%;
     order: -1;
     margin-bottom: 0.15rem;
+    flex-wrap: wrap;
   }
 
-  .btn-primary {
-    width: 100%;
+  .btn-primary, .btn-success {
+    flex: 1;
     justify-content: center;
     padding: 0.65rem !important;
     border-radius: 10px !important;
-    font-size: 0.9rem !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    font-size: 0.85rem !important;
     font-weight: 700 !important;
   }
 
@@ -1076,14 +1360,6 @@ onMounted(() => {
   .desktop-view { display: none !important; }
   .mobile-view { display: block !important; padding: 0.25rem 0; }
   
-  .pagination-footer { 
-    border-top: none; 
-    margin-top: 1rem;
-    padding: 1.25rem 0 3rem 0 !important;
-    background: transparent !important;
-    justify-content: center !important;
-  }
-
   .mobile-card {
     background: white;
     border-radius: 16px;
