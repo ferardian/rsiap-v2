@@ -55,6 +55,36 @@ const registrasiService = {
     updateRegistrasi(noRawat, data) {
         const id = btoa(noRawat);
         return api.put(`/registrasi/booking/registrasi/${id}`, data)
+    },
+
+    /**
+     * Get active queue list from tb_list
+     */
+    getAntreanLoket() {
+        return api.get('/anjungan/tiket-loket')
+    },
+
+    /**
+     * Update queue status (Call, Finish, Batal)
+     * @param {Object} data - { kd_list, status, kd_loket, no_rawat }
+     */
+    updateAntrean(data) {
+        return api.patch('/anjungan/tiket-loket', data)
+    },
+
+    /**
+     * Get available loket list
+     */
+    getLoket() {
+        return api.get('/anjungan/loket')
+    },
+
+    /**
+     * Take a new queue ticket (Virtual/Admin)
+     * @param {Object} data - { jenis, created_by }
+     */
+    ambilAntreanLoket(data) {
+        return api.post('/anjungan/tiket-loket', data)
     }
 }
 

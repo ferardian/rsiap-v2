@@ -11,13 +11,23 @@
           <p class="page-subtitle mb-0">Kelola pendaftaran dan antrean pasien secara cepat dan terintegrasi</p>
         </div>
       </div>
-
       <div class="card-content mt-4">
+        <!-- Queue Manager Section (NEW) -->
+        <div class="row g-4 mb-4" id="section-antrean">
+          <div class="col-12">
+             <QueueManager 
+               :current-no-rawat="form.no_rawat || currentNoRawat"
+               :current-nm-pasien="selectedPasien?.nm_pasien"
+               @ticket-linked="handleTicketLinked"
+             />
+          </div>
+        </div>
+
         <!-- Main Form Grid -->
-        <div class="row g-4">
+        <div class="row g-4" id="section-form">
           <!-- Left Column: Patient Selection -->
           <div class="col-lg-5">
-            <div class="form-section-card h-100">
+            <div class="form-section-card">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="section-title mb-0">
                   <i class="fas fa-user-circle me-2"></i>
@@ -296,7 +306,7 @@
         </div>
 
         <!-- Registration List Section (NEW) -->
-        <div class="row mt-4">
+        <div class="row mt-4" id="section-list">
           <div class="col-12">
             <div class="form-section-card glass-effect registration-list-card">
               <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -805,11 +815,32 @@
       @close="showGenerateSepModal = false"
       @success="fetchRegistrations"
     />
+    <!-- Floating Section Navigation (NEW) -->
+    <nav class="floating-section-nav animate__animated animate__fadeInRight">
+      <div class="nav-inner glass-effect">
+        <button @click="scrollToSection('section-antrean')" class="nav-item" title="Antrean" :class="{ active: activeSection === 'section-antrean' }">
+          <i class="fas fa-headset"></i>
+          <span class="nav-label">Antrean</span>
+        </button>
+        <button @click="scrollToSection('section-form')" class="nav-item" title="Form Registrasi" :class="{ active: activeSection === 'section-form' }">
+          <i class="fas fa-edit"></i>
+          <span class="nav-label">Form</span>
+        </button>
+        <button @click="scrollToSection('section-list')" class="nav-item" title="Daftar Registrasi" :class="{ active: activeSection === 'section-list' }">
+          <i class="fas fa-list-ul"></i>
+          <span class="nav-label">Daftar</span>
+        </button>
+        <div class="nav-divider"></div>
+        <button @click="scrollToTop" class="nav-item top" title="Ke Atas">
+          <i class="fas fa-chevron-up"></i>
+        </button>
+      </div>
+    </nav>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue';
 import { debounce } from 'lodash';
 import dayjs from 'dayjs';
 import Swal from 'sweetalert2';
@@ -821,6 +852,7 @@ import registrasiService from '../../services/registrasiService';
 import wilayahService from '../../services/wilayahService';
 import FastTrackCard from './components/FastTrackCard.vue';
 import api from '../../services/api';
+import QueueManager from '@/components/ui/QueueManager.vue';
 
 // State
 const searchQuery = ref('');
@@ -1137,6 +1169,52 @@ const handleEditRegistrasi = (reg) => {
 
 const cancelEdit = () => {
   resetForm();
+};
+
+// --- Floating Navigation Logic ---
+const activeSection = ref('section-antrean');
+
+const scrollToSection = (id) => {
+  const element = document.getElementById(id);
+  if (element) {
+    const offset = 20; // Padding to see header
+    const bodyRect = document.body.getBoundingClientRect().top;
+    const elementRect = element.getBoundingClientRect().top;
+    const elementPosition = elementRect - bodyRect;
+    const offsetPosition = elementPosition - offset;
+
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+    
+    activeSection.value = id;
+  }
+};
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const handleScrollForNav = () => {
+  const sections = ['section-antrean', 'section-form', 'section-list'];
+  const scrollPosition = window.scrollY + 100;
+
+  for (const section of sections) {
+    const element = document.getElementById(section);
+    if (element) {
+      const top = element.offsetTop;
+      const height = element.offsetHeight;
+      if (scrollPosition >= top && scrollPosition < top + height) {
+        activeSection.value = section;
+      }
+    }
+  }
+};
+
+const handleTicketLinked = (ticket) => {
+  // Can add custom logic here if needed after linking
+  console.log('Ticket linked:', ticket);
 };
 
 const handleFastTrackProcess = async (payloadFromCard) => {
@@ -1486,9 +1564,16 @@ onMounted(async () => {
     
     // Fetch initial list
     fetchRegistrations();
+
+    // Floating Nav Listener
+    window.addEventListener('scroll', handleScrollForNav);
   } catch (error) {
     console.error('Initial fetch failed:', error);
   }
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', handleScrollForNav);
 });
 </script>
 
@@ -1861,6 +1946,86 @@ onMounted(async () => {
   border-radius: 20px;
   padding: 1.5rem;
   border: 1px solid #f0f0f0;
+}
+
+/* Floating Navigation Styles */
+.floating-section-nav {
+  position: fixed;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1050;
+  pointer-events: none;
+}
+
+.nav-inner {
+  pointer-events: auto;
+  padding: 0.75rem;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.nav-item {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  gap: 2px;
+}
+
+.nav-item i {
+  font-size: 1.1rem;
+}
+
+.nav-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: none;
+}
+
+.nav-item:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+  transform: scale(1.05);
+}
+
+.nav-item.active {
+  background: #3498db;
+  color: white;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.nav-item.top {
+  color: #94a3b8;
+}
+
+.nav-item.top:hover {
+  color: #1e3a8a;
+}
+
+.nav-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 0.25rem 0.5rem;
+}
+
+@media (max-width: 1200px) {
+  .floating-section-nav {
+    display: none;
+  }
 }
 
 .section-title {
