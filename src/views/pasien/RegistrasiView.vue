@@ -464,8 +464,8 @@
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item rounded-3 mb-1 py-2" href="#" @click.prevent="printKarcis(reg)">
-                                    <i class="fas fa-print me-2 text-success opacity-75"></i> Print Karcis
+                                  <a class="dropdown-item rounded-3 mb-1 py-2" href="#" @click.prevent="printRegister(reg)">
+                                    <i class="fas fa-print me-2 text-success opacity-75"></i> Print Register
                                   </a>
                                 </li>
                                 <li v-if="reg.stts === 'Belum'">
@@ -837,6 +837,134 @@
       </div>
     </nav>
   </div>
+
+  <!-- Hidden Print Template (APM Format) -->
+  <div v-if="printData" id="print-register-ticket" class="d-none d-print-block">
+      <div class="print-header">
+          <h4 class="h5 fw-bold mb-0 text-center">RSIA AISYIYAH PEKAJANGAN</h4>
+          <p class="small mb-0 text-center">ANJUNGAN PENDAFTARAN MANDIRI</p>
+          <div class="divider-dashed"></div>
+      </div>
+      
+      <div class="print-title">
+          <h5 class="fw-bold text-center">BUKTI REGISTER PENDAFTARAN</h5>
+          <div class="divider-dashed"></div>
+      </div>
+
+      <div class="print-details">
+          <table class="w-100 table-borderless">
+              <tr>
+                  <td width="30%">Tanggal</td>
+                  <td>: {{ printData.tgl_registrasi }} {{ printData.jam_reg }}</td>
+              </tr>
+              <tr>
+                  <td>No. Rawat</td>
+                  <td>: {{ printData.no_rawat }}</td>
+              </tr>
+              <tr>
+                  <td>Nama</td>
+                  <td>: {{ printData.pasien?.nm_pasien }}</td>
+              </tr>
+              <tr>
+                  <td>No. RM</td>
+                  <td>: {{ printData.no_rkm_medis }}</td>
+              </tr>
+              <tr>
+                  <td>J.K.</td>
+                  <td>: {{ printData.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan' }}</td>
+              </tr>
+              <tr>
+                  <td>Umur</td>
+                  <td>: {{ printData.umur }}</td>
+              </tr>
+              <tr class="fw-bold">
+                  <td>Ruang</td>
+                  <td>: {{ printData.poliklinik?.nm_poli }}</td>
+              </tr>
+              <tr>
+                  <td>Dokter</td>
+                  <td>: {{ printData.dokter?.nm_dokter }}</td>
+              </tr>
+          </table>
+      </div>
+
+      <div class="print-queue text-center my-3">
+          <p class="mb-0">No. Antri Poli</p>
+          <div class="d-flex justify-content-between align-items-center">
+              <span class="antrean-number">{{ printData.no_reg }}</span>
+              <span class="fw-bold">{{ printData.caraBayar?.png_jawab }}</span>
+          </div>
+          <p v-if="getPenjabClass(printData.caraBayar?.png_jawab) === 'bpjs'" class="small mb-0">
+              [v] SEP {{ printData.sepSimple?.no_sep || '-' }}
+          </p>
+          <p v-else class="small mb-0">[ ] SEP</p>
+      </div>
+
+      <div class="divider-dashed"></div>
+      <div class="print-form-tindakan">
+          <p class="text-center fw-bold small my-1">FORMULIR TINDAKAN RAJAL</p>
+          <div class="divider-dashed"></div>
+          <table class="w-100 small">
+              <thead>
+                  <tr>
+                      <th width="10%">No.</th>
+                      <th width="50%">Tindakan</th>
+                      <th width="40%" class="text-end">Petugas</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr><td>1.</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+                  <tr><td>2.</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+                  <tr><td>3.</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+              </tbody>
+          </table>
+      </div>
+      
+      <!-- Secondary Footer (Cut Line) -->
+      <div class="print-scissors my-2">
+          <i class="fas fa-scissors"></i>
+          <div class="divider-dashed inline"></div>
+      </div>
+
+      <div class="print-secondary-footer text-center">
+          <h6 class="fw-bold mb-0" style="font-size: 11px;">RSIA AISYIYAH PEKAJANGAN</h6>
+          <p class="mb-0" style="font-size: 8px;">JL. RAYA PEKAJANGAN NO. 610 PEKALONGAN</p>
+          <p class="mb-1" style="font-size: 8px;">(0285) 785909 , rba610@gmail.com</p>
+          
+          <div class="divider-dashed"></div>
+          
+          <div class="secondary-queue my-2">
+              <h1 class="fw-bold mb-0" style="font-size: 2.5rem;">{{ printData.no_reg }}</h1>
+          </div>
+
+          <table class="w-100 table-borderless text-start small">
+              <tr>
+                  <td width="30%">Nama</td>
+                  <td>: {{ printData.pasien?.nm_pasien }}</td>
+              </tr>
+              <tr>
+                  <td>No. RM</td>
+                  <td>: {{ printData.no_rkm_medis }}</td>
+              </tr>
+              <tr>
+                  <td>Poli</td>
+                  <td>: {{ printData.poliklinik?.nm_poli }}</td>
+              </tr>
+              <tr>
+                  <td>Dokter</td>
+                  <td>: {{ printData.dokter?.nm_dokter }}</td>
+              </tr>
+              <tr>
+                  <td colspan="2" class="fw-bold">{{ printData.caraBayar?.png_jawab }}</td>
+              </tr>
+          </table>
+      </div>
+
+      <div class="divider-dashed mt-2"></div>
+      <div class="print-footer text-center mt-1 small" style="font-size: 9px;">
+          <p>{{ new Date().toLocaleString('id-ID') }}</p>
+      </div>
+  </div>
 </template>
 
 <script setup>
@@ -870,6 +998,7 @@ const selectedRegForSep = ref(null);
 const loading = ref(false);
 const numberLoading = ref(false);
 const submitting = ref(false);
+const printData = ref(null);
 
 // Fast Track State
 const fastTrackCandidate = ref(null);
@@ -1353,23 +1482,16 @@ const openGenerateSep = (reg) => {
     showGenerateSepModal.value = true;
 };
 
-const printKarcis = (reg) => {
-    Swal.fire({
-        title: 'Cetak Karcis?',
-        text: `Mencetak karcis untuk ${reg.pasien.nm_pasien}`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Cetak',
-        cancelButtonText: 'Batal',
-        customClass: {
-            popup: 'swal2-glass'
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Logic to print karcis (usually opens a new tab with PDF)
-            window.open(`/api/v1/registrasi/karcis/${reg.no_rawat}`, '_blank');
-        }
-    });
+const printRegister = (reg) => {
+    printData.value = reg;
+    // Wait for Vue to render the print section
+    setTimeout(() => {
+        window.print();
+        // Clear after print to avoid stale data
+        setTimeout(() => {
+            printData.value = null;
+        }, 1000);
+    }, 200);
 };
 
 const batalRegistrasi = (reg) => {
@@ -1391,7 +1513,7 @@ const batalRegistrasi = (reg) => {
             Swal.fire({
                 title: 'Berhasil!',
                 text: 'Registrasi telah dibatalkan.',
-                icon: 'success',
+                iconHtml: '<div class="swal2-icon-custom success"><i class="fas fa-check"></i></div>',
                 timer: 1500,
                 showConfirmButton: false,
                 customClass: { popup: 'swal2-glass' }
@@ -1441,9 +1563,10 @@ const submitRegistration = async () => {
         await Swal.fire({
           title: 'Berhasil!',
           text: isEditMode.value ? 'Data registrasi berhasil diperbarui.' : 'Pasien telah berhasil terdaftar.',
-          icon: 'success',
+          iconHtml: '<div class="swal2-icon-custom success"><i class="fas fa-check"></i></div>',
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
+          customClass: { popup: 'swal2-glass' }
         });
         resetForm();
         if (form.no_rkm_medis) {
@@ -1865,7 +1988,8 @@ onBeforeUnmount(() => {
 /* Fix Aksi Dropdown Flickering */
 .dropdown-menu {
     margin-top: 0 !important;
-    z-index: 1060;
+    z-index: 2000 !important; /* Extremely high to beat any table element */
+    background: rgba(255, 255, 255, 0.98) !important; /* Less transparent to prevent "shining through" */
 }
 
 .dropdown-menu::before {
@@ -1884,9 +2008,40 @@ onBeforeUnmount(() => {
     font-weight: 500;
 }
 
+/* Fix for dropdown clipping on small lists */
+.table-responsive.custom-scroll {
+    padding-bottom: 100px; /* Space for dropdown */
+    margin-bottom: -100px;
+    overflow-x: auto;
+    overflow-y: visible !important;
+}
+
+.registration-list-card {
+    min-height: 450px; /* Ensure card has enough height */
+}
+
 .dropdown-item:hover {
     background-color: rgba(52, 152, 219, 0.1);
     transform: translateX(4px);
+}
+
+/* Ensure the dropdown container doesn't trap the z-index */
+.dropdown {
+    position: relative;
+}
+
+.dropdown.show {
+    z-index: 2001;
+}
+
+/* 
+  FIX: Elevate the entire row's stacking context when dropdown is open.
+  This prevents the next row's buttons from appearing "on top" of the menu.
+*/
+.premium-table tr:has(.dropdown.show),
+.premium-table tr:focus-within {
+    position: relative;
+    z-index: 100 !important;
 }
 
 
@@ -1951,7 +2106,7 @@ onBeforeUnmount(() => {
 /* Floating Navigation Styles */
 .floating-section-nav {
   position: fixed;
-  right: 1.5rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   z-index: 1050;
@@ -2416,15 +2571,115 @@ onBeforeUnmount(() => {
     font-size: 1.25rem;
   }
 }
+
+/* Print Styles */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #print-register-ticket, #print-register-ticket * {
+    visibility: visible;
+  }
+  #print-register-ticket {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 330px; /* Standard 80mm thermal width */
+    margin: 0;
+    padding: 15px;
+    background: white !important;
+    color: black !important;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .d-print-block {
+    display: block !important;
+  }
+  .registration-container, .floating-section-nav {
+    display: none !important;
+  }
+}
+
+.divider-dashed {
+  border-top: 1px dashed #333;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.antrean-number {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+#print-register-ticket td {
+    vertical-align: top;
+    padding: 2px 0;
+}
+
+.print-form-tindakan table th {
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.print-scissors {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #333;
+    width: 100%;
+}
+
+.divider-dashed.inline {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.secondary-queue h1 {
+    line-height: 1;
+    margin: 5px 0;
+}
 </style>
 
 <style>
-/* Global styles for SweetAlert2 glass effect */
-.swal2-glass {
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-radius: 24px !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+/* Fully custom icon alignment fix */
+.swal2-icon-custom {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 1rem auto 1.5rem !important;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  font-size: 2.5rem;
+  border: 4px solid #f0f0f0;
+}
+
+.swal2-icon-custom.success {
+  border-color: #a5dc86;
+  color: #a5dc86;
+}
+
+.swal2-icon-custom i {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: normal !important;
+}
+
+/* Ensure SWAL doesn't hide our custom HTML icon container */
+.swal2-html-container {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 </style>
