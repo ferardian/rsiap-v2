@@ -2585,17 +2585,15 @@ onBeforeUnmount(() => {
     visibility: visible;
   }
   #print-register-ticket {
-    position: absolute;
-    left: 0;
-    top: 0;
+    margin: 0 auto;
     width: 330px; /* Standard 80mm thermal width */
-    margin: 0;
-    padding: 15px;
+    padding: 10px 15px;
     background: white !important;
     color: black !important;
     font-family: 'Courier New', Courier, monospace;
     font-size: 12px;
     line-height: 1.2;
+    box-sizing: border-box;
   }
   .d-print-block {
     display: block !important;
