@@ -3,8 +3,14 @@
     <div class="login-container">
       <div class="card">
         <div class="card-header">
-          <div class="logo">
-            <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
+          <div class="logos-wrapper">
+            <div class="logo">
+              <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
+            </div>
+            <div class="logos-divider"></div>
+            <div class="logo">
+              <img src="@/assets/logo-larsi.png" alt="LARSI Logo" class="logo-img">
+            </div>
           </div>
           <h1>UBAH PASSWORD</h1>
           <p>RSIA Aisyiyah Pekajangan</p>
@@ -216,46 +222,69 @@ onMounted(() => {
 }
 
 .card-header {
-  padding: 2rem;
+  padding: 1.25rem 1.5rem 0.5rem;
   text-align: center;
   background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   color: white;
 }
 
-.logo {
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
+.card-header h1 {
+  margin-top: 0;
+  margin-bottom: 0.2rem;
+  font-size: 1.4rem;
+  color: white;
+}
+
+.card-header p {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.logos-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.logos-divider {
+  width: 1px;
+  height: 45px;
+  background: white;
+  margin: 0;
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 65px;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  margin: 0;
 }
 
 .logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 0.25rem;
-}
-
-p {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.875rem;
+  transform: scale(1.05);
 }
 
 .card-body {
-  padding: 1.5rem 2rem 2rem;
+  padding: 1.5rem 2rem 1.5rem;
 }
 
 .alert {
@@ -281,7 +310,7 @@ p {
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .form-label {
@@ -289,7 +318,7 @@ p {
   font-size: 0.875rem;
   font-weight: 600;
   color: #475569;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .form-input {
@@ -313,7 +342,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
 }
 
 .captcha-box {
@@ -359,30 +388,32 @@ p {
   box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
 }
 
-.mt-3 { margin-top: 1rem; }
+.mt-3 { margin-top: 0.75rem; }
 .mt-2 { margin-top: 0.5rem; }
 
 .info-section {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #f1f5f9;
 }
 
 .help-links {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.75rem;
 }
 
 .help-link {
   color: #3b82f6;
   text-decoration: none;
-  font-size: 0.813rem;
+  font-size: 0.85rem;
+  transition: color 0.3s ease;
 }
 
 .help-link:hover {
   text-decoration: underline;
+  color: #1e40af;
 }
 
 .separator {
@@ -392,17 +423,63 @@ p {
 
 .login-footer {
   text-align: center;
-  margin-top: 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  margin-top: 1rem;
+  color: white;
 }
 
 .login-footer p {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  opacity: 0.9;
   margin-bottom: 0.25rem;
   color: white;
 }
 
 .version {
-  opacity: 0.6;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 0.5rem;
+  }
+  
+  .card-header {
+    padding: 1rem 1rem 0.25rem;
+  }
+  
+  .card-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .logos-wrapper {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .logo {
+    flex: 0 0 95px;
+    width: 95px;
+    height: 50px;
+    padding: 2px 4px;
+    border-radius: 8px;
+  }
+  
+  .logos-divider {
+    height: 35px;
+  }
+  
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+  
+  .info-section {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+  }
+  
+  .login-footer {
+    margin-top: 0.5rem;
+  }
 }
 </style>

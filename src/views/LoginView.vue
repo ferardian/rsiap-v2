@@ -241,18 +241,22 @@ onMounted(() => {
 .card-header {
   padding: 1.25rem 1.5rem 0.5rem;
   text-align: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
 }
 
 .card-header h1 {
   margin-top: 0;
   margin-bottom: 0.2rem;
   font-size: 1.4rem;
+  color: white;
 }
 
 .card-header p {
   margin-top: 0;
   margin-bottom: 0;
   font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .logos-wrapper {
@@ -410,7 +414,7 @@ onMounted(() => {
   
   .logos-wrapper {
     gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem; /* Increased from 0.5rem to add distance to title */
   }
   
   .logo {
