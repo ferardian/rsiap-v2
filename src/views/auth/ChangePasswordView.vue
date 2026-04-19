@@ -4,11 +4,11 @@
       <div class="card">
         <div class="card-header">
           <div class="logos-wrapper">
-            <div class="logo">
+            <div class="logo rs-box">
               <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
             </div>
             <div class="logos-divider"></div>
-            <div class="logo">
+            <div class="logo larsi-box">
               <img src="@/assets/logo-larsi.png" alt="LARSI Logo" class="logo-img">
             </div>
           </div>
@@ -303,7 +303,14 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transform: scale(1.05);
+}
+
+.rs-box {
+  padding: 2px 4px;
+}
+
+.larsi-box {
+  padding: 10px 14px;
 }
 
 .card-body {
@@ -522,6 +529,14 @@ onMounted(() => {
   
   .logos-divider {
     height: 35px;
+  }
+  
+  .rs-box {
+    padding: 1px 2px;
+  }
+  
+  .larsi-box {
+    padding: 8px 10px;
   }
   
   .form-group {
