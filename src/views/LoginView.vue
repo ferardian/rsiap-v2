@@ -394,4 +394,48 @@ onMounted(() => {
   font-size: 0.75rem;
   opacity: 0.7;
 }
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 0.5rem;
+  }
+  
+  .card-header {
+    padding: 1rem 1rem 0.25rem;
+  }
+  
+  .card-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .logos-wrapper {
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .logo {
+    flex: 0 0 95px;
+    width: 95px;
+    height: 50px;
+    padding: 2px 4px;
+    border-radius: 8px;
+  }
+  
+  .logos-divider {
+    height: 35px;
+  }
+  
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+  
+  .info-section {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+  }
+  
+  .login-footer {
+    margin-top: 0.5rem;
+  }
+}
 </style>
