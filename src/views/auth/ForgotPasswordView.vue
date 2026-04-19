@@ -41,6 +41,7 @@
                 placeholder="Masukkan username anda"
                 :disabled="isLoading"
                 required
+                @input="form.username = form.username.replace(/[^0-9.]/g, '')"
               />
             </div>
 
@@ -119,7 +120,9 @@ const successMessage = ref('')
 const captchaImg = ref('')
 
 const isFormValid = computed(() => {
+  const usernamePattern = /^[0-9.]+$/;
   return form.username.trim() !== '' && 
+         usernamePattern.test(form.username.trim()) &&
          form.email.trim() !== '' && 
          form.captcha_code.trim() !== ''
 })

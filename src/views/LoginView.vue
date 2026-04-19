@@ -45,6 +45,7 @@
                 :disabled="isLoading"
                 required
                 autocomplete="username"
+                @input="form.username = form.username.replace(/[^0-9.]/g, '')"
               />
               <div v-if="errors.username" class="error-text">
                 {{ errors.username }}
@@ -55,33 +56,30 @@
               <label for="password" class="form-label">
                 Password
               </label>
-              <input
-                id="password"
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                class="form-input"
-                :class="{ 'is-invalid': errors.password }"
-                placeholder="Masukkan password"
-                :disabled="isLoading"
-                required
-                autocomplete="current-password"
-              />
+              <div class="password-wrapper">
+                <input
+                  id="password"
+                  v-model="form.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-input"
+                  :class="{ 'is-invalid': errors.password }"
+                  placeholder="Masukkan password"
+                  :disabled="isLoading"
+                  required
+                  autocomplete="current-password"
+                />
+                <button 
+                  type="button" 
+                  class="password-toggle"
+                  @click="showPassword = !showPassword"
+                  :class="{ 'is-dimmed': !showPassword }"
+                >
+                  💡
+                </button>
+              </div>
               <div v-if="errors.password" class="error-text">
                 {{ errors.password }}
               </div>
-            </div>
-
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input
-                  v-model="showPassword"
-                  type="checkbox"
-                  class="checkbox-input"
-                  :disabled="isLoading"
-                />
-                <span class="checkmark"></span>
-                Tampilkan password
-              </label>
             </div>
 
             <button
@@ -97,9 +95,10 @@
 
           <!-- Info Section -->
           <div class="info-section">
-            <p class="info-text">
-              <strong>Info:</strong> Gunakan username dan password yang telah terdaftar
-            </p>
+            <div class="info-badge">
+              <span class="badge-icon">ℹ️</span>
+              Gunakan kredensial terdaftar
+            </div>
             <div class="help-links">
               <router-link to="/forgot-password" class="help-link">
                 Lupa password?
@@ -164,6 +163,9 @@ const validateForm = () => {
   if (!form.username.trim()) {
     errors.username = 'Username harus diisi'
     isValid = false
+  } else if (!/^[0-9.]+$/.test(form.username.trim())) {
+    errors.username = 'Username hanya boleh berisi angka dan titik'
+    isValid = false
   } else if (form.username.trim().length < 3) {
     errors.username = 'Username minimal 3 karakter'
     isValid = false
@@ -199,18 +201,18 @@ const handleLogin = async () => {
 
     if (result.success) {
       if (result.requireRoleSelection) {
-        successMessage.value = 'Login berhasil! Mohon pilih role...'
+        successMessage.value = 'Berhasil! Pilih role anda...'
         setTimeout(() => {
           router.push('/select-role')
         }, 1000)
       } else {
-        successMessage.value = 'Login berhasil! Mengalihkan ke dashboard...'
+        successMessage.value = 'Berhasil! Masuk ke sistem...'
         setTimeout(() => {
           router.push('/dashboard')
         }, 1000)
       }
     } else {
-      error.value = result.error
+      error.value = (result.error && result.error.toLowerCase() === 'user not found') ? 'User Tidak Terdaftar' : result.error
     }
   } catch (err) {
     error.value = 'Terjadi kesalahan yang tidak terduga. Silakan coba lagi.'
@@ -300,62 +302,79 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-.error-text {
-  color: #c33;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-.form-input.is-invalid {
-  border-color: #c33;
-}
-
-.checkbox-label {
+.password-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #666;
-  gap: 0.5rem;
 }
 
-.checkbox-input {
-  opacity: 0;
+.password-toggle {
   position: absolute;
-}
-
-.checkmark {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.1rem;
+  padding: 4px;
+  opacity: 0.7;
   transition: all 0.3s ease;
+  z-index: 10;
 }
 
-.checkbox-input:checked + .checkmark {
-  background-color: #3b82f6;
+.password-toggle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.password-toggle.is-dimmed {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+}
+
+.form-input:focus {
+  outline: none;
   border-color: #3b82f6;
-}
-
-.checkbox-input:checked + .checkmark:after {
-  content: '✓';
-  color: white;
-  font-size: 0.7rem;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
 }
 
 .info-section {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   padding-top: 1rem;
-  border-top: 1px solid #e1e5e9;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
 }
 
-.info-text {
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  padding: 0.4rem 0.8rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.badge-icon {
   font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 0.5rem;
 }
 
 .help-links {

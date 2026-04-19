@@ -41,46 +41,62 @@
                 placeholder="masukkan username"
                 :disabled="isLoading"
                 required
+                @input="form.username = form.username.replace(/[^0-9.]/g, '')"
               />
             </div>
 
             <div class="form-group">
               <label for="old_password" class="form-label">Password Lama:</label>
-              <input
-                id="old_password"
-                v-model="form.old_password"
-                type="password"
-                class="form-input"
-                placeholder="********"
-                :disabled="isLoading"
-                required
-              />
+              <div class="password-wrapper">
+                <input
+                  id="old_password"
+                  v-model="form.old_password"
+                  :type="showOldPassword ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="********"
+                  :disabled="isLoading"
+                  required
+                />
+                <button type="button" class="password-toggle" @click="showOldPassword = !showOldPassword" :class="{ 'is-dimmed': !showOldPassword }">
+                  💡
+                </button>
+              </div>
             </div>
 
             <div class="form-group">
               <label for="new_password" class="form-label">Password Baru:</label>
-              <input
-                id="new_password"
-                v-model="form.new_password"
-                type="password"
-                class="form-input"
-                placeholder="masukkan password baru"
-                :disabled="isLoading"
-                required
-              />
+              <div class="password-wrapper">
+                <input
+                  id="new_password"
+                  v-model="form.new_password"
+                  :type="showNewPassword ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="masukkan password baru"
+                  :disabled="isLoading"
+                  required
+                />
+                <button type="button" class="password-toggle" @click="showNewPassword = !showNewPassword" :class="{ 'is-dimmed': !showNewPassword }">
+                  💡
+                </button>
+              </div>
             </div>
 
             <div class="form-group">
               <label for="new_password_confirmation" class="form-label">Konfirmasi Password Baru:</label>
-              <input
-                id="new_password_confirmation"
-                v-model="form.new_password_confirmation"
-                type="password"
-                class="form-input"
-                placeholder="konfirmasi password baru"
-                :disabled="isLoading"
-                required
-              />
+              <div class="password-wrapper">
+                <input
+                  id="new_password_confirmation"
+                  v-model="form.new_password_confirmation"
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="konfirmasi password baru"
+                  :disabled="isLoading"
+                  required
+                />
+                <button type="button" class="password-toggle" @click="showConfirmPassword = !showConfirmPassword" :class="{ 'is-dimmed': !showConfirmPassword }">
+                  💡
+                </button>
+              </div>
             </div>
 
             <!-- Captcha Section -->
@@ -149,8 +165,15 @@ const error = ref('')
 const successMessage = ref('')
 const captchaImg = ref('')
 
+// Password visibility state
+const showOldPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
 const isFormValid = computed(() => {
+  const usernamePattern = /^[0-9.]+$/;
   return form.username.trim() !== '' && 
+         usernamePattern.test(form.username.trim()) &&
          form.old_password.trim() !== '' && 
          form.new_password.trim() !== '' && 
          form.new_password === form.new_password_confirmation &&
@@ -321,9 +344,41 @@ onMounted(() => {
   margin-bottom: 0.4rem;
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  padding: 4px;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.password-toggle.is-dimmed {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 0.95rem;
