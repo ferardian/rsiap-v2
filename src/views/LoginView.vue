@@ -3,8 +3,14 @@
     <div class="login-container">
       <div class="card">
         <div class="card-header">
-          <div class="logo">
-            <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
+          <div class="logos-wrapper">
+            <div class="logo">
+              <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
+            </div>
+            <div class="logos-divider"></div>
+            <div class="logo">
+              <img src="@/assets/logo-larsi.png" alt="LARSI Logo" class="logo-img">
+            </div>
           </div>
           <h1>RSIAP V2</h1>
           <p>RSIA Aisyiyah Pekajangan</p>
@@ -233,28 +239,61 @@ onMounted(() => {
 }
 
 .card-header {
-  padding: 2rem 2rem 1rem;
+  padding: 1.25rem 1.5rem 0.5rem;
   text-align: center;
 }
 
-.logo {
-  width: 120px;
-  height: 120px;
-  background: white;
-  border-radius: 50%;
-  margin: 0 auto 1.5rem;
+.card-header h1 {
+  margin-top: 0;
+  margin-bottom: 0.2rem;
+  font-size: 1.4rem;
+}
+
+.card-header p {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+.logos-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.logos-divider {
+  width: 1px;
+  height: 45px;
+  background: white;
+  margin: 0;
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 65px;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  margin: 0;
 }
 
 .logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transform: scale(1.05);
 }
 
 .error-text {
@@ -304,15 +343,15 @@ onMounted(() => {
 }
 
 .info-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #e1e5e9;
 }
 
 .info-text {
   font-size: 0.85rem;
   color: #666;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .help-links {
@@ -341,12 +380,12 @@ onMounted(() => {
 
 .login-footer {
   text-align: center;
-  margin-top: 2rem;
+  margin-top: 1rem;
   color: white;
 }
 
 .login-footer p {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   opacity: 0.9;
   margin-bottom: 0.25rem;
 }
