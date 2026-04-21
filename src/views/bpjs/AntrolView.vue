@@ -257,8 +257,26 @@
                   </span>
                 </td>
                 <td>
-                  <div class="small fw-bold">{{ item.sumberdata }}</div>
-                  <small class="text-muted">{{ formatEpoch(item.estimasidilayani) }}</small>
+                  <div class="small fw-bold">
+                    <template v-if="item.log_bridging">
+                      <i class="fas fa-desktop me-1 text-primary" style="font-size: 0.8rem;"></i> {{ item.log_bridging.source }}
+                    </template>
+                    <template v-else-if="String(item.sumberdata || '').toLowerCase().includes('mobile jkn')">
+                      <i class="fas fa-mobile-alt me-1 text-info" style="font-size: 0.8rem;"></i> {{ item.sumberdata }}
+                    </template>
+                    <template v-else>
+                      {{ item.sumberdata }}
+                    </template>
+                  </div>
+                  <div v-if="item.log_bridging" class="small" style="font-size: 0.65rem;">
+                    <span :class="item.log_bridging.code == 200 ? 'text-success' : 'text-danger'" :title="item.log_bridging.pesan">
+                      <i class="fas me-1" :class="item.log_bridging.code == 200 ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                      Log: {{ item.log_bridging.code }}
+                    </span>
+                  </div>
+                  <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                    <i class="far fa-clock me-1"></i>{{ formatEpoch(item.estimasidilayani) }}
+                  </small>
                 </td>
                 <td class="text-center">
                   <div class="d-flex gap-2 justify-content-center">
@@ -872,71 +890,7 @@ const fetchAntrolData = async () => {
     if (antrolRes.data.metadata.code === 200) {
       const resData = antrolRes.data.response
       let rawList = Array.isArray(resData) ? resData : (resData ? [resData] : [])
-      
-      // Deduplicate by nokapst (BPJS card number)
-      // If a patient has multiple entries, prioritize "Mobile JKN" over onsite.
-      // However, if BOTH are Mobile JKN (e.g., dua poli berbeda), KEEP BOTH.
-      const processedPatients = new Map()
-      const finalAntrolList = []
-      
-      rawList.forEach(item => {
-        const key = item.nokapst || item.no_kartu
-        const currentSource = String(item.sumberdata || '').toLowerCase()
-        
-        // If we don't have a key, just add it directly 
-        if (!key) {
-           finalAntrolList.push(item)
-           return
-        }
-
-        if (processedPatients.has(key)) {
-           // Get the previously stored items for this patient
-           const existingItems = processedPatients.get(key)
-           
-           // Check if there's already a non-Mobile JKN entry we should replace
-           const nonMobileIndex = existingItems.findIndex(existing => !String(existing.sumberdata || '').toLowerCase().includes('mobile jkn'))
-           if (currentSource.includes('mobile jkn')) {
-              if (String(item.status || '').toLowerCase() === 'batal') {
-                 // The incoming Mobile JKN is cancelled. 
-                 // Do not overwrite active non-Mobile JKN entries. Just append it alongside for record-keeping.
-                 item.is_duplicate = true
-                 existingItems.forEach(ex => ex.is_duplicate = true)
-                 existingItems.push(item)
-              } else if (nonMobileIndex !== -1) {
-                 // Incoming Mobile JKN is active. Replace the non-Mobile JKN one with this Mobile JKN one
-                 existingItems[nonMobileIndex] = item
-              } else {
-                 // All existing are ALSO Mobile JKN, so keep this one too (allow multiple MJKN)
-                 item.is_duplicate = true
-                 existingItems.forEach(ex => ex.is_duplicate = true)
-                 existingItems.push(item)
-              }
-           } else {
-              // Current is NOT Mobile JKN (e.g., Onsite/Bridging). 
-              // We should only ignore it if there's an ACTIVE Mobile JKN entry.
-              const hasActiveMobileJkn = existingItems.some(existing => 
-                  String(existing.sumberdata || '').toLowerCase().includes('mobile jkn') && 
-                  String(existing.status || '').toLowerCase() !== 'batal'
-              )
-              
-              if (!hasActiveMobileJkn) {
-                 // Even if there's a cancelled MJKN or other onsite queues, keep this active bridging queue
-                 item.is_duplicate = true
-                 existingItems.forEach(ex => ex.is_duplicate = true)
-                 existingItems.push(item)
-              }
-           }
-        } else {
-           // First time seeing this patient, save as array
-           processedPatients.set(key, [item])
-        }
-      })
-      
-      // Flatten the map values back to a single array
-      processedPatients.forEach(items => finalAntrolList.push(...items))
-      
-      antrolList.value = finalAntrolList
-
+      antrolList.value = rawList
     } else {
       antrolList.value = []
       if (antrolRes.data.metadata.code !== 201) { 
