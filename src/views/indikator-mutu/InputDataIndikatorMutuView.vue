@@ -394,14 +394,14 @@
                             </div>
 
                             <!-- Missing Days Info -->
-                            <div v-if="!monthlyStats.isComplete" class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 border">
-                                <div class="badge bg-warning text-dark p-2 rounded-circle">
+                            <div v-if="!monthlyStats.isComplete" class="d-flex align-items-middle gap-3 p-3 bg-white rounded-3 border">
+                                <div class="badge bg-warning text-dark p-2 rounded-circle flex-shrink-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                                     <i class="fas fa-exclamation"></i>
                                 </div>
-                                <div>
+                                <div class="flex-grow-1">
                                     <p class="mb-1 fw-bold text-dark small">Data Belum Lengkap</p>
                                     <p class="mb-0 text-muted extra-small">
-                                        Terdapat <span class="fw-bold text-danger">{{ monthlyStats.missingDays.length }} tanggal</span> yang belum diisi. Lengkapi semua data untuk memberikan analisa.
+                                        Terdapat <span class="fw-bold text-danger">{{ monthlyStats.missingDays.length }} tanggal</span> yang belum diisi. Anda tetap dapat memberikan analisa sekarang.
                                     </p>
                                     <div class="mt-2 d-flex flex-wrap gap-1">
                                         <span v-for="day in monthlyStats.missingDays" :key="day" class="badge bg-light text-dark border extra-small">
@@ -409,10 +409,15 @@
                                         </span>
                                     </div>
                                 </div>
+                                <div v-if="!showAnalisaForm && existingAnalisa.length === 0" class="ms-auto flex-shrink-0">
+                                    <button class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" @click="showAnalisaForm = true">
+                                        <i class="fas fa-pen-fancy me-2"></i> Beri Analisa
+                                    </button>
+                                </div>
                             </div>
 
                             <div v-else class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 border">
-                                <div class="badge bg-success p-2 rounded-circle text-white">
+                                <div class="badge bg-success p-2 rounded-circle text-white flex-shrink-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                                     <i class="fas fa-check"></i>
                                 </div>
                                 <div>
@@ -420,7 +425,7 @@
                                     <p class="mb-0 text-muted extra-small">Seluruh data pada periode {{ formatMonthYear(analisaFilters.bulan) }} telah terisi lengkap.</p>
                                 </div>
                                 <div v-if="!showAnalisaForm && existingAnalisa.length === 0" class="ms-auto">
-                                    <button class="btn btn-primary btn-sm px-4 rounded-pill" @click="showAnalisaForm = true">
+                                    <button class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" @click="showAnalisaForm = true">
                                         <i class="fas fa-pen-fancy me-2"></i> Beri Analisa
                                     </button>
                                 </div>

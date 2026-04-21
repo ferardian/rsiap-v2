@@ -227,10 +227,10 @@
 
       <!-- Data Table -->
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+        <div class="card-header bg-primary py-3 px-4 d-flex justify-content-between align-items-center border-0">
           <div class="d-flex align-items-center">
-            <div class="header-accent-line me-3"></div>
-            <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-list me-2 text-primary"></i>Rincian Berkas SEP</h6>
+            <div class="header-accent-line me-3 bg-white opacity-50"></div>
+            <h6 class="mb-0 fw-bold text-white"><i class="fas fa-list me-2 text-white"></i>Rincian Berkas SEP</h6>
           </div>
           <div class="d-flex align-items-center gap-3">
             <span class="badge premium-count-badge rounded-pill px-3 py-2 fw-bold">
