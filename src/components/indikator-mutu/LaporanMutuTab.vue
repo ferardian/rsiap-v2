@@ -125,7 +125,8 @@
                    <p class="mb-0">Tidak ada data laporan untuk periode ini.</p>
                 </td>
               </tr>
-              <tr v-else v-for="(item, index) in items" :key="item.id_inmut">
+            <template v-for="(item, index) in items" :key="item.id_inmut">
+              <tr :class="{ 'table-active fw-medium': expandedRowId === item.id_inmut }">
                 <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
                 <td>
                    <div class="fw-bold">{{ item.nama_inmut }}</div>
@@ -136,18 +137,145 @@
                 </td>
                 <td class="text-center">{{ item.total_num }}</td>
                 <td class="text-center">{{ item.total_denum }}</td>
-                <td class="text-center fw-bold" :class="isTercapai(item) ? 'text-success' : 'text-danger'">
+                <td class="text-center fw-bold text-lg" :class="isTercapai(item) ? 'text-success' : 'text-danger'">
                     {{ item.score }}%
                 </td>
                 <td class="text-center">
                     <span class="badge" :class="isTercapai(item) ? 'bg-success' : 'bg-danger'">{{ isTercapai(item) ? 'Tercapai' : 'Tidak Tercapai' }}</span>
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="fetchDetail(item)">
-                        Detail
+                    <button 
+                        class="btn btn-detail-toggle" 
+                        :class="{ 'active': expandedRowId === item.id_inmut }"
+                        @click="fetchDetail(item)"
+                    >
+                        <span>Detail</span>
+                        <i class="fas fa-chevron-down ms-1 transition-transform" :class="{ 'fa-rotate-180': expandedRowId === item.id_inmut }"></i>
                     </button>
                 </td>
               </tr>
+
+              <!-- Expandable Detail Row -->
+              <tr v-if="expandedRowId === item.id_inmut">
+                <td colspan="8" class="p-0 border-0 bg-light">
+                  <div class="expandable-content-wrapper overflow-hidden">
+                    <div class="detail-container p-4">
+                      <div v-if="detailLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                        <span class="ms-2 text-muted small">Memuat rincian...</span>
+                      </div>
+                      
+                      <div v-else-if="detailData" class="detail-content animate-fade-in">
+                        <!-- Header Detail Card -->
+                        <div class="detail-header-card shadow-sm mb-4">
+                          <div class="row g-4">
+                            <div class="col-md-7">
+                              <div class="d-flex align-items-start gap-3 mb-3">
+                                <div class="detail-icon-box">
+                                  <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div>
+                                  <h6 class="fw-800 text-dark mb-1">{{ detailData.indicator.nama_inmut_utama || detailData.indicator.nama_inmut }}</h6>
+                                  <p class="text-muted small mb-0">{{ detailData.indicator.nama_ruang || '-' }}</p>
+                                </div>
+                              </div>
+                              <div class="row g-3">
+                                <div class="col-sm-6">
+                                  <div class="meta-item">
+                                    <span class="meta-label">Numerator</span>
+                                    <span class="meta-value">{{ detailData.indicator.ket_num_utama || '-' }}</span>
+                                  </div>
+                                </div>
+                                <div class="col-sm-6">
+                                  <div class="meta-item">
+                                    <span class="meta-label">Denominator</span>
+                                    <span class="meta-value">{{ detailData.indicator.ket_denum_utama || '-' }}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-5">
+                              <div class="target-card-mini mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <span class="text-muted small fw-bold">TARGET / STANDAR</span>
+                                  <span class="target-value">{{ getStandar(detailData.indicator) }}</span>
+                                </div>
+                              </div>
+                              <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small fw-bold">PERIODE</span>
+                                <span class="text-dark fw-bold">{{ filters.tipe.toUpperCase() }} {{ filters.periode }} - {{ filters.tahun }}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Data & Trend Split -->
+                        <div class="row g-4">
+                          <div class="col-xl-7">
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100">
+                              <div class="card-header bg-primary py-3 border-0 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-white"><i class="fas fa-table me-2"></i>Rincian Capaian Per Bulan</h6>
+                              </div>
+                              <div class="table-responsive">
+                                <table class="table table-sm mb-0 align-middle">
+                                  <thead class="bg-gray-50 text-center text-xs fw-800 text-uppercase text-muted">
+                                    <tr>
+                                      <th class="py-3">Bulan</th>
+                                      <th>Target</th>
+                                      <th>Num</th>
+                                      <th>Denum</th>
+                                      <th>Capaian</th>
+                                      <th>Hasil</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="text-center font-sm">
+                                    <tr v-if="detailData.monthly.length === 0">
+                                      <td colspan="6" class="py-4 text-muted">Belum ada data bulanan</td>
+                                    </tr>
+                                    <tr v-for="m in detailData.monthly" :key="m.bulan">
+                                      <td class="fw-bold">{{ getMonthName(m.bulan) }} {{ m.tahun }}</td>
+                                      <td>{{ getStandar(detailData.indicator) }}</td>
+                                      <td>{{ m.total_num }}</td>
+                                      <td>{{ m.total_denum }}</td>
+                                      <td class="fw-bold" :class="isTercapai(m, detailData.indicator) ? 'text-success' : 'text-danger'">
+                                        {{ m.score }}%
+                                      </td>
+                                      <td>
+                                        <span class="badge" :class="isTercapai(m, detailData.indicator) ? 'bg-success' : 'bg-danger'">
+                                          <i :class="isTercapai(m, detailData.indicator) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1"></i>
+                                          {{ isTercapai(m, detailData.indicator) ? 'Tercapai' : 'Gagal' }}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xl-5">
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100">
+                              <div class="card-header bg-primary py-3 border-0">
+                                <h6 class="mb-0 fw-bold text-white"><i class="fas fa-chart-line me-2"></i>Tren Capaian</h6>
+                              </div>
+                              <div class="card-body p-2">
+                                <apexchart 
+                                  v-if="chartSeries.length > 0"
+                                  width="100%" 
+                                  height="280" 
+                                  :options="chartOptions" 
+                                  :series="chartSeries"
+                                ></apexchart>
+                                <div v-else class="text-center text-muted py-5">Data grafik tidak tersedia</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
             </tbody>
           </table>
         </div>
@@ -202,128 +330,7 @@
       </div>
     </div>
 
-    <!-- Detail Modal -->
-    <div v-if="showDetail" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-white border-0 py-3 px-4">
-                    <h5 class="modal-title fw-bold text-primary">Detail Laporan Indikator Mutu</h5>
-                    <button type="button" class="btn-close" @click="closeDetail"></button>
-                </div>
-                <div class="modal-body p-4 bg-light">
-                    <div v-if="detailLoading" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-muted">Memuat data rincian...</p>
-                    </div>
-                    <div v-else-if="detailData">
-                        <!-- Header Detail -->
-                        <div class="card border-0 shadow-sm mb-4 rounded-3 overflow-hidden">
-                            <div class="card-body p-0">
-                                <div class="bg-white p-3 border-bottom">
-                                    <h5 class="fw-bold mb-0">{{ detailData.indicator.nama_inmut_utama || detailData.indicator.nama_inmut }}</h5>
-                                </div>
-                                <div class="p-4">
-                                    <div class="row g-4">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Unit / Ruang</label>
-                                                <div class="fw-bold">{{ detailData.indicator.nama_ruang || '-' }}</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Numerator</label>
-                                                <div class="text-sm">{{ detailData.indicator.ket_num_utama || '-' }}</div>
-                                            </div>
-                                            <div class="mb-0">
-                                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Denominator</label>
-                                                <div class="text-sm">{{ detailData.indicator.ket_denum_utama || '-' }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Target / Standar</label>
-                                                <div class="fw-bold text-primary fs-5">{{ getStandar(detailData.indicator) }}</div>
-                                            </div>
-                                            <div class="mb-0">
-                                                <label class="text-muted small fw-bold text-uppercase d-block mb-1">Periode Laporan</label>
-                                                <div class="fw-bold">{{ filters.tipe.toUpperCase() }} {{ filters.periode }} - {{ filters.tahun }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Data Table Breakdown -->
-                        <div class="row g-4 mb-4">
-                            <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100">
-                                    <div class="card-header bg-white py-3 border-0">
-                                        <h6 class="mb-0 fw-bold"><i class="fas fa-table me-2 text-primary"></i>Rincian Capaian Per Bulan</h6>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table mb-0 align-middle">
-                                            <thead class="table-light text-center border-top">
-                                                <tr>
-                                                    <th>Bulan</th>
-                                                    <th>Target</th>
-                                                    <th>Numerator</th>
-                                                    <th>Denumerator</th>
-                                                    <th>Capaian (%)</th>
-                                                    <th>Hasil</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="text-center">
-                                                <tr v-if="detailData.monthly.length === 0">
-                                                    <td colspan="6" class="py-4 text-muted">Belum ada data bulanan</td>
-                                                </tr>
-                                                <tr v-for="m in detailData.monthly" :key="m.bulan">
-                                                    <td class="fw-bold">{{ getMonthName(m.bulan) }} {{ m.tahun }}</td>
-                                                    <td>{{ getStandar(detailData.indicator) }}</td>
-                                                    <td>{{ m.total_num }}</td>
-                                                    <td>{{ m.total_denum }}</td>
-                                                    <td class="fw-bold" :class="isTercapai(m, detailData.indicator) ? 'text-success' : 'text-danger'">
-                                                        {{ m.score }}%
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge" :class="isTercapai(m, detailData.indicator) ? 'bg-success' : 'bg-danger'">
-                                                            {{ isTercapai(m, detailData.indicator) ? 'Tercapai' : 'Tidak Tercapai' }}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Trend Chart -->
-                            <div class="col-lg-4">
-                                <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100">
-                                    <div class="card-header bg-white py-3 border-0">
-                                        <h6 class="mb-0 fw-bold"><i class="fas fa-chart-line me-2 text-primary"></i>Tren Capaian</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <apexchart 
-                                            v-if="chartSeries.length > 0"
-                                            width="100%" 
-                                            height="320" 
-                                            :options="chartOptions" 
-                                            :series="chartSeries"
-                                        ></apexchart>
-                                        <div v-else class="text-center text-muted py-5">Data grafik tidak tersedia</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button class="btn btn-secondary px-4" @click="closeDetail">Tutup</button>
-                    <button v-if="detailData" class="btn btn-primary px-4" @click="window.print()"><i class="fas fa-print me-1"></i> Cetak Laporan</button>
-                </div>
-            </div>
-        </div>
-    </div>
   </div>
 </template>
 
@@ -343,8 +350,8 @@ const limit = ref(10)
 const totalPages = ref(1)
 const periodeInfo = ref(null)
 
-// Detail View State
-const showDetail = ref(false)
+// Detail View State (Refactored for Expandable Rows)
+const expandedRowId = ref(null)
 const detailLoading = ref(false)
 const detailData = ref(null)
 
@@ -362,11 +369,24 @@ const filters = reactive({
     jenis: 'semua'
 })
 
-// Watch filters.tipe to reset periode logic if needed
+// Watch filters to refresh data
 watch(() => filters.tipe, (newVal) => {
-    // Reset to 1 when switching types to avoid invalid period 3/4 for semester
     filters.periode = 1
     fetchData()
+})
+
+// Watch filters complex to refresh detail if open
+watch(() => [filters.tahun, filters.tipe, filters.periode, filters.unit, filters.jenis], () => {
+    if (expandedRowId.value) {
+        // Find the item in the current items list
+        const item = items.value.find(i => i.id_inmut === expandedRowId.value);
+        if (item) {
+            fetchDetail(item, true); // force reload
+        } else {
+            // If item is no longer in the list after filter change, close it
+            closeDetail();
+        }
+    }
 })
 
 const fetchUnits = async () => {
@@ -445,9 +465,18 @@ const displayedPages = computed(() => {
 
 const getMonthName = (m) => monthNames[parseInt(m) - 1]
 
-const fetchDetail = async (item) => {
+const fetchDetail = async (item, force = false) => {
+    // Toggle off if clicking the same item (unless forced)
+    if (!force && expandedRowId.value === item.id_inmut) {
+        expandedRowId.value = null
+        detailData.value = null
+        return
+    }
+
     detailLoading.value = true
-    showDetail.value = true
+    expandedRowId.value = item.id_inmut
+    // Only clear if not forced (to keep previous data visible while loading new data if desirable)
+    // but clearing is cleaner for "reload" feel
     detailData.value = null
     
     try {
@@ -463,13 +492,14 @@ const fetchDetail = async (item) => {
         detailData.value = response.data.data
     } catch (error) {
         console.error(error)
+        if (!force) expandedRowId.value = null
     } finally {
         detailLoading.value = false
     }
 }
 
 const closeDetail = () => {
-    showDetail.value = false
+    expandedRowId.value = null
     detailData.value = null
 }
 
@@ -730,6 +760,130 @@ onMounted(() => {
 }
 
 /* Pagination Adjustments */
+/* Expansion Transition */
+.expandable-content-wrapper {
+  max-height: 0;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+tr.table-active + tr .expandable-content-wrapper {
+  max-height: 1200px; /* Large enough to fit content */
+}
+
+.detail-container {
+  background-color: #f8fafc;
+  border-top: 1px dashed #e2e8f0;
+  border-bottom: 3px solid #435ebe;
+}
+
+/* Detail UI Components */
+.btn-detail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  padding: 6px 16px;
+  border-radius: 50rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-detail-toggle:hover {
+  border-color: #435ebe;
+  color: #435ebe;
+  transform: translateY(-1px);
+}
+
+.btn-detail-toggle.active {
+  background: #435ebe;
+  border-color: #435ebe;
+  color: white;
+  box-shadow: 0 4px 10px rgba(67, 94, 190, 0.25);
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+.fa-rotate-180 {
+  transform: rotate(180deg);
+}
+
+.detail-header-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.detail-icon-box {
+  width: 40px;
+  height: 40px;
+  background: rgba(67, 94, 190, 0.1);
+  color: #435ebe;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-value {
+  font-size: 0.82rem;
+  color: #334155;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.target-card-mini {
+  background: #f1f5f9;
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.target-value {
+  font-weight: 800;
+  color: #435ebe;
+}
+
+.bg-gray-50 {
+  background-color: #f8fafc;
+}
+
+.text-xs { font-size: 0.7rem; }
+.font-sm { font-size: 0.85rem; }
+.fw-800 { font-weight: 800; }
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media print {
+  .expandable-content-wrapper { max-height: none !important; }
+  .btn-detail-toggle, .filter-card, .card-footer { display: none !important; }
+}
+
 @media (max-width: 991px) {
     .filter-card .row > div {
         margin-bottom: 1rem;
