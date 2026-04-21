@@ -338,7 +338,11 @@
                                 <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
                                     <div class="text-start">
                                         <small class="text-muted d-block extra-small">CAPAIAN</small>
-                                        <span class="fw-bold text-dark">{{ item.score }}%</span>
+                                        <span class="fw-bold" :class="isTargetMet(item) ? 'text-success' : 'text-danger'">{{ item.score }}%</span>
+                                    </div>
+                                    <div class="text-center px-1">
+                                        <small class="text-muted d-block extra-small">TARGET</small>
+                                        <span class="fw-bold text-dark extra-small">{{ getTargetDisplay(item) }}</span>
                                     </div>
                                     <div v-if="item.isAnalyzed" class="text-end">
                                         <i class="fas fa-chevron-right text-success opacity-50"></i>
@@ -358,8 +362,8 @@
             <!-- SELECTED INDICATOR VIEW -->
             <div v-else>
                 <!-- BACK BUTTON -->
-                <div class="mb-3">
-                    <button class="btn btn-link text-decoration-none p-0 text-muted hover-primary transition-all" @click="selectedIndicator = null">
+                <div class="mb-4">
+                    <button class="btn btn-sm btn-white border shadow-sm px-4 py-2 rounded-pill text-primary fw-bold hover-elevate transition-all" @click="selectedIndicator = null">
                         <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar Indikator
                     </button>
                 </div>
@@ -433,20 +437,35 @@
                         </div>
 
                         <!-- Stats Summary Bar -->
-                        <div class="bg-white border-top p-3 d-flex justify-content-around text-center">
-                            <div>
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold">Numerator</small>
+                        <div class="bg-white border-top p-3 d-flex justify-content-around flex-wrap gap-3 text-center">
+                            <div class="px-2">
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Numerator</small>
                                 <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalNum }}</span>
                             </div>
-                            <div class="vr mx-2"></div>
-                            <div>
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold">Denominator</small>
+                            <div class="vr opacity-25 d-none d-md-block"></div>
+                            <div class="px-2">
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Denominator</small>
                                 <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalDenum }}</span>
                             </div>
-                            <div class="vr mx-2"></div>
-                            <div>
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold">Capaian</small>
-                                <span class="fw-bold text-primary h5 mb-0">{{ monthlyStats.score }}%</span>
+                            <div class="vr opacity-25 d-none d-md-block"></div>
+                            <div class="px-2">
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Target</small>
+                                <span class="fw-bold text-dark h5 mb-0 text-primary">{{ getTargetDisplay(selectedIndicator) }}</span>
+                            </div>
+                            <div class="vr opacity-25 d-none d-md-block"></div>
+                            <div class="px-2">
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Capaian</small>
+                                <span class="fw-bold h5 mb-0" :class="isTargetMet(monthlyStats) ? 'text-success' : 'text-danger'">{{ monthlyStats.score }}%</span>
+                            </div>
+                            <div class="vr opacity-25 d-none d-md-block"></div>
+                            <div class="px-2">
+                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Status</small>
+                                <div v-if="isTargetMet(monthlyStats)" class="badge bg-success rounded-pill px-3 shadow-sm">
+                                    <i class="fas fa-check-circle me-1"></i> TERCAPAI
+                                </div>
+                                <div v-else class="badge bg-danger rounded-pill px-3 shadow-sm">
+                                    <i class="fas fa-times-circle me-1"></i> TIDAK TERCAPAI
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1253,7 +1272,7 @@ const isTargetMet = (item) => {
         score = parseFloat(item.jumlah || calculateCapaian(item.jml_num, item.jml_denum))
     } else if (selectedIndicator.value) {
         const indicator = selectedIndicator.value
-        score = parseFloat(calculateCapaian(item.jml_num, item.jml_denum))
+        score = parseFloat(item.score || calculateCapaian(item.jml_num || item.totalNum, item.jml_denum || item.totalDenum))
         target = parseFloat(indicator.standar)
         rumus = String(indicator.rumus)
     } else {
