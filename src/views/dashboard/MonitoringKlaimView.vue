@@ -322,7 +322,7 @@
               </li>
 
               <li :class="{ disabled: currentPage === totalPages }">
-                <button class="pag-btn" @click="currentPage--" :disabled="currentPage === totalPages">
+                <button class="pag-btn" @click="currentPage++" :disabled="currentPage === totalPages">
                   <i class="fas fa-chevron-right"></i>
                 </button>
               </li>
