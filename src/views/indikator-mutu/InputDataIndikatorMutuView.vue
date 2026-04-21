@@ -307,18 +307,21 @@
                                             {{ item.nama_inmut }}
                                         </h6>
                                     </div>
-                                    <div class="ms-2">
-                                        <span v-if="item.isAnalyzed" class="badge bg-success rounded-pill extra-small me-1">
+                                    <div class="ms-2 d-flex flex-column align-items-end gap-1">
+                                        <!-- Primary Status -->
+                                        <span v-if="item.isAnalyzed" class="badge bg-success rounded-pill extra-small">
                                             <i class="fas fa-check-double"></i> Selesai
-                                        </span>
-                                        <span v-if="item.hasFeedback" class="badge bg-info rounded-pill extra-small">
-                                            <i class="fas fa-comment-dots"></i> Feedback Komite
                                         </span>
                                         <span v-else-if="item.isComplete" class="badge bg-primary rounded-pill extra-small">
                                             <i class="fas fa-edit"></i> Siap Analisa
                                         </span>
                                         <span v-else class="badge bg-warning text-dark rounded-pill extra-small">
                                             <i class="fas fa-clock"></i> Belum Lengkap
+                                        </span>
+
+                                        <!-- Secondary Status -->
+                                        <span v-if="item.hasFeedback" class="badge bg-info rounded-pill extra-small">
+                                            <i class="fas fa-comment-dots"></i> Feedback Komite
                                         </span>
                                     </div>
                                 </div>

@@ -1,6 +1,68 @@
 <template>
   <div>
+    <!-- Monitoring Stats Section -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.05) !important;">
+          <div class="card-body p-0">
+            <div class="d-flex align-items-center justify-content-between p-3" :class="pendingAnalyses.length > 0 ? 'bg-warning-subtle' : 'bg-success-subtle'">
+              <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon d-flex align-items-center justify-content-center rounded-circle shadow-sm" 
+                     :class="pendingAnalyses.length > 0 ? 'bg-warning text-white' : 'bg-success text-white'"
+                     style="width: 40px; height: 40px;">
+                  <i class="fas" :class="pendingAnalyses.length > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle'"></i>
+                </div>
+                <div>
+                  <h6 class="fw-bold mb-0" :class="pendingAnalyses.length > 0 ? 'text-warning-emphasis' : 'text-success-emphasis'">
+                    {{ pendingAnalyses.length > 0 ? `${pendingAnalyses.length} Indikator Belum Dianalisa` : 'Semua Analisa Bulan Ini Telah Terisi' }}
+                  </h6>
+                  <small class="text-muted">Status pengumpulan analisa periode {{ formatDateFull(filters.bulan) }}</small>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button v-if="loadingStats" class="btn btn-sm btn-light disabled">
+                    <span class="spinner-border spinner-border-sm me-1"></span> Mengolah...
+                </button>
+                <button v-if="pendingAnalyses.length > 0 && !loadingStats" 
+                        class="btn btn-sm shadow-sm rounded-pill px-3 fw-bold" 
+                        :class="showPendingList ? 'btn-light border text-dark' : 'btn-warning text-dark'"
+                        @click="showPendingList = !showPendingList">
+                  <i class="fas" :class="showPendingList ? 'fa-times me-1' : 'fa-list-ul me-1'"></i>
+                  {{ showPendingList ? 'Tutup List' : 'Lihat Daftar Pending' }}
+                </button>
+              </div>
+            </div>
+            
+            <Transition name="slide-fade">
+              <div v-if="showPendingList && pendingAnalyses.length > 0" class="p-0 border-top bg-white">
+                <div class="table-responsive" style="max-height: 350px;">
+                  <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="bg-light sticky-top">
+                      <tr>
+                        <th class="ps-3 py-2 text-muted small fw-bold text-uppercase" width="30%">Unit / Ruang</th>
+                        <th class="py-2 text-muted small fw-bold text-uppercase" width="70%">Indikator Mutu</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in pendingAnalyses" :key="item.dep_id + '_' + item.id_inmut">
+                        <td class="ps-3"><span class="fw-bold text-dark small" style="font-size: 0.82rem;">{{ item.nama_ruang }}</span></td>
+                        <td><span class="text-secondary small" style="font-size: 0.8rem;">{{ item.nama_inmut }}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="p-2 bg-light border-top text-center">
+                    <small class="text-muted italic">Menampilkan daftar unit yang belum menginput analisa capaian bulan ini.</small>
+                </div>
+              </div>
+            </Transition>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Filters -->
+
     <div class="row mb-4">
       <div class="col-md-6 d-flex align-items-center">
          <!-- <button class="btn btn-primary" @click="openModal(null)">
@@ -295,7 +357,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
 import { useToast } from 'vue-toastification'
 import { Modal } from 'bootstrap'
 import api from '@/services/indikatorMutuService'
@@ -323,6 +385,13 @@ const filters = reactive({
     bulan: new Date().toISOString().slice(0, 7), // YYYY-MM
     unit: null
 })
+
+// === MONITORING STATS STATE ===
+const allAssignments = ref([])
+const pendingAnalyses = ref([])
+const showPendingList = ref(false)
+const loadingStats = ref(false)
+
 
 const isEdit = ref(false)
 const form = reactive({
@@ -406,8 +475,39 @@ const fetchIndicators = async () => {
          const params = { limit: 1000, status: 1 } 
          const response = await api.getRuang(params)
          indicators.value = response.data.data.data // Accessing paginated data
+         
+         // Also update allAssignments for monitoring stats
+         allAssignments.value = response.data.data.data || []
     } catch (error) {
         console.error('Error indicators', error)
+    }
+}
+
+const calculatePendingAnalyses = async () => {
+    if (allAssignments.value.length === 0) await fetchIndicators()
+    
+    loadingStats.value = true
+    try {
+        // Fetch ALL analyses for the selected month to check completeness
+        const params = {
+            bulan: filters.bulan,
+            limit: 1000 // Get all for comparison
+        }
+        const response = await api.getAnalisa(params)
+        const submitted = response.data.data.data || []
+        
+        // Create a unique key for comparison: dep_id + id_inmut
+        const submittedKeys = new Set(submitted.map(s => `${s.dep_id}_${s.id_inmut}`))
+        
+        // Filter assignments that are NOT in the submitted list
+        pendingAnalyses.value = allAssignments.value.filter(ass => {
+            const key = `${ass.dep_id}_${ass.id_inmut}`
+            return !submittedKeys.has(key)
+        })
+    } catch (error) {
+        console.error('Error calculating pending analyses:', error)
+    } finally {
+        loadingStats.value = false
     }
 }
 
@@ -487,6 +587,15 @@ const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' }
     return new Date(dateString).toLocaleDateString('id-ID', options)
 }
+
+const formatDateFull = (monthStr) => {
+    if (!monthStr) return '-'
+    const [year, month] = monthStr.split('-')
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    return `${monthNames[parseInt(month) - 1]} ${year}`
+}
+
 
 const isDetail = ref(false)
 
@@ -614,10 +723,19 @@ const resetFeedbackForm = () => {
     isFeedbackExists.value = false
 }
 
-onMounted(() => {
+watch(() => filters.bulan, () => {
+    calculatePendingAnalyses()
+})
+
+
+onMounted(async () => {
     fetchUnits()
     fetchData()
     checkCommittee()
+    
+    // Initial fetch for monitoring stats
+    await fetchIndicators()
+    calculatePendingAnalyses()
 })
 </script>
 
@@ -678,7 +796,34 @@ onMounted(() => {
     padding: 0.375rem 0.5rem !important;
   }
 }
+
+/* Stats Styles */
+.bg-warning-subtle { background-color: #fff9db !important; }
+.bg-success-subtle { background-color: #ebfbee !important; }
+.text-warning-emphasis { color: #856404 !important; }
+.text-success-emphasis { color: #155724 !important; }
+
+/* Animations */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+
+.hover-elevate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
 </style>
+
 
 <style>
 /* Fallback for Bootstrap versions < 5.3 */
