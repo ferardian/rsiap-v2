@@ -362,7 +362,7 @@ const submitSpo = async () => {
     try {
         const payload = {
             judul: state.judul,
-            unit_id: state.unit.dep_id,
+            unit_id: state.unit.dep_id || state.unit.unit_id,
             tgl_terbit: state.tgl_terbit,
             jenis: state.jenis,
             semua_unit_terkait: state.semua_unit_terkait,
