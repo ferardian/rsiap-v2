@@ -14,9 +14,16 @@
                 </div>
                 <div>
                   <h6 class="fw-bold mb-0" :class="pendingAnalyses.length > 0 ? 'text-warning-emphasis' : 'text-success-emphasis'">
-                    {{ pendingAnalyses.length > 0 ? `${pendingAnalyses.length} Indikator Belum Dianalisa` : 'Semua Analisa Bulan Ini Telah Terisi' }}
+                    {{ pendingAnalyses.length > 0 ? `${pendingStats.total} Indikator Belum Dianalisa` : 'Semua Analisa Bulan Ini Telah Terisi' }}
                   </h6>
-                  <small class="text-muted">Status pengumpulan analisa periode {{ formatDateFull(filters.bulan) }}</small>
+                  <small class="text-muted">
+                    <template v-if="pendingAnalyses.length > 0">
+                        {{ pendingStats.uniqueRooms }} Ruang & {{ pendingStats.uniqueInmuts }} Indikator • Periode {{ formatDateFull(filters.bulan) }}
+                    </template>
+                    <template v-else>
+                        Status pengumpulan analisa periode {{ formatDateFull(filters.bulan) }}
+                    </template>
+                  </small>
                 </div>
               </div>
               <div class="d-flex gap-2">
@@ -44,7 +51,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="item in pendingAnalyses" :key="item.dep_id + '_' + item.id_inmut">
+                      <tr v-for="item in sortedPendingAnalyses" :key="item.dep_id + '_' + item.id_inmut">
                         <td class="ps-3"><span class="fw-bold text-dark small" style="font-size: 0.82rem;">{{ item.nama_ruang }}</span></td>
                         <td><span class="text-secondary small" style="font-size: 0.8rem;">{{ item.nama_inmut }}</span></td>
                       </tr>
@@ -188,20 +195,31 @@
       <div class="card-footer bg-white border-top py-3">
          <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
-            Menampilkan {{ items.length }} dari {{ total }} data
+              Menampilkan <span class="fw-bold text-dark">{{ (page - 1) * limit + 1 }} - {{ Math.min(page * limit, total) }}</span> dari <span class="fw-bold text-dark">{{ total }}</span> data
             </small>
             <nav aria-label="Page navigation" v-if="totalPages > 1">
-            <ul class="pagination pagination-sm mb-0">
+              <ul class="pagination pagination-sm mb-0">
                 <li class="page-item" :class="{ disabled: page === 1 }">
-                <button class="page-link" @click="changePage(page - 1)">Previous</button>
+                  <button class="page-link shadow-none" @click="changePage(page - 1)">
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
                 </li>
-                <li class="page-item" :class="{ active: page === p }" v-for="p in totalPages" :key="p">
-                <button class="page-link" @click="changePage(p)">{{ p }}</button>
+                
+                <li class="page-item" 
+                    v-for="p in displayedPages" 
+                    :key="p === '...' ? 'dots-' + Math.random() : p"
+                    :class="{ active: page === p, disabled: p === '...' }">
+                  <button class="page-link shadow-none" @click="p !== '...' && changePage(p)">
+                    {{ p }}
+                  </button>
                 </li>
+                
                 <li class="page-item" :class="{ disabled: page === totalPages }">
-                <button class="page-link" @click="changePage(page + 1)">Next</button>
+                  <button class="page-link shadow-none" @click="changePage(page + 1)">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
                 </li>
-            </ul>
+              </ul>
             </nav>
         </div>
       </div>
@@ -381,6 +399,23 @@ const totalPages = ref(1)
 const modalRef = ref(null)
 let modalInstance = null
 
+const displayedPages = computed(() => {
+    const total = totalPages.value
+    const current = page.value
+    const delta = 1 // Number of pages around current
+    const range = []
+    
+    for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+            range.push(i)
+        } else if (range[range.length - 1] !== '...') {
+            range.push('...')
+        }
+    }
+    return range
+})
+
+
 const filters = reactive({
     bulan: new Date().toISOString().slice(0, 7), // YYYY-MM
     unit: null
@@ -391,6 +426,29 @@ const allAssignments = ref([])
 const pendingAnalyses = ref([])
 const showPendingList = ref(false)
 const loadingStats = ref(false)
+
+const pendingStats = computed(() => {
+    const total = pendingAnalyses.value.length
+    const uniqueRooms = new Set(pendingAnalyses.value.map(p => p.dep_id)).size
+    const uniqueInmuts = new Set(pendingAnalyses.value.map(p => p.id_inmut)).size
+    return { total, uniqueRooms, uniqueInmuts }
+})
+
+const sortedPendingAnalyses = computed(() => {
+    return [...pendingAnalyses.value].sort((a, b) => {
+        // Sort by room name first
+        const roomA = a.nama_ruang || ''
+        const roomB = b.nama_ruang || ''
+        if (roomA !== roomB) return roomA.localeCompare(roomB)
+        
+        // Then by indicator name
+        const inmutA = a.nama_inmut || ''
+        const inmutB = b.nama_inmut || ''
+        return inmutA.localeCompare(inmutB)
+    })
+})
+
+
 
 
 const isEdit = ref(false)
