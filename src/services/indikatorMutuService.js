@@ -16,6 +16,7 @@ const service = {
     getMonitoring: (params) => api.get('/indikator-mutu/monitoring', { params }),
     getUnits: () => api.get('/indikator-mutu/monitoring/units'),
     getLaporan: (params) => api.get('/indikator-mutu/laporan', { params }),
+    getLaporanDetail: (params) => api.get('/indikator-mutu/laporan/detail', { params }),
 
     // Analisa
     getAnalisa: (params) => api.get('/indikator-mutu/analisa', { params }),
