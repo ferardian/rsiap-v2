@@ -17,9 +17,43 @@
             <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
             <div class="stat-info">
               <span class="stat-value">{{ pagination.total || 0 }}</span>
-              <span class="stat-label">Total Berkas</span>
+              <span class="stat-label">{{ activeTab === 'staf' ? 'Total Staf' : 'Total Berkas' }}</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-container mb-4">
+      <div class="capsule-tabs">
+        <div class="capsule-tabs-wrapper">
+          <button 
+            type="button" 
+            class="capsule-tab" 
+            :class="{ 'active': activeTab === 'standar' }"
+            @click="changeTab('standar')"
+          >
+            <i class="fas fa-file-alt me-2"></i> <span>Komite Kesehatan</span>
+          </button>
+          <button 
+            type="button" 
+            class="capsule-tab" 
+            :class="{ 'active': activeTab === 'kredensial' }"
+            @click="changeTab('kredensial')"
+          >
+            <i class="fas fa-id-badge me-2"></i> 
+            <span>Kredensial</span>
+            <span v-if="pendingCount > 0" class="tab-badge">{{ pendingCount }}</span>
+          </button>
+          <button 
+            type="button" 
+            class="capsule-tab" 
+            :class="{ 'active': activeTab === 'staf' }"
+            @click="changeTab('staf')"
+          >
+            <i class="fas fa-user-md me-2"></i> <span>Data Tenaga Kesehatan</span>
+          </button>
         </div>
       </div>
     </div>
@@ -34,7 +68,7 @@
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Cari berdasarkan Perihal atau PJ..." 
+              :placeholder="activeTab === 'staf' ? 'Cari berdasarkan Nama atau NIK...' : 'Cari berdasarkan Perihal atau PJ...'" 
               @input="handleSearch"
             >
             <button v-if="searchQuery" class="clear-search" @click="clearSearch">
@@ -42,7 +76,7 @@
             </button>
           </div>
           
-          <div class="filter-box">
+          <div v-if="activeTab !== 'staf'" class="filter-box">
             <i class="fas fa-calendar-alt filter-icon"></i>
             <input 
               v-model="filterDate" 
@@ -58,9 +92,9 @@
 
         <!-- Add Button Right -->
         <div class="action-buttons">
-          <button class="btn-primary" @click="openCreateModal">
+          <button v-if="activeTab !== 'staf'" class="btn-primary" @click="openCreateModal">
             <i class="fas fa-plus"></i>
-            <span>Tambah Berkas</span>
+            <span>{{ activeTab === 'standar' ? 'Buat Surat Undangan' : 'Pengajuan SPK RKK' }}</span>
           </button>
         </div>
       </div>
@@ -72,41 +106,59 @@
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <div class="spinner"></div>
-          <p>Memuat data berkas...</p>
+          <p>Memuat data {{ activeTab === 'staf' ? 'staf' : 'berkas' }}...</p>
         </div>
 
-        <table v-else-if="berkasList.length > 0" class="modern-table">
+        <!-- Table for Standar / Kredensial -->
+        <table v-else-if="berkasList.length > 0 && activeTab !== 'staf'" class="modern-table">
           <thead>
             <tr>
-              <th width="5%">No</th>
-              <th width="20%">Nomor Surat</th>
-              <th width="30%">Perihal</th>
-              <th width="15%">Tanggal Terbit</th>
-              <th width="20%">Penanggung Jawab</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="50" class="text-center">No</th>
+              <th style="min-width: 150px;">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status / No' }}</th>
+              <th style="min-width: 250px;">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
+              <th v-if="activeTab === 'kredensial'" style="min-width: 200px;">Pegawai</th>
+              <th style="min-width: 130px;">Tgl Terbit</th>
+              <th style="min-width: 150px;">Penanggung Jawab</th>
+              <th width="100" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(berkas, index) in berkasList" :key="index" class="table-row-hover">
-              <td class="text-muted">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+              <td class="text-muted text-center">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
               <td>
                 <div class="badge-nomor">
-                  {{ formatNomorSurat(berkas) }}
+                  <template v-if="(activeTab === 'standar' || activeTab === 'kredensial') && (berkas.status_approval === 'pengajuan' || !berkas.status_approval)">
+                    <span class="text-warning"><i class="fas fa-clock me-1"></i> Menunggu Approval</span>
+                  </template>
+                  <template v-else>
+                    {{ formatNomorSurat(berkas) }}
+                  </template>
                 </div>
               </td>
               <td>
-                <div class="fw-medium text-dark">{{ berkas.perihal }}</div>
+                <div class="fw-bold text-dark">{{ berkas.perihal || berkas.judul }}</div>
+              </td>
+              <td v-if="activeTab === 'kredensial'">
+                <div v-if="berkas.target_pegawai">
+                  <div class="fw-bold text-dark fs-xs">{{ berkas.target_pegawai.nama }}</div>
+                  <div class="text-muted fs-xs">{{ berkas.target_pegawai.nik }}</div>
+                </div>
+                <div v-else class="text-center">
+                  <button class="btn-quick-link" @click="openEditModal(berkas)" title="Set Pegawai">
+                    <i class="fas fa-user-plus me-1"></i> Set Pegawai
+                  </button>
+                </div>
               </td>
               <td>
                 <div class="date-cell">
-                  <i class="fas fa-calendar-alt text-muted"></i>
-                  <span>{{ formatDate(berkas.tgl_terbit) }}</span>
+                  <i class="fas fa-calendar-alt text-muted me-1"></i>
+                  <span class="fs-xs">{{ formatDate(berkas.tgl_terbit) }}</span>
                 </div>
               </td>
               <td>
                 <div class="pj-cell" :title="berkas.penanggung_jawab?.nama || berkas.pj">
                   <div class="pj-avatar">{{ getInitials(berkas.penanggung_jawab?.nama || berkas.pj) }}</div>
-                  <span class="pj-name text-truncate">{{ berkas.penanggung_jawab?.nama || berkas.pj }}</span>
+                  <span class="pj-name text-truncate fs-xs">{{ berkas.penanggung_jawab?.nama || berkas.pj }}</span>
                 </div>
               </td>
               <td>
@@ -114,21 +166,89 @@
                   <button class="btn-action btn-view" @click="openDetailModal(berkas)" title="Detail">
                     <i class="fas fa-eye"></i>
                   </button>
+
+                  <template v-if="activeTab === 'kredensial'">
+                    <button v-if="berkas.file" class="btn-action btn-file" @click="openFile(berkas.file)" title="Lihat Berkas">
+                      <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button v-else disabled class="btn-action btn-file-disabled" title="Berkas Belum Diupload">
+                      <i class="fas fa-file-excel"></i>
+                    </button>
+                  </template>
+
                   <div class="dropdown-more">
                     <button class="btn-action btn-more" @click="toggleMenu(index)" title="Lainnya">
                       <i class="fas fa-ellipsis-v"></i>
                     </button>
-                    <!-- Dropdown Menu -->
                     <div v-if="activeMenu === index" class="dropdown-menu-custom">
                       <button class="dropdown-item" @click="openEditModal(berkas); activeMenu = null">
-                        <i class="fas fa-edit text-primary"></i> Edit Berkas
+                        <i class="fas fa-edit text-primary"></i> Edit {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}
+                      </button>
+                      <button v-if="activeTab === 'kredensial'" class="dropdown-item" @click="openUploadModal(berkas); activeMenu = null">
+                        <i class="fas fa-upload text-success"></i> Upload File SK
                       </button>
                       <div class="dropdown-divider"></div>
                       <button class="dropdown-item text-danger" @click="confirmDelete(berkas); activeMenu = null">
-                        <i class="fas fa-trash"></i> Hapus Berkas
+                        <i class="fas fa-trash"></i> Hapus {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}
                       </button>
                     </div>
                   </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Table for Staf -->
+        <table v-else-if="berkasList.length > 0 && activeTab === 'staf'" class="modern-table">
+          <thead>
+            <tr>
+              <th width="50" class="text-center">No</th>
+              <th style="min-width: 200px;">NIK / Nama</th>
+              <th style="min-width: 150px;">Profesi</th>
+              <th style="min-width: 150px;">Unit</th>
+              <th style="min-width: 200px;">Pendidikan / Prodi</th>
+              <th style="min-width: 130px;">Tanggal Lulus</th>
+              <th style="min-width: 100px;">Bukti</th>
+              <th width="100" class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(staf, index) in berkasList" :key="index" class="table-row-hover">
+              <td class="text-muted text-center">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+              <td>
+                <div class="fw-bold text-dark">{{ staf.nama }}</div>
+                <div class="text-muted fs-xs">{{ staf.nik }}</div>
+              </td>
+              <td>
+                <div class="text-dark">{{ staf.kategori_profesi || '-' }}</div>
+                <div class="text-muted fs-xs">{{ staf.jbtn || '-' }}</div>
+              </td>
+              <td>
+                <div class="badge-unit">
+                  <i class="fas fa-building me-1"></i>
+                  {{ (staf.departemen && staf.departemen !== '-') ? staf.departemen : 'Belum Set' }}
+                </div>
+              </td>
+              <td>
+                <div class="text-dark">{{ staf.pendidikan }}</div>
+                <div class="text-muted fs-xs">{{ staf.prodi || '-' }}</div>
+              </td>
+              <td>{{ formatDate(staf.tanggal_lulus) }}</td>
+              <td>
+                <a v-if="staf.bukti_kelulusan" :href="getBuktiKelulusanUrl(staf.bukti_kelulusan)" target="_blank" class="badge bg-success text-white text-decoration-none">
+                  <i class="fas fa-check-circle me-1"></i> Lihat
+                </a>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td>
+                <div class="action-buttons-cell justify-content-center">
+                  <button class="btn-action btn-view" @click="openStafDetail(staf)" title="Detail">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-action btn-upload" @click="openUploadBuktiModal(staf)" title="Upload Bukti Kelulusan">
+                    <i class="fas fa-upload"></i>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -140,8 +260,8 @@
           <div class="empty-icon">
             <i class="fas fa-file-contract"></i>
           </div>
-          <h3>Pencarian Tidak Ditemukan</h3>
-          <p>Belum ada data Berkas Komite Kesehatan yang terdaftar atau sesuai kriteria pencarian.</p>
+          <h3>Data Tidak Ditemukan</h3>
+          <p>Belum ada data {{ activeTab === 'staf' ? 'staf' : 'berkas' }} yang terdaftar atau sesuai kriteria pencarian.</p>
           <button v-if="searchQuery || filterDate" class="btn-outline-primary mt-3" @click="resetFilters">
             <i class="fas fa-sync-alt mr-2"></i>Reset Pencarian
           </button>
@@ -192,6 +312,7 @@
       :show="showFormModal"
       :is-edit="isEditMode"
       :data="selectedBerkas"
+      :is-kredensial="activeTab === 'kredensial'"
       @close="showFormModal = false"
       @saved="loadData"
     />
@@ -202,28 +323,166 @@
       @close="showDetailModal = false"
     />
 
-    <!-- Delete Confirmation Modal -->
+    <SkUploadModal 
+       :show="showUploadModal"
+       :data="selectedBerkas"
+       @close="showUploadModal = false"
+       @saved="loadData"
+    />
+
+    <!-- Modal Detail Staf -->
+    <div v-if="showStafDetailModal" class="modal-overlay" @click="showStafDetailModal = false">
+      <div class="modal-content modal-lg" @click.stop style="max-width: 800px">
+        <div class="modal-header modern-header">
+          <div class="header-content">
+            <div class="header-icon bg-primary-light">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <div>
+              <h3>Detail Kualifikasi Staf</h3>
+              <p class="header-subtitle">{{ selectedStaf?.nama }} ({{ selectedStaf?.nik }})</p>
+            </div>
+          </div>
+          <button class="btn-close-icon" @click="showStafDetailModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="detail-grid">
+            <div class="detail-group">
+              <label>Informasi Profesi</label>
+              <div class="detail-row">
+                <span class="label">Pendidikan</span>
+                <span class="value">{{ selectedStaf?.pendidikan || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Program Studi</span>
+                <span class="value">{{ selectedStaf?.prodi || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Kategori Profesi</span>
+                <span class="value">{{ selectedStaf?.kategori_profesi || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Unit/Departemen</span>
+                <span class="value">{{ selectedStaf?.departemen || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Jabatan</span>
+                <span class="value">{{ selectedStaf?.jbtn || '-' }}</span>
+              </div>
+            </div>
+            
+            <div class="detail-group">
+              <label>Informasi Kelulusan & Legalitas</label>
+              <div class="detail-row">
+                <span class="label">Tanggal Lulus</span>
+                <span class="value">{{ formatDate(selectedStaf?.tanggal_lulus) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Nomor STR</span>
+                <span class="value">{{ selectedStaf?.nomor_str || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Masa Berlaku STR</span>
+                <span class="value">{{ formatDate(selectedStaf?.tgl_akhir_str) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Nomor SIP</span>
+                <span class="value">{{ selectedStaf?.nomor_sip || '-' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Masa Berlaku SIP</span>
+                <span class="value">{{ formatDate(selectedStaf?.tgl_akhir_sip) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4" v-if="selectedStaf?.bukti_kelulusan">
+            <label class="d-block mb-2 fw-bold text-muted">Verifikasi Ijazah</label>
+            <a :href="getBuktiKelulusanUrl(selectedStaf.bukti_kelulusan)" target="_blank" class="btn-preview-file">
+              <i class="fas fa-file-pdf me-2"></i> Verifikasi Ijazah
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="showStafDetailModal = false">Tutup</button>
+          <button class="btn-save" @click="openUploadBuktiModal(selectedStaf); showStafDetailModal = false">
+            <i class="fas fa-upload me-2"></i> Update Bukti
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Upload Verifikasi Ijazah -->
+    <div v-if="showUploadBuktiModal" class="modal-overlay" @click="closeUploadBuktiModal">
+       <div class="modal-content modal-sm" @click.stop>
+          <div class="modal-header modern-header">
+             <div class="header-content">
+                <div class="header-icon bg-primary-light">
+                   <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div>
+                   <h3 class="mb-0">Update Ijazah</h3>
+                   <p class="header-subtitle fs-xs mb-0">{{ selectedStaf?.nama }}</p>
+                </div>
+             </div>
+             <button class="btn-close-icon" @click="closeUploadBuktiModal">
+                <i class="fas fa-times"></i>
+             </button>
+          </div>
+          <div class="modal-body p-4">
+             <div 
+               class="upload-dropzone" 
+               @dragover.prevent 
+               @drop.prevent="handleDrop"
+               @click="$refs.fileInput.click()"
+             >
+                <input type="file" ref="fileInput" hidden @change="handleFileChange" accept=".pdf,.jpg,.jpeg,.png">
+                <div class="upload-icon-circle mb-3">
+                   <i class="fas fa-file-upload"></i>
+                </div>
+                <p v-if="!buktiFile" class="fw-bold text-dark mb-1">Klik atau seret file ke sini</p>
+                <p v-else class="text-success fw-bold mb-1">{{ buktiFile.name }}</p>
+                <p class="text-muted fs-xs">Format: PDF, JPG, PNG (Maks 10MB)</p>
+             </div>
+          </div>
+          <div class="modal-footer">
+             <button class="btn-cancel" @click="closeUploadBuktiModal" :disabled="uploadingBukti">Batal</button>
+             <button class="btn-save" @click="submitUploadBukti" :disabled="!buktiFile || uploadingBukti">
+                <span v-if="uploadingBukti" class="spinner-border spinner-border-sm me-2"></span>
+                <i class="fas fa-check me-2" v-else></i>
+                {{ uploadingBukti ? 'Mengunggah...' : 'Simpan Perubahan' }}
+             </button>
+          </div>
+       </div>
+    </div>
+
     <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
-      <div class="modal-content modal-sm" @click.stop>
-        <div class="modal-icon-header text-danger">
-          <div class="icon-circle bg-danger-light">
+      <div class="modal-content modal-sm modal-alert" @click.stop>
+        <div class="modal-alert-header text-danger">
+          <div class="icon-circle-large bg-danger-soft">
             <i class="fas fa-exclamation-triangle"></i>
           </div>
         </div>
-        <div class="modal-body text-center mt-3">
-          <h3 class="mb-2">Hapus Berkas?</h3>
-          <p class="text-muted">
-            Anda yakin ingin menghapus berkas nomor <br>
-            <strong>{{ formatNomorSurat(selectedBerkas) }}</strong>?<br>
-            Tindakan ini tidak dapat dibatalkan.
+        <div class="modal-body text-center p-4">
+          <h3 class="fw-bold text-dark mb-3">Hapus {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}?</h3>
+          <p class="text-muted fs-sm mb-4">
+            Anda yakin ingin menghapus data nomor:<br>
+            <span class="d-block mt-2 p-2 bg-light rounded-3 fw-bold text-dark border">{{ formatNomorSurat(selectedBerkas) }}</span>
           </p>
+          <div class="alert alert-danger-soft border-0 rounded-3 py-2 px-3 mb-0">
+            <p class="fs-xs mb-0 text-danger fw-600">
+              <i class="fas fa-info-circle me-1"></i> Tindakan ini tidak dapat dibatalkan.
+            </p>
+          </div>
         </div>
-        <div class="modal-footer-flex">
-          <button class="btn-cancel" @click="showDeleteModal = false">Batal</button>
-          <button class="btn-danger" @click="executeDelete" :disabled="deleting">
-            <i class="fas fa-trash" v-if="!deleting"></i>
-            <span class="spinner-border spinner-border-sm" v-else></span>
-            {{ deleting ? 'Menghapus...' : 'Hapus' }}
+        <div class="modal-footer border-0 bg-white pt-0 pb-4 px-4 justify-content-center">
+          <button class="btn btn-light px-4 py-2 rounded-3 fw-bold me-2" @click="showDeleteModal = false">Batal</button>
+          <button class="btn btn-danger px-4 py-2 rounded-3 fw-bold shadow-sm" @click="executeDelete" :disabled="deleting">
+            <i class="fas fa-trash me-1" v-if="!deleting"></i>
+            <span class="spinner-border spinner-border-sm me-1" v-else></span>
+            {{ deleting ? 'Menghapus...' : 'Ya, Hapus' }}
           </button>
         </div>
       </div>
@@ -235,12 +494,15 @@
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { komiteKesehatanService } from '@/services/komiteKesehatanService'
+import { skService } from '@/services/skService'
+import { pegawaiService } from '@/services/pegawaiService'
 import debounce from 'lodash/debounce'
 import { format } from 'date-fns'
 
-// Import Modals (will be created in next steps)
+// Import Modals
 import KesehatanFormModal from './components/KesehatanFormModal.vue'
 import KesehatanDetailModal from './components/KesehatanDetailModal.vue'
+import SkUploadModal from './components/SkUploadModal.vue'
 
 const toast = useToast()
 
@@ -250,6 +512,8 @@ const loading = ref(true)
 const searchQuery = ref('')
 const filterDate = ref('')
 const activeMenu = ref(null)
+const activeTab = ref('standar') // 'standar' | 'kredensial' | 'staf'
+const pendingCount = ref(0)
 
 const pagination = ref({
   current_page: 1,
@@ -262,8 +526,14 @@ const pagination = ref({
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
+const showUploadModal = ref(false)
+const showUploadBuktiModal = ref(false)
+const showStafDetailModal = ref(false)
 const isEditMode = ref(false)
 const selectedBerkas = ref(null)
+const selectedStaf = ref(null)
+const buktiFile = ref(null)
+const uploadingBukti = ref(false)
 const deleting = ref(false)
 
 // Close dropdowns when clicking outside
@@ -276,6 +546,7 @@ const closeDropdowns = (e) => {
 onMounted(() => {
   document.addEventListener('click', closeDropdowns)
   loadData()
+  fetchPendingCount()
 })
 
 onUnmounted(() => {
@@ -291,12 +562,13 @@ const toggleMenu = (index) => {
 }
 
 const buildFilters = () => {
-  const filters = [
-    { field: 'status', operator: '=', value: '1' }
-  ]
+  const filters = []
+  
+  if (activeTab.value === 'standar') {
+    filters.push({ field: 'status', operator: '=', value: '1' })
+  }
   
   if (filterDate.value) {
-    // Add 1 day to match backend logic
     const dateObj = new Date(filterDate.value)
     dateObj.setDate(dateObj.getDate() + 1)
     const formattedDate = dateObj.toISOString().split('T')[0]
@@ -310,7 +582,28 @@ const loadData = async (page = 1) => {
   loading.value = true
   try {
     const filters = buildFilters()
-    const response = await komiteKesehatanService.search(searchQuery.value, pagination.value.per_page, page, filters)
+    let response;
+    
+    if (activeTab.value === 'standar') {
+      response = await komiteKesehatanService.search(searchQuery.value, pagination.value.per_page, page, filters)
+    } else if (activeTab.value === 'kredensial') {
+      const combinedSearch = searchQuery.value 
+        ? `SPK RKK ${searchQuery.value}` 
+        : 'SPK RKK'
+      response = await skService.searchSk(combinedSearch, pagination.value.per_page, page, filters)
+    } else {
+      // Data Staf Nakes Lain (Filtered to exclude Perawat, Ners, and Dokter)
+      const filters = [
+        { field: 'kategori_profesi', operator: 'not_in', value: ['Perawat', 'Ners', 'Dokter'] }
+      ]
+      response = await pegawaiService.getKualifikasiStaf({
+        search: searchQuery.value,
+        per_page: pagination.value.per_page,
+        page: page,
+        group: 'nakes_lain',
+        filters: filters
+      })
+    }
     
     if (response.data) {
       berkasList.value = response.data.data || []
@@ -322,10 +615,20 @@ const loadData = async (page = 1) => {
       }
     }
   } catch (error) {
-    console.error('Error loading Berkas:', error)
-    toast.error('Gagal memuat data Berkas Komite Kesehatan')
+    console.error('Error loading data:', error)
+    toast.error('Gagal memuat data')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchPendingCount = async () => {
+  try {
+    const filters = [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]
+    const response = await skService.searchSk('SPK RKK', 1, 1, filters)
+    pendingCount.value = response.data?.meta?.total || 0
+  } catch (error) {
+    console.error('Error fetching pending count:', error)
   }
 }
 
@@ -333,6 +636,15 @@ const handleSearch = debounce(() => {
   pagination.value.current_page = 1
   loadData(1)
 }, 500)
+
+const changeTab = (tab) => {
+  if (activeTab.value !== tab) {
+    activeTab.value = tab
+    searchQuery.value = ''
+    filterDate.value = ''
+    loadData(1)
+  }
+}
 
 const clearSearch = () => {
   searchQuery.value = ''
@@ -350,6 +662,91 @@ const resetFilters = () => {
   handleSearch()
 }
 
+const openFile = (filename) => {
+  if (!filename) return
+  
+  if (activeTab.value === 'kredensial') {
+    const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
+    const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
+    const url = `${baseUrl}/webapps/rsia_sk/${filename}`
+    window.open(url, '_blank')
+  } else {
+    const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/arsip/berkas/${filename}`
+    window.open(fileUrl, '_blank')
+  }
+}
+
+const getBuktiKelulusanUrl = (filename) => {
+  const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
+  const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
+  return `${baseUrl}/webapps/rsia_kualifikasi/${filename}`
+}
+
+const openStafDetail = (staf) => {
+  selectedStaf.value = staf
+  showStafDetailModal.value = true
+}
+
+const openUploadBuktiModal = (staf) => {
+  selectedStaf.value = staf
+  buktiFile.value = null
+  showUploadBuktiModal.value = true
+}
+
+const closeUploadBuktiModal = () => {
+  if (uploadingBukti.value) return
+  showUploadBuktiModal.value = false
+  selectedStaf.value = null
+  buktiFile.value = null
+}
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (file) validateAndSetFile(file)
+}
+
+const handleDrop = (e) => {
+  const file = e.dataTransfer.files[0]
+  if (file) validateAndSetFile(file)
+}
+
+const validateAndSetFile = (file) => {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+  const maxSize = 10 * 1024 * 1024 // 10MB
+
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Format berkas tidak didukung. Gunakan PDF/JPG/PNG')
+    return
+  }
+
+  if (file.size > maxSize) {
+    toast.error('Ukuran berkas terlalu besar. Maksimal 10MB')
+    return
+  }
+
+  buktiFile.value = file
+}
+
+const submitUploadBukti = async () => {
+  if (!buktiFile.value || !selectedStaf.value) return
+
+  uploadingBukti.value = true
+  const formData = new FormData()
+  formData.append('file', buktiFile.value)
+
+  try {
+    await pegawaiService.uploadBuktiKelulusan(selectedStaf.value.nik, formData)
+    toast.success('Bukti Kelulusan berhasil diupload')
+    closeUploadBuktiModal()
+    loadData()
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    toast.error('Gagal mengupload file')
+  } finally {
+    uploadingBukti.value = false
+  }
+}
+
 const changePage = (page) => {
   if (page >= 1 && page <= pagination.value.last_page) {
     loadData(page)
@@ -362,27 +759,17 @@ const parseDate = (dateStr) => {
   return new Date(dateStr.replace(' ', 'T'))
 }
 
-const formatDay = (dateString) => {
-  const d = parseDate(dateString)
-  return d ? d.getDate() : '-'
-}
-
-const formatMonthYear = (dateString) => {
-  const d = parseDate(dateString)
-  return d ? d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }) : ''
-}
-
 const formatDate = (dateString) => {
-  if (!dateString) return '-'
+  if (!dateString || dateString === '0000-00-00') return '-'
   try {
     const d = parseDate(dateString)
     return d ? d.toLocaleDateString('id-ID', {
-      day: '2-digit',
+      day: 'numeric',
       month: 'long',
       year: 'numeric'
-    }) : dateString
+    }) : '-'
   } catch (e) {
-    return dateString
+    return dateString || '-'
   }
 }
 
@@ -391,7 +778,7 @@ const formatNomorSurat = (berkas) => {
   try {
     const tglPattern = berkas.tgl_terbit ? format(new Date(berkas.tgl_terbit.replace(' ', 'T').split('.')[0]), 'ddMMyy') : ''
     const no = String(berkas.nomor).padStart(3, '0')
-    const prefix = berkas.prefix || 'KTKL-RSIA'
+    const prefix = berkas.prefix || (activeTab.value === 'kredensial' ? 'SK-RSIA' : 'KTKL-RSIA')
     return `${no}/${prefix}/${tglPattern}`
   } catch (e) {
     return `${berkas.nomor}/${berkas.prefix || 'KTKL-RSIA'}`
@@ -403,6 +790,20 @@ const getInitials = (name) => {
   return name.includes(' ') 
     ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : name.substring(0, 2).toUpperCase()
+}
+
+const getStatusBadgeClass = (status) => {
+  const classes = {
+    'pengajuan': 'badge-status-warning',
+    'disetujui': 'badge-status-success',
+    'ditolak': 'badge-status-danger'
+  }
+  return `badge-status ${classes[status] || 'badge-status-secondary'}`
+}
+
+const isExpired = (dateString) => {
+  if (!dateString) return true
+  return new Date(dateString) < new Date()
 }
 
 // Actions
@@ -423,6 +824,11 @@ const openEditModal = (berkas) => {
   showFormModal.value = true
 }
 
+const openUploadModal = (berkas) => {
+  selectedBerkas.value = berkas
+  showUploadModal.value = true
+}
+
 const confirmDelete = (berkas) => {
   selectedBerkas.value = berkas
   showDeleteModal.value = true
@@ -433,16 +839,20 @@ const executeDelete = async () => {
   
   deleting.value = true
   try {
-    const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit}`)
+    if (activeTab.value === 'standar') {
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+      await komiteKesehatanService.delete(identifier)
+    } else {
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+      await skService.deleteSk(identifier)
+    }
     
-    await komiteKesehatanService.delete(identifier)
-    
-    toast.success('Berkas berhasil dihapus')
+    toast.success('Data berhasil dihapus')
     showDeleteModal.value = false
     loadData(pagination.value.current_page)
   } catch (error) {
-    console.error('Error deleting Berkas:', error)
-    toast.error('Gagal menghapus berkas')
+    console.error('Error deleting:', error)
+    toast.error('Gagal menghapus data')
   } finally {
     deleting.value = false
   }
@@ -462,14 +872,11 @@ const displayedPages = computed(() => {
     }
   }
   
-  return pages.filter((page, index, array) => {
-    return true
-  })
+  return pages
 })
 </script>
 
 <style scoped>
-/* Reuse and extend styles from PksView / KeperawatanView layout */
 .sdi-view {
   min-height: 100vh;
   background-color: #f8fafc;
@@ -680,7 +1087,6 @@ const displayedPages = computed(() => {
   background: white;
   color: #334155;
   cursor: pointer;
-  appearance: none;
 }
 
 .btn-primary {
@@ -696,20 +1102,18 @@ const displayedPages = computed(() => {
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn-primary:hover {
   background: #d97706;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
 }
 
 /* Card & Table modern */
 .card-modern {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   overflow: hidden;
   border: 1px solid #e2e8f0;
 }
@@ -759,30 +1163,6 @@ const displayedPages = computed(() => {
   margin: 0 0 0.5rem 0;
 }
 
-.empty-state p {
-  margin: 0;
-  font-size: 0.875rem;
-  max-width: 400px;
-}
-
-.btn-outline-primary {
-  display: inline-flex;
-  align-items: center;
-  background: transparent;
-  color: #3b82f6;
-  border: 1px solid #3b82f6;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-outline-primary:hover {
-  background: #eff6ff;
-}
-
 .modern-table {
   width: 100%;
   border-collapse: collapse;
@@ -801,10 +1181,9 @@ const displayedPages = computed(() => {
 }
 
 .modern-table td {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
-  font-size: 0.875rem;
 }
 
 .table-row-hover:hover {
@@ -827,16 +1206,14 @@ const displayedPages = computed(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #475569;
   font-size: 0.875rem;
-  white-space: nowrap;
+  color: #475569;
 }
 
 .pj-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  max-width: 250px;
 }
 
 .pj-avatar {
@@ -848,63 +1225,47 @@ const displayedPages = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
   font-weight: 600;
-  flex-shrink: 0;
+  font-size: 0.8rem;
 }
 
 .pj-name {
+  font-size: 0.875rem;
   color: #1e293b;
-  font-weight: 500;
+  max-width: 180px;
 }
 
-.text-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Actions logic */
 .action-buttons-cell {
   display: flex;
-  gap: 0.5rem;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .btn-action {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
-  border: none;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.875rem;
-}
-
-.btn-view {
-  background: #f1f5f9;
-  color: #64748b;
 }
 
 .btn-view:hover {
-  background: #e2e8f0;
-  color: #334155;
-}
-
-.btn-more {
-  background: transparent;
-  color: #64748b;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #bfdbfe;
 }
 
 .btn-more:hover {
-  background: #f1f5f9;
-  color: #334155;
+  background: #f8fafc;
+  color: #1e293b;
 }
 
-/* Dropdown */
 .dropdown-more {
   position: relative;
 }
@@ -912,58 +1273,51 @@ const displayedPages = computed(() => {
 .dropdown-menu-custom {
   position: absolute;
   right: 0;
-  top: calc(100% + 4px);
+  top: 100%;
+  margin-top: 0.5rem;
   background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  min-width: 160px;
   z-index: 50;
-  padding: 0.5rem 0;
-  animation: slideDown 0.15s ease-out;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  min-width: 200px;
+  overflow: hidden;
+  padding: 0.5rem;
 }
 
 .dropdown-item {
+  width: 100%;
+  padding: 0.625rem 1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  width: 100%;
-  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: #475569;
   border: none;
   background: none;
-  text-align: left;
-  font-size: 0.875rem;
-  color: #334155;
   cursor: pointer;
-  transition: background 0.2s;
+  border-radius: 8px;
+  text-align: left;
 }
 
 .dropdown-item:hover {
-  background: #f8fafc;
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .dropdown-divider {
   height: 1px;
-  background: #e2e8f0;
-  margin: 0.25rem 0;
+  background: #f1f5f9;
+  margin: 0.5rem 0;
 }
 
-.text-primary { color: #3b82f6; }
-.text-danger { color: #ef4444 !important; }
-
-/* Pagination modern */
 .pagination-container {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
   border-top: 1px solid #e2e8f0;
-  background: white;
 }
 
 .pagination-info {
@@ -974,7 +1328,7 @@ const displayedPages = computed(() => {
 .pagination-controls {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .btn-page {
@@ -983,18 +1337,12 @@ const displayedPages = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: white;
-  border-radius: 6px;
   color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
-}
-
-.btn-page:not(:disabled):hover {
-  background: #f8fafc;
-  color: #334155;
-  border-color: #cbd5e1;
 }
 
 .btn-page:disabled {
@@ -1011,13 +1359,11 @@ const displayedPages = computed(() => {
   min-width: 32px;
   height: 32px;
   padding: 0 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e2e8f0;
-  background: white;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
   color: #64748b;
+  font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -1026,150 +1372,455 @@ const displayedPages = computed(() => {
 .btn-page-number.active {
   background: #3b82f6;
   color: white;
+}
+
+.btn-page-number:hover:not(.active) {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Custom styles for Staf info */
+.staf-info-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.staf-name {
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.staf-nik {
+  font-size: 0.75rem;
+}
+
+.badge-legal {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badge-legal.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-legal.expired {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.upload-dropzone {
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-dropzone:hover {
   border-color: #3b82f6;
-  font-weight: 500;
-}
-
-.btn-page-number:not(.active):hover {
   background: #f8fafc;
-  border-color: #cbd5e1;
 }
 
-/* Delete Modal Styling */
+.upload-icon-circle {
+  width: 56px;
+  height: 56px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto;
+  border: 1px solid #dbeafe;
+}
+
+.badge-unit {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+}
+
+.badge-unit i {
+  color: #3b82f6;
+  opacity: 0.7;
+}
+
+.btn-action.btn-upload {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.btn-action.btn-upload:hover {
+  background: #dcfce7;
+}
+
+.btn-preview-file {
+  display: flex;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  background: #eff6ff;
+  border-radius: 12px;
+  color: #3b82f6;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: 1px solid #dbeafe;
+}
+
+.btn-preview-file i {
+  font-size: 1.1rem;
+}
+
+.btn-preview-file:hover {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.btn-preview-file:hover {
+  background: #e2e8f0;
+}
+
+.btn-file {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.btn-file:hover {
+  background: #e0f2fe;
+}
+
+.btn-file-disabled {
+  background: #f8fafc;
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.btn-quick-link {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-quick-link:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #334155;
+  transform: translateY(-1px);
+}
+
+.btn-quick-link i {
+  color: #3b82f6;
+}
+
+/* Tab Styles from Keperawatan */
+.tabs-container {
+  display: flex;
+}
+
+.capsule-tabs {
+  display: flex;
+  background: white;
+  padding: 0.4rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eef2f6;
+  width: fit-content;
+}
+
+.capsule-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.capsule-tab {
+  padding: 0.75rem 1.75rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #64748b;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.capsule-tab i {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.capsule-tab:hover:not(.active) {
+  color: #3b82f6;
+  background: #f8fafc;
+}
+
+.capsule-tab:hover i {
+  transform: translateY(-1px);
+}
+
+.capsule-tab.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.capsule-tab.active i {
+  color: white !important;
+}
+
+/* Badge Styles */
+.badge-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-status-warning { background: #fef3c7; color: #92400e; }
+.badge-status-success { background: #dcfce7; color: #15803d; }
+.badge-status-danger { background: #fee2e2; color: #b91c1c; }
+.badge-status-secondary { background: #f1f5f9; color: #475569; }
+
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 10000;
+  padding: 2rem;
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.modal-content.modal-lg {
+  max-width: 800px;
 }
 
 .modal-content.modal-sm {
-  width: 100%;
-  max-width: 400px;
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 450px;
 }
 
-@keyframes modalPop {
-  0% { transform: scale(0.95); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.modal-icon-header {
+.modal-header.modern-header {
+  background: linear-gradient(to right, #ffffff, #f8fafc);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-radius: 0 0 16px 16px;
 }
 
-.icon-circle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.btn-save {
+  padding: 0.75rem 1.5rem;
+  background: #3b82f6;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 2rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
-.bg-danger-light {
+.btn-save:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.35);
+}
+
+.btn-save:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-close-icon {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.btn-close-icon:hover {
   background: #fee2e2;
   color: #ef4444;
 }
 
-.modal-footer-flex {
+.header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
 }
 
-.btn-cancel, .btn-danger {
-  flex: 1;
-  padding: 0.75rem;
-  border-radius: 8px;
+.bg-primary-light { background: #eff6ff; color: #3b82f6; }
+.bg-danger-soft { background: #fee2e2; color: #ef4444; }
+
+.modal-alert {
+  overflow: visible;
+  padding-top: 2rem;
+}
+
+.modal-alert-header {
+  display: flex;
+  justify-content: center;
+}
+
+.icon-circle-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin-bottom: -1rem;
+  z-index: 1;
+}
+
+.alert-danger-soft {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.fw-600 { font-weight: 600; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.detail-group label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.detail-row .label {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.detail-row .value {
+  color: #1e293b;
   font-weight: 600;
   font-size: 0.875rem;
-  cursor: pointer;
-  text-align: center;
-  border: none;
-  transition: all 0.2s;
 }
 
-.btn-cancel {
-  background: #f1f5f9;
-  color: #475569;
-}
-
-.btn-cancel:hover {
-  background: #e2e8f0;
-}
-
-.btn-danger {
+.tab-badge {
   background: #ef4444;
   color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 20px;
+  margin-left: 8px;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  animation: pulse-red 2s infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
 }
 
-.btn-danger:hover {
-  background: #dc2626;
-}
-
-.btn-danger:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .hero-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
-  }
-  
-  .stats-section {
-    width: 100%;
-  }
-  
-  .stat-card {
-    flex: 1;
-  }
-  
-  .action-bar-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-filter-group {
-    flex-direction: column;
-  }
-  
-  .search-box {
-    max-width: 100%;
-  }
-
-  .pagination-container {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-  
-  .pagination-info {
-    text-align: center;
-    width: 100%;
-  }
-
-  .pagination-controls {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+@keyframes pulse-red {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 </style>

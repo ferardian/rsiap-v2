@@ -1,189 +1,198 @@
 <template>
-  <div class="approval-nomor-surat-page">
-    <!-- Header -->
-    <div class="page-header border-none">
+  <div class="approval-container">
+    <div class="boxed-layout">
+      <!-- Premium Header Section -->
+    <div class="hero-header">
+      <div class="header-overlay"></div>
       <div class="header-content">
-        <div class="header-text">
-          <h1 class="page-title">📝 Persetujuan Nomor Surat</h1>
-          <p class="page-subtitle">Verifikasi dan setujui pengajuan nomor surat resmi</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats Bar -->
-    <div class="hero-stats mb-6">
-      <div class="stat-card">
-        <span class="stat-label">Total Pengajuan</span>
-        <span class="stat-value">{{ currentStats.total || 0 }}</span>
-      </div>
-      <div class="stat-card warning">
-        <span class="stat-label">Menunggu</span>
-        <span class="stat-value">{{ currentStats.pengajuan || 0 }}</span>
-      </div>
-      <div class="stat-card success">
-        <span class="stat-label">Disetujui</span>
-        <span class="stat-value">{{ currentStats.disetujui || 0 }}</span>
-      </div>
-    </div>
-
-    <!-- Tab Navigation -->
-    <div class="tabs-container mb-6">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.id"
-        @click="activeTab = tab.id"
-        :class="['tab-item', { active: activeTab === tab.id }]"
-      >
-        <i :class="['fas', tab.icon, 'mr-2']"></i>
-        {{ tab.label }}
-      </button>
-    </div>
-
-    <!-- Content Card -->
-    <div class="content-card">
-      <div class="history-header bg-gray-50/50 border-b border-gray-100">
-        <div class="header-row">
-          <div class="flex flex-col">
-            <h3>Daftar Pengajuan - {{ activeTabLabel }}</h3>
-            <p class="text-sm text-gray-500 mt-1">Sistem verifikasi otomatis untuk penomoran surat</p>
+        <div class="title-area">
+          <div class="icon-badge">
+            <i class="fas fa-file-signature"></i>
           </div>
-          <button class="btn-refresh" @click="loadData" :disabled="loading">
+          <div class="text-group">
+            <h1>Persetujuan Nomor Surat</h1>
+            <p>Kelola dan verifikasi pengajuan penomoran dokumen resmi rumah sakit</p>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <button @click="loadData" :disabled="loading" class="btn-refresh-modern">
             <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
-            <span class="hidden sm:inline ml-1">Refresh</span>
+            <span>Refresh Data</span>
           </button>
         </div>
       </div>
-      
-      <div class="card-body p-0">
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state py-10 text-center">
-          <i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-blue-500"></i>
-          <p class="text-gray-500">Memuat data {{ activeTabLabel }}...</p>
+
+      <!-- Stats Grid (Glassmorphism Effect) -->
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-icon info"><i class="fas fa-list-ul"></i></div>
+          <div class="stat-data">
+            <span class="val">{{ currentStats.total || 0 }}</span>
+            <span class="lab">Total Antrian</span>
+          </div>
         </div>
-        
-        <!-- Unified Empty State -->
-        <div v-else-if="suratList.length === 0" class="empty-state py-16 text-center">
-          <i class="fas fa-folder-open text-5xl text-gray-200 mb-4 block"></i>
-          <p class="text-gray-400 font-medium text-lg">Bagus! Tidak ada antrian pengajuan surat saat ini.</p>
-          <p class="text-gray-300 text-sm mt-1">Semua surat {{ activeTabLabel.toLowerCase() }} sudah terproses.</p>
+        <div class="stat-item warning anim-pulse">
+          <div class="stat-icon warn"><i class="fas fa-hourglass-half"></i></div>
+          <div class="stat-data">
+            <span class="val">{{ currentStats.pengajuan || 0 }}</span>
+            <span class="lab">Menunggu Approval</span>
+          </div>
+        </div>
+        <div class="stat-item success">
+          <div class="stat-icon succ"><i class="fas fa-check-double"></i></div>
+          <div class="stat-data">
+            <span class="val">{{ currentStats.disetujui || 0 }}</span>
+            <span class="lab">Telah Disetujui</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <!-- Navigation Tabs -->
+      <nav class="tabs-nav">
+        <div class="tabs-wrapper">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="['tab-pill', { active: activeTab === tab.id }]"
+          >
+            <i :class="['fas', tab.icon]"></i>
+            <span>{{ tab.label }}</span>
+            <!-- Notification Badge with Count -->
+            <transition name="pop">
+              <span v-if="getTabPendingCount(tab.id) > 0" class="notif-badge">
+                {{ getTabPendingCount(tab.id) > 99 ? '99+' : getTabPendingCount(tab.id) }}
+              </span>
+            </transition>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Data Section -->
+      <div class="data-card">
+        <div class="card-header">
+          <h3><i class="fas fa-database mr-2 text-primary"></i> Daftar Pengajuan: {{ activeTabLabel }}</h3>
+          <div class="badge-count">{{ suratList.length }} Data</div>
         </div>
 
-        <template v-else>
-          <!-- Desktop Table View -->
-          <div class="table-container hidden md:block">
-            <table class="modern-table w-full">
-              <thead>
-                <tr>
-                  <th width="140">TANGGAL</th>
-                  <th>PERIHAL</th>
-                  <th v-if="activeTab === 'eksternal'">ALAMAT</th>
-                  <th>PENANGGUNG JAWAB</th>
-                  <th width="120">STATUS</th>
-                  <th class="text-center" width="200">AKSI</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="surat in suratList" :key="surat.id">
-                  <td>
-                    <div class="date-cell">
-                      <span class="day">{{ getDay(surat.tgl_terbit) }}</span>
-                      <div class="month-year">
-                        <span class="month">{{ getMonth(surat.tgl_terbit) }}</span>
-                        <span class="year">{{ getYear(surat.tgl_terbit) }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="flex flex-col">
-                      <span class="perihal-text">{{ surat.perihal }}</span>
-                      <span v-if="surat.no_surat" class="no-surat-badge mt-2">{{ surat.no_surat }}</span>
-                    </div>
-                  </td>
-                  <td v-if="activeTab === 'eksternal'">
-                    <p class="text-sm text-gray-600 line-clamp-2 max-w-xs">{{ surat.alamat || '-' }}</p>
-                  </td>
-                  <td>
-                    <div class="pj-info">
-                      <span class="pj-name">{{ surat.penanggung_jawab?.nama || '-' }}</span>
-                      <span class="pj-nip">{{ surat.pj }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span :class="['status-pill', surat.status]">
-                      {{ capitalize(surat.status) }}
-                    </span>
-                  </td>
-                  <td>
-                    <div v-if="surat.status === 'pengajuan'" class="flex justify-center gap-2">
-                      <button 
-                        @click="handleAction(surat, 'disetujui')" 
-                        class="btn-act approve"
-                        v-tooltip="'Setujui & Terbitkan Nomor'"
-                        :disabled="processingId === surat.id"
-                      >
-                        <i class="fas" :class="processingId === surat.id ? 'fa-spinner fa-spin' : 'fa-check-circle'"></i>
-                      </button>
-                      <button 
-                        @click="handleAction(surat, 'ditolak')" 
-                        class="btn-act reject"
-                        v-tooltip="'Tolak Pengajuan'"
-                        :disabled="processingId === surat.id"
-                      >
-                        <i class="fas fa-times-circle"></i>
-                      </button>
-                    </div>
-                    <div v-else class="text-center">
-                      <span class="text-xs text-blue-500 font-bold">
-                        <i class="fas fa-check-double mr-1"></i> TERPROSES
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+        <div class="card-body">
+          <!-- Loading Overlay -->
+          <div v-if="loading" class="loading-wrapper">
+            <div class="loader-circle"></div>
+            <p>Sinkronisasi data...</p>
           </div>
 
-          <!-- Mobile Layout (Tabbed Cards) -->
-          <div class="mobile-view md:hidden p-4">
-            <div class="space-y-4">
-              <div v-for="surat in suratList" :key="surat.id" class="mobile-card">
-                <div class="card-header-mob">
-                  <span class="mobile-date">{{ formatDateShort(surat.tgl_terbit) }}</span>
-                  <span :class="['status-pill small', surat.status]">{{ capitalize(surat.status) }}</span>
-                </div>
-                
-                <div class="card-body-mob">
-                  <h4 class="perihal-mob">{{ surat.perihal }}</h4>
-                  <p v-if="activeTab === 'eksternal'" class="text-xs text-gray-500 mt-1 italic">{{ surat.alamat }}</p>
-                  <div class="pj-mob-row mt-3">
-                    <i class="fas fa-user-circle text-gray-300"></i>
-                    <span>{{ (surat.penanggung_jawab?.nama || surat.pj) }}</span>
-                  </div>
-                  <div v-if="surat.no_surat" class="no-surat-badge mt-2 w-fit">
-                    {{ surat.no_surat }}
-                  </div>
-                </div>
+          <!-- Empty State -->
+          <div v-else-if="suratList.length === 0" class="empty-wrapper">
+            <div class="empty-illustration">
+              <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h4>Semua Beres!</h4>
+            <p>Tidak ada pengajuan {{ activeTabLabel.toLowerCase() }} yang perlu disetujui saat ini.</p>
+          </div>
 
-                <div v-if="surat.status === 'pengajuan'" class="card-footer-mob">
-                  <button 
-                    @click="handleAction(surat, 'disetujui')" 
-                    class="mob-btn approve"
-                    :disabled="processingId === surat.id"
-                  >
-                    <i class="fas fa-check mr-1"></i> Setujui
+          <template v-else>
+            <!-- Desktop View -->
+            <div class="table-responsive hidden-mobile">
+              <table class="premium-table">
+                <thead>
+                  <tr>
+                    <th>Tgl Terbit</th>
+                    <th>Detail Pengajuan</th>
+                    <th v-if="activeTab === 'eksternal'">Tujuan / Alamat</th>
+                    <th>Penanggung Jawab</th>
+                    <th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="surat in suratList" :key="surat.id" class="row-hover">
+                    <td>
+                      <div class="calendar-card">
+                        <span class="month">{{ getMonth(surat.tgl_terbit) }}</span>
+                        <span class="day">{{ getDay(surat.tgl_terbit) }}</span>
+                        <span class="year">{{ getYear(surat.tgl_terbit) }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="surat-info">
+                        <span class="perihal">{{ surat.perihal }}</span>
+                        <div v-if="surat.no_surat" class="no-surat-pill">
+                          <i class="fas fa-tag"></i> {{ surat.no_surat }}
+                        </div>
+                        <span v-else class="pending-pill">Menunggu Nomor</span>
+                      </div>
+                    </td>
+                    <td v-if="activeTab === 'eksternal'">
+                      <div class="alamat-text">{{ surat.alamat || '-' }}</div>
+                    </td>
+                    <td>
+                      <div class="user-chip">
+                        <div class="avatar">{{ getInitials(surat.penanggung_jawab?.nama || surat.pj) }}</div>
+                        <div class="user-details">
+                          <span class="name">{{ surat.penanggung_jawab?.nama || '-' }}</span>
+                          <span class="nik">{{ surat.pj }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <div v-if="surat.status === 'pengajuan'" class="action-group">
+                        <button 
+                          @click="handleAction(surat, 'disetujui')" 
+                          class="act-btn approve"
+                          title="Setujui Pengajuan"
+                          :disabled="processingId === surat.id"
+                        >
+                          <i v-if="processingId === surat.id" class="fas fa-spinner fa-spin"></i>
+                          <i v-else class="fas fa-check"></i>
+                        </button>
+                        <button 
+                          @click="handleAction(surat, 'ditolak')" 
+                          class="act-btn reject"
+                          title="Tolak Pengajuan"
+                          :disabled="processingId === surat.id"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <div v-else class="status-done">
+                        <i class="fas fa-check-circle"></i> Terproses
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile View -->
+            <div class="mobile-grid visible-mobile">
+              <div v-for="surat in suratList" :key="surat.id" class="m-card">
+                <div class="m-card-header">
+                  <div class="m-date">{{ formatDateShort(surat.tgl_terbit) }}</div>
+                  <div :class="['m-status', surat.status]">{{ surat.status }}</div>
+                </div>
+                <div class="m-card-body">
+                  <div class="m-perihal">{{ surat.perihal }}</div>
+                  <div v-if="activeTab === 'eksternal'" class="m-alamat">{{ surat.alamat }}</div>
+                  <div class="m-pj">
+                    <i class="far fa-user-circle"></i> {{ surat.penanggung_jawab?.nama || surat.pj }}
+                  </div>
+                </div>
+                <div v-if="surat.status === 'pengajuan'" class="m-card-footer">
+                  <button @click="handleAction(surat, 'disetujui')" class="m-btn approve" :disabled="processingId === surat.id">
+                    <i class="fas fa-check"></i> Setujui
                   </button>
-                  <button 
-                    @click="handleAction(surat, 'ditolak')" 
-                    class="mob-btn reject"
-                    :disabled="processingId === surat.id"
-                  >
-                    <i class="fas fa-times mr-1"></i> Tolak
+                  <button @click="handleAction(surat, 'ditolak')" class="m-btn reject" :disabled="processingId === surat.id">
+                    <i class="fas fa-times"></i> Tolak
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -194,6 +203,8 @@ import { ref, watch, onMounted, computed } from 'vue'
 import { suratInternalService } from '@/services/suratInternalService'
 import { suratEksternalService } from '@/services/suratEksternalService'
 import { skService } from '@/services/skService'
+import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
+import { komiteKesehatanService } from '@/services/komiteKesehatanService'
 import Swal from 'sweetalert2'
 
 // State
@@ -204,23 +215,31 @@ const activeTab = ref('internal')
 const internalStats = ref({})
 const eksternalStats = ref({})
 const kredensialStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
+const undanganStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
+const kesehatanStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 
 const tabs = [
   { id: 'internal', label: 'Internal', icon: 'fa-building' },
   { id: 'eksternal', label: 'Eksternal', icon: 'fa-globe' },
-  { id: 'kredensial', label: 'SK Kredensial', icon: 'fa-id-badge' }
+  { id: 'kredensial', label: 'SK Kredensial', icon: 'fa-id-badge' },
+  { id: 'undangan', label: 'Komite Keperawatan', icon: 'fa-envelope-open-text' },
+  { id: 'kesehatan', label: 'Komite Kesehatan', icon: 'fa-briefcase-medical' }
 ]
 
 // Computed
 const activeTabLabel = computed(() => {
   if (activeTab.value === 'internal') return 'Surat Internal'
   if (activeTab.value === 'eksternal') return 'Surat Eksternal'
+  if (activeTab.value === 'undangan') return 'Komite Keperawatan'
+  if (activeTab.value === 'kesehatan') return 'Komite Kesehatan'
   return 'SK Kredensial'
 })
 
 const currentStats = computed(() => {
   if (activeTab.value === 'internal') return internalStats.value
   if (activeTab.value === 'eksternal') return eksternalStats.value
+  if (activeTab.value === 'undangan') return undanganStats.value
+  if (activeTab.value === 'kesehatan') return kesehatanStats.value
   return kredensialStats.value
 })
 
@@ -259,6 +278,50 @@ const loadData = async () => {
         pengajuan: suratList.value.length,
         disetujui: 0
       }
+    } else if (activeTab.value === 'undangan') {
+      const res = await komiteKeperawatanService.search('', 100, 1, [
+        { field: 'status_approval', operator: '=', value: 'pengajuan' }
+      ])
+      
+      const rawData = res.data?.data || []
+      suratList.value = rawData.map(item => ({
+        id: btoa(`${item.nomor}.${item.tgl_terbit.split(' ')[0]}`),
+        perihal: item.perihal,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.penanggung_jawab,
+        pj: item.pj,
+        status: item.status_approval,
+        no_surat: null,
+        _original: item
+      }))
+
+      undanganStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
+    } else if (activeTab.value === 'kesehatan') {
+      const res = await komiteKesehatanService.search('', 100, 1, [
+        { field: 'status_approval', operator: '=', value: 'pengajuan' }
+      ])
+      
+      const rawData = res.data?.data || []
+      suratList.value = rawData.map(item => ({
+        id: btoa(`${item.nomor}.${item.tgl_terbit.split(' ')[0]}`),
+        perihal: item.perihal,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.penanggung_jawab,
+        pj: item.pj,
+        status: item.status_approval,
+        no_surat: null,
+        _original: item
+      }))
+
+      kesehatanStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
     } else {
       const payload = {
         sort: [{ field: 'created_at', direction: 'desc' }],
@@ -290,7 +353,7 @@ const handleAction = async (surat, status) => {
   const actionLabel = status === 'disetujui' ? 'menyetujui' : 'menolak'
   
   const result = await Swal.fire({
-    title: `<span class="text-xl font-bold">${capitalize(status)} Surat?</span>`,
+    title: `<span class="text-xl font-bold">${status === 'disetujui' ? 'Setujui' : 'Tolak'} Pengajuan?</span>`,
     html: `<p class="text-gray-500">Apakah Anda yakin ingin ${actionLabel} perihal: <br><b>"${surat.perihal}"</b>?</p>`,
     icon: status === 'disetujui' ? 'success' : 'warning',
     showCancelButton: true,
@@ -299,9 +362,9 @@ const handleAction = async (surat, status) => {
     cancelButtonText: 'Batal',
     reverseButtons: true,
     customClass: {
-      popup: 'rounded-2xl shadow-2xl',
-      confirmButton: 'rounded-xl px-6 py-2 font-bold shadow-lg',
-      cancelButton: 'rounded-xl px-6 py-2 font-bold'
+      popup: 'rounded-3xl shadow-2xl',
+      confirmButton: 'rounded-xl px-8 py-3 font-bold shadow-lg',
+      cancelButton: 'rounded-xl px-8 py-3 font-bold'
     }
   })
 
@@ -313,9 +376,17 @@ const handleAction = async (surat, status) => {
       if (status === 'disetujui') {
         await skService.approveKredensial(surat.id)
       } else {
-        // Fallback for rejected credential drafts
         await skService.updateSk(surat.id, { status_approval: 'ditolak' })
       }
+    } else if (activeTab.value === 'undangan' || activeTab.value === 'kesehatan') {
+      const currentService = activeTab.value === 'undangan' ? komiteKeperawatanService : komiteKesehatanService
+      await currentService.update(surat.id, {
+        nomor: surat._original.nomor,
+        tgl_terbit: surat._original.tgl_terbit.split(' ')[0],
+        pj: surat._original.pj,
+        perihal: surat._original.perihal,
+        status_approval: status
+      })
     } else {
       const updateFn = activeTab.value === 'internal' ? suratInternalService.updateSuratInternal : suratEksternalService.updateSuratEksternal
       await updateFn(surat.id, {
@@ -324,25 +395,19 @@ const handleAction = async (surat, status) => {
       })
     }
 
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true
-    })
-
-    Toast.fire({
+    Swal.fire({
       icon: 'success',
-      title: `Surat Berhasil ${capitalize(status)}`,
-      background: '#ffffff',
-      color: '#1e293b'
+      title: 'Berhasil!',
+      text: `Surat telah ${status === 'disetujui' ? 'disetujui' : 'ditolak'}.`,
+      timer: 2000,
+      showConfirmButton: false,
+      customClass: { popup: 'rounded-3xl' }
     })
 
     loadData()
   } catch (error) {
     console.error(`Error ${actionLabel} surat:`, error)
-    Swal.fire('Gagal', 'Terjadi kesalahan sistem. Mohon coba lagi.', 'error')
+    Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error')
   } finally {
     processingId.value = null
   }
@@ -356,6 +421,11 @@ const getMonth = (dateStr) => {
 }
 const getYear = (dateStr) => dateStr ? new Date(dateStr).getFullYear() : '-'
 
+const getInitials = (name) => {
+  if (!name) return '?'
+  return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+}
+
 const formatDateShort = (dateStr) => {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
@@ -368,201 +438,435 @@ const capitalize = (str) => {
 }
 
 // Initialize
-onMounted(() => {
+onMounted(async () => {
+  await loadAllStats()
   loadData()
 })
+
+const loadAllStats = async () => {
+  try {
+    const [intStats, ekstStats, kredRes, undRes] = await Promise.all([
+      suratInternalService.getStats(),
+      suratEksternalService.getStats(),
+      skService.searchSk('SPK RKK', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]),
+      komiteKeperawatanService.search('', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }])
+    ])
+
+    internalStats.value = intStats.data.data || intStats.data || {}
+    eksternalStats.value = ekstStats.data.data || ekstStats.data || {}
+    
+    // Pastikan mengambil dari total atau count
+    kredensialStats.value = { 
+      pengajuan: kredRes.data?.total ?? kredRes.data?.meta?.total ?? kredRes.data?.data?.length ?? 0 
+    }
+    undanganStats.value = { 
+      pengajuan: undRes.data?.total ?? undRes.data?.meta?.total ?? undRes.data?.data?.length ?? 0 
+    }
+
+    const kesRes = await komiteKesehatanService.search('', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }])
+    kesehatanStats.value = { 
+      pengajuan: kesRes.data?.total ?? kesRes.data?.meta?.total ?? kesRes.data?.data?.length ?? 0 
+    }
+  } catch (error) {
+    console.error('Error loading all stats:', error)
+  }
+}
+
+const getTabPendingCount = (tabId) => {
+  if (tabId === 'internal') return internalStats.value.pengajuan || 0
+  if (tabId === 'eksternal') return eksternalStats.value.pengajuan || 0
+  if (tabId === 'kredensial') return kredensialStats.value.pengajuan || 0
+  if (tabId === 'undangan') return undanganStats.value.pengajuan || 0
+  if (tabId === 'kesehatan') return kesehatanStats.value.pengajuan || 0
+  return 0
+}
 </script>
 
 <style scoped>
-.approval-nomor-surat-page {
-  padding: 0;
-  max-width: 1400px;
-  margin: 0 auto;
+.approval-container {
+  padding: 1rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
 }
 
-/* Page Header */
-.page-header {
-  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #2563eb 100%);
-  padding: 3rem 2rem;
-  border-radius: 24px;
-  margin-bottom: -2.5rem;
-  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.2);
-  position: relative;
-  z-index: 1;
+.boxed-layout {
+  width: 100%;
+  max-width: 100%;
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
 }
 
-.page-title {
-  font-size: 2.25rem;
-  font-weight: 800;
+/* Header Section */
+.hero-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 2rem;
+  padding: 2.5rem;
   color: white;
-  margin: 0;
-  letter-spacing: -0.025em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(37, 99, 235, 0.2);
+  margin-bottom: 2rem;
 }
 
-.page-subtitle {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 1.1rem;
-  margin-top: 0.75rem;
-  max-width: 600px;
+.header-overlay {
+  position: absolute;
+  top: 0; right: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.2), transparent);
 }
 
-/* Stats Bar */
-.hero-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   position: relative;
   z-index: 10;
-  padding: 0 1rem;
 }
 
-.stat-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 1.5rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
-  border: 1px solid white;
-  transition: transform 0.3s ease;
-}
-
-.stat-card:hover { transform: translateY(-5px); }
-
-.stat-label { font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-.stat-value { font-size: 2rem; font-weight: 900; color: #0f172a; display: block; margin-top: 0.5rem; }
-.stat-card.warning .stat-value { color: #f59e0b; }
-.stat-card.success .stat-value { color: #10b981; }
-
-/* Tabs */
-.tabs-container {
+.title-area {
   display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.icon-badge {
+  width: 64px; height: 64px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.text-group h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+.text-group p { color: rgba(255, 255, 255, 0.9); margin: 0.25rem 0 0 0; font-size: 0.95rem; }
+
+.btn-refresh-modern {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-refresh-modern:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+/* Stats Section */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+  position: relative;
+  z-index: 10;
+}
+
+.stat-item {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+}
+
+.stat-icon.info { background: rgba(255, 255, 255, 0.2); color: #fff; }
+.stat-icon.warn { background: rgba(255, 255, 255, 0.2); color: #fff; }
+.stat-icon.succ { background: rgba(255, 255, 255, 0.2); color: #fff; }
+
+.stat-data { display: flex; flex-direction: column; }
+.stat-data .val { font-size: 1.5rem; font-weight: 800; line-height: 1.2; color: #fff; }
+.stat-data .lab { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); font-weight: 700; text-transform: uppercase; }
+
+/* Tabs Navigation */
+.tabs-nav {
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 20;
+}
+
+.tabs-wrapper {
   background: #f1f5f9;
   padding: 0.4rem;
-  border-radius: 14px;
+  border-radius: 1.25rem;
+  display: flex;
   width: fit-content;
-  margin-top: 1.5rem;
-  margin-left: 1rem;
 }
 
-.tab-item {
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.tab-pill {
   border: none;
-}
-
-.tab-item.active {
-  background: white;
-  color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-/* Content Card */
-.content-card {
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.history-header { padding: 1.5rem 2rem; }
-.header-row { display: flex; justify-content: space-between; align-items: flex-start; }
-h3 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; }
-
-.btn-refresh {
+  background: transparent;
   padding: 0.6rem 1.25rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  color: #475569;
+  border-radius: 0.75rem;
   font-weight: 700;
-  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
   transition: all 0.2s;
+  position: relative;
 }
 
-.btn-refresh:hover:not(:disabled) { background: white; border-color: #3b82f6; color: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1); }
-
-/* Table Elements */
-.modern-table th { padding: 1.25rem 1.5rem; background: #f8fafc; color: #94a3b8; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; }
-.modern-table td { padding: 1.5rem; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
-.modern-table tr:hover { background: #fafbfc; }
-
-.date-cell { display: flex; align-items: center; gap: 0.75rem; }
-.date-cell .day { font-size: 1.75rem; font-weight: 900; color: #cbd5e1; line-height: 1; }
-.month-year { display: flex; flex-direction: column; }
-.month-year .month { font-size: 0.7rem; font-weight: 800; color: #64748b; }
-.month-year .year { font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-top: -2px; }
-
-.perihal-text { font-weight: 700; color: #1e293b; font-size: 1rem; display: block; }
-.no-surat-badge {
-  background: #eff6ff;
-  color: #2563eb;
-  padding: 0.35rem 0.75rem;
-  border-radius: 8px;
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid #dbeafe;
-}
-
-.pj-name { font-weight: 600; color: #475569; display: block; font-size: 0.9rem; }
-.pj-nip { font-size: 0.75rem; color: #94a3b8; font-family: ui-monospace; }
-
-.status-pill { padding: 0.4rem 0.85rem; border-radius: 10px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
-.status-pill.pengajuan { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
-.status-pill.disetujui { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; }
-.status-pill.ditolak { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
-
-/* Action Buttons Overlay */
-.btn-act {
-  width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;
-  border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.btn-act.approve { background: #dcfce7; color: #16a34a; }
-.btn-act.approve:hover:not(:disabled) { transform: scale(1.1); background: #22c55e; color: white; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); }
-.btn-act.reject { background: #fee2e2; color: #dc2626; }
-.btn-act.reject:hover:not(:disabled) { transform: scale(1.1); background: #ef4444; color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
-
-/* Mobile Card View */
-.mobile-card {
-  background: white; border-radius: 18px; border: 1px solid #f1f5f9; overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-.card-header-mob { padding: 1rem; background: #fafbfc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
-.mobile-date { font-weight: 800; font-size: 0.8rem; color: #64748b; }
-.card-body-mob { padding: 1.25rem; }
-.perihal-mob { font-weight: 800; color: #1e293b; font-size: 1rem; line-height: 1.4; }
-.pj-mob-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #64748b; }
-.card-footer-mob { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #f1f5f9; border-top: 1px solid #f1f5f9; }
-.mob-btn { padding: 1rem; border: none; font-weight: 800; font-size: 0.85rem; cursor: pointer; background: white; }
-.mob-btn.approve { color: #16a34a; }
-.mob-btn.reject { color: #dc2626; }
-.mob-btn:active { background: #f8fafc; }
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .page-header { padding: 2.5rem 1.5rem; border-radius: 24px; margin-bottom: -1.5rem; margin-top: 1rem; }
-  .page-title { font-size: 1.75rem; }
-  .page-subtitle { font-size: 0.9rem; }
-  .hero-stats { grid-template-columns: 1fr; }
-  .tabs-container { margin: 0 1rem 1rem 1rem; width: calc(100% - 2rem); }
-  .tab-item { flex: 1; text-align: center; }
-  .content-card { border-radius: 20px 20px 0 0; }
-  .history-header { padding: 1rem 1.25rem; }
-  .history-header h3 { font-size: 1rem; }
-  .history-header p { font-size: 0.75rem; }
-  .btn-refresh { padding: 0.4rem 0.75rem; font-size: 0.75rem; border-radius: 8px; }
-  .empty-state { padding: 2.5rem 1rem; }
-  .empty-state i { font-size: 3rem; }
-  .empty-state p.text-lg { font-size: 0.95rem; }
+.notif-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f43f5e;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4);
+  z-index: 10;
 }
 
 /* Animations */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.surat-list-item { animation: fadeIn 0.4s ease forwards; }
+.pop-enter-active {
+  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.pop-leave-active {
+  animation: pop-in 0.3s reverse;
+}
+@keyframes pop-in {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.tab-pill.active {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Data Card */
+.data-card {
+  background: white;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.badge-count {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.card-body { position: relative; min-height: 200px; }
+
+/* Premium Table */
+.premium-table { width: 100%; border-collapse: collapse; }
+.premium-table th {
+  background: #f8fafc;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.premium-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+
+.row-hover:hover { background-color: #f8fafc; }
+
+/* Calendar Card */
+.calendar-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  width: 50px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.calendar-card .month {
+  background: #f43f5e;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  width: 100%;
+  text-align: center;
+  padding: 2px 0;
+}
+
+.calendar-card .day { font-size: 1.25rem; font-weight: 800; color: #1e293b; padding: 2px 0; }
+.calendar-card .year { font-size: 0.6rem; color: #94a3b8; padding-bottom: 4px; }
+
+.surat-info { display: flex; flex-direction: column; gap: 0.4rem; }
+.perihal { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+
+.no-surat-pill {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: fit-content;
+  border: 1px solid #dbeafe;
+}
+
+.pending-pill {
+  background: #fff7ed;
+  color: #f59e0b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  width: fit-content;
+}
+
+.alamat-text { font-size: 0.85rem; color: #475569; max-width: 250px; line-height: 1.4; }
+
+.user-chip { display: flex; align-items: center; gap: 0.75rem; }
+.user-chip .avatar {
+  width: 36px; height: 36px;
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800;
+}
+
+.user-details { display: flex; flex-direction: column; }
+.user-details .name { font-size: 0.85rem; font-weight: 700; color: #1e293b; }
+.user-details .nik { font-size: 0.7rem; color: #94a3b8; }
+
+.action-group { display: flex; justify-content: center; gap: 0.75rem; }
+.act-btn {
+  width: 40px; height: 40px;
+  border-radius: 0.75rem;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.act-btn.approve { background: #dcfce7; color: #10b981; }
+.act-btn.approve:hover { background: #10b981; color: white; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+
+.act-btn.reject { background: #fee2e2; color: #f43f5e; }
+.act-btn.reject:hover { background: #f43f5e; color: white; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3); }
+
+.status-done {
+  color: #3b82f6; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+}
+
+/* Loading & Empty State */
+.loading-wrapper, .empty-wrapper {
+  padding: 4rem 2rem;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.loader-circle {
+  width: 48px; height: 48px;
+  border: 4px solid #f1f5f9;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-illustration {
+  font-size: 4rem; color: #e2e8f0; margin-bottom: 1rem;
+}
+
+.empty-wrapper h4 { font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 0; }
+.empty-wrapper p { color: #94a3b8; margin-top: 0.5rem; max-width: 300px; }
+
+/* Responsive Utilities */
+.hidden-mobile { display: block; }
+.visible-mobile { display: none; }
+
+@media (max-width: 768px) {
+  .hidden-mobile { display: none; }
+  .visible-mobile { display: block; }
+
+  .hero-header { padding: 1.5rem; border-radius: 1.5rem; }
+  .header-content { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .stat-item { padding: 1rem; }
+  
+  .tabs-wrapper { width: 100%; overflow-x: auto; }
+  .tab-pill { flex: 1; white-space: nowrap; justify-content: center; }
+
+  .mobile-grid { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+  .m-card { background: #fff; border-radius: 1.25rem; border: 1px solid #e2e8f0; overflow: hidden; }
+  .m-card-header { padding: 1rem; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
+  .m-date { font-weight: 800; font-size: 0.8rem; color: #64748b; }
+  .m-status { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 0.25rem 0.5rem; border-radius: 0.5rem; }
+  .m-status.pengajuan { background: #fffbeb; color: #d97706; }
+  
+  .m-card-body { padding: 1rem; }
+  .m-perihal { font-weight: 800; font-size: 1rem; color: #1e293b; line-height: 1.4; }
+  .m-alamat { font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; }
+  .m-pj { margin-top: 1rem; font-size: 0.85rem; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 0.5rem; }
+  
+  .m-card-footer { display: flex; border-top: 1px solid #f1f5f9; }
+  .m-btn { flex: 1; padding: 1rem; border: none; background: white; font-weight: 800; font-size: 0.85rem; cursor: pointer; }
+  .m-btn.approve { color: #10b981; border-right: 1px solid #f1f5f9; }
+  .m-btn.reject { color: #f43f5e; }
+}
+
+.anim-pulse { animation: soft-pulse 2s infinite; }
+@keyframes soft-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
 </style>

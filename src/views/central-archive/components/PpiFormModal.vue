@@ -426,6 +426,7 @@ const submitForm = async () => {
 .modal-body {
   padding: 2rem;
   overflow-y: auto;
+  flex: 1;
 }
 
 .modern-form label {
@@ -511,13 +512,13 @@ const submitForm = async () => {
 .btn-clear:hover { background: #ef4444; color: white; }
 
 .search-results-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
+  position: relative;
+  margin-top: 0.5rem;
   left: 0; right: 0;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
   max-height: 250px;
   overflow-y: auto;
   z-index: 50;

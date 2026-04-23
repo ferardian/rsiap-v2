@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3 class="modal-title">
           <i class="fas" :class="isEdit ? 'fa-edit text-primary' : 'fa-plus-circle text-success'"></i>
-          {{ isEdit ? 'Edit Berkas Komite Kesehatan' : 'Buat Berkas Komite Kesehatan' }}
+          {{ isEdit ? (isKredensial ? 'Edit Pengajuan SPK RKK' : 'Edit Surat Undangan') : (isKredensial ? 'Pengajuan SPK RKK' : 'Buat Surat Undangan') }}
         </h3>
         <button class="btn-close-icon" @click="$emit('close')">
           <i class="fas fa-times"></i>
@@ -45,8 +45,8 @@
           </div>
 
           <div class="form-group">
-            <label>Perihal Surat <span>*</span></label>
-            <input type="text" v-model="formData.perihal" class="form-control" placeholder="Contoh: Rapat Koordinasi Anggota" required>
+            <label>{{ isKredensial ? 'Judul Pengajuan' : 'Perihal Surat' }} <span>*</span></label>
+            <input type="text" v-model="formData.perihal" class="form-control" :placeholder="isKredensial ? 'Contoh: Pengajuan Kredensial' : 'Contoh: Rapat Koordinasi Anggota'" required>
           </div>
 
           <div class="form-group has-search">
@@ -105,6 +105,67 @@
               <i class="fas fa-check-circle text-success ml-auto"></i>
             </div>
           </div>
+
+          <div v-if="isKredensial && !isEdit" class="form-group">
+            <label>Jenis SK <span>*</span></label>
+            <select v-model="formData.jenis" class="form-control" required>
+              <option value="" disabled>Pilih Jenis SK</option>
+              <option value="A">SK Dokumen</option>
+              <option value="B">SK Pengangkatan Jabatan</option>
+            </select>
+          </div>
+
+          <!-- Target Pegawai (Only for Kredensial) -->
+          <div v-if="isKredensial" class="form-group has-search mt-4">
+            <label>Target Pegawai (Penerima SPK/RKK) <span>*</span></label>
+            <div class="search-wrapper">
+              <i class="fas fa-user search-icon"></i>
+              <input 
+                type="text" 
+                v-model="searchTarget" 
+                class="form-control" 
+                placeholder="Cari NIK atau Nama Pegawai..." 
+                @input="handleSearchTarget"
+                @focus="showTargetList = true"
+              >
+              <button 
+                v-if="searchTarget && selectedTarget" 
+                type="button" 
+                class="btn-clear" 
+                @click="clearSelectedTarget"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <!-- Dropdown Hasil Pencarian Target -->
+            <div v-if="showTargetList && searchListTarget.length > 0" class="search-results-dropdown">
+              <div 
+                v-for="pegawai in searchListTarget" 
+                :key="pegawai.nik" 
+                class="search-result-item"
+                @click="selectTarget(pegawai)"
+              >
+                <div class="pegawai-info">
+                  <div class="pegawai-name">{{ pegawai.nama }}</div>
+                  <div class="pegawai-nik">NIK: {{ pegawai.nik }} &bull; {{ pegawai.jbtn || '-' }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Target Validation/Display -->
+            <div v-if="selectedTarget?.nik" class="selected-pj-badge mt-2 bg-success-light border-success-light">
+              <div class="pj-avatar bg-success-light text-success">{{ getInitials(selectedTarget.nama) }}</div>
+              <div class="pj-details">
+                <span class="pj-nama">{{ selectedTarget.nama }}</span>
+                <span class="pj-nik">{{ selectedTarget.nik }}</span>
+              </div>
+              <i class="fas fa-check-circle text-success ml-auto"></i>
+            </div>
+            <small v-else-if="isSubmitted" class="text-danger mt-1 d-block">
+              <i class="fas fa-exclamation-circle"></i> Target Pegawai wajib dipilih untuk Pengajuan Kredensial.
+            </small>
+          </div>
         </form>
       </div>
 
@@ -113,7 +174,7 @@
         <button type="submit" form="kesehatanForm" class="btn-submit" :disabled="loading || (isSubmitted && !selectedPj?.nik)">
           <i class="fas fa-save" v-if="!loading"></i>
           <span class="spinner-border spinner-border-sm" v-else></span>
-          {{ loading ? 'Menyimpan...' : (isEdit ? 'Update Berkas' : 'Buat Berkas') }}
+          {{ loading ? 'Menyimpan...' : (isEdit ? 'Update' : 'Buat') }}
         </button>
       </div>
     </div>
@@ -128,6 +189,7 @@ import { format } from 'date-fns'
 
 // Services
 import { komiteKesehatanService } from '@/services/komiteKesehatanService'
+import { skService } from '@/services/skService'
 import { pegawaiService } from '@/services/pegawaiService'
 
 const props = defineProps({
@@ -136,6 +198,10 @@ const props = defineProps({
     default: false
   },
   isEdit: {
+    type: Boolean,
+    default: false
+  },
+  isKredensial: {
     type: Boolean,
     default: false
   },
@@ -153,11 +219,13 @@ const loading = ref(false)
 const isSubmitted = ref(false)
 const formData = ref({
   pj: '',
-  perihal: '',
-  tgl_terbit: new Date().toISOString().split('T')[0]
+  nik: '',
+  perihal: props.isKredensial ? 'SPK RKK ' : '',
+  tgl_terbit: new Date().toISOString().split('T')[0],
+  jenis: ''
 })
 
-// Max date for Tgl Terbit is usually today or slightly in future
+// Max date for Tgl Terbit
 const maxDate = computed(() => {
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 30)
@@ -171,22 +239,37 @@ const searchList = ref([])
 const showPegawaiList = ref(false)
 const selectedPj = ref(null)
 
+// Target Pegawai Search State
+const searchTarget = ref('')
+const searchingTarget = ref(false)
+const searchListTarget = ref([])
+const showTargetList = ref(false)
+const selectedTarget = ref(null)
+
 // Initialize form when modal opens or edits change
 watch(() => props.show, (newVal) => {
   if (newVal) {
     isSubmitted.value = false
     loading.value = false
     
+    // Reset all states
+    selectedPj.value = null
+    searchPj.value = ''
+    selectedTarget.value = null
+    searchTarget.value = ''
+    searchList.value = []
+    searchListTarget.value = []
+    
     if (props.isEdit && props.data) {
-      // Edit Mode
       const tgl = props.data.tgl_terbit ? props.data.tgl_terbit.split(' ')[0] : ''
       formData.value = {
         nomor: props.data.nomor,
-        prefix: props.data.prefix || 'KTKL-RSIA',
+        prefix: props.data.prefix,
         pj: props.data.pj || '',
-        perihal: props.data.perihal || '',
+        perihal: props.data.perihal || props.data.judul || '',
         tgl_terbit: tgl,
-        status: props.data.status || '1'
+        status: props.data.status || '1',
+        jenis: props.data.jenis || ''
       }
       
       // Initialize PJ search field
@@ -197,23 +280,26 @@ watch(() => props.show, (newVal) => {
           jbtn: props.data.penanggung_jawab.jbtn
         }
         searchPj.value = props.data.penanggung_jawab.nama
-      } else if (props.data.pj) {
-        selectedPj.value = { nik: props.data.pj, nama: props.data.pj }
-        searchPj.value = props.data.pj
+      }
+
+      // Initialize Target if Kredensial
+      if (props.data.target_pegawai) {
+        selectedTarget.value = {
+            nik: props.data.target_pegawai.nik,
+            nama: props.data.target_pegawai.nama,
+            jbtn: props.data.target_pegawai.jbtn
+        }
+        searchTarget.value = props.data.target_pegawai.nama
       }
     } else {
-      // Create Mode
       formData.value = {
         pj: '',
-        perihal: '',
-        tgl_terbit: new Date().toISOString().split('T')[0]
+        nik: '',
+        perihal: props.isKredensial ? 'SPK RKK ' : '',
+        tgl_terbit: new Date().toISOString().split('T')[0],
+        jenis: ''
       }
-      searchPj.value = ''
-      selectedPj.value = null
     }
-    
-    searchList.value = []
-    showPegawaiList.value = false
   }
 })
 
@@ -221,6 +307,7 @@ watch(() => props.show, (newVal) => {
 const handleClickOutside = (e) => {
   if (!e.target.closest('.search-wrapper') && !e.target.closest('.search-results-dropdown')) {
     showPegawaiList.value = false
+    showTargetList.value = false
   }
 }
 
@@ -236,9 +323,6 @@ onUnmounted(() => {
 const handleSearchPegawai = debounce(async () => {
   if (!searchPj.value || searchPj.value.length < 3) {
     searchList.value = []
-    if (!searchPj.value && selectedPj.value) {
-       clearSelectedPj()
-    }
     return
   }
   
@@ -257,11 +341,7 @@ const handleSearchPegawai = debounce(async () => {
 }, 300)
 
 const selectPegawai = (pegawai) => {
-  selectedPj.value = {
-    nik: pegawai.nik,
-    nama: pegawai.nama,
-    jbtn: pegawai.jbtn
-  }
+  selectedPj.value = { nik: pegawai.nik, nama: pegawai.nama, jbtn: pegawai.jbtn }
   formData.value.pj = pegawai.nik
   searchPj.value = pegawai.nama
   showPegawaiList.value = false
@@ -272,11 +352,41 @@ const clearSelectedPj = () => {
   formData.value.pj = ''
   searchPj.value = ''
   searchList.value = []
+}
+
+// Search Target Pegawai Logic
+const handleSearchTarget = debounce(async () => {
+  if (!searchTarget.value || searchTarget.value.length < 3) {
+    searchListTarget.value = []
+    return
+  }
   
-  setTimeout(() => {
-    const inputEL = document.querySelector('.search-wrapper input')
-    if(inputEL) inputEL.focus()
-  }, 50)
+  searchingTarget.value = true
+  showTargetList.value = true
+  
+  try {
+    const res = await pegawaiService.searchPegawai(searchTarget.value, 10)
+    searchListTarget.value = res.data?.data || []
+  } catch (error) {
+    console.error('Error searching target:', error)
+    searchListTarget.value = []
+  } finally {
+    searchingTarget.value = false
+  }
+}, 300)
+
+const selectTarget = (pegawai) => {
+  selectedTarget.value = { nik: pegawai.nik, nama: pegawai.nama, jbtn: pegawai.jbtn }
+  formData.value.nik = pegawai.nik
+  searchTarget.value = pegawai.nama
+  showTargetList.value = false
+}
+
+const clearSelectedTarget = () => {
+  selectedTarget.value = null
+  formData.value.nik = ''
+  searchTarget.value = ''
+  searchListTarget.value = []
 }
 
 // Formatters
@@ -285,7 +395,7 @@ const formatNomorSurat = (data) => {
   try {
     const tglPattern = data.tgl_terbit ? format(new Date(data.tgl_terbit.replace(' ', 'T').split('.')[0]), 'ddMMyy') : ''
     const no = String(data.nomor).padStart(3, '0')
-    const prefix = data.prefix || 'KTKL-RSIA'
+    const prefix = data.prefix || (props.isKredensial ? 'SK-RSIA' : 'KTKL-RSIA')
     return `${no}/${prefix}/${tglPattern}`
   } catch (e) {
     return `${data.nomor}/${data.prefix || 'KTKL-RSIA'}`
@@ -322,40 +432,67 @@ const submitForm = async () => {
     toast.warning('Penanggung Jawab harus dipilih dari daftar pegawai')
     return
   }
+
+  if (props.isKredensial && (!selectedTarget.value || !selectedTarget.value.nik)) {
+    toast.warning('Target Pegawai (Penerima SPK/RKK) harus dipilih')
+    return
+  }
   
   formData.value.pj = selectedPj.value.nik
+  if (selectedTarget.value) {
+    formData.value.nik = selectedTarget.value.nik
+  }
+  
   loading.value = true
   
   try {
     if (props.isEdit) {
-      const identifier = btoa(`${props.data.nomor}.${formData.value.tgl_terbit}`)
-      const updateData = {
-        nomor: props.data.nomor,
-        tgl_terbit: formData.value.tgl_terbit,
-        pj: formData.value.pj,
-        perihal: formData.value.perihal,
-        status: formData.value.status || '1'
+      if (props.isKredensial) {
+        const identifier = btoa(`${props.data.nomor}.${props.data.jenis}.${formData.value.tgl_terbit}`)
+        const updateData = {
+          nomor: props.data.nomor,
+          jenis: props.data.jenis,
+          tgl_terbit: formData.value.tgl_terbit,
+          pj: formData.value.pj,
+          nik: formData.value.nik,
+          judul: formData.value.perihal,
+          status: formData.value.status || '1'
+        }
+        await skService.updateSk(identifier, updateData)
+      } else {
+        const identifier = btoa(`${props.data.nomor}.${formData.value.tgl_terbit}`)
+        const updateData = {
+          nomor: props.data.nomor,
+          tgl_terbit: formData.value.tgl_terbit,
+          pj: formData.value.pj,
+          perihal: formData.value.perihal,
+          status: formData.value.status || '1'
+        }
+        await komiteKesehatanService.update(identifier, updateData)
       }
-      await komiteKesehatanService.update(identifier, updateData)
-      toast.success('Berkas berhasil diperbarui')
+      toast.success('Data berhasil diperbarui')
     } else {
-      await komiteKesehatanService.store(formData.value)
-      toast.success('Berkas berhasil dibuat')
+      if (props.isKredensial) {
+        const skPayload = {
+          tgl_terbit: formData.value.tgl_terbit,
+          pj: formData.value.pj,
+          nik: formData.value.nik,
+          judul: formData.value.perihal,
+          status_approval: 'pengajuan',
+          jenis: formData.value.jenis
+        }
+        await skService.createSk(skPayload)
+      } else {
+        await komiteKesehatanService.store(formData.value)
+      }
+      toast.success('Data berhasil dibuat')
     }
     
     emit('saved')
     emit('close')
   } catch (error) {
-    console.error('Error saving berkas:', error)
-    if (error.response?.data?.message) {
-      toast.error(error.response.data.message)
-    } else if (error.response?.data?.errors) {
-       const errors = error.response.data.errors
-       const firstKey = Object.keys(errors)[0]
-       toast.error(errors[firstKey][0])
-    } else {
-      toast.error('Gagal menyimpan berkas')
-    }
+    console.error('Error saving:', error)
+    toast.error(error.response?.data?.message || 'Gagal menyimpan data')
   } finally {
     loading.value = false
   }
@@ -370,13 +507,15 @@ const submitForm = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
-  padding: 1rem;
+  z-index: 10000;
+  padding: 2rem;
 }
 
 .modal-content {
@@ -437,8 +576,9 @@ const submitForm = async () => {
 }
 
 .modal-body {
-  padding: 2rem;
+  padding: 2rem 2rem 12rem 2rem;
   overflow-y: auto;
+  flex: 1;
 }
 
 /* Form Styles */
@@ -487,6 +627,15 @@ const submitForm = async () => {
 
 .form-control::placeholder {
   color: #94a3b8;
+}
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 
 /* Info Alert */
@@ -563,16 +712,17 @@ const submitForm = async () => {
 
 .search-results-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   left: 0;
   right: 0;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   max-height: 250px;
   overflow-y: auto;
-  z-index: 50;
+  z-index: 100;
+  margin-top: 4px;
 }
 
 .search-result-item {
@@ -580,10 +730,6 @@ const submitForm = async () => {
   border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
   transition: background 0.2s;
-}
-
-.search-result-item:last-child {
-  border-bottom: none;
 }
 
 .search-result-item:hover {
@@ -617,6 +763,9 @@ const submitForm = async () => {
   border-radius: 8px;
 }
 
+.bg-success-light { background: #f0fdf4 !important; }
+.border-success-light { border-color: #bbf7d0 !important; }
+
 .pj-avatar {
   width: 36px;
   height: 36px;
@@ -629,6 +778,8 @@ const submitForm = async () => {
   font-weight: 600;
   font-size: 0.85rem;
 }
+
+.pj-avatar.bg-success-light { background: #dcfce7 !important; }
 
 .pj-details {
   display: flex;
@@ -699,34 +850,10 @@ const submitForm = async () => {
 .btn-submit:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Utilities */
-.text-danger { color: #ef4444; }
-.text-success { color: #3b82f6; }
-.text-muted { color: #64748b; }
-.text-primary { color: #3b82f6; }
-
 @media (max-width: 640px) {
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-  
-  .modal-content {
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-  
-  .modal-header {
-    border-radius: 0;
-  }
-  
-  .modal-footer {
-    border-radius: 0;
-  }
+  .form-row { flex-direction: column; gap: 0; }
+  .modal-content { height: 100vh; max-height: 100vh; border-radius: 0; }
 }
 </style>

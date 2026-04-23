@@ -251,6 +251,8 @@ const submitForm = async () => {
 
 .modal-body {
   padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .warning-box {

@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3 class="modal-title">
           <i class="fas" :class="isEdit ? 'fa-edit text-primary' : 'fa-plus-circle text-success'"></i>
-          {{ isEdit ? (isKredensial ? 'Edit Pengajuan SPK RKK' : 'Edit Berkas Komite Keperawatan') : (isKredensial ? 'Pengajuan SPK RKK' : 'Buat Berkas Komite Keperawatan') }}
+          {{ isEdit ? (isKredensial ? 'Edit Pengajuan SPK RKK' : 'Edit Surat Undangan') : (isKredensial ? 'Pengajuan SPK RKK' : 'Buat Surat Undangan') }}
         </h3>
         <button class="btn-close-icon" @click="$emit('close')">
           <i class="fas fa-times"></i>
@@ -220,7 +220,7 @@ const isSubmitted = ref(false)
 const formData = ref({
   pj: '',
   nik: '',
-  perihal: '',
+  perihal: props.isKredensial ? 'SPK RKK ' : '',
   tgl_terbit: new Date().toISOString().split('T')[0],
   jenis: ''
 })
@@ -252,6 +252,14 @@ watch(() => props.show, (newVal) => {
     isSubmitted.value = false
     loading.value = false
     
+    // Reset all states first to avoid data leak from previous view
+    selectedPj.value = null
+    searchPj.value = ''
+    selectedTarget.value = null
+    searchTarget.value = ''
+    searchList.value = []
+    searchListTarget.value = []
+    
     if (props.isEdit && props.data) {
       // Edit Mode Initialization
       const tgl = props.data.tgl_terbit ? props.data.tgl_terbit.split(' ')[0] : ''
@@ -279,7 +287,7 @@ watch(() => props.show, (newVal) => {
       formData.value = {
         pj: '',
         nik: '',
-        perihal: '',
+        perihal: props.isKredensial ? 'SPK RKK ' : '',
         tgl_terbit: new Date().toISOString().split('T')[0],
         jenis: ''
       }
@@ -510,7 +518,12 @@ const submitForm = async () => {
         }
         await skService.createSk(skPayload)
       } else {
-        await komiteKeperawatanService.store(formData.value)
+        const payload = {
+          pj: formData.value.pj,
+          perihal: formData.value.perihal,
+          tgl_terbit: formData.value.tgl_terbit
+        }
+        await komiteKeperawatanService.store(payload)
       }
       toast.success(props.isKredensial ? 'Pengajuan berhasil dibuat' : 'Berkas berhasil dibuat')
     }
@@ -610,8 +623,9 @@ const submitForm = async () => {
 }
 
 .modal-body {
-  padding: 2rem;
-  overflow: visible;
+  padding: 2rem 2rem 10rem 2rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 /* Form Styles */
@@ -745,7 +759,7 @@ select.form-control {
 
 .search-results-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   left: 0;
   right: 0;
   background: white;
@@ -754,7 +768,8 @@ select.form-control {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   max-height: 250px;
   overflow-y: auto;
-  z-index: 50;
+  z-index: 100;
+  margin-top: 4px;
 }
 
 .search-result-item {

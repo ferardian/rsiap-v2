@@ -234,6 +234,7 @@ const getInitials = (name) => {
 .modal-body {
   padding: 0;
   overflow-y: auto;
+  flex: 1;
 }
 
 /* Hero Badge Style for Nomor */

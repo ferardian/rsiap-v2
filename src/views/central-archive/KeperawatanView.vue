@@ -34,7 +34,7 @@
             :class="{ 'active': activeTab === 'standar' }"
             @click="changeTab('standar')"
           >
-            <i class="fas fa-file-alt me-2"></i> <span>Data Berkas (Standar)</span>
+            <i class="fas fa-file-alt me-2"></i> <span>Komite Keperawatan</span>
           </button>
           <button 
             type="button" 
@@ -42,7 +42,9 @@
             :class="{ 'active': activeTab === 'kredensial' }"
             @click="changeTab('kredensial')"
           >
-            <i class="fas fa-id-badge me-2"></i> <span>Pengajuan Kredensial</span>
+            <i class="fas fa-id-badge me-2"></i> 
+            <span>Kredensial</span>
+            <span v-if="pendingCount > 0" class="tab-badge">{{ pendingCount }}</span>
           </button>
           <button 
             type="button" 
@@ -92,7 +94,7 @@
         <div class="action-buttons">
           <button v-if="activeTab !== 'staf'" class="btn-primary" @click="openCreateModal">
             <i class="fas fa-plus"></i>
-            <span>{{ activeTab === 'standar' ? 'Tambah Berkas' : 'Pengajuan SPK RKK' }}</span>
+            <span>{{ activeTab === 'standar' ? 'Buat Surat Undangan' : 'Pengajuan SPK RKK' }}</span>
           </button>
         </div>
       </div>
@@ -255,7 +257,7 @@
             <i class="fas fa-file-contract"></i>
           </div>
           <h3>Pencarian Tidak Ditemukan</h3>
-          <p>Belum ada data {{ activeTab === 'standar' ? 'Berkas Komite Keperawatan' : 'Pengajuan Kredensial' }} yang terdaftar atau sesuai kriteria pencarian.</p>
+          <p>Belum ada data {{ activeTab === 'standar' ? 'Surat Undangan' : 'Pengajuan Kredensial' }} yang terdaftar atau sesuai kriteria pencarian.</p>
           <button v-if="searchQuery || filterDate" class="btn-outline-primary mt-3" @click="resetFilters">
             <i class="fas fa-sync-alt mr-2"></i>Reset Pencarian
           </button>
@@ -520,6 +522,7 @@ const searchQuery = ref('')
 const filterDate = ref('')
 const activeMenu = ref(null)
 const activeTab = ref('standar') // 'standar' | 'kredensial'
+const pendingCount = ref(0)
 
 const pagination = ref({
   current_page: 1,
@@ -552,6 +555,7 @@ const closeDropdowns = (e) => {
 onMounted(() => {
   document.addEventListener('click', closeDropdowns)
   loadData()
+  fetchPendingCount()
 })
 
 onUnmounted(() => {
@@ -621,9 +625,19 @@ const loadData = async (page = 1) => {
     }
   } catch (error) {
     console.error('Error loading Berkas:', error)
-    toast.error('Gagal memuat data Berkas Komite Keperawatan')
+    toast.error('Gagal memuat data')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchPendingCount = async () => {
+  try {
+    const filters = [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]
+    const response = await skService.searchSk('SPK RKK', 1, 1, filters)
+    pendingCount.value = response.data?.meta?.total || 0
+  } catch (error) {
+    console.error('Error fetching pending count:', error)
   }
 }
 
@@ -832,7 +846,8 @@ const executeDelete = async () => {
   deleting.value = true
   try {
     if (activeTab.value === 'standar') {
-      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit}`)
+      const tglOnly = selectedBerkas.value.tgl_terbit.split(' ')[0]
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${tglOnly}`)
       await komiteKeperawatanService.delete(identifier)
     } else {
       const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
@@ -1143,6 +1158,28 @@ const displayedPages = computed(() => {
 
 .capsule-tab.active i {
   color: white !important;
+}
+
+.tab-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 20px;
+  margin-left: 8px;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  animation: pulse-red 2s infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 /* Original Buttons (modified specifically for Action Bar if needed) */

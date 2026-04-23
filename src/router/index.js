@@ -587,6 +587,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/survey-kepuasan',
+    name: 'SurveyKepuasan',
+    component: () => import('../views/laporan/SurveyKepuasanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ppra/tim',
     name: 'TimPpra',
     component: () => import('../views/ppra/TimPpraView.vue'),
