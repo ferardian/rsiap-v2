@@ -1,142 +1,136 @@
 <template>
   <div class="login-page">
-    <div class="login-container">
-      <div class="card">
-        <div class="card-header">
-          <div class="logos-wrapper">
-            <div class="logo rs-box">
-              <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="logo-img">
+    <!-- Animated Background Shapes -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    
+    <div class="bento-container">
+      <div class="bento-stack">
+        
+        <!-- Row 1: Header (Prioritize RS Logo) -->
+        <div class="bento-item item-header animate-in-1">
+          <div class="header-grid">
+            <div class="header-left">
+              <div class="main-logo-box">
+                <img src="@/assets/logo.png" alt="RSIA Logo" class="main-logo">
+              </div>
+              <div class="header-text">
+                <h1>RSIAP <span class="v2-tag">V2</span></h1>
+                <p>Integrated Healthcare System</p>
+              </div>
             </div>
-            <div class="logos-divider"></div>
-            <div class="logo larsi-box">
-              <img src="@/assets/logo-larsi.png" alt="LARSI Logo" class="logo-img">
+            <div class="header-right">
+              <div class="secondary-logo-box">
+                <img src="@/assets/logo-larsi.png" alt="LARSI Logo" class="secondary-logo">
+              </div>
             </div>
           </div>
-          <h1>RSIAP V2</h1>
-          <p>RSIA Aisyiyah Pekajangan</p>
         </div>
 
-        <div class="card-body">
-          <!-- Alert Error -->
-          <div v-if="error" class="alert alert-error">
-            <span>⚠️</span>
-            <span>{{ error }}</span>
+        <!-- Row 2: Login Form & Real-time Status -->
+        <div class="bento-item item-login animate-in-2">
+          <div class="login-header">
+            <div class="welcome-msg">
+              <h2>Masuk Sistem</h2>
+              <p>RSIA Aisyiyah Pekajangan</p>
+            </div>
+            <div class="status-indicator" :class="{ 'is-offline': !isOnline }">
+              <span class="dot"></span> 
+              {{ isOnline ? 'Online' : 'Offline' }}
+            </div>
           </div>
 
-          <!-- Alert Success -->
+          <div v-if="error" class="alert alert-error animate-shake">
+            <span>⚠️ {{ error }}</span>
+          </div>
+
           <div v-if="successMessage" class="alert alert-success">
-            <span>✅</span>
-            <span>{{ successMessage }}</span>
+            <span>✅ {{ successMessage }}</span>
           </div>
 
-          <!-- Login Form -->
-          <form @submit.prevent="handleLogin">
+          <form @submit.prevent="handleLogin" class="login-form">
             <div class="form-group">
-              <label for="username" class="form-label">
-                Username / NIK
-              </label>
-              <input
-                id="username"
-                v-model="form.username"
-                type="text"
-                class="form-input"
-                :class="{ 'is-invalid': errors.username }"
-                placeholder="Masukkan username atau NIK"
-                :disabled="isLoading"
-                required
-                autocomplete="username"
-                @input="form.username = form.username.replace(/[^0-9.]/g, '')"
-              />
-              <div v-if="errors.username" class="error-text">
-                {{ errors.username }}
+              <label for="username">NIK / Username</label>
+              <div class="input-field">
+                <input
+                  id="username"
+                  name="username"
+                  v-model="form.username"
+                  type="text"
+                  class="form-input"
+                  placeholder="Masukkan NIK anda"
+                  autocomplete="username"
+                  :disabled="isLoading"
+                  required
+                  @input="form.username = form.username.replace(/[^0-9.]/g, '')"
+                />
               </div>
             </div>
 
             <div class="form-group">
-              <label for="password" class="form-label">
-                Password
-              </label>
-              <div class="password-wrapper">
+              <label for="password">Password</label>
+              <div class="input-field password-field">
                 <input
                   id="password"
+                  name="password"
                   v-model="form.password"
                   :type="showPassword ? 'text' : 'password'"
                   class="form-input"
-                  :class="{ 'is-invalid': errors.password }"
                   placeholder="Masukkan password"
+                  autocomplete="current-password"
                   :disabled="isLoading"
                   required
-                  autocomplete="current-password"
                 />
-                <button 
-                  type="button" 
-                  class="password-toggle"
-                  @click="showPassword = !showPassword"
-                  :class="{ 'is-dimmed': !showPassword }"
-                >
-                  💡
+                <button type="button" class="toggle-btn" @click="showPassword = !showPassword">
+                  <!-- Lock Icon (Hidden) -->
+                  <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                  <!-- Unlock Icon (Visible) -->
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
                 </button>
-              </div>
-              <div v-if="errors.password" class="error-text">
-                {{ errors.password }}
               </div>
             </div>
 
-            <button
-              type="submit"
-              class="btn btn-primary"
-              :disabled="isLoading || !isFormValid"
-            >
+            <button type="submit" class="btn-submit" :disabled="isLoading || !isFormValid">
               <div v-if="isLoading" class="spinner"></div>
-              <span v-else>🔐</span>
-              <span>{{ isLoading ? 'Sedang masuk...' : 'Masuk' }}</span>
+              <span v-else>Masuk Sekarang</span>
             </button>
           </form>
 
-          <!-- Info Section -->
-          <div class="info-section">
-            <div class="info-badge">
-              <span class="badge-icon">ℹ️</span>
-              Gunakan kredensial terdaftar
-            </div>
-            <div class="help-links">
-              <router-link to="/forgot-password" class="help-link">
-                Lupa password?
-              </router-link>
-              <span class="separator">•</span>
-              <a href="#" class="help-link" @click.prevent>
-                Bantuan IT
-              </a>
-            </div>
+          <div class="login-footer-links">
+            <router-link to="/forgot-password" class="forgot-link">Lupa password?</router-link>
+            <div class="divider"></div>
+            <a href="#" class="help-link" @click.prevent>Bantuan IT</a>
           </div>
         </div>
-      </div>
 
-      <!-- Footer -->
-      <div class="login-footer">
-        <p>&copy; 2024 RSIA - Sistem Informasi Rumah Sakit</p>
-        <p class="version">Version 2.0.0</p>
+        <!-- Row 3: Year & Version -->
+        <div class="bento-item item-footer animate-in-3">
+          <div class="footer-flex">
+            <div class="copy-text">&copy; 2024 RSIA Aisyiyah Pekajangan</div>
+            <div class="version-tag">v2.1.0-stable</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-// Router and store
 const router = useRouter()
 const authStore = useAuthStore()
 
-// Reactive state
-const form = reactive({
-  username: '',
-  password: ''
-})
+// Connection Monitoring
+const isOnline = ref(navigator.onLine)
+const updateOnlineStatus = () => {
+  isOnline.value = navigator.onLine
+}
 
-const errors = reactive({
+const form = reactive({
   username: '',
   password: ''
 })
@@ -146,53 +140,14 @@ const isLoading = ref(false)
 const error = ref('')
 const successMessage = ref('')
 
-// Computed properties
 const isFormValid = computed(() => {
   return form.username.trim() !== '' && form.password.trim() !== ''
 })
 
-// Form validation
-const validateForm = () => {
-  // Reset errors
-  errors.username = ''
-  errors.password = ''
-
-  let isValid = true
-
-  // Username validation
-  if (!form.username.trim()) {
-    errors.username = 'Username harus diisi'
-    isValid = false
-  } else if (!/^[0-9.]+$/.test(form.username.trim())) {
-    errors.username = 'Username hanya boleh berisi angka dan titik'
-    isValid = false
-  } else if (form.username.trim().length < 3) {
-    errors.username = 'Username minimal 3 karakter'
-    isValid = false
-  }
-
-  // Password validation
-  if (!form.password.trim()) {
-    errors.password = 'Password harus diisi'
-    isValid = false
-  }
-
-  return isValid
-}
-
-// Login handler
 const handleLogin = async () => {
-  // Clear previous messages
   error.value = ''
   successMessage.value = ''
-
-  // Validate form
-  if (!validateForm()) {
-    return
-  }
-
   isLoading.value = true
-
   try {
     const result = await authStore.login({
       username: form.username.trim(),
@@ -200,276 +155,342 @@ const handleLogin = async () => {
     })
 
     if (result.success) {
-      if (result.requireRoleSelection) {
-        successMessage.value = 'Berhasil! Pilih role anda...'
-        setTimeout(() => {
-          router.push('/select-role')
-        }, 1000)
-      } else {
-        successMessage.value = 'Berhasil! Masuk ke sistem...'
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 1000)
-      }
+      successMessage.value = 'Berhasil! Mengalihkan...'
+      setTimeout(() => {
+        router.push(result.requireRoleSelection ? '/select-role' : '/dashboard')
+      }, 800)
     } else {
-      error.value = (result.error && result.error.toLowerCase() === 'user not found') ? 'User Tidak Terdaftar' : result.error
+      error.value = result.error || 'Username atau password salah.'
     }
   } catch (err) {
-    error.value = 'Terjadi kesalahan yang tidak terduga. Silakan coba lagi.'
-    console.error('Login error:', err)
+    error.value = 'Gangguan koneksi ke server.'
   } finally {
     isLoading.value = false
   }
 }
 
-// Check if user is already logged in
 onMounted(() => {
   if (authStore.isAuthenticated) {
     router.push('/dashboard')
   }
+  // Setup online/offline listeners
+  window.addEventListener('online', updateOnlineStatus)
+  window.addEventListener('offline', updateOnlineStatus)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('online', updateOnlineStatus)
+  window.removeEventListener('offline', updateOnlineStatus)
 })
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 .login-page {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  font-family: 'Outfit', sans-serif;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.card-header {
-  padding: 1.25rem 1.5rem 0.5rem;
-  text-align: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-  color: white;
-}
-
-.card-header h1 {
-  margin-top: 0;
-  margin-bottom: 0.2rem;
-  font-size: 1.4rem;
-  color: white;
-}
-
-.card-header p {
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.logos-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.logos-divider {
-  width: 1px;
-  height: 45px;
-  background: white;
-  margin: 0;
-  display: block;
-  flex-shrink: 0;
-}
-
-.logo {
-  flex: 0 0 120px;
-  width: 120px;
-  height: 65px;
   background: #f8fafc;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
-  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
   overflow: hidden;
+  position: relative;
+}
+
+/* Decor */
+.bg-shape {
+  position: absolute;
+  filter: blur(120px);
+  z-index: 0;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.shape-1 { width: 500px; height: 500px; background: #93c5fd; top: -150px; left: -150px; }
+.shape-2 { width: 400px; height: 400px; background: #c7d2fe; bottom: -100px; right: -100px; }
+
+.bento-container {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+}
+
+.bento-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Reduced gap */
+}
+
+.bento-item {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px; /* Slightly smaller radius */
+  padding: 1.25rem; /* Reduced padding */
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Row 1: Header Grid */
+.header-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.main-logo-box {
+  background: white;
+  padding: 4px;
+  border-radius: 12px;
+  width: 65px; /* Smaller logo box */
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.main-logo { max-width: 95%; max-height: 95%; object-fit: contain; }
+
+.header-text h1 {
+  color: #0f172a;
+  font-size: 1.4rem; /* Smaller text */
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.header-text p {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.v2-tag {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+.secondary-logo-box {
+  background: white;
+  padding: 4px;
+  border-radius: 10px;
+  width: 80px; /* Smaller secondary logo box */
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border: 1.5px solid #d4af37;
+  position: relative;
+  overflow: hidden;
+}
+
+.secondary-logo-box::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 8px;
+  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%);
+  background-size: 200% 200%;
+  animation: shine 4s infinite linear;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.secondary-logo { max-width: 90%; max-height: 90%; object-fit: contain; position: relative; z-index: 2; }
+
+/* Row 2: Form */
+.login-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem; /* Reduced margin */
+}
+
+.welcome-msg h2 {
+  color: #0f172a;
+  font-size: 1.25rem; /* Smaller text */
+  font-weight: 700;
   margin: 0;
 }
 
-.logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.welcome-msg p {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 2px 0 0;
 }
 
-.rs-box {
-  padding: 2px 4px;
-}
-
-.larsi-box {
-  padding: 10px 14px;
-}
-
-.password-wrapper {
-  position: relative;
+.status-indicator {
   display: flex;
   align-items: center;
+  gap: 6px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
-.password-toggle {
-  position: absolute;
-  right: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  padding: 4px;
-  opacity: 0.7;
-  transition: all 0.3s ease;
-  z-index: 10;
+.status-indicator.is-offline {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
-.password-toggle:hover {
-  opacity: 1;
-  transform: scale(1.1);
+.status-indicator .dot { 
+  width: 7px; 
+  height: 7px; 
+  background: currentColor; 
+  border-radius: 50%; 
+  box-shadow: 0 0 8px currentColor;
+  animation: pulse 2s infinite;
 }
 
-.password-toggle.is-dimmed {
-  opacity: 0.3;
-  filter: grayscale(1);
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.login-form { display: flex; flex-direction: column; gap: 1rem; /* Reduced gap */ }
+
+.form-group label {
+  display: block;
+  color: #475569;
+  font-size: 0.75rem; /* Smaller text */
+  font-weight: 700;
+  margin-bottom: 0.5rem; /* Reduced margin */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 0.75rem 1rem; /* Reduced padding */
+  color: #0f172a;
   font-size: 0.95rem;
-  transition: all 0.3s ease;
-  background: #f8fafc;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-input:focus {
-  outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: white;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.info-section {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
-  text-align: center;
+.password-field { position: relative; }
+.toggle-btn {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.4;
 }
 
-.info-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: #f1f5f9;
-  padding: 0.4rem 0.8rem;
-  border-radius: 50px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #64748b;
-  margin-bottom: 0.75rem;
-  border: 1px solid #e2e8f0;
+.btn-submit {
+  margin-top: 0.5rem; /* Reduced margin */
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.9rem; /* Reduced padding */
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 8px 20px -8px rgba(37, 99, 235, 0.4);
 }
 
-.badge-icon {
-  font-size: 0.85rem;
+.btn-submit:hover:not(:disabled) { 
+  transform: translateY(-2px); 
+  box-shadow: 0 10px 24px -8px rgba(37, 99, 235, 0.5);
 }
 
-.help-links {
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.login-footer-links {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 1.25rem;
+  margin-top: 1.25rem; /* Reduced margin */
 }
 
-.help-link {
-  color: #3b82f6;
+.forgot-link, .help-link {
+  color: #64748b;
   text-decoration: none;
-  font-size: 0.85rem;
-  transition: color 0.3s ease;
-}
-
-.help-link:hover {
-  color: #1e40af;
-  text-decoration: underline;
-}
-
-.separator {
-  color: #ccc;
-  font-size: 0.85rem;
-}
-
-.login-footer {
-  text-align: center;
-  margin-top: 1rem;
-  color: white;
-}
-
-.login-footer p {
   font-size: 0.8rem;
-  opacity: 0.9;
-  margin-bottom: 0.25rem;
+  font-weight: 600;
+  transition: color 0.3s;
 }
 
-.version {
-  font-size: 0.75rem;
-  opacity: 0.7;
+.forgot-link:hover, .help-link:hover { color: #3b82f6; }
+.divider { width: 1px; height: 12px; background: #e2e8f0; }
+
+/* Item 3: Footer */
+.footer-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-@media (max-width: 480px) {
-  .login-page {
-    padding: 0.5rem;
-  }
-  
-  .card-header {
-    padding: 1rem 1rem 0.25rem;
-  }
-  
-  .card-header h1 {
-    font-size: 1.25rem;
-  }
-  
-  .logos-wrapper {
-    gap: 0.75rem;
-    margin-bottom: 1.5rem; /* Increased from 0.5rem to add distance to title */
-  }
-  
-  .logo {
-    flex: 0 0 95px;
-    width: 95px;
-    height: 50px;
-    padding: 2px 4px;
-    border-radius: 8px;
-  }
-  
-  .logos-divider {
-    height: 35px;
-  }
-  
-  .rs-box {
-    padding: 1px 2px;
-  }
-  
-  .larsi-box {
-    padding: 8px 10px;
-  }
-  
-  .info-section {
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-  }
-  
-  .login-footer {
-    margin-top: 0.5rem;
-  }
+.copy-text { color: #64748b; font-size: 0.75rem; font-weight: 600; }
+.version-tag { background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-family: monospace; font-weight: 600; }
+
+/* Alert */
+.alert { padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1.25rem; font-weight: 600; }
+.alert-error { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+.alert-success { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+
+/* Animation */
+[class*="animate-in-"] { opacity: 0; transform: translateY(8px); animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-in-1 { animation-delay: 0.1s; }
+.animate-in-2 { animation-delay: 0.2s; }
+.animate-in-3 { animation-delay: 0.3s; }
+
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+.animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes shine {
+  0% { background-position: -200% -200%; }
+  100% { background-position: 200% 200%; }
 }
 </style>
