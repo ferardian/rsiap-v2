@@ -99,6 +99,7 @@
             <thead class="bg-light-soft small-label text-dark">
               <tr>
                 <th class="ps-4 py-3 text-start">PEGAWAI</th>
+                <th class="py-3 bg-secondary-soft">JADWAL</th>
                 <th class="py-3">HADIR</th>
                 <th class="py-3 bg-primary-soft">PAGI</th>
                 <th class="py-3 bg-primary-soft">SIANG</th>
@@ -112,18 +113,19 @@
             </thead>
             <tbody>
               <tr v-if="loading && summaryItems.length === 0">
-                <td colspan="9" class="text-center py-5">
+                <td colspan="11" class="text-center py-5">
                   <div class="spinner-border text-primary"></div>
                 </td>
               </tr>
               <tr v-else-if="summaryItems.length === 0">
-                <td colspan="9" class="text-center py-5 text-muted">Tidak ada data ringkasan</td>
+                <td colspan="11" class="text-center py-5 text-muted">Tidak ada data ringkasan</td>
               </tr>
               <tr v-for="s in summaryItems" :key="s.nik">
                 <td class="ps-4 text-start">
                   <div class="fw-bold text-dark">{{ s.nama }}</div>
                   <div class="smallest text-muted">{{ s.nik }} • {{ s.jbtn }}</div>
                 </td>
+                <td class="fw-bold text-secondary">{{ s.total_jadwal || 0 }}</td>
                 <td class="fw-bold">{{ s.total_hadir }}</td>
                 <td class="text-primary">{{ s.pagi }}</td>
                 <td class="text-primary">{{ s.siang }}</td>
@@ -530,6 +532,7 @@ onMounted(() => {
 }
 
 .bg-primary-soft { background-color: #eff6ff; }
+.bg-secondary-soft { background-color: #f1f5f9; }
 .bg-success-soft { background-color: #f0fdf4; }
 .bg-warning-soft { background-color: #fffbeb; }
 .bg-danger-soft { background-color: #fef2f2; }

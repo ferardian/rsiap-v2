@@ -205,6 +205,7 @@ import { suratEksternalService } from '@/services/suratEksternalService'
 import { skService } from '@/services/skService'
 import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
 import { komiteKesehatanService } from '@/services/komiteKesehatanService'
+import { komiteMedisService } from '@/services/komiteMedisService'
 import Swal from 'sweetalert2'
 
 // State
@@ -217,13 +218,15 @@ const eksternalStats = ref({})
 const kredensialStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const undanganStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const kesehatanStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
+const medisStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 
 const tabs = [
   { id: 'internal', label: 'Internal', icon: 'fa-building' },
   { id: 'eksternal', label: 'Eksternal', icon: 'fa-globe' },
   { id: 'kredensial', label: 'SK Kredensial', icon: 'fa-id-badge' },
   { id: 'undangan', label: 'Komite Keperawatan', icon: 'fa-envelope-open-text' },
-  { id: 'kesehatan', label: 'Komite Kesehatan', icon: 'fa-briefcase-medical' }
+  { id: 'kesehatan', label: 'Komite Kesehatan', icon: 'fa-briefcase-medical' },
+  { id: 'medis', label: 'Komite Medis', icon: 'fa-file-medical' }
 ]
 
 // Computed
@@ -232,6 +235,7 @@ const activeTabLabel = computed(() => {
   if (activeTab.value === 'eksternal') return 'Surat Eksternal'
   if (activeTab.value === 'undangan') return 'Komite Keperawatan'
   if (activeTab.value === 'kesehatan') return 'Komite Kesehatan'
+  if (activeTab.value === 'medis') return 'Komite Medis'
   return 'SK Kredensial'
 })
 
@@ -240,6 +244,7 @@ const currentStats = computed(() => {
   if (activeTab.value === 'eksternal') return eksternalStats.value
   if (activeTab.value === 'undangan') return undanganStats.value
   if (activeTab.value === 'kesehatan') return kesehatanStats.value
+  if (activeTab.value === 'medis') return medisStats.value
   return kredensialStats.value
 })
 
@@ -322,6 +327,28 @@ const loadData = async () => {
         pengajuan: suratList.value.length,
         disetujui: 0
       }
+    } else if (activeTab.value === 'medis') {
+      const res = await komiteMedisService.search('', 100, 1, [
+        { field: 'status_approval', operator: '=', value: 'pengajuan' }
+      ])
+      
+      const rawData = res.data?.data || []
+      suratList.value = rawData.map(item => ({
+        id: btoa(`${item.nomor}.${item.tgl_terbit.split(' ')[0]}`),
+        perihal: item.perihal,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.penanggung_jawab,
+        pj: item.pj,
+        status: item.status_approval,
+        no_surat: null,
+        _original: item
+      }))
+
+      medisStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
     } else {
       const payload = {
         sort: [{ field: 'created_at', direction: 'desc' }],
@@ -378,8 +405,11 @@ const handleAction = async (surat, status) => {
       } else {
         await skService.updateSk(surat.id, { status_approval: 'ditolak' })
       }
-    } else if (activeTab.value === 'undangan' || activeTab.value === 'kesehatan') {
-      const currentService = activeTab.value === 'undangan' ? komiteKeperawatanService : komiteKesehatanService
+    } else if (activeTab.value === 'undangan' || activeTab.value === 'kesehatan' || activeTab.value === 'medis') {
+      let currentService = komiteKeperawatanService
+      if (activeTab.value === 'kesehatan') currentService = komiteKesehatanService
+      if (activeTab.value === 'medis') currentService = komiteMedisService
+      
       await currentService.update(surat.id, {
         nomor: surat._original.nomor,
         tgl_terbit: surat._original.tgl_terbit.split(' ')[0],
@@ -467,6 +497,11 @@ const loadAllStats = async () => {
     kesehatanStats.value = { 
       pengajuan: kesRes.data?.total ?? kesRes.data?.meta?.total ?? kesRes.data?.data?.length ?? 0 
     }
+
+    const medRes = await komiteMedisService.search('', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }])
+    medisStats.value = { 
+      pengajuan: medRes.data?.total ?? medRes.data?.meta?.total ?? medRes.data?.data?.length ?? 0 
+    }
   } catch (error) {
     console.error('Error loading all stats:', error)
   }
@@ -478,6 +513,7 @@ const getTabPendingCount = (tabId) => {
   if (tabId === 'kredensial') return kredensialStats.value.pengajuan || 0
   if (tabId === 'undangan') return undanganStats.value.pengajuan || 0
   if (tabId === 'kesehatan') return kesehatanStats.value.pengajuan || 0
+  if (tabId === 'medis') return medisStats.value.pengajuan || 0
   return 0
 }
 </script>
