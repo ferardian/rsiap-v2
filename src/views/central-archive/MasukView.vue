@@ -275,12 +275,9 @@
 
             <div class="form-row">
               <div class="form-group col-full">
-                <label>File Berkas Surat <span v-if="!isEdit" class="required">*</span></label>
-                <input type="file" ref="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="file-input" :required="!isEdit && !formData.berkas">
-                <small class="text-muted" v-if="!isEdit">Maksimal ukuran file 10MB. Wajib diisi untuk surat baru.</small>
-                <small class="text-warning mt-1 d-block" v-else>
-                  <i class="fas fa-info-circle"></i> Biarkan kosong jika tidak ingin mengubah berkas yang sudah ada.
-                </small>
+                <label>File Berkas Surat <small class="text-muted">(Opsional)</small></label>
+                <input type="file" ref="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="file-input">
+                <small class="text-muted d-block mt-1">Maksimal ukuran file 10MB. Kosongkan jika berkas belum tersedia.</small>
               </div>
             </div>
           </form>
