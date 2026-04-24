@@ -23,7 +23,7 @@ const service = {
     getSpoUnits: (id, params = {}) => api.get(`/berkas/spo/${id}/units`, { params }),
 
     // Get list of departments for unit selection
-    getUnits: () => api.get('/sdi/departemen'),
+    getUnits: (params = { limit: 1000 }) => api.get('/sdi/departemen', { params }),
 };
 
 export default service;
