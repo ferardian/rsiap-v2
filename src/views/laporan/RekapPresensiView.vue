@@ -69,20 +69,20 @@
 
     <!-- Display Mode Switcher & Summary -->
     <div class="d-flex justify-content-center mb-4">
-      <div class="btn-group bg-white rounded-pill p-1 shadow-sm border">
+      <div class="bg-white rounded-pill p-1 shadow-sm border d-flex gap-1">
         <button 
           class="btn btn-sm px-4 py-2 rounded-pill transition-all" 
           :class="displayMode === 'detail' ? 'btn-primary shadow' : 'btn-light border-0'"
           @click="displayMode = 'detail'"
         >
-          <i class="fas fa-list me-2"></i>Detail Data
+          <i class="fas fa-list me-2"></i><span class="text-nowrap">Detail Data</span>
         </button>
         <button 
           class="btn btn-sm px-4 py-2 rounded-pill transition-all" 
           :class="displayMode === 'summary' ? 'btn-primary shadow' : 'btn-light border-0'"
           @click="displayMode = 'summary'"
         >
-          <i class="fas fa-chart-pie me-2"></i>Ringkasan
+          <i class="fas fa-chart-pie me-2"></i><span class="text-nowrap">Ringkasan</span>
         </button>
       </div>
     </div>

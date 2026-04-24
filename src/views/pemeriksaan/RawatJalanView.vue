@@ -114,17 +114,16 @@
     <div class="card border-0 shadow-sm" style="z-index: 1; position: relative;">
       <div class="card-body p-0">
         <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
-          <table class="table table-hover align-middle mb-0">
+          <table class="table table-hover align-middle mb-0 table-compact">
             <thead class="bg-light sticky-top" style="z-index: 10;">
               <tr>
-                <th class="px-3 py-3" style="width: 80px">No. Reg</th>
-                <th class="px-3 py-3">Pasien</th>
-                <th class="px-3 py-3">Poliklinik</th>
-                <th class="px-3 py-3">Dokter</th>
-                <th class="px-3 py-3">Alamat</th>
-                <th class="px-3 py-3">Bayar</th>
-                <th class="px-3 py-3">Status</th>
-                <th class="px-3 py-3 text-end">Aksi</th>
+                <th class="px-3 py-2" style="width: 80px">No. Reg</th>
+                <th class="px-3 py-2">Pasien</th>
+                <th class="px-3 py-2">Dokter & Poliklinik</th>
+                <th class="px-3 py-2">Alamat</th>
+                <th class="px-3 py-2 text-center">Bayar</th>
+                <th class="px-3 py-2">Status</th>
+                <th class="px-3 py-2 text-end">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -142,11 +141,11 @@
                 </td>
               </tr>
               <tr v-else v-for="item in items" :key="item.no_rawat" @contextmenu.prevent="handleRightClick($event, item)" class="cursor-pointer">
-                <td class="px-3 py-3">
+                <td class="px-3 py-2">
                   <div class="fw-bold text-primary">{{ item.no_reg }}</div>
                   <div class="small text-muted">{{ item.no_rawat }}</div>
                 </td>
-                <td class="px-3 py-3">
+                <td class="px-3 py-2">
                   <div class="fw-semibold">{{ item.pasien?.nm_pasien }}</div>
                   <div class="small text-muted">
                     {{ item.no_rkm_medis }} 
@@ -154,21 +153,22 @@
                     {{ item.pasien?.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}
                   </div>
                 </td>
-                <td class="px-3 py-3">
-                  {{ item.poliklinik?.nm_poli }}
+                <td class="px-3 py-2">
+                  <div class="fw-semibold text-dark">{{ item.dokter?.nm_dokter }}</div>
+                  <div class="small text-muted" style="font-size: 0.75rem;">{{ item.poliklinik?.nm_poli }}</div>
                 </td>
-                <td class="px-3 py-3">
-                  {{ item.dokter?.nm_dokter }}
-                </td>
-                <td class="px-3 py-3 text-truncate" style="max-width: 150px;">
+                <td class="px-3 py-2 text-truncate" style="max-width: 150px;">
                   {{ item.pasien?.alamat }}
                 </td>
-                <td class="px-3 py-3">
-                   <span class="badge rounded-pill" :class="getBayarClass(item.cara_bayar?.png_jawab)">
+                <td class="px-3 py-2 text-center">
+                   <span class="badge rounded-pill mb-1 d-inline-block" :class="getBayarClass(item.cara_bayar?.png_jawab)">
                      {{ item.cara_bayar?.png_jawab }}
                    </span>
+                   <div v-if="item.sep" class="text-success fw-bold animate__animated animate__pulse animate__infinite" style="font-size: 10px; margin-top: -2px;">
+                     <i class="fas fa-check-circle" style="font-size: 9px;"></i> SEP TERBIT
+                   </div>
                 </td>
-                <td class="px-3 py-3">
+                <td class="px-3 py-2">
                   <span 
                     class="badge rounded-pill"
                     :class="getStatusClass(item.stts)"
@@ -176,13 +176,13 @@
                     {{ item.stts }}
                   </span>
                 </td>
-                <td class="px-3 py-3 text-end">
+                <td class="px-3 py-2 text-end">
                   <div class="d-flex justify-content-end gap-1">
-                    <button class="btn btn-sm btn-light border" title="Lihat Detail" @click="openModal(item)">
-                      <i class="fas fa-eye text-secondary"></i>
+                    <button class="btn btn-action-table" title="Lihat Detail" @click="openModal(item)">
+                      <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-light border" title="Menu Aksi" @click="openActionSheet(item)">
-                      <i class="fas fa-ellipsis-v text-secondary"></i>
+                    <button class="btn btn-action-table" title="Menu Aksi" @click="openActionSheet(item)">
+                      <i class="fas fa-ellipsis-v"></i>
                     </button>
                   </div>
                 </td>
@@ -292,7 +292,12 @@
                     </div>
                     <div class="col-md-6">
                       <label class="detail-label text-muted mb-1">No. Peserta (BPJS/Asuransi)</label>
-                      <div class="detail-value text-success fw-medium">{{ selectedItem.pasien?.no_peserta || '-' }}</div>
+                      <div class="detail-value text-success fw-medium">
+                        {{ selectedItem.pasien?.no_peserta || '-' }}
+                        <span v-if="selectedItem.sep" class="badge bg-success-soft text-success border border-success-soft ms-2" style="font-size: 0.7rem;">
+                          <i class="fas fa-check-circle me-1"></i>SEP: {{ selectedItem.sep.no_sep }}
+                        </span>
+                      </div>
                     </div>
                     <div class="col-md-6">
                       <label class="detail-label text-muted mb-1">Nama Lengkap</label>
@@ -741,98 +746,125 @@
       </div>
     </div>
 
-    <!-- Mobile Action Sheet -->
+    <!-- Mobile Action Sheet / Action Menu -->
     <div v-if="showActionSheet" class="action-sheet-overlay" @click="closeActionSheet">
       <div class="action-sheet-container animate__animated animate__slideInUp animate__faster" @click.stop>
         <div class="action-sheet-header">
           <div class="header-line"></div>
-          <div class="header-content">
-            <h6 class="mb-0 fw-bold">{{ selectedActionItem?.pasien?.nm_pasien }}</h6>
-            <p class="mb-0 text-muted small">{{ selectedActionItem?.no_rawat }}</p>
-          </div>
-          <button class="btn-close-sheet" @click="closeActionSheet">&times;</button>
-        </div>
-        
-        <div class="action-sheet-body">
-          <div class="action-item" @click="executeAction('detail')">
-            <div class="action-icon icon-blue">
-              <i class="fas fa-eye"></i>
+          <div class="d-flex align-items-center justify-content-between px-2 pb-2">
+            <div class="text-start">
+              <h6 class="mb-0 fw-bold text-dark">{{ selectedActionItem?.pasien?.nm_pasien }}</h6>
+              <p class="mb-0 text-muted smallest-custom tracking-wider">{{ selectedActionItem?.no_rawat }}</p>
             </div>
-            <div class="action-label">Lihat Detail</div>
-          </div>
-          
-          <div class="action-item" @click="executeAction('billing')">
-            <div class="action-icon icon-green">
-              <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-            <div class="action-label">Billing Pasien</div>
-          </div>
-
-          <div class="action-section-title">ERM / MEDIS</div>
-
-          <div class="action-item" @click="executeAction('erm-soap')">
-            <div class="action-icon icon-cyan">
-              <i class="fas fa-notes-medical"></i>
-            </div>
-            <div class="action-label">SOAP (CPPT)</div>
-          </div>
-
-          <div class="action-item" @click="executeAction('erm-asesmen')">
-            <div class="action-icon icon-purple">
-              <i class="fas fa-user-md"></i>
-            </div>
-            <div class="action-label">Asesmen Medis</div>
-          </div>
-
-          <div class="action-item" @click="executeAction('erm-resume')">
-            <div class="action-icon icon-gray">
-              <i class="fas fa-file-alt"></i>
-            </div>
-            <div class="action-label">Resume Medis</div>
-          </div>
-
-          <div class="action-section-title">PERMINTAAN</div>
-
-          <div class="action-item" @click="executeAction('req-operasi')">
-            <div class="action-icon icon-red">
-              <i class="fas fa-procedures"></i>
-            </div>
-            <div class="action-label">Jadwal Operasi</div>
-          </div>
-
-          <div class="action-item" @click="executeAction('req-lab')">
-            <div class="action-icon icon-info">
-              <i class="fas fa-flask"></i>
-            </div>
-            <div class="action-label">Pemeriksaan Lab</div>
-          </div>
-
-          <div class="action-item" @click="executeAction('req-rad')">
-            <div class="action-icon icon-dark">
-              <i class="fas fa-x-ray"></i>
-            </div>
-            <div class="action-label">Pemeriksaan Radiologi</div>
-          </div>
-
-          <div class="action-section-title">LAINNYA</div>
-
-          <div class="action-item" @click="executeAction('copyRawat')">
-            <div class="action-icon icon-light">
-              <i class="fas fa-copy"></i>
-            </div>
-            <div class="action-label">Salin No. Rawat</div>
-          </div>
-
-          <div class="action-item" @click="executeAction('copyRM')">
-            <div class="action-icon icon-light">
-              <i class="fas fa-id-card"></i>
-            </div>
-            <div class="action-label">Salin No. RM</div>
+            <button class="btn-close-sheet" @click="closeActionSheet">
+              <i class="fas fa-times"></i>
+            </button>
           </div>
         </div>
         
-        <div class="action-sheet-footer">
-          <button class="btn btn-light w-100 py-3 fw-bold text-danger rounded-0 border-top mt-2" @click="closeActionSheet">
+        <div class="action-sheet-body pt-3">
+          <!-- Main Actions: Grid -->
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <div class="action-card" @click="executeAction('detail')">
+                <div class="action-card-icon bg-blue-soft text-primary">
+                  <i class="fas fa-eye"></i>
+                </div>
+                <div class="action-card-label">Detail Pasien</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="action-card" @click="executeAction('billing')">
+                <div class="action-card-icon bg-emerald-soft text-emerald-600">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="action-card-label">Billing Pasien</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: ERM -->
+          <div class="action-group mb-4">
+            <div class="action-group-header">Pemeriksaan & Medis</div>
+            <div class="action-list">
+              <div class="action-list-item" @click="executeAction('erm-soap')">
+                <div class="item-icon bg-cyan-soft text-cyan-600"><i class="fas fa-notes-medical"></i></div>
+                <div class="item-text">
+                  <div class="item-title">SOAP (CPPT)</div>
+                  <div class="item-desc">Catatan perkembangan pasien terintegrasi</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+              <div class="action-list-item" @click="executeAction('erm-asesmen')">
+                <div class="item-icon bg-purple-soft text-purple-600"><i class="fas fa-user-md"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Asesmen Medis</div>
+                  <div class="item-desc">Hasil pemeriksaan dan penilaian dokter</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+              <div class="action-list-item" @click="executeAction('erm-resume')">
+                <div class="item-icon bg-slate-soft text-slate-600"><i class="fas fa-file-alt"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Resume Medis</div>
+                  <div class="item-desc">Ringkasan riwayat pelayanan pasien</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Requests -->
+          <div class="action-group mb-4">
+            <div class="action-group-header">Permintaan Penunjang</div>
+            <div class="action-list">
+              <div class="action-list-item" @click="executeAction('req-lab')">
+                <div class="item-icon bg-sky-soft text-sky-600"><i class="fas fa-flask"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Laboratorium</div>
+                  <div class="item-desc">Permintaan pemeriksaan darah/cairan</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+              <div class="action-list-item" @click="executeAction('req-rad')">
+                <div class="item-icon bg-indigo-soft text-indigo-600"><i class="fas fa-x-ray"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Radiologi</div>
+                  <div class="item-desc">Permintaan foto rontgen/USG/CT-Scan</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+              <div class="action-list-item" @click="executeAction('req-operasi')">
+                <div class="item-icon bg-rose-soft text-rose-600"><i class="fas fa-procedures"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Jadwal Operasi</div>
+                  <div class="item-desc">Pendaftaran jadwal tindakan operasi</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Data -->
+          <div class="action-group mb-4">
+            <div class="action-group-header">Data Administrasi</div>
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="action-btn-outline" @click="executeAction('copyRawat')">
+                  <i class="fas fa-copy me-2"></i> Salin Rawat
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="action-btn-outline" @click="executeAction('copyRM')">
+                  <i class="fas fa-id-card me-2"></i> Salin No. RM
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-sheet-footer p-3 border-top bg-light-subtle">
+          <button class="btn btn-white w-100 rounded-pill fw-bold text-secondary shadow-sm py-2 border" @click="closeActionSheet">
             BATAL
           </button>
         </div>
@@ -1798,6 +1830,55 @@ onUnmounted(() => {
   box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
 }
 
+.table-compact {
+  font-size: 0.85rem;
+}
+
+.table-compact th {
+  padding: 0.65rem 1rem !important;
+  font-size: 0.8rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  background-color: #f8fafc !important;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.table-compact td {
+  padding: 0.5rem 1rem !important;
+}
+
+.table-compact .badge {
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+.btn-action-table {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #64748b;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.btn-action-table:hover {
+  background-color: #f1f5f9;
+  color: #4f46e5;
+  border-color: #c7d2fe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-action-table i {
+  font-size: 0.85rem;
+}
+
 .detail-label {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -2226,7 +2307,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
   z-index: 10000;
   display: flex;
   align-items: flex-end;
@@ -2235,140 +2317,205 @@ onUnmounted(() => {
 
 .action-sheet-container {
   width: 100%;
-  max-width: 600px;
-  background: white;
-  border-radius: 20px 20px 0 0;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 24px 24px 0 0;
   padding-bottom: env(safe-area-inset-bottom);
-  max-height: 85vh;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -20px 25px -5px rgba(0, 0, 0, 0.1), 0 -10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .action-sheet-header {
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   border-bottom: 1px solid #f1f5f9;
   position: relative;
-  text-align: center;
 }
 
 .header-line {
-  width: 40px;
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px;
-  margin: 0 auto 0.75rem;
+  width: 36px;
+  height: 5px;
+  background: #cbd5e1;
+  border-radius: 10px;
+  margin: 0 auto 1rem;
+}
+
+.smallest-custom {
+  font-size: 0.65rem;
 }
 
 .btn-close-sheet {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 1.25rem;
   background: #f1f5f9;
   border: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #64748b;
+  transition: all 0.2s;
+}
+
+.btn-close-sheet:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .action-sheet-body {
   overflow-y: auto;
-  padding: 0.5rem 1rem;
+  padding: 1.5rem;
 }
 
-.action-section-title {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #94a3b8;
-  padding: 1.25rem 0.5rem 0.5rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+/* Action Cards (Grid) */
+.action-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.action-item {
+.action-card:hover {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.action-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
-  padding: 0.75rem 0.75rem;
-  border-radius: 12px;
-  margin-bottom: 0.25rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.action-card-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Action Groups (Lists) */
+.action-group-header {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+  padding-left: 0.25rem;
+}
+
+.action-list {
+  background: #f8fafc;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+}
+
+.action-list-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
   cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.action-item:active {
-  background-color: #f1f5f9;
-  transform: scale(0.98);
+.action-list-item:last-child {
+  border-bottom: none;
 }
 
-.action-icon {
+.action-list-item:hover {
+  background: #ffffff;
+}
+
+.item-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 1rem;
   font-size: 1rem;
+  margin-right: 1rem;
 }
 
-.action-label {
-  font-size: 0.9rem;
+.item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.item-desc {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.action-btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #334155;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* Action Icon Colors */
-.icon-blue { background-color: #eff6ff; color: #3b82f6; }
-.icon-green { background-color: #f0fdf4; color: #22c55e; }
-.icon-cyan { background-color: #ecfeff; color: #06b6d4; }
-.icon-purple { background-color: #faf5ff; color: #a855f7; }
-.icon-gray { background-color: #f8fafc; color: #64748b; }
-.icon-red { background-color: #fef2f2; color: #ef4444; }
-.icon-info { background-color: #e0f2fe; color: #0ea5e9; }
-.icon-dark { background-color: #f1f5f9; color: #334155; }
-.icon-light { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.action-btn-outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+/* Soft Colors */
+.bg-primary-soft { background-color: #eff6ff; }
+.bg-success-soft { background-color: #f0fdf4; }
+.bg-emerald-soft { background-color: #ecfdf5; }
+.bg-blue-soft { background-color: #eff6ff; }
+.bg-cyan-soft { background-color: #ecfeff; }
+.bg-purple-soft { background-color: #faf5ff; }
+.bg-slate-soft { background-color: #f8fafc; }
+.bg-sky-soft { background-color: #f0f9ff; }
+.bg-indigo-soft { background-color: #eef2ff; }
+.bg-rose-soft { background-color: #fff1f2; }
+
+.text-emerald-600 { color: #059669; }
+.text-cyan-600 { color: #0891b2; }
+.text-purple-600 { color: #9333ea; }
+.text-slate-600 { color: #475569; }
+.text-sky-600 { color: #0284c7; }
+.text-indigo-600 { color: #4f46e5; }
+.text-rose-600 { color: #e11d48; }
 
 @media (max-width: 768px) {
-  /* Font Scale Adjustments */
-  .page-title {
-    font-size: 1.25rem !important;
-  }
-  .page-subtitle {
-    font-size: 0.75rem !important;
-  }
-  .table thead th {
-    font-size: 0.7rem !important;
-    padding: 0.5rem 0.25rem !important;
-  }
-  .table tbody td {
-    font-size: 0.8rem !important;
-    padding: 0.5rem 0.25rem !important;
-  }
-  .fw-bold, 
-  .fw-semibold,
-  .fw-medium {
-    font-size: inherit !important;
-  }
-  .small.text-muted {
-    font-size: 0.7rem !important;
-  }
-  .badge {
-    font-size: 0.65rem !important;
-    padding: 0.25rem 0.5rem !important;
-  }
-  
-  /* Filter Padding */
-  .card-body {
-    padding: 1rem !important;
-  }
-  .form-label {
-    font-size: 0.7rem !important;
+  .action-sheet-container {
+    max-width: 100%;
   }
 }
 </style>

@@ -65,11 +65,19 @@
               <th 
                 v-for="day in daysInMonth" 
                 :key="day" 
-                :class="{ 'sunday': isSunday(day) }"
+                :class="{ 
+                  'sunday': isSunday(day),
+                  'holiday': isHoliday(day)
+                }"
                 class="date-col"
+                :title="getHolidayName(day)"
               >
-                {{ day }}
-                <div class="day-name">{{ getDayName(day) }}</div>
+                <div class="date-header-content">
+                  {{ day }}
+                  <div class="day-name">{{ getDayName(day) }}</div>
+                  <div v-if="isHoliday(day)" class="holiday-indicator"></div>
+                  <div v-if="isHoliday(day)" class="holiday-name-tooltip">{{ getHolidayName(day) }}</div>
+                </div>
               </th>
               <!-- Summary Columns -->
               <th class="stats-header">Pagi</th>
@@ -97,10 +105,12 @@
                 class="shift-cell"
                 :class="{ 
                   'sunday': isSunday(day),
+                  'holiday': isHoliday(day),
                   'has-shift': getShift(emp, day) && getShift(emp, day) !== '-',
                   'pend-change': isPendingChange(emp.id, day)
                 }"
                 @click="openShiftModal(emp, day)"
+                :title="getHolidayName(day)"
               >
                 {{ getShiftCode(emp, day) }}
               </td>
@@ -132,8 +142,12 @@
                 <th 
                   v-for="day in daysInMonth" 
                   :key="day" 
-                  :class="{ 'sunday': isSunday(day) }"
+                  :class="{ 
+                    'sunday': isSunday(day),
+                    'holiday': isHoliday(day)
+                  }"
                   class="date-col"
+                  :title="getHolidayName(day)"
                 >
                   {{ day }} <br> {{ getDayName(day) }}
                 </th>
@@ -146,7 +160,10 @@
                   v-for="day in daysInMonth" 
                   :key="day"
                   class="summary-cell"
-                  :class="{ 'sunday': isSunday(day) }"
+                  :class="{ 
+                    'sunday': isSunday(day),
+                    'holiday': isHoliday(day)
+                  }"
                 >
                   {{ countRow[day] || 0 }}
                 </td>
@@ -286,6 +303,7 @@ const shifts = ref([])
 const departmentOptions = ref([])
 const hasChanges = ref(false)
 const pendingChanges = ref({}) // Map: "pegawaiId_day" -> "shiftCode"
+const holidays = ref({}) // Key: YYYY-MM-DD, Value: Holiday Name
 
 // Modal State
 const showModal = ref(false)
@@ -459,10 +477,36 @@ const isSunday = (day) => {
   return date.getDay() === 0 // 0 is Sunday
 }
 
+const isHoliday = (day) => {
+  const dateStr = `${filter.value.year}-${filter.value.month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+  return holidays.value[dateStr] !== undefined
+}
+
+const getHolidayName = (day) => {
+  const dateStr = `${filter.value.year}-${filter.value.month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+  return holidays.value[dateStr] || ''
+}
+
 const getDayName = (day) => {
   const date = new Date(filter.value.year, filter.value.month - 1, day)
   const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
   return days[date.getDay()]
+}
+
+const fetchHolidays = async () => {
+  try {
+    const res = await fetch(`https://libur.deno.dev/api?year=${filter.value.year}`)
+    if (res.ok) {
+      const data = await res.json()
+      const fetchedHolidays = {}
+      data.forEach(item => {
+        fetchedHolidays[item.date] = item.name
+      })
+      holidays.value = fetchedHolidays
+    }
+  } catch (err) {
+    console.error('Error fetching holidays:', err)
+  }
 }
 
 const fetchData = async () => {
@@ -470,6 +514,10 @@ const fetchData = async () => {
   employees.value = []
   pendingChanges.value = {}
   hasChanges.value = false
+  
+  if (Object.keys(holidays.value).length === 0 || !Object.keys(holidays.value)[0].startsWith(filter.value.year.toString())) {
+    await fetchHolidays()
+  }
   
   try {
     const [schedRes, shiftRes] = await Promise.all([
@@ -1311,6 +1359,80 @@ thead .sticky-col {
   color: #ef4444;
 }
 
+.holiday {
+  background-color: #fff1f2 !important;
+  color: #e11d48;
+}
+
+/* Ensure sticky behavior is maintained for holiday headers */
+thead th.holiday {
+  position: sticky;
+  top: 0;
+  z-index: 31; /* Slightly higher than normal sticky th */
+}
+
+.date-header-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.holiday-indicator {
+  width: 6px;
+  height: 6px;
+  background-color: #e11d48;
+  border-radius: 50%;
+  margin-top: 2px;
+  box-shadow: 0 0 4px rgba(225, 29, 72, 0.4);
+  transition: transform 0.2s;
+}
+
+.date-col:hover .holiday-indicator {
+  transform: scale(1.3);
+}
+
+.date-col:hover {
+  z-index: 1100 !important; /* Boost z-index of the entire cell on hover */
+}
+
+.holiday-name-tooltip {
+  position: absolute;
+  top: 100%; /* Move back to bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e11d48;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 2000; /* Extremely high z-index */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  pointer-events: none;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  margin-top: 8px;
+}
+
+.date-col:hover .holiday-name-tooltip {
+  opacity: 1;
+  visibility: visible;
+  top: 100%;
+}
+
+.holiday-name-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%; /* Back to top of tooltip */
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #e11d48; /* Arrow pointing up */
+}
+
 .shift-cell {
   cursor: pointer;
   transition: background-color 0.1s;
@@ -1536,17 +1658,25 @@ thead .sticky-col {
 }
 
 /* Row Colors - Keep colors but strictly match cell sizing */
-.row-blue .summary-cell {
+.row-blue .summary-cell:not(.holiday):not(.sunday) {
   background-color: #3b82f6; 
   color: white;
+}
+.row-blue .summary-cell.holiday, .row-blue .summary-cell.sunday {
+  background-color: #fff1f2 !important;
+  color: #e11d48 !important;
 }
 .row-blue .sticky-col {
   background-color: white;
 }
 
-.row-yellow .summary-cell {
+.row-yellow .summary-cell:not(.holiday):not(.sunday) {
   background-color: #fef08a;
   color: black;
+}
+.row-yellow .summary-cell.holiday, .row-yellow .summary-cell.sunday {
+  background-color: #fff1f2 !important;
+  color: #e11d48 !important;
 }
 .row-yellow .sticky-col {
   background-color: white;
