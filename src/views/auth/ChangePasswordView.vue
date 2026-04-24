@@ -319,6 +319,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  flex-shrink: 0;
 }
 
 .main-logo { max-width: 95%; max-height: 95%; object-fit: contain; }
