@@ -48,6 +48,9 @@ export const satuSehatService = {
   pushOrthancRadiologi(data) {
     return api.post('/satusehat/servicerequest-radiology/push-orthanc', data)
   },
+  updatePacsAccessionRadiologi(data) {
+    return api.post('/satusehat/servicerequest-radiology/update-pacs-accession', data)
+  },
 
   // Medication Request
   getMedicationRequests(params) {

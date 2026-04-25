@@ -109,7 +109,12 @@
               <tr v-for="(item, index) in data" :key="index">
                 <!-- Order & Waktu -->
                 <td class="ps-3">
-                  <div class="fw-semibold text-primary small">{{ item.noorder }}</div>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="fw-semibold text-primary small">{{ item.noorder }}</div>
+                    <button class="btn btn-link p-0 text-muted" @click="handleUpdateAccession(item)" title="Magic Auto-Sync PACS">
+                      <i class="fas fa-magic" style="font-size: 10px;"></i>
+                    </button>
+                  </div>
                   <div class="text-muted" style="font-size:11px;">{{ item.tgl_permintaan }} {{ item.jam_permintaan }}</div>
                   <div class="text-muted" style="font-size:11px;">Rawat: {{ item.no_rawat }}</div>
                 </td>
@@ -327,6 +332,98 @@ export default {
         Swal.fire({ icon: 'error', title: 'Gagal', text: error.response?.data?.message || 'Terjadi kesalahan jaringan' })
       } finally {
         this.pushing = false
+      }
+    },
+    async handleUpdateAccession(item) {
+      // 1. Try Auto Sync First (One Click)
+      Swal.fire({
+        title: 'Mencari data di PACS...',
+        text: `Mencoba sinkronisasi otomatis untuk order ${item.noorder}`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+
+      try {
+        const response = await satuSehatService.updatePacsAccessionRadiologi({
+          noorder: item.noorder
+          // pacs_accession_number is omitted for auto-find
+        })
+
+        if (response.data?.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil (Otomatis)',
+            text: response.data.message,
+            timer: 3000,
+            showConfirmButton: false
+          })
+          this.fetchData()
+          return // Success, stop here
+        }
+      } catch (error) {
+        // If not found (404), continue to manual input modal
+        if (error.response?.status !== 404) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: error.response?.data?.message || 'Terjadi kesalahan'
+          })
+          return
+        }
+      }
+
+      // 2. If Auto Sync Fails (Not Found), show Manual Input Modal
+      const { value: pacsAccession } = await Swal.fire({
+        title: 'PACS Tidak Ditemukan Otomatis',
+        html: `
+          <div class="text-start mb-2 small text-muted">Sistem gagal menemukan data di PACS menggunakan No. RM & Tanggal.</div>
+          <div class="text-start mb-3 small text-muted">Silakan masukkan <b>Accession Number</b> yang tertera di PACS secara manual untuk order <b>${item.noorder}</b>.</div>
+        `,
+        input: 'text',
+        inputLabel: 'Accession Number di PACS',
+        inputPlaceholder: 'Contoh: 2604222106211',
+        showCancelButton: true,
+        confirmButtonText: 'Update Manual',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Nomor accession PACS harus diisi!'
+          }
+        }
+      })
+
+      if (pacsAccession) {
+        Swal.fire({
+          title: 'Sedang memproses...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading()
+          }
+        })
+
+        try {
+          const response = await satuSehatService.updatePacsAccessionRadiologi({
+            noorder: item.noorder,
+            pacs_accession_number: pacsAccession
+          })
+
+          if (response.data?.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: response.data.message
+            })
+            this.fetchData()
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: error.response?.data?.message || 'Terjadi kesalahan'
+          })
+        }
       }
     }
   },
