@@ -23,10 +23,26 @@
       </div>
     </div>
 
+    <!-- Search Menu -->
+    <div class="sidebar-search" v-if="!effectiveIsCollapsed">
+      <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input 
+          type="text" 
+          v-model="searchQuery" 
+          placeholder="Cari menu..." 
+          class="search-input"
+        >
+        <button v-if="searchQuery" @click="searchQuery = ''" class="clear-search">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="sidebar-nav">
       <ul class="nav-list">
-        <li v-for="menu in menuTree" :key="menu.id_menu" class="nav-item">
+        <li v-for="menu in filteredMenuTree" :key="menu.id_menu" class="nav-item">
           <!-- Parent Menu -->
           <div 
             class="nav-link" 
@@ -38,12 +54,12 @@
             <i 
               v-if="menu.children && menu.children.length > 0 && !effectiveIsCollapsed" 
               class="fas fa-chevron-right arrow-icon"
-              :class="{ 'rotated': expandedMenus.includes(menu.id_menu) }"
+              :class="{ 'rotated': expandedMenus.includes(menu.id_menu) || searchQuery }"
             ></i>
           </div>
 
           <!-- Children Submenu -->
-          <ul v-if="menu.children && menu.children.length > 0 && expandedMenus.includes(menu.id_menu) && !effectiveIsCollapsed" class="nav-sublist">
+          <ul v-if="menu.children && menu.children.length > 0 && (expandedMenus.includes(menu.id_menu) || searchQuery) && !effectiveIsCollapsed" class="nav-sublist">
             <li v-for="child in menu.children" :key="child.id_menu" class="nav-item">
               <router-link :to="child.route" class="nav-link sub-link" active-class="active" @click="handleSubmenuClick">
                 <span :class="`${getIconClass(child.icon)} sub-icon`">{{ getIconContent(child.icon) }}</span>
@@ -51,6 +67,10 @@
               </router-link>
             </li>
           </ul>
+        </li>
+        <li v-if="filteredMenuTree.length === 0 && searchQuery" class="no-results text-center py-4 small opacity-75">
+          <i class="fas fa-search-minus d-block mb-2 fs-4"></i>
+          Menu tidak ditemukan
         </li>
       </ul>
     </nav>
@@ -81,12 +101,44 @@ const authStore = useAuthStore()
 // State
 const isHovered = ref(false)
 const expandedMenus = ref([])
+const searchQuery = ref('')
 
 // Computed
 const effectiveIsCollapsed = computed(() => {
   return props.isCollapsed && !isHovered.value
 })
+
 const menuTree = computed(() => menuStore.menuTree || [])
+
+const filteredMenuTree = computed(() => {
+  if (!searchQuery.value) return menuTree.value
+
+  const query = searchQuery.value.toLowerCase()
+  
+  return menuTree.value.map(menu => {
+    // 1. Check if parent matches
+    const parentMatches = menu.nama_menu.toLowerCase().includes(query)
+    
+    // 2. Check if children match
+    let filteredChildren = []
+    if (menu.children && menu.children.length > 0) {
+      filteredChildren = menu.children.filter(child => 
+        child.nama_menu.toLowerCase().includes(query)
+      )
+    }
+
+    // 3. Return menu if parent matches (with all children) or if some children match
+    if (parentMatches || filteredChildren.length > 0) {
+      return {
+        ...menu,
+        children: parentMatches ? menu.children : filteredChildren
+      }
+    }
+    
+    return null
+  }).filter(Boolean)
+})
+
 const userName = computed(() => authStore.userName)
 const userRole = computed(() => authStore.userRole)
 
@@ -357,6 +409,70 @@ onMounted(async () => {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Search */
+.sidebar-search {
+  padding: 0 1rem 1rem;
+}
+
+.search-box {
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.search-box:focus-within {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.search-icon {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-right: 0.75rem;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 0.875rem;
+  width: 100%;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.clear-search {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0.2rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-search:hover {
+  color: white;
+}
+
+.no-results {
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Navigation */
