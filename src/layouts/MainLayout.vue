@@ -163,10 +163,18 @@ const handleLogout = async () => {
   router.push('/login')
 }
 
+let lastWidth = window.innerWidth
 const checkScreenSize = () => {
-  if (window.innerWidth < 768) {
+  const currentWidth = window.innerWidth
+  const isMobile = currentWidth < 768
+  const wasMobile = lastWidth < 768
+
+  // Only auto-collapse if we just transitioned from desktop to mobile
+  if (isMobile && !wasMobile) {
     isSidebarCollapsed.value = true
   }
+  
+  lastWidth = currentWidth
 }
 
 // Watchers

@@ -24,7 +24,7 @@
     </div>
 
     <!-- Search Menu -->
-    <div class="sidebar-search" v-if="!effectiveIsCollapsed">
+    <div class="sidebar-search" v-if="!effectiveIsCollapsed" @click.stop>
       <div class="search-box">
         <i class="fas fa-search search-icon"></i>
         <input 

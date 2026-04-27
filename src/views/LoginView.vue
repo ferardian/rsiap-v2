@@ -107,7 +107,6 @@
         <div class="bento-item item-footer animate-in-3">
           <div class="footer-flex">
             <div class="copy-text">&copy; 2024 RSIA Aisyiyah Pekajangan</div>
-            <div class="version-tag">v2.1.0-stable</div>
           </div>
         </div>
 
@@ -251,8 +250,8 @@ onUnmounted(() => {
   background: white;
   padding: 4px;
   border-radius: 12px;
-  width: 65px; /* Smaller logo box */
-  height: 65px;
+  width: 55px; /* Smaller logo box */
+  height: 55px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -459,7 +458,7 @@ onUnmounted(() => {
 /* Item 3: Footer */
 .footer-flex {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 

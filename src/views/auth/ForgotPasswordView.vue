@@ -115,7 +115,6 @@
         <!-- Row 3: Footer -->
         <div class="bento-item animate-in-3 footer-flex">
           <div class="copy-text">© 2024 RSIA Aisyiyah Pekajangan</div>
-          <div class="version-tag">v2.1.0-stable</div>
         </div>
       </div>
     </div>
@@ -249,8 +248,8 @@ onMounted(() => {
   background: white;
   padding: 4px;
   border-radius: 12px;
-  width: 65px;
-  height: 65px;
+  width: 55px;
+  height: 55px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,7 +417,7 @@ onMounted(() => {
 
 .footer-flex {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
