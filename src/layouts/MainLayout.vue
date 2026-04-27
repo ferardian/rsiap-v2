@@ -77,7 +77,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 // State
-const isSidebarCollapsed = ref(false)
+const isSidebarCollapsed = ref(window.innerWidth < 768)
 const departmentName = ref('')
 
 // Computed
