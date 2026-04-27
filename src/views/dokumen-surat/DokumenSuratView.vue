@@ -19,13 +19,6 @@
         <i class="fas fa-file-alt"></i>
         Dokumen & Surat
       </button>
-      <button 
-        @click="activeTab = 'staf'" 
-        :class="['tab-button', { active: activeTab === 'staf' }]"
-      >
-        <i class="fas fa-user-md"></i>
-        Staf Klinis
-      </button>
       <button class="tab-button" disabled>
         <i class="fas fa-clipboard-list"></i>
         SPO
@@ -99,210 +92,6 @@
       </div>
     </div>
 
-
-    <!-- Tab 2: Staf Klinis -->
-    <div v-if="activeTab === 'staf'">
-      <!-- Filters -->
-      <div class="actions-bar">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input 
-            v-model="stafSearch" 
-            @input="handleStafSearch"
-            type="text" 
-            placeholder="Cari Nama / NIK..."
-          >
-        </div>
-        
-        <select v-model="stafFilter.kategori" @change="loadStafList" class="filter-select">
-          <option value="">Semua Kategori</option>
-          <option value="Staf Medis">Staf Medis</option>
-          <option value="Staf Keperawatan">Staf Keperawatan</option>
-          <option value="Staf Kebidanan">Staf Kebidanan</option>
-          <option value="Staf Klinis Lainnya">Staf Klinis Lainnya</option>
-        </select>
-
-        <select v-model="stafFilter.status" @change="loadStafList" class="filter-select">
-          <option value="">Semua Status</option>
-          <option value="1">Sudah Ada Kualifikasi</option>
-          <option value="0">Belum Ada Kualifikasi</option>
-        </select>
-      </div>
-
-      <!-- Table -->
-      <div class="table-container">
-        <div v-if="stafLoading" class="loading-state">
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Memuat data staf...</p>
-        </div>
-
-        <table v-else class="files-table">
-          <thead>
-            <tr>
-              <th>Pegawai</th>
-              <th>Jabatan</th>
-              <th>Kualifikasi</th>
-              <th>Masa Berlaku</th>
-              <th class="actions-col">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="staf in stafList" :key="staf.nik">
-              <td>
-                <div class="staf-info">
-                  <span class="staf-nama">{{ staf.nama }}</span>
-                  <span class="staf-nik">{{ staf.nik }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="jabatan-info">
-                  <span>{{ staf.jbtn }}</span>
-                  <small class="text-muted">{{ staf.pendidikan }}</small>
-                </div>
-              </td>
-              <td>
-                <div v-if="staf.has_kualifikasi" class="kualifikasi-info">
-                  <div class="badge-profesi">{{ staf.kategori_profesi }}</div>
-                  <div class="detail-kualifikasi">
-                    <small v-if="staf.nomor_str">STR: {{ staf.nomor_str }}</small>
-                    <small v-if="staf.nomor_sip">SIP: {{ staf.nomor_sip }}</small>
-                  </div>
-                </div>
-                <span v-else class="status-incomplete">Belum ada data</span>
-              </td>
-              <td>
-                <div v-if="staf.has_kualifikasi" class="expiry-info">
-                  <div v-if="staf.tanggal_akhir_str" :class="{'text-danger': new Date(staf.tanggal_akhir_str) < new Date(), 'text-success': new Date(staf.tanggal_akhir_str) >= new Date()}">
-                    <i class="fas fa-calendar-alt"></i> STR: {{ formatDateTime(staf.tanggal_akhir_str).split(' ')[0] }} {{ formatDateTime(staf.tanggal_akhir_str).split(' ')[1] }} {{ formatDateTime(staf.tanggal_akhir_str).split(' ')[2] }}
-                  </div>
-                  <div v-if="staf.tanggal_izin_praktek">
-                    <i class="fas fa-calendar-check"></i> SIP: {{ formatDateTime(staf.tanggal_izin_praktek).split(' ')[0] }} {{ formatDateTime(staf.tanggal_izin_praktek).split(' ')[1] }} {{ formatDateTime(staf.tanggal_izin_praktek).split(' ')[2] }}
-                  </div>
-                </div>
-                <span v-else>-</span>
-              </td>
-              <td class="actions">
-                <button 
-                  v-if="staf.has_kualifikasi"
-                  @click="openStafModal(staf, 'view')" 
-                  class="btn-action btn-view"
-                  title="Lihat Detail"
-                >
-                  <i class="fas fa-eye"></i> Detail
-                </button>
-                <button 
-                  v-if="(staf.has_kualifikasi && canUpdate) || (!staf.has_kualifikasi && canCreate)"
-                  @click="openStafModal(staf, 'edit')" 
-                  :class="['btn-action', staf.has_kualifikasi ? 'btn-edit' : 'btn-add']"
-                  :title="staf.has_kualifikasi ? 'Edit Data' : 'Tambah Data'"
-                >
-                  <i :class="['fas', staf.has_kualifikasi ? 'fa-edit' : 'fa-plus']"></i>
-                  {{ staf.has_kualifikasi ? 'Edit' : 'Input' }}
-                </button>
-              </td>
-            </tr>
-            <tr v-if="stafList.length === 0">
-              <td colspan="5" class="no-data">
-                <i class="fas fa-users-slash"></i>
-                <p>Tidak ada data staf ditemukan</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Modal Staf Klinis -->
-    <div v-if="showStafModal" class="modal-overlay" @click.self="closeStafModal">
-      <div class="modal-content modal-lg">
-        <div class="modal-header">
-          <h2>
-            <i class="fas fa-user-md"></i>
-            {{ isStafViewMode ? 'Detail Kualifikasi' : (stafFormData.has_kualifikasi ? 'Edit Kualifikasi' : 'Input Kualifikasi') }} 
-            <small class="modal-subtitle">{{ stafFormData.nama }}</small>
-          </h2>
-          <button @click="closeStafModal" class="btn-close">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-
-        <form @submit.prevent="saveStaf" class="modal-form">
-          <!-- Hidden NIK -->
-          <input type="hidden" v-model="stafFormData.nik">
-          
-          <div class="form-row">
-            <div class="form-group col-full">
-              <label>Kategori Profesi <span class="required" v-if="!isStafViewMode">*</span></label>
-              <select v-model="stafFormData.kategori_profesi" required :disabled="isStafViewMode">
-                <option value="Staf Medis">Staf Medis</option>
-                <option value="Staf Keperawatan">Staf Keperawatan</option>
-                <option value="Staf Kebidanan">Staf Kebidanan</option>
-                <option value="Staf Klinis Lainnya">Staf Klinis Lainnya</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>Informasi STR</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nomor STR <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.nomor_str" type="text" required :disabled="isStafViewMode">
-              </div>
-              <div class="form-group">
-                <label>Tanggal Terbit STR <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.tanggal_str" type="date" required :disabled="isStafViewMode">
-              </div>
-              <div class="form-group">
-                <label>Masa Berlaku STR <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.tanggal_akhir_str" type="date" required :disabled="isStafViewMode">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>Informasi SIP</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nomor SIP <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.nomor_sip" type="text" required :disabled="isStafViewMode">
-              </div>
-              <div class="form-group">
-                <label>Masa Berlaku SIP <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.tanggal_izin_praktek" type="date" required :disabled="isStafViewMode">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>Pendidikan</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Perguruan Tinggi <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.perguruan_tinggi" type="text" required :disabled="isStafViewMode">
-              </div>
-              <div class="form-group">
-                <label>Program Studi <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.prodi" type="text" required :disabled="isStafViewMode">
-              </div>
-              <div class="form-group">
-                <label>Tanggal Lulus <span class="required" v-if="!isStafViewMode">*</span></label>
-                <input v-model="stafFormData.tanggal_lulus" type="date" required :disabled="isStafViewMode">
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" @click="closeStafModal" class="btn-cancel">{{ isStafViewMode ? 'Tutup' : 'Batal' }}</button>
-            <button v-if="!isStafViewMode" type="submit" class="btn-submit" :disabled="savingStaf">
-              <i class="fas" :class="savingStaf ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-              {{ savingStaf ? 'Menyimpan...' : 'Simpan' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
     <!-- Upload/Edit Modal -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
@@ -360,9 +149,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import fileManagerService from '@/services/fileManagerService'
-import kualifikasiStafService from '@/services/kualifikasiStafService'
 import { useMenuStore } from '@/stores/menu'
 import { useAuthStore } from '@/stores/auth'
 import Swal from 'sweetalert2'
@@ -379,42 +167,6 @@ const filesList = ref([])
 const searchQuery = ref('')
 const activeTab = ref('dokumen')
 
-// Staf Klinis State
-const stafLoading = ref(false)
-const stafList = ref([])
-const stafSearch = ref('')
-const stafFilter = ref({
-  kategori: '',
-  status: ''
-})
-const showStafModal = ref(false)
-const stafFormData = ref({
-  nik: '',
-  nama: '',
-  kategori_profesi: '',
-  nomor_str: '',
-  tanggal_str: '',
-  tanggal_akhir_str: '',
-  nomor_sip: '',
-  tanggal_izin_praktek: '',
-  perguruan_tinggi: '',
-  prodi: '',
-  tanggal_lulus: '',
-  status: 1
-})
-const savingStaf = ref(false)
-const isStafViewMode = ref(false)
-
-
-
-
-// Check permission
-onMounted(async () => {
-  if (menuStore.userMenus.length === 0) {
-    await menuStore.fetchUserMenus()
-  }
-})
-
 // Modal state
 const showModal = ref(false)
 const isEditMode = ref(false)
@@ -424,6 +176,13 @@ const fileInput = ref(null)
 const formData = ref({
   id: null,
   nama_file: ''
+})
+
+// Check permission
+onMounted(async () => {
+  if (menuStore.userMenus.length === 0) {
+    await menuStore.fetchUserMenus()
+  }
 })
 
 // Check if user is admin
@@ -645,118 +404,7 @@ const downloadFile = async (file) => {
 }
 
 
-// Watch tab change
-watch(activeTab, (val) => {
-  if (val === 'staf') {
-    loadStafList()
-  }
-})
-
-// Staf Klinis Methods
-const loadStafList = async () => {
-  stafLoading.value = true
-  try {
-    const params = {
-      search: stafSearch.value,
-      kategori_profesi: stafFilter.value.kategori,
-      has_kualifikasi: stafFilter.value.status,
-      filter_user_dep: 1
-    }
-    const response = await kualifikasiStafService.getKualifikasi(params)
-    stafList.value = response.data.data || []
-  } catch (error) {
-    console.error('Error loading staf:', error)
-  } finally {
-    stafLoading.value = false
-  }
-}
-
-let stafSearchTimeout
-const handleStafSearch = () => {
-  clearTimeout(stafSearchTimeout)
-  stafSearchTimeout = setTimeout(() => {
-    loadStafList()
-  }, 500)
-}
-
-const openStafModal = (data, mode = 'edit') => {
-  isStafViewMode.value = mode === 'view'
-  
-  if (data.has_kualifikasi) {
-    // Edit existing or View
-    stafFormData.value = {
-      nik: data.nik,
-      nama: data.nama,
-      kategori_profesi: data.kategori_profesi,
-      nomor_str: data.nomor_str,
-      tanggal_str: data.tanggal_str,
-      tanggal_akhir_str: data.tanggal_akhir_str,
-      nomor_sip: data.nomor_sip,
-      tanggal_izin_praktek: data.tanggal_izin_praktek,
-      perguruan_tinggi: data.perguruan_tinggi,
-      prodi: data.prodi,
-      tanggal_lulus: data.tanggal_lulus,
-      status: data.status
-    }
-  } else {
-    // New
-    stafFormData.value = {
-      nik: data.nik,
-      nama: data.nama,
-      kategori_profesi: 'Staf Medis',
-      nomor_str: '',
-      tanggal_str: '',
-      tanggal_akhir_str: '',
-      nomor_sip: '',
-      tanggal_izin_praktek: '',
-      perguruan_tinggi: '',
-      prodi: '',
-      tanggal_lulus: '',
-      status: 1
-    }
-  }
-  showStafModal.value = true
-}
-
-const closeStafModal = () => {
-  showStafModal.value = false
-  isStafViewMode.value = false
-  stafFormData.value = { nik: '', nama: '' }
-}
-
-
-const saveStaf = async () => {
-  savingStaf.value = true
-  try {
-    const isUpdate = stafList.value.find(s => s.nik === stafFormData.value.nik)?.has_kualifikasi
-    
-    if (isUpdate) {
-      await kualifikasiStafService.updateKualifikasi(stafFormData.value.nik, stafFormData.value)
-    } else {
-      await kualifikasiStafService.createKualifikasi(stafFormData.value)
-    }
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Berhasil!',
-      text: 'Data kualifikasi berhasil disimpan',
-      timer: 1500,
-      showConfirmButton: false
-    })
-
-    closeStafModal()
-    loadStafList()
-  } catch (error) {
-    console.error('Error saving staf:', error)
-    Swal.fire({
-      icon: 'error',
-      title: 'Gagal!',
-      text: error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data'
-    })
-  } finally {
-    savingStaf.value = false
-  }
-}
+// Initialize
 
 // Initialize
 onMounted(() => {
@@ -806,7 +454,7 @@ onMounted(() => {
   margin-bottom: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
 

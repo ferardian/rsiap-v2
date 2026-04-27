@@ -219,14 +219,28 @@
                   <option value="TENAGA LUAR">TENAGA LUAR</option>
                 </select>
               </div>
-               <div class="form-group">
-                <label>Ms Kerja <span class="required">*</span></label>
-                <select v-model="form.ms_kerja" required>
-                  <option value="<1">&lt; 1 Tahun</option>
-                  <option value="PT">PT</option>
-                  <option value="FT">FT</option>
-                  <option value=">1">&gt; 1 Tahun</option>
+              <div class="form-group">
+                <label>Status Koordinator <span class="required">*</span></label>
+                <select v-model="form.status_koor" required>
+                  <option value="0">Tidak</option>
+                  <option value="1">Ya</option>
                 </select>
+              </div>
+              <div v-if="form.stts_aktif === 'KELUAR'" class="form-group">
+                <label>Tanggal Keluar <span class="required">*</span></label>
+                <input 
+                  type="date" 
+                  v-model="form.tgl_keluar" 
+                  :required="form.stts_aktif === 'KELUAR'"
+                />
+              </div>
+              <div v-if="form.stts_aktif === 'KELUAR'" class="form-group full-width">
+                <label>Keterangan Keluar</label>
+                <textarea 
+                  v-model="form.ket_keluar" 
+                  placeholder="Alasan atau keterangan keluar..."
+                  rows="2"
+                ></textarea>
               </div>
             </div>
           </div>
@@ -275,15 +289,6 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Kelompok Jabatan <span class="required">*</span></label>
-                <select v-model="form.kode_kelompok" required>
-                  <option value="">Pilih Kelompok</option>
-                  <option v-for="item in master.kelompok_jabatan" :key="item.kode_kelompok" :value="item.kode_kelompok">
-                    {{ item.nama_kelompok }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group">
                 <label>Resiko Kerja <span class="required">*</span></label>
                 <select v-model="form.kode_resiko" required>
                   <option value="">Pilih Resiko</option>
@@ -291,35 +296,6 @@
                     {{ item.nama_resiko }}
                   </option>
                 </select>
-              </div>
-               <div class="form-group">
-                <label>Emergency Index <span class="required">*</span></label>
-                <select v-model="form.kode_emergency" required>
-                  <option value="">Pilih Klp Emergency</option>
-                  <option v-for="item in master.emergency_index" :key="item.kode_emergency" :value="item.kode_emergency">
-                    {{ item.nama_emergency }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Unit/Index Insentif <span class="required">*</span></label>
-                <select v-model="form.indexins" required>
-                   <option value="">Pilih Unit Insentif</option>
-                  <option v-for="item in master.departemen" :key="item.dep_id" :value="item.dep_id">
-                    {{ item.nama }}
-                  </option>
-                </select>
-              </div>
-               <div class="form-group">
-                <label>Status Koordinator <span class="required">*</span></label>
-                <select v-model="form.status_koor" required>
-                  <option value="0">Tidak</option>
-                  <option value="1">Ya</option>
-                </select>
-              </div>
-               <div class="form-group">
-                <label>Wajib Masuk (Hari) <span class="required">*</span></label>
-                <input type="number" v-model="form.wajibmasuk" required />
               </div>
               <div class="form-group">
                 <label>No. BPJS Kesehatan</label>
@@ -418,7 +394,9 @@ const form = ref({
   no_bpjstk: '',
   gol_darah: '-',
   agama: 'ISLAM',
-  stts_nikah: 'BELUM MENIKAH'
+  stts_nikah: 'BELUM MENIKAH',
+  tgl_keluar: '',
+  ket_keluar: ''
 })
 
 const master = ref({
@@ -478,7 +456,9 @@ const resetForm = () => {
     no_bpjstk: '',
     gol_darah: '-',
     agama: 'ISLAM',
-    stts_nikah: 'BELUM MENIKAH'
+    stts_nikah: 'BELUM MENIKAH',
+    tgl_keluar: '',
+    ket_keluar: ''
   }
 }
 
@@ -522,6 +502,16 @@ watch(() => props.pegawaiData, (newVal) => {
       } else if (typeof newVal.email === 'string') {
         form.value.email = newVal.email
       }
+    }
+
+    // Handle Departure Info
+    if (newVal.pegawaiKeluar) {
+      form.value.tgl_keluar = newVal.pegawaiKeluar.tgl_keluar || ''
+      form.value.ket_keluar = newVal.pegawaiKeluar.keterangan || ''
+    } else {
+      // Flat structure fallback (from index join)
+      form.value.tgl_keluar = newVal.tgl_keluar || ''
+      form.value.ket_keluar = newVal.ket_keluar || ''
     }
   } else if (!props.isEdit) {
     resetForm()

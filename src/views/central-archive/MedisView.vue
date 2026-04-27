@@ -121,10 +121,10 @@
           <thead v-else-if="activeTab === 'kredensial'">
             <tr>
               <th width="5%">No</th>
-              <th width="20%">Nomor Surat</th>
-              <th width="30%">Judul Pengajuan</th>
+              <th width="15%">Nomor Surat</th>
+              <th width="25%">Judul Pengajuan</th>
               <th width="20%">Target Pegawai</th>
-              <th width="15%">Tanggal Terbit</th>
+              <th width="15%">Bukti Kredensial</th>
               <th width="10%" class="text-center">Aksi</th>
             </tr>
           </thead>
@@ -209,6 +209,18 @@
                 <td>
                    <div class="text-muted">{{ formatDate(item.tgl_terbit) }}</div>
                 </td>
+                <td>
+                  <div v-if="item.bukti_kredensial" class="status-container clickable" @click="openFile(item.bukti_kredensial, 'sk')">
+                     <span class="badge bg-success-light text-success">
+                        <i class="fas fa-check-circle me-1"></i> Tersedia
+                     </span>
+                  </div>
+                  <div v-else class="text-center">
+                    <button class="btn-quick-upload" @click="openUploadKredensialModal(item)" title="Upload Bukti Kredensial">
+                      <i class="fas fa-upload me-1"></i> Upload
+                    </button>
+                  </div>
+                </td>
               </template>
 
               <!-- Staf Tab Columns -->
@@ -257,6 +269,9 @@
                     <div v-if="activeMenu === index" class="dropdown-menu-custom">
                       <button class="dropdown-item" @click="openEditModal(item); activeMenu = null">
                         <i class="fas fa-edit text-primary"></i> Edit Berkas
+                      </button>
+                      <button v-if="activeTab === 'kredensial'" class="dropdown-item" @click="openUploadModal(item); activeMenu = null">
+                        <i class="fas fa-upload text-success"></i> Upload File SK
                       </button>
                       <div class="dropdown-divider"></div>
                       <button class="dropdown-item text-danger" @click="confirmDelete(item); activeMenu = null">
@@ -343,6 +358,20 @@
       @close="showDetailModal = false"
     />
 
+    <SkUploadModal 
+       :show="showUploadModal"
+       :sk="selectedBerkas"
+       @close="showUploadModal = false"
+       @uploaded="handleSaved"
+    />
+
+    <SkBuktiKredensialUploadModal
+      :show="showUploadKredensialModal"
+      :sk="selectedBerkas"
+      @close="showUploadKredensialModal = false"
+      @uploaded="handleSaved"
+    />
+
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
       <div class="modal-content modal-sm" @click.stop>
@@ -384,6 +413,8 @@ import { format } from 'date-fns'
 // Import Modals
 import MedisFormModal from './components/MedisFormModal.vue'
 import MedisDetailModal from './components/MedisDetailModal.vue'
+import SkUploadModal from './components/SkUploadModal.vue'
+import SkBuktiKredensialUploadModal from './components/SkBuktiKredensialUploadModal.vue'
 
 const toast = useToast()
 
@@ -407,6 +438,8 @@ const pagination = ref({
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
+const showUploadModal = ref(false)
+const showUploadKredensialModal = ref(false)
 const isEditMode = ref(false)
 const selectedBerkas = ref(null)
 const deleting = ref(false)
@@ -621,12 +654,17 @@ const getInitials = (name) => {
     : cleaned.substring(0, 2).toUpperCase()
 }
 
-const getStatusClass = (status) => {
-  if (!status) return 'status-pending'
-  switch (status.toLowerCase()) {
-    case 'disetujui': return 'status-success'
-    case 'ditolak': return 'status-danger'
-    default: return 'status-pending'
+const openFile = (filename, type = 'arsip') => {
+  if (!filename) return
+  
+  if (activeTab.value === 'kredensial' || type === 'sk') {
+    const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
+    const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
+    const url = `${baseUrl}/webapps/rsia_sk/${filename}`
+    window.open(url, '_blank')
+  } else {
+    const fileUrl = `${import.meta.env.VITE_API_BASE_URL}/arsip/berkas/${filename}`
+    window.open(fileUrl, '_blank')
   }
 }
 
@@ -646,6 +684,16 @@ const openEditModal = (item) => {
   selectedBerkas.value = item
   isEditMode.value = true
   showFormModal.value = true
+}
+
+const openUploadModal = (item) => {
+  selectedBerkas.value = item
+  showUploadModal.value = true
+}
+
+const openUploadKredensialModal = (item) => {
+  selectedBerkas.value = item
+  showUploadKredensialModal.value = true
 }
 
 const confirmDelete = (item) => {
@@ -1478,5 +1526,32 @@ const displayedPages = computed(() => {
 .tab-item.active .tab-badge {
   background: white;
   color: #3b82f6;
+}
+
+.btn-quick-upload {
+  padding: 0.35rem 0.75rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-quick-upload:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.bg-success-light {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
 }
 </style>

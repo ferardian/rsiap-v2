@@ -83,6 +83,14 @@
               <label>NPWP</label>
               <span>{{ pegawai.npwp || '-' }}</span>
             </div>
+            <div v-if="pegawai.stts_aktif === 'KELUAR'" class="info-group">
+              <label>Tanggal Keluar</label>
+              <span class="text-danger fw-bold">{{ formatDate(pegawai.pegawai_keluar?.tgl_keluar || pegawai.pegawaiKeluar?.tgl_keluar || pegawai.tgl_keluar) }}</span>
+            </div>
+            <div v-if="pegawai.stts_aktif === 'KELUAR' && (pegawai.pegawai_keluar?.keterangan || pegawai.pegawaiKeluar?.keterangan || pegawai.ket_keluar)" class="info-group">
+              <label>Keterangan Keluar</label>
+              <span>{{ pegawai.pegawai_keluar?.keterangan || pegawai.pegawaiKeluar?.keterangan || pegawai.ket_keluar }}</span>
+            </div>
           </div>
 
           <!-- Insurance Info (New) -->

@@ -117,7 +117,8 @@
               <th style="min-width: 150px;">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status / No' }}</th>
               <th style="min-width: 250px;">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
               <th v-if="activeTab === 'kredensial'" style="min-width: 200px;">Pegawai</th>
-              <th style="min-width: 130px;">Tgl Terbit</th>
+              <th v-if="activeTab === 'kredensial'" style="min-width: 130px;">Tgl Terbit</th>
+              <th v-if="activeTab === 'kredensial'" style="min-width: 150px;">Bukti Kredensial</th>
               <th style="min-width: 150px;">Penanggung Jawab</th>
               <th width="100" class="text-center">Aksi</th>
             </tr>
@@ -149,18 +150,30 @@
                   </button>
                 </div>
               </td>
-              <td>
-                <div class="date-cell">
-                  <i class="fas fa-calendar-alt text-muted me-1"></i>
-                  <span class="fs-xs">{{ formatDate(berkas.tgl_terbit) }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="pj-cell" :title="berkas.penanggung_jawab?.nama || berkas.pj">
-                  <div class="pj-avatar">{{ getInitials(berkas.penanggung_jawab?.nama || berkas.pj) }}</div>
-                  <span class="pj-name text-truncate fs-xs">{{ berkas.penanggung_jawab?.nama || berkas.pj }}</span>
-                </div>
-              </td>
+                <td>
+                  <div class="date-cell">
+                    <i class="fas fa-calendar-alt text-muted me-1"></i>
+                    <span class="fs-xs">{{ formatDate(berkas.tgl_terbit) }}</span>
+                  </div>
+                </td>
+                <td v-if="activeTab === 'kredensial'">
+                  <div v-if="berkas.bukti_kredensial" class="status-container clickable" @click="openFile(berkas.bukti_kredensial, 'sk')">
+                     <span class="badge bg-success-light text-success">
+                        <i class="fas fa-check-circle me-1"></i> Tersedia
+                     </span>
+                  </div>
+                  <div v-else class="text-center">
+                    <button class="btn-quick-upload" @click="openUploadKredensialModal(berkas)" title="Upload Bukti Kredensial">
+                      <i class="fas fa-upload me-1"></i> Upload
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  <div class="pj-cell" :title="berkas.penanggung_jawab?.nama || berkas.pj">
+                    <div class="pj-avatar">{{ getInitials(berkas.penanggung_jawab?.nama || berkas.pj) }}</div>
+                    <span class="pj-name text-truncate fs-xs">{{ berkas.penanggung_jawab?.nama || berkas.pj }}</span>
+                  </div>
+                </td>
               <td>
                 <div class="action-buttons-cell justify-content-center">
                   <button class="btn-action btn-view" @click="openDetailModal(berkas)" title="Detail">
@@ -325,9 +338,16 @@
 
     <SkUploadModal 
        :show="showUploadModal"
-       :data="selectedBerkas"
+       :sk="selectedBerkas"
        @close="showUploadModal = false"
-       @saved="loadData"
+       @uploaded="loadData"
+    />
+
+    <SkBuktiKredensialUploadModal
+      :show="showUploadKredensialModal"
+      :sk="selectedBerkas"
+      @close="showUploadKredensialModal = false"
+      @uploaded="loadData"
     />
 
     <!-- Modal Detail Staf -->
@@ -503,6 +523,7 @@ import { format } from 'date-fns'
 import KesehatanFormModal from './components/KesehatanFormModal.vue'
 import KesehatanDetailModal from './components/KesehatanDetailModal.vue'
 import SkUploadModal from './components/SkUploadModal.vue'
+import SkBuktiKredensialUploadModal from './components/SkBuktiKredensialUploadModal.vue'
 
 const toast = useToast()
 
@@ -527,6 +548,7 @@ const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
 const showUploadModal = ref(false)
+const showUploadKredensialModal = ref(false)
 const showUploadBuktiModal = ref(false)
 const showStafDetailModal = ref(false)
 const isEditMode = ref(false)
@@ -662,10 +684,10 @@ const resetFilters = () => {
   handleSearch()
 }
 
-const openFile = (filename) => {
+const openFile = (filename, type = 'arsip') => {
   if (!filename) return
   
-  if (activeTab.value === 'kredensial') {
+  if (activeTab.value === 'kredensial' || type === 'sk') {
     const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
     const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
     const url = `${baseUrl}/webapps/rsia_sk/${filename}`
@@ -827,6 +849,11 @@ const openEditModal = (berkas) => {
 const openUploadModal = (berkas) => {
   selectedBerkas.value = berkas
   showUploadModal.value = true
+}
+
+const openUploadKredensialModal = (berkas) => {
+  selectedBerkas.value = berkas
+  showUploadKredensialModal.value = true
 }
 
 const confirmDelete = (berkas) => {
@@ -1822,5 +1849,32 @@ const displayedPages = computed(() => {
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
   70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.btn-quick-upload {
+  padding: 0.35rem 0.75rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-quick-upload:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.bg-success-light {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
 }
 </style>

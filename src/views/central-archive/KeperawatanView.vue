@@ -116,7 +116,8 @@
               <th style="min-width: 180px;">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status / No' }}</th>
               <th style="min-width: 250px;">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
               <th v-if="activeTab === 'kredensial'" style="min-width: 200px;">Pegawai</th>
-              <th style="min-width: 130px;">Tgl Terbit</th>
+              <th v-if="activeTab === 'kredensial'" style="min-width: 130px;">Tgl Terbit</th>
+              <th v-if="activeTab === 'kredensial'" style="min-width: 150px;">Bukti Kredensial</th>
               <th :style="{ minWidth: activeTab === 'kredensial' ? '180px' : '220px' }">Penanggung Jawab</th>
               <th width="100" class="text-center">Aksi</th>
             </tr>
@@ -161,6 +162,18 @@
                   <div class="date-cell">
                     <i class="fas fa-calendar-alt text-muted fs-xs me-1"></i>
                     <span class="fs-xs">{{ formatDate(berkas.tgl_terbit) }}</span>
+                  </div>
+                </td>
+                <td v-if="activeTab === 'kredensial'">
+                  <div v-if="berkas.bukti_kredensial" class="status-container clickable" @click="openFile(berkas.bukti_kredensial, 'sk')">
+                     <span class="badge bg-success-light text-success">
+                        <i class="fas fa-check-circle me-1"></i> Tersedia
+                     </span>
+                  </div>
+                  <div v-else class="text-center">
+                    <button class="btn-quick-upload" @click="openUploadKredensialModal(berkas)" title="Upload Bukti Kredensial">
+                      <i class="fas fa-upload me-1"></i> Upload
+                    </button>
                   </div>
                 </td>
                 <td>
@@ -437,6 +450,13 @@
       @uploaded="loadData"
     />
 
+    <SkBuktiKredensialUploadModal
+      :show="showUploadKredensialModal"
+      :sk="selectedBerkas"
+      @close="showUploadKredensialModal = false"
+      @uploaded="loadData"
+    />
+
     <!-- Modal Upload Bukti Kelulusan -->
     <div v-if="showUploadBuktiModal" class="modal-overlay" @click="closeUploadBuktiModal">
       <div class="modal-content" @click.stop style="max-width: 500px">
@@ -511,6 +531,7 @@ import { format } from 'date-fns'
 import KeperawatanFormModal from './components/KeperawatanFormModal.vue'
 import KeperawatanDetailModal from './components/KeperawatanDetailModal.vue'
 import SkUploadModal from './components/SkUploadModal.vue'
+import SkBuktiKredensialUploadModal from './components/SkBuktiKredensialUploadModal.vue'
 
 const toast = useToast()
 const authStore = useAuthStore()
@@ -536,6 +557,7 @@ const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
 const showUploadModal = ref(false)
+const showUploadKredensialModal = ref(false)
 const showUploadBuktiModal = ref(false)
 const showStafDetailModal = ref(false)
 const isEditMode = ref(false)
@@ -674,6 +696,11 @@ const resetFilters = () => {
 const openUploadModal = (berkas) => {
   selectedBerkas.value = berkas
   showUploadModal.value = true
+}
+
+const openUploadKredensialModal = (berkas) => {
+  selectedBerkas.value = berkas
+  showUploadKredensialModal.value = true
 }
 
 const openFile = (filename) => {
@@ -2174,5 +2201,32 @@ const displayedPages = computed(() => {
 
 .btn-upload:hover {
   background: #e0f2fe !important;
+}
+
+.btn-quick-upload {
+  padding: 0.35rem 0.75rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-quick-upload:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.bg-success-light {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
 }
 </style>

@@ -17,7 +17,7 @@ export const pegawaiService = {
         return api.get(`/sdi/pegawai/${nik}`, {
             params: {
                 select: '*',
-                include: 'petugas,dep,statusKerja,email,nomorKartu,keluarga'
+                include: 'petugas,dep,statusKerja,email,nomorKartu,keluarga,pegawaiKeluar'
             }
         })
     },
@@ -112,8 +112,8 @@ export const pegawaiService = {
     /**
      * Get employee statistics
      */
-    getStatistik() {
-        return api.get('/sdi/pegawai/statistik')
+    getStatistik(params = {}) {
+        return api.get('/sdi/pegawai/statistik', { params })
     },
 
     // ========== Master Data ==========

@@ -62,7 +62,7 @@ export const authService = {
     try {
       const response = await api.get('/user/auth/detail', {
         params: {
-          include: 'dep,petugas,email,statusKerja,keluarga'
+          include: 'dep,petugas,email,statusKerja,keluarga,kualifikasiStaf'
         }
       })
       return response.data

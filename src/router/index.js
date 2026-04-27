@@ -218,6 +218,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/karyawan-unit',
+    name: 'DataKaryawanUnit',
+    component: () => import('../views/sdi/KaryawanUnitView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/data-dokter',
     name: 'DataDokter',
     component: () => import('../views/sdi/DokterView.vue'),

@@ -130,6 +130,7 @@
                 <!-- Jabatan merged with Name -->
                 <th>Departemen</th>
                 <th>Mulai Kerja</th>
+                <th>Tgl. Keluar</th>
                 <th>Masa Kerja</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -167,6 +168,12 @@
                 <!-- Jabatan moved to name column subtitle -->
                 <td>{{ pegawai.departemen || '-' }}</td>
                 <td>{{ formatDate(pegawai.mulai_kerja) }}</td>
+                <td>
+                  <span v-if="pegawai.tgl_keluar" class="departure-date">
+                    {{ formatDate(pegawai.tgl_keluar) }}
+                  </span>
+                  <span v-else>-</span>
+                </td>
                 <td>
                   <div class="tenure-badge">
                     <i class="fas fa-history"></i>
@@ -512,7 +519,7 @@ const exportToExcel = async () => {
       wsData.push([
         'No', 'NIP', 'Nama Lengkap', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 
         'No KTP / NIK', 'No Telp', 'Jml. Keluarga', 'Departemen', 'Jabatan', 'Alamat', 
-        'Pendidikan', 'Tanggal Masuk', 'Masa Kerja', 'Status'
+        'Pendidikan', 'Tanggal Masuk', 'Tanggal Keluar', 'Masa Kerja', 'Status'
       ])
 
       dataToExport.forEach((emp, index) => {
@@ -531,6 +538,7 @@ const exportToExcel = async () => {
           emp.alamat || '-',
           emp.pendidikan || '-',
           emp.mulai_kerja ? formatDate(emp.mulai_kerja) : '-',
+          emp.tgl_keluar ? formatDate(emp.tgl_keluar) : '-',
           emp.mulai_kerja ? calculateTenure(emp.mulai_kerja) : '-',
           emp.stts_aktif || '-'
         ])
