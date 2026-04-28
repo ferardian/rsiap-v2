@@ -98,9 +98,9 @@
               <td>{{ staf.pendidikan || '-' }}</td>
               <td>
                 <div v-if="staf.judul_sk" class="kredensial-cell-premium" :title="staf.judul_sk">
-                  <div class="level-pill" :class="getLevelClass(calculateKredensial(staf))">
+                  <div class="level-pill" :class="getLevelClass(staf.level_kredensial || calculateKredensial(staf))">
                     <i class="fas fa-award"></i>
-                    <span>{{ calculateKredensial(staf) }}</span>
+                    <span>{{ staf.level_kredensial || calculateKredensial(staf) }}</span>
                   </div>
                   <div class="sk-date-wrapper">
                     <i class="far fa-calendar-alt"></i>
@@ -221,13 +221,32 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Kategori Profesi <span class="required">*</span></label>
-                <select v-model="form.kategori_profesi" required>
+                <select v-model="form.kategori_profesi" @change="handleKategoriChange" required>
                   <option value="">Pilih Kategori</option>
                   <option value="Staf Medis">Staf Medis</option>
                   <option value="Staf Kebidanan">Staf Kebidanan</option>
                   <option value="Staf Keperawatan">Staf Keperawatan</option>
                   <option value="Staf Klinis Lainnya">Staf Klinis Lainnya</option>
                 </select>
+              </div>
+              <div class="form-group">
+                <label>Jenjang Pendidikan (Untuk Filter)</label>
+                <select v-model="form.temp_jenjang_pendidikan" @change="filterMasterKredensial">
+                  <option value="">Semua Pendidikan</option>
+                  <option v-for="edu in availableEducations" :key="edu" :value="edu">{{ edu }}</option>
+                </select>
+              </div>
+              <div class="form-group full-width">
+                <label>Jenjang Kredensial <span class="required">*</span></label>
+                <select v-model="form.id_kredensial" required>
+                  <option value="">Pilih Jenjang Kredensial</option>
+                  <option v-for="mk in filteredMasterKredensial" :key="mk.id" :value="mk.id">
+                    {{ mk.label }} ({{ mk.jenjang_pendidikan }})
+                  </option>
+                </select>
+                <small class="help-text text-primary" v-if="suggestedKredensial" @click="form.id_kredensial = suggestedKredensial.id" style="cursor: pointer;">
+                  <i class="fas fa-magic"></i> Rekomendasi: <strong>{{ suggestedKredensial.label }}</strong> (Klik untuk pilih)
+                </small>
               </div>
             </div>
           </div>
@@ -245,7 +264,7 @@
               </div>
               <div class="form-group">
                 <label>Tanggal STR <span class="required">*</span></label>
-                <input type="date" v-model="form.tanggal_str" required>
+                <input type="date" v-model="form.tanggal_str" @change="autoSuggestKredensial" required>
               </div>
               <div class="form-group full-width">
                 <label>Tanggal Akhir SIP <span class="required">*</span></label>
@@ -409,9 +428,9 @@
                 <label>Kredensial Terakhir</label>
                 <div class="kredensial-card-mini">
                   <div class="k-card-header">
-                    <div class="level-badge-premium" :class="getLevelClass(calculateKredensial(selectedStaf))">
+                    <div class="level-badge-premium" :class="getLevelClass(selectedStaf.level_kredensial || calculateKredensial(selectedStaf))">
                       <i class="fas fa-shield-alt"></i>
-                      {{ calculateKredensial(selectedStaf) }}
+                      {{ selectedStaf.level_kredensial || calculateKredensial(selectedStaf) }}
                     </div>
                   </div>
                   <div class="k-card-body">
@@ -582,6 +601,10 @@ const showDeleteModal = ref(false)
 const isEditMode = ref(false)
 const saving = ref(false)
 const selectedStaf = ref(null)
+const masterKredensialList = ref([])
+const filteredMasterKredensial = ref([])
+const availableEducations = ref([])
+const suggestedKredensial = ref(null)
 const searchQuery = ref('')
 const showEmployeeList = ref(false)
 const showDetailModal = ref(false)
@@ -601,6 +624,8 @@ const form = ref({
   perguruan_tinggi: '',
   prodi: '',
   tanggal_lulus: '',
+  id_kredensial: '',
+  temp_jenjang_pendidikan: '',
   status: '1'
 })
 
@@ -829,6 +854,7 @@ const submitUploadBukti = async () => {
 }
 
 const calculateKredensial = (staf) => {
+  if (staf.level_kredensial) return staf.level_kredensial
   if (!staf.tgl_terbit_sk) return '-'
   
   const pendidikan = (staf.pendidikan || '').toUpperCase()
@@ -838,8 +864,8 @@ const calculateKredensial = (staf) => {
   const masaKerja = tahunTerbit - tahunAwal
 
   if (pendidikan.includes('D3') || pendidikan.includes('DIII')) {
-    if (masaKerja >= 22) return 'PK V (≥ 22 Tahun)'
-    if (masaKerja >= 19) return 'PK IV (≥ 19 Tahun)'
+    if (masaKerja >= 22) return 'PK V (>= 22 Tahun)'
+    if (masaKerja >= 19) return 'PK IV (>= 19 Tahun)'
     if (masaKerja > 9) return 'PK III (> 9 - 12 Tahun)'
     if (masaKerja > 6) return 'PK II (> 6 - 9 Tahun)'
     if (masaKerja >= 3) return 'PK I (3 - 6 Tahun)'
@@ -852,6 +878,69 @@ const calculateKredensial = (staf) => {
   }
   
   return '-'
+}
+
+const loadMasterKredensial = async () => {
+  try {
+    const response = await pegawaiService.getMasterKredensial()
+    if (response.data.success) {
+      masterKredensialList.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Error loading master kredensial:', error)
+  }
+}
+
+const handleKategoriChange = () => {
+  // Update available educations based on category
+  const educations = masterKredensialList.value
+    .filter(mk => mk.kategori_profesi === form.value.kategori_profesi)
+    .map(mk => mk.jenjang_pendidikan)
+  availableEducations.value = [...new Set(educations)]
+  
+  // Reset education and filtered list
+  form.value.temp_jenjang_pendidikan = ''
+  filterMasterKredensial()
+  autoSuggestKredensial()
+}
+
+const filterMasterKredensial = () => {
+  let filtered = masterKredensialList.value.filter(mk => mk.kategori_profesi === form.value.kategori_profesi)
+  
+  if (form.value.temp_jenjang_pendidikan) {
+    filtered = filtered.filter(mk => mk.jenjang_pendidikan === form.value.temp_jenjang_pendidikan)
+  }
+  
+  filteredMasterKredensial.value = filtered
+}
+
+const autoSuggestKredensial = () => {
+  if (!form.value.kategori_profesi || !form.value.tanggal_str) {
+    suggestedKredensial.value = null
+    return
+  }
+
+  // Logic to suggest based on experience (similar to old calculateKredensial)
+  const tglAwal = new Date(form.value.tanggal_str) // Use STR date as entry point or reference
+  const today = new Date()
+  const masaKerja = today.getFullYear() - tglAwal.getFullYear()
+
+  const candidates = masterKredensialList.value.filter(mk => 
+    mk.kategori_profesi === form.value.kategori_profesi &&
+    masaKerja >= mk.min_masa_kerja &&
+    masaKerja <= mk.max_masa_kerja
+  )
+
+  if (candidates.length > 0) {
+    // If there's an education filter, prefer that
+    const bestMatch = form.value.temp_jenjang_pendidikan 
+      ? candidates.find(c => c.jenjang_pendidikan === form.value.temp_jenjang_pendidikan) || candidates[0]
+      : candidates[0]
+    
+    suggestedKredensial.value = bestMatch
+  } else {
+    suggestedKredensial.value = null
+  }
 }
 
 const getLevelClass = (level) => {
@@ -954,6 +1043,7 @@ const isExpiringSoon = (date) => {
 onMounted(() => {
   loadStafKlinis()
   loadKaryawanList()
+  loadMasterKredensial()
 })
 </script>
 

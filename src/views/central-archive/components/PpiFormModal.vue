@@ -325,7 +325,7 @@ const submitForm = async () => {
         tgl_terbit: formData.value.tgl_terbit,
         pj: formData.value.pj,
         perihal: formData.value.perihal,
-        status: formData.value.status || '1'
+        status: String(formData.value.status ?? '1')
       }
       await komitePpiService.update(identifier, updateData)
       toast.success('Berkas berhasil diperbarui')

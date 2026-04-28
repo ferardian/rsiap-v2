@@ -106,18 +106,13 @@
             </div>
           </div>
 
-          <div v-if="isKredensial && !isEdit" class="form-group">
-            <label>Jenis SK <span>*</span></label>
-            <select v-model="formData.jenis" class="form-control" required>
-              <option value="" disabled>Pilih Jenis SK</option>
-              <option value="A">SK Dokumen</option>
-              <option value="B">SK Pengangkatan Jabatan</option>
-            </select>
-          </div>
 
-          <!-- Target Pegawai (Only for Kredensial) -->
-          <div v-if="isKredensial" class="form-group has-search mt-4">
-            <label>Target Pegawai (Penerima SPK/RKK) <span>*</span></label>
+          <!-- Target Pegawai (Kredensial / Undangan) -->
+          <div class="form-group has-search mt-4">
+            <label>Target Pegawai <span v-if="isKredensial">(Penerima SPK/RKK) *</span></label>
+            <small class="text-muted d-block mb-2">
+              <i class="fas fa-info-circle me-1"></i> Opsional: Untuk pengajuan kredensial, silahkan pilih karyawan dibawah
+            </small>
             <div class="search-wrapper">
               <i class="fas fa-user search-icon"></i>
               <input 
@@ -162,10 +157,11 @@
               </div>
               <i class="fas fa-check-circle text-success ml-auto"></i>
             </div>
-            <small v-else-if="isSubmitted" class="text-danger mt-1 d-block">
-              <i class="fas fa-exclamation-circle"></i> Target Pegawai wajib dipilih untuk Pengajuan Kredensial.
+            <small v-else-if="isSubmitted && isKredensial" class="text-danger mt-1 d-block">
+              <i class="fas fa-exclamation-circle"></i> Target Pegawai wajib dipilih.
             </small>
           </div>
+
         </form>
       </div>
 
@@ -189,7 +185,6 @@ import { format } from 'date-fns'
 
 // Services
 import { komiteKesehatanService } from '@/services/komiteKesehatanService'
-import { skService } from '@/services/skService'
 import { pegawaiService } from '@/services/pegawaiService'
 
 const props = defineProps({
@@ -225,6 +220,7 @@ const formData = ref({
   jenis: ''
 })
 
+
 // Max date for Tgl Terbit
 const maxDate = computed(() => {
   const tomorrow = new Date()
@@ -247,7 +243,7 @@ const showTargetList = ref(false)
 const selectedTarget = ref(null)
 
 // Initialize form when modal opens or edits change
-watch(() => props.show, (newVal) => {
+watch(() => props.show, async (newVal) => {
   if (newVal) {
     isSubmitted.value = false
     loading.value = false
@@ -271,7 +267,7 @@ watch(() => props.show, (newVal) => {
         status: props.data.status || '1',
         jenis: props.data.jenis || ''
       }
-      
+
       // Initialize PJ search field
       if (props.data.penanggung_jawab) {
         selectedPj.value = {
@@ -282,14 +278,26 @@ watch(() => props.show, (newVal) => {
         searchPj.value = props.data.penanggung_jawab.nama
       }
 
-      // Initialize Target if Kredensial
+      // Initialize Target if present
       if (props.data.target_pegawai) {
         selectedTarget.value = {
-            nik: props.data.target_pegawai.nik,
-            nama: props.data.target_pegawai.nama,
-            jbtn: props.data.target_pegawai.jbtn
+          nik: props.data.target_pegawai.nik,
+          nama: props.data.target_pegawai.nama,
+          jbtn: props.data.target_pegawai.jbtn
         }
+        formData.value.nik = props.data.target_pegawai.nik
         searchTarget.value = props.data.target_pegawai.nama
+      } else if (props.data.nik) {
+        try {
+          const res = await pegawaiService.search(props.data.nik)
+          if (res.data?.data && res.data.data.length > 0) {
+            selectedTarget.value = res.data.data[0]
+            formData.value.nik = selectedTarget.value.nik
+            searchTarget.value = selectedTarget.value.nama
+          }
+        } catch (e) {
+          console.error('Failed to load target pegawai details', e)
+        }
       }
     } else {
       formData.value = {
@@ -299,9 +307,14 @@ watch(() => props.show, (newVal) => {
         tgl_terbit: new Date().toISOString().split('T')[0],
         jenis: ''
       }
+      searchPj.value = ''
+      selectedPj.value = null
+      searchTarget.value = ''
+      selectedTarget.value = null
     }
   }
 })
+
 
 // Close dropdown when clicking outside
 const handleClickOutside = (e) => {
@@ -376,10 +389,11 @@ const handleSearchTarget = debounce(async () => {
 }, 300)
 
 const selectTarget = (pegawai) => {
-  selectedTarget.value = { nik: pegawai.nik, nama: pegawai.nama, jbtn: pegawai.jbtn }
+  selectedTarget.value = pegawai
   formData.value.nik = pegawai.nik
   searchTarget.value = pegawai.nama
   showTargetList.value = false
+  searchingTarget.value = false
 }
 
 const clearSelectedTarget = () => {
@@ -439,52 +453,31 @@ const submitForm = async () => {
   }
   
   formData.value.pj = selectedPj.value.nik
-  if (selectedTarget.value) {
-    formData.value.nik = selectedTarget.value.nik
-  }
+  formData.value.nik = selectedTarget.value?.nik || null
   
   loading.value = true
   
   try {
     if (props.isEdit) {
-      if (props.isKredensial) {
-        const identifier = btoa(`${props.data.nomor}.${props.data.jenis}.${formData.value.tgl_terbit}`)
-        const updateData = {
-          nomor: props.data.nomor,
-          jenis: props.data.jenis,
-          tgl_terbit: formData.value.tgl_terbit,
-          pj: formData.value.pj,
-          nik: formData.value.nik,
-          judul: formData.value.perihal,
-          status: formData.value.status || '1'
-        }
-        await skService.updateSk(identifier, updateData)
-      } else {
-        const identifier = btoa(`${props.data.nomor}.${formData.value.tgl_terbit}`)
-        const updateData = {
-          nomor: props.data.nomor,
-          tgl_terbit: formData.value.tgl_terbit,
-          pj: formData.value.pj,
-          perihal: formData.value.perihal,
-          status: formData.value.status || '1'
-        }
-        await komiteKesehatanService.update(identifier, updateData)
+      const identifier = btoa(`${props.data.nomor}.${formData.value.tgl_terbit}`)
+      const updateData = {
+        nomor: props.data.nomor,
+        tgl_terbit: formData.value.tgl_terbit,
+        pj: formData.value.pj,
+        nik: formData.value.nik,
+        perihal: formData.value.perihal,
+        status: String(formData.value.status ?? '1')
       }
+      await komiteKesehatanService.update(identifier, updateData)
       toast.success('Data berhasil diperbarui')
     } else {
-      if (props.isKredensial) {
-        const skPayload = {
-          tgl_terbit: formData.value.tgl_terbit,
-          pj: formData.value.pj,
-          nik: formData.value.nik,
-          judul: formData.value.perihal,
-          status_approval: 'pengajuan',
-          jenis: formData.value.jenis
-        }
-        await skService.createSk(skPayload)
-      } else {
-        await komiteKesehatanService.store(formData.value)
+      const payload = {
+        tgl_terbit: formData.value.tgl_terbit,
+        pj: formData.value.pj,
+        nik: formData.value.nik,
+        perihal: formData.value.perihal
       }
+      await komiteKesehatanService.store(payload)
       toast.success('Data berhasil dibuat')
     }
     

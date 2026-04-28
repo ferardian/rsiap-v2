@@ -121,10 +121,10 @@
           <thead v-else-if="activeTab === 'kredensial'">
             <tr>
               <th width="5%">No</th>
-              <th width="15%">Nomor Surat</th>
-              <th width="25%">Judul Pengajuan</th>
-              <th width="20%">Target Pegawai</th>
-              <th width="15%">Bukti Kredensial</th>
+              <th width="25%">Info Pengajuan</th>
+              <th width="25%">SK Kredensial</th>
+              <th width="20%">Pegawai</th>
+              <th width="15%">Bukti</th>
               <th width="10%" class="text-center">Aksi</th>
             </tr>
           </thead>
@@ -179,39 +179,55 @@
               <!-- Kredensial Tab Columns -->
               <template v-else-if="activeTab === 'kredensial'">
                 <td>
-                  <div class="badge-nomor">
-                    <template v-if="(activeTab === 'standar' || activeTab === 'kredensial') && (item.status_approval === 'pengajuan' || !item.status_approval)">
-                      <span class="text-warning"><i class="fas fa-clock me-1"></i> Menunggu Approval</span>
-                    </template>
-                    <template v-else>
-                      {{ formatNomorSurat(item, activeTab === 'kredensial') }}
-                    </template>
+                  <div class="fw-bold text-dark fs-6">{{ item.perihal }}</div>
+                  <div class="mt-1 d-flex gap-2 align-items-center">
+                    <span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:500; font-size:10px; border:1px solid #e2e8f0;">
+                      <i class="fas fa-hashtag me-1"></i> {{ formatNomorSurat(item, true) }}
+                    </span>
+                    <small class="text-muted" style="font-size: 10px;"><i class="far fa-calendar-alt me-1"></i> {{ formatDate(item.tgl_terbit) }}</small>
                   </div>
                 </td>
                 <td>
-                  <div class="fw-medium text-dark">{{ item.judul }}</div>
-                  <small class="text-muted d-block mt-1">{{ item.pj_nama }}</small>
+                  <template v-if="item.sk">
+                    <div class="fw-medium text-purple-dark mb-1" style="line-height: 1.2;">{{ item.sk.judul }}</div>
+                    <div class="d-flex flex-wrap gap-1">
+                      <span class="badge" style="background:#f5f3ff; color:#7c3aed; font-weight:500; font-size:10px; border:1px solid #ddd6fe;">
+                        <i class="fas fa-file-signature me-1"></i> {{ item.sk.prefix ? item.sk.nomor + '/' + item.sk.prefix : item.sk.nomor }}
+                      </span>
+                      <span v-if="item.sk.kredensial" class="badge" style="background:#fff7ed; color:#c2410c; font-weight:600; font-size:10px; border:1px solid #ffedd5;">
+                        <i class="fas fa-medal me-1"></i> {{ item.sk.kredensial.label }}
+                      </span>
+                      <span class="badge" style="background:#f0fdf4; color:#15803d; font-weight:500; font-size:10px; border:1px solid #dcfce7;">
+                        <i class="fas fa-calendar-check me-1"></i> {{ formatDate(item.sk.tgl_terbit) }}
+                      </span>
+                    </div>
+                  </template>
+                  <template v-else-if="item.status_approval === 'disetujui'">
+                    <span class="badge" style="background:#fef2f2; color:#ef4444; font-weight:500; font-size:10px; border:1px solid #fecaca;">
+                      <i class="fas fa-exclamation-circle me-1"></i> SK Belum Ditautkan
+                    </span>
+                  </template>
+                  <template v-else>
+                    <span class="text-muted italic small">Menunggu Persetujuan</span>
+                  </template>
                 </td>
                 <td>
                   <div v-if="item.target_pegawai" class="pj-cell" :title="item.target_pegawai.nama">
                     <div class="pj-avatar bg-purple-light text-purple">{{ getInitials(item.target_pegawai.nama) }}</div>
                     <div class="d-flex flex-column">
-                      <span class="pj-name text-truncate">{{ item.target_pegawai.nama }}</span>
-                      <small class="text-muted">{{ item.nik }}</small>
+                      <span class="pj-name text-truncate fw-bold">{{ item.target_pegawai.nama }}</span>
+                      <small class="text-muted" style="font-size: 10px;">{{ item.nik }}</small>
                     </div>
                   </div>
                   <div v-else class="text-center">
                     <button class="btn-quick-link" @click="openEditModal(item)" title="Set Pegawai">
-                      <i class="fas fa-user-plus mr-1"></i> Set Pegawai
+                      <i class="fas fa-user-plus me-1"></i> Set Pegawai
                     </button>
                   </div>
                 </td>
                 <td>
-                   <div class="text-muted">{{ formatDate(item.tgl_terbit) }}</div>
-                </td>
-                <td>
-                  <div v-if="item.bukti_kredensial" class="status-container clickable" @click="openFile(item.bukti_kredensial, 'sk')">
-                     <span class="badge bg-success-light text-success">
+                  <div v-if="item.sk?.bukti_kredensial" class="status-container clickable" @click="openFile(item.sk.bukti_kredensial, 'sk')">
+                     <span class="badge" style="background:#ecfdf5; color:#059669; border: 1px solid #d1fae5;">
                         <i class="fas fa-check-circle me-1"></i> Tersedia
                      </span>
                   </div>
@@ -261,6 +277,14 @@
                   <button class="btn-action btn-view" @click="openDetailModal(item)" title="Detail">
                     <i class="fas fa-eye"></i>
                   </button>
+                  <template v-if="activeTab === 'kredensial' && item.status_approval === 'disetujui'">
+                    <button v-if="item.sk?.berkas" class="btn-action btn-file" @click="openFile(item.sk.berkas)" title="Lihat Berkas">
+                      <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button v-else disabled class="btn-action btn-file-disabled" title="Berkas Belum Diupload">
+                       <i class="fas fa-file-excel"></i>
+                    </button>
+                  </template>
                   <div class="dropdown-more" v-if="activeTab !== 'staf'">
                     <button class="btn-action btn-more" @click="toggleMenu(index)" title="Lainnya">
                       <i class="fas fa-ellipsis-v"></i>
@@ -270,8 +294,8 @@
                       <button class="dropdown-item" @click="openEditModal(item); activeMenu = null">
                         <i class="fas fa-edit text-primary"></i> Edit Berkas
                       </button>
-                      <button v-if="activeTab === 'kredensial'" class="dropdown-item" @click="openUploadModal(item); activeMenu = null">
-                        <i class="fas fa-upload text-success"></i> Upload File SK
+                      <button v-if="activeTab === 'kredensial' && item.status_approval === 'disetujui'" class="dropdown-item" @click="openSkKredensialModal(item); activeMenu = null">
+                        <i class="fas fa-file-signature text-purple"></i> Terbitkan / Update SK
                       </button>
                       <div class="dropdown-divider"></div>
                       <button class="dropdown-item text-danger" @click="confirmDelete(item); activeMenu = null">
@@ -358,11 +382,12 @@
       @close="showDetailModal = false"
     />
 
-    <SkUploadModal 
-       :show="showUploadModal"
-       :sk="selectedBerkas"
-       @close="showUploadModal = false"
-       @uploaded="handleSaved"
+    <SkKredensialFormModal 
+       :show="showSkKredensialModal"
+       :data="selectedBerkas"
+       sumberKomite="medis"
+       @close="showSkKredensialModal = false"
+       @saved="handleSaved"
     />
 
     <SkBuktiKredensialUploadModal
@@ -413,7 +438,7 @@ import { format } from 'date-fns'
 // Import Modals
 import MedisFormModal from './components/MedisFormModal.vue'
 import MedisDetailModal from './components/MedisDetailModal.vue'
-import SkUploadModal from './components/SkUploadModal.vue'
+import SkKredensialFormModal from './components/SkKredensialFormModal.vue'
 import SkBuktiKredensialUploadModal from './components/SkBuktiKredensialUploadModal.vue'
 
 const toast = useToast()
@@ -438,7 +463,7 @@ const pagination = ref({
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
-const showUploadModal = ref(false)
+const showSkKredensialModal = ref(false)
 const showUploadKredensialModal = ref(false)
 const isEditMode = ref(false)
 const selectedBerkas = ref(null)
@@ -495,6 +520,8 @@ const buildFilters = () => {
   
   if (activeTab.value === 'standar') {
     filters.push({ field: 'status', operator: '=', value: '1' })
+  } else if (activeTab.value === 'kredensial') {
+    filters.push({ field: 'perihal', operator: 'like', value: '%Kredensial%' })
   }
   
   if (filterDate.value) {
@@ -514,10 +541,7 @@ const loadData = async (page = 1) => {
     if (activeTab.value === 'standar') {
       response = await komiteMedisService.search(searchQuery.value, pagination.value.per_page, page, filters)
     } else if (activeTab.value === 'kredensial') {
-      const combinedSearch = searchQuery.value 
-        ? `SPK RKK ${searchQuery.value}` 
-        : 'SPK RKK'
-      response = await skService.searchSk(combinedSearch, pagination.value.per_page, page, filters)
+      response = await komiteMedisService.search(searchQuery.value, pagination.value.per_page, page, filters)
     } else {
       // Data Staf
       response = await pegawaiService.getKualifikasiStaf({
@@ -556,12 +580,14 @@ const fetchPendingCounts = async () => {
     const filters = [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]
     
     // Fetch Medis Pending Count
-    const resMedis = await komiteMedisService.search('', 1, 1, filters)
-    pendingCount.value = resMedis.data?.total || 0
+    const stdFilters = [...filters]
+    const resMedis = await komiteMedisService.search('', 1, 1, stdFilters)
+    pendingCount.value = resMedis.data?.meta?.total || resMedis.data?.total || 0
     
     // Fetch Kredensial Pending Count
-    const resKred = await skService.searchSk('SPK RKK', 1, 1, filters)
-    pendingCountKredensial.value = resKred.data?.meta?.total || 0
+    const kredFilters = [...filters, { field: 'perihal', operator: 'like', value: '%Kredensial%' }]
+    const resKred = await komiteMedisService.search('', 1, 1, kredFilters)
+    pendingCountKredensial.value = resKred.data?.meta?.total || resKred.data?.total || 0
   } catch (error) {
     console.error('Error fetching pending counts:', error)
   }
@@ -686,9 +712,9 @@ const openEditModal = (item) => {
   showFormModal.value = true
 }
 
-const openUploadModal = (item) => {
+const openSkKredensialModal = (item) => {
   selectedBerkas.value = item
-  showUploadModal.value = true
+  showSkKredensialModal.value = true
 }
 
 const openUploadKredensialModal = (item) => {

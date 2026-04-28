@@ -111,15 +111,21 @@
 
         <table v-else-if="berkasList.length > 0" class="modern-table">
           <thead>
-            <tr v-if="activeTab !== 'staf'">
+            <tr v-if="activeTab === 'standar'">
               <th width="5%" class="text-center">No</th>
-              <th style="min-width: 180px;">{{ activeTab === 'standar' ? 'Nomor Surat' : 'Status / No' }}</th>
-              <th style="min-width: 250px;">{{ activeTab === 'standar' ? 'Perihal' : 'Judul Pengajuan' }}</th>
-              <th v-if="activeTab === 'kredensial'" style="min-width: 200px;">Pegawai</th>
-              <th v-if="activeTab === 'kredensial'" style="min-width: 130px;">Tgl Terbit</th>
-              <th v-if="activeTab === 'kredensial'" style="min-width: 150px;">Bukti Kredensial</th>
-              <th :style="{ minWidth: activeTab === 'kredensial' ? '180px' : '220px' }">Penanggung Jawab</th>
+              <th style="min-width: 180px;">Nomor Surat</th>
+              <th style="min-width: 250px;">Perihal</th>
+              <th style="min-width: 130px;">Tgl Terbit</th>
+              <th style="min-width: 220px;">Penanggung Jawab</th>
               <th width="100" class="text-center">Aksi</th>
+            </tr>
+            <tr v-else-if="activeTab === 'kredensial'">
+              <th width="5%" class="text-center">No</th>
+              <th width="25%">Info Pengajuan</th>
+              <th width="25%">SK Kredensial</th>
+              <th width="20%">Pegawai</th>
+              <th width="15%">Bukti</th>
+              <th width="10%" class="text-center">Aksi</th>
             </tr>
             <tr v-else>
               <th width="50" class="text-center">No</th>
@@ -132,63 +138,106 @@
               <th width="100" class="text-center">Aksi</th>
             </tr>
           </thead>
+
           <tbody>
             <template v-if="activeTab !== 'staf'">
               <tr v-for="(berkas, index) in berkasList" :key="index" class="table-row-hover">
                 <td class="text-muted">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
-                <td>
-                  <div v-if="activeTab === 'kredensial' && berkas.status_approval === 'pengajuan'" class="badge badge-warning">
-                    <i class="fas fa-clock fs-xs me-1"></i> Menunggu Approval
-                  </div>
-                  <div v-else class="badge-nomor">
-                    {{ formatNomorSurat(berkas) }}
-                  </div>
-                </td>
-                <td>
-                  <div class="fw-medium text-dark text-truncate" style="max-width: 200px;">{{ activeTab === 'standar' ? berkas.perihal : berkas.judul }}</div>
-                </td>
-                <td v-if="activeTab === 'kredensial'">
-                  <div v-if="berkas.target_pegawai">
-                    <div class="fw-bold text-dark fs-xs">{{ berkas.target_pegawai.nama }}</div>
-                    <div class="text-muted fs-xs">{{ berkas.target_pegawai.nik }}</div>
-                  </div>
-                  <div v-else class="text-center">
-                    <button class="btn-quick-link" @click="openEditModal(berkas)" title="Set Pegawai">
-                      <i class="fas fa-user-plus me-1"></i> Set Pegawai
-                    </button>
-                  </div>
-                </td>
-                <td>
-                  <div class="date-cell">
-                    <i class="fas fa-calendar-alt text-muted fs-xs me-1"></i>
-                    <span class="fs-xs">{{ formatDate(berkas.tgl_terbit) }}</span>
-                  </div>
-                </td>
-                <td v-if="activeTab === 'kredensial'">
-                  <div v-if="berkas.bukti_kredensial" class="status-container clickable" @click="openFile(berkas.bukti_kredensial, 'sk')">
-                     <span class="badge bg-success-light text-success">
-                        <i class="fas fa-check-circle me-1"></i> Tersedia
-                     </span>
-                  </div>
-                  <div v-else class="text-center">
-                    <button class="btn-quick-upload" @click="openUploadKredensialModal(berkas)" title="Upload Bukti Kredensial">
-                      <i class="fas fa-upload me-1"></i> Upload
-                    </button>
-                  </div>
-                </td>
-                <td>
-                  <div class="pj-cell" :title="berkas.penanggung_jawab?.nama || berkas.pj">
-                    <div class="pj-avatar">{{ getInitials(berkas.penanggung_jawab?.nama || berkas.pj) }}</div>
-                    <span class="pj-name text-truncate fs-xs">{{ berkas.penanggung_jawab?.nama || berkas.pj }}</span>
-                  </div>
-                </td>
+                
+                <!-- Kredensial Tab Columns -->
+                <template v-if="activeTab === 'kredensial'">
+                  <td>
+                    <div class="fw-bold text-dark fs-6">{{ berkas.perihal }}</div>
+                    <div class="mt-1 d-flex gap-2 align-items-center">
+                      <span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:500; font-size:10px; border:1px solid #e2e8f0;">
+                        <i class="fas fa-hashtag me-1"></i> {{ formatNomorSurat(berkas) }}
+                      </span>
+                      <small class="text-muted" style="font-size: 10px;"><i class="far fa-calendar-alt me-1"></i> {{ formatDate(berkas.tgl_terbit) }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <template v-if="berkas.sk">
+                      <div class="fw-medium text-purple-dark mb-1" style="line-height: 1.2;">{{ berkas.sk.judul }}</div>
+                      <div class="d-flex flex-wrap gap-1">
+                        <span class="badge" style="background:#f5f3ff; color:#7c3aed; font-weight:500; font-size:10px; border:1px solid #ddd6fe;">
+                          <i class="fas fa-file-signature me-1"></i> {{ berkas.sk.prefix ? berkas.sk.nomor + '/' + berkas.sk.prefix : berkas.sk.nomor }}
+                        </span>
+                        <span v-if="berkas.sk.kredensial" class="badge" style="background:#fff7ed; color:#c2410c; font-weight:600; font-size:10px; border:1px solid #ffedd5;">
+                          <i class="fas fa-medal me-1"></i> {{ berkas.sk.kredensial.label }}
+                        </span>
+                        <span class="badge" style="background:#f0fdf4; color:#15803d; font-weight:500; font-size:10px; border:1px solid #dcfce7;">
+                          <i class="fas fa-calendar-check me-1"></i> {{ formatDate(berkas.sk.tgl_terbit) }}
+                        </span>
+                      </div>
+                    </template>
+                    <template v-else-if="berkas.status_approval === 'disetujui'">
+                      <span class="badge" style="background:#fef2f2; color:#ef4444; font-weight:500; font-size:10px; border:1px solid #fecaca;">
+                        <i class="fas fa-exclamation-circle me-1"></i> SK Belum Ditautkan
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span class="text-muted italic small">Menunggu Persetujuan</span>
+                    </template>
+                  </td>
+                  <td>
+                    <div v-if="berkas.target_pegawai" class="pj-cell" :title="berkas.target_pegawai.nama">
+                      <div class="pj-avatar bg-purple-light text-purple">{{ getInitials(berkas.target_pegawai.nama) }}</div>
+                      <div class="d-flex flex-column">
+                        <span class="pj-name text-truncate fw-bold">{{ berkas.target_pegawai.nama }}</span>
+                        <small class="text-muted" style="font-size: 10px;">{{ berkas.nik }}</small>
+                      </div>
+                    </div>
+                    <div v-else class="text-center">
+                      <button class="btn-quick-link" @click="openEditModal(berkas)" title="Set Pegawai">
+                        <i class="fas fa-user-plus me-1"></i> Set Pegawai
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <div v-if="berkas.sk?.bukti_kredensial" class="status-container clickable" @click="openFile(berkas.sk.bukti_kredensial, 'sk')">
+                       <span class="badge" style="background:#ecfdf5; color:#059669; border: 1px solid #d1fae5;">
+                          <i class="fas fa-check-circle me-1"></i> Tersedia
+                       </span>
+                    </div>
+                    <div v-else class="text-center">
+                      <button class="btn-quick-upload" @click="openUploadKredensialModal(berkas)" title="Upload Bukti Kredensial">
+                        <i class="fas fa-upload me-1"></i> Upload
+                      </button>
+                    </div>
+                  </td>
+                </template>
+
+                <!-- Standar Tab Columns -->
+                <template v-else>
+                  <td>
+                    <div class="badge-nomor">
+                      {{ formatNomorSurat(berkas) }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="fw-medium text-dark">{{ berkas.perihal }}</div>
+                  </td>
+                  <td>
+                    <div class="date-cell">
+                      <i class="fas fa-calendar-alt text-muted fs-xs me-1"></i>
+                      <span class="fs-xs">{{ formatDate(berkas.tgl_terbit) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="pj-cell" :title="berkas.penanggung_jawab?.nama || berkas.pj">
+                      <div class="pj-avatar">{{ getInitials(berkas.penanggung_jawab?.nama || berkas.pj) }}</div>
+                      <span class="pj-name text-truncate fs-xs">{{ berkas.penanggung_jawab?.nama || berkas.pj }}</span>
+                    </div>
+                  </td>
+                </template>
+
                 <td>
                   <div class="action-buttons-cell justify-content-center">
                     <button class="btn-action btn-view" @click="openDetailModal(berkas)" title="Detail">
                       <i class="fas fa-eye"></i>
                     </button>
                     <template v-if="activeTab === 'kredensial' && berkas.status_approval === 'disetujui'">
-                      <button v-if="berkas.berkas" class="btn-action btn-file" @click="openFile(berkas.berkas)" title="Lihat Berkas">
+                      <button v-if="berkas.sk?.berkas" class="btn-action btn-file" @click="openFile(berkas.sk.berkas)" title="Lihat Berkas">
                         <i class="fas fa-file-pdf"></i>
                       </button>
                       <button v-else disabled class="btn-action btn-file-disabled" title="Berkas Belum Diupload">
@@ -204,9 +253,9 @@
                         <button 
                           v-if="activeTab === 'kredensial' && berkas.status_approval === 'disetujui'"
                           class="dropdown-item" 
-                          @click="openUploadModal(berkas); activeMenu = null"
+                          @click="openSkKredensialModal(berkas); activeMenu = null"
                         >
-                          <i class="fas fa-upload text-success"></i> Upload Berkas
+                          <i class="fas fa-file-signature text-purple"></i> Terbitkan / Update SK
                         </button>
                         <button class="dropdown-item" @click="openEditModal(berkas); activeMenu = null">
                           <i class="fas fa-edit text-primary"></i> Edit Berkas
@@ -443,11 +492,12 @@
       </div>
     </div>
 
-    <SkUploadModal 
-      :show="showUploadModal"
-      :sk="selectedBerkas"
-      @close="showUploadModal = false"
-      @uploaded="loadData"
+    <SkKredensialFormModal 
+      :show="showSkKredensialModal"
+      :data="selectedBerkas"
+      sumberKomite="keperawatan"
+      @close="showSkKredensialModal = false"
+      @saved="loadData"
     />
 
     <SkBuktiKredensialUploadModal
@@ -530,7 +580,7 @@ import { format } from 'date-fns'
 // Import Modals (will be created in next steps)
 import KeperawatanFormModal from './components/KeperawatanFormModal.vue'
 import KeperawatanDetailModal from './components/KeperawatanDetailModal.vue'
-import SkUploadModal from './components/SkUploadModal.vue'
+import SkKredensialFormModal from './components/SkKredensialFormModal.vue'
 import SkBuktiKredensialUploadModal from './components/SkBuktiKredensialUploadModal.vue'
 
 const toast = useToast()
@@ -555,11 +605,11 @@ const pagination = ref({
 // Modal States
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
-const showDeleteModal = ref(false)
-const showUploadModal = ref(false)
+const showSkKredensialModal = ref(false)
 const showUploadKredensialModal = ref(false)
 const showUploadBuktiModal = ref(false)
 const showStafDetailModal = ref(false)
+const showDeleteModal = ref(false)
 const isEditMode = ref(false)
 const selectedBerkas = ref(null)
 const selectedStaf = ref(null)
@@ -597,9 +647,10 @@ const buildFilters = () => {
   
   if (activeTab.value === 'standar') {
     filters.push({ field: 'status', operator: '=', value: '1' })
+  } else if (activeTab.value === 'kredensial') {
+    filters.push({ field: 'perihal', operator: 'like', value: '%Kredensial%' })
   } else {
-    // Kredensial only shows records where the judul contains "SPK RKK"
-    // (Ignorning jenis letter type per user request)
+    // Data Staf
   }
   
   if (filterDate.value) {
@@ -622,10 +673,7 @@ const loadData = async (page = 1) => {
     if (activeTab.value === 'standar') {
       response = await komiteKeperawatanService.search(searchQuery.value, pagination.value.per_page, page, filters)
     } else if (activeTab.value === 'kredensial') {
-      const combinedSearch = searchQuery.value 
-        ? `SPK RKK ${searchQuery.value}` 
-        : 'SPK RKK'
-      response = await skService.searchSk(combinedSearch, pagination.value.per_page, page, filters)
+      response = await komiteKeperawatanService.search(searchQuery.value, pagination.value.per_page, page, filters)
     } else {
       // Data Staf
       response = await pegawaiService.getKualifikasiStaf({
@@ -656,8 +704,11 @@ const loadData = async (page = 1) => {
 const fetchPendingCount = async () => {
   try {
     const filters = [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]
-    const response = await skService.searchSk('SPK RKK', 1, 1, filters)
-    pendingCount.value = response.data?.meta?.total || 0
+    
+    // Fetch Keperawatan Pending Count (Kredensial)
+    const kredFilters = [...filters, { field: 'perihal', operator: 'like', value: '%Kredensial%' }]
+    const resKred = await komiteKeperawatanService.search('', 1, 1, kredFilters)
+    pendingCount.value = resKred.data?.meta?.total || resKred.data?.total || 0
   } catch (error) {
     console.error('Error fetching pending count:', error)
   }
@@ -693,9 +744,9 @@ const resetFilters = () => {
   handleSearch()
 }
 
-const openUploadModal = (berkas) => {
+const openSkKredensialModal = (berkas) => {
   selectedBerkas.value = berkas
-  showUploadModal.value = true
+  showSkKredensialModal.value = true
 }
 
 const openUploadKredensialModal = (berkas) => {
@@ -863,6 +914,10 @@ const openEditModal = (berkas) => {
 }
 
 const confirmDelete = (berkas) => {
+  if (activeTab.value === 'kredensial' && !berkas.sk) {
+    toast.warning('Belum ada SK yang terbit untuk pengajuan ini. Jika ingin menghapus surat undangan, silakan melalui tab Komite Keperawatan.')
+    return
+  }
   selectedBerkas.value = berkas
   showDeleteModal.value = true
 }

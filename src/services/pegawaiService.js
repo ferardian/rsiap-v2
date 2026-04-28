@@ -103,6 +103,13 @@ export const pegawaiService = {
     },
 
     /**
+     * Get master list of credentials (PK I, II, etc)
+     */
+    getMasterKredensial(params = {}) {
+        return api.get('/sdi/master-kredensial', { params })
+    },
+
+    /**
      * Get list of employees for dropdown (simplified data)
      */
     getKaryawanList(params = {}) {
