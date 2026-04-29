@@ -309,7 +309,7 @@
          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="pagination-info">
                 <span class="text-muted fw-medium">Menampilkan </span>
-                <span class="badge bg-light text-primary rounded-pill px-3">{{ items.length }}</span>
+                <span class="badge bg-light text-primary rounded-pill px-3">{{ paginationRange }}</span>
                 <span class="text-muted fw-medium"> dari </span>
                 <span class="badge bg-light text-dark rounded-pill px-3">{{ total }}</span>
                 <span class="text-muted fw-medium"> data indikator</span>
@@ -509,6 +509,12 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('id-ID', options)
 }
 
+const paginationRange = computed(() => {
+    const from = (page.value - 1) * limit.value + 1
+    const to = (page.value - 1) * limit.value + items.value.length
+    return items.value.length > 0 ? `${from} - ${to}` : '0'
+})
+
 const displayedPages = computed(() => {
     const total = totalPages.value
     const current = page.value
@@ -643,13 +649,13 @@ const chartOptions = computed(() => {
 // Logic reused from AnalisaTab roughly
 const getRumusSymbol = (val) => {
     const map = {
-        '1': '=',
-        '2': '≤',
+        '1': '',
+        '2': '<=',
         '3': '<',
-        '4': '≥',
+        '4': '>=',
         '5': '>'
     }
-    return map[val] || val || ''
+    return (val in map) ? map[val] : (val || '')
 }
 
 const getStandar = (item) => {
@@ -666,9 +672,10 @@ const getStandar = (item) => {
     
     const std = (item.standar_utama) ? item.standar_utama : item.standar;
     const rumus = (item.rumus_utama) ? item.rumus_utama : item.rumus;
-    const satuan = (item.satuan_utama) ? item.satuan_utama : item.satuan;
+    let satuan = (item.satuan_utama) ? item.satuan_utama : item.satuan;
+    if (satuan === 'Persentase') satuan = '%'
     
-    return `${getRumusSymbol(rumus)} ${std} ${satuan || ''}`;
+    return `${getRumusSymbol(rumus)} ${std} ${satuan || ''}`.trim();
 }
 
 const isTercapai = (data, meta = null) => {
