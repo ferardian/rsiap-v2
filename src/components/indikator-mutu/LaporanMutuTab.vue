@@ -84,21 +84,21 @@
             </div>
 
             <!-- Action Area -->
-            <div class="col-lg-3">
-                <label class="filter-label d-none d-lg-block" style="visibility: hidden;">Action</label>
+            <div class="col-lg-2">
+                <label class="filter-label" style="visibility: hidden;">Action</label>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-refresh rounded-3" @click="fetchData" title="Refresh Data">
+                    <button class="btn btn-refresh rounded-3 btn-sm px-2" @click="fetchData" title="Refresh Data" style="height: 38px; width: 38px;">
                         <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
                     </button>
                     <div class="dropdown flex-grow-1" ref="exportDropdownRef">
-                        <button class="btn btn-outline-danger rounded-3 w-100 dropdown-toggle" type="button" @click.stop="toggleExportDropdown" :disabled="loading || printingProgress > 0">
+                        <button class="btn btn-outline-danger rounded-3 w-100 dropdown-toggle btn-sm fw-bold" type="button" @click.stop="toggleExportDropdown" :disabled="loading || printingProgress > 0" style="height: 38px;">
                             <i class="fas fa-file-pdf me-1"></i> 
-                            <span v-if="printingProgress > 0" class="small fw-bold">Processing {{ printingProgress }}%</span>
-                            <span v-else class="small fw-bold">Export PDF</span>
+                            <span v-if="printingProgress > 0" style="font-size: 10px;">{{ printingProgress }}%</span>
+                            <span v-else>PDF</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 show" v-if="showExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 show" v-if="showExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 200px;">
                             <li><a class="dropdown-item py-2" @click.prevent="handleExportRekap" href="#"><i class="fas fa-list-alt me-2 text-primary"></i> Rekapitulasi (Tabel)</a></li>
-                            <li><a class="dropdown-item py-2" @click.prevent="handleExportFull" href="#"><i class="fas fa-file-medical me-2 text-danger"></i> Laporan Lengkap (Semua Grafik)</a></li>
+                            <li><a class="dropdown-item py-2" @click.prevent="handleExportFull" href="#"><i class="fas fa-file-medical me-2 text-danger"></i> Laporan Lengkap (Semua)</a></li>
                         </ul>
                     </div>
                 </div>
