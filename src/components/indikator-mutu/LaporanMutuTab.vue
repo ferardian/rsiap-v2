@@ -19,6 +19,9 @@
                             
                             <input type="radio" name="tipe" id="semester" value="semester" v-model="filters.tipe" hidden>
                             <label for="semester">Semester</label>
+
+                            <input type="radio" name="tipe" id="tahunan" value="tahunan" v-model="filters.tipe" hidden>
+                            <label for="tahunan">Tahunan</label>
                             <div class="selection-slider"></div>
                         </div>
                     </div>
@@ -41,12 +44,15 @@
                             <label for="p4">IV</label>
                             <div class="selection-slider"></div>
                         </div>
-                        <div class="custom-segmented-control" v-else>
+                        <div class="custom-segmented-control period-selector" v-else-if="filters.tipe === 'semester'">
                             <input type="radio" name="periode-s" id="s1" :value="1" v-model="filters.periode" @change="fetchData" hidden>
                             <label for="s1">Semester 1</label>
                             <input type="radio" name="periode-s" id="s2" :value="2" v-model="filters.periode" @change="fetchData" hidden>
                             <label for="s2">Semester 2</label>
                             <div class="selection-slider"></div>
+                        </div>
+                        <div class="custom-segmented-control bg-light-subtle" v-else>
+                            <label class="w-100 text-center small fw-bold text-primary">SETAHUN PENUH</label>
                         </div>
                     </div>
                     <div class="flex-grow-1">
