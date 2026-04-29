@@ -82,9 +82,24 @@
                 </div>
                 
                  <div class="mb-3">
-                    <label class="form-label fw-bold">Link ke Master Utama (ID)</label>
-                    <input type="number" class="form-control" v-model="form.id_master" placeholder="ID Master Inmut Utama (Optional)">
-                    <small class="text-muted">Isi jika indikator ini turunan dari Master Utama</small>
+                    <label class="form-label fw-bold">Link ke Master Utama</label>
+                    <v-select 
+                        :options="masterUtamaList" 
+                        label="nama_inmut" 
+                        v-model="form.id_master"
+                        :reduce="item => item.id_master"
+                        placeholder="Cari & Pilih Master Utama (Optional)"
+                        class="style-chooser"
+                        @update:modelValue="handleMasterUtamaChange"
+                    >
+                        <template #option="{ nama_inmut, kategori }">
+                            <div>
+                                <div class="fw-bold">{{ nama_inmut }}</div>
+                                <small class="text-muted">{{ kategori }}</small>
+                            </div>
+                        </template>
+                    </v-select>
+                    <small class="text-muted">Hubungkan indikator ini dengan Master Utama jika tersedia</small>
                 </div>
             </div>
 
@@ -147,6 +162,7 @@
 <script setup>
 import { ref, reactive, watch, onMounted } from 'vue'
 import departemenService from '@/services/departemenService'
+import indikatorMutuService from '@/services/indikatorMutuService'
 
 const props = defineProps({
   visible: Boolean,
@@ -177,6 +193,7 @@ const form = reactive({
 
 const isEdit = ref(false)
 const departments = ref([])
+const masterUtamaList = ref([])
 const selectedDepartment = ref(null)
 const selectedJenisIndikator = ref(null)
 
@@ -184,8 +201,7 @@ const jenisIndikatorOptions = [
     { value: 'Indikator Mutu Nasional', label: 'Indikator Mutu Nasional', id: 2 },
     { value: 'Indikator Mutu Prioritas Rumah Sakit', label: 'Indikator Mutu Prioritas Rumah Sakit', id: 3 },
     { value: 'Indikato Mutu Prioritas Unit', label: 'Indikato Mutu Prioritas Unit', id: 4 },
-    { value: 'Indikator Mutu Unit', label: 'Indikator Mutu Unit', id: 5 },
-    { value: 'Indikator Mutu Prioritas Rumah Sakit/SKP', label: 'Indikator Mutu Prioritas Rumah Sakit/SKP', id: 6 }
+    { value: 'Indikator Mutu Unit', label: 'Indikator Mutu Unit', id: 5 }
 ]
 
 watch(() => props.initialData, (newVal) => {
@@ -235,6 +251,15 @@ const fetchDepartments = async () => {
     }
 }
 
+const fetchMasterUtama = async () => {
+    try {
+        const response = await indikatorMutuService.getUtama({ limit: 1000 })
+        masterUtamaList.value = response.data.data.data || []
+    } catch (error) {
+        console.error('Error fetching Master Utama:', error)
+    }
+}
+
 const handleDepartmentChange = (depId) => {
     form.dep_id = depId
     const dept = departments.value.find(d => d.dep_id === depId)
@@ -251,11 +276,39 @@ const handleJenisChange = (value) => {
     }
 }
 
+const handleMasterUtamaChange = (idMaster) => {
+    if (!idMaster) return
+
+    const master = masterUtamaList.value.find(m => m.id_master === idMaster)
+    if (master) {
+        // Auto-fill form fields from Master Utama
+        form.nama_inmut = master.nama_inmut
+        form.nama_jenis = master.kategori
+        form.satuan = master.satuan
+        form.standar = master.standar
+        form.rumus = master.rumus
+        form.ket_num = master.ket_num
+        form.ket_denum = master.ket_denum
+        form.definisi_operasional = master.definisi
+        form.formula = master.formula
+
+        // Also update the selected jenis indikator dropdown if matched
+        selectedJenisIndikator.value = master.kategori
+        
+        // Find and set id_jenis based on kategori
+        const jenis = jenisIndikatorOptions.find(j => j.value === master.kategori)
+        if (jenis) {
+            form.id_jenis = jenis.id
+        }
+    }
+}
+
 const save = () => {
     emit('save', { ...form })
 }
 
 onMounted(() => {
     fetchDepartments()
+    fetchMasterUtama()
 })
 </script>

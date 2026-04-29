@@ -1,96 +1,167 @@
 <template>
-  <div class="container-fluid p-0">
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <h3 class="fw-bold text-primary mb-1">
-          <i class="fas fa-database me-2"></i>Master Indikator Mutu
+  <div class="container-fluid py-4 px-4">
+    <div class="row mb-4 align-items-center">
+      <div class="col-12">
+        <h3 class="fw-bold text-dark mb-1">
+          <i class="fas fa-database text-primary me-2"></i> Master Indikator Mutu
         </h3>
-        <p class="text-muted mb-0">Kelola master data indikator mutu utama dan ruangan</p>
-      </div>
-      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2">
-         <div class="input-group" style="max-width: 300px;">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="fas fa-search text-muted"></i>
-          </span>
-          <input 
-            type="text" 
-            class="form-control border-start-0 ps-0" 
-            :placeholder="activeTab === 'utama' ? 'Cari Inmut Utama...' : 'Cari Inmut Ruang...'"
-            v-model="filters.keyword"
-            @keyup.enter="refreshData"
-          >
-        </div>
-        <button class="btn btn-primary" @click="openCreateModal">
-          <i class="fas fa-plus me-1"></i> Tambah
-        </button>
+        <p class="text-muted">Kelola master data indikator mutu utama dan ruangan secara terpusat</p>
       </div>
     </div>
 
     <!-- Tabs Header -->
-    <ul class="nav nav-tabs mb-3">
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 shadow-sm border d-inline-flex">
       <li class="nav-item">
-        <a class="nav-link" :class="{ active: activeTab === 'utama' }" href="#" @click.prevent="switchTab('utama')">
-            <i class="fas fa-star me-1"></i> Master Utama
-        </a>
+        <button 
+          class="nav-link px-4 py-2 fw-semibold" 
+          :class="{ active: activeTab === 'utama' }"
+          @click="switchTab('utama')"
+        >
+          <i class="fas fa-star me-2"></i> Master Utama
+        </button>
       </li>
       <li class="nav-item">
-        <a class="nav-link" :class="{ active: activeTab === 'ruang' }" href="#" @click.prevent="switchTab('ruang')">
-            <i class="fas fa-hospital-alt me-1"></i> Master Indikator Ruang
-        </a>
+        <button 
+          class="nav-link px-4 py-2 fw-semibold" 
+          :class="{ active: activeTab === 'ruang' }"
+          @click="switchTab('ruang')"
+        >
+          <i class="fas fa-hospital me-2"></i> Master Indikator Ruang
+        </button>
       </li>
     </ul>
 
-    <!-- Tab Content -->
-    <div v-show="activeTab === 'utama'">
-        <MasterUtamaTable 
-            :items="utama.items" 
-            :loading="utama.loading"
-            :total="utama.total"
-            :page="utama.page"
-            :limit="utama.limit"
-            :totalPages="utama.totalPages"
-            @change-page="p => changePage('utama', p)"
-            @edit="openEditModal"
-            @delete="deleteItem"
-        />
-    </div>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+      <div class="card-header bg-primary border-0 py-3 px-4">
+        <div class="d-flex flex-wrap flex-lg-nowrap gap-3 align-items-center justify-content-between">
+          <!-- Search & Filters Group -->
+          <div class="d-flex flex-grow-1 gap-2 align-items-center">
+            <!-- Search -->
+            <div class="input-group shadow-sm rounded-3 overflow-hidden border action-item bg-white" style="max-width: 400px;">
+              <span class="input-group-text bg-white border-0 pe-1 ps-3">
+                <i class="fas fa-search text-muted"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control border-0 ps-2 py-0" 
+                placeholder="Cari indikator, PJ, atau kategori..."
+                v-model="filters.keyword"
+                @keyup.enter="refreshData"
+              >
+            </div>
 
-    <div v-show="activeTab === 'ruang'">
-        <MasterRuangTable 
-            :items="ruang.items" 
-            :loading="ruang.loading"
-            :total="ruang.total"
-            :page="ruang.page"
-            :limit="ruang.limit"
-            :totalPages="ruang.totalPages"
-            @change-page="p => changePage('ruang', p)"
-            @edit="openEditModal"
-            @delete="deleteItem"
-        />
+            <!-- Filter Kategori (Only for Utama) -->
+            <select 
+              v-if="activeTab === 'utama'"
+              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select" 
+              style="width: 280px;"
+              v-model="filters.kategori"
+              @change="refreshData"
+            >
+              <option value="">Semua Kategori</option>
+              <option value="Indikator Mutu Nasional">Indikator Mutu Nasional</option>
+              <option value="Indikator Mutu Prioritas Rumah Sakit">Indikator Mutu Prioritas Rumah Sakit</option>
+              <option value="Indikator Mutu Prioritas Unit">Indikator Mutu Prioritas Unit</option>
+              <option value="Indikator Mutu Unit">Indikator Mutu Unit</option>
+            </select>
+
+            <!-- Filter Unit (Only for Ruang) -->
+            <select 
+              v-if="activeTab === 'ruang'"
+              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select flex-grow-1" 
+              style="max-width: 350px;"
+              v-model="filters.dep_id"
+              @change="refreshData"
+            >
+              <option value="">Semua Unit/Dep</option>
+              <option value="all">Semua Ruangan</option>
+              <option v-for="unit in units" :key="unit.dep_id" :value="unit.dep_id">
+                {{ unit.nama_ruang }}
+              </option>
+            </select>
+
+            <!-- Filter Status (Only for Ruang) -->
+            <select 
+              v-if="activeTab === 'ruang'"
+              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select" 
+              style="width: 160px;"
+              v-model="filters.status"
+              @change="refreshData"
+            >
+              <option value="">Semua Status</option>
+              <option value="1">Aktif</option>
+              <option value="2">Non-Aktif</option>
+            </select>
+          </div>
+
+          <!-- Action Button Group -->
+          <div class="mt-2 mt-lg-0 ps-lg-2">
+            <button 
+              class="btn btn-add-gradient px-5 rounded-3 shadow-sm fw-bold action-item"
+              @click="openCreateModal"
+            >
+              <i class="fas fa-plus me-2"></i> Tambah Indikator
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <transition name="fade" mode="out-in">
+          <div v-if="activeTab === 'utama'" key="utama">
+            <MasterUtamaTable 
+              :items="utama.items" 
+              :loading="utama.loading"
+              :total="utama.total"
+              :page="utama.page"
+              :limit="utama.limit"
+              :totalPages="utama.totalPages"
+              @change-page="p => changePage('utama', p)"
+              @edit="openEditModal"
+              @delete="deleteItem"
+            />
+          </div>
+          <div v-else key="ruang">
+            <MasterRuangTable 
+              :items="ruang.items" 
+              :loading="ruang.loading"
+              :total="ruang.total"
+              :page="ruang.page"
+              :limit="ruang.limit"
+              :totalPages="ruang.totalPages"
+              @change-page="p => changePage('ruang', p)"
+              @edit="openEditModal"
+              @delete="deleteItem"
+            />
+          </div>
+        </transition>
+      </div>
     </div>
 
     <!-- Modals -->
     <MasterUtamaForm 
-        :visible="showUtamaModal" 
-        :initial-data="selectedItem"
-        :is-saving="isSaving"
-        @close="closeModals"
-        @save="handleSaveUtama"
+      v-if="showUtamaModal" 
+      :visible="showUtamaModal"
+      :initial-data="selectedItem"
+      :is-saving="isSaving"
+      @close="closeModals"
+      @save="handleSaveUtama"
     />
 
     <MasterRuangForm 
-        :visible="showRuangModal" 
-        :initial-data="selectedItem"
-        :is-saving="isSaving"
-        @close="closeModals"
-        @save="handleSaveRuang"
+      v-if="showRuangModal" 
+      :visible="showRuangModal"
+      :initial-data="selectedItem"
+      :is-saving="isSaving"
+      @close="closeModals"
+      @save="handleSaveRuang"
     />
 
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import api from '@/services/indikatorMutuService'
@@ -102,8 +173,14 @@ import MasterRuangForm from '@/components/indikator-mutu/MasterRuangForm.vue'
 
 const toast = useToast()
 const activeTab = ref('utama')
-const filters = reactive({ keyword: '' })
+const filters = reactive({ 
+    keyword: '',
+    kategori: '',
+    status: '1', // Default Aktif
+    dep_id: ''
+})
 const isSaving = ref(false)
+const units = ref([])
 
 // State for Master Utama
 const utama = reactive({
@@ -132,7 +209,10 @@ const selectedItem = ref({})
 // Methods
 const switchTab = (tab) => {
     activeTab.value = tab
-    filters.keyword = '' // Reset filter on tab switch or keep it? user preference. Let's reset to avoid confusion.
+    filters.keyword = '' 
+    filters.kategori = ''
+    filters.status = tab === 'ruang' ? '1' : '' // Default Aktif for Ruang
+    filters.dep_id = ''
     refreshData()
 }
 
@@ -144,6 +224,15 @@ const refreshData = () => {
     }
 }
 
+const fetchUnits = async () => {
+    try {
+        const response = await api.getUnits()
+        units.value = response.data.data
+    } catch (error) {
+        console.error('Gagal memuat daftar unit:', error)
+    }
+}
+
 const fetchUtama = async () => {
     utama.loading = true
     try {
@@ -152,6 +241,8 @@ const fetchUtama = async () => {
             limit: utama.limit,
             keyword: filters.keyword
         }
+        if (filters.kategori) params.kategori = filters.kategori
+        
         const response = await api.getUtama(params)
         const data = response.data.data
         utama.items = data.data
@@ -173,6 +264,9 @@ const fetchRuang = async () => {
             limit: ruang.limit,
             keyword: filters.keyword
         }
+        if (filters.status !== '') params.status = filters.status
+        if (filters.dep_id) params.dep_id = filters.dep_id
+
         const response = await api.getRuang(params)
         const data = response.data.data
         ruang.items = data.data
@@ -292,8 +386,129 @@ const deleteItem = async (item) => {
 
 // Initial Load
 onMounted(() => {
+    fetchUnits()
     refreshData()
 })
 
 // Watch filters.keyword with debounce if needed, currently on Enter key
 </script>
+
+<style scoped>
+.container-fluid {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.nav-pills {
+    padding: 0.5rem;
+}
+
+.nav-pills .nav-link {
+    color: #6c757d;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: #f1f3f5;
+    color: #495057;
+}
+
+.action-item {
+    height: 42px !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+}
+
+.action-item .form-control {
+    height: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.custom-select {
+    cursor: pointer;
+    background-position: right 0.75rem center;
+    background-size: 12px 10px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    height: 42px !important;
+}
+
+.custom-select:focus {
+    border-color: #fff !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn-add-gradient {
+    height: 42px !important;
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    margin: 0;
+}
+
+.btn-add-gradient:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4) !important;
+    color: white;
+    filter: brightness(1.1);
+}
+
+.btn-add-gradient:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.rounded-4 {
+    border-radius: 1rem !important;
+}
+
+/* Animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .nav-pills {
+        width: 100%;
+        display: flex !important;
+    }
+    
+    .nav-pills .nav-item {
+        flex: 1;
+    }
+    
+    .nav-pills .nav-link {
+        width: 100%;
+        text-align: center;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+}
+</style>
