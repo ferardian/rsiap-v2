@@ -84,15 +84,23 @@
             </div>
 
             <!-- Action Area -->
-            <div class="col-lg-2">
+            <div class="col-lg-3">
                 <label class="filter-label d-none d-lg-block" style="visibility: hidden;">Action</label>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-refresh rounded-3 flex-grow-1" @click="fetchData" title="Refresh Data">
+                    <button class="btn btn-refresh rounded-3" @click="fetchData" title="Refresh Data">
                         <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
                     </button>
-                    <button class="btn btn-outline-danger rounded-3 px-3" @click="exportRekapToPDF" title="Export Rekap PDF" :disabled="loading">
-                        <i class="fas fa-file-pdf me-1"></i> <span class="small fw-bold">PDF</span>
-                    </button>
+                    <div class="dropdown flex-grow-1" ref="exportDropdownRef">
+                        <button class="btn btn-outline-danger rounded-3 w-100 dropdown-toggle" type="button" @click.stop="toggleExportDropdown" :disabled="loading || printingProgress > 0">
+                            <i class="fas fa-file-pdf me-1"></i> 
+                            <span v-if="printingProgress > 0" class="small fw-bold">Processing {{ printingProgress }}%</span>
+                            <span v-else class="small fw-bold">Export PDF</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 show" v-if="showExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050;">
+                            <li><a class="dropdown-item py-2" @click.prevent="handleExportRekap" href="#"><i class="fas fa-list-alt me-2 text-primary"></i> Rekapitulasi (Tabel)</a></li>
+                            <li><a class="dropdown-item py-2" @click.prevent="handleExportFull" href="#"><i class="fas fa-file-medical me-2 text-danger"></i> Laporan Lengkap (Semua Grafik)</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -347,12 +355,23 @@
       </div>
     </div>
 
+    <!-- Hidden Chart for Batch Export -->
+    <div style="position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none;">
+        <apexchart 
+            v-if="printChartData"
+            ref="printChartRef"
+            :options="printChartOptions"
+            :series="printChartData.series"
+            width="600"
+            height="300"
+        />
+    </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue'
 import api from '@/services/indikatorMutuService'
 import VueApexCharts from 'vue3-apexcharts'
 import { jsPDF } from 'jspdf'
@@ -375,7 +394,43 @@ const detailLoading = ref(false)
 const detailData = ref(null)
 const chartRef = ref(null)
 
+// Batch Printing State
+const printChartRef = ref(null)
+const printChartData = ref(null)
+const printingProgress = ref(0)
+const showExportDropdown = ref(false)
+const exportDropdownRef = ref(null)
+
+const toggleExportDropdown = () => {
+    showExportDropdown.value = !showExportDropdown.value
+}
+
+const handleExportRekap = () => {
+    showExportDropdown.value = false
+    exportRekapToPDF()
+}
+
+const handleExportFull = () => {
+    showExportDropdown.value = false
+    exportFullReportToPDF()
+}
+
+const handleClickOutside = (event) => {
+    if (exportDropdownRef.value && !exportDropdownRef.value.contains(event.target)) {
+        showExportDropdown.value = false
+    }
+}
+
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+
+const printChartOptions = {
+    chart: { type: 'line', toolbar: { show: false }, animations: { enabled: false } },
+    stroke: { curve: 'smooth', width: 3 },
+    markers: { size: 5 },
+    xaxis: { categories: monthNames },
+    yaxis: { min: 0, max: 100 },
+    colors: ['#435ebe']
+}
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
 
 const currentYear = new Date().getFullYear()
@@ -638,6 +693,11 @@ const isTercapai = (data, meta = null) => {
 onMounted(() => {
     fetchUnits()
     fetchData()
+    window.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('click', handleClickOutside)
 })
 
 const exportDetailToPDF = async (data) => {
@@ -828,6 +888,131 @@ const exportRekapToPDF = async () => {
     });
     
     doc.save(`Rekap_Mutu_${filters.tahun}_${filters.tipe}_${filters.periode}.pdf`);
+}
+
+const exportFullReportToPDF = async () => {
+    loading.value = true;
+    printingProgress.value = 1;
+    
+    try {
+        // 1. Fetch ALL Indicators
+        const params = {
+            page: 1,
+            limit: 1000,
+            tahun: filters.tahun,
+            tipe: filters.tipe,
+            periode: filters.periode,
+            dep_id: filters.unit,
+            jenis: filters.jenis
+        }
+        const response = await api.getLaporan(params)
+        const allItems = response.data.data.data
+        
+        if (allItems.length === 0) {
+            toast.warning('Tidak ada data untuk diekspor');
+            return;
+        }
+
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const totalItems = allItems.length;
+
+        for (let i = 0; i < totalItems; i++) {
+            const item = allItems[i];
+            printingProgress.value = Math.round(((i) / totalItems) * 100);
+            
+            // 2. Fetch Detail for this indicator
+            const detailRes = await api.getLaporanDetail({
+                id_inmut: item.id_inmut,
+                tahun: filters.tahun,
+                tipe: filters.tipe,
+                periode: filters.periode
+            });
+            const monthly = detailRes.data.data.monthly;
+
+            // 3. Render Chart to Hidden Component
+            printChartData.value = {
+                series: [{
+                    name: 'Capaian',
+                    data: monthly.map(m => m.score)
+                }]
+            };
+            
+            // Wait for Vue to render and ApexCharts to be ready
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            let chartImg = null;
+            if (printChartRef.value) {
+                const uri = await printChartRef.value.dataURI();
+                chartImg = uri.imgURI;
+            }
+
+            // 4. Build PDF Page
+            if (i > 0) doc.addPage();
+            
+            // Page Header (Simple version for all-in-one)
+            doc.setFillColor(67, 94, 190);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+            doc.text('LAPORAN INDIKATOR MUTU', 105, 12, { align: 'center' });
+            doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+            doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun} | RSIA AISYIYAH PEKAJANGAN`, 105, 18, { align: 'center' });
+
+            // Content
+            doc.setTextColor(33, 37, 41);
+            doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+            doc.text(`${i+1}. ${item.nama_inmut}`, 15, 40, { maxWidth: 180 });
+            
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+            doc.text(`Unit: ${item.nama_ruang || '-'}`, 15, 50);
+            
+            // Summary Box
+            doc.setDrawColor(226, 232, 240); doc.setFillColor(248, 250, 252);
+            doc.roundedRect(15, 55, 180, 20, 2, 2, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.text('Target:', 20, 65); doc.text(getStandar(item), 45, 65);
+            doc.text('Capaian:', 100, 65); 
+            doc.setTextColor(isTercapai(item) ? 21 : 220, isTercapai(item) ? 128 : 53, isTercapai(item) ? 61 : 69);
+            doc.text(`${item.score}% (${isTercapai(item) ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 118, 65);
+            doc.setTextColor(33, 37, 41);
+
+            // Chart Image
+            if (chartImg) {
+                doc.addImage(chartImg, 'PNG', 15, 80, 180, 75);
+            }
+
+            // Table
+            const tableHead = [['Bulan', 'Num', 'Denum', 'Score', 'Status']];
+            const tableBody = monthly.map(m => [
+                getMonthName(m.bulan), m.total_num, m.total_denum, `${m.score}%`,
+                isTercapai(m, item) ? 'Tercapai' : 'Gagal'
+            ]);
+
+            autoTable(doc, {
+                head: tableHead,
+                body: tableBody,
+                startY: 160,
+                theme: 'grid',
+                headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
+                styles: { fontSize: 8 },
+                didParseCell: function(data) {
+                    if (data.column.index === 4 && data.cell.section === 'body') {
+                        data.cell.styles.textColor = data.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
+                    }
+                }
+            });
+        }
+
+        printingProgress.value = 100;
+        doc.save(`Laporan_Lengkap_Mutu_${filters.tahun}_${filters.tipe}.pdf`);
+        toast.success('Laporan lengkap berhasil dibuat');
+    } catch (error) {
+        console.error('Full report export failed', error);
+        toast.error('Gagal membuat laporan lengkap');
+    } finally {
+        loading.value = false;
+        setTimeout(() => { printingProgress.value = 0; }, 2000);
+    }
 }
 </script>
 
