@@ -70,7 +70,7 @@
             </div>
             
             <!-- Unit / Dep Filter -->
-            <div class="col-lg-4" v-if="filters.jenis !== 'group'">
+            <div class="col-lg-3" v-if="filters.jenis !== 'group'">
                 <label class="filter-label"><i class="fas fa-hospital-user me-1"></i> Unit / Ruang</label>
                 <v-select 
                     :options="units" 
@@ -84,11 +84,16 @@
             </div>
 
             <!-- Action Area -->
-            <div class="col-lg-1">
+            <div class="col-lg-2">
                 <label class="filter-label d-none d-lg-block" style="visibility: hidden;">Action</label>
-                <button class="btn btn-refresh rounded-3 w-100" @click="fetchData" title="Refresh Data">
-                    <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
-                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-refresh rounded-3 flex-grow-1" @click="fetchData" title="Refresh Data">
+                        <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
+                    </button>
+                    <button class="btn btn-outline-danger rounded-3 px-3" @click="exportRekapToPDF" title="Export Rekap PDF" :disabled="loading">
+                        <i class="fas fa-file-pdf me-1"></i> <span class="small fw-bold">PDF</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -200,18 +205,23 @@
                                 </div>
                               </div>
                             </div>
-                            <div class="col-md-5">
-                              <div class="target-card-mini mb-3">
-                                <div class="d-flex justify-content-between align-items-center">
-                                  <span class="text-muted small fw-bold">TARGET / STANDAR</span>
-                                  <span class="target-value">{{ getStandar(detailData.indicator) }}</span>
+                                <div class="col-md-5">
+                                  <div class="d-flex justify-content-between align-items-start mb-3">
+                                      <div class="target-card-mini flex-grow-1 me-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                          <span class="text-muted small fw-bold">TARGET / STANDAR</span>
+                                          <span class="target-value">{{ getStandar(detailData.indicator) }}</span>
+                                        </div>
+                                      </div>
+                                      <button class="btn btn-outline-danger btn-sm rounded-3 shadow-sm px-3" @click="exportDetailToPDF(detailData)" title="Download PDF Laporan">
+                                          <i class="fas fa-file-pdf me-1"></i> PDF
+                                      </button>
+                                  </div>
+                                  <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted small fw-bold">PERIODE</span>
+                                    <span class="text-dark fw-bold">{{ filters.tipe.toUpperCase() }} {{ filters.periode }} - {{ filters.tahun }}</span>
+                                  </div>
                                 </div>
-                              </div>
-                              <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted small fw-bold">PERIODE</span>
-                                <span class="text-dark fw-bold">{{ filters.tipe.toUpperCase() }} {{ filters.periode }} - {{ filters.tahun }}</span>
-                              </div>
-                            </div>
                           </div>
                         </div>
 
@@ -266,6 +276,7 @@
                               <div class="card-body p-2">
                                 <apexchart 
                                   v-if="chartSeries.length > 0"
+                                  ref="chartRef"
                                   width="100%" 
                                   height="280" 
                                   :options="chartOptions" 
@@ -344,6 +355,8 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import api from '@/services/indikatorMutuService'
 import VueApexCharts from 'vue3-apexcharts'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const apexchart = VueApexCharts
 
@@ -360,6 +373,7 @@ const periodeInfo = ref(null)
 const expandedRowId = ref(null)
 const detailLoading = ref(false)
 const detailData = ref(null)
+const chartRef = ref(null)
 
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
@@ -625,6 +639,196 @@ onMounted(() => {
     fetchUnits()
     fetchData()
 })
+
+const exportDetailToPDF = async (data) => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const indicator = data.indicator;
+    const monthly = data.monthly;
+    
+    // Header
+    doc.setFillColor(67, 94, 190); // Primary color #435ebe
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 18, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('RSIA AISYIYAH PEKAJANGAN', 105, 25, { align: 'center' });
+    doc.text('Sistem Monitoring Indikator Mutu Digital', 105, 30, { align: 'center' });
+    
+    // Content Info
+    doc.setTextColor(33, 37, 41);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(indicator.nama_inmut_utama || indicator.nama_inmut, 15, 55);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Unit / Ruang: ${indicator.nama_ruang || '-'}`, 15, 62);
+    doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, 15, 67);
+    
+    // Summary Box
+    doc.setDrawColor(226, 232, 240);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(15, 75, 180, 25, 2, 2, 'FD');
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Target / Standar:', 25, 85);
+    doc.text(getStandar(indicator), 65, 85);
+    
+    const overallScore = indicator.score || 0;
+    doc.text('Total Capaian:', 25, 92);
+    doc.setTextColor(isTercapai(indicator) ? 21 : 220, isTercapai(indicator) ? 128 : 53, isTercapai(indicator) ? 61 : 69);
+    doc.text(`${overallScore}%`, 65, 92);
+    doc.text(`(${isTercapai(indicator) ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, 92);
+    
+    doc.setTextColor(33, 37, 41);
+    
+    // Chart
+    // In Vue 3, ref inside v-for results in an array
+    const chartInstance = Array.isArray(chartRef.value) ? chartRef.value[0] : chartRef.value;
+    
+    if (chartInstance) {
+        try {
+            const chartDataURI = await chartInstance.dataURI();
+            if (chartDataURI && chartDataURI.imgURI) {
+                doc.setFont('helvetica', 'bold');
+                doc.text('Grafik Tren Capaian Bulanan:', 15, 115);
+                doc.addImage(chartDataURI.imgURI, 'PNG', 15, 120, 180, 80);
+            }
+        } catch (e) {
+            console.error('Chart export failed', e);
+        }
+    }
+    
+    // Table
+    const tableHead = [['Bulan', 'Numerator', 'Denominator', 'Capaian (%)', 'Status']];
+    const tableBody = monthly.map(m => [
+        `${getMonthName(m.bulan)} ${m.tahun}`,
+        m.total_num,
+        m.total_denum,
+        `${m.score}%`,
+        isTercapai(m, indicator) ? 'Tercapai' : 'Gagal'
+    ]);
+    
+    autoTable(doc, {
+        head: tableHead,
+        body: tableBody,
+        startY: chartInstance ? 210 : 120,
+        theme: 'grid',
+        headStyles: { fillColor: [67, 94, 190], halign: 'center' },
+        columnStyles: {
+            0: { cellWidth: 50 },
+            1: { halign: 'center' },
+            2: { halign: 'center' },
+            3: { halign: 'center', fontStyle: 'bold' },
+            4: { halign: 'center' }
+        },
+        didParseCell: function(data) {
+            if (data.column.index === 4 && data.cell.section === 'body') {
+                if (data.cell.text[0] === 'Tercapai') {
+                    data.cell.styles.textColor = [21, 128, 61];
+                } else {
+                    data.cell.styles.textColor = [220, 53, 69];
+                }
+            }
+        }
+    });
+    
+    // Footer - Page Number
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Halaman ${i} dari ${pageCount}`, 105, 285, { align: 'center' });
+        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 200, 285, { align: 'right' });
+    }
+    
+    doc.save(`Laporan_Indikator_${indicator.nama_inmut.replace(/\s+/g, '_')}_${filters.tahun}.pdf`);
+}
+
+const exportRekapToPDF = async () => {
+    loading.value = true;
+    let allItems = [];
+    try {
+        const params = {
+            page: 1,
+            limit: 1000,
+            tahun: filters.tahun,
+            tipe: filters.tipe,
+            periode: filters.periode,
+            dep_id: filters.unit,
+            jenis: filters.jenis
+        }
+        const response = await api.getLaporan(params)
+        allItems = response.data.data.data
+    } catch (error) {
+        console.error('Failed to fetch all data for PDF', error);
+        allItems = items.value; // fallback to current page
+    } finally {
+        loading.value = false;
+    }
+
+    const doc = new jsPDF('l', 'mm', 'a4');
+    
+    // Header
+    doc.setFillColor(67, 94, 190);
+    doc.rect(0, 0, 297, 35, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REKAPITULASI CAPAIAN INDIKATOR MUTU', 148, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const unitText = filters.unit ? units.value.find(u => u.dep_id === filters.unit)?.nama_ruang : 'Seluruh Unit';
+    doc.text(`Unit: ${unitText} | Periode: ${filters.tipe.toUpperCase()} ${filters.periode} Tahun ${filters.tahun}`, 148, 22, { align: 'center' });
+    doc.text('RSIA AISYIYAH PEKAJANGAN', 148, 27, { align: 'center' });
+    
+    const tableHead = [['#', 'Indikator', 'Unit/Ruang', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Status']];
+    const tableBody = allItems.map((item, index) => [
+        index + 1,
+        item.nama_inmut,
+        item.nama_ruang,
+        getStandar(item),
+        item.total_num,
+        item.total_denum,
+        `${item.score}%`,
+        isTercapai(item) ? 'Tercapai' : 'Tidak Tercapai'
+    ]);
+    
+    autoTable(doc, {
+        head: tableHead,
+        body: tableBody,
+        startY: 45,
+        theme: 'grid',
+        headStyles: { fillColor: [67, 94, 190], halign: 'center' },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            1: { cellWidth: 80 },
+            4: { halign: 'center' },
+            5: { halign: 'center' },
+            6: { halign: 'center', fontStyle: 'bold' },
+            7: { halign: 'center' }
+        },
+        didParseCell: function(data) {
+             if (data.column.index === 7 && data.cell.section === 'body') {
+                if (data.cell.text[0] === 'Tercapai') {
+                    data.cell.styles.textColor = [21, 128, 61];
+                } else {
+                    data.cell.styles.textColor = [220, 53, 69];
+                }
+            }
+        }
+    });
+    
+    doc.save(`Rekap_Mutu_${filters.tahun}_${filters.tipe}_${filters.periode}.pdf`);
+}
 </script>
 
 <style scoped>
