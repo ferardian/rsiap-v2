@@ -742,15 +742,20 @@ const exportDetailToPDF = async (data) => {
     doc.setFillColor(248, 250, 252);
     doc.roundedRect(15, 75, 180, 25, 2, 2, 'FD');
     
+    // Calculate Overall Summary
+    const totalNum = monthly.reduce((sum, m) => sum + (parseFloat(m.total_num) || 0), 0);
+    const totalDenum = monthly.reduce((sum, m) => sum + (parseFloat(m.total_denum) || 0), 0);
+    const overallScore = totalDenum > 0 ? ((totalNum / totalDenum) * 100).toFixed(2) : 0;
+    const isTotalTercapai = isTercapai({ ...indicator, score: overallScore });
+    
     doc.setFont('helvetica', 'bold');
     doc.text('Target / Standar:', 25, 85);
     doc.text(getStandar(indicator), 65, 85);
     
-    const overallScore = indicator.score || 0;
     doc.text('Total Capaian:', 25, 92);
-    doc.setTextColor(isTercapai(indicator) ? 21 : 220, isTercapai(indicator) ? 128 : 53, isTercapai(indicator) ? 61 : 69);
+    doc.setTextColor(isTotalTercapai ? 21 : 220, isTotalTercapai ? 128 : 53, isTotalTercapai ? 61 : 69);
     doc.text(`${overallScore}%`, 65, 92);
-    doc.text(`(${isTercapai(indicator) ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, 92);
+    doc.text(`(${isTotalTercapai ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, 92);
     
     doc.setTextColor(33, 37, 41);
     
