@@ -36,9 +36,7 @@
                 <small class="text-muted">{{ item.nama_ruang }}</small>
               </td>
               <td>
-                 {{ getRumusSymbol(item.rumus || item.rumus_utama) }} 
-                 {{ item.standar || item.standar_utama }} 
-                 {{ item.satuan || item.satuan_utama }}
+                 {{ getStandar(item) }}
               </td>
               <td class="text-center">{{ item.total_num }}</td>
               <td class="text-center">{{ item.total_denum }}</td>
@@ -66,7 +64,7 @@
      <div class="card-footer bg-white border-top py-3">
       <div class="d-flex justify-content-between align-items-center">
         <small class="text-muted">
-          Menampilkan {{ items.length }} dari {{ total }} data
+          Menampilkan {{ paginationRange }} dari {{ total }} data
         </small>
         <nav aria-label="Page navigation" v-if="totalPages > 1">
           <ul class="pagination pagination-sm mb-0">
@@ -87,7 +85,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   items: Array,
   loading: Boolean,
   total: Number,
@@ -100,14 +100,30 @@ defineEmits(['detail', 'change-page'])
 
 const getRumusSymbol = (val) => {
     const map = {
-        '1': '=',
-        '2': '≤',
+        '1': '',
+        '2': '<=',
         '3': '<',
-        '4': '≥',
+        '4': '>=',
         '5': '>'
     }
-    return map[val] || val || ''
+    return (val in map) ? map[val] : (val || '')
 }
+
+const getStandar = (item) => {
+    if (!item) return '-'
+    const rumus = item.rumus || item.rumus_utama
+    const std = item.standar || item.standar_utama
+    let satuan = item.satuan || item.satuan_utama
+    if (satuan === 'Persentase') satuan = '%'
+    
+    return `${getRumusSymbol(rumus)} ${std} ${satuan || ''}`.trim()
+}
+
+const paginationRange = computed(() => {
+    const from = (props.page - 1) * props.limit + 1
+    const to = (props.page - 1) * props.limit + props.items.length
+    return props.items.length > 0 ? `${from} - ${to}` : '0'
+})
 
 const getBadgeClass = (score, standar, rumus) => {
     // Simple logic for checking if score meets standard based on rumus

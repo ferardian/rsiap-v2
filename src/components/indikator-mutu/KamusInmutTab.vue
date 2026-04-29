@@ -74,7 +74,7 @@
       <div class="card-footer bg-white border-top py-3">
          <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
-            Menampilkan {{ items.length }} dari {{ total }} indikator
+            Menampilkan {{ paginationRange }} dari {{ total }} indikator
             </small>
             <nav aria-label="Page navigation" v-if="totalPages > 1">
             <ul class="pagination pagination-sm mb-0">
@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { Modal } from 'bootstrap'
 import api from '@/services/indikatorMutuService'
 import { debounce } from 'lodash'
@@ -219,26 +219,32 @@ const changePage = (p) => {
 // Ideally should be in a composable or utility
 const getRumusSymbol = (val) => {
     const map = {
-        '1': '=',
-        '2': '≤',
+        '1': '',
+        '2': '<=',
         '3': '<',
-        '4': '≥',
+        '4': '>=',
         '5': '>'
     }
-    return map[val] || val || ''
+    return (val in map) ? map[val] : (val || '')
 }
 
 const getStandar = (ind) => {
     if (!ind) return '-';
-    // Access relation (snake_case from PHP serialization usually, checking both just in case)
     const utama = ind.master_utama || ind.masterUtama; 
     
     const std = (utama && utama.standar) ? utama.standar : ind.standar;
     const rumus = (utama && utama.rumus) ? utama.rumus : ind.rumus;
-    const satuan = (utama && utama.satuan) ? utama.satuan : ind.satuan;
+    let satuan = (utama && utama.satuan) ? utama.satuan : ind.satuan;
+    if (satuan === 'Persentase') satuan = '%'
     
-    return `${getRumusSymbol(rumus)} ${std} ${satuan || ''}`;
+    return `${getRumusSymbol(rumus)} ${std} ${satuan || ''}`.trim();
 }
+
+const paginationRange = computed(() => {
+    const from = (page.value - 1) * limit.value + 1
+    const to = (page.value - 1) * limit.value + items.value.length
+    return items.value.length > 0 ? `${from} - ${to}` : '0'
+})
 
 const getMasterValue = (ind, key) => {
    if(!ind) return '-';
