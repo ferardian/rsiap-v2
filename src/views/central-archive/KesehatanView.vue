@@ -44,7 +44,7 @@
           >
             <i class="fas fa-id-badge me-2"></i> 
             <span>Kredensial</span>
-            <span v-if="pendingCount > 0" class="tab-badge">{{ pendingCount }}</span>
+            <span v-if="pendingCount > 0" class="tab-badge pulse-badge">{{ pendingCount }}</span>
           </button>
           <button 
             type="button" 
@@ -550,6 +550,11 @@
         </div>
         <div class="modal-body text-center p-4">
           <h3 class="fw-bold text-dark mb-3">Hapus {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}?</h3>
+          <div v-if="selectedBerkas?.sk" class="alert alert-warning border-0 rounded-3 py-2 px-3 mb-3 text-start" style="background: #fffbeb; border: 1px solid #fef3c7 !important;">
+            <p class="fs-xs mb-0 text-warning-dark fw-600" style="color: #92400e;">
+              <i class="fas fa-exclamation-triangle me-1"></i> <strong>Perhatian:</strong> Berkas ini sudah memiliki SK yang terbit. Menghapus berkas ini <strong>TIDAK</strong> akan menghapus SK-nya, namun tautan akan terputus.
+            </p>
+          </div>
           <p class="text-muted fs-sm mb-4">
             Anda yakin ingin menghapus data nomor:<br>
             <span class="d-block mt-2 p-2 bg-light rounded-3 fw-bold text-dark border">{{ formatNomorSurat(selectedBerkas) }}</span>
@@ -929,20 +934,16 @@ const executeDelete = async () => {
   
   deleting.value = true
   try {
-    if (activeTab.value === 'standar') {
-      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
-      await komiteKesehatanService.delete(identifier)
-    } else {
-      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
-      await skService.deleteSk(identifier)
-    }
+    const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+    await komiteKesehatanService.delete(identifier)
     
     toast.success('Data berhasil dihapus')
     showDeleteModal.value = false
     loadData(pagination.value.current_page)
+    fetchPendingCount()
   } catch (error) {
     console.error('Error deleting:', error)
-    toast.error('Gagal menghapus data')
+    toast.error(error.response?.data?.message || 'Gagal menghapus data')
   } finally {
     deleting.value = false
   }
@@ -1901,11 +1902,14 @@ const displayedPages = computed(() => {
   margin-left: 8px;
   font-weight: 800;
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-  animation: pulse-red 2s infinite;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 18px;
+}
+
+.pulse-badge {
+  animation: pulse-red 2s infinite;
 }
 
 @keyframes pulse-red {

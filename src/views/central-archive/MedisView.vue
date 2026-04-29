@@ -34,7 +34,7 @@
         >
           <i class="fas fa-file-medical"></i>
           <span>Komite Medis</span>
-          <span v-if="pendingCount > 0" class="tab-badge">{{ pendingCount }}</span>
+          <span v-if="pendingCount > 0" class="tab-badge pulse-badge">{{ pendingCount }}</span>
         </button>
         <button 
           class="tab-item" 
@@ -43,7 +43,7 @@
         >
           <i class="fas fa-id-card-alt"></i>
           <span>Kredensial (SPK RKK)</span>
-          <span v-if="pendingCountKredensial > 0" class="tab-badge">{{ pendingCountKredensial }}</span>
+          <span v-if="pendingCountKredensial > 0" class="tab-badge pulse-badge">{{ pendingCountKredensial }}</span>
         </button>
         <button 
           class="tab-item" 
@@ -407,9 +407,14 @@
         </div>
         <div class="modal-body text-center mt-3">
           <h3 class="mb-2">Hapus {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}?</h3>
+          <div v-if="selectedBerkas?.sk" class="alert alert-warning border-0 rounded-3 py-2 px-3 mb-3 text-start" style="background: #fffbeb; border: 1px solid #fef3c7 !important;">
+            <p class="fs-xs mb-0 text-warning-dark fw-600" style="color: #92400e;">
+              <i class="fas fa-exclamation-triangle me-1"></i> <strong>Perhatian:</strong> Berkas ini sudah memiliki SK yang terbit. Menghapus berkas ini <strong>TIDAK</strong> akan menghapus SK-nya, namun tautan akan terputus.
+            </p>
+          </div>
           <p class="text-muted">
             Anda yakin ingin menghapus {{ activeTab === 'kredensial' ? 'pengajuan' : 'berkas' }} nomor <br>
-            <strong>{{ activeTab === 'kredensial' ? selectedBerkas?.no_surat : formatNomorSurat(selectedBerkas) }}</strong>?<br>
+            <strong>{{ formatNomorSurat(selectedBerkas) }}</strong>?<br>
             Tindakan ini tidak dapat dibatalkan.
           </p>
         </div>
@@ -665,10 +670,10 @@ const formatNomorSurat = (berkas, forceKredensial = false) => {
   try {
     const tglPattern = berkas.tgl_terbit ? format(new Date(berkas.tgl_terbit.replace(' ', 'T').split('.')[0]), 'ddMMyy') : ''
     const no = String(berkas.nomor).padStart(3, '0')
-    const prefix = berkas.prefix || (forceKredensial ? 'KPRT-RSIA' : 'KOMED-RSIA')
+    const prefix = berkas.prefix || (forceKredensial ? 'SK-RSIA' : 'KOMED-RSIA')
     return `${no}/${prefix}/${tglPattern}`
   } catch (e) {
-    return `${berkas.nomor}/${berkas.prefix || (forceKredensial ? 'KPRT-RSIA' : 'KOMED-RSIA')}`
+    return `${berkas.nomor}/${berkas.prefix || (forceKredensial ? 'SK-RSIA' : 'KOMED-RSIA')}`
   }
 }
 
@@ -732,20 +737,16 @@ const executeDelete = async () => {
   
   deleting.value = true
   try {
-    if (activeTab.value === 'kredensial') {
-        const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit}`)
-        await skService.deleteSk(identifier)
-    } else {
-        const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit}`)
-        await komiteMedisService.delete(identifier)
-    }
+    const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+    await komiteMedisService.delete(identifier)
     
     toast.success('Data berhasil dihapus')
     showDeleteModal.value = false
     loadData(pagination.value.current_page)
+    fetchPendingCounts()
   } catch (error) {
     console.error('Error deleting:', error)
-    toast.error('Gagal menghapus data')
+    toast.error(error.response?.data?.message || 'Gagal menghapus data')
   } finally {
     deleting.value = false
   }
@@ -1541,12 +1542,25 @@ const displayedPages = computed(() => {
   background: #ef4444;
   color: white;
   font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 100px;
-  margin-left: 0.5rem;
+  padding: 2px 6px;
+  border-radius: 20px;
+  margin-left: 8px;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 18px;
-  text-align: center;
+}
+
+.pulse-badge {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .tab-item.active .tab-badge {
