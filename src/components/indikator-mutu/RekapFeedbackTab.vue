@@ -158,7 +158,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import api from '@/services/indikatorMutuService'
 import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 import { useToast } from 'vue-toastification'
 
@@ -264,7 +264,7 @@ const exportToPDF = () => {
         stripHtml(item.feedback ? item.feedback.rekomendasi : '')
     ])
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: 32,
         head: [['#', 'Indikator & Unit', 'Tgl Feedback', 'Supervisi', 'Rekomendasi / Saran']],
         body: tableData,
