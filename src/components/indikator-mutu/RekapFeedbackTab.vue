@@ -1,0 +1,293 @@
+<template>
+  <div>
+    <!-- Filters & Stats -->
+    <div class="filter-card shadow-sm mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <label class="filter-label"><i class="fas fa-calendar-alt me-1"></i> Periode Bulan</label>
+                <input type="month" class="form-control" v-model="filters.bulan" @change="fetchData">
+            </div>
+            <div class="col-md-4">
+                <label class="filter-label"><i class="fas fa-hospital me-1"></i> Unit / Ruang</label>
+                <v-select 
+                    :options="units" 
+                    label="nama_ruang" 
+                    v-model="filters.unit"
+                    :reduce="unit => unit.dep_id"
+                    placeholder="Semua Unit"
+                    class="style-chooser"
+                    @update:modelValue="fetchData"
+                />
+            </div>
+            <div class="col-md-3">
+                <label class="filter-label"><i class="fas fa-search me-1"></i> Cari Indikator</label>
+                <input type="text" class="form-control" v-model="filters.keyword" placeholder="Ketik nama indikator..." @input="debounceFetch">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button class="btn btn-primary w-100" @click="fetchData" title="Refresh">
+                    <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="stat-box bg-white shadow-sm border-start border-primary border-4 p-3 rounded-3 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small fw-bold text-uppercase">Total Indikator Ter-Supervisi</div>
+                    <div class="h3 mb-0 fw-800 text-primary">{{ total }}</div>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary p-3 rounded-circle">
+                    <i class="fas fa-check-double fa-lg"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th width="5%" class="text-center py-3">#</th>
+                            <th width="20%">Indikator & Unit</th>
+                            <th width="12%" class="text-center">Tgl Feedback</th>
+                            <th width="30%">Supervisi Komite</th>
+                            <th width="30%">Rekomendasi / Saran</th>
+                            <th width="3%" class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="loading">
+                            <td colspan="6" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 text-muted">Memuat rekap feedback...</p>
+                            </td>
+                        </tr>
+                        <tr v-else-if="items.length === 0">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-comments-slash fa-3x mb-3 opacity-25"></i>
+                                <p>Tidak ada data supervisi pada periode ini.</p>
+                            </td>
+                        </tr>
+                        <tr v-for="(item, index) in items" :key="item.id_analisa" :class="{'bg-light-subtle': !item.feedback}">
+                            <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
+                            <td>
+                                <div class="fw-bold text-dark mb-1">{{ item.nama_inmut }}</div>
+                                <div class="badge bg-info-subtle text-info border-info-subtle small fw-bold">
+                                    <i class="fas fa-hospital-user me-1"></i> {{ item.nama_ruang }}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div v-if="item.feedback && item.feedback.tgl_feedback" class="small fw-bold text-secondary">
+                                    {{ formatDate(item.feedback.tgl_feedback) }}
+                                </div>
+                                <div v-else class="text-muted small italic">-</div>
+                            </td>
+                            <td>
+                                <div v-if="item.feedback && item.feedback.supervisi" class="feedback-content" v-html="item.feedback.supervisi"></div>
+                                <div v-else class="text-muted small italic">Belum ada supervisi</div>
+                            </td>
+                            <td>
+                                <div v-if="item.feedback && item.feedback.rekomendasi" class="feedback-content" v-html="item.feedback.rekomendasi"></div>
+                                <div v-else class="text-muted small italic">Belum ada rekomendasi</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-circle p-2" :class="item.feedback ? 'bg-success' : 'bg-light text-muted border'">
+                                    <i class="fas" :class="item.feedback ? 'fa-check' : 'fa-minus'"></i>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white border-top-0 py-3">
+             <div class="d-flex justify-content-between align-items-center">
+                <div class="small text-muted">
+                    Menampilkan <strong>{{ (page - 1) * limit + 1 }} - {{ Math.min(page * limit, total) }}</strong> dari <strong>{{ total }}</strong> data
+                </div>
+                <nav v-if="totalPages > 1">
+                    <ul class="pagination pagination-sm mb-0 custom-pagination">
+                        <li class="page-item" :class="{ disabled: page === 1 }">
+                            <button class="page-link" @click="changePage(page - 1)"><i class="fas fa-chevron-left"></i></button>
+                        </li>
+                        <li class="page-item" v-for="p in displayedPages" :key="p" :class="{ active: page === p, disabled: p === '...' }">
+                            <button class="page-link" @click="p !== '...' && changePage(p)">{{ p }}</button>
+                        </li>
+                        <li class="page-item" :class="{ disabled: page === totalPages }">
+                            <button class="page-link" @click="changePage(page + 1)"><i class="fas fa-chevron-right"></i></button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted, computed } from 'vue'
+import api from '@/services/indikatorMutuService'
+
+const items = ref([])
+const units = ref([])
+const loading = ref(false)
+const total = ref(0)
+const page = ref(1)
+const limit = ref(10)
+const totalPages = ref(1)
+
+const filters = reactive({
+    bulan: new Date().toISOString().slice(0, 7),
+    unit: null,
+    keyword: ''
+})
+
+const stats = computed(() => {
+    return {
+        totalFeedback: items.value.filter(i => i.feedback).length
+    }
+})
+
+const fetchData = async () => {
+    loading.value = true
+    try {
+        const params = {
+            page: page.value,
+            limit: limit.value,
+            bulan: filters.bulan,
+            dep_id: filters.unit,
+            keyword: filters.keyword,
+            has_feedback: 1
+        }
+        const response = await api.getAnalisa(params)
+        const data = response.data.data
+        items.value = data.data
+        total.value = data.total
+        totalPages.value = data.last_page
+    } catch (error) {
+        console.error('Error rekap feedback:', error)
+    } finally {
+        loading.value = false
+    }
+}
+
+const fetchUnits = async () => {
+    try {
+        const response = await api.getUnits()
+        units.value = response.data.data
+    } catch (error) {
+        console.error('Error fetch units:', error)
+    }
+}
+
+let timeout = null
+const debounceFetch = () => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+        page.value = 1
+        fetchData()
+    }, 500)
+}
+
+const changePage = (p) => {
+    page.value = p
+    fetchData()
+}
+
+const formatDate = (dateString) => {
+    if (!dateString) return '-'
+    const options = { year: 'numeric', month: 'short', day: 'numeric' }
+    return new Date(dateString).toLocaleDateString('id-ID', options)
+}
+
+const displayedPages = computed(() => {
+    const total = totalPages.value
+    const current = page.value
+    const delta = 1
+    const range = []
+    
+    for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+            range.push(i)
+        } else if (range[range.length - 1] !== '...') {
+            range.push('...')
+        }
+    }
+    return range
+})
+
+onMounted(() => {
+    fetchUnits()
+    fetchData()
+})
+</script>
+
+<style scoped>
+.filter-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.filter-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+    display: block;
+    letter-spacing: 0.5px;
+}
+
+.fw-800 { font-weight: 800; }
+
+.feedback-content {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-height: 100px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Custom scrollbar for feedback content */
+.feedback-content::-webkit-scrollbar {
+    width: 4px;
+}
+.feedback-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.custom-pagination .page-link {
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    margin: 0 2px;
+    border-radius: 6px !important;
+    font-weight: 600;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background: #435ebe;
+    color: #fff;
+}
+
+.bg-light-subtle {
+    background-color: rgba(248, 250, 252, 0.5);
+}
+
+.style-chooser :deep(.vs__dropdown-toggle) {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    min-height: 38px;
+}
+</style>

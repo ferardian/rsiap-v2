@@ -47,6 +47,15 @@
           <i class="fas fa-file-alt me-1"></i> Laporan
         </button>
       </li>
+      <li class="nav-item">
+        <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'rekap_feedback' }" 
+            @click="activeTab = 'rekap_feedback'"
+        >
+          <i class="fas fa-comments-dollar me-1"></i> Rekap Supervisi
+        </button>
+      </li>
     </ul>
 
     <!-- Tab Content -->
@@ -67,6 +76,10 @@
         <KeepAlive>
              <LaporanMutuTab v-if="activeTab === 'laporan'" />
         </KeepAlive>
+
+        <KeepAlive>
+             <RekapFeedbackTab v-if="activeTab === 'rekap_feedback'" />
+        </KeepAlive>
       </div>
     </div>
 
@@ -79,6 +92,7 @@ import MonitoringInmutTab from '@/components/indikator-mutu/MonitoringInmutTab.v
 import AnalisaMutuTab from '@/components/indikator-mutu/AnalisaMutuTab.vue'
 import KamusInmutTab from '@/components/indikator-mutu/KamusInmutTab.vue'
 import LaporanMutuTab from '@/components/indikator-mutu/LaporanMutuTab.vue'
+import RekapFeedbackTab from '@/components/indikator-mutu/RekapFeedbackTab.vue'
 
 const activeTab = ref('monitoring')
 </script>
