@@ -472,10 +472,11 @@ watch(() => props.pegawaiData, (newVal) => {
       }
     });
 
-    // Handle Petugas specific fields if they were linked
+    // Special handling for relation fields
     if (newVal.petugas) {
+      form.value.kd_jbtn = newVal.petugas.kd_jbtn
+      form.value.jbtn = newVal.petugas.jabatan?.nm_jbtn || newVal.jbtn
       form.value.no_telp = newVal.petugas.no_telp || '-'
-      form.value.kd_jbtn = newVal.petugas.kd_jbtn || '-'
       form.value.gol_darah = newVal.petugas.gol_darah || '-'
       form.value.agama = newVal.petugas.agama || 'ISLAM'
       form.value.stts_nikah = newVal.petugas.stts_nikah || 'BELUM MENIKAH'
@@ -497,19 +498,16 @@ watch(() => props.pegawaiData, (newVal) => {
 
     // Handle Email relationship mapping
     if (newVal.email) {
-      if (typeof newVal.email === 'object' && newVal.email.email) {
-        form.value.email = newVal.email.email
-      } else if (typeof newVal.email === 'string') {
-        form.value.email = newVal.email
-      }
+      form.value.email = typeof newVal.email === 'object' ? (newVal.email.email || '') : newVal.email
     }
 
     // Handle Departure Info
-    if (newVal.pegawaiKeluar) {
-      form.value.tgl_keluar = newVal.pegawaiKeluar.tgl_keluar || ''
-      form.value.ket_keluar = newVal.pegawaiKeluar.keterangan || ''
+    const keluarData = newVal.pegawaiKeluar || newVal.pegawai_keluar
+    if (keluarData) {
+      form.value.tgl_keluar = keluarData.tgl_keluar || ''
+      form.value.ket_keluar = keluarData.ket_keluar || keluarData.keterangan || ''
     } else {
-      // Flat structure fallback (from index join)
+      // Flat structure fallback
       form.value.tgl_keluar = newVal.tgl_keluar || ''
       form.value.ket_keluar = newVal.ket_keluar || ''
     }
