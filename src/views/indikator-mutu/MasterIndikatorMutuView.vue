@@ -358,17 +358,30 @@ const handleSaveRuang = async (formData) => {
 }
 
 const handleActivate = async (item) => {
-    try {
-        if (activeTab.value === 'utama') {
-            await api.updateUtama(item.id_master, { ...item, status: '1' })
-        } else {
-            await api.updateRuang(item.id_inmut, { ...item, status: '1' })
+    const result = await Swal.fire({
+        title: 'Aktifkan Kembali?',
+        text: "Indikator ini akan muncul kembali untuk pengisian data dan monitoring.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Aktifkan!',
+        cancelButtonText: 'Batal'
+    })
+
+    if (result.isConfirmed) {
+        try {
+            if (activeTab.value === 'utama') {
+                await api.updateUtama(item.id_master, { ...item, status: '1' })
+            } else {
+                await api.updateRuang(item.id_inmut, { ...item, status: '1' })
+            }
+            toast.success('Data berhasil diaktifkan kembali')
+            refreshData()
+        } catch (error) {
+            console.error(error)
+            toast.error('Gagal mengaktifkan data')
         }
-        toast.success('Data berhasil diaktifkan kembali')
-        refreshData()
-    } catch (error) {
-        console.error(error)
-        toast.error('Gagal mengaktifkan data')
     }
 }
 
