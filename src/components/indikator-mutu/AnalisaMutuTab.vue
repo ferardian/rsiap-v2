@@ -306,6 +306,12 @@
                                 </div>
 
                                 <div v-if="isCommitteeMember" class="feedback-edit-section">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold small">Tanggal Feedback</label>
+                                            <input type="date" class="form-control form-control-sm" v-model="feedbackForm.tgl_feedback">
+                                        </div>
+                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold small">Supervisi</label>
                                         <QuillEditor theme="snow" toolbar="minimal" content-type="html" v-model:content="feedbackForm.supervisi" style="height: 120px; padding-bottom: 40px;" />
@@ -327,6 +333,12 @@
                                         <i class="fas fa-info-circle me-1"></i> Belum ada supervisi/rekomendasi dari Komite Mutu.
                                     </div>
                                     <div v-else>
+                                        <div class="mb-2 text-end">
+                                            <span class="badge bg-light text-muted border py-2 px-3">
+                                                <i class="fas fa-calendar-alt me-1 text-primary"></i> 
+                                                Tanggal Feedback: <span class="text-dark fw-bold">{{ formatDate(feedbackForm.tgl_feedback) }}</span>
+                                            </span>
+                                        </div>
                                         <div class="mb-3">
                                             <label class="form-label fw-bold small text-secondary">Supervisi:</label>
                                             <div class="p-3 bg-white border rounded" v-html="feedbackForm.supervisi || '-'"></div>
@@ -470,7 +482,8 @@ const feedbackLoading = ref(false)
 const isFeedbackExists = ref(false)
 const feedbackForm = reactive({
     supervisi: '',
-    rekomendasi: ''
+    rekomendasi: '',
+    tgl_feedback: new Date().toISOString().split('T')[0]
 })
 
 const checkCommittee = async () => {
@@ -746,6 +759,7 @@ const fetchFeedback = async (id_analisa) => {
         if (response.data.success && response.data.data) {
             feedbackForm.supervisi = response.data.data.supervisi || ''
             feedbackForm.rekomendasi = response.data.data.rekomendasi || ''
+            feedbackForm.tgl_feedback = response.data.data.tgl_feedback || new Date().toISOString().split('T')[0]
             isFeedbackExists.value = true
         }
     } catch (error) {
@@ -763,7 +777,8 @@ const saveFeedback = async () => {
         const payload = {
             id_analisa: form.id_analisa,
             supervisi: feedbackForm.supervisi,
-            rekomendasi: feedbackForm.rekomendasi
+            rekomendasi: feedbackForm.rekomendasi,
+            tgl_feedback: feedbackForm.tgl_feedback
         }
         await api.storeFeedback(payload)
         toast.success('Supervisi & Rekomendasi berhasil disimpan')
@@ -778,6 +793,7 @@ const saveFeedback = async () => {
 const resetFeedbackForm = () => {
     feedbackForm.supervisi = ''
     feedbackForm.rekomendasi = ''
+    feedbackForm.tgl_feedback = new Date().toISOString().split('T')[0]
     isFeedbackExists.value = false
 }
 
