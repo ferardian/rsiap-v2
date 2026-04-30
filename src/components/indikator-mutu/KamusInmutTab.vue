@@ -29,7 +29,7 @@
                 <th width="5%" class="text-center">#</th>
                 <th width="35%">Indikator</th>
                 <th width="20%">Unit / Ruang</th>
-                <th width="25%">Standar & Tipe</th>
+                <th width="25%">Standar</th>
                 <th width="15%" class="text-center">Aksi</th>
               </tr>
             </thead>
