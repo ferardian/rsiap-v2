@@ -136,7 +136,12 @@
               <tr v-else v-for="(item, index) in items" :key="item.id_analisa">
                <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
                 <td>
-                  <div class="fw-bold text-primary">{{ item.nama_inmut }}</div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="fw-bold text-primary">{{ item.nama_inmut }}</div>
+                    <span v-if="item.feedback" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2" style="font-size: 0.65rem;">
+                        <i class="fas fa-check-circle me-1"></i> Ter-Supervisi
+                    </span>
+                  </div>
                   <small class="text-muted">{{ item.nama_ruang }}</small>
                 </td>
                 <td>
