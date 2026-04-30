@@ -172,7 +172,10 @@
                          @mouseleave="hoveredStatusIndex = null">
                       <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="status-label-mini">{{ item.name }}</span>
-                        <span class="status-value-mini">{{ item.count }}</span>
+                        <span class="status-value-mini">
+                          {{ item.count }}
+                          <small class="text-muted ms-1">({{ calculatePercentage(item.count, stats.total) }}%)</small>
+                        </span>
                       </div>
                       <div class="progress-mini">
                         <div class="progress-bar-mini" :style="{ width: calculatePercentage(item.count, stats.total) + '%', background: getStatusColor(index) }"></div>
