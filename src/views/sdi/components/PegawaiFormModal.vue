@@ -548,12 +548,21 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
+    // Clean up dates that are '0000-00-00'
+    const payload = { ...form.value }
+    const dateFields = ['tgl_lahir', 'mulai_kerja', 'mulai_kontrak', 'tgl_keluar']
+    dateFields.forEach(field => {
+      if (payload[field] === '0000-00-00') {
+        payload[field] = ''
+      }
+    })
+
     let response;
     if (props.isEdit) {
-      response = await pegawaiService.updatePegawai(form.value.nik, form.value)
+      response = await pegawaiService.updatePegawai(payload.nik, payload)
       toast.success('Data karyawan berhasil diperbarui')
     } else {
-      response = await pegawaiService.createPegawai(form.value)
+      response = await pegawaiService.createPegawai(payload)
       toast.success('Karyawan baru berhasil ditambahkan')
     }
     
