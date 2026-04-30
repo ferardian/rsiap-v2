@@ -548,12 +548,12 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    // Clean up dates that are '0000-00-00'
+    // Clean up dates that are '0000-00-00' or empty
     const payload = { ...form.value }
     const dateFields = ['tgl_lahir', 'mulai_kerja', 'mulai_kontrak', 'tgl_keluar']
     dateFields.forEach(field => {
-      if (payload[field] === '0000-00-00') {
-        payload[field] = ''
+      if (payload[field] === '0000-00-00' || payload[field] === '') {
+        payload[field] = null
       }
     })
 
@@ -572,7 +572,17 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Error saving employee:', error)
-    toast.error('Gagal menyimpan data: ' + (error.response?.data?.message || error.message))
+    
+    // Detailed error handling
+    if (error.response?.data?.errors) {
+      const validationErrors = error.response.data.errors
+      Object.keys(validationErrors).forEach(key => {
+        const messages = validationErrors[key]
+        toast.error(`${key}: ${messages.join(', ')}`)
+      })
+    } else {
+      toast.error('Gagal menyimpan data: ' + (error.response?.data?.message || error.message))
+    }
   } finally {
     loading.value = false
   }
