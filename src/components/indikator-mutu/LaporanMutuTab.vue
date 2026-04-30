@@ -202,13 +202,13 @@
                                 <div class="col-sm-6">
                                   <div class="meta-item">
                                     <span class="meta-label">Numerator</span>
-                                    <span class="meta-value">{{ detailData.indicator.ket_num_utama || '-' }}</span>
+                                    <span class="meta-value" v-html="detailData.indicator.ket_num_utama || '-'"></span>
                                   </div>
                                 </div>
                                 <div class="col-sm-6">
                                   <div class="meta-item">
                                     <span class="meta-label">Denominator</span>
-                                    <span class="meta-value">{{ detailData.indicator.ket_denum_utama || '-' }}</span>
+                                    <span class="meta-value" v-html="detailData.indicator.ket_denum_utama || '-'"></span>
                                   </div>
                                 </div>
                               </div>
