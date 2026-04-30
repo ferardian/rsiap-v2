@@ -23,10 +23,34 @@
                 <label class="filter-label"><i class="fas fa-search me-1"></i> Cari Indikator</label>
                 <input type="text" class="form-control" v-model="filters.keyword" placeholder="Ketik nama indikator..." @input="debounceFetch">
             </div>
-            <div class="col-md-2 d-flex align-items-end gap-2">
-                <button class="btn btn-primary w-100" @click="fetchData" title="Refresh">
-                    <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
-                </button>
+            <div class="col-md-2">
+                <label class="filter-label invisible">ACTION</label>
+                <div class="d-flex gap-2">
+                    <div class="dropdown w-100" v-click-outside="() => showExportMenu = false">
+                        <button 
+                            class="btn btn-outline-primary dropdown-toggle w-100 d-flex align-items-center justify-content-center" 
+                            type="button" 
+                            @click="showExportMenu = !showExportMenu"
+                        >
+                            <i class="fas fa-download me-2"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 show" v-if="showExportMenu" style="display: block; top: 100%; margin-top: 5px;">
+                            <li>
+                                <a class="dropdown-item py-2" href="#" @click.prevent="exportToExcel(); showExportMenu = false">
+                                    <i class="fas fa-file-excel text-success me-2"></i> Export Excel (.xlsx)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="#" @click.prevent="exportToPDF(); showExportMenu = false">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i> Export PDF (.pdf)
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-primary d-flex align-items-center justify-content-center" style="width: 45px; height: 38px;" @click="fetchData" title="Refresh">
+                        <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -39,7 +63,7 @@
                     <div class="text-muted small fw-bold text-uppercase">Total Indikator Ter-Supervisi</div>
                     <div class="h3 mb-0 fw-800 text-primary">{{ total }}</div>
                 </div>
-                <div class="stat-icon bg-primary-subtle text-primary p-3 rounded-circle">
+                <div class="stat-icon bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
                     <i class="fas fa-clipboard-check fa-lg"></i>
                 </div>
             </div>
@@ -133,6 +157,29 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import api from '@/services/indikatorMutuService'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
+import * as XLSX from 'xlsx'
+import { useToast } from 'vue-toastification'
+
+const toast = useToast()
+
+const showExportMenu = ref(false)
+
+// Directive for clicking outside the dropdown
+const vClickOutside = {
+    mounted(el, binding) {
+        el.clickOutsideEvent = (event) => {
+            if (!(el === event.target || el.contains(event.target))) {
+                binding.value(event)
+            }
+        }
+        document.body.addEventListener('click', el.clickOutsideEvent)
+    },
+    unmounted(el) {
+        document.body.removeEventListener('click', el.clickOutsideEvent)
+    }
+}
 
 const items = ref([])
 const units = ref([])
@@ -153,6 +200,97 @@ const stats = computed(() => {
         totalFeedback: items.value.filter(i => i.feedback).length
     }
 })
+
+const stripHtml = (html) => {
+    if (!html) return '-'
+    const tmp = document.createElement("DIV")
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || "-"
+}
+
+const exportToExcel = () => {
+    if (items.value.length === 0) {
+        toast.warning('Tidak ada data untuk di-export')
+        return
+    }
+
+    const data = items.value.map((item, index) => ({
+        'No': index + 1,
+        'Indikator Mutu': item.nama_inmut,
+        'Unit / Ruang': item.nama_ruang,
+        'Tanggal Feedback': item.feedback ? item.feedback.tgl_feedback : '-',
+        'Supervisi': stripHtml(item.feedback ? item.feedback.supervisi : ''),
+        'Rekomendasi / Saran': stripHtml(item.feedback ? item.feedback.rekomendasi : '')
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(data)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Rekap Supervisi")
+    
+    // Set column widths
+    const wscols = [
+        {wch: 5}, {wch: 40}, {wch: 25}, {wch: 15}, {wch: 50}, {wch: 50}
+    ]
+    ws['!cols'] = wscols
+
+    XLSX.writeFile(wb, `Rekap_Supervisi_${filters.bulan}.xlsx`)
+    toast.success('Excel berhasil di-download')
+}
+
+const exportToPDF = () => {
+    if (items.value.length === 0) {
+        toast.warning('Tidak ada data untuk di-export')
+        return
+    }
+
+    const doc = new jsPDF('l', 'mm', 'a4')
+    const title = `REKAP SUPERVISI & REKOMENDASI KOMITE MUTU`
+    const period = `Periode: ${formatDateFull(filters.bulan)}`
+
+    doc.setFontSize(16)
+    doc.setTextColor(67, 94, 190) // Primary color
+    doc.text(title, 14, 15)
+    
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(period, 14, 22)
+    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 27)
+
+    const tableData = items.value.map((item, index) => [
+        index + 1,
+        `${item.nama_inmut}\n(${item.nama_ruang})`,
+        item.feedback ? formatDate(item.feedback.tgl_feedback) : '-',
+        stripHtml(item.feedback ? item.feedback.supervisi : ''),
+        stripHtml(item.feedback ? item.feedback.rekomendasi : '')
+    ])
+
+    doc.autoTable({
+        startY: 32,
+        head: [['#', 'Indikator & Unit', 'Tgl Feedback', 'Supervisi', 'Rekomendasi / Saran']],
+        body: tableData,
+        headStyles: { fillColor: [67, 94, 190], textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 60 },
+            2: { cellWidth: 25, halign: 'center' },
+            3: { cellWidth: 80 },
+            4: { cellWidth: 80 }
+        },
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+        alternateRowStyles: { fillColor: [245, 247, 255] }
+    })
+
+    doc.save(`Rekap_Supervisi_${filters.bulan}.pdf`)
+    toast.success('PDF berhasil di-download')
+}
+
+const formatDateFull = (monthStr) => {
+    if (!monthStr) return '-'
+    const [year, month] = monthStr.split('-')
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    return `${monthNames[parseInt(month) - 1]} ${year}`
+}
 
 const fetchData = async () => {
     loading.value = true
