@@ -79,13 +79,26 @@
             <nav aria-label="Page navigation" v-if="totalPages > 1">
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item" :class="{ disabled: page === 1 }">
-                <button class="page-link" @click="changePage(page - 1)">Previous</button>
+                    <button class="page-link" @click="changePage(1)" aria-label="First">
+                        <i class="fas fa-angle-double-left"></i>
+                    </button>
                 </li>
-                <li class="page-item" :class="{ active: page === p }" v-for="p in totalPages" :key="p">
-                <button class="page-link" @click="changePage(p)">{{ p }}</button>
+                <li class="page-item" :class="{ disabled: page === 1 }">
+                    <button class="page-link" @click="changePage(page - 1)">Previous</button>
+                </li>
+                
+                <li class="page-item" :class="{ active: page === p, disabled: p === '...' }" v-for="(p, idx) in displayedPages" :key="idx">
+                    <button v-if="p !== '...'" class="page-link" @click="changePage(p)">{{ p }}</button>
+                    <span v-else class="page-link">{{ p }}</span>
+                </li>
+
+                <li class="page-item" :class="{ disabled: page === totalPages }">
+                    <button class="page-link" @click="changePage(page + 1)">Next</button>
                 </li>
                 <li class="page-item" :class="{ disabled: page === totalPages }">
-                <button class="page-link" @click="changePage(page + 1)">Next</button>
+                    <button class="page-link" @click="changePage(totalPages)" aria-label="Last">
+                        <i class="fas fa-angle-double-right"></i>
+                    </button>
                 </li>
             </ul>
             </nav>
@@ -244,6 +257,35 @@ const paginationRange = computed(() => {
     const from = (page.value - 1) * limit.value + 1
     const to = (page.value - 1) * limit.value + items.value.length
     return items.value.length > 0 ? `${from} - ${to}` : '0'
+})
+
+const displayedPages = computed(() => {
+    const total = totalPages.value
+    const current = page.value
+    const delta = 2
+    const range = []
+    const rangeWithDots = []
+    let l
+
+    for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+            range.push(i)
+        }
+    }
+
+    for (const i of range) {
+        if (l) {
+            if (i - l === 2) {
+                rangeWithDots.push(l + 1)
+            } else if (i - l !== 1) {
+                rangeWithDots.push('...')
+            }
+        }
+        rangeWithDots.push(i)
+        l = i
+    }
+
+    return rangeWithDots
 })
 
 const getMasterValue = (ind, key) => {
