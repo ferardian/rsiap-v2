@@ -136,13 +136,11 @@
               <tr v-else v-for="(item, index) in items" :key="item.id_analisa">
                <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
                 <td>
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <div class="fw-bold text-primary">{{ item.nama_inmut }}</div>
-                    <span v-if="item.feedback" class="badge bg-success shadow-sm rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.3px;">
-                        <i class="fas fa-check-circle me-1"></i> TER-SUPERVISI ({{ formatDate(item.feedback.tgl_feedback) }})
-                    </span>
-                  </div>
-                  <small class="text-muted">{{ item.nama_ruang }}</small>
+                  <div class="fw-bold text-primary mb-1">{{ item.nama_inmut }}</div>
+                  <small class="text-muted d-block mb-1">{{ item.nama_ruang }}</small>
+                  <span v-if="item.feedback" class="badge bg-success shadow-sm rounded-pill px-2 py-1" style="font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px;">
+                      <i class="fas fa-check-circle me-1"></i> TER-SUPERVISI ({{ formatDate(item.feedback.tgl_feedback) }})
+                  </span>
                 </td>
                 <td>
                     <div class="mb-2">
