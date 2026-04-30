@@ -72,8 +72,11 @@
               <template v-if="stats.kelompok_profesi?.length">
                 <div v-for="(item, index) in stats.kelompok_profesi" :key="index"
                      class="prof-card-premium clickable"
+                     :class="{ 'is-highlighted': hoveredProfessionIndex === index }"
                      :style="{ '--prof-color': getProfessionDetail(item.name).color, '--prof-bg': getProfessionDetail(item.name).bg }"
-                     @click="showDetails('Profesi: ' + item.name, item.filter_key, item.filter_val)">
+                     @click="showDetails('Profesi: ' + item.name, item.filter_key, item.filter_val)"
+                     @mouseenter="hoveredProfessionIndex = index"
+                     @mouseleave="hoveredProfessionIndex = null">
                   
                   <div class="prof-icon-box">
                     <i :class="getProfessionDetail(item.name).icon"></i>
@@ -83,9 +86,9 @@
                     <span class="prof-tag">{{ item.name }}</span>
                     <h3 class="prof-number">
                       {{ item.count }} <small>Orang</small>
-                      <span class="prof-percentage">({{ calculatePercentage(item.count, stats.total) }}%)</span>
                     </h3>
                   </div>
+                  <span class="prof-percentage">{{ calculatePercentage(item.count, stats.total) }}%</span>
                   
                   <div class="prof-arrow-premium">
                     <i class="fas fa-arrow-right"></i>
@@ -530,6 +533,7 @@ const filteredDetailList = ref([])
 const hoveredStatusIndex = ref(null)
 const hoveredUnitIndex = ref(null)
 const hoveredEduIndex = ref(null)
+const hoveredProfessionIndex = ref(null)
 
 const fetchData = async () => {
   loading.value = true
@@ -708,7 +712,15 @@ const professionChartOptions = computed(() => {
     chart: {
       type: 'treemap',
       fontFamily: 'Outfit, sans-serif',
-      toolbar: { show: false }
+      toolbar: { show: false },
+      events: {
+        dataPointMouseEnter: function(event, chartContext, config) {
+          hoveredProfessionIndex.value = config.dataPointIndex
+        },
+        dataPointMouseLeave: function(event, chartContext, config) {
+          hoveredProfessionIndex.value = null
+        }
+      }
     },
     colors: colors,
     plotOptions: {
@@ -1885,6 +1897,14 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
+.prof-card-premium.is-highlighted {
+  border-color: var(--prof-color);
+  background: var(--prof-bg);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
 .prof-card-premium::before {
   content: '';
   position: absolute;
@@ -1945,14 +1965,11 @@ onMounted(() => {
 }
 
 .prof-number {
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 900;
   color: #1e293b;
-  margin: 0;
   line-height: 1.2;
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
 }
 
 .prof-number small {
@@ -1962,12 +1979,16 @@ onMounted(() => {
 }
 
 .prof-percentage {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: #3b82f6;
   background: #eff6ff;
-  padding: 0.125rem 0.5rem;
-  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .prof-value-mini small {
