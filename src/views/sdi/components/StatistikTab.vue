@@ -81,7 +81,10 @@
                   
                   <div class="prof-content-box">
                     <span class="prof-tag">{{ item.name }}</span>
-                    <h3 class="prof-number">{{ item.count }} <small>Orang</small></h3>
+                    <h3 class="prof-number">
+                      {{ item.count }} <small>Orang</small>
+                      <span class="prof-percentage">({{ calculatePercentage(item.count, stats.total) }}%)</span>
+                    </h3>
                   </div>
                   
                   <div class="prof-arrow-premium">
@@ -1947,12 +1950,24 @@ onMounted(() => {
   color: #1e293b;
   margin: 0;
   line-height: 1.2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
 }
 
 .prof-number small {
   font-size: 0.8rem;
   font-weight: 600;
   color: #94a3b8;
+}
+
+.prof-percentage {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 0.125rem 0.5rem;
+  border-radius: 6px;
 }
 
 .prof-value-mini small {
