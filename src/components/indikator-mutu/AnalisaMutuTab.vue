@@ -764,7 +764,7 @@ const fetchFeedback = async (id_analisa) => {
         if (response.data.success && response.data.data) {
             feedbackForm.supervisi = response.data.data.supervisi || ''
             feedbackForm.rekomendasi = response.data.data.rekomendasi || ''
-            feedbackForm.tgl_feedback = response.data.data.tgl_feedback || new Date().toISOString().split('T')[0]
+            feedbackForm.tgl_feedback = response.data.data.tgl_feedback ? response.data.data.tgl_feedback.slice(0, 10) : new Date().toISOString().split('T')[0]
             isFeedbackExists.value = true
         }
     } catch (error) {
