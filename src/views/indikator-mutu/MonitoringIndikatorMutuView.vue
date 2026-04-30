@@ -53,7 +53,7 @@
             :class="{ active: activeTab === 'rekap_feedback' }" 
             @click="activeTab = 'rekap_feedback'"
         >
-          <i class="fas fa-comments-dollar me-1"></i> Rekap Supervisi
+          <i class="fas fa-comment-medical me-1"></i> Rekap Supervisi
         </button>
       </li>
     </ul>

@@ -40,7 +40,7 @@
                     <div class="h3 mb-0 fw-800 text-primary">{{ total }}</div>
                 </div>
                 <div class="stat-icon bg-primary-subtle text-primary p-3 rounded-circle">
-                    <i class="fas fa-check-double fa-lg"></i>
+                    <i class="fas fa-clipboard-check fa-lg"></i>
                 </div>
             </div>
         </div>
