@@ -39,7 +39,7 @@
                     <select class="form-select" v-model="form.kategori" required>
                         <option value="" disabled>Pilih Kategori</option>
                         <option value="Indikator Mutu Nasional">Indikator Mutu Nasional</option>
-                        <option value="Indikator Mutu Prioritas Rumah Sakit/SKP">Indikator Mutu Prioritas Rumah Sakit/SKP</option>
+                        <option value="Indikator Mutu Prioritas Rumah Sakit">Indikator Mutu Prioritas Rumah Sakit</option>
                         <option value="Indikator Mutu Prioritas Unit">Indikator Mutu Prioritas Unit</option>
                         <option value="Indikator Mutu Unit">Indikator Mutu Unit</option>
                     </select>
