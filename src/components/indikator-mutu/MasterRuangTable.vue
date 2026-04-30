@@ -54,9 +54,12 @@
                   <button class="btn btn-sm btn-outline-primary me-1" @click="$emit('edit', item)" title="Edit">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-danger" @click="$emit('delete', item)" title="Hapus">
-                    <i class="fas fa-trash"></i>
-                  </button>
+                   <button v-if="item.status == '1'" class="btn btn-sm btn-outline-danger" @click="$emit('delete', item)" title="Non-aktifkan">
+                     <i class="fas fa-trash"></i>
+                   </button>
+                   <button v-else class="btn btn-sm btn-outline-success" @click="$emit('activate', item)" title="Aktifkan">
+                     <i class="fas fa-check-circle"></i>
+                   </button>
                 </div>
               </td>
             </tr>
@@ -117,7 +120,7 @@ const props = defineProps({
   totalPages: Number
 })
 
-defineEmits(['edit', 'delete', 'change-page'])
+defineEmits(['edit', 'delete', 'activate', 'change-page'])
 
 const displayedPages = computed(() => {
     const current = props.page

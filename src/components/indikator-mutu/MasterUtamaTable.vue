@@ -7,22 +7,23 @@
             <tr>
               <th width="5%" class="text-center">#</th>
               <th width="30%">Nama Indikator</th>
-              <th width="20%">Kategori</th>
+              <th width="15%">Kategori</th>
+              <th width="10%" class="text-center">Status</th>
               <th width="15%">Standar</th>
-              <th width="15%">Satuan</th>
+              <th width="10%">Satuan</th>
               <th width="10%" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="6" class="text-center py-5">
+              <td colspan="7" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                   <span class="visually-hidden">Loading...</span>
                 </div>
               </td>
             </tr>
             <tr v-else-if="items.length === 0">
-              <td colspan="6" class="text-center py-5 text-muted">
+              <td colspan="7" class="text-center py-5 text-muted">
                 <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
                 <p>Tidak ada data ditemukan.</p>
               </td>
@@ -36,6 +37,14 @@
               <td>
                 <span class="badge bg-light text-dark border">{{ item.kategori }}</span>
               </td>
+              <td class="text-center">
+                 <span v-if="item.status == '1'" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3">
+                   <i class="fas fa-check-circle me-1"></i> Aktif
+                 </span>
+                 <span v-else class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3">
+                   <i class="fas fa-times-circle me-1"></i> Non-Aktif
+                 </span>
+               </td>
               <td>{{ getRumusSymbol(item.rumus) }} {{ item.standar }}</td>
               <td>{{ item.satuan }}</td>
               <td class="text-center">
@@ -43,8 +52,11 @@
                   <button class="btn btn-sm btn-outline-primary me-1" @click="$emit('edit', item)" title="Edit">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-danger" @click="$emit('delete', item)" title="Hapus">
+                  <button v-if="item.status == '1'" class="btn btn-sm btn-outline-danger" @click="$emit('delete', item)" title="Non-aktifkan">
                     <i class="fas fa-trash"></i>
+                  </button>
+                  <button v-else class="btn btn-sm btn-outline-success" @click="$emit('activate', item)" title="Aktifkan">
+                    <i class="fas fa-check-circle"></i>
                   </button>
                 </div>
               </td>
@@ -106,7 +118,7 @@ const props = defineProps({
   totalPages: Number
 })
 
-defineEmits(['edit', 'delete', 'change-page'])
+defineEmits(['edit', 'delete', 'activate', 'change-page'])
 
 const displayedPages = computed(() => {
     const current = props.page

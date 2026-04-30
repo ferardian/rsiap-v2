@@ -118,6 +118,7 @@
               @change-page="p => changePage('utama', p)"
               @edit="openEditModal"
               @delete="deleteItem"
+              @activate="handleActivate"
             />
           </div>
           <div v-else key="ruang">
@@ -131,6 +132,7 @@
               @change-page="p => changePage('ruang', p)"
               @edit="openEditModal"
               @delete="deleteItem"
+              @activate="handleActivate"
             />
           </div>
         </transition>
@@ -352,6 +354,21 @@ const handleSaveRuang = async (formData) => {
         toast.error('Gagal menyimpan data')
     } finally {
         isSaving.value = false
+    }
+}
+
+const handleActivate = async (item) => {
+    try {
+        if (activeTab.value === 'utama') {
+            await api.updateUtama(item.id_master, { ...item, status: '1' })
+        } else {
+            await api.updateRuang(item.id_inmut, { ...item, status: '1' })
+        }
+        toast.success('Data berhasil diaktifkan kembali')
+        refreshData()
+    } catch (error) {
+        console.error(error)
+        toast.error('Gagal mengaktifkan data')
     }
 }
 
