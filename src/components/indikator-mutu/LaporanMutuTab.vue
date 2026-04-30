@@ -422,16 +422,21 @@ const handleClickOutside = (event) => {
 }
 
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-
-const printChartOptions = {
-    chart: { type: 'line', toolbar: { show: false }, animations: { enabled: false } },
-    stroke: { curve: 'smooth', width: 3 },
-    markers: { size: 5 },
-    xaxis: { categories: monthNames },
-    yaxis: { min: 0, max: 100 },
-    colors: ['#435ebe']
-}
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+
+const printChartOptions = reactive({
+    chart: { type: 'line', toolbar: { show: false }, animations: { enabled: false } },
+    stroke: { 
+        width: [4, 2],
+        curve: 'smooth',
+        dashArray: [0, 8]
+    },
+    markers: { size: 5 },
+    xaxis: { categories: [] },
+    yaxis: { min: 0, max: 100 },
+    colors: ['#435ebe', '#ff4560'],
+    legend: { show: true, position: 'top' }
+})
 
 const currentYear = new Date().getFullYear()
 const years = Array.from({length: 5}, (_, i) => currentYear - i)
@@ -942,11 +947,22 @@ const exportFullReportToPDF = async () => {
             const monthly = detailRes.data.data.monthly;
 
             // 3. Render Chart to Hidden Component
+            printChartOptions.xaxis.categories = monthly.map(m => shortMonthNames[parseInt(m.bulan) - 1]);
+            
             printChartData.value = {
-                series: [{
-                    name: 'Capaian',
-                    data: monthly.map(m => m.score)
-                }]
+                series: [
+                    {
+                        name: 'Capaian (%)',
+                        data: monthly.map(m => m.score)
+                    },
+                    {
+                        name: 'Target',
+                        data: monthly.map(() => {
+                            const std = parseFloat(item.standar_utama || item.standar)
+                            return isNaN(std) ? 0 : std
+                        })
+                    }
+                ]
             };
             
             // Wait for Vue to render and ApexCharts to be ready
