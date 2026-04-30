@@ -138,8 +138,8 @@
                 <td>
                   <div class="d-flex align-items-center gap-2 mb-1">
                     <div class="fw-bold text-primary">{{ item.nama_inmut }}</div>
-                    <span v-if="item.feedback" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2" style="font-size: 0.65rem;">
-                        <i class="fas fa-check-circle me-1"></i> Ter-Supervisi
+                    <span v-if="item.feedback" class="badge bg-success shadow-sm rounded-pill px-2 py-1" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.3px;">
+                        <i class="fas fa-check-circle me-1"></i> TER-SUPERVISI
                     </span>
                   </div>
                   <small class="text-muted">{{ item.nama_ruang }}</small>
