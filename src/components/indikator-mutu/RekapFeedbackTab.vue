@@ -25,16 +25,16 @@
             </div>
             <div class="col-md-2">
                 <label class="filter-label invisible">ACTION</label>
-                <div class="d-flex gap-2">
-                    <div class="dropdown w-100" v-click-outside="() => showExportMenu = false">
+                <div class="d-flex gap-2 align-items-stretch" style="height: 40px;">
+                    <div class="dropdown flex-grow-1" v-click-outside="() => showExportMenu = false">
                         <button 
-                            class="btn btn-outline-primary dropdown-toggle w-100 d-flex align-items-center justify-content-center" 
+                            class="btn btn-success dropdown-toggle w-100 h-100 d-flex align-items-center justify-content-center border-0 shadow-sm" 
                             type="button" 
                             @click="showExportMenu = !showExportMenu"
                         >
                             <i class="fas fa-download me-2"></i> Export
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 show" v-if="showExportMenu" style="display: block; top: 100%; margin-top: 5px;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 show" v-if="showExportMenu" style="display: block; top: 100%; margin-top: 5px; z-index: 1050;">
                             <li>
                                 <a class="dropdown-item py-2" href="#" @click.prevent="exportToExcel(); showExportMenu = false">
                                     <i class="fas fa-file-excel text-success me-2"></i> Export Excel (.xlsx)
@@ -47,7 +47,7 @@
                             </li>
                         </ul>
                     </div>
-                    <button class="btn btn-primary d-flex align-items-center justify-content-center" style="width: 45px; height: 38px;" @click="fetchData" title="Refresh">
+                    <button class="btn btn-primary d-flex align-items-center justify-content-center border-0 shadow-sm" style="width: 45px;" @click="fetchData" title="Refresh">
                         <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
                     </button>
                 </div>
