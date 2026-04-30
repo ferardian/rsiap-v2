@@ -80,9 +80,8 @@
               </option>
             </select>
 
-            <!-- Filter Status (Only for Ruang) -->
+            <!-- Filter Status -->
             <select 
-              v-if="activeTab === 'ruang'"
               class="form-select border shadow-sm rounded-3 action-item bg-white custom-select" 
               style="width: 160px;"
               v-model="filters.status"
@@ -211,7 +210,7 @@ const switchTab = (tab) => {
     activeTab.value = tab
     filters.keyword = '' 
     filters.kategori = ''
-    filters.status = tab === 'ruang' ? '1' : '' // Default Aktif for Ruang
+    filters.status = '1' // Default Aktif
     filters.dep_id = ''
     refreshData()
 }
@@ -242,6 +241,7 @@ const fetchUtama = async () => {
             keyword: filters.keyword
         }
         if (filters.kategori) params.kategori = filters.kategori
+        if (filters.status) params.status = filters.status
         
         const response = await api.getUtama(params)
         const data = response.data.data
@@ -358,7 +358,7 @@ const handleSaveRuang = async (formData) => {
 const deleteItem = async (item) => {
     const result = await Swal.fire({
         title: 'Apakah Anda yakin?',
-        text: "Data yang dihapus tidak dapat dikembalikan!",
+        text: "Data akan dinon-aktifkan dari sistem!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
