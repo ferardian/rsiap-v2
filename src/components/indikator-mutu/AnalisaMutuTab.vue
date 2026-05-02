@@ -684,7 +684,13 @@ const openModal = async (item, detail = false) => {
         form.id_inmut = item.id_inmut
         form.nama_inmut = item.nama_inmut // For display
         form.nama_ruang = item.nama_ruang // For display
-        form.bulan = item.tanggal_awal.slice(0, 7) // approximate
+        
+        // Fix: Use Date object to handle timezone shift instead of raw string slice
+        const d = new Date(item.tanggal_awal);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        form.bulan = `${year}-${month}`;
+
         form.jml_num = item.jml_num
         form.jml_denum = item.jml_denum
         form.analisa = item.analisa
@@ -785,6 +791,7 @@ const saveFeedback = async () => {
         }
         await api.storeFeedback(payload)
         toast.success('Supervisi & Rekomendasi berhasil disimpan')
+        fetchData() // Refresh list data to show updated feedback date/status
     } catch (error) {
         console.error(error)
         toast.error('Gagal menyimpan feedback')
