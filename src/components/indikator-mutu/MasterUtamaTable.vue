@@ -1,7 +1,7 @@
 <template>
   <div class="card shadow-sm border-0">
     <div class="card-body p-0">
-      <div class="table-responsive">
+      <div class="table-responsive d-none d-md-block">
         <table class="table table-hover align-middle mb-0">
           <thead class="bg-light">
             <tr>
@@ -63,6 +63,57 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Mobile Card View -->
+      <div class="d-md-none p-3">
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div v-else-if="items.length === 0" class="text-center py-5 text-muted">
+          <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+          <p>Tidak ada data ditemukan.</p>
+        </div>
+        <div v-else v-for="(item, index) in items" :key="item.id_master" class="card mb-3 border shadow-sm rounded-3 overflow-hidden">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-light text-dark border small">{{ item.kategori }}</span>
+              <span v-if="item.status == '1'" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2">
+                 Aktif
+              </span>
+              <span v-else class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-2">
+                 Non-Aktif
+              </span>
+            </div>
+            <h6 class="fw-bold text-primary mb-1">{{ item.nama_inmut }}</h6>
+            <p class="text-muted small mb-3 text-truncate-2">{{ stripHtml(item.definisi) }}</p>
+            
+            <div class="row g-2 mb-3 bg-light p-2 rounded-3">
+              <div class="col-6">
+                <small class="text-muted d-block">Standar</small>
+                <span class="fw-bold">{{ getRumusSymbol(item.rumus) }} {{ item.standar }}</span>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Satuan</small>
+                <span class="fw-bold">{{ item.satuan || '-' }}</span>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary flex-grow-1 py-2 rounded-3" @click="$emit('edit', item)">
+                <i class="fas fa-edit me-1"></i> Edit
+              </button>
+              <button v-if="item.status == '1'" class="btn btn-outline-danger py-2 rounded-3" @click="$emit('delete', item)">
+                <i class="fas fa-trash"></i>
+              </button>
+              <button v-else class="btn btn-outline-success py-2 rounded-3" @click="$emit('activate', item)">
+                <i class="fas fa-check-circle"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="card-footer bg-white border-top py-3">
@@ -198,6 +249,14 @@ const getRumusSymbol = (val) => {
     opacity: 0.5;
     background: #f8f9fa;
     cursor: not-allowed;
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Mobile Responsive */

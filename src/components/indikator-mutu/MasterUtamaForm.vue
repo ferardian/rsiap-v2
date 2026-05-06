@@ -12,18 +12,18 @@
         <div class="modal-body bg-light">
           
           <!-- Tabs -->
-          <ul class="nav nav-tabs mb-3">
+          <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto pb-1 custom-tabs">
             <li class="nav-item">
               <a class="nav-link" :class="{ active: activeTab === 'umum' }" href="#" @click.prevent="activeTab = 'umum'">Data Umum</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" :class="{ active: activeTab === 'detail' }" href="#" @click.prevent="activeTab = 'detail'">Detail Indikator</a>
+              <a class="nav-link text-nowrap" :class="{ active: activeTab === 'detail' }" href="#" @click.prevent="activeTab = 'detail'">Detail Indikator</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" :class="{ active: activeTab === 'metode' }" href="#" @click.prevent="activeTab = 'metode'">Metodologi</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" :class="{ active: activeTab === 'periode' }" href="#" @click.prevent="activeTab = 'periode'">Periode & PJ</a>
+            <li class="nav-item text-nowrap">
+              <a class="nav-link text-nowrap" :class="{ active: activeTab === 'periode' }" href="#" @click.prevent="activeTab = 'periode'">Periode & PJ</a>
             </li>
           </ul>
 
@@ -245,3 +245,32 @@ const save = () => {
     emit('save', { ...form })
 }
 </script>
+
+<style scoped>
+.custom-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+.custom-tabs::-webkit-scrollbar-thumb {
+    background: #dee2e6;
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: none;
+    }
+    
+    .modal-body {
+        padding: 0.75rem !important;
+    }
+
+    .bg-white.p-3 {
+        padding: 1rem !important;
+    }
+
+    :deep(.ql-editor) {
+        min-height: 120px !important;
+    }
+}
+</style>

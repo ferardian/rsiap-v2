@@ -44,6 +44,29 @@ export const useMenuStore = defineStore('menu', {
 
       const menu = findMenu(state.userMenus, menuId)
       return menu ? Boolean(menu[permission]) : false
+    },
+
+    // Check if user has permission for specific route
+    hasMenuPermissionByRoute: (state) => (routePath, permission = 'can_view') => {
+      const findMenuByRoute = (menus, path) => {
+        for (const menu of menus) {
+          // Check if current menu route matches
+          if (menu.route === path) return menu
+          
+          // Check children recursively
+          if (menu.children && menu.children.length > 0) {
+            const found = findMenuByRoute(menu.children, path)
+            if (found) return found
+          }
+        }
+        return null
+      }
+
+      const menu = findMenuByRoute(state.userMenus, routePath)
+      
+      // If super admin (determined by role name or other logic), grant all permissions
+      // But here we strictly follow menu permission data from API
+      return menu ? Boolean(menu[permission]) : false
     }
   },
 

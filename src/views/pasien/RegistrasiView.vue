@@ -1,5 +1,6 @@
 <template>
-  <div class="registration-container p-3 p-md-4">
+  <div class="registrasi-view-root">
+    <div class="registration-container p-3 p-md-4">
     <div class="registration-card glass-effect animate__animated animate__fadeIn">
       <!-- Header Area -->
       <div class="card-header-premium">
@@ -964,6 +965,7 @@
       <div class="print-footer text-center mt-1 small" style="font-size: 9px;">
           <p>{{ new Date().toLocaleString('id-ID') }}</p>
       </div>
+    </div>
   </div>
 </template>
 

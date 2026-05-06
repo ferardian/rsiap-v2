@@ -12,12 +12,12 @@
         <div class="modal-body bg-light">
           
           <!-- Tabs -->
-          <ul class="nav nav-tabs mb-3">
+          <ul class="nav nav-tabs mb-3 flex-nowrap overflow-auto pb-1 custom-tabs">
             <li class="nav-item">
-              <a class="nav-link" :class="{ active: activeTab === 'identitas' }" href="#" @click.prevent="activeTab = 'identitas'">Identitas</a>
+              <a class="nav-link text-nowrap" :class="{ active: activeTab === 'identitas' }" href="#" @click.prevent="activeTab = 'identitas'">Identitas</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" :class="{ active: activeTab === 'teknis' }" href="#" @click.prevent="activeTab = 'teknis'">Teknis & Pengukuran</a>
+              <a class="nav-link text-nowrap" :class="{ active: activeTab === 'teknis' }" href="#" @click.prevent="activeTab = 'teknis'">Teknis & Pengukuran</a>
             </li>
           </ul>
 
@@ -200,7 +200,7 @@ const selectedJenisIndikator = ref(null)
 const jenisIndikatorOptions = [
     { value: 'Indikator Mutu Nasional', label: 'Indikator Mutu Nasional', id: 2 },
     { value: 'Indikator Mutu Prioritas Rumah Sakit', label: 'Indikator Mutu Prioritas Rumah Sakit', id: 3 },
-    { value: 'Indikato Mutu Prioritas Unit', label: 'Indikato Mutu Prioritas Unit', id: 4 },
+    { value: 'Indikator Mutu Prioritas Unit', label: 'Indikator Mutu Prioritas Unit', id: 4 },
     { value: 'Indikator Mutu Unit', label: 'Indikator Mutu Unit', id: 5 }
 ]
 
@@ -312,3 +312,32 @@ onMounted(() => {
     fetchMasterUtama()
 })
 </script>
+
+<style scoped>
+.custom-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+.custom-tabs::-webkit-scrollbar-thumb {
+    background: #dee2e6;
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: none;
+    }
+    
+    .modal-body {
+        padding: 0.75rem !important;
+    }
+
+    .bg-white.p-3 {
+        padding: 1rem !important;
+    }
+
+    :deep(.ql-editor) {
+        min-height: 120px !important;
+    }
+}
+</style>

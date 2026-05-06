@@ -63,7 +63,20 @@
                 </td>
                 <td>
                   <div class="patient-name">{{ patient.nm_pasien }}</div>
-                  <small class="text-muted" v-if="patient.no_ktp">{{ patient.no_ktp }}</small>
+                  <div class="patient-meta-compact mt-1">
+                    <span v-if="patient.no_ktp" class="meta-item" title="NIK">
+                      <i class="fas fa-id-card text-primary opacity-75"></i> {{ patient.no_ktp }}
+                    </span>
+                    <span v-if="patient.no_peserta" class="meta-item" title="No. BPJS">
+                      <i class="fas fa-credit-card text-success opacity-75"></i> {{ patient.no_peserta }}
+                    </span>
+                    <span v-if="patient.no_tlp && patient.no_tlp !== '-'" class="meta-item" title="No. HP">
+                      <i class="fas fa-phone-alt text-info opacity-75"></i> {{ patient.no_tlp }}
+                    </span>
+                    <span v-if="patient.namakeluarga" class="meta-item" title="Penanggung Jawab">
+                      <i class="fas fa-user-friends text-secondary opacity-75"></i> {{ patient.namakeluarga }}
+                    </span>
+                  </div>
                 </td>
                 <td>
                   <span :class="['badge-gender', patient.jk === 'L' ? 'male' : 'female']">
@@ -80,12 +93,14 @@
                   <div class="address-info">{{ patient.alamat || '-' }}</div>
                 </td>
                 <td>
+                  <div class="d-flex align-items-center justify-content-center gap-1">
                     <button class="btn-action" @click="viewHistory(patient)" title="Riwayat Pemeriksaan">
                         <i class="fas fa-history text-primary"></i>
                     </button>
                     <button class="btn-action" @click="viewDetail(patient)" title="Lihat Detail">
                         <i class="fas fa-eye"></i>
                     </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -129,9 +144,21 @@
       <!-- Pagination -->
       <div class="pagination-container" v-if="pagination.total > 0">
         <div class="pagination-info">
-          Menampilkan {{ pagination.from || 0 }} - {{ pagination.to || 0 }} dari {{ pagination.total }} data
+          Menampilkan <span class="fw-bold text-dark">{{ pagination.from || 0 }}</span> 
+          - <span class="fw-bold text-dark">{{ pagination.to || 0 }}</span> 
+          dari <span class="fw-bold text-primary">{{ pagination.total }}</span> data
         </div>
+        
         <div class="pagination-controls">
+          <button 
+            class="btn-page" 
+            :disabled="pagination.current_page === 1"
+            @click="changePage(1)"
+            title="Halaman Pertama"
+          >
+            <i class="fas fa-angle-double-left"></i>
+          </button>
+          
           <button 
             class="btn-page" 
             :disabled="pagination.current_page === 1"
@@ -139,13 +166,40 @@
           >
             <i class="fas fa-chevron-left"></i>
           </button>
-          <span class="current-page">{{ pagination.current_page }}</span>
+
+          <div class="page-numbers d-none d-md-flex">
+            <template v-for="page in pageNumbers" :key="page">
+              <button 
+                v-if="page !== '...'"
+                class="btn-number" 
+                :class="{ active: page === pagination.current_page }"
+                @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+              <span v-else class="page-dots">{{ page }}</span>
+            </template>
+          </div>
+
+          <div class="page-indicator-mobile d-md-none">
+            {{ pagination.current_page }} / {{ pagination.last_page }}
+          </div>
+
           <button 
             class="btn-page" 
             :disabled="pagination.current_page === pagination.last_page"
             @click="changePage(pagination.current_page + 1)"
           >
             <i class="fas fa-chevron-right"></i>
+          </button>
+
+          <button 
+            class="btn-page" 
+            :disabled="pagination.current_page === pagination.last_page"
+            @click="changePage(pagination.last_page)"
+            title="Halaman Terakhir"
+          >
+            <i class="fas fa-angle-double-right"></i>
           </button>
         </div>
       </div>
@@ -168,7 +222,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import pasienService from '../../services/pasienService';
 import PatientDetailModal from './components/PatientDetailModal.vue';
 import RiwayatPemeriksaanModal from './components/RiwayatPemeriksaanModal.vue';
@@ -283,6 +337,38 @@ const viewHistory = (patient) => {
   showHistoryModal.value = true;
 };
 
+// Page numbers logic
+const pageNumbers = computed(() => {
+  const current = pagination.value.current_page;
+  const last = pagination.value.last_page;
+  const delta = 2;
+  const left = current - delta;
+  const right = current + delta + 1;
+  const range = [];
+  const rangeWithDots = [];
+  let l;
+
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || (i >= left && i < right)) {
+      range.push(i);
+    }
+  }
+
+  for (let i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push('...');
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+
+  return rangeWithDots;
+});
+
 onMounted(() => {
   fetchPatients();
 });
@@ -290,7 +376,7 @@ onMounted(() => {
 
 <style scoped>
 .patient-data-container {
-  padding: 1.5rem;
+  padding: 1rem;
   background-color: #f8f9fa;
   min-height: 100vh;
 }
@@ -306,10 +392,10 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #2c3e50;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -321,7 +407,7 @@ onMounted(() => {
 
 .page-subtitle {
   color: #7f8c8d;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   margin: 0;
 }
 
@@ -348,10 +434,10 @@ onMounted(() => {
 
 .search-input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.8rem;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
   border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
   background-color: #ffffff;
 }
@@ -390,11 +476,11 @@ onMounted(() => {
 
 .custom-table thead th {
   background-color: #f8f9fa;
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1rem;
   font-weight: 600;
   color: #636e72;
   text-transform: uppercase;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   letter-spacing: 0.5px;
   border-bottom: 2px solid #eef2f7;
 }
@@ -408,7 +494,7 @@ onMounted(() => {
 }
 
 .custom-table td {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   vertical-align: middle;
   border-bottom: 1px solid #f1f2f6;
   color: #2d3436;
@@ -417,23 +503,42 @@ onMounted(() => {
 .badge-rm {
   background-color: #e3f2fd;
   color: #1976d2;
-  padding: 0.35rem 0.75rem;
-  border-radius: 8px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-family: 'Roboto Mono', monospace;
 }
 
 .patient-name {
   font-weight: 600;
   color: #2c3e50;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.patient-meta-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.patient-meta-compact .meta-item {
+  font-size: 0.72rem;
+  color: #636e72;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f1f2f6;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .badge-gender {
-  padding: 0.25rem 0.75rem;
+  padding: 0.15rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
@@ -452,6 +557,12 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.85rem;
+}
+
+.dob-info {
+  font-size: 0.85rem;
+  line-height: 1.3;
 }
 
 .btn-action {
@@ -460,8 +571,8 @@ onMounted(() => {
     color: #95a5a6;
     cursor: pointer;
     transition: color 0.2s;
-    padding: 0.5rem;
-    font-size: 1.1rem;
+    padding: 0.4rem;
+    font-size: 1rem;
 }
 
 .btn-action:hover {
@@ -576,33 +687,77 @@ onMounted(() => {
 }
 
 .btn-page {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
   background: white;
-  color: #2c3e50;
+  color: #636e72;
   cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.btn-page:hover:not(:disabled) {
+  background-color: #f1f8ff;
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.btn-page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f8f9fa;
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-number {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #636e72;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-page:hover:not(:disabled) {
+.btn-number:hover:not(.active) {
+  background-color: #f1f2f6;
+  color: #2d3436;
+}
+
+.btn-number.active {
+  background-color: #3498db;
+  color: white;
   border-color: #3498db;
-  color: #3498db;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
 }
 
-.btn-page:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #f8f9fa;
+.page-dots {
+  color: #b2bec3;
+  font-weight: 700;
+  padding: 0 0.2rem;
 }
 
-.current-page {
-  font-weight: 600;
+.page-indicator-mobile {
+  font-weight: 700;
   color: #2c3e50;
+  font-size: 0.9rem;
 }
 
 /* Responsive Utilities */

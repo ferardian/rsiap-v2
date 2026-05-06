@@ -35,9 +35,9 @@
       <div class="card-header bg-primary border-0 py-3 px-4">
         <div class="d-flex flex-wrap flex-lg-nowrap gap-3 align-items-center justify-content-between">
           <!-- Search & Filters Group -->
-          <div class="d-flex flex-grow-1 gap-2 align-items-center">
+          <div class="d-flex flex-wrap flex-lg-nowrap flex-grow-1 gap-2 align-items-center">
             <!-- Search -->
-            <div class="input-group shadow-sm rounded-3 overflow-hidden border action-item bg-white" style="max-width: 400px;">
+            <div class="input-group shadow-sm rounded-3 overflow-hidden border action-item bg-white search-group">
               <span class="input-group-text bg-white border-0 pe-1 ps-3">
                 <i class="fas fa-search text-muted"></i>
               </span>
@@ -53,8 +53,7 @@
             <!-- Filter Kategori (Only for Utama) -->
             <select 
               v-if="activeTab === 'utama'"
-              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select" 
-              style="width: 280px;"
+              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select filter-select" 
               v-model="filters.kategori"
               @change="refreshData"
             >
@@ -67,8 +66,7 @@
             <!-- Filter Unit (Only for Ruang) -->
             <select 
               v-if="activeTab === 'ruang'"
-              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select flex-grow-1" 
-              style="max-width: 350px;"
+              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select filter-select-unit" 
               v-model="filters.dep_id"
               @change="refreshData"
             >
@@ -81,8 +79,7 @@
 
             <!-- Filter Status -->
             <select 
-              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select" 
-              style="width: 160px;"
+              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select filter-select-status" 
               v-model="filters.status"
               @change="refreshData"
             >
@@ -93,9 +90,9 @@
           </div>
 
           <!-- Action Button Group -->
-          <div class="mt-2 mt-lg-0 ps-lg-2">
+          <div class="mt-2 mt-lg-0">
             <button 
-              class="btn btn-add-gradient px-5 rounded-3 shadow-sm fw-bold action-item"
+              class="btn btn-add-gradient w-100 w-lg-auto px-4 rounded-3 shadow-sm fw-bold action-item"
               @click="openCreateModal"
             >
               <i class="fas fa-plus me-2"></i> Tambah Indikator
@@ -478,6 +475,23 @@ onMounted(() => {
     box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.2) !important;
 }
 
+.search-group {
+    width: 100%;
+    max-width: 400px;
+}
+
+.filter-select {
+    width: 280px;
+}
+
+.filter-select-unit {
+    width: 350px;
+}
+
+.filter-select-status {
+    width: 160px;
+}
+
 .btn-add-gradient {
     height: 42px !important;
     background: linear-gradient(45deg, #28a745, #20c997);
@@ -538,6 +552,16 @@ onMounted(() => {
         text-align: center;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
+    }
+
+    .search-group, .filter-select, .filter-select-unit, .filter-select-status {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .card-header {
+        padding: 1rem !important;
     }
 }
 </style>

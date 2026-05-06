@@ -147,7 +147,7 @@
           <div class="d-flex flex-wrap align-items-center gap-2">
              <h5 class="m-0 fw-bold me-2"><i class="fas fa-list-ul text-primary me-2"></i>Daftar Antrean Online</h5>
              <button 
-               v-if="filteredAntrol.length > 0"
+               v-if="filteredAntrol.length > 0 && canUpdate"
                class="btn btn-sm btn-outline-primary text-nowrap fw-bold rounded-pill px-3 btn-bulk-sync-all" 
                @click="bulkSyncAllShown"
                :disabled="isBulkingAll || loading"
@@ -236,6 +236,9 @@
                     <span v-if="item.stts_daftar" :class="['badge rounded-pill fw-normal ms-1', item.stts_daftar === 'Baru' ? 'bg-primary-subtle text-primary border-primary-subtle' : 'bg-secondary-subtle text-secondary border-secondary-subtle']" style="font-size: 0.65rem;">
                       {{ item.stts_daftar }}
                     </span>
+                    <span v-if="item.tgl_registrasi" class="badge rounded-pill bg-light text-dark border fw-normal ms-1" style="font-size: 0.65rem;">
+                      <i class="far fa-calendar-alt me-1 text-muted"></i>{{ item.tgl_registrasi }}
+                    </span>
                   </div>
                   <div v-if="item.nokapst && sepMap[item.nokapst] && sepMap[item.nokapst].user" class="mt-1">
                     <span class="badge rounded-pill bg-light text-dark border fw-normal" style="font-size: 0.65rem;">
@@ -289,6 +292,7 @@
                       <i class="fas" :class="taskLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-list-check'"></i>
                     </button>
                     <button 
+                      v-if="canUpdate"
                       class="btn btn-sync-task" 
                       title="Adjustment Waktu Antrean"
                       @click="showAdjustmentModal(item)"
@@ -297,6 +301,7 @@
                       <i class="fas" :class="syncLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-clock-rotate-left'"></i>
                     </button>
                     <button 
+                      v-if="canUpdate"
                       class="btn btn-bulk-sync" 
                       title="Sync Semua Task Sekaligus"
                       @click="openBulkSyncModal(item)"
@@ -305,6 +310,7 @@
                       <i class="fas" :class="bulkSyncLoading === item.kodebooking ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
                     </button>
                     <button 
+                      v-if="canDelete"
                       class="btn btn-cancel-task" 
                       title="Batalkan Antrean"
                       @click="cancelQueue(item)"
@@ -666,9 +672,11 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import bpjsAntrolService from '@/services/bpjsAntrolService'
 import { useToast } from 'vue-toastification'
+import { useMenuStore } from '@/stores/menu'
 import Swal from 'sweetalert2'
 
 const toast = useToast()
+const menuStore = useMenuStore()
 const loading = ref(false)
 const sepList = ref([]) // Changed from sepCount
 const antrolList = ref([])
@@ -697,6 +705,15 @@ const adjData = reactive({
   task6: { tgl: '', jam: '' },
   task7: { tgl: '', jam: '' },
   has_resep: false
+})
+
+// Permissions
+const canUpdate = computed(() => {
+  return menuStore.hasMenuPermissionByRoute('/bpjs/antrol', 'can_update')
+})
+
+const canDelete = computed(() => {
+  return menuStore.hasMenuPermissionByRoute('/bpjs/antrol', 'can_delete')
 })
 
 const filters = reactive({
@@ -1175,7 +1192,10 @@ const updateLocalTask = async (taskId) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (menuStore.userMenus.length === 0) {
+    await menuStore.fetchUserMenus()
+  }
   fetchAntrolData()
 })
 </script>
