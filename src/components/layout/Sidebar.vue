@@ -59,14 +59,16 @@
           </div>
 
           <!-- Children Submenu -->
-          <ul v-if="menu.children && menu.children.length > 0 && (expandedMenus.includes(menu.id_menu) || searchQuery) && !effectiveIsCollapsed" class="nav-sublist">
-            <li v-for="child in menu.children" :key="child.id_menu" class="nav-item">
-              <router-link :to="child.route" class="nav-link sub-link" active-class="active" @click="handleSubmenuClick">
-                <span :class="`${getIconClass(child.icon)} sub-icon`">{{ getIconContent(child.icon) }}</span>
-                <span class="nav-text">{{ child.nama_menu }}</span>
-              </router-link>
-            </li>
-          </ul>
+          <transition name="submenu">
+            <ul v-show="menu.children && menu.children.length > 0 && (expandedMenus.includes(menu.id_menu) || searchQuery) && !effectiveIsCollapsed" class="nav-sublist">
+              <li v-for="child in menu.children" :key="child.id_menu" class="nav-item">
+                <router-link :to="child.route" class="nav-link sub-link" active-class="active" @click="handleSubmenuClick">
+                  <span :class="`${getIconClass(child.icon)} sub-icon`">{{ getIconContent(child.icon) }}</span>
+                  <span class="nav-text">{{ child.nama_menu }}</span>
+                </router-link>
+              </li>
+            </ul>
+          </transition>
         </li>
         <li v-if="filteredMenuTree.length === 0 && searchQuery" class="no-results text-center py-4 small opacity-75">
           <i class="fas fa-search-minus d-block mb-2 fs-4"></i>
@@ -636,6 +638,20 @@ onMounted(async () => {
 
 .arrow-icon.rotated {
     transform: rotate(90deg);
+}
+
+/* Submenu Transition */
+.submenu-enter-active,
+.submenu-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.submenu-enter-from,
+.submenu-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 
 /* Footer is removed but keeping comments consistent */
