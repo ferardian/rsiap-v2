@@ -537,38 +537,37 @@
           <div class="modal-body p-4 bg-light">
             <form @submit.prevent="submitTambahPasien" class="row g-4" id="formTambahPasien">
               
-              <!-- Kiri: Identitas Personal -->
               <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                  <div class="card-header bg-white border-bottom-0 py-3 d-flex align-items-center justify-content-center">
-                    <h6 class="fw-bold text-white mb-0"><i class="fas fa-id-card me-2"></i>A. IDENTITAS PERSONAL</h6>
+                <div class="card form-card-premium border-0 h-100">
+                  <div class="card-header card-header-gradient a">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-id-card me-2"></i>A. IDENTITAS PERSONAL</h6>
                   </div>
-                  <div class="card-body">
+                  <div class="card-body p-4">
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">No. KTP / NIK</label>
-                      <div class="input-group input-group-sm">
+                      <label class="label-premium"><i class="fas fa-fingerprint"></i> No. KTP / NIK</label>
+                      <div class="input-group-premium">
                         <input type="text" v-model="formPasienBaru.no_ktp" class="form-control" placeholder="16 Digit NIK" maxlength="16">
-                        <button class="btn btn-outline-primary" type="button" @click="lookupBpjsByNik" :disabled="loadingBpjsNik">
+                        <button class="btn btn-primary" type="button" @click="lookupBpjsByNik" :disabled="loadingBpjsNik" title="Cek BPJS by NIK">
                           <i v-if="loadingBpjsNik" class="fas fa-spinner fa-spin"></i>
                           <i v-else class="fas fa-search"></i>
                         </button>
                       </div>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">Nama Lengkap Pasien <span class="text-danger">*</span></label>
-                      <input type="text" v-model="formPasienBaru.nm_pasien" class="form-control form-control-sm" required placeholder="Sesuai KTP">
+                      <label class="label-premium"><i class="fas fa-user"></i> Nama Lengkap Pasien <span class="text-danger">*</span></label>
+                      <input type="text" v-model="formPasienBaru.nm_pasien" class="form-control form-control-premium" required placeholder="Sesuai KTP">
                     </div>
                     <div class="row">
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Jenis Kelamin <span class="text-danger">*</span></label>
-                        <select v-model="formPasienBaru.jk" class="form-select form-select-sm" required>
+                        <label class="label-premium"><i class="fas fa-venus-mars"></i> Jenis Kelamin <span class="text-danger">*</span></label>
+                        <select v-model="formPasienBaru.jk" class="form-select form-select-premium" required>
                           <option value="L">Laki-laki</option>
                           <option value="P">Perempuan</option>
                         </select>
                       </div>
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Gol. Darah</label>
-                        <select v-model="formPasienBaru.gol_darah" class="form-select form-select-sm">
+                        <label class="label-premium"><i class="fas fa-tint"></i> Gol. Darah</label>
+                        <select v-model="formPasienBaru.gol_darah" class="form-select form-select-premium">
                           <option value="-">-</option>
                           <option value="A">A</option>
                           <option value="B">B</option>
@@ -579,22 +578,22 @@
                     </div>
                     <div class="row">
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Tempat Lahir <span class="text-danger">*</span></label>
-                        <input type="text" v-model="formPasienBaru.tmp_lahir" class="form-control form-control-sm" required>
+                        <label class="label-premium"><i class="fas fa-map-marker-alt"></i> Tempat Lahir <span class="text-danger">*</span></label>
+                        <input type="text" v-model="formPasienBaru.tmp_lahir" class="form-control form-control-premium" required>
                       </div>
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Tanggal Lahir <span class="text-danger">*</span></label>
-                        <input type="date" v-model="formPasienBaru.tgl_lahir" class="form-control form-control-sm" required>
+                        <label class="label-premium"><i class="fas fa-calendar-day"></i> Tgl Lahir <span class="text-danger">*</span></label>
+                        <input type="date" v-model="formPasienBaru.tgl_lahir" class="form-control form-control-premium" required>
                       </div>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">Nama Ibu Kandung</label>
-                      <input type="text" v-model="formPasienBaru.nm_ibu" class="form-control form-control-sm" placeholder="Nama Ibu">
+                      <label class="label-premium"><i class="fas fa-female"></i> Nama Ibu Kandung</label>
+                      <input type="text" v-model="formPasienBaru.nm_ibu" class="form-control form-control-premium" placeholder="Nama Ibu">
                     </div>
                     <div class="row">
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Status Nikah</label>
-                        <select v-model="formPasienBaru.stts_nikah" class="form-select form-select-sm">
+                        <label class="label-premium"><i class="fas fa-heart"></i> Status Nikah</label>
+                        <select v-model="formPasienBaru.stts_nikah" class="form-select form-select-premium">
                           <option value="BELUM MENIKAH">BELUM MENIKAH</option>
                           <option value="MENIKAH">MENIKAH</option>
                           <option value="JANDA">JANDA</option>
@@ -603,8 +602,8 @@
                         </select>
                       </div>
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Agama</label>
-                        <select v-model="formPasienBaru.agama" class="form-select form-select-sm">
+                        <label class="label-premium"><i class="fas fa-pray"></i> Agama</label>
+                        <select v-model="formPasienBaru.agama" class="form-select form-select-premium">
                           <option value="ISLAM">ISLAM</option>
                           <option value="KRISTEN">KRISTEN</option>
                           <option value="KATHOLIK">KATHOLIK</option>
@@ -617,8 +616,8 @@
                     </div>
                     <div class="row">
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Pendidikan</label>
-                        <select v-model="formPasienBaru.pnd" class="form-select form-select-sm">
+                        <label class="label-premium"><i class="fas fa-graduation-cap"></i> Pendidikan</label>
+                        <select v-model="formPasienBaru.pnd" class="form-select form-select-premium">
                           <option value="TS">TS</option>
                           <option value="TK">TK</option>
                           <option value="SD">SD</option>
@@ -635,30 +634,28 @@
                         </select>
                       </div>
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Pekerjaan</label>
-                        <input type="text" v-model="formPasienBaru.pekerjaan" class="form-control form-control-sm" placeholder="Contoh: WIRASWASTA">
+                        <label class="label-premium"><i class="fas fa-briefcase"></i> Pekerjaan</label>
+                        <input type="text" v-model="formPasienBaru.pekerjaan" class="form-control form-control-premium" placeholder="WIRASWASTA">
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Tengah: Kontak & Domisili -->
               <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                  <div class="card-header bg-white border-bottom-0 py-3 d-flex align-items-center justify-content-center">
-                    <h6 class="fw-bold text-white mb-0"><i class="fas fa-map-marker-alt me-2"></i>B. KONTAK & DOMISILI</h6>
+                <div class="card form-card-premium border-0 h-100">
+                  <div class="card-header card-header-gradient b">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-map-marker-alt me-2"></i>B. KONTAK & DOMISILI</h6>
                   </div>
-                  <div class="card-body">
+                  <div class="card-body p-4">
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">Alamat Lengkap <span class="text-danger">*</span></label>
-                      <textarea v-model="formPasienBaru.alamat" class="form-control form-control-sm" rows="3" required placeholder="Jl. Contoh, RT/RW"></textarea>
+                      <label class="label-premium"><i class="fas fa-home"></i> Alamat Lengkap <span class="text-danger">*</span></label>
+                      <textarea v-model="formPasienBaru.alamat" class="form-control form-control-premium" rows="3" required placeholder="Jl. Contoh, RT/RW"></textarea>
                     </div>
                     
-                    <!-- Wilayah Selection -->
                     <div class="row">
                       <div class="col-12 mb-2">
-                        <label class="form-label small fw-bold">Wilayah (Pilih dari daftar)</label>
+                        <label class="label-premium"><i class="fas fa-map"></i> Wilayah (Pilih dari daftar)</label>
                       </div>
                       <div class="col-6 mb-3">
                         <v-select
@@ -668,13 +665,9 @@
                           label="nm_prop"
                           @search="onSearchPropinsi"
                           :filterable="false"
-                          placeholder="Cari Propinsi..."
+                          placeholder="Propinsi..."
                           class="v-select-custom"
                         >
-                          <template #no-options="{ search, searching }">
-                            <template v-if="searching">Mencari...</template>
-                            <em v-else style="opacity: 0.5;">Ketik minimal 3 huruf...</em>
-                          </template>
                         </v-select>
                       </div>
                       <div class="col-6 mb-3">
@@ -685,13 +678,9 @@
                           label="nm_kab"
                           @search="onSearchKabupaten"
                           :filterable="false"
-                          placeholder="Cari Kabupaten..."
+                          placeholder="Kabupaten..."
                           class="v-select-custom"
                         >
-                          <template #no-options="{ search, searching }">
-                            <template v-if="searching">Mencari...</template>
-                            <em v-else style="opacity: 0.5;">Ketik minimal 3 huruf...</em>
-                          </template>
                         </v-select>
                       </div>
                       <div class="col-6 mb-3">
@@ -702,13 +691,9 @@
                           label="nm_kec"
                           @search="onSearchKecamatan"
                           :filterable="false"
-                          placeholder="Cari Kecamatan..."
+                          placeholder="Kecamatan..."
                           class="v-select-custom"
                         >
-                          <template #no-options="{ search, searching }">
-                            <template v-if="searching">Mencari...</template>
-                            <em v-else style="opacity: 0.5;">Ketik minimal 3 huruf...</em>
-                          </template>
                         </v-select>
                       </div>
                       <div class="col-6 mb-3">
@@ -719,59 +704,54 @@
                           label="nm_kel"
                           @search="onSearchKelurahan"
                           :filterable="false"
-                          placeholder="Cari Kelurahan..."
+                          placeholder="Kelurahan..."
                           class="v-select-custom"
                         >
-                          <template #no-options="{ search, searching }">
-                            <template v-if="searching">Mencari...</template>
-                            <em v-else style="opacity: 0.5;">Ketik minimal 3 huruf...</em>
-                          </template>
                         </v-select>
                       </div>
                     </div>
 
                     <div class="row mt-2">
                       <div class="col-12 mb-3">
-                        <label class="form-label small fw-bold">No. HP / Telepon</label>
-                        <input type="text" v-model="formPasienBaru.no_tlp" class="form-control form-control-sm" placeholder="08xxx">
+                        <label class="label-premium"><i class="fas fa-phone"></i> No. HP / Telepon</label>
+                        <input type="text" v-model="formPasienBaru.no_tlp" class="form-control form-control-premium" placeholder="08xxx">
                       </div>
                       <div class="col-12 mb-3">
-                        <label class="form-label small fw-bold">Email</label>
-                        <input type="email" v-model="formPasienBaru.email" class="form-control form-control-sm" placeholder="email@contoh.com">
+                        <label class="label-premium"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" v-model="formPasienBaru.email" class="form-control form-control-premium" placeholder="email@contoh.com">
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Kanan: Asuransi & PJ -->
               <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                  <div class="card-header bg-white border-bottom-0 py-3 d-flex align-items-center justify-content-center">
-                    <h6 class="fw-bold text-white mb-0"><i class="fas fa-hand-holding-medical me-2"></i>C. ASURANSI & P. JAWAB</h6>
+                <div class="card form-card-premium border-0 h-100">
+                  <div class="card-header card-header-gradient c">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-hand-holding-medical me-2"></i>C. ASURANSI & P. JAWAB</h6>
                   </div>
-                  <div class="card-body">
-                    <div class="mb-3">
-                      <label class="form-label small fw-bold">No. Kartu Asuransi / BPJS</label>
-                      <div class="input-group input-group-sm">
+                  <div class="card-body p-4">
+                    <div class="mb-4">
+                      <label class="label-premium"><i class="fas fa-credit-card"></i> No. Kartu BPJS / JKN</label>
+                      <div class="input-group-premium">
                         <input type="text" v-model="formPasienBaru.no_peserta" class="form-control" placeholder="13 Digit No JKN" maxlength="13">
-                        <button class="btn btn-outline-success" type="button" @click="lookupBpjsByNoKartu" :disabled="loadingBpjsNoKartu">
+                        <button class="btn btn-success" type="button" @click="lookupBpjsByNoKartu" :disabled="loadingBpjsNoKartu" title="Cek BPJS by No. Kartu">
                           <i v-if="loadingBpjsNoKartu" class="fas fa-spinner fa-spin"></i>
                           <i v-else class="fas fa-search"></i>
                         </button>
                       </div>
                     </div>
                     
-                    <hr class="text-muted opacity-25">
+                    <div class="divider-dashed opacity-50 mb-4"></div>
                     
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">Nama Penanggung Jawab (PJ)</label>
-                      <input type="text" v-model="formPasienBaru.namakeluarga" class="form-control form-control-sm" placeholder="Nama PJ">
+                      <label class="label-premium"><i class="fas fa-user-friends"></i> Nama Penanggung Jawab (PJ)</label>
+                      <input type="text" v-model="formPasienBaru.namakeluarga" class="form-control form-control-premium" placeholder="Nama PJ">
                     </div>
                     <div class="row">
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Hub. dgn Pasien</label>
-                        <select v-model="formPasienBaru.keluarga" class="form-select form-select-sm">
+                        <label class="label-premium"><i class="fas fa-users"></i> Hubungan</label>
+                        <select v-model="formPasienBaru.keluarga" class="form-select form-select-premium">
                           <option value="SUAMI">SUAMI</option>
                           <option value="ISTRI">ISTRI</option>
                           <option value="AYAH">AYAH</option>
@@ -781,21 +761,20 @@
                         </select>
                       </div>
                       <div class="col-6 mb-3">
-                        <label class="form-label small fw-bold">Pekerjaan PJ</label>
-                        <input type="text" v-model="formPasienBaru.pekerjaanpj" class="form-control form-control-sm" placeholder="Pekerjaan PJ">
+                        <label class="label-premium"><i class="fas fa-user-tie"></i> Pekerjaan PJ</label>
+                        <input type="text" v-model="formPasienBaru.pekerjaanpj" class="form-control form-control-premium" placeholder="Pekerjaan PJ">
                       </div>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">Alamat PJ</label>
-                      <textarea v-model="formPasienBaru.alamatpj" class="form-control form-control-sm" rows="2" placeholder="Kosongkan jika sama dengan pasien"></textarea>
+                      <label class="label-premium"><i class="fas fa-map-marked-alt"></i> Alamat PJ</label>
+                      <textarea v-model="formPasienBaru.alamatpj" class="form-control form-control-premium" rows="2" placeholder="Kosongkan jika sama dengan pasien"></textarea>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label small fw-bold">Instansi / Perusahaan</label>
-                      <div class="input-group input-group-sm">
-                        <input type="text" class="form-control" readonly value="- (Pilih Instansi)">
-                        <button class="btn btn-outline-secondary" type="button" disabled><i class="fas fa-search"></i></button>
+                      <label class="label-premium"><i class="fas fa-building"></i> Instansi / Perusahaan</label>
+                      <div class="input-group-premium bg-light opacity-75">
+                        <input type="text" class="form-control" readonly value="- (Pemilihan Belum Aktif)">
+                        <button class="btn btn-secondary" type="button" disabled><i class="fas fa-search"></i></button>
                       </div>
-                      <small class="text-muted" style="font-size: 0.7rem;">Pemilihan instansi belum aktif.</small>
                     </div>
                   </div>
                 </div>
@@ -2632,6 +2611,107 @@ onBeforeUnmount(() => {
 .form-check-custom label {
   font-size: 0.9rem;
   color: #4a5568;
+  cursor: pointer;
+}
+
+/* Premium Modal Styles */
+.modal-content {
+  border-radius: 28px !important;
+  overflow: hidden;
+}
+
+.form-card-premium {
+  border: none !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.form-card-premium:hover {
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-2px);
+}
+
+.card-header-gradient {
+  padding: 1.25rem !important;
+  color: white !important;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: none !important;
+}
+
+.card-header-gradient.a { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.card-header-gradient.b { background: linear-gradient(135deg, #2af598 0%, #009efd 100%); }
+.card-header-gradient.c { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+
+.input-group-premium {
+  display: flex;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid #edf2f7;
+  background: white;
+  transition: all 0.3s;
+}
+
+.input-group-premium:focus-within {
+  border-color: #3498db;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.input-group-premium .form-control {
+  border: none !important;
+  background: transparent !important;
+  padding: 0.75rem 1rem;
+  box-shadow: none !important;
+}
+
+.input-group-premium .btn {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 1.25rem;
+  transition: all 0.2s;
+}
+
+.label-premium {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.label-premium i {
+  color: #3498db;
+  opacity: 0.7;
+}
+
+.form-control-premium {
+  border-radius: 14px !important;
+  border: 1.5px solid #edf2f7 !important;
+  padding: 0.75rem 1rem !important;
+  background-color: white !important;
+  transition: all 0.3s !important;
+  font-size: 0.9rem !important;
+}
+
+.form-control-premium:focus {
+  border-color: #3498db !important;
+  background-color: white !important;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1) !important;
+}
+
+.form-select-premium {
+  border-radius: 14px !important;
+  border: 1.5px solid #edf2f7 !important;
+  background-color: white !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.9rem !important;
   cursor: pointer;
 }
 
