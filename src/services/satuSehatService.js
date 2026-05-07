@@ -220,6 +220,17 @@ export const satuSehatService = {
   },
   syncSpecimenLab(data) {
     return api.post('/satusehat/specimen-lab/sync', data)
+  },
+
+  // Observation Lab PK
+  getObservationLab(params) {
+    return api.get('/satusehat/observation-lab', { params })
+  },
+  sendObservationLab(data) {
+    return api.post('/satusehat/observation-lab/send', data)
+  },
+  syncObservationLab(data) {
+    return api.post('/satusehat/observation-lab/sync', data)
   }
 }
 
