@@ -546,7 +546,13 @@
                   <div class="card-body">
                     <div class="mb-3">
                       <label class="form-label small fw-bold">No. KTP / NIK</label>
-                      <input type="text" v-model="formPasienBaru.no_ktp" class="form-control form-control-sm" placeholder="16 Digit NIK" maxlength="16">
+                      <div class="input-group input-group-sm">
+                        <input type="text" v-model="formPasienBaru.no_ktp" class="form-control" placeholder="16 Digit NIK" maxlength="16">
+                        <button class="btn btn-outline-primary" type="button" @click="lookupBpjsByNik" :disabled="loadingBpjsNik">
+                          <i v-if="loadingBpjsNik" class="fas fa-spinner fa-spin"></i>
+                          <i v-else class="fas fa-search"></i>
+                        </button>
+                      </div>
                     </div>
                     <div class="mb-3">
                       <label class="form-label small fw-bold">Nama Lengkap Pasien <span class="text-danger">*</span></label>
@@ -747,7 +753,13 @@
                   <div class="card-body">
                     <div class="mb-3">
                       <label class="form-label small fw-bold">No. Kartu Asuransi / BPJS</label>
-                      <input type="text" v-model="formPasienBaru.no_peserta" class="form-control form-control-sm" placeholder="13 Digit No JKN">
+                      <div class="input-group input-group-sm">
+                        <input type="text" v-model="formPasienBaru.no_peserta" class="form-control" placeholder="13 Digit No JKN" maxlength="13">
+                        <button class="btn btn-outline-success" type="button" @click="lookupBpjsByNoKartu" :disabled="loadingBpjsNoKartu">
+                          <i v-if="loadingBpjsNoKartu" class="fas fa-spinner fa-spin"></i>
+                          <i v-else class="fas fa-search"></i>
+                        </button>
+                      </div>
                     </div>
                     
                     <hr class="text-muted opacity-25">
@@ -983,6 +995,7 @@ import wilayahService from '../../services/wilayahService';
 import FastTrackCard from './components/FastTrackCard.vue';
 import api from '../../services/api';
 import QueueManager from '@/components/ui/QueueManager.vue';
+import bpjsVclaimService from '../../services/bpjsVclaimService';
 
 // State
 const searchQuery = ref('');
@@ -1024,6 +1037,8 @@ const loadingPropinsi = ref(false);
 const loadingKabupaten = ref(false);
 const loadingKecamatan = ref(false);
 const loadingKelurahan = ref(false);
+const loadingBpjsNik = ref(false);
+const loadingBpjsNoKartu = ref(false);
 
 // List State
 const registrationList = ref([]);
@@ -1188,6 +1203,73 @@ const onSearchKelurahan = debounce(async (search, loading) => {
     loading(false);
   }
 }, 500);
+
+const lookupBpjsByNik = async () => {
+  if (!formPasienBaru.no_ktp || formPasienBaru.no_ktp.length < 13) {
+    Swal.fire({ title: 'Info', text: 'Masukkan NIK terlebih dahulu (minimal 13 digit untuk pencarian)', icon: 'info', customClass: { popup: 'swal2-glass' } });
+    return;
+  }
+  
+  loadingBpjsNik.value = true;
+  try {
+    const today = dayjs().format('YYYY-MM-DD');
+    const response = await bpjsVclaimService.getPesertaByNik(formPasienBaru.no_ktp, today);
+    if (response.data?.metaData?.code === "200") {
+      fillFormFromBpjs(response.data.response.peserta);
+    } else {
+      Swal.fire({ title: 'Gagal', text: response.data?.metaData?.message || 'Data tidak ditemukan', icon: 'error', customClass: { popup: 'swal2-glass' } });
+    }
+  } catch (error) {
+    Swal.fire({ title: 'Error', text: 'Terjadi kesalahan koneksi ke BPJS', icon: 'error', customClass: { popup: 'swal2-glass' } });
+  } finally {
+    loadingBpjsNik.value = false;
+  }
+};
+
+const lookupBpjsByNoKartu = async () => {
+  if (!formPasienBaru.no_peserta || formPasienBaru.no_peserta.length < 10) {
+    Swal.fire({ title: 'Info', text: 'Masukkan No. Kartu BPJS terlebih dahulu', icon: 'info', customClass: { popup: 'swal2-glass' } });
+    return;
+  }
+  
+  loadingBpjsNoKartu.value = true;
+  try {
+    const today = dayjs().format('YYYY-MM-DD');
+    const response = await bpjsVclaimService.getPesertaByNoKartu(formPasienBaru.no_peserta, today);
+    if (response.data?.metaData?.code === "200") {
+      fillFormFromBpjs(response.data.response.peserta);
+    } else {
+      Swal.fire({ title: 'Gagal', text: response.data?.metaData?.message || 'Data tidak ditemukan', icon: 'error', customClass: { popup: 'swal2-glass' } });
+    }
+  } catch (error) {
+    Swal.fire({ title: 'Error', text: 'Terjadi kesalahan koneksi ke BPJS', icon: 'error', customClass: { popup: 'swal2-glass' } });
+  } finally {
+    loadingBpjsNoKartu.value = false;
+  }
+};
+
+const fillFormFromBpjs = (peserta) => {
+  if (!peserta) return;
+  
+  formPasienBaru.nm_pasien = peserta.nama;
+  formPasienBaru.no_ktp = peserta.nik;
+  formPasienBaru.no_peserta = peserta.noKartu;
+  formPasienBaru.jk = peserta.sex === 'L' ? 'L' : 'P';
+  formPasienBaru.tgl_lahir = peserta.tglLahir;
+  
+  // Set default values if empty
+  if (!formPasienBaru.tmp_lahir) formPasienBaru.tmp_lahir = '-';
+  
+  // Inform user
+  Swal.fire({
+    title: 'Data Ditemukan!',
+    html: `Data BPJS atas nama <b>${peserta.nama}</b> berhasil dimuat.<br><small class="text-muted">Silakan lengkapi data alamat dan penanggung jawab.</small>`,
+    icon: 'success',
+    timer: 3000,
+    timerProgressBar: true,
+    customClass: { popup: 'swal2-glass' }
+  });
+};
 
 const submitTambahPasien = async () => {
   submittingPasien.value = true;
