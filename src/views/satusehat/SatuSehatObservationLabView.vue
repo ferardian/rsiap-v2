@@ -1,224 +1,242 @@
-<script setup>
-import { ref, onMounted, reactive } from 'vue'
-import { useToast } from 'vue-toastification'
-import satuSehatService from '@/services/satuSehatService'
-import LoadingBar from '@/components/LoadingBar.vue'
-import { useDebounceFn } from '@vueuse/core'
-
-const toast = useToast()
-const loading = ref(false)
-const items = ref([])
-const meta = ref({})
-
-const filters = reactive({
-  tgl_awal: new Date().toISOString().substr(0, 10),
-  tgl_akhir: new Date().toISOString().substr(0, 10),
-  search: '',
-  status: 'unsent',
-  limit: 15,
-  page: 1
-})
-
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const response = await satuSehatService.getObservationLab(filters)
-    items.value = response.data.data
-    meta.value = response.data
-  } catch (error) {
-    toast.error('Gagal mengambil data Observation Lab')
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleSearch = useDebounceFn(() => {
-  filters.page = 1
-  fetchData()
-}, 500)
-
-const handlePageChange = (page) => {
-  filters.page = page
-  fetchData()
-}
-
-const sendObservation = async (item) => {
-  item.loading = true
-  try {
-    const response = await satuSehatService.sendObservationLab(item)
-    if (response.success) {
-      toast.success(response.message)
-      item.id_observation = response.id_observation
-    } else {
-      toast.error(response.message || 'Gagal mengirim Observation')
-    }
-  } catch (error) {
-    toast.error('Terjadi kesalahan sistem')
-  } finally {
-    item.loading = false
-  }
-}
-
-const syncBatch = async () => {
-  loading.value = true
-  try {
-    const response = await satuSehatService.syncObservationLab({
-      tgl_awal: filters.tgl_awal,
-      tgl_akhir: filters.tgl_akhir
-    })
-    toast.success('Sinkronisasi batch selesai')
-    fetchData()
-  } catch (error) {
-    toast.error('Gagal sinkronisasi batch')
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchData()
-})
-</script>
-
 <template>
-  <div class="container-fluid py-4">
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card shadow-sm border-0 bg-gradient-primary text-white p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h4 class="mb-0 text-white font-weight-bold">SatuSehat Observation Lab (PK)</h4>
-              <p class="mb-0 opacity-8 text-sm">Sinkronisasi hasil pemeriksaan laboratorium ke platform SatuSehat FHIR.</p>
-            </div>
-            <div class="icon-shape bg-white text-primary rounded-circle shadow-sm">
+  <div class="satusehat-observation-lab">
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="header-text">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="header-icon-box">
               <i class="fas fa-microscope"></i>
             </div>
+            <h2 class="page-title mb-0">Observation Lab <span class="text-primary-emphasis">SatuSehat</span></h2>
           </div>
+          <p class="page-subtitle text-muted mb-0">Sinkronisasi hasil pemeriksaan laboratorium ke platform SatuSehat FHIR</p>
+        </div>
+        <div class="header-actions d-flex gap-2">
+          <button class="btn btn-refresh-premium shadow-sm" @click="fetchData" :disabled="loading">
+            <i :class="['fas fa-sync-alt', { 'fa-spin': loading }]"></i>
+            <span>Refresh</span>
+          </button>
+          <button class="btn btn-primary rounded-3 shadow-sm px-3 d-flex align-items-center gap-2" @click="syncBatch" :disabled="loading || syncing">
+            <i class="fas" :class="syncing ? 'fa-circle-notch fa-spin' : 'fa-cloud-upload-alt'"></i>
+            <span>{{ syncing ? 'Syncing...' : 'Sync All Pending' }}</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4">
-      <div class="card-body">
+    <!-- Stats summary -->
+    <div class="row g-3 mb-4 flex-nowrap overflow-x-auto pb-2 stats-scroller">
+      <div class="col-md-3 min-w-stats">
+        <div class="card stat-card shadow-sm border-0 h-100 overflow-hidden">
+          <div class="stat-card-body p-3 d-flex align-items-center gap-3">
+            <div class="stat-icon-wrapper primary">
+              <i class="fas fa-file-medical-alt"></i>
+            </div>
+            <div>
+              <p class="stat-label mb-0">Total Observation</p>
+              <h3 class="stat-value mb-0">{{ totalItems }}</h3>
+            </div>
+          </div>
+          <div class="stat-wave primary"></div>
+        </div>
+      </div>
+      <div class="col-md-3 min-w-stats">
+        <div class="card stat-card shadow-sm border-0 h-100 overflow-hidden">
+          <div class="stat-card-body p-3 d-flex align-items-center gap-3">
+            <div class="stat-icon-wrapper success">
+              <i class="fas fa-check-double"></i>
+            </div>
+            <div>
+              <p class="stat-label mb-0">Data Terkirim</p>
+              <h3 class="stat-value mb-0">{{ items.filter(i => i.id_observation).length }}</h3>
+            </div>
+          </div>
+          <div class="stat-wave success"></div>
+        </div>
+      </div>
+      <div class="col-md-3 min-w-stats">
+        <div class="card stat-card shadow-sm border-0 h-100 overflow-hidden">
+          <div class="stat-card-body p-3 d-flex align-items-center gap-3">
+            <div class="stat-icon-wrapper warning">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div>
+              <p class="stat-label mb-0">Belum Terkirim</p>
+              <h3 class="stat-value mb-0">{{ items.filter(i => !i.id_observation).length }}</h3>
+            </div>
+          </div>
+          <div class="stat-wave warning"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="toolbar-card card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3 p-md-4">
         <div class="row g-3">
-          <div class="col-md-3">
-            <label class="form-label small text-muted font-weight-bold uppercase">Periode Awal</label>
-            <input type="date" class="form-control form-control-sm border-light shadow-none" v-model="filters.tgl_awal" @change="fetchData">
+          <div class="col-lg-5 order-2 order-lg-1">
+            <div class="search-box-premium">
+              <i class="fas fa-search search-icon"></i>
+              <input 
+                type="text" 
+                class="form-control" 
+                v-model="filters.search" 
+                placeholder="Cari No. Order, Nama Pasien, atau No. Rawat..."
+                @keyup.enter="fetchData"
+              >
+              <button class="btn btn-search-go" @click="fetchData">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
           </div>
-          <div class="col-md-3">
-            <label class="form-label small text-muted font-weight-bold uppercase">Periode Akhir</label>
-            <input type="date" class="form-control form-control-sm border-light shadow-none" v-model="filters.tgl_akhir" @change="fetchData">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label small text-muted font-weight-bold uppercase">Status Sync</label>
-            <select class="form-select form-select-sm border-light shadow-none" v-model="filters.status" @change="fetchData">
-              <option value="all">Semua Status</option>
-              <option value="sent">Sudah Terkirim</option>
-              <option value="unsent">Belum Terkirim</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small text-muted font-weight-bold uppercase">Cari Pasien / No.Order</label>
-            <div class="input-group input-group-sm border-light shadow-none">
-              <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
-              <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Masukkan nama atau no order..." v-model="filters.search" @input="handleSearch">
+          <div class="col-lg-7 order-1 order-lg-2">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+              <div class="filter-group shadow-sm">
+                <span class="filter-label"><i class="fas fa-calendar-alt me-1"></i> Periode Reg</span>
+                <input type="date" class="form-control" v-model="filters.tgl_awal" @change="fetchData">
+                <span class="filter-separator">-</span>
+                <input type="date" class="form-control" v-model="filters.tgl_akhir" @change="fetchData">
+              </div>
+              <div class="filter-group shadow-sm min-w-status-select">
+                <span class="filter-label"><i class="fas fa-filter me-1"></i> Status</span>
+                <select class="form-select border-0" v-model="filters.status" @change="fetchData">
+                  <option value="all">Semua</option>
+                  <option value="sent">Sudah Kirim</option>
+                  <option value="unsent">Belum Kirim</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card shadow-sm border-0 overflow-hidden">
-      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-        <h6 class="mb-0 font-weight-bold text-dark">Data Hasil Pemeriksaan</h6>
-        <button class="btn btn-primary btn-sm px-4 shadow-sm" :disabled="loading" @click="syncBatch">
-          <i class="fas fa-sync-alt me-2" :class="{'fa-spin': loading}"></i> Sync Batch
-        </button>
+    <!-- Table Card -->
+    <div class="card table-card border-0 shadow-sm rounded-4 overflow-hidden animate-slide-up">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 custom-table-premium">
+            <thead>
+              <tr>
+                <th class="ps-4">Order Details</th>
+                <th>Patient Information</th>
+                <th>Result Information</th>
+                <th>Specimen Reference</th>
+                <th>Sync Status</th>
+                <th class="pe-4 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="loading" v-for="n in 5" :key="n">
+                <td colspan="6" class="p-4">
+                  <div class="loading-shimmer-premium"></div>
+                </td>
+              </tr>
+              <tr v-else-if="items.length === 0">
+                <td colspan="6" class="py-5 text-center no-data-state">
+                  <div class="empty-state-icon">
+                    <i class="fas fa-folder-open"></i>
+                  </div>
+                  <p class="mt-3 fw-medium text-secondary">No observation records found</p>
+                  <button class="btn btn-sm btn-outline-primary rounded-pill px-4 mt-2" @click="fetchData">Try Refreshing</button>
+                </td>
+              </tr>
+              <tr v-for="item in items" :key="item.noorder + item.id_template" class="hover-row">
+                <td class="ps-4">
+                  <div class="order-id">{{ item.noorder }}</div>
+                  <div class="reg-number">#{{ item.no_rawat }}</div>
+                </td>
+                <td>
+                  <div class="patient-name">{{ item.nm_pasien }}</div>
+                  <div class="patient-id">MR: {{ item.no_rkm_medis }}</div>
+                  <div class="id-pill" :class="item.no_ktp ? 'success' : 'danger'">
+                    <i class="fas" :class="item.no_ktp ? 'fa-id-card' : 'fa-exclamation-triangle'"></i>
+                    {{ item.no_ktp || 'NIK Missing' }}
+                  </div>
+                </td>
+                <td>
+                  <div class="exam-name">{{ item.Pemeriksaan }}</div>
+                  <div class="exam-value">Hasil: <span class="fw-bold">{{ item.nilai }} {{ item.satuan }}</span></div>
+                  <div class="exam-meta">
+                    <span class="exam-code">Ref: {{ item.nilai_rujukan }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div v-if="item.id_specimen" class="sync-status success mini">
+                    <div class="sync-icon"><i class="fas fa-vial"></i></div>
+                    <div class="sync-text">
+                      <span class="status-id">{{ item.id_specimen }}</span>
+                    </div>
+                  </div>
+                  <div v-else class="sync-status danger mini">
+                    <div class="sync-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="sync-text">
+                      <span class="status-label">Missing Specimen</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <transition name="scale" mode="out-in">
+                    <div v-if="item.id_observation" class="sync-status success" :key="'sent-' + item.noorder">
+                      <div class="sync-icon"><i class="fas fa-check"></i></div>
+                      <div class="sync-text">
+                        <span class="status-label">Synced</span>
+                        <span class="status-id">{{ item.id_observation }}</span>
+                      </div>
+                    </div>
+                    <div v-else class="sync-status warning" :key="'unsent-' + item.noorder">
+                      <div class="sync-icon"><i class="fas fa-hourglass-start"></i></div>
+                      <div class="sync-text">
+                        <span class="status-label">Pending</span>
+                      </div>
+                    </div>
+                  </transition>
+                </td>
+                <td class="pe-4 text-end">
+                  <div class="action-buttons">
+                    <button 
+                      class="btn btn-action shadow-sm"
+                      :class="item.id_observation ? 'btn-update' : 'btn-send'"
+                      @click="sendToSatuSehat(item)"
+                      :disabled="sendingItems.includes(item.noorder + item.id_template) || !item.no_ktp || !item.id_specimen"
+                    >
+                      <template v-if="sendingItems.includes(item.noorder + item.id_template)">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        Working...
+                      </template>
+                      <template v-else>
+                        <i :class="item.id_observation ? 'fas fa-sync' : 'fas fa-paper-plane'"></i>
+                        {{ item.id_observation ? 'Refetch' : 'Send Observation' }}
+                      </template>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      
-      <LoadingBar :loading="loading" />
 
-      <div class="table-responsive" style="min-height: 400px;">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="bg-light">
-            <tr>
-              <th class="ps-4 text-xs font-weight-bold text-muted uppercase">Pasien & No.Order</th>
-              <th class="text-xs font-weight-bold text-muted uppercase">Pemeriksaan</th>
-              <th class="text-xs font-weight-bold text-muted uppercase">Hasil</th>
-              <th class="text-xs font-weight-bold text-muted uppercase">Waktu Hasil</th>
-              <th class="text-xs font-weight-bold text-muted uppercase">Sync Status</th>
-              <th class="text-xs font-weight-bold text-muted uppercase text-end pe-4">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in items" :key="`${item.noorder}-${item.id_template}`">
-              <td class="ps-4">
-                <div class="d-flex flex-column">
-                  <span class="text-sm font-weight-bold text-dark mb-0">{{ item.nm_pasien }}</span>
-                  <span class="text-xs text-muted">{{ item.noorder }} | {{ item.no_rawat }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="d-flex flex-column">
-                  <span class="text-sm font-weight-bold text-primary mb-0">{{ item.Pemeriksaan }}</span>
-                  <span class="text-xs text-muted">LOINC: {{ item.code }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="d-flex flex-column">
-                  <span class="text-sm font-weight-bold text-dark mb-0">{{ item.nilai }} {{ item.satuan }}</span>
-                  <span class="text-xs text-muted">Ref: {{ item.nilai_rujukan }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="text-xs text-dark">{{ item.tgl_hasil }} {{ item.jam_hasil }}</span>
-              </td>
-              <td>
-                <span v-if="item.id_observation" class="badge badge-sm bg-success shadow-none font-weight-bold">
-                  <i class="fas fa-check-circle me-1"></i> SENT
-                </span>
-                <span v-else class="badge badge-sm bg-secondary shadow-none font-weight-bold">
-                  <i class="fas fa-clock me-1"></i> PENDING
-                </span>
-              </td>
-              <td class="text-end pe-4">
-                <button 
-                  class="btn btn-sm shadow-none px-3" 
-                  :class="item.id_observation ? 'btn-outline-success' : 'btn-outline-primary'"
-                  :disabled="item.loading || !item.id_specimen"
-                  @click="sendObservation(item)"
-                >
-                  <span v-if="item.loading" class="spinner-border spinner-border-sm me-1"></span>
-                  <i v-else class="fas fa-paper-plane me-1"></i>
-                  {{ item.id_observation ? 'Resend' : 'Send Observation' }}
-                </button>
-              </td>
-            </tr>
-            <tr v-if="items.length === 0 && !loading">
-              <td colspan="6" class="text-center py-5 text-muted">
-                <i class="fas fa-clipboard-list fa-3x mb-3 opacity-2"></i>
-                <p>Data tidak ditemukan untuk filter yang dipilih.</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div v-if="meta.last_page > 1" class="card-footer bg-white border-top py-3">
-        <nav aria-label="Page navigation">
-          <ul class="pagination pagination-sm justify-content-center mb-0">
-            <li class="page-item" :class="{ disabled: meta.current_page === 1 }">
-              <a class="page-link shadow-none border-light" href="#" @click.prevent="handlePageChange(meta.current_page - 1)">
-                <i class="fas fa-chevron-left"></i>
-              </a>
+      <div class="card-footer bg-white p-4 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="pagination-info">
+          Showing <span class="fw-bold">{{ items.length }}</span> of <span class="fw-bold">{{ totalItems }}</span> entries
+        </div>
+        <nav v-if="totalPages > 1">
+          <ul class="pagination pagination-premium mb-0">
+            <li class="page-item" :class="{ disabled: filters.page === 1 }">
+              <button class="page-link shadow-none" @click="changePage(filters.page - 1)"><i class="fas fa-chevron-left"></i></button>
             </li>
-            <li v-for="page in meta.last_page" :key="page" class="page-item" :class="{ active: meta.current_page === page }">
-              <a class="page-link shadow-none border-light" href="#" @click.prevent="handlePageChange(page)">{{ page }}</a>
+            <li 
+              class="page-item" 
+              v-for="p in totalPages" 
+              :key="p" 
+              :class="{ active: filters.page === p }"
+              v-show="p <= 3 || (p > totalPages - 2) || (p >= filters.page - 1 && p <= filters.page + 1)"
+            >
+              <button class="page-link shadow-none" @click="changePage(p)">{{ p }}</button>
             </li>
-            <li class="page-item" :class="{ disabled: meta.current_page === meta.last_page }">
-              <a class="page-link shadow-none border-light" href="#" @click.prevent="handlePageChange(meta.current_page + 1)">
-                <i class="fas fa-chevron-right"></i>
-              </a>
+            <li class="page-item" :class="{ disabled: filters.page === totalPages }">
+              <button class="page-link shadow-none" @click="changePage(filters.page + 1)"><i class="fas fa-chevron-right"></i></button>
             </li>
           </ul>
         </nav>
@@ -227,27 +245,486 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.bg-gradient-primary {
-  background: linear-gradient(87deg, #5e72e4 0, #825ee4 100%) !important;
+<script>
+import satuSehatService from '@/services/satuSehatService'
+import Swal from 'sweetalert2'
+import dayjs from 'dayjs'
+
+export default {
+  name: 'SatuSehatObservationLabView',
+  data() {
+    return {
+      items: [],
+      loading: false,
+      syncing: false,
+      totalItems: 0,
+      totalPages: 1,
+      sendingItems: [],
+      filters: {
+        tgl_awal: dayjs().format('YYYY-MM-DD'),
+        tgl_akhir: dayjs().format('YYYY-MM-DD'),
+        search: '',
+        status: 'unsent',
+        page: 1,
+        limit: 15
+      }
+    }
+  },
+  mounted() {
+    this.fetchData()
+  },
+  methods: {
+    async fetchData() {
+      this.loading = true
+      try {
+        const res = await satuSehatService.getObservationLab(this.filters)
+        if (res.data.success) {
+          const payload = res.data.data
+          this.items = payload.data
+          this.totalItems = payload.total
+          this.totalPages = payload.last_page
+        }
+      } catch (err) {
+        console.error('Fetch error:', err)
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'Database Connection Error', 
+          text: err.response?.data?.error || 'Gagal mengambil data dari server SIMRS.' 
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+
+    changePage(p) {
+      if (p < 1 || p > this.totalPages) return
+      this.filters.page = p
+      this.fetchData()
+    },
+
+    async syncBatch() {
+      const result = await Swal.fire({
+        title: 'Sync All Pending?',
+        text: `Sistem akan mengirimkan seluruh Observation Lab yang belum terkirim pada periode registrasi ${this.filters.tgl_awal} s/d ${this.filters.tgl_akhir} ke SatuSehat.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Sinkronkan Semua',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#3b82f6'
+      })
+
+      if (!result.isConfirmed) return
+
+      this.syncing = true
+      try {
+        const res = await satuSehatService.syncObservationLab({
+          tgl_awal: this.filters.tgl_awal,
+          tgl_akhir: this.filters.tgl_akhir
+        })
+
+        if (res.data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Sinkronisasi Selesai',
+            text: res.data.message
+          })
+          this.fetchData()
+        }
+      } catch (err) {
+        console.error('Batch sync error:', err)
+        Swal.fire({
+          icon: 'error',
+          title: 'Sinkronisasi Gagal',
+          text: err.response?.data?.message || 'Terjadi kesalahan saat sinkronisasi batch'
+        })
+      } finally {
+        this.syncing = false
+      }
+    },
+
+    async sendToSatuSehat(item) {
+      const key = item.noorder + item.id_template
+      this.sendingItems.push(key)
+      
+      try {
+        const res = await satuSehatService.sendObservationLab(item)
+        if (res.data.success) {
+          Swal.fire({ 
+            icon: 'success', 
+            title: 'Synchronization Success', 
+            text: res.data.message, 
+            timer: 1500, 
+            showConfirmButton: false 
+          })
+          this.fetchData()
+        } else {
+          Swal.fire({ 
+            icon: 'error', 
+            title: 'Gagal', 
+            text: res.data.message || 'Gagal mengirim data ke SatuSehat' 
+          })
+        }
+      } catch (err) {
+        console.error('Send error:', err)
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'FHIR Integration Failed', 
+          text: err.response?.data?.message || 'Gagal mengirim data ke SatuSehat' 
+        })
+      } finally {
+        this.sendingItems = this.sendingItems.filter(i => i !== key)
+      }
+    }
+  }
 }
-.icon-shape {
+</script>
+
+<style scoped>
+/* Page Layout & Animations */
+.satusehat-observation-lab {
+  padding-bottom: 2rem;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Header & Actions */
+.header-icon-box {
+  background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+  color: white;
   width: 48px;
   height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 14px;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(94, 114, 228, 0.5);
 }
-.text-xs {
-  font-size: 0.75rem;
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #1e293b;
 }
-.font-weight-bold {
+
+.btn-refresh-premium {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
   font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
 }
-.uppercase {
+
+.btn-refresh-premium:hover:not(:disabled) {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Stat Cards */
+.stats-scroller {
+  scrollbar-width: none;
+}
+.stats-scroller::-webkit-scrollbar { display: none; }
+
+.min-w-stats { min-width: 240px; }
+
+.stat-card {
+  position: relative;
+  transition: transform 0.3s ease;
+  background: white;
+  z-index: 1;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.stat-icon-wrapper.primary { background: #eff6ff; color: #5e72e4; }
+.stat-icon-wrapper.success { background: #ecfdf5; color: #2dce89; }
+.stat-icon-wrapper.warning { background: #fffbeb; color: #fb6340; }
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
 }
-.badge-sm {
-  padding: 0.45em 0.7em;
+
+.stat-value {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.stat-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.stat-wave.primary { background: #5e72e4; }
+.stat-wave.success { background: #2dce89; }
+.stat-wave.warning { background: #fb6340; }
+
+/* Filter Toolbar */
+.toolbar-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.search-box-premium {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.25rem;
+  color: #94a3b8;
+}
+
+.search-box-premium .form-control {
+  padding-left: 3.25rem;
+  padding-right: 3.5rem;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-size: 0.95rem;
+}
+
+.search-box-premium .form-control:focus {
+  border-color: #5e72e4;
+  box-shadow: 0 0 0 4px rgba(94, 114, 228, 0.1);
+}
+
+.btn-search-go {
+  position: absolute;
+  right: 6px;
+  height: 40px;
+  width: 40px;
+  background: #5e72e4;
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-search-go:hover { background: #825ee4; transform: scale(1.05); }
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 4px 12px;
+  height: 52px;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.filter-group .form-control, 
+.filter-group .form-select {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0 8px;
+  width: auto;
+}
+
+.filter-separator { color: #cbd5e1; margin: 0 4px; }
+.min-w-status-select { min-width: 180px; }
+
+/* Premium Table */
+.table-card {
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025) !important;
+}
+
+.custom-table-premium thead th {
+  background: #f8fafc;
+  padding: 1.25rem 0.75rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: #64748b;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.hover-row { transition: background 0.2s ease; }
+.hover-row:hover { background-color: #f8fafc; }
+
+.order-id { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+.reg-number { font-size: 0.7rem; font-weight: 600; color: #5e72e4; }
+
+.patient-name { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
+.patient-id { font-size: 0.75rem; color: #64748b; }
+
+.id-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.id-pill.success { background: #ecfdf5; color: #2dce89; }
+.id-pill.danger { background: #fef2f2; color: #f5365c; }
+
+.exam-name { font-weight: 700; color: #5e72e4; font-size: 0.85rem; }
+.exam-value { font-size: 0.8rem; color: #1e293b; }
+.exam-meta { display: flex; flex-direction: column; gap: 2px; }
+.exam-code { font-family: 'Mono', monospace; font-size: 10px; color: #64748b; }
+
+/* Sync Status Box */
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.sync-status.success { background: #ecfdf5; border: 1px solid #d1fae5; }
+.sync-status.warning { background: #fffbeb; border: 1px solid #fef3c7; }
+.sync-status.danger { background: #fef2f2; border: 1px solid #fee2e2; }
+
+.sync-status.mini { padding: 4px 8px; gap: 6px; }
+
+.sync-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+.sync-status.success .sync-icon { background: #2dce89; color: white; }
+.sync-status.warning .sync-icon { background: #fb6340; color: white; }
+.sync-status.danger .sync-icon { background: #f5365c; color: white; }
+
+.sync-status.mini .sync-icon { width: 20px; height: 20px; font-size: 0.6rem; border-radius: 6px; }
+
+.sync-text { display: flex; flex-direction: column; }
+.status-label { font-size: 0.75rem; font-weight: 700; }
+.status-id { font-size: 9px; opacity: 0.7; font-family: monospace; }
+.sync-status.success .status-label { color: #1aae6f; }
+.sync-status.warning .status-label { color: #8a3a06; }
+.sync-status.danger .status-label { color: #bd1c3d; }
+
+/* Action Buttons */
+.btn-action {
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-send { background: #5e72e4; color: white; border: none; }
+.btn-send:hover:not(:disabled) { background: #324cdd; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(94, 114, 228, 0.4); }
+
+.btn-update { background: white; color: #5e72e4; border: 1px solid #5e72e4; }
+.btn-update:hover:not(:disabled) { background: #5e72e4; color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(94, 114, 228, 0.2); }
+
+/* Shimmer Effect */
+.loading-shimmer-premium {
+  height: 60px;
+  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Pagination Premium */
+.pagination-premium .page-link {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 4px;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.pagination-premium .page-item.active .page-link {
+  background: #5e72e4;
+  border-color: #5e72e4;
+  color: white;
+}
+
+.pagination-info { font-size: 0.8rem; color: #64748b; }
+
+/* Animation Overrides */
+.scale-enter-active, .scale-leave-active { transition: all 0.3s ease; }
+.scale-enter-from, .scale-leave-to { opacity: 0; transform: scale(0.9); }
+
+/* Empty state */
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  background: #f1f5f9;
+  color: #cbd5e1;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto;
 }
 </style>
