@@ -35,6 +35,10 @@
                   <span class="value">{{ sepData.no_kartu }}</span>
                 </div>
                 <div class="info-row">
+                  <span class="label">No. KTP</span>
+                  <span class="value">{{ sepData.pasien?.no_ktp || '-' }}</span>
+                </div>
+                <div class="info-row">
                   <span class="label">Jenis Peserta</span>
                   <span class="value">{{ sepData.peserta || '-' }}</span>
                 </div>
