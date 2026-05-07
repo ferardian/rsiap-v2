@@ -548,6 +548,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/specimen-lab',
+    name: 'SatuSehatSpecimenLab',
+    component: () => import('@/views/satusehat/SatuSehatSpecimenLabView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/laporan/hais',
     name: 'LaporanHais',
     component: () => import('../views/laporan/HaisLaporanView.vue'),

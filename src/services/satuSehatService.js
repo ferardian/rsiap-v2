@@ -209,6 +209,17 @@ export const satuSehatService = {
   },
   syncServiceRequestLab(data) {
     return api.post('/satusehat/servicerequest-lab/sync', data)
+  },
+
+  // Specimen Lab
+  getSpecimenLab(params) {
+    return api.get('/satusehat/specimen-lab', { params })
+  },
+  sendSpecimenLab(data) {
+    return api.post('/satusehat/specimen-lab/send', data)
+  },
+  syncSpecimenLab(data) {
+    return api.post('/satusehat/specimen-lab/sync', data)
   }
 }
 
