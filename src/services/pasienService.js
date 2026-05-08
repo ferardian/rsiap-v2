@@ -14,9 +14,26 @@ const pasienService = {
 
     /**
      * Create a new patient
-     * @param {Object} data - Patient data payload
      */
     createPasien: (data) => api.post('/pasien', data),
+
+    /**
+     * Update an existing patient
+     */
+    updatePasien: (noRm, data) => api.put(`/pasien/${noRm}`, data),
+
+    /**
+     * Get list of companies/institutions
+     */
+    getPerusahaan: (params) => api.get('/pasien/perusahaan-pasien', { params }),
+
+    /**
+     * Master data for registration
+     */
+    getSuku: () => api.get('/pasien/suku-bangsa'),
+    getBahasa: () => api.get('/pasien/bahasa-pasien'),
+    getCacat: () => api.get('/pasien/cacat-fisik'),
+    getNextNoRm: () => api.get('/pasien/next-rm'),
 };
 
 export default pasienService;

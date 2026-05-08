@@ -112,9 +112,14 @@
                     <div class="text-muted small mb-1"><i class="fas fa-map-marker-alt me-1 opacity-50"></i>{{ selectedPasien.alamat || 'Alamat tidak tersedia' }}</div>
                     <div class="text-muted small" v-if="selectedPasien.namakeluarga"><i class="fas fa-user-friends me-1 opacity-50"></i>PJ: {{ selectedPasien.namakeluarga }}</div>
                   </div>
-                  <button @click="clearSelectedPasien" class="btn-clear">
-                    <i class="fas fa-times"></i>
-                  </button>
+                  <div class="btn-actions-container">
+                    <button @click="openEditPasienModal" class="btn-edit-pasien" title="Edit Data Pasien">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button @click="clearSelectedPasien" class="btn-clear">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -528,9 +533,9 @@
 
     <!-- Tambah Pasien Modal -->
     <div class="modal fade" id="tambahPasienModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 95vw; width: 1400px;">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 98vw; width: 1600px;">
         <div class="modal-content border-0 shadow-lg">
-          <div class="modal-header bg-primary text-white border-0 py-3">
+          <div class="modal-header modal-header-premium text-white border-0 py-3">
             <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2"></i>Tambah Pasien Baru</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -542,11 +547,34 @@
                   <div class="card-header card-header-gradient a">
                     <h6 class="fw-bold mb-0"><i class="fas fa-id-card me-2"></i>A. IDENTITAS PERSONAL</h6>
                   </div>
-                  <div class="card-body p-4">
+                  <div class="card-body p-3">
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="label-premium mb-0"><i class="fas fa-id-badge text-primary"></i> NO. REKAM MEDIS</label>
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" type="checkbox" v-model="lockRm" id="lockRmSwitch">
+                          <label class="form-check-label small text-muted cursor-pointer" for="lockRmSwitch" style="font-size: 0.7rem;">
+                            {{ lockRm ? 'Terkunci' : 'Buka' }}
+                          </label>
+                        </div>
+                      </div>
+                      <input 
+                        type="text" 
+                        v-model="formPasienBaru.no_rkm_medis" 
+                        class="form-control form-control-premium" 
+                        :style="lockRm ? 'background-color: #e9ecef !important;' : 'background-color: #ffffff !important;'"
+                        :class="lockRm ? '' : 'border-primary shadow-sm'"
+                        placeholder="Auto Generated"
+                        :readonly="lockRm"
+                      >
+                      <div class="form-text mt-1 text-muted" v-if="!isEditPatientMode" style="font-size: 0.75rem;">
+                        <i class="fas fa-info-circle me-1"></i> Nomor RM akan digenerate otomatis oleh sistem.
+                      </div>
+                    </div>
                     <div class="mb-3">
                       <label class="label-premium"><i class="fas fa-fingerprint"></i> No. KTP / NIK</label>
                       <div class="input-group-premium">
-                        <input type="text" v-model="formPasienBaru.no_ktp" class="form-control" placeholder="16 Digit NIK" maxlength="16">
+                        <input type="text" v-model="formPasienBaru.no_ktp" class="form-control" placeholder="16 Digit NIK" maxlength="16" autocomplete="new-password">
                         <button class="btn btn-primary" type="button" @click="lookupBpjsByNik" :disabled="loadingBpjsNik" title="Cek BPJS by NIK">
                           <i v-if="loadingBpjsNik" class="fas fa-spinner fa-spin"></i>
                           <i v-else class="fas fa-search"></i>
@@ -555,17 +583,17 @@
                     </div>
                     <div class="mb-3">
                       <label class="label-premium"><i class="fas fa-user"></i> Nama Lengkap Pasien <span class="text-danger">*</span></label>
-                      <input type="text" v-model="formPasienBaru.nm_pasien" class="form-control form-control-premium" required placeholder="Sesuai KTP">
+                      <input type="text" v-model="formPasienBaru.nm_pasien" class="form-control form-control-premium" required placeholder="Sesuai KTP" autocomplete="new-password">
                     </div>
                     <div class="row">
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-venus-mars"></i> Jenis Kelamin <span class="text-danger">*</span></label>
                         <select v-model="formPasienBaru.jk" class="form-select form-select-premium" required>
                           <option value="L">Laki-laki</option>
                           <option value="P">Perempuan</option>
                         </select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-tint"></i> Gol. Darah</label>
                         <select v-model="formPasienBaru.gol_darah" class="form-select form-select-premium">
                           <option value="-">-</option>
@@ -577,21 +605,21 @@
                       </div>
                     </div>
                     <div class="row">
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-map-marker-alt"></i> Tempat Lahir <span class="text-danger">*</span></label>
                         <input type="text" v-model="formPasienBaru.tmp_lahir" class="form-control form-control-premium" required>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-calendar-day"></i> Tgl Lahir <span class="text-danger">*</span></label>
                         <input type="date" v-model="formPasienBaru.tgl_lahir" class="form-control form-control-premium" required>
                       </div>
                     </div>
                     <div class="mb-3">
                       <label class="label-premium"><i class="fas fa-female"></i> Nama Ibu Kandung</label>
-                      <input type="text" v-model="formPasienBaru.nm_ibu" class="form-control form-control-premium" placeholder="Nama Ibu">
+                      <input type="text" v-model="formPasienBaru.nm_ibu" class="form-control form-control-premium" placeholder="Nama Ibu" autocomplete="new-password">
                     </div>
                     <div class="row">
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-heart"></i> Status Nikah</label>
                         <select v-model="formPasienBaru.stts_nikah" class="form-select form-select-premium">
                           <option value="BELUM MENIKAH">BELUM MENIKAH</option>
@@ -601,7 +629,7 @@
                           <option value="JOMBLO">JOMBLO</option>
                         </select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-pray"></i> Agama</label>
                         <select v-model="formPasienBaru.agama" class="form-select form-select-premium">
                           <option value="ISLAM">ISLAM</option>
@@ -615,7 +643,7 @@
                       </div>
                     </div>
                     <div class="row">
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-graduation-cap"></i> Pendidikan</label>
                         <select v-model="formPasienBaru.pnd" class="form-select form-select-premium">
                           <option value="TS">TS</option>
@@ -623,6 +651,7 @@
                           <option value="SD">SD</option>
                           <option value="SMP">SMP</option>
                           <option value="SMA">SMA</option>
+                          <option value="SLTA/SEDERAJAT">SLTA/SEDERAJAT</option>
                           <option value="D1">D1</option>
                           <option value="D2">D2</option>
                           <option value="D3">D3</option>
@@ -633,11 +662,12 @@
                           <option value="-">-</option>
                         </select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-briefcase"></i> Pekerjaan</label>
-                        <input type="text" v-model="formPasienBaru.pekerjaan" class="form-control form-control-premium" placeholder="WIRASWASTA">
+                        <input type="text" v-model="formPasienBaru.pekerjaan" class="form-control form-control-premium" placeholder="WIRASWASTA" autocomplete="new-password">
                       </div>
                     </div>
+                    
                   </div>
                 </div>
               </div>
@@ -647,17 +677,17 @@
                   <div class="card-header card-header-gradient b">
                     <h6 class="fw-bold mb-0"><i class="fas fa-map-marker-alt me-2"></i>B. KONTAK & DOMISILI</h6>
                   </div>
-                  <div class="card-body p-4">
+                  <div class="card-body p-3">
                     <div class="mb-3">
                       <label class="label-premium"><i class="fas fa-home"></i> Alamat Lengkap <span class="text-danger">*</span></label>
-                      <textarea v-model="formPasienBaru.alamat" class="form-control form-control-premium" rows="3" required placeholder="Jl. Contoh, RT/RW"></textarea>
+                      <textarea v-model="formPasienBaru.alamat" class="form-control form-control-premium" rows="3" required placeholder="Jl. Contoh, RT/RW" autocomplete="new-password"></textarea>
                     </div>
                     
                     <div class="row">
                       <div class="col-12 mb-2">
                         <label class="label-premium"><i class="fas fa-map"></i> Wilayah (Pilih dari daftar)</label>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <v-select
                           v-model="formPasienBaru.kd_prop"
                           :options="propinsiOptions"
@@ -668,9 +698,17 @@
                           placeholder="Propinsi..."
                           class="v-select-custom"
                         >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
                         </v-select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <v-select
                           v-model="formPasienBaru.kd_kab"
                           :options="kabupatenOptions"
@@ -681,9 +719,17 @@
                           placeholder="Kabupaten..."
                           class="v-select-custom"
                         >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
                         </v-select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <v-select
                           v-model="formPasienBaru.kd_kec"
                           :options="kecamatanOptions"
@@ -694,9 +740,17 @@
                           placeholder="Kecamatan..."
                           class="v-select-custom"
                         >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
                         </v-select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <v-select
                           v-model="formPasienBaru.kd_kel"
                           :options="kelurahanOptions"
@@ -707,18 +761,94 @@
                           placeholder="Kelurahan..."
                           class="v-select-custom"
                         >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
                         </v-select>
                       </div>
                     </div>
 
                     <div class="row mt-2">
-                      <div class="col-12 mb-3">
+                      <div class="col-12 mb-2">
                         <label class="label-premium"><i class="fas fa-phone"></i> No. HP / Telepon</label>
                         <input type="text" v-model="formPasienBaru.no_tlp" class="form-control form-control-premium" placeholder="08xxx">
                       </div>
-                      <div class="col-12 mb-3">
+                      <div class="col-12 mb-2">
                         <label class="label-premium"><i class="fas fa-envelope"></i> Email</label>
                         <input type="email" v-model="formPasienBaru.email" class="form-control form-control-premium" placeholder="email@contoh.com">
+                      </div>
+                    </div>
+
+                    <div class="divider-dashed opacity-50 my-3"></div>
+
+                    <div class="row">
+                      <div class="col-6 mb-2">
+                        <label class="label-premium"><i class="fas fa-user-tag"></i> Suku Bangsa</label>
+                        <v-select
+                          v-model="formPasienBaru.suku_bangsa"
+                          :options="sukuOptions"
+                          :reduce="suku => suku.id"
+                          label="nama_suku_bangsa"
+                          placeholder="Pilih Suku"
+                          class="v-select-custom"
+                          :loading="loadingSuku"
+                        >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
+                        </v-select>
+                      </div>
+                      <div class="col-6 mb-2">
+                        <label class="label-premium"><i class="fas fa-language"></i> Bahasa Pasien</label>
+                        <v-select
+                          v-model="formPasienBaru.bahasa_pasien"
+                          :options="bahasaOptions"
+                          :reduce="bhs => bhs.id"
+                          label="nama_bahasa"
+                          placeholder="Pilih Bahasa"
+                          class="v-select-custom"
+                          :loading="loadingBahasa"
+                        >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
+                        </v-select>
+                      </div>
+                      <div class="col-12 mb-2">
+                        <label class="label-premium"><i class="fas fa-wheelchair"></i> Cacat Fisik</label>
+                        <v-select
+                          v-model="formPasienBaru.cacat_fisik"
+                          :options="cacatOptions"
+                          :reduce="cct => cct.id"
+                          label="nama_cacat"
+                          placeholder="Pilih Cacat Fisik"
+                          class="v-select-custom"
+                          :loading="loadingCacat"
+                        >
+                          <template #search="{ attributes, events }">
+                            <input
+                              class="vs__search"
+                              v-bind="attributes"
+                              v-on="events"
+                              autocomplete="new-password"
+                            />
+                          </template>
+                        </v-select>
                       </div>
                     </div>
                   </div>
@@ -730,11 +860,32 @@
                   <div class="card-header card-header-gradient c">
                     <h6 class="fw-bold mb-0"><i class="fas fa-hand-holding-medical me-2"></i>C. ASURANSI & P. JAWAB</h6>
                   </div>
-                  <div class="card-body p-4">
+                  <div class="card-body p-3">
+                    <div class="mb-3">
+                      <label class="label-premium"><i class="fas fa-wallet"></i> Jenis Bayar / Pembiayaan <span class="text-danger">*</span></label>
+                      <v-select
+                        v-model="formPasienBaru.kd_pj"
+                        :options="penijabs"
+                        :reduce="pj => pj.kd_pj"
+                        label="png_jawab"
+                        placeholder="Pilih Pembiayaan"
+                        class="v-select-custom"
+                      >
+                        <template #search="{ attributes, events }">
+                          <input
+                            class="vs__search"
+                            v-bind="attributes"
+                            v-on="events"
+                            autocomplete="new-password"
+                          />
+                        </template>
+                      </v-select>
+                    </div>
+
                     <div class="mb-4">
                       <label class="label-premium"><i class="fas fa-credit-card"></i> No. Kartu BPJS / JKN</label>
                       <div class="input-group-premium">
-                        <input type="text" v-model="formPasienBaru.no_peserta" class="form-control" placeholder="13 Digit No JKN" maxlength="13">
+                        <input type="text" v-model="formPasienBaru.no_peserta" class="form-control" placeholder="13 Digit No JKN" maxlength="13" autocomplete="new-password">
                         <button class="btn btn-success" type="button" @click="lookupBpjsByNoKartu" :disabled="loadingBpjsNoKartu" title="Cek BPJS by No. Kartu">
                           <i v-if="loadingBpjsNoKartu" class="fas fa-spinner fa-spin"></i>
                           <i v-else class="fas fa-search"></i>
@@ -749,7 +900,7 @@
                       <input type="text" v-model="formPasienBaru.namakeluarga" class="form-control form-control-premium" placeholder="Nama PJ">
                     </div>
                     <div class="row">
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-users"></i> Hubungan</label>
                         <select v-model="formPasienBaru.keluarga" class="form-select form-select-premium">
                           <option value="SUAMI">SUAMI</option>
@@ -760,7 +911,7 @@
                           <option value="SAUDARA">SAUDARA</option>
                         </select>
                       </div>
-                      <div class="col-6 mb-3">
+                      <div class="col-6 mb-2">
                         <label class="label-premium"><i class="fas fa-user-tie"></i> Pekerjaan PJ</label>
                         <input type="text" v-model="formPasienBaru.pekerjaanpj" class="form-control form-control-premium" placeholder="Pekerjaan PJ">
                       </div>
@@ -771,10 +922,19 @@
                     </div>
                     <div class="mb-3">
                       <label class="label-premium"><i class="fas fa-building"></i> Instansi / Perusahaan</label>
-                      <div class="input-group-premium bg-light opacity-75">
-                        <input type="text" class="form-control" readonly value="- (Pemilihan Belum Aktif)">
-                        <button class="btn btn-secondary" type="button" disabled><i class="fas fa-search"></i></button>
-                      </div>
+                      <v-select
+                        v-model="formPasienBaru.perusahaan_pasien"
+                        :options="perusahaanOptions"
+                        :reduce="p => p.kode_perusahaan"
+                        label="nama_perusahaan"
+                        placeholder="Pilih Instansi/Perusahaan"
+                        class="v-select-custom bg-white"
+                        :loading="loadingPerusahaan"
+                      >
+                        <template #no-options="{ search, searching, loading }">
+                          {{ searching ? 'Tidak ditemukan' : 'Ketik untuk mencari' }}
+                        </template>
+                      </v-select>
                     </div>
                   </div>
                 </div>
@@ -782,7 +942,7 @@
 
             </form>
           </div>
-          <div class="modal-footer bg-light border-top-0 py-3 d-flex justify-content-between align-items-center">
+          <div class="modal-footer border-0 bg-light py-3 px-4 d-flex justify-content-between align-items-center" style="border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
             <div class="text-muted small">
               <span class="text-danger">*</span> Wajib diisi
             </div>
@@ -792,7 +952,7 @@
               </button>
               <button type="submit" form="formTambahPasien" class="btn btn-primary-premium" :disabled="submittingPasien">
                 <span v-if="submittingPasien" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <i v-else class="fas fa-save me-2"></i> Simpan & Pilih Pasien
+                <i v-else class="fas fa-save me-2"></i> Simpan
               </button>
             </div>
           </div>
@@ -981,6 +1141,7 @@ const searchQuery = ref('');
 const searchResults = ref([]);
 const searching = ref(false);
 const selectedPasien = ref(null);
+const isEditPatientMode = ref(false);
 
 const polikliniks = ref([]);
 const dokters = ref([]);
@@ -1010,6 +1171,8 @@ const loadingRiwayat = ref(false);
 // Wilayah State
 const propinsiOptions = ref([]);
 const kabupatenOptions = ref([]);
+const lockRm = ref(true);
+const originalNoRm = ref('');
 const kecamatanOptions = ref([]);
 const kelurahanOptions = ref([]);
 const loadingPropinsi = ref(false);
@@ -1018,6 +1181,15 @@ const loadingKecamatan = ref(false);
 const loadingKelurahan = ref(false);
 const loadingBpjsNik = ref(false);
 const loadingBpjsNoKartu = ref(false);
+const perusahaanOptions = ref([]);
+const sukuOptions = ref([]);
+const bahasaOptions = ref([]);
+const cacatOptions = ref([]);
+
+const loadingPerusahaan = ref(false);
+const loadingSuku = ref(false);
+const loadingBahasa = ref(false);
+const loadingCacat = ref(false);
 
 // List State
 const registrationList = ref([]);
@@ -1050,6 +1222,8 @@ const form = reactive({
 let tambahPasienModal = null;
 const submittingPasien = ref(false);
 const formPasienBaru = reactive({
+  no_rkm_medis: '',
+  sync_counter: false,
   nm_pasien: '',
   jk: 'L',
   no_ktp: '',
@@ -1061,9 +1235,9 @@ const formPasienBaru = reactive({
   agama: 'ISLAM',
   pnd: 'SMA',
   pekerjaan: '-',
-  suku_bangsa: 5, // Default SUKU JAWA or similar
-  bahasa_pasien: 5, // Default INDONESIA
-  cacat_fisik: 5, // Default TIDAK ADA
+  suku_bangsa: 5,
+  bahasa_pasien: 5,
+  cacat_fisik: 5,
   
   alamat: '',
   no_tlp: '',
@@ -1093,45 +1267,23 @@ const canSubmit = computed(() => {
 });
 
 // Handlers
-const openTambahPasienModal = () => {
-  // Reset form
-  Object.assign(formPasienBaru, {
-    nm_pasien: '',
-    jk: 'L',
-    no_ktp: '',
-    tmp_lahir: '',
-    tgl_lahir: '',
-    nm_ibu: '',
-    gol_darah: '-',
-    stts_nikah: 'BELUM MENIKAH',
-    agama: 'ISLAM',
-    pnd: 'SMA',
-    pekerjaan: '-',
-    suku_bangsa: 5,
-    bahasa_pasien: 5,
-    cacat_fisik: 5,
-    
-    alamat: '',
-    no_tlp: '',
-    email: '',
-    kd_prop: null,
-    kd_kab: null,
-    kd_kec: null,
-    kd_kel: null,
-    
-    namakeluarga: '',
-    keluarga: 'SAUDARA',
-    kd_pj: 'A01', // UMUM
-    pekerjaanpj: '-',
-    alamatpj: '',
-    propinsipj: '-',
-    kabupatenpj: '-',
-    kecamatanpj: '-',
-    kelurahanpj: '-',
-    no_peserta: '',
-    perusahaan_pasien: '-',
-    nip: ''
-  });
+const openTambahPasienModal = async () => {
+  isEditPatientMode.value = false;
+  resetFormPasienBaru();
+  fetchPerusahaans();
+
+  // Fetch Next RM
+  try {
+    const res = await pasienService.getNextNoRm();
+    if (res.data.success) {
+      formPasienBaru.no_rkm_medis = res.data.data;
+      originalNoRm.value = res.data.data;
+    }
+  } catch (error) {
+    console.error('Failed to fetch next RM:', error);
+  }
+
+  await fetchMasterPasien();
   
   if (!tambahPasienModal) {
     tambahPasienModal = new window.bootstrap.Modal(document.getElementById('tambahPasienModal'));
@@ -1182,6 +1334,60 @@ const onSearchKelurahan = debounce(async (search, loading) => {
     loading(false);
   }
 }, 500);
+
+const fetchMasterPasien = async () => {
+  console.log('Fetching master pasien data...');
+  // Suku Bangsa
+  if (sukuOptions.value.length === 0) {
+    loadingSuku.value = true;
+    try {
+      const res = await pasienService.getSuku();
+      sukuOptions.value = res.data.data;
+      console.log('Suku loaded:', sukuOptions.value.length);
+    } catch (e) {
+      console.error('Error loading suku:', e);
+    }
+    loadingSuku.value = false;
+  }
+
+  // Bahasa
+  if (bahasaOptions.value.length === 0) {
+    loadingBahasa.value = true;
+    try {
+      const res = await pasienService.getBahasa();
+      bahasaOptions.value = res.data.data;
+      console.log('Bahasa loaded:', bahasaOptions.value.length);
+    } catch (e) {}
+    loadingBahasa.value = false;
+  }
+
+  // Cacat Fisik
+  if (cacatOptions.value.length === 0) {
+    loadingCacat.value = true;
+    try {
+      const res = await pasienService.getCacat();
+      cacatOptions.value = res.data.data;
+      console.log('Cacat loaded:', cacatOptions.value.length);
+    } catch (e) {}
+    loadingCacat.value = false;
+  }
+};
+
+const fetchPerusahaans = async () => {
+  await fetchMasterPasien();
+  
+  if (perusahaanOptions.value.length > 0) return;
+  
+  loadingPerusahaan.value = true;
+  try {
+    const res = await pasienService.getPerusahaan({ limit: 1000 });
+    perusahaanOptions.value = res.data.data;
+  } catch (error) {
+    console.error('Failed to fetch perusahaans:', error);
+  } finally {
+    loadingPerusahaan.value = false;
+  }
+};
 
 const lookupBpjsByNik = async () => {
   if (!formPasienBaru.no_ktp || formPasienBaru.no_ktp.length < 13) {
@@ -1250,28 +1456,154 @@ const fillFormFromBpjs = (peserta) => {
   });
 };
 
+const resetFormPasienBaru = () => {
+  Object.assign(formPasienBaru, {
+    no_rkm_medis: '',
+    sync_counter: false,
+    nm_pasien: '',
+    jk: 'L',
+    no_ktp: '',
+    tmp_lahir: '',
+    tgl_lahir: '',
+    nm_ibu: '',
+    gol_darah: '-',
+    stts_nikah: 'BELUM MENIKAH',
+    agama: 'ISLAM',
+    pnd: 'SMA',
+    pekerjaan: '-',
+    suku_bangsa: 5,
+    bahasa_pasien: 5,
+    cacat_fisik: 5,
+    alamat: '',
+    no_tlp: '',
+    email: '',
+    kd_prop: null,
+    kd_kab: null,
+    kd_kec: null,
+    kd_kel: null,
+    namakeluarga: '',
+    keluarga: 'SAUDARA',
+    kd_pj: 'A01',
+    pekerjaanpj: '-',
+    alamatpj: '',
+    propinsipj: '-',
+    kabupatenpj: '-',
+    no_peserta: '',
+    perusahaan_pasien: '-'
+  });
+  isEditPatientMode.value = false;
+};
+
+const openEditPasienModal = async () => {
+  if (!selectedPasien.value) return;
+  
+  isEditPatientMode.value = true;
+  
+  // Map selectedPasien data to formPasienBaru
+  const p = selectedPasien.value;
+  formPasienBaru.no_rkm_medis = p.no_rkm_medis;
+  originalNoRm.value = p.no_rkm_medis;
+  formPasienBaru.nm_pasien = p.nm_pasien;
+  formPasienBaru.jk = p.jk;
+  formPasienBaru.no_ktp = p.no_ktp;
+  formPasienBaru.tmp_lahir = p.tmp_lahir;
+  formPasienBaru.tgl_lahir = p.tgl_lahir;
+  formPasienBaru.nm_ibu = p.nm_ibu;
+  formPasienBaru.gol_darah = p.gol_darah;
+  formPasienBaru.stts_nikah = p.stts_nikah;
+  formPasienBaru.agama = p.agama;
+  formPasienBaru.pnd = p.pnd;
+  formPasienBaru.pekerjaan = p.pekerjaan;
+  formPasienBaru.suku_bangsa = p.suku_bangsa || 5;
+  formPasienBaru.bahasa_pasien = p.bahasa_pasien || 5;
+  formPasienBaru.cacat_fisik = p.cacat_fisik || 5;
+  formPasienBaru.alamat = p.alamat;
+  formPasienBaru.no_tlp = p.no_tlp;
+  formPasienBaru.email = p.email;
+  formPasienBaru.kd_prop = p.kd_prop;
+  formPasienBaru.kd_kab = p.kd_kab;
+  formPasienBaru.kd_kec = p.kd_kec;
+  formPasienBaru.kd_kel = p.kd_kel;
+  formPasienBaru.namakeluarga = p.namakeluarga;
+  formPasienBaru.keluarga = p.keluarga;
+  formPasienBaru.kd_pj = p.kd_pj;
+  formPasienBaru.pekerjaanpj = p.pekerjaanpj;
+  formPasienBaru.alamatpj = p.alamatpj;
+  formPasienBaru.propinsipj = p.propinsipj;
+  formPasienBaru.kabupatenpj = p.kabupatenpj;
+  formPasienBaru.no_peserta = p.no_peserta;
+  formPasienBaru.perusahaan_pasien = p.perusahaan_pasien;
+  
+  // Set options for regions to show names instead of codes
+  if (p.propinsi) propinsiOptions.value = [p.propinsi];
+  if (p.kabupaten) kabupatenOptions.value = [p.kabupaten];
+  if (p.kecamatan) kecamatanOptions.value = [p.kecamatan];
+  if (p.kelurahan) kelurahanOptions.value = [p.kelurahan];
+
+  await fetchMasterPasien();
+  
+  if (!tambahPasienModal) {
+    tambahPasienModal = new window.bootstrap.Modal(document.getElementById('tambahPasienModal'));
+  }
+  tambahPasienModal.show();
+};
+
 const submitTambahPasien = async () => {
+  // Check if No. RM was edited
+  if (formPasienBaru.no_rkm_medis !== originalNoRm.value) {
+    const result = await Swal.fire({
+      title: 'Update Counter RM?',
+      text: `Anda mengubah No. RM (${originalNoRm.value} -> ${formPasienBaru.no_rkm_medis}). Apakah ingin mengupdate counter sistem agar nomor selanjutnya mengikuti nomor ini?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Update Counter',
+      cancelButtonText: 'Tidak, Simpan Saja',
+      reverseButtons: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#627d98',
+    });
+    formPasienBaru.sync_counter = result.isConfirmed;
+  }
+
   submittingPasien.value = true;
   try {
-    const response = await pasienService.createPasien(formPasienBaru);
-    
-    // Automatically select the newly created patient
-    const newPasien = response.data?.data;
-    if (newPasien) {
-      selectPasien(newPasien);
+    let response;
+    if (isEditPatientMode.value) {
+      response = await pasienService.updatePasien(selectedPasien.value.no_rkm_medis, formPasienBaru);
+      
+      // Update local state
+      const updatedPasien = { ...selectedPasien.value, ...formPasienBaru };
+      selectedPasien.value = updatedPasien;
       
       Swal.fire({
         title: 'Berhasil!',
-        text: 'Pasien baru berhasil didaftarkan.',
+        text: 'Data pasien berhasil diperbarui.',
         icon: 'success',
         timer: 2000,
         showConfirmButton: false
       });
+    } else {
+      response = await pasienService.createPasien(formPasienBaru);
+      
+      // Automatically select the newly created patient
+      const newPasien = response.data?.data;
+      if (newPasien) {
+        selectPasien(newPasien);
+        
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Pasien baru berhasil didaftarkan.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
     }
     
     tambahPasienModal.hide();
+    resetFormPasienBaru();
   } catch (error) {
-    console.error('Failed to create patient:', error);
+    console.error('Failed to save patient:', error);
     Swal.fire({
       title: 'Gagal!',
       text: error.response?.data?.message || 'Terjadi kesalahan saat menyimpan pasien.',
@@ -1295,7 +1627,7 @@ const handlePatientSearch = debounce(async () => {
       limit: 10,
       sort: [{ field: 'nm_pasien', direction: 'asc' }]
     };
-    const response = await pasienService.searchPasien(payload);
+    const response = await api.post('/pasien/search?include=propinsi,kabupaten,kecamatan,kelurahan', payload);
     searchResults.value = response.data.data;
   } catch (error) {
     console.error('Search error:', error);
@@ -1316,15 +1648,16 @@ const selectPasien = (pasien) => {
 const checkFastTrackBPJS = async (pasien) => {
   fastTrackCandidate.value = null;
   
-  // If no card number, attempt to search by RM or KTP if possible, 
-  // but usually we need some BPJS context.
-  // The anjungan/identitas endpoint handles RM/NIK/NoKartu.
+  // Only check if patient has BPJS number
+  if (!pasien.no_peserta || pasien.no_peserta === '-' || pasien.no_peserta === '') {
+    return;
+  }
   
   checkingFastTrack.value = true;
   try {
     const response = await api.post('/anjungan/identitas', {
       tipe: 'bpjs',
-      nomor: pasien.no_rkm_medis
+      nomor: pasien.no_peserta // Better use no_peserta directly if we have it
     });
 
     if (response.data.success && response.data.data) {
@@ -1335,8 +1668,8 @@ const checkFastTrackBPJS = async (pasien) => {
       }
     }
   } catch (error) {
-    console.error('Fast track check error:', error);
-    // Silent fail for check
+    // Silent fail for check - usually means no active referral/control letter found
+    // We don't need to log this as an error in the console to avoid confusion
   } finally {
     checkingFastTrack.value = false;
   }
@@ -2283,10 +2616,10 @@ onBeforeUnmount(() => {
 
 /* v-select custom styling */
 .v-select-custom :deep(.vs__dropdown-toggle) {
-  padding: 0.4rem 0.5rem;
-  border-radius: 12px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 14px;
   border: 1.5px solid #edf2f7;
-  background-color: #f8fafc;
+  background-color: white;
   transition: all 0.3s;
 }
 
@@ -2301,14 +2634,15 @@ onBeforeUnmount(() => {
 }
 
 .v-select-custom :deep(.vs__selected) {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #2d3748;
   margin: 4px 2px 0px;
 }
 
 .v-select-custom :deep(.vs__search) {
   margin: 0;
-  padding: 0.35rem 0;
+  padding: 0.15rem 0;
+  font-size: 0.85rem;
   color: #2c3e50;
 }
 
@@ -2317,12 +2651,15 @@ onBeforeUnmount(() => {
 }
 
 .v-select-custom :deep(.vs__dropdown-menu) {
+  z-index: 1051 !important;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   padding: 0.5rem;
-  margin-top: 5px;
-  z-index: 1100;
+  max-height: 350px;
+  min-width: 100%;
+  width: max-content;
+  max-width: 350px;
 }
 
 .v-select-custom :deep(.vs__dropdown-option) {
@@ -2334,12 +2671,6 @@ onBeforeUnmount(() => {
   word-wrap: break-word;
   line-height: 1.4;
   font-size: 0.8rem;
-}
-
-.v-select-custom :deep(.vs__dropdown-menu) {
-  min-width: 100%;
-  width: max-content;
-  max-width: 350px;
 }
 
 .v-select-custom :deep(.vs__dropdown-option--highlight) {
@@ -2430,6 +2761,8 @@ onBeforeUnmount(() => {
   border: 2px solid #3498db;
   border-radius: 16px;
   padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
 }
 
 .box-inner {
@@ -2458,28 +2791,51 @@ onBeforeUnmount(() => {
   color: #1a202c;
 }
 
-.btn-clear {
+.btn-actions-container {
   position: absolute;
-  top: -0.5rem;
-  right: -0.5rem;
-  width: 28px;
-  height: 28px;
-  background: #e53e3e;
-  color: white;
-  border: none;
+  top: 50%;
+  right: 1.25rem;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  z-index: 5;
+}
+
+.btn-clear, .btn-edit-pasien {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(229, 62, 62, 0.2);
-  transition: transform 0.2s;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-edit-pasien {
+  background: #f0f7ff;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+}
+
+.btn-edit-pasien:hover {
+  background: #e6f7ff;
+  color: #096dd9;
+  transform: scale(1.1);
+}
+
+.btn-clear {
+  background: #fff1f0;
+  color: #f5222d;
+  border: 1px solid #ffa39e;
 }
 
 .btn-clear:hover {
+  background: #ffccc7;
+  color: #cf1322;
   transform: scale(1.1);
-  background: #c53030;
 }
 
 .placeholder-pasien-box {
@@ -2549,7 +2905,7 @@ onBeforeUnmount(() => {
 }
 
 .btn-secondary-premium {
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.5rem;
   background: #f8fafc;
   color: #64748b;
   font-weight: 600;
@@ -2560,11 +2916,11 @@ onBeforeUnmount(() => {
 }
 
 .btn-danger-premium {
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.5rem;
   background: linear-gradient(135deg, #e53e3e, #f56565);
   color: white;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   border: none;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
@@ -2582,7 +2938,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #3182ce, #2c5282);
   color: white;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   border: none;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(49, 130, 206, 0.2);
@@ -2625,7 +2981,7 @@ onBeforeUnmount(() => {
   border-radius: 20px !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
   transition: all 0.3s ease;
-  overflow: hidden;
+  overflow: visible !important;
 }
 
 .form-card-premium:hover {
@@ -2634,12 +2990,14 @@ onBeforeUnmount(() => {
 }
 
 .card-header-gradient {
-  padding: 1.25rem !important;
+  padding: 0.9rem !important;
   color: white !important;
   text-align: center;
   font-weight: 700;
   letter-spacing: 0.5px;
   border: none !important;
+  border-top-left-radius: 20px !important;
+  border-top-right-radius: 20px !important;
 }
 
 .card-header-gradient.a { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -2663,15 +3021,18 @@ onBeforeUnmount(() => {
 .input-group-premium .form-control {
   border: none !important;
   background: transparent !important;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
   box-shadow: none !important;
 }
 
 .input-group-premium .btn {
   border: none !important;
   border-radius: 0 !important;
-  padding: 0 1.25rem;
+  padding: 0 0.6rem;
   transition: all 0.2s;
+  min-width: 36px;
+  max-width: 45px;
 }
 
 .label-premium {
@@ -2694,10 +3055,10 @@ onBeforeUnmount(() => {
 .form-control-premium {
   border-radius: 14px !important;
   border: 1.5px solid #edf2f7 !important;
-  padding: 0.75rem 1rem !important;
+  padding: 0.6rem 0.9rem !important;
   background-color: white !important;
   transition: all 0.3s !important;
-  font-size: 0.9rem !important;
+  font-size: 0.85rem !important;
 }
 
 .form-control-premium:focus {
@@ -2710,8 +3071,8 @@ onBeforeUnmount(() => {
   border-radius: 14px !important;
   border: 1.5px solid #edf2f7 !important;
   background-color: white !important;
-  padding: 0.75rem 1rem !important;
-  font-size: 0.9rem !important;
+  padding: 0.6rem 0.9rem !important;
+  font-size: 0.85rem !important;
   cursor: pointer;
 }
 
@@ -2844,4 +3205,72 @@ onBeforeUnmount(() => {
   margin: 0 !important;
   padding: 0 !important;
 }
+
+/* Premium Modal Header */
+.modal-header-premium {
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2) !important;
+  border-top-left-radius: 24px !important;
+  border-top-right-radius: 24px !important;
+}
+
+.modal-header-premium::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.modal-header-premium .modal-title {
+  font-size: 1.25rem !important;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.modal-header-premium .modal-title i {
+  background: rgba(255, 255, 255, 0.15);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  margin-right: 12px;
+  font-size: 1.1rem;
+}
+
+.modal-header-premium .btn-close {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  opacity: 0.8;
+  padding: 0.6rem !important;
+  margin-right: -0.25rem !important;
+  transition: all 0.3s;
+  border-radius: 10px !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") !important;
+}
+
+.modal-header-premium .btn-close:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+.modal-content {
+  border-radius: 24px !important;
+  border: none !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  overflow: visible !important;
+  background-color: #4f46e5 !important;
+  background-clip: padding-box !important;
+}
+
 </style>

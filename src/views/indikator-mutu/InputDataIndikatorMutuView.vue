@@ -250,19 +250,34 @@
                  </div>
 
                  <div class="calendar-grid">
-                    <div v-for="day in calendarDays" :key="day.date" class="calendar-day card" :class="{'has-data': day.hasData}">
-                        <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" :class="day.hasData ? 'bg-success text-white' : 'bg-light'">
+                    <div v-for="day in calendarDays" :key="day.date" class="calendar-day card" :class="{'has-data': day.hasData, 'is-sunday': day.isSunday}">
+                        <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" :class="day.isSunday ? 'bg-danger text-white' : (day.hasData ? 'bg-success text-white' : 'bg-light')">
                             <small class="fw-bold">{{ day.date.slice(-2) }} {{ day.dayName }}</small>
                             <i v-if="day.hasData" class="fas fa-check-circle small"></i>
+                            <i v-else-if="day.isSunday" class="fas fa-calendar-day small"></i>
                         </div>
-                        <div class="card-body p-2">
+                        <div class="card-body p-2" :class="{'bg-light opacity-50': day.date > new Date().toISOString().slice(0, 10)}">
                             <div class="mb-2">
                                 <label class="small text-muted d-block mb-0">Num</label>
-                                <input type="number" class="form-control form-control-sm" v-model.number="day.numerator" min="0" @input="day.isTouched = true">
+                                <input 
+                                    type="number" 
+                                    class="form-control form-control-sm" 
+                                    v-model.number="day.numerator" 
+                                    min="0" 
+                                    :disabled="day.date > new Date().toISOString().slice(0, 10)"
+                                    @input="day.isTouched = true"
+                                >
                             </div>
                             <div>
                                 <label class="small text-muted d-block mb-0">Denum</label>
-                                <input type="number" class="form-control form-control-sm" v-model.number="day.denominator" min="0" :disabled="!needsDenominator(selectedIndicator)" @input="day.isTouched = true">
+                                <input 
+                                    type="number" 
+                                    class="form-control form-control-sm" 
+                                    v-model.number="day.denominator" 
+                                    min="0" 
+                                    :disabled="!needsDenominator(selectedIndicator) || day.date > new Date().toISOString().slice(0, 10)" 
+                                    @input="day.isTouched = true"
+                                >
                             </div>
                         </div>
                     </div>
@@ -341,7 +356,12 @@
                                 <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
                                     <div class="text-start">
                                         <small class="text-muted d-block extra-small">CAPAIAN</small>
-                                        <span class="fw-bold" :class="isTargetMet(item) ? 'text-success' : 'text-danger'">{{ item.score }}%</span>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="fw-bold" :class="isTargetMet(item) ? 'text-success' : 'text-danger'">{{ item.score }}%</span>
+                                            <span class="badge extra-small rounded-pill p-1 px-2" :class="isTargetMet(item) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle'" style="font-size: 0.6rem !important;">
+                                                {{ isTargetMet(item) ? 'Tercapai' : 'Tidak Tercapai' }}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div class="text-center px-1">
                                         <small class="text-muted d-block extra-small">TARGET</small>
@@ -899,6 +919,7 @@ const calendarDays = computed(() => {
             date: dateStr,
             day: d,
             dayName: currentDate.toLocaleDateString('id-ID', { weekday: 'short' }),
+            isSunday: currentDate.getDay() === 0,
             numerator: existing ? existing.num : 0,
             denominator: existing ? existing.denum : 0,
             hasData: !!existing,
@@ -942,21 +963,22 @@ const saveBulk = async () => {
     
     bulkSaving.value = true
     try {
-        // Only send days that have been touched/modified by user
-        const allDays = calendarDays.value.map(day => ({
-            id_inmut: selectedIndicator.value.id_inmut,
-            tgl_transaksi: day.date,
-            dep_id: filters.unit,
-            numerator: day.numerator,
-            denominator: day.denominator,
-            isTouched: day.isTouched
-        }))
-
-        // Filter: only include entries that user has touched (modified or from DB)
-        const payload = allDays.filter(item => item.isTouched).map(({ isTouched, ...rest }) => rest)
+        // Get current date string for comparison (YYYY-MM-DD)
+        const today = new Date().toISOString().slice(0, 10)
+        
+        // Map all days, but only those up to today
+        const payload = calendarDays.value
+            .filter(day => day.date <= today)
+            .map(day => ({
+                id_inmut: selectedIndicator.value.id_inmut,
+                tgl_transaksi: day.date,
+                dep_id: filters.unit,
+                numerator: day.numerator,
+                denominator: day.denominator
+            }))
 
         if (payload.length === 0) {
-            toast.warning('Tidak ada data yang diisi. Silakan isi minimal satu tanggal.')
+            toast.warning('Tidak ada data yang dapat disimpan untuk periode ini.')
             return
         }
 
@@ -1264,22 +1286,26 @@ const getUnitName = () => {
 }
 
 const isTargetMet = (item) => {
-    // Try to get indicator data from item.indikator first (like in monitoring)
-    const ind = item?.indikator
+    if (!item) return false
+    
     let target, rumus, score
     
-    if (ind) {
-        const utama = ind.master_utama || ind.masterUtama
-        target = parseFloat((utama && utama.standar) ? utama.standar : ind.standar)
-        rumus = String((utama && utama.rumus) ? utama.rumus : ind.rumus)
-        score = parseFloat(item.jumlah || calculateCapaian(item.jml_num, item.jml_denum))
-    } else if (selectedIndicator.value) {
-        const indicator = selectedIndicator.value
-        score = parseFloat(item.score || calculateCapaian(item.jml_num || item.totalNum, item.jml_denum || item.totalDenum))
-        target = parseFloat(indicator.standar)
-        rumus = String(indicator.rumus)
+    // Check if item has indicator data (either direct or nested)
+    const ind = item.indikator || item
+    const utama = ind.master_utama || ind.masterUtama
+    
+    target = parseFloat((utama && utama.standar) ? utama.standar : ind.standar)
+    rumus = String((utama && utama.rumus) ? utama.rumus : ind.rumus)
+    
+    // Get score (from item.score, item.jumlah, or calculate it)
+    if (item.score !== undefined) {
+        score = parseFloat(item.score)
+    } else if (item.jumlah !== undefined) {
+        score = parseFloat(item.jumlah)
     } else {
-        return false
+        const num = item.jml_num || item.totalNum || 0
+        const denum = item.jml_denum || item.totalDenum || 0
+        score = denum > 0 ? (num / denum) * 100 : 0
     }
     
     if (isNaN(target) || isNaN(score)) return false
@@ -1376,6 +1402,14 @@ onMounted(() => {
 }
 .calendar-day.has-data {
     border-color: #198754;
+}
+.calendar-day.is-sunday {
+    border-color: #dc3545;
+}
+.calendar-day.is-sunday .card-header {
+    background: #dc3545 !important;
+    background-color: #dc3545 !important;
+    color: white !important;
 }
 
 /* Premium Filter Styles */

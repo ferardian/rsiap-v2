@@ -173,6 +173,12 @@
                                 <span class="badge" :class="isTercapai(item) ? 'bg-success' : 'bg-danger'">{{ getKesimpulanText(item) }}</span>
                             </div>
                         </div>
+                        <div v-if="hasDiscrepancy(item)" class="col-12 mt-1">
+                            <div class="alert alert-warning p-1 mb-0 border-0 rounded d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                                <span class="text-dark">Rekap: <strong>{{ item.current_rekap.num }}/{{ item.current_rekap.denum }}</strong></span>
+                            </div>
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -284,6 +290,17 @@
                               <div class="col-md-6">
                                 <label class="form-label fw-bold">Total Denominator</label>
                                 <input type="number" class="form-control" v-model="form.jml_denum" :readonly="isDetail">
+                             </div>
+                             <div v-if="!isDetail && form.current_rekap && (form.jml_num != form.current_rekap.num || form.jml_denum != form.current_rekap.denum)" class="col-12">
+                                <div class="alert alert-warning d-flex align-items-center justify-content-between py-2 px-3 border-0 shadow-sm mb-0">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-sync-alt fa-spin text-warning"></i>
+                                        <small class="fw-bold">Data rekap saat ini: {{ form.current_rekap.num }} / {{ form.current_rekap.denum }}</small>
+                                    </div>
+                                    <button type="button" class="btn btn-xs btn-warning py-0 px-2 fw-bold shadow-none" style="font-size: 0.7rem;" @click="syncData">
+                                        SYNC DATA
+                                    </button>
+                                </div>
                              </div>
                         </div>
 
@@ -475,7 +492,8 @@ const form = reactive({
     jml_num: 0,
     jml_denum: 0,
     analisa: '',
-    tindak_lanjut: ''
+    tindak_lanjut: '',
+    current_rekap: null
 })
 
 // === FEEDBACK STATE ===
@@ -656,6 +674,19 @@ const stripHtml = (html) => {
    return tmp.textContent || tmp.innerText || "";
 }
 
+const hasDiscrepancy = (item) => {
+    if (!item.current_rekap) return false
+    return item.jml_num != item.current_rekap.num || item.jml_denum != item.current_rekap.denum
+}
+
+const syncData = () => {
+    if (form.current_rekap) {
+        form.jml_num = form.current_rekap.num
+        form.jml_denum = form.current_rekap.denum
+        toast.info('Data telah disinkronkan dengan rekap terbaru')
+    }
+}
+
 const formatDate = (dateString) => {
     if(!dateString) return '-'
     const options = { year: 'numeric', month: 'short', day: 'numeric' }
@@ -695,6 +726,7 @@ const openModal = async (item, detail = false) => {
         form.jml_denum = item.jml_denum
         form.analisa = item.analisa
         form.tindak_lanjut = item.tindak_lanjut
+        form.current_rekap = item.current_rekap || null
         
         // Fetch Feedback
         await fetchFeedback(item.id_analisa)
