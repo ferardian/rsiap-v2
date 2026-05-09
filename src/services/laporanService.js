@@ -5,7 +5,15 @@ const service = {
     getDiagnosaReport: (params) => api.get('/laporan/diagnosa-procedure/diagnosa', { params }),
 
     // Get Prosedur (ICD-9) Report
-    getProsedurReport: (params) => api.get('/laporan/diagnosa-procedure/procedure', { params }),
+    getProsedurReport(params) {
+        return api.get('/laporan/diagnosa-procedure/procedure', { params });
+    },
+    getDiagnosaPatients(params) {
+        return api.get('/laporan/diagnosa-procedure/diagnosa/patients', { params });
+    },
+    getProsedurPatients(params) {
+        return api.get('/laporan/diagnosa-procedure/procedure/patients', { params });
+    }
 };
 
 export default service;

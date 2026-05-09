@@ -12,7 +12,7 @@
         </div>
 
         <div class="header-actions">
-          <div class="filter-wrapper">
+          <div class="filter-wrapper align-items-end">
             <div class="filter-group">
               <label class="filter-label">PERIODE</label>
               <div class="date-range-picker">
@@ -45,7 +45,7 @@
               </div>
             </div>
 
-            <div class="filter-group d-flex align-items-end">
+            <div class="filter-group">
               <button @click="refreshData" class="btn-refresh-premium" :disabled="loading">
                 <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
                 Tampilkan
@@ -151,7 +151,13 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(item, index) in tableData" :key="index">
+                    <tr 
+                      v-for="(item, index) in tableData" 
+                      :key="index" 
+                      @click="openPatientModal(item)"
+                      class="clickable-row"
+                      title="Klik untuk detail pasien"
+                    >
                       <td><span class="rank-num">{{ index + 1 }}</span></td>
                       <td><span class="badge-kode">{{ item.kd_penyakit || item.kode }}</span></td>
                       <td>
@@ -174,6 +180,73 @@
         </div>
       </div>
     </div>
+
+    <!-- Patient Detail Modal -->
+    <div class="modal fade" id="patientListModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+          <div class="modal-header bg-primary text-white p-4" style="border-radius: 20px 20px 0 0;">
+            <div class="modal-header-content">
+              <h5 class="modal-title fw-800">
+                <i class="fas fa-users me-2"></i>
+                Daftar Pasien: {{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}
+              </h5>
+              <p class="mb-0 opacity-75 small">
+                Periode: {{ filters.tgl_awal }} s/d {{ filters.tgl_akhir }} | Layanan: {{ filters.status }}
+              </p>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <div v-if="loadingPatients" class="p-5 text-center">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-3 text-muted">Mengambil data pasien...</p>
+            </div>
+            <div v-else class="table-responsive">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="bg-light sticky-top">
+                  <tr>
+                    <th class="ps-4">Tgl Registrasi</th>
+                    <th>No RM</th>
+                    <th>No Rawat</th>
+                    <th>Nama Pasien</th>
+                    <th>Tgl Lahir</th>
+                    <th>Umur</th>
+                    <th>No KTP</th>
+                    <th>JK</th>
+                    <th>Alamat</th>
+                    <th class="pe-4">Pembiayaan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(p, i) in patientList" :key="i">
+                    <td class="ps-4">{{ p.tgl_registrasi }}</td>
+                    <td><span class="badge bg-secondary-subtle text-secondary fw-bold">{{ p.no_rkm_medis }}</span></td>
+                    <td><span class="text-primary fw-bold small">{{ p.no_rawat }}</span></td>
+                    <td class="fw-bold">{{ p.nm_pasien }}</td>
+                    <td>{{ p.tgl_lahir }}</td>
+                    <td>{{ p.umur }}</td>
+                    <td>{{ p.no_ktp }}</td>
+                    <td><span class="badge" :class="p.jk === 'L' ? 'bg-info' : 'bg-danger'">{{ p.jk }}</span></td>
+                    <td><small>{{ p.alamat }}</small></td>
+                    <td class="pe-4"><span class="badge bg-success-subtle text-success">{{ p.pembiayaan }}</span></td>
+                  </tr>
+                  <tr v-if="patientList.length === 0">
+                    <td colspan="10" class="text-center py-5 text-muted">Tidak ada data pasien untuk periode ini.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer p-3 bg-light" style="border-radius: 0 0 20px 20px;">
+            <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal">Tutup</button>
+            <button type="button" class="btn btn-success px-4 fw-bold" @click="exportPatientsExcel">
+              <i class="fas fa-file-excel me-2"></i> Export Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -190,6 +263,10 @@ const loading = ref(false)
 const activeTab = ref('diagnosa')
 const diagnosaData = ref([])
 const prosedurData = ref([])
+const patientList = ref([])
+const selectedItem = ref(null)
+const loadingPatients = ref(false)
+let modalInstance = null
 
 const filters = reactive({
   tgl_awal: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -303,6 +380,45 @@ const exportToExcel = () => {
   XLSX.writeFile(workbook, `Laporan_${activeTab.value}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`)
 }
 
+const openPatientModal = async (item) => {
+  selectedItem.value = item
+  patientList.value = []
+  loadingPatients.value = true
+  
+  if (!modalInstance) {
+    modalInstance = new bootstrap.Modal(document.getElementById('patientListModal'))
+  }
+  modalInstance.show()
+  
+  try {
+    const params = {
+      ...filters,
+      kd_penyakit: item.kd_penyakit,
+      kode: item.kode
+    }
+    
+    let response
+    if (activeTab.value === 'diagnosa') {
+      response = await laporanService.getDiagnosaPatients(params)
+    } else {
+      response = await laporanService.getProsedurPatients(params)
+    }
+    patientList.value = response.data.data
+  } catch (error) {
+    console.error('Gagal mengambil daftar pasien:', error)
+  } finally {
+    loadingPatients.value = false
+  }
+}
+
+const exportPatientsExcel = () => {
+  const name = selectedItem.value?.nm_penyakit || selectedItem.value?.nm_prosedur
+  const worksheet = XLSX.utils.json_to_sheet(patientList.value)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Daftar Pasien')
+  XLSX.writeFile(workbook, `Pasien_${name}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`)
+}
+
 const debouncedRefresh = debounce(refreshData, 500)
 
 watch(() => filters.keyword, () => {
@@ -391,7 +507,8 @@ watch(activeTab, () => {
 .form-input-premium, .form-select-premium {
   background: white;
   border: none;
-  padding: 0.6rem 1rem;
+  padding: 0 1rem;
+  height: 44px;
   border-radius: 10px;
   font-weight: 600;
   color: #1e293b;
@@ -403,11 +520,16 @@ watch(activeTab, () => {
   background: #f59e0b;
   color: white;
   border: none;
-  padding: 0.65rem 1.5rem;
+  padding: 0 1.5rem;
+  height: 44px;
   border-radius: 10px;
   font-weight: 700;
   transition: all 0.2s;
   box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .btn-refresh-premium:hover:not(:disabled) {
@@ -524,6 +646,19 @@ watch(activeTab, () => {
   font-size: 0.85rem;
   font-weight: 700;
 }
+
+.clickable-row {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: #f8fafc !important;
+  transform: scale(1.005);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.fw-800 { font-weight: 800; }
 
 /* Custom Table */
 .custom-table-premium thead th {
