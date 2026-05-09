@@ -611,6 +611,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/diagnosa-procedure',
+    name: 'DiagnosaProcedure',
+    component: () => import('../views/laporan/DiagnosaProcedureView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ppra/tim',
     name: 'TimPpra',
     component: () => import('../views/ppra/TimPpraView.vue'),
