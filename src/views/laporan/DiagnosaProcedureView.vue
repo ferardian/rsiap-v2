@@ -184,23 +184,37 @@
     <!-- Patient Detail Modal -->
     <div class="modal fade" id="patientListModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-          <div class="modal-header bg-primary text-white p-4" style="border-radius: 20px 20px 0 0;">
-            <div class="modal-header-content">
-              <h5 class="modal-title fw-800">
-                <i class="fas fa-users me-2"></i>
-                Daftar Pasien: <span class="badge bg-white text-primary ms-1 me-2">{{ selectedItem?.kd_penyakit || selectedItem?.kode }}</span> {{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}
-              </h5>
-              <p class="mb-0 opacity-75 small">
-                Periode: {{ filters.tgl_awal }} s/d {{ filters.tgl_akhir }} | Layanan: {{ filters.status }}
-              </p>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+          <!-- Enhanced Header with Gradient -->
+          <div class="modal-header-premium d-flex justify-content-between align-items-center p-4">
+            <div class="d-flex align-items-center gap-3">
+              <div class="header-icon-circle shadow-sm">
+                <i class="fas fa-user-injured text-primary"></i>
+              </div>
+              <div class="header-text">
+                <h5 class="modal-title fw-800 text-white mb-0">
+                  Daftar Pasien
+                </h5>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <span class="badge bg-white text-primary fw-bold shadow-sm">{{ selectedItem?.kd_penyakit || selectedItem?.kode }}</span>
+                  <span class="text-white-50 small fw-600">{{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}</span>
+                </div>
+              </div>
             </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="d-flex align-items-center gap-3">
+              <div class="patient-count-badge shadow-sm">
+                <span class="count-num">{{ filteredPatients.length }}</span>
+                <span class="count-label">Pasien</span>
+              </div>
+              <button type="button" class="btn-close-custom shadow-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="modal-body p-0">
             <!-- Modal Filters -->
             <div class="modal-filters p-3 bg-light border-bottom">
-              <div class="row g-3 align-items-center">
+              <div class="row g-2 align-items-center">
                 <div class="col-md-5">
                   <div class="search-input-wrapper shadow-sm">
                     <i class="fas fa-search search-icon"></i>
@@ -208,28 +222,24 @@
                       type="text" 
                       v-model="patientSearch" 
                       class="form-input-premium w-100 ps-5" 
-                      placeholder="Cari Nama, No RM, No Rawat..."
+                      placeholder="Cari Pasien..."
+                      style="height: 38px; font-size: 0.85rem;"
                     />
                   </div>
                 </div>
                 <div class="col-md-3">
-                  <select v-model="patientStatusFilter" class="form-select-premium w-100 shadow-sm">
+                  <select v-model="patientStatusFilter" class="form-select-premium w-100 shadow-sm" style="height: 38px; font-size: 0.85rem;">
                     <option value="all">Semua Layanan</option>
                     <option value="Ralan">Rawat Jalan</option>
                     <option value="Ranap">Rawat Inap</option>
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <select v-model="patientPjFilter" class="form-select-premium w-100 shadow-sm">
+                  <select v-model="patientPjFilter" class="form-select-premium w-100 shadow-sm" style="height: 38px; font-size: 0.85rem;">
                     <option value="all">Semua Pembiayaan</option>
                     <option v-for="pj in uniquePj" :key="pj" :value="pj">{{ pj }}</option>
                   </select>
                 </div>
-              </div>
-              <div class="mt-2 d-flex justify-content-between align-items-center px-1">
-                <span class="badge bg-primary-soft text-primary fw-bold" style="font-size: 0.8rem;">
-                  Total: {{ filteredPatients.length }} Pasien
-                </span>
               </div>
             </div>
 
@@ -288,11 +298,11 @@
               </table>
             </div>
           </div>
-          <div class="modal-footer p-3 bg-light d-flex justify-content-end gap-2" style="border-radius: 0 0 20px 20px;">
-            <button type="button" class="btn btn-outline-secondary fw-bold btn-sm px-3" data-bs-dismiss="modal" style="border-radius: 8px; font-size: 0.75rem; width: auto !important;">
+          <div class="custom-modal-footer p-3 bg-light d-flex justify-content-end gap-2 border-top">
+            <button type="button" class="btn btn-secondary fw-bold btn-sm px-4 py-2" data-bs-dismiss="modal" style="border-radius: 12px; font-size: 0.75rem; width: auto !important; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
               Tutup
             </button>
-            <button type="button" class="btn btn-success fw-bold btn-sm px-3" @click="exportPatientsExcel" style="border-radius: 8px; font-size: 0.75rem; width: auto !important;">
+            <button type="button" class="btn btn-success fw-bold btn-sm px-4 py-2" @click="exportPatientsExcel" style="border-radius: 12px; font-size: 0.75rem; width: auto !important; border: none; box-shadow: 0 4px 10px rgba(21, 128, 61, 0.2);">
               <i class="fas fa-file-excel me-2"></i> Export Excel
             </button>
           </div>
@@ -486,11 +496,27 @@ const openPatientModal = async (item) => {
 }
 
 const exportPatientsExcel = () => {
+  const code = selectedItem.value?.kd_penyakit || selectedItem.value?.kode
   const name = selectedItem.value?.nm_penyakit || selectedItem.value?.nm_prosedur
-  const worksheet = XLSX.utils.json_to_sheet(patientList.value)
+  
+  // Add header info
+  const headerData = [
+    ["LAPORAN DAFTAR PASIEN"],
+    ["Diagnosa/Prosedur:", `${code} - ${name}`],
+    ["Periode:", `${filters.tgl_awal} s/d ${filters.tgl_akhir}`],
+    [""], // Spacer
+    ["Tgl Registrasi", "No RM", "No Rawat", "Status", "Nama Pasien", "Tgl Lahir", "Umur", "No KTP", "JK", "Alamat", "Pembiayaan"]
+  ]
+  
+  // Format patient data
+  const data = filteredPatients.value.map(p => [
+    p.tgl_registrasi, p.no_rkm_medis, p.no_rawat, p.status, p.nm_pasien, p.tgl_lahir, p.umur, p.no_ktp, p.jk, p.alamat, p.pembiayaan
+  ])
+  
+  const worksheet = XLSX.utils.aoa_to_sheet([...headerData, ...data])
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Daftar Pasien')
-  XLSX.writeFile(workbook, `Pasien_${name}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`)
+  XLSX.writeFile(workbook, `Pasien_${code}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`)
 }
 
 const debouncedRefresh = debounce(refreshData, 500)
@@ -735,6 +761,81 @@ watch(activeTab, () => {
 .fw-800 { font-weight: 800; }
 .fw-600 { font-weight: 600; }
 
+/* Modal Premium Styles */
+.modal-header-premium {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+}
+
+.header-icon-circle {
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.patient-count-badge {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 80px;
+}
+
+.count-num {
+  color: white;
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.count-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-close-custom {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-close-custom:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.custom-modal-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+.custom-modal-footer .btn {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0 !important;
+}
+
 .bg-blue-soft, .bg-primary-soft { background-color: #eff6ff; }
 .text-blue { color: #3b82f6; }
 .bg-pink-soft { background-color: #fdf2f8; }
@@ -762,9 +863,9 @@ watch(activeTab, () => {
   background: #f8fafc;
   color: #475569;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   letter-spacing: 0.5px;
-  padding: 1.25rem 1rem;
+  padding: 0.75rem 1rem;
   border-top: none;
 }
 
@@ -773,9 +874,10 @@ watch(activeTab, () => {
 }
 
 .custom-table-patient tbody td {
-  padding: 1.25rem 1rem;
+  padding: 0.75rem 1rem;
   vertical-align: middle;
   border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8rem;
 }
 
 .rank-num {
