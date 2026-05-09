@@ -189,7 +189,7 @@
             <div class="modal-header-content">
               <h5 class="modal-title fw-800">
                 <i class="fas fa-users me-2"></i>
-                Daftar Pasien: {{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}
+                Daftar Pasien: <span class="badge bg-white text-primary ms-1 me-2">{{ selectedItem?.kd_penyakit || selectedItem?.kode }}</span> {{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}
               </h5>
               <p class="mb-0 opacity-75 small">
                 Periode: {{ filters.tgl_awal }} s/d {{ filters.tgl_akhir }} | Layanan: {{ filters.status }}
@@ -198,49 +198,101 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0">
+            <!-- Modal Filters -->
+            <div class="modal-filters p-3 bg-light border-bottom">
+              <div class="row g-3 align-items-center">
+                <div class="col-md-5">
+                  <div class="search-input-wrapper shadow-sm">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                      type="text" 
+                      v-model="patientSearch" 
+                      class="form-input-premium w-100 ps-5" 
+                      placeholder="Cari Nama, No RM, No Rawat..."
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <select v-model="patientStatusFilter" class="form-select-premium w-100 shadow-sm">
+                    <option value="all">Semua Layanan</option>
+                    <option value="Ralan">Rawat Jalan</option>
+                    <option value="Ranap">Rawat Inap</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select v-model="patientPjFilter" class="form-select-premium w-100 shadow-sm">
+                    <option value="all">Semua Pembiayaan</option>
+                    <option v-for="pj in uniquePj" :key="pj" :value="pj">{{ pj }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-2 d-flex justify-content-between align-items-center px-1">
+                <span class="badge bg-primary-soft text-primary fw-bold" style="font-size: 0.8rem;">
+                  Total: {{ filteredPatients.length }} Pasien
+                </span>
+              </div>
+            </div>
+
             <div v-if="loadingPatients" class="p-5 text-center">
               <div class="spinner-border text-primary" role="status"></div>
               <p class="mt-3 text-muted">Mengambil data pasien...</p>
             </div>
-            <div v-else class="table-responsive">
-              <table class="table table-hover table-striped mb-0">
-                <thead class="bg-light sticky-top">
+            <div v-else class="table-responsive" style="max-height: 60vh;">
+              <table class="table custom-table-patient mb-0">
+                <thead class="sticky-top bg-white shadow-sm">
                   <tr>
-                    <th class="ps-4">Tgl Registrasi</th>
-                    <th>No RM</th>
-                    <th>No Rawat</th>
-                    <th>Nama Pasien</th>
-                    <th>Tgl Lahir</th>
-                    <th>Umur</th>
-                    <th>No KTP</th>
-                    <th>JK</th>
+                    <th class="ps-4">Registrasi</th>
+                    <th>Identitas Pasien</th>
+                    <th>Info Rawat</th>
+                    <th>Detail Fisik</th>
                     <th>Alamat</th>
                     <th class="pe-4">Pembiayaan</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(p, i) in patientList" :key="i">
-                    <td class="ps-4">{{ p.tgl_registrasi }}</td>
-                    <td><span class="badge bg-secondary-subtle text-secondary fw-bold">{{ p.no_rkm_medis }}</span></td>
-                    <td><span class="text-primary fw-bold small">{{ p.no_rawat }}</span></td>
-                    <td class="fw-bold">{{ p.nm_pasien }}</td>
-                    <td>{{ p.tgl_lahir }}</td>
-                    <td>{{ p.umur }}</td>
-                    <td>{{ p.no_ktp }}</td>
-                    <td><span class="badge" :class="p.jk === 'L' ? 'bg-info' : 'bg-danger'">{{ p.jk }}</span></td>
-                    <td><small>{{ p.alamat }}</small></td>
-                    <td class="pe-4"><span class="badge bg-success-subtle text-success">{{ p.pembiayaan }}</span></td>
+                  <tr v-for="(p, i) in filteredPatients" :key="i">
+                    <td class="ps-4 text-nowrap">
+                      <div class="fw-bold">{{ p.tgl_registrasi }}</div>
+                      <span class="badge" :class="p.jk === 'L' ? 'bg-blue-soft text-blue' : 'bg-pink-soft text-pink'">
+                        {{ p.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark">{{ p.nm_pasien }}</div>
+                      <div class="small text-muted">No RM: <span class="fw-bold text-primary">{{ p.no_rkm_medis }}</span></div>
+                      <div class="small text-muted">NIK: {{ p.no_ktp }}</div>
+                    </td>
+                    <td>
+                      <div class="text-primary fw-bold small mb-1">{{ p.no_rawat }}</div>
+                      <div class="small text-muted">Lahir: {{ p.tgl_lahir }}</div>
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark">{{ p.umur }}</div>
+                    </td>
+                    <td>
+                      <div class="small-text-truncate" :title="p.alamat">{{ p.alamat }}</div>
+                    </td>
+                    <td class="pe-4">
+                      <span class="badge badge-premium-pj">{{ p.pembiayaan }}</span>
+                    </td>
                   </tr>
-                  <tr v-if="patientList.length === 0">
-                    <td colspan="10" class="text-center py-5 text-muted">Tidak ada data pasien untuk periode ini.</td>
+                  <tr v-if="filteredPatients.length === 0">
+                    <td colspan="6" class="text-center py-5">
+                      <div class="no-data-content py-4">
+                        <i class="fas fa-user-slash fa-3x mb-3 text-muted opacity-25"></i>
+                        <p class="text-muted fw-600">Tidak ada pasien yang cocok dengan filter Anda</p>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <div class="modal-footer p-3 bg-light" style="border-radius: 0 0 20px 20px;">
-            <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal">Tutup</button>
-            <button type="button" class="btn btn-success px-4 fw-bold" @click="exportPatientsExcel">
+          <div class="modal-footer p-3 bg-light d-flex justify-content-end gap-2" style="border-radius: 0 0 20px 20px;">
+            <button type="button" class="btn btn-outline-secondary fw-bold btn-sm px-3" data-bs-dismiss="modal" style="border-radius: 8px; font-size: 0.75rem; width: auto !important;">
+              Tutup
+            </button>
+            <button type="button" class="btn btn-success fw-bold btn-sm px-3" @click="exportPatientsExcel" style="border-radius: 8px; font-size: 0.75rem; width: auto !important;">
               <i class="fas fa-file-excel me-2"></i> Export Excel
             </button>
           </div>
@@ -264,9 +316,31 @@ const activeTab = ref('diagnosa')
 const diagnosaData = ref([])
 const prosedurData = ref([])
 const patientList = ref([])
+const patientSearch = ref('')
+const patientPjFilter = ref('all')
+const patientStatusFilter = ref('all')
 const selectedItem = ref(null)
 const loadingPatients = ref(false)
 let modalInstance = null
+
+const uniquePj = computed(() => {
+  const pjs = patientList.value.map(p => p.pembiayaan)
+  return [...new Set(pjs)].sort()
+})
+
+const filteredPatients = computed(() => {
+  return patientList.value.filter(p => {
+    const matchesSearch = 
+      p.nm_pasien.toLowerCase().includes(patientSearch.value.toLowerCase()) ||
+      p.no_rkm_medis.toLowerCase().includes(patientSearch.value.toLowerCase()) ||
+      p.no_rawat.toLowerCase().includes(patientSearch.value.toLowerCase())
+    
+    const matchesPj = patientPjFilter.value === 'all' || p.pembiayaan === patientPjFilter.value
+    const matchesStatus = patientStatusFilter.value === 'all' || p.status === patientStatusFilter.value
+    
+    return matchesSearch && matchesPj && matchesStatus
+  })
+})
 
 const filters = reactive({
   tgl_awal: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -659,21 +733,49 @@ watch(activeTab, () => {
 }
 
 .fw-800 { font-weight: 800; }
+.fw-600 { font-weight: 600; }
+
+.bg-blue-soft, .bg-primary-soft { background-color: #eff6ff; }
+.text-blue { color: #3b82f6; }
+.bg-pink-soft { background-color: #fdf2f8; }
+.text-pink { color: #ec4899; }
+
+.small-text-truncate {
+  font-size: 0.8rem;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-premium-pj {
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #d1fae5;
+  font-weight: 700;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+}
 
 /* Custom Table */
-.custom-table-premium thead th {
+.custom-table-premium thead th, .custom-table-patient thead th {
   background: #f8fafc;
   color: #475569;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.5px;
-  padding: 1rem;
+  padding: 1.25rem 1rem;
   border-top: none;
 }
 
-.custom-table-premium tbody td {
-  padding: 1rem;
+.custom-table-patient tbody tr {
+  transition: all 0.2s;
+}
+
+.custom-table-patient tbody td {
+  padding: 1.25rem 1rem;
   vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .rank-num {
