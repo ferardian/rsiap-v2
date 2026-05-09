@@ -121,6 +121,9 @@
                     <button class="btn-icon edit-btn" title="Edit" @click="$router.push(`/central-archive/spo/edit/${item.id}`)">
                        <i class="fas fa-edit text-warning"></i>
                     </button>
+                    <button v-if="canDelete" class="btn-icon delete-btn" title="Hapus" @click="handleDelete(item)">
+                       <i class="fas fa-trash text-danger"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -136,6 +139,7 @@
               <div class="d-flex gap-2 align-items-center">
                 <span class="badge" :class="getJenisClass(item.jenis)">{{ item.jenis ? String(item.jenis).toUpperCase() : '-' }}</span>
                 <i class="fas fa-edit text-warning cursor-pointer p-1" @click.stop="$router.push(`/central-archive/spo/edit/${item.id}`)"></i>
+                <i v-if="canDelete" class="fas fa-trash text-danger cursor-pointer p-1" @click.stop="handleDelete(item)"></i>
               </div>
             </div>
             <div class="mobile-card-body">
@@ -266,6 +270,11 @@
 import { ref, onMounted, watch } from 'vue'
 import spoService from '@/services/spoService'
 import Swal from 'sweetalert2'
+import { useMenuStore } from '@/stores/menu'
+import { computed } from 'vue'
+
+const menuStore = useMenuStore()
+const canDelete = computed(() => menuStore.hasMenuPermissionByRoute('/central-archive/spo', 'can_delete'))
 
 // State
 const loading = ref(false)
@@ -368,6 +377,33 @@ const viewDetail = async (item) => {
 
 const closeDetail = () => {
   showDetail.value = false
+}
+
+const handleDelete = async (item) => {
+  const result = await Swal.fire({
+    title: 'Apakah anda yakin?',
+    text: `Anda akan menghapus SPO "${item.judul}"`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal'
+  })
+
+  if (result.isConfirmed) {
+    loading.value = true
+    try {
+      await spoService.deleteSpo(item.id)
+      Swal.fire('Terhapus!', 'Data SPO berhasil dihapus.', 'success')
+      fetchData(pagination.value.current_page)
+    } catch (error) {
+      console.error('Error deleting data:', error)
+      Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus data.', 'error')
+    } finally {
+      loading.value = false
+    }
+  }
 }
 
 const formatDate = (dateStr) => {
