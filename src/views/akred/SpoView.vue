@@ -9,6 +9,9 @@
         <p class="text-muted mb-0">Standar Prosedur Operasional Rumah Sakit</p>
       </div>
       <div class="col-12 col-md-6 d-flex justify-content-end align-items-center gap-2">
+        <button v-if="mode === 'manage'" class="btn btn-outline-indigo px-3 shadow-sm d-none d-md-block" @click="$router.push('/central-archive/spo-generator')">
+          <i class="fas fa-robot me-2"></i>SPO Generator AI
+        </button>
         <button v-if="mode === 'manage'" class="btn btn-primary px-3 shadow-sm d-none d-md-block" @click="openCreateModal">
           <i class="fas fa-plus me-2"></i>Tambah SPO
         </button>
@@ -540,5 +543,17 @@ onUnmounted(() => {
 
 .page-link {
   cursor: pointer;
+}
+.btn-outline-indigo {
+  color: #4f46e5;
+  border-color: #4f46e5;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-outline-indigo:hover {
+  background-color: #4f46e5;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 </style>

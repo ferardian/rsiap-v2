@@ -726,6 +726,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/central-archive/spo-generator',
+    name: 'CentralArchiveSpoGenerator',
+    component: () => import('../views/central-archive/SpoAiGeneratorView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/central-archive/pks',
     name: 'CentralArchivePks',
     component: () => import('../views/central-archive/PksView.vue'),

@@ -24,6 +24,9 @@ const service = {
 
     // Get list of departments for unit selection
     getUnits: (params = { limit: 1000 }) => api.get('/sdi/departemen', { params }),
+
+    // AI Generation for SPO
+    generateAi: (data) => api.post('/berkas/spo/generate-ai', data),
 };
 
 export default service;
