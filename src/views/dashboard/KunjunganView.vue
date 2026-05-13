@@ -204,6 +204,69 @@
               <div v-else class="chart-placeholder">Menyiapkan grafik...</div>
             </div>
           </div>
+          
+          <!-- Kategori & Kelas Pasien (Below Trend) -->
+          <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
+            <h4 class="card-title">Kategori Pasien</h4>
+            <div class="list-visual">
+              <div v-for="item in visitData.kategori" :key="item.label" class="list-item clickable" @click="openDetails(item.label)">
+                <div class="item-header">
+                  <span class="item-label">{{ item.label }}</span>
+                  <div class="d-flex align-items-center">
+                    <span class="item-value mr-2">{{ item.total }}</span>
+                    <i class="fas fa-chevron-right text-muted small"></i>
+                  </div>
+                </div>
+                <div class="bar-container-mini">
+                  <div class="bar-mini bg-warning" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
+            <h4 class="card-title">Kelas Perawatan</h4>
+            <div class="list-visual">
+              <div v-for="item in visitData.kelas" :key="item.label" class="list-item">
+                <div class="item-header">
+                  <span class="item-label">{{ item.label }}</span>
+                  <span class="item-value">{{ item.total }}</span>
+                </div>
+                <div class="bar-container-mini">
+                  <div class="bar-mini bg-success" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Poli / Unit / Bangsal (Moved here, below Category/Class) -->
+          <div class="visual-card full-width mt-2">
+            <h4 class="card-title">
+              {{ filters.status_lanjut === 'Ranap' ? 'Berdasarkan Bangsal / Kamar' : 'Berdasarkan Unit / Poliklinik' }}
+            </h4>
+            <div class="poli-grid">
+              <template v-if="filters.status_lanjut === 'Ranap'">
+                <div v-for="item in visitData.bangsal" :key="item.label" class="poli-item">
+                  <span class="poli-name">{{ item.label }}</span>
+                  <div class="poli-bar-wrapper">
+                      <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                           <span class="poli-val">{{ item.total }}</span>
+                      </div>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <div v-for="item in visitData.poli" :key="item.label" class="poli-item">
+                  <span class="poli-name">{{ item.label }}</span>
+                  <div class="poli-bar-wrapper">
+                      <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
+                           <span class="poli-val">{{ item.total }}</span>
+                      </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
         </div>
 
         <div class="visuals-grid">
@@ -321,68 +384,155 @@
             </div>
           </div>
 
-          <!-- Poli / Unit / Bangsal (Bottom Full Width) -->
-          <div class="visual-card full-width mt-4">
-            <h4 class="card-title">
-              {{ filters.status_lanjut === 'Ranap' ? 'Berdasarkan Bangsal / Kamar' : 'Berdasarkan Unit / Poliklinik' }}
-            </h4>
-            <div class="poli-grid">
-              <template v-if="filters.status_lanjut === 'Ranap'">
-                <div v-for="item in visitData.bangsal" :key="item.label" class="poli-item">
-                  <span class="poli-name">{{ item.label }}</span>
-                  <div class="poli-bar-wrapper">
-                      <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                           <span class="poli-val">{{ item.total }}</span>
-                      </div>
-                  </div>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="item in visitData.poli" :key="item.label" class="poli-item">
-                  <span class="poli-name">{{ item.label }}</span>
-                  <div class="poli-bar-wrapper">
-                      <div class="poli-bar" :style="{ height: getPercentage(item.total, summary.total) + '%' }">
-                           <span class="poli-val">{{ item.total }}</span>
-                      </div>
-                  </div>
-                </div>
-              </template>
+      </div>
+
+      <!-- Patient Details Modal -->
+      <transition name="fade">
+        <div v-if="detailModal.show" class="modal-overlay" @click.self="closeDetails">
+          <div class="modal-container large">
+            <div class="modal-header">
+              <div class="header-left">
+                <h3 class="modal-title">
+                  <i class="fas fa-users-viewfinder mr-2"></i>
+                  Detail Pasien: {{ detailModal.category }}
+                </h3>
+                <p class="modal-subtitle">Periode: {{ filters.mode === 'tahunan' ? filters.tahun : (filters.tgl_awal + ' s/d ' + filters.tgl_akhir) }}</p>
+              </div>
+              <button @click="closeDetails" class="btn-close-modal">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
-          </div>
-  
-          <!-- Kategori & Kelas Pasien (Ranap Only) -->
-          <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
-            <h4 class="card-title">Kategori Pasien</h4>
-            <div class="list-visual">
-              <div v-for="item in visitData.kategori" :key="item.label" class="list-item">
-                <div class="item-header">
-                  <span class="item-label">{{ item.label }}</span>
-                  <span class="item-value">{{ item.total }}</span>
-                </div>
-                <div class="bar-container-mini">
-                  <div class="bar-mini bg-warning" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
-                </div>
+
+            <div class="modal-body custom-scrollbar">
+            <!-- Modal Filters -->
+            <div class="modal-filters-container">
+              <div class="search-box-modal">
+                <i class="fas fa-search"></i>
+                <input v-model="detailModal.searchQuery" type="text" placeholder="Cari Nama / No. RM / No. Rawat..." class="modal-search-input">
+              </div>
+              <div class="filter-controls-modal">
+                <select v-if="detailModal.category === 'Perina'" v-model="detailModal.filterType" class="modal-select-mini">
+                  <option value="all">Semua Jenis</option>
+                  <option value="BBL">BBL</option>
+                  <option value="Perawatan">Perawatan</option>
+                </select>
+                <select v-model="detailModal.filterDoctor" class="modal-select-mini">
+                  <option value="all">Semua Dokter</option>
+                  <option v-for="doc in uniqueDoctors" :key="doc" :value="doc">{{ doc }}</option>
+                </select>
+                <select v-if="detailModal.category === 'VK'" v-model="detailModal.filterTindakan" class="modal-select-mini">
+                  <option value="all">Semua Tindakan</option>
+                  <option value="SC">SC</option>
+                  <option value="Kuret">Kuret</option>
+                  <option value="Ponek">Ponek</option>
+                  <option value="Partus">Partus</option>
+                  <option value="-">Tanpa Tindakan</option>
+                </select>
               </div>
             </div>
-          </div>
-  
-          <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
-            <h4 class="card-title">Kelas Perawatan</h4>
-            <div class="list-visual">
-              <div v-for="item in visitData.kelas" :key="item.label" class="list-item">
-                <div class="item-header">
-                  <span class="item-label">{{ item.label }}</span>
-                  <span class="item-value">{{ item.total }}</span>
-                </div>
-                <div class="bar-container-mini">
-                  <div class="bar-mini bg-success" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
-                </div>
-              </div>
+
+            <div v-if="detailModal.loading" class="modal-loader">
+              <div class="loader"></div>
+              <p>Mengambil data detail...</p>
             </div>
+            <div v-else-if="filteredDetails.length === 0" class="empty-state">
+              <i class="fas fa-folder-open mb-3"></i>
+              <p>Tidak ada data pasien yang cocok.</p>
+            </div>
+            <div v-else class="table-responsive">
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nama Pasien</th>
+                    <th>No. RM / Rawat</th>
+                    <th>Pembiayaan</th>
+                    <th>Dokter / Unit</th>
+                    <th>Kamar / Bangsal</th>
+                    <th v-if="detailModal.category === 'Perina'">Asal Pasien</th>
+                    <th v-if="detailModal.category === 'VK'">Tindakan</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(p, index) in filteredDetails" :key="p.no_rawat">
+                    <td>{{ index + 1 }}</td>
+                    <td>
+                      <div class="patient-name">{{ p.nm_pasien }}</div>
+                      <div class="small-text-group">
+                        <span class="text-muted"><i class="fas fa-calendar-alt me-1"></i>Reg: {{ p.tgl_registrasi }}</span>
+                        <span class="text-info ms-2"><i class="fas fa-baby me-1"></i>Lahir: {{ p.tgl_lahir }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="text-primary fw-bold" style="font-size: 0.8rem;">{{ p.no_rkm_medis }}</div>
+                      <small class="text-muted" style="font-size: 0.7rem;">{{ p.no_rawat }}</small>
+                    </td>
+                    <td>
+                      <span :style="{
+                        backgroundColor: p.pembayaran_kategori === 'BPJS' ? '#4169E1' : '#6c757d',
+                        color: 'white',
+                        fontSize: '0.65rem',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
+                        width: 'max-content'
+                      }">
+                        {{ p.png_jawab }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="text-dark" style="font-size: 0.8rem;">{{ p.nm_dokter }}</div>
+                      <small class="text-info" style="font-size: 0.7rem;">{{ p.nm_poli }}</small>
+                    </td>
+                    <td>
+                      <div v-if="p.kd_kamar">
+                        <div class="text-dark fw-bold" style="font-size: 0.75rem;">{{ p.kd_kamar }}</div>
+                        <div class="text-muted" style="font-size: 0.65rem; line-height: 1;">{{ p.nm_bangsal }}</div>
+                      </div>
+                      <span v-else class="badge-rawat-bersama">Rawat Bersama</span>
+                    </td>
+                    <td v-if="detailModal.category === 'Perina'">
+                      <span :class="['badge', p.asal_pasien === 'BBL' ? 'badge-bbl' : 'badge-perawatan']">
+                        {{ p.asal_pasien }}
+                      </span>
+                    </td>
+                    <td v-if="detailModal.category === 'VK'" class="text-center">
+                      <div v-if="p.metode_persalinan && p.metode_persalinan !== '-'" :style="{
+                        display: 'inline-block',
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        fontSize: '0.7rem',
+                        fontWeight: '700',
+                        letterSpacing: '0.5px',
+                        textTransform: 'uppercase',
+                        backgroundColor: p.metode_persalinan === 'SC' ? '#FFF1F2' : (p.metode_persalinan === 'Kuret' ? '#FFFBEB' : (p.metode_persalinan === 'Ponek' ? '#F5F3FF' : '#F0FDF4')),
+                        color: p.metode_persalinan === 'SC' ? '#E11D48' : (p.metode_persalinan === 'Kuret' ? '#B45309' : (p.metode_persalinan === 'Ponek' ? '#7C3AED' : '#16A34A')),
+                        border: `1px solid ${p.metode_persalinan === 'SC' ? '#FDA4AF' : (p.metode_persalinan === 'Kuret' ? '#FDE68A' : (p.metode_persalinan === 'Ponek' ? '#DDD6FE' : '#86EFAC'))}`,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                      }">
+                        {{ p.metode_persalinan }}
+                      </div>
+                      <span v-else style="color: #cbd5e1; font-weight: bold;">-</span>
+                    </td>
+                    <td>
+                      <span class="badge badge-status">{{ p.status_lanjut }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="text-muted small">Menampilkan {{ filteredDetails.length }} dari {{ detailModal.data.length }} pasien</div>
+            <button @click="closeDetails" class="btn-primary-outline">Tutup</button>
+          </div>
           </div>
         </div>
-      </div>
+      </transition>
     </div>
+  </div>
 </template>
 
 <script setup>
@@ -427,6 +577,53 @@ const summary = ref({
 })
 const visitData = ref({ registrasi: [], cara_bayar: [], poli: [], dokter: [], bangsal: [], kategori: [], kelas: [] })
 const inpatientCare = ref(null)
+
+const detailModal = ref({
+  show: false,
+  loading: false,
+  category: '',
+  data: [],
+  searchQuery: '',
+  filterType: 'all',
+  filterDoctor: 'all',
+  filterTindakan: 'all'
+})
+
+const filteredDetails = computed(() => {
+  let result = detailModal.value.data
+
+  // Search filter
+  if (detailModal.value.searchQuery) {
+    const q = detailModal.value.searchQuery.toLowerCase()
+    result = result.filter(p => 
+      p.nm_pasien.toLowerCase().includes(q) || 
+      p.no_rkm_medis.toLowerCase().includes(q) || 
+      p.no_rawat.toLowerCase().includes(q)
+    )
+  }
+
+  // Type filter
+  if (detailModal.value.filterType !== 'all') {
+    result = result.filter(p => p.asal_pasien === detailModal.value.filterType)
+  }
+
+  // Doctor filter
+  if (detailModal.value.filterDoctor !== 'all') {
+    result = result.filter(p => p.nm_dokter === detailModal.value.filterDoctor)
+  }
+
+  // Tindakan filter (Action filter)
+  if (detailModal.value.filterTindakan !== 'all') {
+    result = result.filter(p => p.metode_persalinan === detailModal.value.filterTindakan)
+  }
+
+  return result
+})
+
+const uniqueDoctors = computed(() => {
+  const doctors = [...new Set(detailModal.value.data.map(p => p.nm_dokter))]
+  return doctors.sort()
+})
 
 // Generate year options (current year ± 5 years)
 const currentYear = new Date().getFullYear()
@@ -571,6 +768,33 @@ const checkMobile = () => {
   if (!isMobile.value) {
     isFilterVisible.value = true
   }
+}
+
+const openDetails = async (category) => {
+  detailModal.value.category = category
+  detailModal.value.show = true
+  detailModal.value.loading = true
+  detailModal.value.data = []
+  detailModal.value.searchQuery = ''
+  detailModal.value.filterType = 'all'
+  detailModal.value.filterDoctor = 'all'
+
+  try {
+    const params = {
+      ...filters.value,
+      kategori: category
+    }
+    const response = await dashboardVisitService.getVisitDetails(params)
+    detailModal.value.data = response.data.data
+  } catch (error) {
+    console.error('Failed to fetch details:', error)
+  } finally {
+    detailModal.value.loading = false
+  }
+}
+
+const closeDetails = () => {
+  detailModal.value.show = false
 }
 
 onMounted(() => {
@@ -1408,5 +1632,324 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 }
+/* Clickable items */
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: translateX(4px);
+}
+
+.clickable .item-value {
+  transition: all 0.2s;
+}
+
+.clickable:hover .item-value {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 24px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-container.large {
+  max-width: 1100px;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-subtitle {
+  color: #64748b;
+  margin: 0.15rem 0 0 0;
+  font-size: 0.8rem;
+}
+
+.btn-close-modal {
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+}
+
+.btn-close-modal:hover {
+  background: #e2e8f0;
+  color: #ef4444;
+}
+
+.modal-body {
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-loader {
+  padding: 4rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.empty-state {
+  padding: 5rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.empty-state i {
+  font-size: 3rem;
+}
+
+/* Table Design */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-table th {
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  border-bottom: 2px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.detail-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+.detail-table tr:hover {
+  background: #f8fafc;
+}
+
+.patient-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.small-text-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+}
+
+.badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.badge-bbl {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #d1fae5;
+}
+
+.badge-perawatan {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.badge-rawat-bersama {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 0.1rem 0.4rem;
+  border: 1px dashed #e2e8f0;
+  border-radius: 4px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.badge-payment {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  font-size: 0.6rem;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.badge-status {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Modal Filters Styling */
+.modal-filters-container {
+  padding: 0.75rem 1.5rem;
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.search-box-modal {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-box-modal i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.modal-search-input {
+  width: 100%;
+  padding: 0.4rem 1rem 0.4rem 2.2rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.modal-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-controls-modal {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.modal-select-mini {
+  padding: 0.4rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  outline: none;
+  background: white;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-select-mini:focus {
+  border-color: #3b82f6;
+}
+
+.modal-footer {
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-primary-outline {
+  background: white;
+  border: 1.5px solid #3b82f6;
+  color: #3b82f6;
+  padding: 0.4rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary-outline:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Transitions */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
 </style>
