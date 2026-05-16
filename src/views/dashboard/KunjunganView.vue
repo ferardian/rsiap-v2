@@ -2,88 +2,92 @@
   <div class="visit-dashboard">
     <!-- Header Section -->
     <div class="page-header">
-      <div class="header-content">
-        <div class="header-text">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <h1 class="page-title mb-0">
-                 <i class="fas fa-chart-line mr-2"></i>
-                 Dashboard Kunjungan
-            </h1>
-            <div class="header-buttons">
-              <button @click="fetchData" class="btn-refresh" :disabled="loading" title="Refresh Data">
+      <div class="header-content-wrapper">
+        <div class="header-main-info">
+          <div class="d-flex align-items-center gap-3">
+            <div class="header-icon-box">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+              <h1 class="page-title">Dashboard Kunjungan</h1>
+              <p class="page-subtitle">Analisis kunjungan pasien Ralan & Ranap</p>
+            </div>
+            <div class="header-buttons ms-auto d-lg-none">
+              <button @click="fetchData" class="btn-refresh-circle" :disabled="loading">
                 <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
               </button>
-              <button @click="isFilterVisible = !isFilterVisible" class="btn-toggle-filter d-md-none">
-                <i class="fas" :class="isFilterVisible ? 'fa-chevron-up' : 'fa-filter'"></i>
+              <button @click="isFilterVisible = !isFilterVisible" class="btn-filter-toggle">
+                <i class="fas" :class="isFilterVisible ? 'fa-times' : 'fa-filter'"></i>
               </button>
             </div>
           </div>
-          <p class="page-subtitle mb-0">Analisis data kunjungan pasien Rawat Jalan & Rawat Inap</p>
         </div>
-        <transition name="collapse">
-          <div v-show="isFilterVisible || !isMobile" class="header-actions">
-          <div class="filter-group">
-            <!-- Mode Selector -->
-            <div class="filter-item">
-              <label>Mode Periode</label>
-              <div class="mode-selector">
-                <button 
-                  @click="filters.mode = 'harian'; fetchData()" 
-                  :class="['mode-btn', { active: filters.mode === 'harian' }]"
-                >
-                  <i class="fas fa-calendar-day"></i> Harian
-                </button>
-                <button 
-                  @click="filters.mode = 'tahunan'; fetchData()" 
-                  :class="['mode-btn', { active: filters.mode === 'tahunan' }]"
-                >
-                  <i class="fas fa-calendar-alt"></i> Tahunan
+
+        <transition name="filter-slide">
+          <div v-show="isFilterVisible || !isMobile" class="header-filter-bar">
+            <div class="filter-items-container">
+              <!-- Mode Selection -->
+              <div class="filter-unit mode-unit">
+                <span class="unit-label">Mode</span>
+                <div class="compact-mode-selector">
+                  <button @click="filters.mode = 'harian'; fetchData()" :class="{ active: filters.mode === 'harian' }">
+                    <i class="fas fa-calendar-day"></i><span>Harian</span>
+                  </button>
+                  <button @click="filters.mode = 'tahunan'; fetchData()" :class="{ active: filters.mode === 'tahunan' }">
+                    <i class="fas fa-calendar-alt"></i><span>Tahunan</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Date Range / Year -->
+              <div class="filter-unit date-unit">
+                <span class="unit-label">{{ filters.mode === 'harian' ? 'Periode' : 'Tahun' }}</span>
+                <div v-if="filters.mode === 'harian'" class="compact-date-range">
+                  <input type="date" v-model="filters.tgl_awal" @change="fetchData" class="mini-input">
+                  <i class="fas fa-arrow-right separator-icon"></i>
+                  <input type="date" v-model="filters.tgl_akhir" @change="fetchData" class="mini-input">
+                </div>
+                <select v-else v-model="filters.tahun" @change="fetchData" class="mini-select">
+                  <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+                </select>
+              </div>
+
+              <!-- Service Type -->
+              <div class="filter-unit service-unit">
+                <span class="unit-label">Layanan</span>
+                <select v-model="filters.status_lanjut" @change="fetchData" class="mini-select">
+                  <option value="all">Semua Layanan</option>
+                  <option value="Ralan">Rawat Jalan</option>
+                  <option value="Ranap">Rawat Inap</option>
+                </select>
+              </div>
+
+              <!-- Unit/Poli -->
+              <div class="filter-unit poli-unit">
+                <span class="unit-label">Poliklinik / Unit</span>
+                <div class="searchable-wrapper">
+                  <SearchableSelect
+                    v-model="filters.kd_poli"
+                    :options="poliklinikOptions"
+                    labelKey="nm_poli"
+                    valueKey="kd_poli"
+                    placeholder="Semua Poliklinik"
+                    @change="fetchData"
+                  />
+                </div>
+              </div>
+
+              <!-- Desktop Refresh -->
+              <div class="filter-unit refresh-unit d-none d-lg-flex">
+                <span class="unit-label">&nbsp;</span>
+                <button @click="fetchData" class="btn-refresh-pill" :disabled="loading">
+                  <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+                  <span>Refresh</span>
                 </button>
               </div>
-            </div>
-
-            <!-- Date Range (Harian Mode) -->
-            <div v-if="filters.mode === 'harian'" class="filter-item">
-              <label>Periode</label>
-              <div class="date-inputs">
-                <input type="date" v-model="filters.tgl_awal" @change="fetchData" class="form-input">
-                <span class="separator">sampai</span>
-                <input type="date" v-model="filters.tgl_akhir" @change="fetchData" class="form-input">
-              </div>
-            </div>
-
-            <!-- Year Selector (Tahunan Mode) -->
-            <div v-if="filters.mode === 'tahunan'" class="filter-item">
-              <label>Tahun</label>
-              <select v-model="filters.tahun" @change="fetchData" class="form-select">
-                <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
-              </select>
-            </div>
-
-            <div class="filter-item">
-              <label>Jenis Layanan</label>
-              <select v-model="filters.status_lanjut" @change="fetchData" class="form-select">
-                <option value="all">Semua Layanan</option>
-                <option value="Ralan">Rawat Jalan</option>
-                <option value="Ranap">Rawat Inap</option>
-              </select>
-            </div>
-
-            <!-- Poliklinik Filter -->
-            <div class="filter-item poli-filter">
-              <label>Poliklinik / Unit</label>
-              <SearchableSelect
-                v-model="filters.kd_poli"
-                :options="poliklinikOptions"
-                labelKey="nm_poli"
-                valueKey="kd_poli"
-                placeholder="Semua Poliklinik"
-                @change="fetchData"
-              />
             </div>
           </div>
-        </div>
-      </transition>
+        </transition>
       </div>
     </div>
 
@@ -810,257 +814,250 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.visit-dashboard {
-  padding: 0;
-  overflow-x: hidden;
-  width: 100%;
-}
-
-.filter-group {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  align-items: flex-end;
-}
-
-.poli-filter {
-  flex: 1;
-  min-width: 200px;
-}
-
-/* Header */
+/* New Compact Header Styles */
 .page-header {
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
-  padding: 3rem 2rem;
-  border-radius: 0 0 30px 30px;
-  margin-bottom: 2rem;
+  padding: 1.5rem 1rem;
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 1.5rem;
   color: white;
   position: relative;
-  /* Remove overflow: hidden to allow dropdowns to show */
-  overflow: visible; 
-  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
-  z-index: 10;
+  overflow: visible;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.page-header::after {
-  content: '';
-  position: absolute;
-  bottom: -30px;
-  left: -20px;
-  width: 150px;
-  height: 150px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 40px;
-  transform: rotate(15deg);
-  pointer-events: none;
-}
-
-.header-content {
+.header-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.header-icon-box {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  padding: 0 1rem;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #60a5fa;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .page-title {
-  font-size: 2.2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .page-subtitle {
-  opacity: 0.9;
-  font-size: 1rem;
-  margin-top: 0.5rem;
-  padding-left: 2.2rem; /* Align with title text (skipping icon space) */
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin: 0.25rem 0 0 0;
 }
 
-.header-actions {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(15px) saturate(160%);
-  padding: 1.5rem 2.5rem;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 20;
+.header-filter-bar {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
 }
 
-.btn-toggle-filter {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+.filter-items-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.header-buttons {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.btn-refresh {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-refresh:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-1px);
-}
-
-.btn-refresh:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-refresh i {
-  font-size: 1rem;
-}
-
-.btn-toggle-filter:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Collapse Transition */
-.collapse-enter-active,
-.collapse-leave-active {
-  transition: all 0.3s ease-out;
-  max-height: 500px;
-  opacity: 1;
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.filter-group {
-  display: flex;
-  gap: 1.5rem;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
 }
 
-.filter-item {
+.filter-unit {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
-.filter-item label {
-  font-size: 0.75rem;
+.unit-label {
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.5);
+  padding-left: 0.25rem;
 }
 
-/* Mode Selector */
-.mode-selector {
-  display: flex;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.25rem;
-  border-radius: 12px;
-}
-
-.mode-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
+/* Compact Inputs */
+.mini-input, .mini-select {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
   font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  height: 36px;
+}
+
+.compact-date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.compact-date-range .mini-input {
+  border: none;
+  background: transparent;
+  height: 32px;
+  padding: 0 0.5rem;
+}
+
+.separator-icon {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.compact-mode-selector {
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px;
+  border-radius: 10px;
+  height: 36px;
+}
+
+.compact-mode-selector button {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0 0.85rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.compact-mode-selector button.active {
+  background: white;
+  color: #1e40af;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.poli-unit {
+  flex: 1;
+  min-width: 220px;
+}
+
+.searchable-wrapper {
+  height: 36px;
+}
+
+/* Deep override for SearchableSelect to fit the theme */
+:deep(.searchable-select-container) {
+  height: 36px !important;
+}
+:deep(.searchable-select-input) {
+  height: 36px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+}
+
+.btn-refresh-pill {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0 1rem;
+  border-radius: 10px;
+  height: 36px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh-pill:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Mobile Toggle Buttons */
+.btn-refresh-circle, .btn-filter-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  cursor: pointer;
 }
 
-.mode-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
-}
-
-.mode-btn.active {
-  background: rgba(255, 255, 255, 0.95);
-  color: #1e3a8a;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.mode-btn i {
-  font-size: 0.9rem;
-}
-
-.date-inputs .separator {
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: lowercase;
-  opacity: 0.6;
-  color: white;
-  padding: 0 0.25rem;
-}
-
-.form-input, .form-select {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9rem;
-  color: #1e293b;
-  font-weight: 700;
-  outline: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* Transitions */
+.filter-slide-enter-active, .filter-slide-leave-active {
   transition: all 0.3s ease;
 }
+.filter-slide-enter-from, .filter-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
 
-.form-input:focus, .form-select:focus {
-  background: white;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+@media (max-width: 992px) {
+  .page-header {
+    padding: 1.25rem 1rem;
+    border-radius: 0;
+  }
+  
+  .header-main-info .ms-auto {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .header-filter-bar {
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.95);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border-radius: 0 0 20px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .filter-items-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .filter-unit {
+    width: 100%;
+  }
+
+  .compact-mode-selector button {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 /* Stats Grid */
