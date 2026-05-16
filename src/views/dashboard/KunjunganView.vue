@@ -323,13 +323,35 @@
             <div class="visual-card">
               <h4 class="card-title">Berdasarkan Cara Bayar</h4>
               <div class="list-visual">
-                <div v-for="item in visitData.cara_bayar" :key="item.label" class="list-item">
-                  <div class="item-header">
-                    <span class="item-label">{{ item.label }}</span>
-                    <span class="item-value">{{ item.total }} ({{ getPercentage(item.total, summary.total) }}%)</span>
+                <div v-for="item in visitData.cara_bayar" :key="item.label" class="list-item-group mb-3">
+                  <div class="list-item">
+                    <div class="item-header">
+                      <span class="item-label fw-bold">{{ item.label }}</span>
+                      <span class="item-value">{{ item.total }} ({{ getPercentage(item.total, summary.total) }}%)</span>
+                    </div>
+                    <div class="bar-container-mini">
+                      <div class="bar-mini primary" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                    </div>
                   </div>
-                  <div class="bar-container-mini">
-                    <div class="bar-mini primary" :style="{ width: getPercentage(item.total, summary.total) + '%' }"></div>
+                  
+                  <!-- Stacked Bar for Class Details with Highlight -->
+                  <div v-if="item.details && item.details.length > 0" class="nested-highlight mt-2">
+                    <div class="stacked-bar">
+                      <div v-for="(sub, sIdx) in item.details" :key="sub.label" 
+                           class="bar-segment"
+                           :style="{ 
+                             width: getPercentage(sub.total, item.total) + '%',
+                             backgroundColor: getClassColor(sub.label)
+                           }"
+                           :title="`${sub.label}: ${sub.total}`">
+                      </div>
+                    </div>
+                    <div class="stacked-labels d-flex flex-wrap gap-2 mt-1">
+                      <div v-for="sub in item.details" :key="sub.label" class="label-item d-flex align-items-center">
+                        <span class="dot" :style="{ backgroundColor: getClassColor(sub.label) }"></span>
+                        <span class="text-muted" style="font-size: 0.65rem;">{{ sub.label }} ({{ sub.total }})</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -380,6 +402,48 @@
                              <span class="doc-name">{{ item.label }}</span>
                              <div class="doc-bar-container">
                                   <div class="doc-bar" :style="{ width: (item.total / (visitData.dokter[0]?.total || 1) * 100) + '%' }"></div>
+                             </div>
+                             <!-- Nested Payment & Status Breakdown with Highlight -->
+                             <div v-if="(item.details && item.details.length > 0) || (item.status && item.status.length > 0)" class="nested-highlight">
+                               <!-- Cara Bayar Bar -->
+                               <div v-if="item.details && item.details.length > 0" class="mb-2">
+                                 <div class="doc-stacked-bar">
+                                   <div v-for="sub in item.details" :key="sub.label" 
+                                        class="bar-segment"
+                                        :style="{ 
+                                          width: (sub.total / item.total * 100) + '%',
+                                          backgroundColor: getPaymentColor(sub.label)
+                                        }"
+                                        :title="`${sub.label}: ${sub.total}`">
+                                   </div>
+                                 </div>
+                                 <div class="stacked-labels d-flex flex-wrap gap-2 mt-1">
+                                   <div v-for="sub in item.details" :key="sub.label" class="label-item d-flex align-items-center">
+                                     <span class="dot" :style="{ backgroundColor: getPaymentColor(sub.label) }"></span>
+                                     <span class="text-muted" style="font-size: 0.65rem;">{{ sub.label }} ({{ sub.total }})</span>
+                                   </div>
+                                 </div>
+                               </div>
+
+                               <!-- Status Pasien Bar (Baru/Lama) -->
+                               <div v-if="item.status && item.status.length > 0">
+                                 <div class="doc-stacked-bar">
+                                   <div v-for="sub in item.status" :key="sub.label" 
+                                        class="bar-segment"
+                                        :style="{ 
+                                          width: (sub.total / item.total * 100) + '%',
+                                          backgroundColor: getStatusColor(sub.label)
+                                        }"
+                                        :title="`${sub.label}: ${sub.total}`">
+                                   </div>
+                                 </div>
+                                 <div class="stacked-labels d-flex flex-wrap gap-2 mt-1">
+                                   <div v-for="sub in item.status" :key="sub.label" class="label-item d-flex align-items-center">
+                                     <span class="dot" :style="{ backgroundColor: getStatusColor(sub.label) }"></span>
+                                     <span class="text-muted" style="font-size: 0.65rem; font-weight: bold;">Pasien {{ sub.label }} ({{ sub.total }})</span>
+                                   </div>
+                                 </div>
+                               </div>
                              </div>
                         </div>
                         <span class="doc-count">{{ item.total }}</span>
@@ -623,6 +687,34 @@ const filteredDetails = computed(() => {
 
   return result
 })
+
+const getClassColor = (label) => {
+  const colors = {
+    'Kelas 1': '#3b82f6',
+    'Kelas 2': '#10b981',
+    'Kelas 3': '#f59e0b',
+    'Kelas VIP': '#8b5cf6',
+    'Kelas Utama': '#06b6d4',
+    'VIP': '#8b5cf6',
+    'Utama': '#06b6d4'
+  }
+  return colors[label] || '#94a3b8'
+}
+
+const getPaymentColor = (label) => {
+  const l = label.toLowerCase()
+  if (l.includes('non pbi')) return '#3b82f6' // Blue for Non PBI
+  if (l.includes('bpjs kesehatan / pbi') && !l.includes('non pbi')) return '#f59e0b' // Orange for PBI
+  if (l.includes('umum')) return '#8b5cf6' // Purple for UMUM
+  return '#94a3b8' // Gray for others
+}
+
+const getStatusColor = (label) => {
+  const l = label.toLowerCase()
+  if (l === 'baru') return '#f43f5e' // Rose
+  if (l === 'lama') return '#0ea5e9' // Sky
+  return '#94a3b8'
+}
 
 const uniqueDoctors = computed(() => {
   const doctors = [...new Set(detailModal.value.data.map(p => p.nm_dokter))]
@@ -1833,6 +1925,66 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   display: block;
+}
+
+.stacked-bar-container {
+  width: 100%;
+}
+
+.stacked-bar {
+  display: flex;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.stacked-labels {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.label-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.nested-highlight {
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-left: 3px solid #e2e8f0;
+}
+
+.stacked-bar {
+  display: flex;
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.doc-stacked-bar {
+  display: flex;
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
 }
 
 .badge-status {
