@@ -174,10 +174,10 @@
       </div>
 
       <!-- BOR Per Kelas Section (Only for Gabungan Category) -->
-      <div v-if="filters.activeCategory === 'Gabungan' && overallData.bor_per_kelas" class="bor-kelas-section mb-4 animate__animated animate__fadeInUp">
+      <div v-if="currentData.bor_per_kelas && currentData.bor_per_kelas.length > 0" class="bor-kelas-section mb-4 animate__animated animate__fadeInUp">
         <h5 class="card-title-sm mb-3">BOR per Kelas Rawat <span v-if="filters.isYearlyMode" class="text-primary fw-normal small">(Rerata Tahunan)</span></h5>
         <div class="row g-3">
-          <div v-for="cl in overallData.bor_per_kelas" :key="cl.kelas" class="col-md-2 col-6">
+          <div v-for="cl in currentData.bor_per_kelas" :key="cl.kelas" class="col-md-2 col-6">
             <div class="bor-kelas-card card border-0 shadow-sm rounded-4 p-3 h-100">
               <h6 class="text-muted x-small fw-bold mb-2 text-uppercase">{{ cl.kelas }}</h6>
               <div class="d-flex align-items-center justify-content-between">
@@ -707,7 +707,7 @@ onMounted(() => {
 
 .bor-gauge-value .value {
   display: block;
-  font-size: 2.25rem;
+  font-size: 1.85rem;
   font-weight: 900;
   color: #1e293b;
   line-height: 1;

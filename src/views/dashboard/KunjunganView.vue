@@ -77,6 +77,21 @@
                 </div>
               </div>
 
+              <!-- Dokter -->
+              <div class="filter-unit dokter-unit">
+                <span class="unit-label">Dokter</span>
+                <div class="searchable-wrapper">
+                  <SearchableSelect
+                    v-model="filters.kd_dokter"
+                    :options="dokterOptions"
+                    labelKey="nm_dokter"
+                    valueKey="kd_dokter"
+                    placeholder="Semua Dokter"
+                    @change="fetchData"
+                  />
+                </div>
+              </div>
+
               <!-- Desktop Refresh -->
               <div class="filter-unit refresh-unit d-none d-lg-flex">
                 <span class="unit-label">&nbsp;</span>
@@ -607,6 +622,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import dashboardVisitService from '../../services/dashboardVisitService'
 import poliklinikService from '../../services/poliklinikService'
+import dokterService from '../../services/dokterService'
 import SearchableSelect from '../../components/ui/SearchableSelect.vue'
 import {
   Chart as ChartJS,
@@ -638,6 +654,7 @@ const loading = ref(true)
 const isFilterVisible = ref(false)
 const isMobile = ref(false)
 const poliklinikOptions = ref([])
+const dokterOptions = ref([])
 const summary = ref({ 
   total: 0, baru: 0, lama: 0, pria: 0, wanita: 0, 
   keluar_l: 0, keluar_p: 0, mati_l: 0, mati_p: 0,
@@ -733,7 +750,8 @@ const filters = ref({
   tgl_akhir: new Date().toISOString().substr(0, 10),
   tahun: currentYear,
   status_lanjut: 'all',
-  kd_poli: 'all'
+  kd_poli: 'all',
+  kd_dokter: 'all'
 })
 
 const fetchPoliklinik = async () => {
@@ -745,6 +763,31 @@ const fetchPoliklinik = async () => {
     ]
   } catch (error) {
     console.error('Failed to fetch poliklinik:', error)
+  }
+}
+
+const fetchDokter = async () => {
+  try {
+    const response = await dokterService.getAllDokter({ status: '1' })
+    const allDoctors = response.data.data
+    
+    // Deduplicate by kd_dokter (take the first occurrence)
+    const uniqueDoctors = []
+    const seen = new Set()
+    
+    allDoctors.forEach(dr => {
+      if (!seen.has(dr.kd_dokter)) {
+        seen.add(dr.kd_dokter)
+        uniqueDoctors.push(dr)
+      }
+    })
+
+    dokterOptions.value = [
+      { kd_dokter: 'all', nm_dokter: 'Semua Dokter' },
+      ...uniqueDoctors
+    ]
+  } catch (error) {
+    console.error('Failed to fetch dokter:', error)
   }
 }
 
@@ -897,6 +940,7 @@ onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
   fetchPoliklinik()
+  fetchDokter()
   fetchData()
 })
 
