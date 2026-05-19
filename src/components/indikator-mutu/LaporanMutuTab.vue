@@ -29,7 +29,7 @@
             </div>
 
             <!-- Periode & Tampilan Group -->
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <div class="d-flex gap-2">
                     <div class="flex-grow-1">
                         <label class="filter-label"><i class="fas fa-clock me-1"></i> Periode Ke-</label>
@@ -69,8 +69,22 @@
                 </div>
             </div>
             
+            <!-- Master Indikator Filter -->
+            <div class="col-lg-2" v-if="filters.jenis === 'group'">
+                <label class="filter-label"><i class="fas fa-star me-1"></i> Indikator Utama</label>
+                <v-select 
+                    :options="masterUtamaList" 
+                    label="nama_inmut" 
+                    v-model="filters.id_master"
+                    :reduce="m => m.id_master"
+                    placeholder="Semua Indikator"
+                    class="modern-select"
+                    @update:modelValue="fetchData"
+                />
+            </div>
+
             <!-- Unit / Dep Filter -->
-            <div class="col-lg-3" v-if="filters.jenis !== 'group'">
+            <div class="col-lg-2" v-if="filters.jenis !== 'group'">
                 <label class="filter-label"><i class="fas fa-hospital-user me-1"></i> Unit / Ruang</label>
                 <v-select 
                     :options="units" 
@@ -122,7 +136,9 @@
             <thead class="bg-light text-center">
               <tr>
                 <th width="5%">#</th>
-                <th width="30%">Indikator & Unit</th>
+                <th width="30%">
+                  {{ filters.jenis === 'group' ? 'Indikator Utama' : 'Indikator & Unit' }}
+                </th>
                 <th width="15%">Target</th>
                 <th width="10%">Num</th>
                 <th width="10%">Denum</th>
@@ -144,12 +160,12 @@
                    <p class="mb-0">Tidak ada data laporan untuk periode ini.</p>
                 </td>
               </tr>
-            <template v-for="(item, index) in items" :key="item.id_inmut">
-              <tr :class="{ 'table-active fw-medium': expandedRowId === item.id_inmut }">
+            <template v-for="(item, index) in items" :key="getRowId(item)">
+              <tr :class="{ 'table-active fw-medium': expandedRowId === getRowId(item) }">
                 <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
                 <td>
                    <div class="fw-bold">{{ item.nama_inmut }}</div>
-                   <small class="text-muted">{{ item.nama_ruang }}</small>
+                   <small class="text-muted" v-if="filters.jenis !== 'group'">{{ item.nama_ruang }}</small>
                 </td>
                 <td class="text-center">
                     {{ getStandar(item) }}
@@ -165,17 +181,17 @@
                 <td class="text-center">
                     <button 
                         class="btn btn-detail-toggle" 
-                        :class="{ 'active': expandedRowId === item.id_inmut }"
+                        :class="{ 'active': expandedRowId === getRowId(item) }"
                         @click="fetchDetail(item)"
                     >
                         <span>Detail</span>
-                        <i class="fas fa-chevron-down ms-1 transition-transform" :class="{ 'fa-rotate-180': expandedRowId === item.id_inmut }"></i>
+                        <i class="fas fa-chevron-down ms-1 transition-transform" :class="{ 'fa-rotate-180': expandedRowId === getRowId(item) }"></i>
                     </button>
                 </td>
               </tr>
 
               <!-- Expandable Detail Row -->
-              <tr v-if="expandedRowId === item.id_inmut">
+              <tr v-if="expandedRowId === getRowId(item)">
                 <td colspan="8" class="p-0 border-0 bg-light">
                   <div class="expandable-content-wrapper overflow-hidden">
                     <div class="detail-container p-4">
@@ -195,7 +211,9 @@
                                 </div>
                                 <div>
                                   <h6 class="fw-800 text-dark mb-1">{{ detailData.indicator.nama_inmut_utama || detailData.indicator.nama_inmut }}</h6>
-                                  <p class="text-muted small mb-0">{{ detailData.indicator.nama_ruang || '-' }}</p>
+                                  <p class="text-muted small mb-0">
+                                    {{ filters.jenis === 'group' ? ('Rekapitulasi Global • ' + (detailData.indicator.kategori || 'Indikator Mutu')) : (detailData.indicator.nama_ruang || '-') }}
+                                  </p>
                                 </div>
                               </div>
                               <div class="row g-3">
@@ -267,7 +285,7 @@
                                       <td>
                                         <span class="badge" :class="isTercapai(m, detailData.indicator) ? 'bg-success' : 'bg-danger'">
                                           <i :class="isTercapai(m, detailData.indicator) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1"></i>
-                                          {{ isTercapai(m, detailData.indicator) ? 'Tercapai' : 'Gagal' }}
+                                          {{ isTercapai(m, detailData.indicator) ? 'Tercapai' : 'Tidak Tercapai' }}
                                         </span>
                                       </td>
                                     </tr>
@@ -295,6 +313,108 @@
                             </div>
                           </div>
                         </div>
+
+                        <!-- Rincian Per Ruang / Unit (Only shown in Group/Indikator mode) -->
+                        <div class="row g-4 mt-2 mb-5" v-if="filters.jenis === 'group' && detailData.units_detail && detailData.units_detail.length > 0">
+                          <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                              <div class="card-header bg-primary py-3 border-0 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-white"><i class="fas fa-hospital me-2"></i>Rincian Capaian Per Ruangan / Unit</h6>
+                              </div>
+                              <div class="table-responsive">
+                                <table class="table table-sm mb-0 align-middle">
+                                  <colgroup>
+                                    <col style="width: 30%;">
+                                    <col style="width: 14%;">
+                                    <col style="width: 14%;">
+                                    <col style="width: 14%;">
+                                    <col style="width: 14%;">
+                                    <col style="width: 14%;">
+                                  </colgroup>
+                                  <thead class="bg-gray-50 text-center text-xs fw-800 text-uppercase text-muted">
+                                    <tr class="align-middle">
+                                      <th class="py-3 text-start ps-4">Nama Ruang / Unit</th>
+                                      <th class="py-3">Target</th>
+                                      <th class="py-3">Num</th>
+                                      <th class="py-3">Denum</th>
+                                      <th class="py-3">Capaian</th>
+                                      <th class="py-3">Hasil</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="text-center font-sm">
+                                    <template v-for="u in unitsGrouped" :key="u.id_inmut">
+                                      <tr @click="toggleUnitExpand(u.id_inmut)" style="cursor: pointer;" class="hover-bg-light align-middle">
+                                        <td class="fw-bold text-start ps-4 py-2">
+                                          <div class="d-flex align-items-center">
+                                            <i class="fas me-2 text-primary" :class="expandedUnitIds.includes(u.id_inmut) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                                            <span>{{ u.nama_ruang }}</span>
+                                          </div>
+                                        </td>
+                                        <td class="py-2">{{ getStandar(detailData.indicator) }}</td>
+                                        <td class="py-2">{{ u.total_num }}</td>
+                                        <td class="py-2">{{ u.total_denum }}</td>
+                                        <td class="py-2 fw-bold" :class="isTercapai(u, detailData.indicator) ? 'text-success' : 'text-danger'">
+                                          {{ u.score }}%
+                                        </td>
+                                        <td class="py-2">
+                                          <span class="badge" :class="isTercapai(u, detailData.indicator) ? 'bg-success' : 'bg-danger'">
+                                            <i :class="isTercapai(u, detailData.indicator) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1"></i>
+                                            {{ isTercapai(u, detailData.indicator) ? 'Tercapai' : 'Tidak Tercapai' }}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                      <!-- Monthly nested table for this unit -->
+                                      <tr v-if="expandedUnitIds.includes(u.id_inmut)">
+                                        <td colspan="6" class="p-3 bg-light border-0">
+                                          <div class="px-4 py-3 bg-white rounded-3 border border-light-subtle shadow-sm">
+                                            <div class="fw-bold text-xs text-muted mb-2 text-uppercase"><i class="fas fa-calendar-alt me-1 text-primary"></i>Rincian Bulanan Unit: {{ u.nama_ruang }}</div>
+                                            <table class="table table-sm table-bordered mb-0 align-middle">
+                                              <colgroup>
+                                                <col style="width: 30%;">
+                                                <col style="width: 14%;">
+                                                <col style="width: 14%;">
+                                                <col style="width: 14%;">
+                                                <col style="width: 14%;">
+                                                <col style="width: 14%;">
+                                              </colgroup>
+                                              <thead class="bg-light text-center text-xs text-muted">
+                                                <tr class="align-middle">
+                                                  <th class="py-2">Bulan</th>
+                                                  <th class="py-2">Target</th>
+                                                  <th class="py-2">Num</th>
+                                                  <th class="py-2">Denum</th>
+                                                  <th class="py-2">Capaian</th>
+                                                  <th class="py-2">Hasil</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody class="text-center text-sm">
+                                                <tr v-for="m in u.months" :key="m.bulan" class="align-middle">
+                                                  <td class="fw-medium py-2">{{ getMonthName(m.bulan) }} {{ m.tahun }}</td>
+                                                  <td class="py-2">{{ getStandar(detailData.indicator) }}</td>
+                                                  <td class="py-2">{{ m.total_num }}</td>
+                                                  <td class="py-2">{{ m.total_denum }}</td>
+                                                  <td class="fw-bold py-2" :class="isTercapai(m, detailData.indicator) ? 'text-success' : 'text-danger'">
+                                                    {{ m.score }}%
+                                                  </td>
+                                                  <td class="py-2">
+                                                    <span class="badge badge-sm" :class="isTercapai(m, detailData.indicator) ? 'bg-success' : 'bg-danger'">
+                                                      {{ isTercapai(m, detailData.indicator) ? 'Tercapai' : 'Tidak Tercapai' }}
+                                                    </span>
+                                                  </td>
+                                                </tr>
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </template>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                       </div>
                     </div>
                   </div>
@@ -381,6 +501,7 @@ const apexchart = VueApexCharts
 
 const items = ref([])
 const units = ref([])
+const masterUtamaList = ref([])
 const loading = ref(false)
 const total = ref(0)
 const page = ref(1)
@@ -446,6 +567,7 @@ const filters = reactive({
     tipe: 'triwulan',
     periode: 1, // Default Triwulan 1
     unit: null,
+    id_master: null,
     jenis: 'semua'
 })
 
@@ -455,11 +577,20 @@ watch(() => filters.tipe, (newVal) => {
     fetchData()
 })
 
+watch(() => filters.jenis, (newVal) => {
+    if (newVal === 'group') {
+        filters.unit = null; // Clear unit filter when grouping by indicator
+    } else {
+        filters.id_master = null; // Clear master filter when viewing all units
+    }
+    fetchData()
+})
+
 // Watch filters complex to refresh detail if open
-watch(() => [filters.tahun, filters.tipe, filters.periode, filters.unit, filters.jenis], () => {
+watch(() => [filters.tahun, filters.tipe, filters.periode, filters.unit, filters.jenis, filters.id_master], () => {
     if (expandedRowId.value) {
         // Find the item in the current items list
-        const item = items.value.find(i => i.id_inmut === expandedRowId.value);
+        const item = items.value.find(i => getRowId(i) === expandedRowId.value);
         if (item) {
             fetchDetail(item, true); // force reload
         } else {
@@ -478,6 +609,15 @@ const fetchUnits = async () => {
     }
 }
 
+const fetchMasterUtama = async () => {
+    try {
+        const response = await api.getUtama({ limit: 100, status: '1' })
+        masterUtamaList.value = response.data.data.data || response.data.data
+    } catch (error) {
+        console.error('Error fetching master utama:', error)
+    }
+}
+
 const fetchData = async () => {
     loading.value = true
     try {
@@ -488,6 +628,7 @@ const fetchData = async () => {
             tipe: filters.tipe,
             periode: filters.periode,
             dep_id: filters.unit,
+            id_master: filters.id_master,
             jenis: filters.jenis
         }
         const response = await api.getLaporan(params)
@@ -549,18 +690,61 @@ const displayedPages = computed(() => {
     return rangeWithDots
 })
 
+const getRowId = (item) => {
+    if (!item) return ''
+    return filters.jenis === 'group' ? `master-${item.id_master}` : `inmut-${item.id_inmut}`
+}
+
 const getMonthName = (m) => monthNames[parseInt(m) - 1]
 
+const expandedUnitIds = ref([])
+const toggleUnitExpand = (id) => {
+    const idx = expandedUnitIds.value.indexOf(id);
+    if (idx > -1) {
+        expandedUnitIds.value.splice(idx, 1);
+    } else {
+        expandedUnitIds.value.push(id);
+    }
+}
+
+const unitsGrouped = computed(() => {
+    if (!detailData.value || !detailData.value.units_detail) return [];
+    
+    const groups = {};
+    detailData.value.units_detail.forEach(item => {
+        const key = item.id_inmut;
+        if (!groups[key]) {
+            groups[key] = {
+                nama_ruang: item.nama_ruang,
+                id_inmut: item.id_inmut,
+                total_num: 0,
+                total_denum: 0,
+                months: []
+            };
+        }
+        groups[key].total_num += parseInt(item.total_num);
+        groups[key].total_denum += parseInt(item.total_denum);
+        groups[key].months.push(item);
+    });
+
+    return Object.values(groups).map(g => {
+        g.score = g.total_denum > 0 ? parseFloat(((g.total_num / g.total_denum) * 100).toFixed(2)) : 0;
+        return g;
+    });
+});
+
 const fetchDetail = async (item, force = false) => {
+    const rowId = getRowId(item)
     // Toggle off if clicking the same item (unless forced)
-    if (!force && expandedRowId.value === item.id_inmut) {
+    if (!force && expandedRowId.value === rowId) {
         expandedRowId.value = null
         detailData.value = null
         return
     }
 
     detailLoading.value = true
-    expandedRowId.value = item.id_inmut
+    expandedRowId.value = rowId
+    expandedUnitIds.value = []
     // Only clear if not forced (to keep previous data visible while loading new data if desirable)
     // but clearing is cleaner for "reload" feel
     detailData.value = null
@@ -704,6 +888,7 @@ const isTercapai = (data, meta = null) => {
 
 onMounted(() => {
     fetchUnits()
+    fetchMasterUtama()
     fetchData()
     window.addEventListener('click', handleClickOutside)
 })
@@ -739,7 +924,11 @@ const exportDetailToPDF = async (data) => {
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Unit / Ruang: ${indicator.nama_ruang || '-'}`, 15, 62);
+    if (filters.jenis === 'group') {
+        doc.text(`Kategori: ${indicator.kategori || 'Global'} (Rekapitulasi Global)`, 15, 62);
+    } else {
+        doc.text(`Unit / Ruang: ${indicator.nama_ruang || '-'}`, 15, 62);
+    }
     doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, 15, 67);
     
     // Summary Box
@@ -788,7 +977,7 @@ const exportDetailToPDF = async (data) => {
         m.total_num,
         m.total_denum,
         `${m.score}%`,
-        isTercapai(m, indicator) ? 'Tercapai' : 'Gagal'
+        isTercapai(m, indicator) ? 'Tercapai' : 'Tidak Tercapai'
     ]);
     
     autoTable(doc, {
@@ -863,15 +1052,26 @@ const exportRekapToPDF = async () => {
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    const unitText = filters.unit ? units.value.find(u => u.dep_id === filters.unit)?.nama_ruang : 'Seluruh Unit';
-    doc.text(`Unit: ${unitText} | Periode: ${filters.tipe.toUpperCase()} ${filters.periode} Tahun ${filters.tahun}`, 148, 22, { align: 'center' });
+    const isGroup = filters.jenis === 'group';
+    let subtitle = '';
+    if (isGroup) {
+        subtitle = `Tampilan: Indikator (Rekapitulasi Global) | Periode: ${filters.tipe.toUpperCase()} ${filters.periode} Tahun ${filters.tahun}`;
+    } else {
+        const unitText = filters.unit ? units.value.find(u => u.dep_id === filters.unit)?.nama_ruang : 'Seluruh Unit';
+        subtitle = `Unit: ${unitText} | Periode: ${filters.tipe.toUpperCase()} ${filters.periode} Tahun ${filters.tahun}`;
+    }
+    doc.text(subtitle, 148, 22, { align: 'center' });
     doc.text('RSIA AISYIYAH PEKAJANGAN', 148, 27, { align: 'center' });
     
-    const tableHead = [['#', 'Indikator', 'Unit/Ruang', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Status']];
+    const tableHead = [
+        isGroup 
+            ? ['#', 'Indikator', 'Kategori', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Status']
+            : ['#', 'Indikator', 'Unit/Ruang', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Status']
+    ];
     const tableBody = allItems.map((item, index) => [
         index + 1,
         item.nama_inmut,
-        item.nama_ruang,
+        isGroup ? (item.kategori || 'Global') : (item.nama_ruang || '-'),
         getStandar(item),
         item.total_num,
         item.total_denum,
@@ -1013,7 +1213,7 @@ const exportFullReportToPDF = async () => {
             const tableHead = [['Bulan', 'Num', 'Denum', 'Score', 'Status']];
             const tableBody = monthly.map(m => [
                 getMonthName(m.bulan), m.total_num, m.total_denum, `${m.score}%`,
-                isTercapai(m, item) ? 'Tercapai' : 'Gagal'
+                isTercapai(m, item) ? 'Tercapai' : 'Tidak Tercapai'
             ]);
 
             autoTable(doc, {
@@ -1190,7 +1390,7 @@ const exportFullReportToPDF = async () => {
 }
 
 tr.table-active + tr .expandable-content-wrapper {
-  max-height: 1200px; /* Large enough to fit content */
+  max-height: 4000px; /* Large enough to fit content including expanded nested rooms */
 }
 
 .detail-container {
@@ -1330,5 +1530,22 @@ tr.table-active + tr .expandable-content-wrapper {
     -webkit-overflow-scrolling: touch !important;
     flex-wrap: nowrap !important;
   }
+}
+
+/* Reset any blue outlines or focus rings on nested tables and interactive rows */
+.detail-container table,
+.detail-container tr,
+.detail-container td,
+.detail-container th {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure nested room sub-tables use a clean, soft border color */
+.detail-container .table-responsive table,
+.detail-container .table-responsive table tr,
+.detail-container .table-responsive table td,
+.detail-container .table-responsive table th {
+    border-color: #e2e8f0 !important;
 }
 </style>
