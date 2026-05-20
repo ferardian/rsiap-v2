@@ -858,8 +858,9 @@ const handleDeleteTodo = async (ep, todo) => {
       popup: 'rounded-4 font-sans shadow-lg',
       title: 'fw-bold text-dark fs-5 pt-3',
       htmlContainer: 'text-secondary small py-2',
-      confirmButton: 'btn btn-danger btn-sm px-3.5 py-2 font-sans small me-2',
-      cancelButton: 'btn btn-secondary btn-sm px-3.5 py-2 font-sans small'
+      actions: 'd-flex align-items-center justify-content-center gap-2 w-100 px-3 mt-3',
+      confirmButton: 'btn btn-danger btn-sm px-4 py-2 font-sans small m-0',
+      cancelButton: 'btn btn-secondary btn-sm px-4 py-2 font-sans small m-0'
     },
     buttonsStyling: false
   })
