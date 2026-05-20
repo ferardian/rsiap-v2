@@ -1046,16 +1046,33 @@ const exportDetailToPDF = async (data) => {
             doc.setFontSize(9);
             doc.text('Rincian Capaian Per Ruangan / Unit:', 15, nextY);
             
-            const roomHead = [['No', 'Nama Ruang / Unit', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Hasil']];
-            const roomBody = groupedUnits.map((ru, idx) => [
-                idx + 1,
-                ru.nama_ruang,
-                getStandar(indicator),
-                ru.total_num,
-                ru.total_denum,
-                `${ru.score}%`,
-                isTercapai(ru, indicator) ? 'Tercapai' : 'Tidak Tercapai'
-            ]);
+            const roomHead = [['Nama Ruang / Unit', 'Bulan', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Status']];
+            const roomBody = [];
+            groupedUnits.forEach((ru) => {
+                // Main Room Row
+                roomBody.push([
+                    ru.nama_ruang,
+                    'Total',
+                    getStandar(indicator),
+                    ru.total_num,
+                    ru.total_denum,
+                    `${ru.score}%`,
+                    isTercapai(ru, indicator) ? 'Tercapai' : 'Tidak Tercapai'
+                ]);
+                
+                // Monthly Breakdown Rows
+                ru.months.forEach(m => {
+                    roomBody.push([
+                        '',
+                        `${getMonthName(m.bulan)} ${m.tahun}`,
+                        getStandar(indicator),
+                        m.total_num,
+                        m.total_denum,
+                        `${m.score}%`,
+                        isTercapai(m, indicator) ? 'Tercapai' : 'Tidak Tercapai'
+                    ]);
+                });
+            });
 
             autoTable(doc, {
                 head: roomHead,
@@ -1065,9 +1082,13 @@ const exportDetailToPDF = async (data) => {
                 theme: 'grid',
                 headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
                 styles: { fontSize: 8 },
-                didParseCell: function(data) {
-                    if (data.column.index === 6 && data.cell.section === 'body') {
-                        data.cell.styles.textColor = data.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
+                didParseCell: function(cellData) {
+                    if (cellData.row.cells[1].text[0] === 'Total' && cellData.cell.section === 'body') {
+                        cellData.cell.styles.fontStyle = 'bold';
+                        cellData.cell.styles.fillColor = [240, 244, 253];
+                    }
+                    if (cellData.column.index === 6 && cellData.cell.section === 'body') {
+                        cellData.cell.styles.textColor = cellData.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
                     }
                 }
             });
@@ -1418,16 +1439,33 @@ const exportFullReportToPDF = async () => {
                     doc.setFontSize(9);
                     doc.text('Rincian Capaian Per Ruangan / Unit:', 15, nextY);
                     
-                    const roomHead = [['No', 'Nama Ruang / Unit', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Hasil']];
-                    const roomBody = groupedUnits.map((ru, idx) => [
-                        idx + 1,
-                        ru.nama_ruang,
-                        getStandar(item),
-                        ru.total_num,
-                        ru.total_denum,
-                        `${ru.score}%`,
-                        isTercapai(ru, item) ? 'Tercapai' : 'Tidak Tercapai'
-                    ]);
+                    const roomHead = [['Nama Ruang / Unit', 'Bulan', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Status']];
+                    const roomBody = [];
+                    groupedUnits.forEach((ru) => {
+                        // Main Room Row
+                        roomBody.push([
+                            ru.nama_ruang,
+                            'Total',
+                            getStandar(item),
+                            ru.total_num,
+                            ru.total_denum,
+                            `${ru.score}%`,
+                            isTercapai(ru, item) ? 'Tercapai' : 'Tidak Tercapai'
+                        ]);
+                        
+                        // Monthly Breakdown Rows
+                        ru.months.forEach(m => {
+                            roomBody.push([
+                                '',
+                                `${getMonthName(m.bulan)} ${m.tahun}`,
+                                getStandar(item),
+                                m.total_num,
+                                m.total_denum,
+                                `${m.score}%`,
+                                isTercapai(m, item) ? 'Tercapai' : 'Tidak Tercapai'
+                            ]);
+                        });
+                    });
 
                     autoTable(doc, {
                         head: roomHead,
@@ -1437,9 +1475,13 @@ const exportFullReportToPDF = async () => {
                         theme: 'grid',
                         headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
                         styles: { fontSize: 8 },
-                        didParseCell: function(data) {
-                            if (data.column.index === 6 && data.cell.section === 'body') {
-                                data.cell.styles.textColor = data.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
+                        didParseCell: function(cellData) {
+                            if (cellData.row.cells[1].text[0] === 'Total' && cellData.cell.section === 'body') {
+                                cellData.cell.styles.fontStyle = 'bold';
+                                cellData.cell.styles.fillColor = [240, 244, 253];
+                            }
+                            if (cellData.column.index === 6 && cellData.cell.section === 'body') {
+                                cellData.cell.styles.textColor = cellData.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
                             }
                         }
                     });
