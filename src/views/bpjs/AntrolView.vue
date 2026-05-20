@@ -183,7 +183,7 @@
                 v-model="filters.keyword" 
                 type="text" 
                 class="form-control premium-input-sm" 
-                placeholder="Cari No. Antrean / No. RM..."
+                placeholder="Cari Nama / No. Antrean / No. RM..."
                 style="min-width: 250px;"
               >
             </div>
@@ -888,7 +888,9 @@ const filteredAntrol = computed(() => {
       String(item.noantrean).toLowerCase().includes(kw) || 
       String(item.kodebooking).toLowerCase().includes(kw) ||
       String(item.nokapst).toLowerCase().includes(kw) ||
-      (item.norekammedis && String(item.norekammedis).toLowerCase().includes(kw))
+      (item.norekammedis && String(item.norekammedis).toLowerCase().includes(kw)) ||
+      (item.nama_pasien && String(item.nama_pasien).toLowerCase().includes(kw)) ||
+      (item.namapasien && String(item.namapasien).toLowerCase().includes(kw))
     )
   }
 

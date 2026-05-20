@@ -56,6 +56,15 @@
           <i class="fas fa-comment-medical me-1"></i> Rekap Supervisi
         </button>
       </li>
+      <li class="nav-item">
+        <button 
+            class="nav-link" 
+            :class="{ active: activeTab === 'supervisi_implikasi' }" 
+            @click="activeTab = 'supervisi_implikasi'"
+        >
+          <i class="fas fa-clipboard-check me-1"></i> Ceklist Implikasi
+        </button>
+      </li>
     </ul>
 
     <!-- Tab Content -->
@@ -80,6 +89,10 @@
         <KeepAlive>
              <RekapFeedbackTab v-if="activeTab === 'rekap_feedback'" />
         </KeepAlive>
+
+        <KeepAlive>
+             <SupervisiImplikasiTab v-if="activeTab === 'supervisi_implikasi'" />
+        </KeepAlive>
       </div>
     </div>
 
@@ -93,6 +106,7 @@ import AnalisaMutuTab from '@/components/indikator-mutu/AnalisaMutuTab.vue'
 import KamusInmutTab from '@/components/indikator-mutu/KamusInmutTab.vue'
 import LaporanMutuTab from '@/components/indikator-mutu/LaporanMutuTab.vue'
 import RekapFeedbackTab from '@/components/indikator-mutu/RekapFeedbackTab.vue'
+import SupervisiImplikasiTab from '@/components/indikator-mutu/SupervisiImplikasiTab.vue'
 
 const activeTab = ref('monitoring')
 </script>

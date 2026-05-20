@@ -36,6 +36,17 @@ const service = {
     
     // Notifications
     sendAnalisaNotification: (data) => api.post('/indikator-mutu/analisa/notif', data),
+
+    // Supervisi Implikasi
+    getSupervisiImplikasiTemplate: () => api.get('/indikator-mutu/supervisi-implikasi/template'),
+    storeSupervisiImplikasiTemplate: (data) => api.post('/indikator-mutu/supervisi-implikasi/template', data),
+    updateSupervisiImplikasiTemplate: (no_unsur, data) => api.put(`/indikator-mutu/supervisi-implikasi/template/${no_unsur}`, data),
+    deleteSupervisiImplikasiTemplate: (no_unsur) => api.delete(`/indikator-mutu/supervisi-implikasi/template/${no_unsur}`),
+    getSupervisiImplikasi: (params) => api.get('/indikator-mutu/supervisi-implikasi', { params }),
+    getSupervisiImplikasiDetail: (id) => api.get(`/indikator-mutu/supervisi-implikasi/${id}`),
+    createSupervisiImplikasi: (data) => api.post('/indikator-mutu/supervisi-implikasi', data),
+    updateSupervisiImplikasi: (id, data) => api.put(`/indikator-mutu/supervisi-implikasi/${id}`, data),
+    deleteSupervisiImplikasi: (id) => api.delete(`/indikator-mutu/supervisi-implikasi/${id}`),
 };
 
 // Export service for Indikator Mutu operations

@@ -97,6 +97,19 @@
                 />
             </div>
 
+            <!-- Cari Indikator Filter -->
+            <div class="col-lg-2">
+                <label class="filter-label"><i class="fas fa-search me-1"></i> Cari Indikator</label>
+                <input 
+                    type="text" 
+                    class="form-control form-control-sm border-0 bg-light-subtle shadow-none" 
+                    v-model="filters.keyword" 
+                    placeholder="Kata kunci..." 
+                    @input="debounceFetch" 
+                    style="height: 38px; border-radius: 8px;"
+                />
+            </div>
+
             <!-- Action Area -->
             <div class="col-lg-2">
                 <label class="filter-label" style="visibility: hidden;">Action</label>
@@ -568,7 +581,8 @@ const filters = reactive({
     periode: 1, // Default Triwulan 1
     unit: null,
     id_master: null,
-    jenis: 'semua'
+    jenis: 'semua',
+    keyword: ''
 })
 
 // Watch filters to refresh data
@@ -629,7 +643,8 @@ const fetchData = async () => {
             periode: filters.periode,
             dep_id: filters.unit,
             id_master: filters.id_master,
-            jenis: filters.jenis
+            jenis: filters.jenis,
+            keyword: filters.keyword
         }
         const response = await api.getLaporan(params)
         const data = response.data.data
@@ -642,6 +657,15 @@ const fetchData = async () => {
     } finally {
         loading.value = false
     }
+}
+
+let debounceTimeout = null
+const debounceFetch = () => {
+    clearTimeout(debounceTimeout)
+    debounceTimeout = setTimeout(() => {
+        page.value = 1
+        fetchData()
+    }, 500)
 }
 
 const changePage = (p) => {

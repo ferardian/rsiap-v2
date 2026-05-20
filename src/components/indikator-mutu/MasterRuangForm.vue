@@ -161,6 +161,7 @@
 
 <script setup>
 import { ref, reactive, watch, onMounted } from 'vue'
+import Swal from 'sweetalert2'
 import departemenService from '@/services/departemenService'
 import indikatorMutuService from '@/services/indikatorMutuService'
 
@@ -276,29 +277,52 @@ const handleJenisChange = (value) => {
     }
 }
 
-const handleMasterUtamaChange = (idMaster) => {
-    if (!idMaster) return
+const handleMasterUtamaChange = async (idMaster) => {
+    if (!idMaster) {
+        form.id_master = null
+        return
+    }
 
     const master = masterUtamaList.value.find(m => m.id_master === idMaster)
     if (master) {
-        // Auto-fill form fields from Master Utama
-        form.nama_inmut = master.nama_inmut
-        form.nama_jenis = master.kategori
-        form.satuan = master.satuan
-        form.standar = master.standar
-        form.rumus = master.rumus
-        form.ket_num = master.ket_num
-        form.ket_denum = master.ket_denum
-        form.definisi_operasional = master.definisi
-        form.formula = master.formula
+        // If the form has any typed / non-empty values, ask the user before overwriting
+        const hasExistingData = form.nama_inmut || form.standar || form.ket_num || form.ket_denum || form.definisi_operasional || form.formula
 
-        // Also update the selected jenis indikator dropdown if matched
-        selectedJenisIndikator.value = master.kategori
-        
-        // Find and set id_jenis based on kategori
-        const jenis = jenisIndikatorOptions.find(j => j.value === master.kategori)
-        if (jenis) {
-            form.id_jenis = jenis.id
+        let shouldFill = true
+        if (hasExistingData) {
+            const result = await Swal.fire({
+                title: 'Salin Detail Master Utama?',
+                text: 'Apakah Anda ingin memperbarui detail teknis (nama, kategori, standar, rumus, definisi operasional, dll) sesuai dengan data Master Utama ini? Pilihan "Tidak" akan tetap menghubungkan indikator tanpa mengubah isian Anda saat ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Ya, Update Semua',
+                cancelButtonText: 'Tidak, Cukup Hubungkan Saja'
+            })
+            shouldFill = result.isConfirmed
+        }
+
+        if (shouldFill) {
+            // Auto-fill form fields from Master Utama
+            if (master.nama_inmut) form.nama_inmut = master.nama_inmut
+            if (master.kategori) form.nama_jenis = master.kategori
+            if (master.satuan) form.satuan = master.satuan
+            if (master.standar !== null && master.standar !== undefined) form.standar = master.standar
+            if (master.rumus !== null && master.rumus !== undefined) form.rumus = master.rumus
+            if (master.ket_num) form.ket_num = master.ket_num
+            if (master.ket_denum) form.ket_denum = master.ket_denum
+            if (master.definisi) form.definisi_operasional = master.definisi
+            if (master.formula) form.formula = master.formula
+
+            // Also update the selected jenis indikator dropdown if matched
+            if (master.kategori) {
+                selectedJenisIndikator.value = master.kategori
+                const jenis = jenisIndikatorOptions.find(j => j.value === master.kategori)
+                if (jenis) {
+                    form.id_jenis = jenis.id
+                }
+            }
         }
     }
 }
