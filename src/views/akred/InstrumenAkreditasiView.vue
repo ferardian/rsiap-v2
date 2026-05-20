@@ -226,7 +226,7 @@
                   <span class="badge bg-soft-indigo text-indigo px-3 py-2 font-mono fw-bold fs-6 rounded-3">
                     {{ ep.kode_ep }}
                   </span>
-                  <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                  <div class="flex-grow-1" style="min-width: 0;">
                     <p class="fw-bold text-dark mb-2 lead-statement" style="word-break: break-word;">{{ ep.pernyataan_ep }}</p>
                     <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-2 small text-muted border-start border-primary border-3" style="word-break: break-word;">
                       <strong class="text-secondary small text-uppercase d-block mb-1">Kelengkapan Bukti:</strong>
@@ -374,11 +374,11 @@
                               <button 
                                 type="button" 
                                 class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans d-block text-start hover-underline shadow-none" 
-                                style="font-size: 0.82rem; background: transparent; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"
+                                style="font-size: 0.82rem; background: transparent; line-height: 1.3; width: 100%; overflow: hidden;"
                                 :title="doc.nama"
                                 @click="handlePreviewDoc(doc)"
                               >
-                                {{ doc.nama }}
+                                <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">{{ doc.nama }}</span>
                               </button>
                               <span class="text-muted font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">
                                 {{ doc.file }}
@@ -545,7 +545,7 @@
                       </span>
                       
                       <!-- EP content -->
-                      <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                      <div class="flex-grow-1" style="min-width: 0;">
                         <p class="fw-bold text-dark mb-2 lead-statement" style="word-break: break-word;">{{ ep.pernyataan_ep }}</p>
                         
                         <!-- Kelengkapan bukti box if exists -->
@@ -695,11 +695,11 @@
                                   <button 
                                     type="button" 
                                     class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans d-block text-start hover-underline shadow-none" 
-                                    style="font-size: 0.82rem; background: transparent; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"
+                                    style="font-size: 0.82rem; background: transparent; line-height: 1.3; width: 100%; overflow: hidden;"
                                     :title="doc.nama"
                                     @click="handlePreviewDoc(doc)"
                                   >
-                                    {{ doc.nama }}
+                                    <span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">{{ doc.nama }}</span>
                                   </button>
                                   <span class="text-muted font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">
                                     {{ doc.file }}
@@ -1753,6 +1753,8 @@ onUnmounted(() => {
 
 .ep-item-row {
   transition: all 0.2s;
+  min-width: 0;
+  width: 100%;
 }
 
 .ep-item-row:hover {
