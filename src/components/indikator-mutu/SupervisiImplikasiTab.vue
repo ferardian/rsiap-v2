@@ -925,6 +925,12 @@ const formatDateFull = (monthStr) => {
   return `${monthNames[parseInt(month) - 1]} ${year}`
 }
 
+const formatDateIndo = (dateString) => {
+  if (!dateString) return '-'
+  const options = { year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString('id-ID', options)
+}
+
 const displayedPages = computed(() => {
   const total = totalPages.value
   const current = page.value
@@ -1062,8 +1068,8 @@ const exportToPDF = async (item) => {
     const supervisorName = detailItem.supervisor?.nama || authStore.user?.data?.detail?.nama || authStore.userName || 'Komite Mutu'
     const koordinatorName = detailItem.koordinator?.nama || detailItem.nama_responden || '-'
 
-    const respondentQRText = `Ditandatangani secara elektronik oleh:\nNama: ${koordinatorName}\nJabatan: Kepala Ruang / Responden\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
-    const supervisorQRText = `Ditandatangani secara elektronik oleh:\nNama: ${supervisorName}\nJabatan: Komite Mutu Supervisor\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const respondentQRText = `Ditandatangani secara elektronik oleh:\nNama: ${koordinatorName}\nJabatan: Kepala Unit\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const supervisorQRText = `Ditandatangani secara elektronik oleh:\nNama: ${supervisorName}\nJabatan: Supervisor\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
 
     const respondentQR = await generateQRCode(respondentQRText)
     const supervisorQR = await generateQRCode(supervisorQRText)
@@ -1085,29 +1091,35 @@ const exportToPDF = async (item) => {
     }
 
     // Check page boundaries for signatures
-    if (currentY + 35 > 280) {
+    if (currentY + 45 > 280) {
       doc.addPage()
-      currentY = 20
+      currentY = 25
     }
 
     // Signatures
     const finalY = currentY
     doc.setFontSize(9)
-    doc.setFont('Helvetica', 'bold')
-    doc.text('Kepala Ruang / Responden', 40, finalY, { align: 'center' })
-    doc.text('Komite Mutu Supervisor', 153, finalY, { align: 'center' })
+    doc.setFont('Helvetica', 'normal')
+    
+    // Date on the right column
+    const dateText = `Pekalongan, ${formatDateIndo(detailItem.tgl_supervisi)}`
+    doc.text(dateText, 153, finalY, { align: 'center' })
+    
+    // Labels
+    doc.text('Kepala Unit', 40, finalY + 5, { align: 'center' })
+    doc.text('Supervisor', 153, finalY + 5, { align: 'center' })
 
     if (respondentQR) {
-      doc.addImage(respondentQR, 'PNG', 31, finalY + 3, 18, 18)
+      doc.addImage(respondentQR, 'PNG', 31, finalY + 8, 18, 18)
     }
     if (supervisorQR) {
-      doc.addImage(supervisorQR, 'PNG', 144, finalY + 3, 18, 18)
+      doc.addImage(supervisorQR, 'PNG', 144, finalY + 8, 18, 18)
     }
 
     doc.setFontSize(9)
     doc.setFont('Helvetica', 'bold')
-    doc.text(`( ${koordinatorName} )`, 40, finalY + 26, { align: 'center' })
-    doc.text(`( ${supervisorName} )`, 153, finalY + 26, { align: 'center' })
+    doc.text(`( ${koordinatorName} )`, 40, finalY + 31, { align: 'center' })
+    doc.text(`( ${supervisorName} )`, 153, finalY + 31, { align: 'center' })
 
     doc.save(`Supervisi_Implikasi_${detailItem.nama_responden}_${detailItem.bulan}.pdf`)
     toast.success('PDF berhasil di-download')
