@@ -1121,7 +1121,20 @@ const exportToPDF = async (item) => {
     doc.text(`( ${koordinatorName} )`, 40, finalY + 31, { align: 'center' })
     doc.text(`( ${supervisorName} )`, 153, finalY + 31, { align: 'center' })
 
-    doc.save(`Supervisi_Implikasi_${detailItem.nama_responden}_${detailItem.bulan}.pdf`)
+    // Format filename: Supervisi_Implikasi_[Unit]_[Bulan]_[Tahun].pdf
+    const unitName = detailItem.departemen?.nama || detailItem.nama_ruang || detailItem.dep_id || 'Unit'
+    const cleanUnitName = unitName.replace(/[^a-zA-Z0-9-_]/g, '_')
+    
+    let formattedPeriod = 'Bulan_Tahun'
+    if (detailItem.bulan) {
+      const [year, month] = detailItem.bulan.split('-')
+      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+      const monthName = monthNames[parseInt(month) - 1] || 'Bulan'
+      formattedPeriod = `${monthName}_${year}`
+    }
+
+    doc.save(`Supervisi_Implikasi_${cleanUnitName}_${formattedPeriod}.pdf`)
     toast.success('PDF berhasil di-download')
   } catch (error) {
     console.error('Error PDF:', error)
