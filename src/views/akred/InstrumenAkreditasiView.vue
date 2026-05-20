@@ -207,6 +207,100 @@
                       <strong class="text-secondary small text-uppercase d-block mb-1">Kelengkapan Bukti:</strong>
                       {{ ep.kelengkapan_bukti }}
                     </div>
+
+                    <!-- Todo List Section -->
+                    <div class="mt-3.5 border-top pt-3">
+                      <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <i class="fas fa-tasks text-muted" style="font-size: 0.8rem;"></i>
+                          <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Daftar Tugas / Catatan</span>
+                          <span v-if="getEpTodoProgress(ep).total > 0" class="badge rounded-pill bg-light text-secondary border px-2 py-0.5 extra-small" style="font-size: 0.65rem;">
+                            {{ getEpTodoProgress(ep).completed }}/{{ getEpTodoProgress(ep).total }} selesai
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Task Items -->
+                      <div v-if="ep.todos && ep.todos.length > 0" class="d-flex flex-column mb-2.5">
+                        <div 
+                          v-for="todo in ep.todos" 
+                          :key="todo.id" 
+                          class="d-flex align-items-center justify-content-between py-2 border-bottom todo-item-row"
+                          :class="{ 'todo-completed': todo.status === 1 }"
+                        >
+                          <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                            <input 
+                              class="todo-checkbox-circle me-1" 
+                              type="checkbox" 
+                              :checked="todo.status === 1"
+                              @change="handleToggleTodo(todo)"
+                              :id="'search-todo-check-' + todo.id"
+                            >
+                            <input 
+                              v-if="editingTodoId === todo.id"
+                              v-focus
+                              type="text" 
+                              class="form-control form-control-sm font-sans edit-todo-input px-2 py-0.5 rounded shadow-none flex-grow-1" 
+                              style="font-size: 0.8rem; height: 26px; border: 1.5px solid #3b82f6; background-color: #fff;"
+                              v-model="editingTodoText"
+                              @keydown.enter="saveEditTodo(todo)"
+                              @keydown.esc="cancelEditTodo"
+                              @blur="saveEditTodo(todo)"
+                            >
+                            <label 
+                              v-else
+                              class="text-dark small font-sans todo-label text-start text-wrap ps-1 mb-0 flex-grow-1" 
+                              :class="{ 'text-decoration-line-through text-muted fw-normal': todo.status === 1 }"
+                              :for="'search-todo-check-' + todo.id"
+                              style="font-size: 0.8rem; font-weight: 500; cursor: pointer;"
+                              @dblclick="startEditTodo(todo)"
+                              title="Klik ganda untuk mengubah"
+                            >
+                              {{ todo.todo }}
+                            </label>
+                          </div>
+                          <div class="d-flex align-items-center gap-1 btn-action-container">
+                            <button 
+                              v-if="editingTodoId !== todo.id"
+                              type="button" 
+                              class="btn btn-link text-muted hover-primary p-1 border-0 btn-delete-todo"
+                              @click="startEditTodo(todo)"
+                              title="Ubah"
+                            >
+                              <i class="far fa-edit" style="font-size: 0.8rem;"></i>
+                            </button>
+                            <button 
+                              type="button" 
+                              class="btn btn-link text-muted hover-danger p-1 border-0 btn-delete-todo"
+                              @click="handleDeleteTodo(ep, todo)"
+                              title="Hapus"
+                            >
+                              <i class="far fa-trash-alt" style="font-size: 0.8rem;"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Add Task Form -->
+                      <form @submit.prevent="handleAddTodo(ep)" class="position-relative d-flex align-items-center w-100 mt-2">
+                        <i class="fas fa-plus text-muted position-absolute ms-3" style="font-size: 0.8rem; pointer-events: none; left: 0;"></i>
+                        <input 
+                          type="text" 
+                          class="form-control form-control-sm font-sans todo-input rounded-pill shadow-none w-100" 
+                          style="padding-left: 2.25rem; padding-right: 2.25rem; font-size: 0.8rem; height: 34px;"
+                          placeholder="Tambah tugas / catatan..."
+                          v-model="newTodoTexts[ep.id]"
+                        >
+                        <button 
+                          v-if="newTodoTexts[ep.id]" 
+                          type="submit" 
+                          class="btn btn-link text-primary position-absolute p-0 d-flex align-items-center justify-content-center" 
+                          style="right: 12px; height: 20px; width: 20px; border: none; background: transparent;"
+                        >
+                          <i class="fas fa-arrow-up" style="font-size: 0.85rem;"></i>
+                        </button>
+                      </form>
+                    </div>
                   </div>
                   <div class="d-flex gap-1.5 flex-wrap flex-sm-column align-items-end justify-content-start">
                     <span 
@@ -277,6 +371,12 @@
                 <div class="flex-grow-1">
                   <h6 class="fw-bold mb-0 text-dark font-sans leading-relaxed text-wrap text-start">{{ std.pernyataan }}</h6>
                 </div>
+                <div v-if="getStandardTodoProgress(std).total > 0" class="ms-auto flex-shrink-0">
+                  <span class="badge rounded-pill bg-soft-success text-success border-soft-success px-2.5 py-1.5 font-sans d-flex align-items-center gap-1.5 small fw-bold">
+                    <i class="fas fa-check-circle"></i>
+                    Tugas: {{ getStandardTodoProgress(std).completed }}/{{ getStandardTodoProgress(std).total }}
+                  </span>
+                </div>
               </div>
 
               <!-- Standard EPs -->
@@ -301,6 +401,100 @@
                         <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-0 small text-muted border-start border-primary border-3 mt-3">
                           <strong class="text-secondary small text-uppercase d-block mb-1">Kelengkapan Bukti:</strong>
                           {{ ep.kelengkapan_bukti }}
+                        </div>
+
+                        <!-- Todo List Section -->
+                        <div class="mt-3.5 border-top pt-3">
+                          <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                              <i class="fas fa-tasks text-muted" style="font-size: 0.8rem;"></i>
+                              <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Daftar Tugas / Catatan</span>
+                              <span v-if="getEpTodoProgress(ep).total > 0" class="badge rounded-pill bg-light text-secondary border px-2 py-0.5 extra-small" style="font-size: 0.65rem;">
+                                {{ getEpTodoProgress(ep).completed }}/{{ getEpTodoProgress(ep).total }} selesai
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Task Items -->
+                          <div v-if="ep.todos && ep.todos.length > 0" class="d-flex flex-column mb-2.5">
+                            <div 
+                              v-for="todo in ep.todos" 
+                              :key="todo.id" 
+                              class="d-flex align-items-center justify-content-between py-2 border-bottom todo-item-row"
+                              :class="{ 'todo-completed': todo.status === 1 }"
+                            >
+                              <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                                <input 
+                                  class="todo-checkbox-circle me-1" 
+                                  type="checkbox" 
+                                  :checked="todo.status === 1"
+                                  @change="handleToggleTodo(todo)"
+                                  :id="'todo-check-' + todo.id"
+                                >
+                                <input 
+                                  v-if="editingTodoId === todo.id"
+                                  v-focus
+                                  type="text" 
+                                  class="form-control form-control-sm font-sans edit-todo-input px-2 py-0.5 rounded shadow-none flex-grow-1" 
+                                  style="font-size: 0.8rem; height: 26px; border: 1.5px solid #3b82f6; background-color: #fff;"
+                                  v-model="editingTodoText"
+                                  @keydown.enter="saveEditTodo(todo)"
+                                  @keydown.esc="cancelEditTodo"
+                                  @blur="saveEditTodo(todo)"
+                                >
+                                <label 
+                                  v-else
+                                  class="text-dark small font-sans todo-label text-start text-wrap ps-1 mb-0 flex-grow-1" 
+                                  :class="{ 'text-decoration-line-through text-muted fw-normal': todo.status === 1 }"
+                                  :for="'todo-check-' + todo.id"
+                                  style="font-size: 0.8rem; font-weight: 500; cursor: pointer;"
+                                  @dblclick="startEditTodo(todo)"
+                                  title="Klik ganda untuk mengubah"
+                                >
+                                  {{ todo.todo }}
+                                </label>
+                              </div>
+                              <div class="d-flex align-items-center gap-1 btn-action-container">
+                                <button 
+                                  v-if="editingTodoId !== todo.id"
+                                  type="button" 
+                                  class="btn btn-link text-muted hover-primary p-1 border-0 btn-delete-todo"
+                                  @click="startEditTodo(todo)"
+                                  title="Ubah"
+                                >
+                                  <i class="far fa-edit" style="font-size: 0.8rem;"></i>
+                                </button>
+                                <button 
+                                  type="button" 
+                                  class="btn btn-link text-muted hover-danger p-1 border-0 btn-delete-todo"
+                                  @click="handleDeleteTodo(ep, todo)"
+                                  title="Hapus"
+                                >
+                                  <i class="far fa-trash-alt" style="font-size: 0.8rem;"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Add Task Form -->
+                          <form @submit.prevent="handleAddTodo(ep)" class="position-relative d-flex align-items-center w-100 mt-2">
+                            <i class="fas fa-plus text-muted position-absolute ms-3" style="font-size: 0.8rem; pointer-events: none; left: 0;"></i>
+                            <input 
+                              type="text" 
+                              class="form-control form-control-sm font-sans todo-input rounded-pill shadow-none w-100" 
+                              style="padding-left: 2.25rem; padding-right: 2.25rem; font-size: 0.8rem; height: 34px;"
+                              placeholder="Tambah tugas / catatan..."
+                              v-model="newTodoTexts[ep.id]"
+                            >
+                            <button 
+                              v-if="newTodoTexts[ep.id]" 
+                              type="submit" 
+                              class="btn btn-link text-primary position-absolute p-0 d-flex align-items-center justify-content-center" 
+                              style="right: 12px; height: 20px; width: 20px; border: none; background: transparent;"
+                            >
+                              <i class="fas fa-arrow-up" style="font-size: 0.85rem;"></i>
+                            </button>
+                          </form>
                         </div>
                       </div>
 
@@ -391,7 +585,10 @@
               @click="scrollToStandard(std.kode)"
             >
               <span class="fw-bold text-dark-blue">{{ std.kode }}</span>
-              <i class="fas fa-chevron-right text-muted extra-small"></i>
+              <span v-if="getStandardTodoProgress(std).total > 0" class="badge rounded-pill bg-soft-success text-success extra-small fw-bold">
+                {{ getStandardTodoProgress(std).completed }}/{{ getStandardTodoProgress(std).total }}
+              </span>
+              <i v-else class="fas fa-chevron-right text-muted extra-small"></i>
             </button>
           </div>
         </div>
@@ -514,7 +711,8 @@ const selectPokja = async (pokja) => {
         { field: 'pokja_id', operator: '=', value: pokja.id }
       ],
       includes: [
-        { relation: 'elemenPenilaians' }
+        { relation: 'elemenPenilaians' },
+        { relation: 'elemenPenilaians.todos' }
       ],
       limit: 100
     })
@@ -547,7 +745,8 @@ const debouncedSearch = () => {
         search: { value: searchQuery.value },
         includes: [
           { relation: 'standar' },
-          { relation: 'standar.pokja' }
+          { relation: 'standar.pokja' },
+          { relation: 'todos' }
         ],
         limit: 25
       })
@@ -592,6 +791,138 @@ const getBuktiColorClass = (bukti) => {
     'S': 'bg-soft-success text-success border-soft-success',
   }
   return classes[bukti.toUpperCase()] || 'bg-light text-dark'
+}
+
+// State for todo inputs per EP
+const newTodoTexts = ref({})
+
+// Todo list handlers
+const handleAddTodo = async (ep) => {
+  const text = newTodoTexts.value[ep.id]?.trim()
+  if (!text) return
+
+  try {
+    const response = await akreditasiService.createTodo({
+      elemen_penilaian_id: ep.id,
+      todo: text,
+      status: 0
+    })
+    
+    if (!ep.todos) {
+      ep.todos = []
+    }
+    const newTodo = response.data?.data || response.data
+    if (newTodo) {
+      ep.todos.push(newTodo)
+      newTodoTexts.value[ep.id] = ''
+      toast.success('Tugas berhasil ditambahkan')
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error('Gagal menambahkan tugas')
+  }
+}
+
+const handleToggleTodo = async (todo) => {
+  const oldStatus = todo.status
+  const newStatus = todo.status === 1 ? 0 : 1
+  
+  // Optimistic update
+  todo.status = newStatus
+
+  try {
+    await akreditasiService.updateTodo(todo.id, {
+      status: newStatus
+    })
+  } catch (error) {
+    console.error(error)
+    // Revert if error
+    todo.status = oldStatus
+    toast.error('Gagal mengubah status tugas')
+  }
+}
+
+const handleDeleteTodo = async (ep, todo) => {
+  if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return
+
+  try {
+    await akreditasiService.deleteTodo(todo.id)
+    ep.todos = ep.todos.filter(t => t.id !== todo.id)
+    toast.success('Tugas berhasil dihapus')
+  } catch (error) {
+    console.error(error)
+    toast.error('Gagal menghapus tugas')
+  }
+}
+
+// Directive for auto focusing inputs
+const vFocus = {
+  mounted: (el) => el.focus()
+}
+
+// Inline edit state
+const editingTodoId = ref(null)
+const editingTodoText = ref('')
+
+const startEditTodo = (todo) => {
+  editingTodoId.value = todo.id
+  editingTodoText.value = todo.todo
+}
+
+const cancelEditTodo = () => {
+  editingTodoId.value = null
+  editingTodoText.value = ''
+}
+
+const saveEditTodo = async (todo) => {
+  const text = editingTodoText.value.trim()
+  if (!text) {
+    cancelEditTodo()
+    return
+  }
+  
+  if (text === todo.todo) {
+    cancelEditTodo()
+    return
+  }
+
+  const oldText = todo.todo
+  todo.todo = text
+  editingTodoId.value = null
+
+  try {
+    await akreditasiService.updateTodo(todo.id, {
+      todo: text
+    })
+    toast.success('Tugas berhasil diperbarui')
+  } catch (error) {
+    console.error(error)
+    todo.todo = oldText
+    toast.error('Gagal memperbarui tugas')
+  } finally {
+    cancelEditTodo()
+  }
+}
+
+// Progress calculation utilities
+const getEpTodoProgress = (ep) => {
+  if (!ep || !ep.todos || ep.todos.length === 0) return { completed: 0, total: 0 }
+  const total = ep.todos.length
+  const completed = ep.todos.filter(t => t.status === 1).length
+  return { completed, total }
+}
+
+const getStandardTodoProgress = (std) => {
+  if (!std || !std.elemen_penilaians || std.elemen_penilaians.length === 0) return { completed: 0, total: 0 }
+  let total = 0
+  let completed = 0
+  std.elemen_penilaians.forEach(ep => {
+    if (ep.todos) {
+      total += ep.todos.length
+      completed += ep.todos.filter(t => t.status === 1).length
+    }
+  })
+  return { completed, total }
 }
 
 onMounted(() => {
@@ -912,5 +1243,93 @@ onMounted(() => {
 .rounded-start-4 {
   border-top-left-radius: 1.25rem !important;
   border-bottom-left-radius: 1.25rem !important;
+}
+
+/* Todo List Styles */
+.todo-item-row {
+  background-color: transparent !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: all 0.15s ease;
+  padding: 8px 4px !important;
+}
+.todo-item-row:hover {
+  background-color: #f8fafc !important;
+}
+.todo-item-row:hover .btn-delete-todo {
+  opacity: 1;
+}
+.todo-completed .todo-label {
+  color: #94a3b8 !important;
+  text-decoration: line-through !important;
+}
+.btn-delete-todo {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: none;
+  border: none;
+  padding: 2px !important;
+}
+.hover-danger:hover {
+  color: #ef4444 !important;
+}
+.hover-primary:hover {
+  color: #2563eb !important;
+}
+@media (max-width: 768px) {
+  .btn-delete-todo {
+    opacity: 1;
+  }
+}
+.todo-checkbox-circle {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.todo-checkbox-circle:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+.todo-checkbox-circle:checked {
+  border-color: #10b981;
+  background-color: #10b981;
+}
+.todo-checkbox-circle:checked::after {
+  content: "✓";
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+.todo-label {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.todo-input {
+  border: 1.5px solid #e2e8f0;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+.todo-input:focus {
+  border-color: #3b82f6;
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 </style>

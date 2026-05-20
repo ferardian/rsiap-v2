@@ -21,6 +21,12 @@ const service = {
 
     // Get single Elemen Penilaian by ID
     getElemenPenilaianById: (id, params = {}) => api.get(`/akred/elemen-penilaian/${id}`, { params }),
+
+    // Elemen Penilaian Todo CRUD
+    getTodos: (params = {}) => api.get('/akred/elemen-penilaian-todo', { params }),
+    createTodo: (payload) => api.post('/akred/elemen-penilaian-todo', payload),
+    updateTodo: (id, payload) => api.patch(`/akred/elemen-penilaian-todo/${id}`, payload),
+    deleteTodo: (id) => api.delete(`/akred/elemen-penilaian-todo/${id}`),
 };
 
 export default service;
