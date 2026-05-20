@@ -518,7 +518,7 @@ onUnmounted(() => {
 .main-content {
   flex: 1;
   padding: 2rem;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 @media (max-width: 768px) {

@@ -362,6 +362,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/akred/instrumen-akreditasi',
+    name: 'InstrumenAkreditasi',
+    component: () => import('../views/akred/InstrumenAkreditasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/pemeriksaan/jadwal-operasi',
     name: 'JadwalOperasi',
     component: () => import('../views/pemeriksaan/JadwalOperasiView.vue'),
