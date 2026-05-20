@@ -25,6 +25,18 @@ const getBaseBerkasUrl = () => {
   return import.meta.env.VITE_BASE_BERKAS_URL || 'http://192.168.100.33/webapps';
 };
 
+const getAkreditasiBerkasUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === '192.168.100.33' || host === 'localhost' || host === '127.0.0.1') {
+      return 'http://192.168.100.31/webapps';
+    }
+    // Default to rsiap.my.id for outside local network
+    return 'https://rsiap.my.id/webapps';
+  }
+  return import.meta.env.VITE_AKREDITASI_BERKAS_URL || 'http://192.168.100.31/webapps';
+};
+
 const getPhotoUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
@@ -39,6 +51,7 @@ const getPhotoUrl = () => {
 
 const DYNAMIC_API_V2_URL = getApiV2Url();
 const DYNAMIC_BASE_BERKAS_URL = getBaseBerkasUrl();
+const DYNAMIC_AKREDITASI_BERKAS_URL = getAkreditasiBerkasUrl();
 const DYNAMIC_PHOTO_URL = getPhotoUrl();
 
 export const config = {
@@ -47,6 +60,7 @@ export const config = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8010',
     API_V2_URL: DYNAMIC_API_V2_URL,
     BASE_BERKAS_URL: DYNAMIC_BASE_BERKAS_URL,
+    AKREDITASI_BERKAS_URL: DYNAMIC_AKREDITASI_BERKAS_URL,
     PHOTO_URL: DYNAMIC_PHOTO_URL,
     API_VERSION: import.meta.env.VITE_API_VERSION || 'v2',
     APP_NAME: import.meta.env.VITE_APP_NAME || 'RSIA - Sistem Informasi Rumah Sakit',

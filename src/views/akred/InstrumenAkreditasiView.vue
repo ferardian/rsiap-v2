@@ -253,7 +253,7 @@
                           class="d-flex align-items-center justify-content-between py-2 border-bottom todo-item-row"
                           :class="{ 'todo-completed': todo.status === 1 }"
                         >
-                          <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                          <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 0;">
                             <input 
                               class="todo-checkbox-circle me-1" 
                               type="checkbox" 
@@ -321,10 +321,134 @@
                           type="submit" 
                           class="btn btn-link text-primary position-absolute p-0 d-flex align-items-center justify-content-center" 
                           style="right: 12px; height: 20px; width: 20px; border: none; background: transparent;"
-                        >
+                                                >
                           <i class="fas fa-arrow-up" style="font-size: 0.85rem;"></i>
                         </button>
                       </form>
+                    </div>
+
+                    <!-- Dokumen Bukti Section -->
+                    <div class="mt-4 border-top pt-3">
+                      <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                          <i class="fas fa-folder-open text-muted" style="font-size: 0.8rem;"></i>
+                          <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Dokumen Bukti / Berkas Terkait</span>
+                        </div>
+                        <button 
+                          type="button" 
+                          class="btn-upload-toggle"
+                          :class="{ 'active': showUploadForms[ep.id] }"
+                          @click="toggleUploadForm(ep.id)"
+                        >
+                          <i class="fas" :class="showUploadForms[ep.id] ? 'fa-times' : 'fa-plus'"></i>
+                          <span>{{ showUploadForms[ep.id] ? 'Batal' : 'Unggah Dokumen' }}</span>
+                        </button>
+                      </div>
+
+                      <!-- Document List -->
+                      <div v-if="ep.dokumens && ep.dokumens.length > 0" class="d-flex flex-column gap-2 mb-3">
+                        <div 
+                          v-for="doc in ep.dokumens" 
+                          :key="doc.id"
+                          class="d-flex align-items-center justify-content-between py-2 px-3 rounded-3 border bg-light-gray-hover transition-all animate__animated animate__fadeIn"
+                          style="background-color: #f8fafc; border-color: #e2e8f0 !important;"
+                        >
+                          <div class="d-flex align-items-center gap-3 flex-grow-1 me-3" style="min-width: 0;">
+                            <!-- Icon Badge -->
+                            <div 
+                              v-if="doc.file.toLowerCase().endsWith('.pdf')" 
+                              class="d-flex align-items-center justify-content-center flex-shrink-0"
+                              style="width: 32px; height: 32px; background-color: rgba(239, 68, 68, 0.08); color: #ef4444; border-radius: 8px;"
+                            >
+                              <i class="fas fa-file-pdf fs-6"></i>
+                            </div>
+                            <div 
+                              v-else 
+                              class="d-flex align-items-center justify-content-center flex-shrink-0"
+                              style="width: 32px; height: 32px; background-color: rgba(34, 197, 94, 0.08); color: #22c55e; border-radius: 8px;"
+                            >
+                              <i class="fas fa-file-image fs-6"></i>
+                            </div>
+                            
+                            <div class="d-flex flex-column text-start flex-grow-1" style="min-width: 0;">
+                              <button 
+                                type="button" 
+                                class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans text-truncate d-block text-start hover-underline shadow-none" 
+                                style="font-size: 0.82rem; background: transparent; line-height: 1.3;"
+                                :title="doc.nama"
+                                @click="handlePreviewDoc(doc)"
+                              >
+                                {{ doc.nama }}
+                              </button>
+                              <span class="text-muted text-truncate font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal;">
+                                {{ doc.file }}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <button 
+                            type="button" 
+                            class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0" 
+                            @click="handleDeleteDokumen(ep, doc)"
+                            title="Hapus Dokumen"
+                          >
+                            <i class="far fa-trash-alt" style="font-size: 0.85rem;"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div v-else class="text-center py-2.5 mb-3 rounded-3 border border-dashed" style="background-color: #fafafa; border-color: #cbd5e1 !important;">
+                        <span class="text-muted font-sans" style="font-size: 0.78rem;">Belum ada dokumen bukti yang diunggah.</span>
+                      </div>
+
+                      <!-- Upload Form (Collapsible) -->
+                      <div v-if="showUploadForms[ep.id]" class="p-3 rounded-3 border animate__animated animate__fadeIn" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                        <div class="row g-2 align-items-center">
+                          <div class="col-sm-auto">
+                            <input 
+                              type="file" 
+                              :id="'file-upload-search-' + ep.id" 
+                              class="d-none" 
+                              accept=".pdf,image/*" 
+                              @change="handleFileChange($event, ep)"
+                            >
+                            <button 
+                              type="button" 
+                              class="btn btn-sm btn-white border w-100 font-sans d-flex align-items-center justify-content-center gap-2 shadow-none"
+                              style="height: 34px; font-size: 0.78rem; background-color: #fff;"
+                              @click="triggerFileInput('search-' + ep.id)"
+                            >
+                              <i class="fas" :class="documentFiles[ep.id] ? 'fa-check text-success' : 'fa-paperclip text-muted'"></i>
+                              <span class="text-truncate" style="max-width: 150px;">
+                                {{ documentFiles[ep.id] ? documentFiles[ep.id].name : 'Pilih Berkas (PDF/Gambar)' }}
+                              </span>
+                            </button>
+                          </div>
+
+                          <div class="col-sm">
+                            <input 
+                              type="text" 
+                              class="form-control form-control-sm font-sans rounded shadow-none" 
+                              style="font-size: 0.78rem; height: 34px;"
+                              placeholder="Nama dokumen bukti..."
+                              v-model="documentNames[ep.id]"
+                            >
+                          </div>
+
+                          <div class="col-sm-auto">
+                            <button 
+                              type="button" 
+                              class="btn btn-sm btn-primary w-100 font-sans d-flex align-items-center justify-content-center gap-1.5 shadow-none"
+                              style="height: 34px; font-size: 0.78rem; min-width: 85px;"
+                              :disabled="!documentFiles[ep.id] || !documentNames[ep.id] || documentUploadLoadings[ep.id]"
+                              @click="handleUploadDokumen(ep)"
+                            >
+                              <span v-if="documentUploadLoadings[ep.id]" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                              <i v-else class="fas fa-upload"></i>
+                              <span>Unggah</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div class="d-flex gap-1.5 flex-wrap flex-sm-column align-items-end justify-content-start">
@@ -448,7 +572,7 @@
                               class="d-flex align-items-center justify-content-between py-2 border-bottom todo-item-row"
                               :class="{ 'todo-completed': todo.status === 1 }"
                             >
-                              <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                              <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 0;">
                                 <input 
                                   class="todo-checkbox-circle me-1" 
                                   type="checkbox" 
@@ -520,6 +644,130 @@
                               <i class="fas fa-arrow-up" style="font-size: 0.85rem;"></i>
                             </button>
                           </form>
+                        </div>
+
+                        <!-- Dokumen Bukti Section -->
+                        <div class="mt-4 border-top pt-3">
+                          <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                              <i class="fas fa-folder-open text-muted" style="font-size: 0.8rem;"></i>
+                              <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Dokumen Bukti / Berkas Terkait</span>
+                            </div>
+                            <button 
+                              type="button" 
+                              class="btn-upload-toggle"
+                              :class="{ 'active': showUploadForms[ep.id] }"
+                              @click="toggleUploadForm(ep.id)"
+                            >
+                              <i class="fas" :class="showUploadForms[ep.id] ? 'fa-times' : 'fa-plus'"></i>
+                              <span>{{ showUploadForms[ep.id] ? 'Batal' : 'Unggah Dokumen' }}</span>
+                            </button>
+                          </div>
+
+                          <!-- Document List -->
+                          <div v-if="ep.dokumens && ep.dokumens.length > 0" class="d-flex flex-column gap-2 mb-3">
+                            <div 
+                              v-for="doc in ep.dokumens" 
+                              :key="doc.id"
+                              class="d-flex align-items-center justify-content-between py-2 px-3 rounded-3 border bg-light-gray-hover transition-all animate__animated animate__fadeIn"
+                              style="background-color: #f8fafc; border-color: #e2e8f0 !important;"
+                            >
+                              <div class="d-flex align-items-center gap-3 flex-grow-1 me-3" style="min-width: 0;">
+                                <!-- Icon Badge -->
+                                <div 
+                                  v-if="doc.file.toLowerCase().endsWith('.pdf')" 
+                                  class="d-flex align-items-center justify-content-center flex-shrink-0"
+                                  style="width: 32px; height: 32px; background-color: rgba(239, 68, 68, 0.08); color: #ef4444; border-radius: 8px;"
+                                >
+                                  <i class="fas fa-file-pdf fs-6"></i>
+                                </div>
+                                <div 
+                                  v-else 
+                                  class="d-flex align-items-center justify-content-center flex-shrink-0"
+                                  style="width: 32px; height: 32px; background-color: rgba(34, 197, 94, 0.08); color: #22c55e; border-radius: 8px;"
+                                >
+                                  <i class="fas fa-file-image fs-6"></i>
+                                </div>
+                                
+                                <div class="d-flex flex-column text-start flex-grow-1" style="min-width: 0;">
+                                  <button 
+                                    type="button" 
+                                    class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans text-truncate d-block text-start hover-underline shadow-none" 
+                                    style="font-size: 0.82rem; background: transparent; line-height: 1.3;"
+                                    :title="doc.nama"
+                                    @click="handlePreviewDoc(doc)"
+                                  >
+                                    {{ doc.nama }}
+                                  </button>
+                                  <span class="text-muted text-truncate font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal;">
+                                    {{ doc.file }}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <button 
+                                type="button" 
+                                class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0" 
+                                @click="handleDeleteDokumen(ep, doc)"
+                                title="Hapus Dokumen"
+                              >
+                                <i class="far fa-trash-alt" style="font-size: 0.85rem;"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div v-else class="text-center py-2.5 mb-3 rounded-3 border border-dashed" style="background-color: #fafafa; border-color: #cbd5e1 !important;">
+                            <span class="text-muted font-sans" style="font-size: 0.78rem;">Belum ada dokumen bukti yang diunggah.</span>
+                          </div>
+
+                          <!-- Upload Form (Collapsible) -->
+                          <div v-if="showUploadForms[ep.id]" class="p-3 rounded-3 border animate__animated animate__fadeIn" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                            <div class="row g-2 align-items-center">
+                              <div class="col-sm-auto">
+                                <input 
+                                  type="file" 
+                                  :id="'file-upload-' + ep.id" 
+                                  class="d-none" 
+                                  accept=".pdf,image/*" 
+                                  @change="handleFileChange($event, ep)"
+                                >
+                                <button 
+                                  type="button" 
+                                  class="btn btn-sm btn-white border w-100 font-sans d-flex align-items-center justify-content-center gap-2 shadow-none"
+                                  style="height: 34px; font-size: 0.78rem; background-color: #fff;"
+                                  @click="triggerFileInput(ep.id)"
+                                >
+                                  <i class="fas" :class="documentFiles[ep.id] ? 'fa-check text-success' : 'fa-paperclip text-muted'"></i>
+                                  <span class="text-truncate" style="max-width: 150px;">
+                                    {{ documentFiles[ep.id] ? documentFiles[ep.id].name : 'Pilih Berkas (PDF/Gambar)' }}
+                                  </span>
+                                </button>
+                              </div>
+
+                              <div class="col-sm">
+                                <input 
+                                  type="text" 
+                                  class="form-control form-control-sm font-sans rounded shadow-none" 
+                                  style="font-size: 0.78rem; height: 34px;"
+                                  placeholder="Nama dokumen bukti..."
+                                  v-model="documentNames[ep.id]"
+                                >
+                              </div>
+
+                              <div class="col-sm-auto">
+                                <button 
+                                  type="button" 
+                                  class="btn btn-sm btn-primary w-100 font-sans d-flex align-items-center justify-content-center gap-1.5 shadow-none"
+                                  style="height: 34px; font-size: 0.78rem; min-width: 85px;"
+                                  :disabled="!documentFiles[ep.id] || !documentNames[ep.id] || documentUploadLoadings[ep.id]"
+                                  @click="handleUploadDokumen(ep)"
+                                >
+                                  <span v-if="documentUploadLoadings[ep.id]" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                  <i v-else class="fas fa-upload"></i>
+                                  <span>Unggah</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -674,6 +922,90 @@
       </div>
     </div>
 
+    <!-- Premium Document Preview Modal -->
+    <div 
+      v-if="showPreviewModal && activePreviewDoc" 
+      class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+      style="z-index: 2000; background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(10px);"
+      @click.self="closePreviewModal"
+    >
+      <div 
+        class="bg-white rounded-4 shadow-2xl border w-100 mx-3 d-flex flex-column overflow-hidden animate__animated animate__zoomIn animate__faster" 
+        style="max-width: 900px; height: 85vh; border-color: #e2e8f0 !important;"
+      >
+        <!-- Modal Header -->
+        <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom preview-modal-header">
+          <div class="d-flex align-items-center gap-3 flex-grow-1 me-3" style="min-width: 0;">
+            <!-- Icon Badge -->
+            <div 
+              v-if="activePreviewDoc.file.toLowerCase().endsWith('.pdf')" 
+              class="d-flex align-items-center justify-content-center flex-shrink-0 preview-badge-pdf"
+            >
+              <i class="fas fa-file-pdf fs-4"></i>
+            </div>
+            <div 
+              v-else 
+              class="d-flex align-items-center justify-content-center flex-shrink-0 preview-badge-image"
+            >
+              <i class="fas fa-file-image fs-4"></i>
+            </div>
+
+            <!-- Title & Filename -->
+            <div class="d-flex flex-column text-start flex-grow-1" style="min-width: 0;">
+              <span class="fw-bold text-dark font-sans text-truncate d-block text-start m-0" style="font-size: 0.95rem; line-height: 1.4;">
+                {{ activePreviewDoc.nama }}
+              </span>
+              <span class="text-muted text-truncate font-mono d-block mt-0.5 text-start" style="font-size: 0.7rem; font-weight: normal;">
+                {{ activePreviewDoc.file }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a 
+              :href="getDocUrl(activePreviewDoc.file)" 
+              target="_blank" 
+              class="btn btn-sm shadow-none font-sans d-flex align-items-center gap-2 px-3 border-0 preview-btn-action"
+              style="white-space: nowrap;"
+            >
+              <i class="fas fa-external-link-alt" style="font-size: 0.75rem;"></i>
+              <span>Buka di Tab Baru</span>
+            </a>
+            <button 
+              type="button" 
+              class="btn btn-sm shadow-none d-flex align-items-center justify-content-center flex-shrink-0 border-0 preview-btn-close"
+              @click="closePreviewModal"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body / Content -->
+        <div class="flex-grow-1 p-3 bg-light d-flex align-items-center justify-content-center overflow-auto position-relative" style="background-color: #f8fafc;">
+          <!-- PDF Frame -->
+          <iframe 
+            v-if="activePreviewDoc.file.toLowerCase().endsWith('.pdf')" 
+            :src="getDocUrl(activePreviewDoc.file)" 
+            width="100%" 
+            height="100%" 
+            style="border: none; border-radius: 8px; background-color: #fff;"
+          ></iframe>
+          
+          <!-- Image Element -->
+          <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center p-2">
+            <img 
+              :src="getDocUrl(activePreviewDoc.file)" 
+              class="img-fluid rounded-3 shadow-lg max-w-100 max-h-100" 
+              style="object-fit: contain; max-height: calc(85vh - 100px);"
+              alt="Preview Berkas"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -682,6 +1014,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import akreditasiService from '@/services/akreditasiService'
+import config from '@/config/api'
 
 const toast = useToast()
 
@@ -689,6 +1022,11 @@ const toast = useToast()
 const showFloatingSearch = ref(false)
 const isSearchExpanded = ref(false)
 const floatingSearchInputRef = ref(null)
+
+// Document Evidence Upload States
+const documentNames = ref({})
+const documentFiles = ref({})
+const documentUploadLoadings = ref({})
 
 const toggleSearchExpand = () => {
   isSearchExpanded.value = !isSearchExpanded.value
@@ -753,7 +1091,8 @@ const selectPokja = async (pokja) => {
       ],
       includes: [
         { relation: 'elemenPenilaians' },
-        { relation: 'elemenPenilaians.todos' }
+        { relation: 'elemenPenilaians.todos' },
+        { relation: 'elemenPenilaians.dokumens' }
       ],
       limit: 100
     })
@@ -787,7 +1126,8 @@ const debouncedSearch = () => {
         includes: [
           { relation: 'standar' },
           { relation: 'standar.pokja' },
-          { relation: 'todos' }
+          { relation: 'todos' },
+          { relation: 'dokumens' }
         ],
         limit: 25
       })
@@ -987,6 +1327,136 @@ const getStandardTodoProgress = (std) => {
   return { completed, total }
 }
 
+// Document Evidence Handlers
+const triggerFileInput = (epId) => {
+  const el = document.getElementById('file-upload-' + epId)
+  if (el) el.click()
+}
+
+const handleFileChange = (event, ep) => {
+  const file = event.target.files[0]
+  if (file) {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format berkas tidak didukung. Harap pilih file PDF atau Gambar (JPG/JPEG/PNG).')
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Ukuran berkas melebihi batas (maksimum 10MB).')
+      event.target.value = ''
+      return
+    }
+
+    documentFiles.value[ep.id] = file
+    if (!documentNames.value[ep.id]) {
+      const cleanName = file.name.substring(0, file.name.lastIndexOf('.'))
+      documentNames.value[ep.id] = cleanName
+    }
+  }
+}
+
+const handleUploadDokumen = async (ep) => {
+  const file = documentFiles.value[ep.id]
+  const name = documentNames.value[ep.id]?.trim()
+
+  if (!file) {
+    toast.error('Harap pilih berkas terlebih dahulu')
+    return
+  }
+  if (!name) {
+    toast.error('Harap masukkan nama dokumen')
+    return
+  }
+
+  documentUploadLoadings.value[ep.id] = true
+  const formData = new FormData()
+  formData.append('elemen_penilaian_id', ep.id)
+  formData.append('file', file)
+  formData.append('nama', name)
+
+  try {
+    const response = await akreditasiService.uploadDokumen(formData)
+    const newDoc = response.data?.data || response.data
+
+    if (!ep.dokumens) {
+      ep.dokumens = []
+    }
+    ep.dokumens.push(newDoc)
+    
+    documentFiles.value[ep.id] = null
+    documentNames.value[ep.id] = ''
+    
+    const fileEl = document.getElementById('file-upload-' + ep.id)
+    if (fileEl) fileEl.value = ''
+
+    toast.success('Dokumen bukti berhasil diunggah')
+  } catch (error) {
+    console.error(error)
+    toast.error(error.response?.data?.message || 'Gagal mengunggah dokumen bukti')
+  } finally {
+    documentUploadLoadings.value[ep.id] = false
+  }
+}
+
+const handleDeleteDokumen = async (ep, doc) => {
+  const result = await Swal.fire({
+    title: 'Hapus Dokumen Bukti?',
+    text: `Apakah Anda yakin ingin menghapus "${doc.nama}"? Berkas akan dihapus permanen dari server.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Ya, Hapus',
+    cancelButtonText: 'Batal',
+    reverseButtons: true,
+    customClass: {
+      popup: 'rounded-4 font-sans shadow-lg',
+      title: 'fw-bold text-dark fs-5 pt-3',
+      htmlContainer: 'text-secondary small py-2',
+      actions: 'd-flex align-items-center justify-content-center gap-2 w-100 px-3 mt-3',
+      confirmButton: 'btn btn-danger btn-sm px-4 py-2 font-sans small m-0',
+      cancelButton: 'btn btn-secondary btn-sm px-4 py-2 font-sans small m-0'
+    },
+    buttonsStyling: false
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await akreditasiService.deleteDokumen(doc.id)
+      ep.dokumens = ep.dokumens.filter(d => d.id !== doc.id)
+      toast.success('Dokumen bukti berhasil dihapus')
+    } catch (error) {
+      console.error(error)
+      toast.error('Gagal menghapus dokumen bukti')
+    }
+  }
+}
+
+const getDocUrl = (fileName) => {
+  return `${config.public.AKREDITASI_BERKAS_URL}/rsia_akreditasi/${fileName}`
+}
+
+// Preview modal and upload form toggle state
+const activePreviewDoc = ref(null)
+const showPreviewModal = ref(false)
+const showUploadForms = ref({})
+
+const toggleUploadForm = (epId) => {
+  showUploadForms.value[epId] = !showUploadForms.value[epId]
+}
+
+const handlePreviewDoc = (doc) => {
+  activePreviewDoc.value = doc
+  showPreviewModal.value = true
+}
+
+const closePreviewModal = () => {
+  activePreviewDoc.value = null
+  showPreviewModal.value = false
+}
+
 const handleScroll = () => {
   const shouldShow = window.scrollY > 150
   showFloatingSearch.value = shouldShow
@@ -1012,6 +1482,71 @@ onUnmounted(() => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family: 'Outfit', sans-serif;
+}
+
+/* Premium Preview Modal Styles */
+.preview-modal-header {
+  border-color: #e2e8f0 !important;
+  background-color: #f8fafc;
+}
+
+.preview-badge-pdf {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border-radius: 10px;
+}
+
+.preview-badge-image {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(34, 197, 94, 0.08);
+  color: #22c55e;
+  border-radius: 10px;
+}
+
+.preview-btn-action {
+  height: 38px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.preview-btn-action:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.preview-btn-close {
+  height: 38px;
+  width: 38px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.preview-btn-close:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.list-btn-delete {
+  height: 32px;
+  width: 32px;
+  background-color: transparent;
+  color: #94a3b8;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.list-btn-delete:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
 }
 
 .font-sans {
@@ -1350,6 +1885,15 @@ onUnmounted(() => {
 .hover-primary:hover {
   color: #2563eb !important;
 }
+.bg-light-gray-hover:hover {
+  background-color: #f1f5f9 !important;
+}
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+.hover-underline:hover {
+  text-decoration: underline !important;
+}
 @media (max-width: 768px) {
   .btn-delete-todo {
     opacity: 1;
@@ -1406,6 +1950,45 @@ onUnmounted(() => {
   border-color: #3b82f6;
   background-color: #fff;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Premium Upload Toggle Button */
+.btn-upload-toggle {
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 0.45rem 1.1rem;
+  border-radius: 50px;
+  border: 1px solid #bfdbfe;
+  background-color: #eff6ff;
+  color: #2563eb;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-upload-toggle:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.12), 0 2px 4px -1px rgba(37, 99, 235, 0.08);
+}
+.btn-upload-toggle:active {
+  transform: translateY(0);
+}
+.btn-upload-toggle.active {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.05);
+}
+.btn-upload-toggle.active:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.12), 0 2px 4px -1px rgba(220, 38, 38, 0.08);
 }
 </style>
 

@@ -27,6 +27,12 @@ const service = {
     createTodo: (payload) => api.post('/akred/elemen-penilaian-todo', payload),
     updateTodo: (id, payload) => api.patch(`/akred/elemen-penilaian-todo/${id}`, payload),
     deleteTodo: (id) => api.delete(`/akred/elemen-penilaian-todo/${id}`),
+
+    // Elemen Penilaian Dokumen Bukti
+    uploadDokumen: (payload) => api.post('/akred/elemen-penilaian-dokumen', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    deleteDokumen: (id) => api.delete(`/akred/elemen-penilaian-dokumen/${id}`),
 };
 
 export default service;
