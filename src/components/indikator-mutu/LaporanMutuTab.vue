@@ -505,10 +505,13 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue'
+import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import VueApexCharts from 'vue3-apexcharts'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+
+const toast = useToast()
 
 const apexchart = VueApexCharts
 
@@ -1164,9 +1167,11 @@ const exportFullReportToPDF = async () => {
             // 2. Fetch Detail for this indicator
             const detailRes = await api.getLaporanDetail({
                 id_inmut: item.id_inmut,
+                id_master: item.id_master,
                 tahun: filters.tahun,
                 tipe: filters.tipe,
-                periode: filters.periode
+                periode: filters.periode,
+                dep_id: filters.unit
             });
             const monthly = detailRes.data.data.monthly;
 
@@ -1344,6 +1349,29 @@ const exportFullReportToPDF = async () => {
 .modern-select :deep(.vs__search::placeholder) {
     color: #6e7985;
     font-size: 0.85rem;
+}
+
+.modern-select :deep(.vs__dropdown-menu) {
+    min-width: 450px !important;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef2f7;
+    padding: 6px 0;
+}
+
+.modern-select :deep(.vs__dropdown-option) {
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.4;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #495057;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.modern-select :deep(.vs__dropdown-option--highlight) {
+    background: #435ebe !important;
+    color: #fff !important;
 }
 
 .btn-refresh {
