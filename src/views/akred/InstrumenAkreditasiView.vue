@@ -226,9 +226,9 @@
                   <span class="badge bg-soft-indigo text-indigo px-3 py-2 font-mono fw-bold fs-6 rounded-3">
                     {{ ep.kode_ep }}
                   </span>
-                  <div class="flex-grow-1">
-                    <p class="fw-bold text-dark mb-2 lead-statement">{{ ep.pernyataan_ep }}</p>
-                    <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-2 small text-muted border-start border-primary border-3">
+                  <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                    <p class="fw-bold text-dark mb-2 lead-statement" style="word-break: break-word;">{{ ep.pernyataan_ep }}</p>
+                    <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-2 small text-muted border-start border-primary border-3" style="word-break: break-word;">
                       <strong class="text-secondary small text-uppercase d-block mb-1">Kelengkapan Bukti:</strong>
                       {{ ep.kelengkapan_bukti }}
                     </div>
@@ -329,14 +329,14 @@
 
                     <!-- Dokumen Bukti Section -->
                     <div class="mt-4 border-top pt-3">
-                      <div class="d-flex align-items-center justify-content-between mb-3">
+                      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                         <div class="d-flex align-items-center gap-2">
                           <i class="fas fa-folder-open text-muted" style="font-size: 0.8rem;"></i>
                           <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Dokumen Bukti / Berkas Terkait</span>
                         </div>
                         <button 
                           type="button" 
-                          class="btn-upload-toggle"
+                          class="btn-upload-toggle flex-shrink-0"
                           :class="{ 'active': showUploadForms[ep.id] }"
                           @click="toggleUploadForm(ep.id)"
                         >
@@ -346,14 +346,14 @@
                       </div>
 
                       <!-- Document List -->
-                      <div v-if="ep.dokumens && ep.dokumens.length > 0" class="d-flex flex-column gap-2 mb-3">
+                      <div v-if="ep.dokumens && ep.dokumens.length > 0" class="d-flex flex-column gap-2 mb-3" style="overflow: hidden;">
                         <div 
                           v-for="doc in ep.dokumens" 
                           :key="doc.id"
                           class="d-flex align-items-center justify-content-between py-2 px-3 rounded-3 border bg-light-gray-hover transition-all animate__animated animate__fadeIn"
-                          style="background-color: #f8fafc; border-color: #e2e8f0 !important;"
+                          style="background-color: #f8fafc; border-color: #e2e8f0 !important; overflow: hidden; min-width: 0;"
                         >
-                          <div class="d-flex align-items-center gap-3 flex-grow-1 me-3" style="min-width: 0;">
+                          <div class="d-flex align-items-center gap-2" style="flex: 1 1 0%; min-width: 0; overflow: hidden;">
                             <!-- Icon Badge -->
                             <div 
                               v-if="doc.file.toLowerCase().endsWith('.pdf')" 
@@ -370,17 +370,17 @@
                               <i class="fas fa-file-image fs-6"></i>
                             </div>
                             
-                            <div class="d-flex flex-column text-start flex-grow-1" style="min-width: 0;">
+                            <div class="d-flex flex-column text-start" style="flex: 1 1 0%; min-width: 0; overflow: hidden;">
                               <button 
                                 type="button" 
-                                class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans text-truncate d-block text-start hover-underline shadow-none" 
-                                style="font-size: 0.82rem; background: transparent; line-height: 1.3;"
+                                class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans d-block text-start hover-underline shadow-none" 
+                                style="font-size: 0.82rem; background: transparent; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"
                                 :title="doc.nama"
                                 @click="handlePreviewDoc(doc)"
                               >
                                 {{ doc.nama }}
                               </button>
-                              <span class="text-muted text-truncate font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal;">
+                              <span class="text-muted font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">
                                 {{ doc.file }}
                               </span>
                             </div>
@@ -388,7 +388,7 @@
                           
                           <button 
                             type="button" 
-                            class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0" 
+                            class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0 ms-2" 
                             @click="handleDeleteDokumen(ep, doc)"
                             title="Hapus Dokumen"
                           >
@@ -471,7 +471,7 @@
         <div v-else class="d-flex flex-column gap-4">
           
           <!-- Pokja Header Card -->
-          <div class="card shadow-sm border-0 bg-gradient-primary text-white header-card overflow-hidden position-relative">
+          <div id="pokja-content-area" class="card shadow-sm border-0 bg-gradient-primary text-white header-card overflow-hidden position-relative">
             <div class="card-body p-4 position-relative" style="z-index: 2;">
               <div class="d-flex align-items-center gap-3">
                 <div class="header-icon-box shadow">
@@ -513,19 +513,21 @@
               class="card shadow-sm border-0 overflow-hidden standard-card bg-white animate__animated animate__fadeInUp"
             >
               <!-- Standard Header -->
-              <div class="card-header bg-light border-0 py-3 px-4 d-flex align-items-center gap-3">
-                <span class="badge bg-primary px-3 py-2 font-sans fw-bold rounded-3 text-white fs-6">
-                  {{ std.kode }}
-                </span>
-                <div class="flex-grow-1">
-                  <h6 class="fw-bold mb-0 text-dark font-sans leading-relaxed text-wrap text-start">{{ std.pernyataan }}</h6>
-                </div>
-                <div v-if="getStandardTodoProgress(std).total > 0" class="ms-auto flex-shrink-0">
-                  <span class="badge rounded-pill bg-soft-success text-success border-soft-success px-2.5 py-1.5 font-sans d-flex align-items-center gap-1.5 small fw-bold">
-                    <i class="fas fa-check-circle"></i>
-                    Tugas: {{ getStandardTodoProgress(std).completed }}/{{ getStandardTodoProgress(std).total }}
+              <div class="card-header bg-light border-0 py-3 px-4 d-flex flex-column gap-2">
+                <!-- Row 1: Kode badge + Tugas badge -->
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                  <span class="badge bg-primary px-3 py-2 font-sans fw-bold rounded-3 text-white flex-shrink-0" style="font-size: 0.88rem;">
+                    {{ std.kode }}
                   </span>
+                  <div v-if="getStandardTodoProgress(std).total > 0" class="flex-shrink-0">
+                    <span class="badge rounded-pill bg-soft-success text-success border-soft-success font-sans d-flex align-items-center gap-1 fw-bold" style="font-size: 0.72rem; padding: 4px 8px; white-space: nowrap;">
+                      <i class="fas fa-check-circle"></i>
+                      Tugas: {{ getStandardTodoProgress(std).completed }}/{{ getStandardTodoProgress(std).total }}
+                    </span>
+                  </div>
                 </div>
+                <!-- Row 2: Pernyataan text full width -->
+                <h6 class="fw-bold mb-0 text-dark font-sans text-wrap text-start" style="line-height: 1.5; font-size: 0.88rem;">{{ std.pernyataan }}</h6>
               </div>
 
               <!-- Standard EPs -->
@@ -543,11 +545,11 @@
                       </span>
                       
                       <!-- EP content -->
-                      <div class="flex-grow-1">
-                        <p class="fw-bold text-dark mb-2 lead-statement">{{ ep.pernyataan_ep }}</p>
+                      <div class="flex-grow-1" style="min-width: 0; overflow: hidden;">
+                        <p class="fw-bold text-dark mb-2 lead-statement" style="word-break: break-word;">{{ ep.pernyataan_ep }}</p>
                         
                         <!-- Kelengkapan bukti box if exists -->
-                        <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-0 small text-muted border-start border-primary border-3 mt-3">
+                        <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-0 small text-muted border-start border-primary border-3 mt-3" style="word-break: break-word;">
                           <strong class="text-secondary small text-uppercase d-block mb-1">Kelengkapan Bukti:</strong>
                           {{ ep.kelengkapan_bukti }}
                         </div>
@@ -648,14 +650,14 @@
 
                         <!-- Dokumen Bukti Section -->
                         <div class="mt-4 border-top pt-3">
-                          <div class="d-flex align-items-center justify-content-between mb-3">
+                          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                             <div class="d-flex align-items-center gap-2">
                               <i class="fas fa-folder-open text-muted" style="font-size: 0.8rem;"></i>
                               <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Dokumen Bukti / Berkas Terkait</span>
                             </div>
                             <button 
                               type="button" 
-                              class="btn-upload-toggle"
+                              class="btn-upload-toggle flex-shrink-0"
                               :class="{ 'active': showUploadForms[ep.id] }"
                               @click="toggleUploadForm(ep.id)"
                             >
@@ -665,14 +667,14 @@
                           </div>
 
                           <!-- Document List -->
-                          <div v-if="ep.dokumens && ep.dokumens.length > 0" class="d-flex flex-column gap-2 mb-3">
+                          <div v-if="ep.dokumens && ep.dokumens.length > 0" class="d-flex flex-column gap-2 mb-3" style="overflow: hidden;">
                             <div 
                               v-for="doc in ep.dokumens" 
                               :key="doc.id"
                               class="d-flex align-items-center justify-content-between py-2 px-3 rounded-3 border bg-light-gray-hover transition-all animate__animated animate__fadeIn"
-                              style="background-color: #f8fafc; border-color: #e2e8f0 !important;"
+                              style="background-color: #f8fafc; border-color: #e2e8f0 !important; overflow: hidden; min-width: 0;"
                             >
-                              <div class="d-flex align-items-center gap-3 flex-grow-1 me-3" style="min-width: 0;">
+                              <div class="d-flex align-items-center gap-2" style="flex: 1 1 0%; min-width: 0; overflow: hidden;">
                                 <!-- Icon Badge -->
                                 <div 
                                   v-if="doc.file.toLowerCase().endsWith('.pdf')" 
@@ -689,17 +691,17 @@
                                   <i class="fas fa-file-image fs-6"></i>
                                 </div>
                                 
-                                <div class="d-flex flex-column text-start flex-grow-1" style="min-width: 0;">
+                                <div class="d-flex flex-column text-start" style="flex: 1 1 0%; min-width: 0; overflow: hidden;">
                                   <button 
                                     type="button" 
-                                    class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans text-truncate d-block text-start hover-underline shadow-none" 
-                                    style="font-size: 0.82rem; background: transparent; line-height: 1.3;"
+                                    class="btn btn-link p-0 border-0 text-decoration-none text-dark-blue fw-semibold font-sans d-block text-start hover-underline shadow-none" 
+                                    style="font-size: 0.82rem; background: transparent; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"
                                     :title="doc.nama"
                                     @click="handlePreviewDoc(doc)"
                                   >
                                     {{ doc.nama }}
                                   </button>
-                                  <span class="text-muted text-truncate font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal;">
+                                  <span class="text-muted font-mono d-block mt-0.5 text-start" style="font-size: 0.68rem; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">
                                     {{ doc.file }}
                                   </span>
                                 </div>
@@ -707,7 +709,7 @@
                               
                               <button 
                                 type="button" 
-                                class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0" 
+                                class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0 ms-2" 
                                 @click="handleDeleteDokumen(ep, doc)"
                                 title="Hapus Dokumen"
                               >
@@ -1010,7 +1012,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import akreditasiService from '@/services/akreditasiService'
@@ -1081,7 +1083,12 @@ const selectPokja = async (pokja) => {
   isSearching.value = false
   searchQuery.value = ''
   activeOffcanvasTab.value = 'standards'
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  // On desktop scroll to top; on mobile scroll to the pokja content area after render
+  const isMobile = window.innerWidth < 992
+  if (!isMobile) {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   
   loadingStandards.value = true
   try {
@@ -1098,6 +1105,15 @@ const selectPokja = async (pokja) => {
     })
     // Sort standards by urutan
     standards.value = response.data.data.sort((a, b) => a.urutan - b.urutan)
+
+    // On mobile: scroll to the pokja header after Vue has rendered it
+    if (isMobile) {
+      await nextTick()
+      const el = document.getElementById('pokja-content-area')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
   } catch (error) {
     console.error(error)
     toast.error('Gagal memuat standar untuk Pokja ' + pokja.kode)
