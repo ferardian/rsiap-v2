@@ -655,6 +655,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import Swal from 'sweetalert2'
 import akreditasiService from '@/services/akreditasiService'
 
 const toast = useToast()
@@ -843,15 +844,35 @@ const handleToggleTodo = async (todo) => {
 }
 
 const handleDeleteTodo = async (ep, todo) => {
-  if (!confirm('Apakah Anda yakin ingin menghapus tugas ini?')) return
+  const result = await Swal.fire({
+    title: 'Hapus Tugas / Catatan?',
+    text: `Apakah Anda yakin ingin menghapus "${todo.todo}"?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Ya, Hapus',
+    cancelButtonText: 'Batal',
+    reverseButtons: true,
+    customClass: {
+      popup: 'rounded-4 font-sans shadow-lg',
+      title: 'fw-bold text-dark fs-5 pt-3',
+      htmlContainer: 'text-secondary small py-2',
+      confirmButton: 'btn btn-danger btn-sm px-3.5 py-2 font-sans small me-2',
+      cancelButton: 'btn btn-secondary btn-sm px-3.5 py-2 font-sans small'
+    },
+    buttonsStyling: false
+  })
 
-  try {
-    await akreditasiService.deleteTodo(todo.id)
-    ep.todos = ep.todos.filter(t => t.id !== todo.id)
-    toast.success('Tugas berhasil dihapus')
-  } catch (error) {
-    console.error(error)
-    toast.error('Gagal menghapus tugas')
+  if (result.isConfirmed) {
+    try {
+      await akreditasiService.deleteTodo(todo.id)
+      ep.todos = ep.todos.filter(t => t.id !== todo.id)
+      toast.success('Tugas berhasil dihapus')
+    } catch (error) {
+      console.error(error)
+      toast.error('Gagal menghapus tugas')
+    }
   }
 }
 
