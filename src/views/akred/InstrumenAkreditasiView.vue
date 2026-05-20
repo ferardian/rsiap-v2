@@ -1,5 +1,30 @@
 <template>
   <div class="container-fluid py-4 page-bg">
+    <!-- Floating Search FAB on Scroll -->
+    <div v-if="showFloatingSearch" class="floating-search-container font-sans shadow-sm d-flex align-items-center">
+      <transition name="slide-left">
+        <div v-if="isSearchExpanded" class="floating-search-input-wrapper me-2">
+          <input 
+            type="text" 
+            class="form-control search-input-floating shadow-sm" 
+            v-model="searchQuery"
+            placeholder="Cari EP, Standar, atau Bukti..."
+            @input="debouncedSearch"
+            ref="floatingSearchInputRef"
+            @keyup.esc="isSearchExpanded = false"
+          >
+        </div>
+      </transition>
+      <button 
+        class="btn-floating-search-toggle d-flex align-items-center justify-content-center" 
+        :class="{ 'active': isSearchExpanded }"
+        @click="toggleSearchExpand"
+        title="Cari Instrumen"
+      >
+        <i :class="isSearchExpanded ? 'fas fa-times' : 'fas fa-search'"></i>
+      </button>
+    </div>
+
     <!-- Header -->
     <div class="row align-items-center mb-4 g-3">
       <div class="col-12 col-md-8">
@@ -28,7 +53,8 @@
       
       <!-- Left Column: Bab & Pokja Navigation -->
       <div class="col-12 col-lg-3">
-        <div class="card shadow-sm border-0 sticky-nav navigation-card">
+        <div class="sticky-nav">
+          <div class="card shadow-sm border-0 navigation-card">
           <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
             <span class="fw-bold text-uppercase nav-header-title tracking-wider small">Daftar Pokja</span>
             <span class="badge bg-soft-primary text-primary px-2 py-1 rounded-pill small-badge">
@@ -90,38 +116,37 @@
                 </div>
               </div>
             </div>
+        </div>
+      </div> <!-- Closes navigation-card -->
 
-          </div>
-
-          <!-- Legend Tipe Bukti / Metode Evaluasi -->
-          <div class="card-footer bg-white border-0 border-top py-3 px-3">
-            <span class="fw-bold text-uppercase text-secondary tracking-wider extra-small d-block mb-2.5">Metode Evaluasi (STARKES)</span>
-            <div class="d-flex flex-column gap-2">
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-soft-danger text-danger font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">R</span>
-                <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Regulasi <span class="text-muted extra-small d-inline-block">(Kebijakan, SPO, Pedoman)</span></span>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-soft-primary text-primary font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">D</span>
-                <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Dokumen <span class="text-muted extra-small d-inline-block">(Catatan Bukti / Berkas)</span></span>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-soft-warning text-warning font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">O</span>
-                <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Observasi <span class="text-muted extra-small d-inline-block">(Pantau Lapangan)</span></span>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-soft-info text-info font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">W</span>
-                <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Wawancara <span class="text-muted extra-small d-inline-block">(Tanya Jawab Staf/Pasien)</span></span>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-soft-success text-success font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">S</span>
-                <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Simulasi <span class="text-muted extra-small d-inline-block">(Peragaan Prosedur)</span></span>
-              </div>
+      <!-- Legend Tipe Bukti / Metode Evaluasi -->
+      <div class="card shadow-sm border-0 mt-3 p-3 mb-4">
+          <span class="fw-bold text-uppercase text-secondary tracking-wider extra-small d-block mb-2.5">Metode Evaluasi (STARKES)</span>
+          <div class="d-flex flex-column gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-soft-danger text-danger font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">R</span>
+              <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Regulasi <span class="text-muted extra-small d-inline-block">(Kebijakan, SPO, Pedoman)</span></span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-soft-primary text-primary font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">D</span>
+              <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Dokumen <span class="text-muted extra-small d-inline-block">(Catatan Bukti / Berkas)</span></span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-soft-warning text-warning font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">O</span>
+              <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Observasi <span class="text-muted extra-small d-inline-block">(Pantau Lapangan)</span></span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-soft-info text-info font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">W</span>
+              <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Wawancara <span class="text-muted extra-small d-inline-block">(Tanya Jawab Staf/Pasien)</span></span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-soft-success text-success font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">S</span>
+              <span class="text-secondary font-sans text-xs" style="font-weight: 500;">Simulasi <span class="text-muted extra-small d-inline-block">(Peragaan Prosedur)</span></span>
             </div>
           </div>
-
         </div>
-      </div>
+      </div> <!-- Closes sticky-nav wrapper -->
+    </div> <!-- Closes col-12 col-lg-3 -->
 
       <!-- Middle Column: Standards Quick Nav -->
       <div v-if="selectedPokja && !isSearching" class="col-auto d-none d-lg-block" style="width: 170px;">
@@ -653,7 +678,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import akreditasiService from '@/services/akreditasiService'
@@ -661,6 +686,21 @@ import akreditasiService from '@/services/akreditasiService'
 const toast = useToast()
 
 // UI state
+const showFloatingSearch = ref(false)
+const isSearchExpanded = ref(false)
+const floatingSearchInputRef = ref(null)
+
+const toggleSearchExpand = () => {
+  isSearchExpanded.value = !isSearchExpanded.value
+  if (isSearchExpanded.value) {
+    setTimeout(() => {
+      if (floatingSearchInputRef.value) {
+        floatingSearchInputRef.value.focus()
+      }
+    }, 150)
+  }
+}
+
 const loadingBab = ref(false)
 const loadingStandards = ref(false)
 const loadingSearch = ref(false)
@@ -947,8 +987,21 @@ const getStandardTodoProgress = (std) => {
   return { completed, total }
 }
 
+const handleScroll = () => {
+  const shouldShow = window.scrollY > 150
+  showFloatingSearch.value = shouldShow
+  if (!shouldShow) {
+    isSearchExpanded.value = false
+  }
+}
+
 onMounted(() => {
   fetchBabAndPokja()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
@@ -1371,5 +1424,80 @@ onMounted(() => {
   flex: 1 !important;
   max-width: 120px !important;
   width: auto !important;
+}
+
+/* Floating Search FAB Container */
+.floating-search-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1050; /* Above typical elements but below dropdowns/modals */
+  border-radius: 50px;
+  background: transparent;
+  pointer-events: none; /* Let clicks pass through container gaps */
+}
+@media (max-width: 991.98px) {
+  .floating-search-container {
+    bottom: 85px; /* Stand vertically above the 'Navigasi' button (at bottom: 24px) */
+    right: 24px;
+  }
+}
+.floating-search-container * {
+  pointer-events: auto; /* Enable clicks inside active elements */
+}
+.btn-floating-search-toggle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 1.1rem;
+}
+.btn-floating-search-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+}
+.btn-floating-search-toggle.active {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  box-shadow: 0 4px 15px rgba(100, 116, 139, 0.35);
+}
+.floating-search-input-wrapper {
+  width: 280px;
+}
+@media (max-width: 575.98px) {
+  .floating-search-input-wrapper {
+    width: 200px; /* Keep it compact on mobile screens to prevent overflow */
+  }
+}
+.floating-search-input-wrapper .search-input-floating {
+  border-radius: 50px !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 0.65rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+  background-color: white !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  width: 100%;
+}
+.floating-search-input-wrapper .search-input-floating:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Slide left animation transition */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-left-enter-from,
+.slide-left-leave-to {
+  transform: scaleX(0);
+  opacity: 0;
+  transform-origin: right center;
 }
 </style>
