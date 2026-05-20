@@ -1355,3 +1355,21 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 </style>
+
+<style>
+/* Global override specifically for SweetAlert2 popups using the .rounded-4 class */
+.swal2-container .swal2-popup.rounded-4 .swal2-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+.swal2-container .swal2-popup.rounded-4 .swal2-actions button {
+  margin: 0 !important;
+  flex: 1 !important;
+  max-width: 120px !important;
+  width: auto !important;
+}
+</style>
