@@ -954,107 +954,220 @@ const exportDetailToPDF = async (data) => {
     const indicator = data.indicator;
     const monthly = data.monthly;
     
-    // Header
-    doc.setFillColor(67, 94, 190); // Primary color #435ebe
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 18, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('RSIA AISYIYAH PEKAJANGAN', 105, 25, { align: 'center' });
-    doc.text('Sistem Monitoring Indikator Mutu Digital', 105, 30, { align: 'center' });
-    
-    // Content Info
-    doc.setTextColor(33, 37, 41);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(indicator.nama_inmut_utama || indicator.nama_inmut, 15, 55);
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    if (filters.jenis === 'group') {
-        doc.text(`Kategori: ${indicator.kategori || 'Global'} (Rekapitulasi Global)`, 15, 62);
-    } else {
-        doc.text(`Unit / Ruang: ${indicator.nama_ruang || '-'}`, 15, 62);
-    }
-    doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, 15, 67);
-    
-    // Summary Box
-    doc.setDrawColor(226, 232, 240);
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(15, 75, 180, 25, 2, 2, 'FD');
-    
     // Calculate Overall Summary
     const totalNum = monthly.reduce((sum, m) => sum + (parseFloat(m.total_num) || 0), 0);
     const totalDenum = monthly.reduce((sum, m) => sum + (parseFloat(m.total_denum) || 0), 0);
     const overallScore = totalDenum > 0 ? ((totalNum / totalDenum) * 100).toFixed(2) : 0;
     const isTotalTercapai = isTercapai({ ...indicator, score: overallScore });
-    
-    doc.setFont('helvetica', 'bold');
-    doc.text('Target / Standar:', 25, 85);
-    doc.text(getStandar(indicator), 65, 85);
-    
-    doc.text('Total Capaian:', 25, 92);
-    doc.setTextColor(isTotalTercapai ? 21 : 220, isTotalTercapai ? 128 : 53, isTotalTercapai ? 61 : 69);
-    doc.text(`${overallScore}%`, 65, 92);
-    doc.text(`(${isTotalTercapai ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, 92);
-    
-    doc.setTextColor(33, 37, 41);
-    
-    // Chart
-    // In Vue 3, ref inside v-for results in an array
-    const chartInstance = Array.isArray(chartRef.value) ? chartRef.value[0] : chartRef.value;
-    
-    if (chartInstance) {
-        try {
-            const chartDataURI = await chartInstance.dataURI();
-            if (chartDataURI && chartDataURI.imgURI) {
-                doc.setFont('helvetica', 'bold');
-                doc.text('Grafik Tren Capaian Bulanan:', 15, 115);
-                doc.addImage(chartDataURI.imgURI, 'PNG', 15, 120, 180, 80);
-            }
-        } catch (e) {
-            console.error('Chart export failed', e);
-        }
-    }
-    
-    // Table
-    const tableHead = [['Bulan', 'Numerator', 'Denominator', 'Capaian (%)', 'Status']];
-    const tableBody = monthly.map(m => [
-        `${getMonthName(m.bulan)} ${m.tahun}`,
-        m.total_num,
-        m.total_denum,
-        `${m.score}%`,
-        isTercapai(m, indicator) ? 'Tercapai' : 'Tidak Tercapai'
-    ]);
-    
-    autoTable(doc, {
-        head: tableHead,
-        body: tableBody,
-        startY: chartInstance ? 210 : 120,
-        theme: 'grid',
-        headStyles: { fillColor: [67, 94, 190], halign: 'center' },
-        columnStyles: {
-            0: { cellWidth: 50 },
-            1: { halign: 'center' },
-            2: { halign: 'center' },
-            3: { halign: 'center', fontStyle: 'bold' },
-            4: { halign: 'center' }
-        },
-        didParseCell: function(data) {
-            if (data.column.index === 4 && data.cell.section === 'body') {
-                if (data.cell.text[0] === 'Tercapai') {
-                    data.cell.styles.textColor = [21, 128, 61];
-                } else {
-                    data.cell.styles.textColor = [220, 53, 69];
+
+    if (filters.jenis === 'group') {
+        // Group Mode Layout (Compact, Side-by-Side & Room Details)
+        
+        // Header
+        doc.setFillColor(67, 94, 190);
+        doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 10, { align: 'center' });
+        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun} | RSIA AISYIYAH PEKAJANGAN`, 105, 15, { align: 'center' });
+
+        // Content Title
+        doc.setTextColor(33, 37, 41);
+        doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        const titleLines = doc.splitTextToSize(indicator.nama_inmut_utama || indicator.nama_inmut, 180);
+        doc.text(titleLines, 15, 28);
+        
+        let startYDetails = 28 + (titleLines.length * 4.5);
+        
+        // Summary Text
+        doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.text(`Target / Standar: ${getStandar(indicator)}`, 15, startYDetails + 2);
+        doc.text('Total Capaian: ', 90, startYDetails + 2);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(isTotalTercapai ? 21 : 220, isTotalTercapai ? 128 : 53, isTotalTercapai ? 61 : 69);
+        doc.text(`${overallScore}% (${isTotalTercapai ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 113, startYDetails + 2);
+        doc.setTextColor(33, 37, 41);
+        
+        // Divider Line
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.2);
+        doc.line(15, startYDetails + 5, 195, startYDetails + 5);
+        
+        let startYTable = startYDetails + 10;
+        
+        // Render Monthly Table on Left Column
+        const tableHead = [['Bulan', 'Num', 'Denum', 'Capaian (%)', 'Status']];
+        const tableBody = monthly.map(m => [
+            getMonthName(m.bulan), m.total_num, m.total_denum, `${m.score}%`,
+            isTercapai(m, indicator) ? 'Tercapai' : 'Tidak Tercapai'
+        ]);
+
+        autoTable(doc, {
+            head: tableHead,
+            body: tableBody,
+            startY: startYTable,
+            margin: { left: 15 },
+            tableWidth: 90,
+            theme: 'grid',
+            headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
+            styles: { fontSize: 8 },
+            didParseCell: function(data) {
+                if (data.column.index === 4 && data.cell.section === 'body') {
+                    data.cell.styles.textColor = data.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
                 }
             }
+        });
+
+        // Render Chart on Right Column
+        const chartInstance = Array.isArray(chartRef.value) ? chartRef.value[0] : chartRef.value;
+        let chartImg = null;
+        if (chartInstance) {
+            try {
+                const chartDataURI = await chartInstance.dataURI();
+                if (chartDataURI && chartDataURI.imgURI) {
+                    chartImg = chartDataURI.imgURI;
+                }
+            } catch (e) {
+                console.error('Chart export failed', e);
+            }
         }
-    });
+        if (chartImg) {
+            doc.addImage(chartImg, 'PNG', 110, startYTable, 85, 42);
+        }
+
+        // Room / Unit Details Table
+        const unitsDetail = data.units_detail || [];
+        const groupedUnits = groupUnitsDetail(unitsDetail);
+        
+        if (groupedUnits.length > 0) {
+            const nextY = Math.max(doc.lastAutoTable.finalY, startYTable + 42) + 8;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text('Rincian Capaian Per Ruangan / Unit:', 15, nextY);
+            
+            const roomHead = [['No', 'Nama Ruang / Unit', 'Target', 'Num', 'Denum', 'Capaian (%)', 'Hasil']];
+            const roomBody = groupedUnits.map((ru, idx) => [
+                idx + 1,
+                ru.nama_ruang,
+                getStandar(indicator),
+                ru.total_num,
+                ru.total_denum,
+                `${ru.score}%`,
+                isTercapai(ru, indicator) ? 'Tercapai' : 'Tidak Tercapai'
+            ]);
+
+            autoTable(doc, {
+                head: roomHead,
+                body: roomBody,
+                startY: nextY + 3,
+                margin: { left: 15, right: 15 },
+                theme: 'grid',
+                headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
+                styles: { fontSize: 8 },
+                didParseCell: function(data) {
+                    if (data.column.index === 6 && data.cell.section === 'body') {
+                        data.cell.styles.textColor = data.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
+                    }
+                }
+            });
+        }
+    } else {
+        // Header
+        doc.setFillColor(67, 94, 190); // Primary color #435ebe
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 18, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('RSIA AISYIYAH PEKAJANGAN', 105, 25, { align: 'center' });
+        doc.text('Sistem Monitoring Indikator Mutu Digital', 105, 30, { align: 'center' });
+        
+        // Content Info
+        doc.setTextColor(33, 37, 41);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(indicator.nama_inmut_utama || indicator.nama_inmut, 15, 55);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        if (filters.jenis === 'group') {
+            doc.text(`Kategori: ${indicator.kategori || 'Global'} (Rekapitulasi Global)`, 15, 62);
+        } else {
+            doc.text(`Unit / Ruang: ${indicator.nama_ruang || '-'}`, 15, 62);
+        }
+        doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, 15, 67);
+        
+        // Summary Box
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(15, 75, 180, 25, 2, 2, 'FD');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Target / Standar:', 25, 85);
+        doc.text(getStandar(indicator), 65, 85);
+        
+        doc.text('Total Capaian:', 25, 92);
+        doc.setTextColor(isTotalTercapai ? 21 : 220, isTotalTercapai ? 128 : 53, isTotalTercapai ? 61 : 69);
+        doc.text(`${overallScore}%`, 65, 92);
+        doc.text(`(${isTotalTercapai ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, 92);
+        
+        doc.setTextColor(33, 37, 41);
+        
+        // Chart
+        const chartInstance = Array.isArray(chartRef.value) ? chartRef.value[0] : chartRef.value;
+        
+        if (chartInstance) {
+            try {
+                const chartDataURI = await chartInstance.dataURI();
+                if (chartDataURI && chartDataURI.imgURI) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Grafik Tren Capaian Bulanan:', 15, 115);
+                    doc.addImage(chartDataURI.imgURI, 'PNG', 15, 120, 180, 80);
+                }
+            } catch (e) {
+                console.error('Chart export failed', e);
+            }
+        }
+        
+        // Table
+        const tableHead = [['Bulan', 'Numerator', 'Denominator', 'Capaian (%)', 'Status']];
+        const tableBody = monthly.map(m => [
+            `${getMonthName(m.bulan)} ${m.tahun}`,
+            m.total_num,
+            m.total_denum,
+            `${m.score}%`,
+            isTercapai(m, indicator) ? 'Tercapai' : 'Tidak Tercapai'
+        ]);
+        
+        autoTable(doc, {
+            head: tableHead,
+            body: tableBody,
+            startY: chartInstance ? 210 : 120,
+            theme: 'grid',
+            headStyles: { fillColor: [67, 94, 190], halign: 'center' },
+            columnStyles: {
+                0: { cellWidth: 50 },
+                1: { halign: 'center' },
+                2: { halign: 'center' },
+                3: { halign: 'center', fontStyle: 'bold' },
+                4: { halign: 'center' }
+            },
+            didParseCell: function(data) {
+                if (data.column.index === 4 && data.cell.section === 'body') {
+                    if (data.cell.text[0] === 'Tercapai') {
+                        data.cell.styles.textColor = [21, 128, 61];
+                    } else {
+                        data.cell.styles.textColor = [220, 53, 69];
+                    }
+                }
+            }
+        });
+    }
     
     // Footer - Page Number
     const pageCount = doc.internal.getNumberOfPages();
