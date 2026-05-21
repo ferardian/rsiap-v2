@@ -172,7 +172,7 @@
       </div>
 
       <!-- Right Column: Standards & EPs Display -->
-      <div class="col-12 col-lg">
+      <div class="col-12 col-lg" style="min-width: 0;">
         
         <!-- Welcome / Idle state -->
         <div v-if="!selectedPokja && !isSearching" class="card shadow-sm border-0 py-5 text-center bg-white idle-card">
