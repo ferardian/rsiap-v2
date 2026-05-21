@@ -29,7 +29,7 @@
     <div class="row align-items-center mb-4 g-3">
       <div class="col-12 col-md-8">
         <h3 class="fw-bold text-primary mb-1">
-          <i class="fas fa-book-medical me-2"></i>Instrumen Akreditasi RS (STARKES)
+          <i class="fas fa-book-medical me-2"></i>Instrumen Akreditasi RS
         </h3>
         <p class="text-muted mb-0">Penelusuran Bab, Pokja, Standar, dan Elemen Penilaian secara interaktif</p>
       </div>
@@ -121,7 +121,7 @@
 
       <!-- Legend Tipe Bukti / Metode Evaluasi -->
       <div class="card shadow-sm border-0 mt-3 p-3 mb-4">
-          <span class="fw-bold text-uppercase text-secondary tracking-wider extra-small d-block mb-2.5">Metode Evaluasi (STARKES)</span>
+          <span class="fw-bold text-uppercase text-secondary tracking-wider extra-small d-block mb-2.5">Metode Evaluasi</span>
           <div class="d-flex flex-column gap-2">
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-soft-danger text-danger font-sans fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 20px; height: 20px; font-size: 0.7rem; padding: 0;">R</span>
