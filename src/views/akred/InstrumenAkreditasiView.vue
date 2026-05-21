@@ -1452,7 +1452,7 @@ const handleDeleteDokumen = async (ep, doc) => {
 }
 
 const getDocUrl = (fileName) => {
-  return `${config.public.AKREDITASI_BERKAS_URL}/rsia_akreditasi/${fileName}`
+  return `${config.public.API_V2_URL}/akred/elemen-penilaian-dokumen/view/${fileName}`
 }
 
 // Preview modal and upload form toggle state
