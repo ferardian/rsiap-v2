@@ -1,14 +1,18 @@
 const getApiV2Url = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host === '192.168.100.33' || host === 'localhost' || host === '127.0.0.1') {
-      // Use local IP for 192.168.100.33, otherwise use localhost:8010 for local dev
-      return host === '192.168.100.33' 
+    const isLocal = host === 'localhost' || 
+                    host === '127.0.0.1' || 
+                    host.startsWith('192.168.') || 
+                    host.startsWith('10.') || 
+                    host.startsWith('172.');
+    if (isLocal) {
+      return host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')
         ? `http://${host}/rsiapi-v2/api/v2` 
         : `http://localhost:8010/api/v2`;
     }
-    // Default to rsiap.my.id for outside local network
-    return `https://rsiap.my.id/rsiapi-v2/api/v2`;
+    const protocol = window.location.protocol;
+    return `${protocol}//${host}/rsiapi-v2/api/v2`;
   }
   return import.meta.env.VITE_API_V2_URL || 'http://localhost:8010/api/v2';
 };
@@ -16,11 +20,17 @@ const getApiV2Url = () => {
 const getBaseBerkasUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host === '192.168.100.33') {
-      return `http://${host}/webapps`;
+    const isLocal = host === 'localhost' || 
+                    host === '127.0.0.1' || 
+                    host.startsWith('192.168.') || 
+                    host.startsWith('10.') || 
+                    host.startsWith('172.');
+    if (isLocal) {
+      const targetHost = (host === 'localhost' || host === '127.0.0.1') ? '192.168.100.33' : host;
+      return `http://${targetHost}/webapps`;
     }
-    // Default to rsiap.my.id for outside local network
-    return `https://rsiap.my.id/webapps`;
+    const protocol = window.location.protocol;
+    return `${protocol}//${host}/webapps`;
   }
   return import.meta.env.VITE_BASE_BERKAS_URL || 'http://192.168.100.33/webapps';
 };
@@ -28,11 +38,16 @@ const getBaseBerkasUrl = () => {
 const getAkreditasiBerkasUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host === '192.168.100.33' || host === 'localhost' || host === '127.0.0.1') {
+    const isLocal = host === 'localhost' || 
+                    host === '127.0.0.1' || 
+                    host.startsWith('192.168.') || 
+                    host.startsWith('10.') || 
+                    host.startsWith('172.');
+    if (isLocal) {
       return 'http://192.168.100.31/webapps';
     }
-    // Default to rsiap.my.id for outside local network
-    return 'https://rsiap.my.id/webapps';
+    const protocol = window.location.protocol;
+    return `${protocol}//${host}/webapps`;
   }
   return import.meta.env.VITE_AKREDITASI_BERKAS_URL || 'http://192.168.100.31/webapps';
 };
@@ -40,11 +55,17 @@ const getAkreditasiBerkasUrl = () => {
 const getPhotoUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host === '192.168.100.33') {
-      return `http://${host}/rsiap/file/pegawai/`;
+    const isLocal = host === 'localhost' || 
+                    host === '127.0.0.1' || 
+                    host.startsWith('192.168.') || 
+                    host.startsWith('10.') || 
+                    host.startsWith('172.');
+    if (isLocal) {
+      const targetHost = (host === 'localhost' || host === '127.0.0.1') ? '192.168.100.33' : host;
+      return `http://${targetHost}/rsiap/file/pegawai/`;
     }
-    // Default to rsiap.my.id for outside local network
-    return `https://rsiap.my.id/rsiap/file/pegawai/`;
+    const protocol = window.location.protocol;
+    return `${protocol}//${host}/rsiap/file/pegawai/`;
   }
   return 'https://rsiap.my.id/rsiap/file/pegawai/';
 };
