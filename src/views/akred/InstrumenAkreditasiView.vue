@@ -987,14 +987,41 @@
 
         <!-- Modal Body / Content -->
         <div class="flex-grow-1 p-3 bg-light d-flex align-items-center justify-content-center overflow-auto position-relative" style="background-color: #f8fafc;">
-          <!-- PDF Frame -->
+          <!-- PDF Frame (Desktop Only) -->
           <iframe 
-            v-if="activePreviewDoc.file.toLowerCase().endsWith('.pdf')" 
+            v-if="activePreviewDoc.file.toLowerCase().endsWith('.pdf') && !isMobile" 
             :src="getDocUrl(activePreviewDoc.file)" 
             width="100%" 
             height="100%" 
             style="border: none; border-radius: 8px; background-color: #fff;"
           ></iframe>
+
+          <!-- PDF Fallback for Mobile (Since mobile browsers don't support inline PDF in iframe) -->
+          <div 
+            v-else-if="activePreviewDoc.file.toLowerCase().endsWith('.pdf') && isMobile"
+            class="w-100 d-flex flex-column align-items-center justify-content-center text-center p-4 bg-white rounded-3 shadow-sm border border-slate-100"
+            style="max-width: 400px; border-color: #e2e8f0 !important;"
+          >
+            <div 
+              class="d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 text-danger mb-4 animate__animated animate__bounceIn"
+              style="width: 80px; height: 80px; background-color: #fef2f2;"
+            >
+              <i class="fas fa-file-pdf" style="font-size: 3rem; color: #ef4444;"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-2" style="font-size: 1.1rem;">Pratinjau PDF tidak didukung di HP</h5>
+            <p class="text-muted small px-2 mb-4" style="line-height: 1.45;">
+              Browser ponsel membatasi pratinjau file PDF secara langsung. Silakan tekan tombol di bawah untuk membuka dokumen di aplikasi PDF bawaan ponsel Anda.
+            </p>
+            <a 
+              :href="getDocUrl(activePreviewDoc.file)" 
+              target="_blank" 
+              class="btn btn-danger px-4 py-2.5 rounded-pill shadow-lg d-flex align-items-center gap-2 border-0 fw-semibold text-white w-100 justify-content-center"
+              style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"
+            >
+              <i class="fas fa-external-link-alt"></i>
+              Buka Dokumen PDF
+            </a>
+          </div>
           
           <!-- Image Element -->
           <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center p-2">
@@ -1020,6 +1047,13 @@ import akreditasiService from '@/services/akreditasiService'
 import config from '@/config/api'
 
 const toast = useToast()
+
+const isMobile = ref(false)
+const detectMobile = () => {
+  if (typeof window !== 'undefined') {
+    isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
+}
 
 // UI state
 const showFloatingSearch = ref(false)
@@ -1483,6 +1517,7 @@ const handleScroll = () => {
 }
 
 onMounted(() => {
+  detectMobile()
   fetchBabAndPokja()
   window.addEventListener('scroll', handleScroll)
 })
