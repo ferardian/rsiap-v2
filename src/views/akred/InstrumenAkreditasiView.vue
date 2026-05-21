@@ -161,6 +161,7 @@
                 :key="std.id"
                 type="button"
                 class="list-group-item list-group-item-action border-0 py-2.5 px-3 btn-quick-nav-item font-sans text-xs d-flex align-items-center justify-content-between"
+                :class="{ 'active-standard-item': activeStandardKode === std.kode }"
                 @click="scrollToStandard(std.kode)"
               >
                 <span class="fw-bold">{{ std.kode }}</span>
@@ -857,6 +858,7 @@
               :key="std.id"
               type="button"
               class="list-group-item list-group-item-action border-0 py-3 px-4 btn-quick-nav-item font-sans d-flex align-items-center justify-content-between"
+              :class="{ 'active-standard-item': activeStandardKode === std.kode }"
               data-bs-dismiss="offcanvas"
               @click="scrollToStandard(std.kode)"
             >
@@ -1089,6 +1091,42 @@ const searchResults = ref([])
 const selectedPokja = ref(null)
 const activeOffcanvasTab = ref('standards')
 
+// Active standard tracking (for sidebar highlight)
+const activeStandardKode = ref(null)
+let standardObserver = null
+
+const setupStandardObserver = () => {
+  // Cleanup previous observer
+  if (standardObserver) {
+    standardObserver.disconnect()
+    standardObserver = null
+  }
+
+  standardObserver = new IntersectionObserver(
+    (entries) => {
+      // Find the topmost entry that is intersecting
+      const visible = entries
+        .filter(e => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+      if (visible.length > 0) {
+        // Extract kode from element id: "standard-MRMIK 1" → "MRMIK 1"
+        const id = visible[0].target.id
+        activeStandardKode.value = id.replace('standard-', '')
+      }
+    },
+    {
+      rootMargin: '-80px 0px -60% 0px', // trigger when entering top 40% of viewport
+      threshold: 0
+    }
+  )
+
+  // Observe all standard section elements
+  standards.value.forEach(std => {
+    const el = document.getElementById('standard-' + std.kode)
+    if (el) standardObserver.observe(el)
+  })
+}
+
 // Total count
 const totalPokja = computed(() => {
   return babList.value.reduce((acc, bab) => acc + (bab.pokjas ? bab.pokjas.length : 0), 0)
@@ -1154,6 +1192,9 @@ const selectPokja = async (pokja) => {
     toast.error('Gagal memuat standar untuk Pokja ' + pokja.kode)
   } finally {
     loadingStandards.value = false
+    // Setup observer after standards are rendered
+    await nextTick()
+    setupStandardObserver()
   }
 }
 
@@ -1199,6 +1240,7 @@ const clearSearch = () => {
 }
 
 const scrollToStandard = (kode) => {
+  activeStandardKode.value = kode
   const element = document.getElementById('standard-' + kode)
   if (element) {
     const yOffset = -94 // 70px header + 24px padding
@@ -1524,6 +1566,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  if (standardObserver) {
+    standardObserver.disconnect()
+  }
 })
 </script>
 
@@ -1886,6 +1931,13 @@ onUnmounted(() => {
 .btn-quick-nav-item:hover {
   background-color: #eff6ff !important;
   color: #2563eb !important;
+  padding-left: 1.25rem !important;
+}
+
+.active-standard-item {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  border-left: 4px solid #2563eb !important;
   padding-left: 1.25rem !important;
 }
 
