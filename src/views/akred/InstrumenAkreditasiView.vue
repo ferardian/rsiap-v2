@@ -934,7 +934,7 @@
     >
       <div 
         class="bg-white rounded-4 shadow-2xl border w-100 mx-3 d-flex flex-column overflow-hidden animate__animated animate__zoomIn animate__faster" 
-        style="max-width: 900px; height: 85vh; border-color: #e2e8f0 !important;"
+        style="max-width: 1300px; height: 90vh; border-color: #e2e8f0 !important;"
       >
         <!-- Modal Header -->
         <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom preview-modal-header">
@@ -1001,7 +1001,7 @@
             <img 
               :src="getDocUrl(activePreviewDoc.file)" 
               class="img-fluid rounded-3 shadow-lg max-w-100 max-h-100" 
-              style="object-fit: contain; max-height: calc(85vh - 100px);"
+              style="object-fit: contain; max-height: calc(90vh - 100px);"
               alt="Preview Berkas"
             >
           </div>
