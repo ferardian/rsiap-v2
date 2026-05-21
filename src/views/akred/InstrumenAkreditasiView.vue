@@ -226,7 +226,7 @@
                   <span class="badge bg-soft-indigo text-indigo px-3 py-2 font-mono fw-bold fs-6 rounded-3">
                     {{ ep.kode_ep }}
                   </span>
-                  <div class="flex-grow-1" style="min-width: 0; width: 100%; overflow: hidden;">
+                  <div class="flex-grow-1 ep-content-div" style="min-width: 0;">
                     <p class="fw-bold text-dark mb-2 lead-statement" style="word-break: break-word;">{{ ep.pernyataan_ep }}</p>
                     <div v-if="ep.kelengkapan_bukti" class="bg-light p-3 rounded-3 mb-2 small text-muted border-start border-primary border-3" style="word-break: break-word;">
                       <strong class="text-secondary small text-uppercase d-block mb-1">Kelengkapan Bukti:</strong>
@@ -537,16 +537,16 @@
                     v-for="ep in std.elemen_penilaians" 
                     :key="ep.id" 
                     class="list-group-item p-4 border-0 border-bottom ep-item-row"
-                    style="min-width: 0; width: 100%; overflow: hidden;"
+                    style="min-width: 0; width: 100%;"
                   >
-                    <div class="d-flex align-items-start gap-3 flex-column flex-md-row" style="overflow: hidden; min-width: 0;">
+                    <div class="d-flex align-items-start gap-3 flex-column flex-md-row">
                       <!-- EP Badge (Letter) -->
                       <span class="badge bg-soft-primary text-primary px-3 py-2 font-mono fw-bold fs-6 rounded-3">
                         EP {{ ep.nomor }}
                       </span>
                       
                       <!-- EP content -->
-                      <div class="flex-grow-1" style="min-width: 0; width: 100%; overflow: hidden;">
+                      <div class="flex-grow-1 ep-content-div" style="min-width: 0;">
                         <p class="fw-bold text-dark mb-2 lead-statement" style="word-break: break-word;">{{ ep.pernyataan_ep }}</p>
                         
                         <!-- Kelengkapan bukti box if exists -->
@@ -1756,6 +1756,14 @@ onUnmounted(() => {
   transition: all 0.2s;
   min-width: 0;
   width: 100%;
+}
+
+/* On mobile (flex-column), EP content must be full-width
+   (flex-grow only grows height in flex-column, not width) */
+@media (max-width: 767.98px) {
+  .ep-content-div {
+    width: 100%;
+  }
 }
 
 .ep-item-row:hover {
