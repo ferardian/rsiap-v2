@@ -44,5 +44,37 @@ export const monitoringRMService = {
             url: '/monitoring/rm/departemen',
             method: 'get'
         })
+    },
+
+    getPegawai() {
+        return api({
+            url: '/monitoring/rm/pegawai',
+            method: 'get'
+        })
+    },
+
+    uploadFile(id, formData) {
+        return api({
+            url: `/monitoring/rm/${id}/files`,
+            method: 'post',
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            data: formData
+        })
+    },
+
+    deleteFile(id, fileId) {
+        return api({
+            url: `/monitoring/rm/${id}/files/${fileId}`,
+            method: 'delete'
+        })
+    },
+
+    getLogs(id) {
+        return api({
+            url: `/monitoring/rm/${id}/logs`,
+            method: 'get'
+        })
     }
 }
