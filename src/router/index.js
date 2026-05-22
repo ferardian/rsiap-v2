@@ -578,6 +578,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/kunjungan-rl3-5',
+    name: 'laporan-kunjungan-rl35',
+    component: () => import('@/views/laporan/KunjunganRL35View.vue'),
+  },
+  {
     path: '/laporan/morbiditas-ralan',
     name: 'laporan-morbiditas-ralan',
     component: () => import('@/views/laporan/MorbiditasRalanView.vue'),
