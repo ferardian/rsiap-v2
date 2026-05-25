@@ -583,6 +583,11 @@ const routes = [
     component: () => import('@/views/laporan/KunjunganRL35View.vue'),
   },
   {
+    path: '/laporan/rujukan-rl3-10',
+    name: 'laporan-rujukan-rl310',
+    component: () => import('@/views/laporan/RujukanRL310View.vue'),
+  },
+  {
     path: '/laporan/morbiditas-ralan',
     name: 'laporan-morbiditas-ralan',
     component: () => import('@/views/laporan/MorbiditasRalanView.vue'),

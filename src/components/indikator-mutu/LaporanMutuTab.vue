@@ -303,6 +303,23 @@
                                       </td>
                                     </tr>
                                   </tbody>
+                                  <tfoot class="text-center font-sm bg-light fw-bold" v-if="detailData.monthly.length > 0 && monthlyAverage">
+                                    <tr>
+                                      <td class="py-3 text-primary">Rata-Rata / Total</td>
+                                      <td class="text-primary">{{ getStandar(detailData.indicator) }}</td>
+                                      <td class="text-primary">{{ monthlyAverage.total_num }}</td>
+                                      <td class="text-primary">{{ monthlyAverage.total_denum }}</td>
+                                      <td :class="isTercapai(monthlyAverage, detailData.indicator) ? 'text-success' : 'text-danger'">
+                                        {{ monthlyAverage.score }}%
+                                      </td>
+                                      <td>
+                                        <span class="badge" :class="isTercapai(monthlyAverage, detailData.indicator) ? 'bg-success' : 'bg-danger'">
+                                          <i :class="isTercapai(monthlyAverage, detailData.indicator) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1"></i>
+                                          {{ isTercapai(monthlyAverage, detailData.indicator) ? 'Tercapai' : 'Tidak Tercapai' }}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  </tfoot>
                                 </table>
                               </div>
                             </div>
@@ -322,6 +339,81 @@
                                   :series="chartSeries"
                                 ></apexchart>
                                 <div v-else class="text-center text-muted py-5">Data grafik tidak tersedia</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Hasil PDSA (Triwulan Only) -->
+                        <div class="row g-4 mt-2 mb-4" v-if="filters.tipe === 'triwulan' && detailData.pdsa">
+                          <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                              <div class="card-header bg-primary py-2 px-3 border-0 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-white small"><i class="fas fa-clipboard-check me-2"></i>Hasil PDSA (Plan-Do-Study-Act)</h6>
+                              </div>
+                              <div class="card-body p-0">
+                                <!-- PLAN -->
+                                <div class="py-2 px-3 border-bottom">
+                                    <h6 class="fw-bold text-primary mb-2 mt-1" style="font-size: 0.9rem;"><i class="fas fa-clipboard-list me-2"></i> PLAN (Rencana)</h6>
+                                    <div class="row g-1" style="font-size: 0.85rem;">
+                                        <div class="col-sm-3 fw-bold text-dark">Latar Belakang / Masalah</div>
+                                        <div class="col-sm-9 text-muted mb-1">{{ detailData.pdsa.p_latar_belakang || '-' }}</div>
+                                        
+                                        <div class="col-sm-3 fw-bold text-dark">Tujuan Perbaikan</div>
+                                        <div class="col-sm-9 text-muted mb-1">{{ detailData.pdsa.p_tujuan || '-' }}</div>
+                                        
+                                        <div class="col-sm-3 fw-bold text-dark">Analisis Akar Masalah</div>
+                                        <div class="col-sm-9 text-muted mb-1">{{ detailData.pdsa.p_akar_masalah || '-' }}</div>
+                                        
+                                        <div class="col-sm-3 fw-bold text-dark">Rencana Intervensi</div>
+                                        <div class="col-sm-9 text-muted mb-1">{{ detailData.pdsa.p_rencana_intervensi || '-' }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- DO & STUDY -->
+                                <div class="row g-0 border-bottom">
+                                    <div class="col-md-6 py-2 px-3 border-end">
+                                        <h6 class="fw-bold text-warning mb-2 mt-1" style="font-size: 0.9rem;"><i class="fas fa-running me-2"></i> DO (Pelaksanaan)</h6>
+                                        <div class="row g-1" style="font-size: 0.85rem;">
+                                            <div class="col-sm-12 fw-bold text-dark">Uraian Pelaksanaan:</div>
+                                            <div class="col-sm-12 text-muted mb-2">{{ detailData.pdsa.d_uraian || '-' }}</div>
+                                            
+                                            <div class="col-sm-12 fw-bold text-dark">Kendala Pelaksanaan:</div>
+                                            <div class="col-sm-12 text-muted mb-1">{{ detailData.pdsa.d_kendala || '-' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 py-2 px-3 bg-light bg-opacity-50">
+                                        <h6 class="fw-bold text-info mb-2 mt-1" style="font-size: 0.9rem;"><i class="fas fa-search me-2"></i> STUDY (Pembelajaran)</h6>
+                                        <div class="row g-1" style="font-size: 0.85rem;">
+                                            <div class="col-sm-12 fw-bold text-dark">Hasil & Data:</div>
+                                            <div class="col-sm-12 text-muted mb-2">{{ detailData.pdsa.s_hasil || '-' }}</div>
+                                            
+                                            <div class="col-sm-12 fw-bold text-dark">Analisis & Pembelajaran:</div>
+                                            <div class="col-sm-12 text-muted mb-1">
+                                                <div class="mb-1"><i class="fas fa-caret-right text-info me-1"></i> <span class="fw-bold">Analisis:</span> {{ detailData.pdsa.s_analisis || '-' }}</div>
+                                                <div><i class="fas fa-caret-right text-info me-1"></i> <span class="fw-bold">Lesson Learned:</span> {{ detailData.pdsa.s_pembelajaran || '-' }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- ACT -->
+                                <div class="py-2 px-3 bg-white">
+                                    <h6 class="fw-bold text-success mb-2 mt-1" style="font-size: 0.9rem;"><i class="fas fa-check-double me-2"></i> ACT (Tindak Lanjut)</h6>
+                                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3 bg-light p-2 mb-1 rounded-3 border border-success border-opacity-25 shadow-sm">
+                                        <div class="text-center text-md-start">
+                                            <span class="d-block text-muted mb-1" style="font-size: 0.7rem; font-weight: 800;">KEPUTUSAN</span>
+                                            <span class="badge rounded-pill px-3 py-1" :class="{'bg-success': detailData.pdsa.a_keputusan === 'Adopt', 'bg-warning text-dark': detailData.pdsa.a_keputusan === 'Adapt', 'bg-danger': detailData.pdsa.a_keputusan === 'Abandon'}" style="font-size: 0.8rem; min-width: 90px;">
+                                                <i class="fas me-1" :class="{'fa-check-circle': detailData.pdsa.a_keputusan === 'Adopt', 'fa-sync-alt': detailData.pdsa.a_keputusan === 'Adapt', 'fa-times-circle': detailData.pdsa.a_keputusan === 'Abandon'}"></i>
+                                                {{ detailData.pdsa.a_keputusan ? detailData.pdsa.a_keputusan.toUpperCase() : '-' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex-grow-1 border-start-md ps-md-3 border-2 border-success border-opacity-25" style="font-size: 0.85rem;">
+                                            <span class="fw-bold text-dark d-block mb-1">Rencana Tindak Lanjut:</span>
+                                            <span class="text-muted" style="line-height: 1.4;">{{ detailData.pdsa.a_tindak_lanjut || 'Belum ada rencana tindak lanjut yang ditentukan.' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -511,6 +603,9 @@ import VueApexCharts from 'vue3-apexcharts'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
+import logoUrl from '@/assets/logo.png'
+import logoLarsiUrl from '@/assets/logo-larsi.png'
+
 const toast = useToast()
 
 const apexchart = VueApexCharts
@@ -537,6 +632,9 @@ const printChartData = ref(null)
 const printingProgress = ref(0)
 const showExportDropdown = ref(false)
 const exportDropdownRef = ref(null)
+
+let imgLogo = null;
+let imgLogoLarsi = null;
 
 const toggleExportDropdown = () => {
     showExportDropdown.value = !showExportDropdown.value
@@ -785,6 +883,27 @@ const unitsGrouped = computed(() => {
     });
 });
 
+const monthlyAverage = computed(() => {
+    if (!detailData.value || !detailData.value.monthly || detailData.value.monthly.length === 0) return null;
+    let num = 0;
+    let denum = 0;
+    detailData.value.monthly.forEach(m => {
+        num += parseInt(m.total_num || 0);
+        denum += parseInt(m.total_denum || 0);
+    });
+    
+    let score = 0;
+    if (denum > 0) {
+        score = parseFloat(((num / denum) * 100).toFixed(2));
+    }
+    
+    return {
+        total_num: num,
+        total_denum: denum,
+        score: score
+    };
+});
+
 const fetchDetail = async (item, force = false) => {
     const rowId = getRowId(item)
     // Toggle off if clicking the same item (unless forced)
@@ -943,11 +1062,77 @@ onMounted(() => {
     fetchMasterUtama()
     fetchData()
     window.addEventListener('click', handleClickOutside)
+    
+    const loadImg = (src) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+            img.src = src;
+        });
+    }
+    loadImg(logoUrl).then(img => imgLogo = img);
+    loadImg(logoLarsiUrl).then(img => imgLogoLarsi = img);
 })
 
 onUnmounted(() => {
     window.removeEventListener('click', handleClickOutside)
 })
+
+const drawPDFHeader = (doc, title, subtitle1, subtitle2, isLandscape = false) => {
+    const pageWidth = isLandscape ? 297 : 210;
+    const centerX = pageWidth / 2;
+    
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    
+    if (imgLogo) {
+        doc.addImage(imgLogo, 'PNG', 15, 8, 20, 20);
+    }
+    if (imgLogoLarsi) {
+        doc.addImage(imgLogoLarsi, 'PNG', pageWidth - 49, 11, 34, 13);
+    }
+    
+    doc.setTextColor(33, 37, 41);
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RSIA AISYIYAH PEKAJANGAN', centerX, 15, { align: 'center' });
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('JL. RAYA PEKAJANGAN NO. 610 PEKALONGAN, JAWA TENGAH', centerX, 21, { align: 'center' });
+    doc.text('Telp: (0285) 785909 | Email: rba610@gmail.com', centerX, 26, { align: 'center' });
+    
+    // Divider lines
+    doc.setDrawColor(33, 37, 41);
+    doc.setLineWidth(1.0);
+    doc.line(15, 31, pageWidth - 15, 31);
+    
+    doc.setLineWidth(0.2);
+    doc.line(15, 32.5, pageWidth - 15, 32.5);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, centerX, 42, { align: 'center' });
+    
+    let nextY = 47;
+    
+    if (subtitle1) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(subtitle1, centerX, nextY, { align: 'center' });
+        if (subtitle2) {
+            nextY += 5;
+            doc.text(subtitle2, centerX, nextY, { align: 'center' });
+        }
+        nextY += 12; // Extra padding below subtitles
+    } else {
+        nextY += 10; // Extra padding below main title when no subtitles exist
+    }
+    
+    return nextY;
+}
 
 const exportDetailToPDF = async (data) => {
     const doc = new jsPDF('p', 'mm', 'a4');
@@ -963,22 +1148,15 @@ const exportDetailToPDF = async (data) => {
     if (filters.jenis === 'group') {
         // Group Mode Layout (Compact, Side-by-Side & Room Details)
         
-        // Header
-        doc.setFillColor(67, 94, 190);
-        doc.rect(0, 0, 210, 20, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-        doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 10, { align: 'center' });
-        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-        doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun} | RSIA AISYIYAH PEKAJANGAN`, 105, 15, { align: 'center' });
+        let startYHeader = drawPDFHeader(doc, 'LAPORAN CAPAIAN INDIKATOR MUTU', `Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, null, false);
 
         // Content Title
         doc.setTextColor(33, 37, 41);
         doc.setFontSize(10); doc.setFont('helvetica', 'bold');
         const titleLines = doc.splitTextToSize(indicator.nama_inmut_utama || indicator.nama_inmut, 180);
-        doc.text(titleLines, 15, 28);
+        doc.text(titleLines, 15, startYHeader);
         
-        let startYDetails = 28 + (titleLines.length * 4.5);
+        let startYDetails = startYHeader + (titleLines.length * 4.5);
         
         // Summary Text
         doc.setFontSize(9); doc.setFont('helvetica', 'normal');
@@ -1006,14 +1184,16 @@ const exportDetailToPDF = async (data) => {
         autoTable(doc, {
             head: tableHead,
             body: tableBody,
+            foot: [['Rata-Rata / Total', totalNum, totalDenum, `${overallScore}%`, isTotalTercapai ? 'Tercapai' : 'Tidak Tercapai']],
             startY: startYTable,
             margin: { left: 15 },
             tableWidth: 90,
             theme: 'grid',
             headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
+            footStyles: { fillColor: [240, 244, 253], textColor: [33, 37, 41], fontSize: 8, fontStyle: 'bold' },
             styles: { fontSize: 8 },
             didParseCell: function(data) {
-                if (data.column.index === 4 && data.cell.section === 'body') {
+                if (data.column.index === 4 && (data.cell.section === 'body' || data.cell.section === 'foot')) {
                     data.cell.styles.textColor = data.cell.text[0] === 'Tercapai' ? [21, 128, 61] : [220, 53, 69];
                 }
             }
@@ -1024,7 +1204,7 @@ const exportDetailToPDF = async (data) => {
         let chartImg = null;
         if (chartInstance) {
             try {
-                const chartDataURI = await chartInstance.dataURI();
+                const chartDataURI = await chartInstance.dataURI({ scale: 3 });
                 if (chartDataURI && chartDataURI.imgURI) {
                     chartImg = chartDataURI.imgURI;
                 }
@@ -1033,7 +1213,10 @@ const exportDetailToPDF = async (data) => {
             }
         }
         if (chartImg) {
-            doc.addImage(chartImg, 'PNG', 110, startYTable, 85, 42);
+            const imgProps = doc.getImageProperties(chartImg);
+            const pdfWidth = 85;
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            doc.addImage(chartImg, 'PNG', 110, startYTable, pdfWidth, pdfHeight);
         }
 
         // Room / Unit Details Table
@@ -1095,64 +1278,73 @@ const exportDetailToPDF = async (data) => {
         }
     } else {
         // Header
-        doc.setFillColor(67, 94, 190); // Primary color #435ebe
-        doc.rect(0, 0, 210, 40, 'F');
-        
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 18, { align: 'center' });
-        
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text('RSIA AISYIYAH PEKAJANGAN', 105, 25, { align: 'center' });
-        doc.text('Sistem Monitoring Indikator Mutu Digital', 105, 30, { align: 'center' });
+        let startYHeader = drawPDFHeader(doc, 'LAPORAN CAPAIAN INDIKATOR MUTU', null, null, false);
         
         // Content Info
         doc.setTextColor(33, 37, 41);
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text(indicator.nama_inmut_utama || indicator.nama_inmut, 15, 55);
+        doc.text(indicator.nama_inmut_utama || indicator.nama_inmut, 15, startYHeader);
         
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         if (filters.jenis === 'group') {
-            doc.text(`Kategori: ${indicator.kategori || 'Global'} (Rekapitulasi Global)`, 15, 62);
+            doc.text('Kategori', 15, startYHeader + 7);
+            doc.text(`: ${indicator.kategori || 'Global'} (Rekapitulasi Global)`, 40, startYHeader + 7);
         } else {
-            doc.text(`Unit / Ruang: ${indicator.nama_ruang || '-'}`, 15, 62);
+            doc.text('Unit / Ruang', 15, startYHeader + 7);
+            doc.text(`: ${indicator.nama_ruang || '-'}`, 40, startYHeader + 7);
         }
-        doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, 15, 67);
+        doc.text('Periode', 15, startYHeader + 12);
+        doc.text(`: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, 40, startYHeader + 12);
         
         // Summary Box
         doc.setDrawColor(226, 232, 240);
         doc.setFillColor(248, 250, 252);
-        doc.roundedRect(15, 75, 180, 25, 2, 2, 'FD');
+        doc.roundedRect(15, startYHeader + 20, 180, 25, 2, 2, 'FD');
         
         doc.setFont('helvetica', 'bold');
-        doc.text('Target / Standar:', 25, 85);
-        doc.text(getStandar(indicator), 65, 85);
+        doc.text('Target / Standar', 25, startYHeader + 30);
+        doc.text(': ' + getStandar(indicator), 60, startYHeader + 30);
         
-        doc.text('Total Capaian:', 25, 92);
+        doc.text('Total Capaian', 25, startYHeader + 37);
+        doc.text(':', 60, startYHeader + 37);
+        
         doc.setTextColor(isTotalTercapai ? 21 : 220, isTotalTercapai ? 128 : 53, isTotalTercapai ? 61 : 69);
-        doc.text(`${overallScore}%`, 65, 92);
-        doc.text(`(${isTotalTercapai ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, 92);
+        doc.text(`${overallScore}%`, 63, startYHeader + 37);
+        doc.text(`(${isTotalTercapai ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 85, startYHeader + 37);
         
         doc.setTextColor(33, 37, 41);
+        
+        let startYChart = startYHeader + 60;
+        let startYTable = startYChart + 100; // Increased to accommodate taller chart
         
         // Chart
         const chartInstance = Array.isArray(chartRef.value) ? chartRef.value[0] : chartRef.value;
         
         if (chartInstance) {
             try {
-                const chartDataURI = await chartInstance.dataURI();
+                const chartDataURI = await chartInstance.dataURI({ scale: 3 });
                 if (chartDataURI && chartDataURI.imgURI) {
                     doc.setFont('helvetica', 'bold');
-                    doc.text('Grafik Tren Capaian Bulanan:', 15, 115);
-                    doc.addImage(chartDataURI.imgURI, 'PNG', 15, 120, 180, 80);
+                    doc.text('Grafik Tren Capaian Bulanan:', 15, startYChart - 5);
+                    
+                    const imgProps = doc.getImageProperties(chartDataURI.imgURI);
+                    const pdfWidth = 110; // Reduced further from 140 to 110
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    const xOffset = (210 - pdfWidth) / 2; // Center horizontally
+                    
+                    doc.addImage(chartDataURI.imgURI, 'PNG', xOffset, startYChart, pdfWidth, pdfHeight);
+                    startYTable = startYChart + pdfHeight + 10;
+                } else {
+                    startYTable = startYChart; // No chart, move table up
                 }
             } catch (e) {
                 console.error('Chart export failed', e);
+                startYTable = startYChart;
             }
+        } else {
+            startYTable = startYChart;
         }
         
         // Table
@@ -1168,9 +1360,11 @@ const exportDetailToPDF = async (data) => {
         autoTable(doc, {
             head: tableHead,
             body: tableBody,
-            startY: chartInstance ? 210 : 120,
+            foot: [['Rata-Rata / Total', totalNum, totalDenum, `${overallScore}%`, isTotalTercapai ? 'Tercapai' : 'Tidak Tercapai']],
+            startY: startYTable,
             theme: 'grid',
             headStyles: { fillColor: [67, 94, 190], halign: 'center' },
+            footStyles: { fillColor: [240, 244, 253], textColor: [33, 37, 41], fontStyle: 'bold', halign: 'center' },
             columnStyles: {
                 0: { cellWidth: 50 },
                 1: { halign: 'center' },
@@ -1179,7 +1373,7 @@ const exportDetailToPDF = async (data) => {
                 4: { halign: 'center' }
             },
             didParseCell: function(data) {
-                if (data.column.index === 4 && data.cell.section === 'body') {
+                if (data.column.index === 4 && (data.cell.section === 'body' || data.cell.section === 'foot')) {
                     if (data.cell.text[0] === 'Tercapai') {
                         data.cell.styles.textColor = [21, 128, 61];
                     } else {
@@ -1188,6 +1382,47 @@ const exportDetailToPDF = async (data) => {
                 }
             }
         });
+
+        if (filters.tipe === 'triwulan' && data.pdsa) {
+            doc.addPage();
+            const nextYPdsa = 20;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(33, 37, 41);
+            doc.text('HASIL PDSA (PLAN-DO-STUDY-ACT):', 15, nextYPdsa);
+            
+            const pdsaHead = [['Tahap', 'Keterangan', 'Uraian']];
+            const pdsaBody = [
+                [{ content: 'PLAN', rowSpan: 4, styles: { halign: 'center', valign: 'middle', fontStyle: 'bold', textColor: [13, 110, 253] } }, { content: 'Latar Belakang', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.p_latar_belakang || '-'],
+                [{ content: 'Tujuan', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.p_tujuan || '-'],
+                [{ content: 'Akar Masalah', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.p_akar_masalah || '-'],
+                [{ content: 'Intervensi', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.p_rencana_intervensi || '-'],
+                
+                [{ content: 'DO', rowSpan: 2, styles: { halign: 'center', valign: 'middle', fontStyle: 'bold', textColor: [253, 126, 20] } }, { content: 'Pelaksanaan', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.d_uraian || '-'],
+                [{ content: 'Kendala', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.d_kendala || '-'],
+                
+                [{ content: 'STUDY', rowSpan: 3, styles: { halign: 'center', valign: 'middle', fontStyle: 'bold', textColor: [13, 202, 240] } }, { content: 'Hasil & Data', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.s_hasil || '-'],
+                [{ content: 'Analisis', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.s_analisis || '-'],
+                [{ content: 'Pembelajaran', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.s_pembelajaran || '-'],
+                
+                [{ content: 'ACT', rowSpan: 2, styles: { halign: 'center', valign: 'middle', fontStyle: 'bold', textColor: [25, 135, 84] } }, { content: 'Keputusan', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.a_keputusan ? data.pdsa.a_keputusan.toUpperCase() : '-'],
+                [{ content: 'Tindak Lanjut', styles: { fontStyle: 'bold', textColor: [33, 37, 41] } }, data.pdsa.a_tindak_lanjut || '-']
+            ];
+            
+            autoTable(doc, {
+                head: pdsaHead,
+                body: pdsaBody,
+                startY: nextYPdsa + 4,
+                theme: 'grid',
+                headStyles: { fillColor: [67, 94, 190], textColor: [255, 255, 255], fontSize: 9, halign: 'center' },
+                styles: { fontSize: 8, cellPadding: 3, valign: 'middle', textColor: [100, 100, 100] },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 35, fillColor: [248, 249, 250] },
+                    2: { cellWidth: 'auto' }
+                }
+            });
+        }
     }
     
     // Footer - Page Number
@@ -1228,16 +1463,6 @@ const exportRekapToPDF = async () => {
     const doc = new jsPDF('l', 'mm', 'a4');
     
     // Header
-    doc.setFillColor(67, 94, 190);
-    doc.rect(0, 0, 297, 35, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('REKAPITULASI CAPAIAN INDIKATOR MUTU', 148, 15, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
     const isGroup = filters.jenis === 'group';
     let subtitle = '';
     if (isGroup) {
@@ -1246,8 +1471,7 @@ const exportRekapToPDF = async () => {
         const unitText = filters.unit ? units.value.find(u => u.dep_id === filters.unit)?.nama_ruang : 'Seluruh Unit';
         subtitle = `Unit: ${unitText} | Periode: ${filters.tipe.toUpperCase()} ${filters.periode} Tahun ${filters.tahun}`;
     }
-    doc.text(subtitle, 148, 22, { align: 'center' });
-    doc.text('RSIA AISYIYAH PEKAJANGAN', 148, 27, { align: 'center' });
+    let startYTable = drawPDFHeader(doc, 'REKAPITULASI CAPAIAN INDIKATOR MUTU', subtitle, null, true);
     
     const tableHead = [
         isGroup 
@@ -1268,7 +1492,7 @@ const exportRekapToPDF = async () => {
     autoTable(doc, {
         head: tableHead,
         body: tableBody,
-        startY: 45,
+        startY: startYTable,
         theme: 'grid',
         headStyles: { fillColor: [67, 94, 190], halign: 'center' },
         columnStyles: {
@@ -1358,32 +1582,25 @@ const exportFullReportToPDF = async () => {
             
             let chartImg = null;
             if (printChartRef.value) {
-                const uri = await printChartRef.value.dataURI();
+                const uri = await printChartRef.value.dataURI({ scale: 3 });
                 chartImg = uri.imgURI;
             }
 
             // 4. Build PDF Page
             if (i > 0) doc.addPage();
             
+            let startYHeader = drawPDFHeader(doc, 'LAPORAN CAPAIAN INDIKATOR MUTU', null, null, false);
+            
             if (filters.jenis === 'group') {
                 // Group Mode Layout (Compact, Side-by-Side & Room Details)
                 
-                // Header
-                doc.setFillColor(67, 94, 190);
-                doc.rect(0, 0, 210, 20, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-                doc.text('LAPORAN CAPAIAN INDIKATOR MUTU', 105, 10, { align: 'center' });
-                doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-                doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun} | RSIA AISYIYAH PEKAJANGAN`, 105, 15, { align: 'center' });
-
                 // Content Title
                 doc.setTextColor(33, 37, 41);
                 doc.setFontSize(10); doc.setFont('helvetica', 'bold');
                 const titleLines = doc.splitTextToSize(`${i+1}. ${item.nama_inmut}`, 180);
-                doc.text(titleLines, 15, 28);
+                doc.text(titleLines, 15, startYHeader);
                 
-                let startYDetails = 28 + (titleLines.length * 4.5);
+                let startYDetails = startYHeader + (titleLines.length * 4.5);
                 
                 // Summary Text
                 doc.setFontSize(9); doc.setFont('helvetica', 'normal');
@@ -1488,35 +1705,41 @@ const exportFullReportToPDF = async () => {
                 }
             } else {
                 // Page Header (Simple version for all-in-one - Semua Mode)
-                doc.setFillColor(67, 94, 190);
-                doc.rect(0, 0, 210, 25, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-                doc.text('LAPORAN INDIKATOR MUTU', 105, 12, { align: 'center' });
-                doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-                doc.text(`Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun} | RSIA AISYIYAH PEKAJANGAN`, 105, 18, { align: 'center' });
+                let startYHeader = drawPDFHeader(doc, 'LAPORAN INDIKATOR MUTU', `Periode: ${filters.tipe.toUpperCase()} ${filters.periode} - ${filters.tahun}`, null, false);
 
                 // Content
                 doc.setTextColor(33, 37, 41);
                 doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-                doc.text(`${i+1}. ${item.nama_inmut}`, 15, 40, { maxWidth: 180 });
+                doc.text(`${i+1}. ${item.nama_inmut}`, 15, startYHeader, { maxWidth: 180 });
                 
                 doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-                doc.text(`Unit: ${item.nama_ruang || '-'}`, 15, 50);
+                doc.text('Unit / Ruang', 15, startYHeader + 10);
+                doc.text(`: ${item.nama_ruang || '-'}`, 35, startYHeader + 10);
                 
                 // Summary Box
                 doc.setDrawColor(226, 232, 240); doc.setFillColor(248, 250, 252);
-                doc.roundedRect(15, 55, 180, 20, 2, 2, 'FD');
+                doc.roundedRect(15, startYHeader + 15, 180, 20, 2, 2, 'FD');
                 doc.setFont('helvetica', 'bold');
-                doc.text('Target:', 20, 65); doc.text(getStandar(item), 45, 65);
-                doc.text('Capaian:', 100, 65); 
+                doc.text('Target:', 20, startYHeader + 25); doc.text(getStandar(item), 45, startYHeader + 25);
+                doc.text('Capaian:', 100, startYHeader + 25); 
                 doc.setTextColor(isTercapai(item) ? 21 : 220, isTercapai(item) ? 128 : 53, isTercapai(item) ? 61 : 69);
-                doc.text(`${item.score}% (${isTercapai(item) ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 118, 65);
+                doc.text(`${item.score}% (${isTercapai(item) ? 'TERCAPAI' : 'TIDAK TERCAPAI'})`, 118, startYHeader + 25);
                 doc.setTextColor(33, 37, 41);
+
+                let startYChart = startYHeader + 40;
+                let startYTable = startYChart + 90; // Increased to accommodate taller chart
 
                 // Chart Image
                 if (chartImg) {
-                    doc.addImage(chartImg, 'PNG', 15, 80, 180, 75);
+                    const imgProps = doc.getImageProperties(chartImg);
+                    const pdfWidth = 110; // Reduced further from 140 to 110
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    const xOffset = (210 - pdfWidth) / 2; // Center horizontally
+                    
+                    doc.addImage(chartImg, 'PNG', xOffset, startYChart, pdfWidth, pdfHeight);
+                    startYTable = startYChart + pdfHeight + 10;
+                } else {
+                    startYTable = startYChart;
                 }
 
                 // Table
@@ -1529,7 +1752,7 @@ const exportFullReportToPDF = async () => {
                 autoTable(doc, {
                     head: tableHead,
                     body: tableBody,
-                    startY: 160,
+                    startY: startYTable,
                     theme: 'grid',
                     headStyles: { fillColor: [67, 94, 190], fontSize: 8 },
                     styles: { fontSize: 8 },

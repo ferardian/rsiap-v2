@@ -9,15 +9,16 @@
 
     <!-- Content -->
     <!-- Content -->
-    <div class="card shadow-md border-0 overflow-hidden">
-      <div class="card-header premium-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
+    <div class="card shadow-md border-0" style="border-radius: 12px;">
+      <div class="card-header premium-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
         <div class="d-flex align-items-center gap-3">
           <div class="mode-segmented-control">
               <div 
                   v-for="mode in [
                       { id: 'daily', label: 'Harian', icon: 'fa-list' },
                       { id: 'monthly', label: 'Bulanan', icon: 'fa-calendar-alt' },
-                      { id: 'analisa', label: 'Analisa', icon: 'fa-chart-line' }
+                      { id: 'analisa', label: 'Analisa', icon: 'fa-chart-line' },
+                      { id: 'pdsa', label: 'PDSA', icon: 'fa-project-diagram' }
                   ]" 
                   :key="mode.id"
                   class="mode-option"
@@ -54,7 +55,7 @@
                 </div>
                 <div class="header-filter-item unit-select-container">
                     <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select 
+                    <v-select append-to-body 
                         :options="units" 
                         label="nama_ruang" 
                         v-model="filters.unit"
@@ -75,7 +76,7 @@
                 </div>
                 <div class="header-filter-item unit-select-container">
                     <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select 
+                    <v-select append-to-body 
                         :options="units" 
                         label="nama_ruang" 
                         v-model="filters.unit"
@@ -88,7 +89,7 @@
                 </div>
                 <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
                     <div class="header-filter-label">Pilih Indikator</div>
-                    <v-select 
+                    <v-select append-to-body 
                         :options="indicators" 
                         label="nama_inmut" 
                         v-model="selectedIndicator"
@@ -103,7 +104,7 @@
             <template v-else-if="viewMode === 'analisa'">
                 <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
                     <div class="header-filter-label">Pilih Indikator</div>
-                    <v-select 
+                    <v-select append-to-body 
                         :options="indicators" 
                         label="nama_inmut" 
                         v-model="selectedIndicator"
@@ -123,7 +124,7 @@
                 </div>
                 <div class="header-filter-item unit-select-container">
                     <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select 
+                    <v-select append-to-body 
                         :options="units" 
                         label="nama_ruang" 
                         v-model="filters.unit"
@@ -132,6 +133,46 @@
                         class="header-vselect unit-select"
                         :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
                         @update:modelValue="fetchAnalisaData"
+                    />
+                </div>
+            </template>
+
+            <!-- PDSA MODE FILTERS -->
+            <template v-else-if="viewMode === 'pdsa'">
+                <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
+                    <div class="header-filter-label">Pilih Indikator</div>
+                    <v-select append-to-body 
+                        :options="indicators" 
+                        label="nama_inmut" 
+                        v-model="selectedIndicator"
+                        placeholder="Pilih Indikator..."
+                        class="header-vselect"
+                        @update:modelValue="fetchPdsaData"
+                    />
+                </div>
+                <div class="header-filter-item">
+                    <div class="header-filter-label">Periode Analisa</div>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm header-input" v-model="selectedTriwulan" @change="handleTriwulanChange">
+                            <option value="03">Triwulan 1 (Jan - Mar)</option>
+                            <option value="06">Triwulan 2 (Apr - Jun)</option>
+                            <option value="09">Triwulan 3 (Jul - Sep)</option>
+                            <option value="12">Triwulan 4 (Okt - Des)</option>
+                        </select>
+                        <input type="number" class="form-control form-control-sm header-input" style="width: 80px;" v-model="selectedYear" @change="handleTriwulanChange">
+                    </div>
+                </div>
+                <div class="header-filter-item unit-select-container">
+                    <div class="header-filter-label">Unit / Ruangan</div>
+                    <v-select append-to-body 
+                        :options="units" 
+                        label="nama_ruang" 
+                        v-model="filters.unit"
+                        :reduce="unit => unit.dep_id"
+                        placeholder="Pilih Unit"
+                        class="header-vselect unit-select"
+                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+                        @update:modelValue="fetchPdsaData"
                     />
                 </div>
             </template>
@@ -612,6 +653,237 @@
                 </div>
             </div>
         </div>
+
+        <!-- PDSA VIEW -->
+        <div v-else-if="viewMode === 'pdsa'" class="p-3">
+            <div v-if="!selectedIndicator" class="text-center py-5 text-muted">
+                <i class="fas fa-project-diagram fa-3x mb-3 opacity-50"></i>
+                <p>Pilih Indikator di atas untuk memuat data PDSA</p>
+            </div>
+            
+            <div v-else-if="pdsaLoading" class="text-center py-5">
+                <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                <p class="text-muted">Memuat data PDSA...</p>
+            </div>
+
+            <div v-else>
+                <!-- Validation Lock -->
+                <div v-if="!hasAnalisaForPdsa" class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Data Analisa Belum Tersedia</h6>
+                        <p class="mb-0 small">Formulir PDSA hanya dapat diisi jika Bapak/Ibu sudah menginput data Analisa Mutu untuk periode bulan ini. Silakan kembali ke tab <b>Analisa</b> terlebih dahulu.</p>
+                    </div>
+                </div>
+
+                <!-- PDSA Form Container -->
+                <div v-else class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between p-3 border-0">
+                        <h6 class="fw-bold mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i> FORM PDSA PERBAIKAN MUTU
+                        </h6>
+                    </div>
+                    
+                    <div class="card-body p-4 bg-light">
+                        <!-- Success Indicator -->
+                        <div v-if="pdsaForm.id" class="alert alert-success d-flex align-items-center border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 4px solid #198754 !important; background: linear-gradient(to right, #d1e7dd, #f8f9fa);">
+                            <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                            <div>
+                                <h6 class="fw-bold text-success mb-1">Data PDSA Tersimpan</h6>
+                                <p class="mb-0 small text-dark">Data PDSA untuk indikator ini sudah tersimpan di sistem. Bapak/Ibu dapat memperbarui data kapan saja jika ada perkembangan dari rencana tindak lanjut.</p>
+                            </div>
+                        </div>
+
+                        <!-- Top Info -->
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(to right, #f8f9fa, #ffffff); border-left: 4px solid #3b82f6 !important;">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold text-dark mb-4"><i class="fas fa-info-circle text-primary me-2"></i> Informasi Dasar PDSA</h6>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Topik Perbaikan</label>
+                                        <input type="text" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.topik" placeholder="Contoh: Menurunkan waktu tunggu obat">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Tim</label>
+                                        <input type="text" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tim" placeholder="Contoh: Tim Farmasi">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Tgl Mulai Uji Coba</label>
+                                        <input type="date" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tgl_mulai">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Tgl Selesai Uji Coba</label>
+                                        <input type="date" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tgl_selesai">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1. PLAN -->
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                    <div class="badge bg-primary text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">1</div>
+                                    <div>
+                                        <h5 class="fw-bold text-primary mb-0" style="letter-spacing: 0.5px;">PLAN</h5>
+                                        <span class="text-muted small fw-medium">Rencanakan Perbaikan</span>
+                                    </div>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Latar Belakang / Masalah</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_latar_belakang" placeholder="Jelaskan masalah berdasarkan data/keluhan/audit."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Tujuan Perbaikan</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_tujuan" placeholder="SMART. Contoh: Menurunkan waktu tunggu obat jadi <30 menit dalam 4 minggu."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Analisis Singkat Akar Masalah</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_akar_masalah" placeholder="Tulis 1-2 penyebab utama yang akan diuji."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Rencana Perubahan / Intervensi</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_rencana_intervensi" placeholder="Apa yang akan dicoba? Siapa PIC? Kapan? Di mana?"></textarea>
+                                    </div>
+                                    <div class="col-12 mt-4">
+                                        <div class="p-4 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da;">
+                                            <h6 class="fw-bold small mb-3 text-secondary text-uppercase"><i class="fas fa-ruler-combined me-2"></i>Rencana Pengukuran</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" v-model="pdsaForm.p_indikator" placeholder="Indikator Pengukuran">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" v-model="pdsaForm.p_cara_ukur" placeholder="Cara Ukur">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" v-model="pdsaForm.p_frekuensi" placeholder="Frekuensi (Harian/Mingguan)">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" v-model="pdsaForm.p_target" placeholder="Target Angka">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. DO -->
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                    <div class="badge text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="background-color: #f59e0b; width: 40px; height: 40px; font-size: 1.1rem;">2</div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0" style="color: #d97706; letter-spacing: 0.5px;">DO</h5>
+                                        <span class="text-muted small fw-medium">Lakukan Uji Coba</span>
+                                    </div>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Uraian Pelaksanaan</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.d_uraian" placeholder="Tulis singkat apa yang dilakukan sesuai rencana. Catat tanggal mulai."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Kendala & Hal yang Berjalan Baik</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.d_kendala" placeholder="Catat apa yang terjadi di lapangan saat uji coba."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. STUDY -->
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                    <div class="badge bg-info text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">3</div>
+                                    <div>
+                                        <h5 class="fw-bold text-info mb-0" style="letter-spacing: 0.5px;">STUDY</h5>
+                                        <span class="text-muted small fw-medium">Pelajari Hasilnya</span>
+                                    </div>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold text-dark">Hasil & Data</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="2" v-model="pdsaForm.s_hasil" placeholder="Tulis data sebelum dan sesudah."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Analisis</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.s_analisis" placeholder="Apakah target tercapai? Mengapa berhasil/gagal? Perubahan mana yang paling berpengaruh?"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">Pembelajaran</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.s_pembelajaran" placeholder="Apa yang kita pelajari dari uji coba ini?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. ACT -->
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                    <div class="badge bg-success text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">4</div>
+                                    <div>
+                                        <h5 class="fw-bold text-success mb-0" style="letter-spacing: 0.5px;">ACT</h5>
+                                        <span class="text-muted small fw-medium">Tindak Lanjuti Keputusan</span>
+                                    </div>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold text-dark mb-3">Keputusan Uji Coba</label>
+                                        <div class="d-flex flex-column gap-3">
+                                            <label class="form-check p-3 rounded-3 border" :class="{'border-success bg-success-light': pdsaForm.a_keputusan === 'Adopt', 'bg-light': pdsaForm.a_keputusan !== 'Adopt'}" style="cursor: pointer; transition: all 0.2s;">
+                                                <div class="d-flex align-items-center">
+                                                    <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Adopt" style="transform: scale(1.2);">
+                                                    <div>
+                                                        <span class="fw-bold d-block text-dark">Adopt</span>
+                                                        <span class="small text-muted">Jadikan standar, sebarkan ke unit lain</span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            
+                                            <label class="form-check p-3 rounded-3 border" :class="{'border-warning bg-warning-light': pdsaForm.a_keputusan === 'Adapt', 'bg-light': pdsaForm.a_keputusan !== 'Adapt'}" style="cursor: pointer; transition: all 0.2s;">
+                                                <div class="d-flex align-items-center">
+                                                    <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Adapt" style="transform: scale(1.2);">
+                                                    <div>
+                                                        <span class="fw-bold d-block text-dark">Adapt</span>
+                                                        <span class="small text-muted">Modifikasi dan uji lagi di siklus berikutnya</span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                            
+                                            <label class="form-check p-3 rounded-3 border" :class="{'border-danger bg-danger-light': pdsaForm.a_keputusan === 'Abandon', 'bg-light': pdsaForm.a_keputusan !== 'Abandon'}" style="cursor: pointer; transition: all 0.2s;">
+                                                <div class="d-flex align-items-center">
+                                                    <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Abandon" style="transform: scale(1.2);">
+                                                    <div>
+                                                        <span class="fw-bold d-block text-dark">Abandon</span>
+                                                        <span class="small text-muted">Hentikan, coba intervensi lain</span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-bold text-dark mb-3">Rencana Tindak Lanjut</label>
+                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6; min-height: 200px;" rows="7" v-model="pdsaForm.a_tindak_lanjut" placeholder="Jelaskan langkah selanjutnya berdasarkan keputusan di atas secara mendetail."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-flex justify-content-end mt-4 pt-4 border-top">
+                            <button class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm d-flex align-items-center gap-2" @click="savePdsa" :disabled="pdsaSaving" style="font-weight: 600; padding: 12px 30px;">
+                                <i v-if="pdsaSaving" class="fas fa-spinner fa-spin"></i>
+                                <i v-else class="fas fa-save"></i>
+                                {{ pdsaForm.id ? 'Perbarui PDSA' : 'Simpan PDSA' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     </div>
   </div>
@@ -644,7 +916,7 @@ const calendarData = ref([])
 
 // === MODE GLIDER LOGIC ===
 const gliderStyle = computed(() => {
-    const modes = ['daily', 'monthly', 'analisa']
+    const modes = ['daily', 'monthly', 'analisa', 'pdsa']
     const activeIndex = modes.indexOf(viewMode.value)
     return {
         transform: `translateX(${activeIndex * 100}%)`
@@ -669,15 +941,52 @@ const analisaFilters = reactive({
 
 // === MONTHLY DATE SYNC ===
 const monthlyFilterDate = ref(filters.tgl_transaksi.slice(0, 7))
+
 const handleMonthlyDateChange = () => {
     if (monthlyFilterDate.value) {
         filters.tgl_transaksi = `${monthlyFilterDate.value}-01`
         analisaFilters.bulan = monthlyFilterDate.value
+        
+        // Sync triwulan selector when month changes in Monthly mode
+        const dateObj = new Date(filters.tgl_transaksi)
+        selectedYear.value = dateObj.getFullYear()
+        const month = dateObj.getMonth() + 1
+        if (month <= 3) selectedTriwulan.value = '03'
+        else if (month <= 6) selectedTriwulan.value = '06'
+        else if (month <= 9) selectedTriwulan.value = '09'
+        else selectedTriwulan.value = '12'
+
         if (viewMode.value === 'monthly') {
             fetchMonthlyData()
         } else if (viewMode.value === 'analisa') {
             fetchAnalisaData()
+        } else if (viewMode.value === 'pdsa') {
+            fetchPdsaData()
         }
+    }
+}
+
+// === TRIWULAN SYNC ===
+const currentMonth = new Date().getMonth() + 1
+let initialTriwulan = '03'
+if (currentMonth <= 3) initialTriwulan = '03'
+else if (currentMonth <= 6) initialTriwulan = '06'
+else if (currentMonth <= 9) initialTriwulan = '09'
+else initialTriwulan = '12'
+
+const selectedTriwulan = ref(initialTriwulan)
+const selectedYear = ref(new Date().getFullYear())
+
+const handleTriwulanChange = () => {
+    const newBulan = `${selectedYear.value}-${selectedTriwulan.value}`
+    monthlyFilterDate.value = newBulan
+    filters.tgl_transaksi = `${newBulan}-01`
+    analisaFilters.bulan = newBulan
+    
+    if (viewMode.value === 'analisa') {
+        fetchAnalisaData()
+    } else if (viewMode.value === 'pdsa') {
+        fetchPdsaData()
     }
 }
 
@@ -685,13 +994,32 @@ const fetchCorrectData = () => {
     if (viewMode.value === 'daily') fetchIndicators()
     else if (viewMode.value === 'monthly') fetchMonthlyData()
     else if (viewMode.value === 'analisa') fetchAnalisaData()
+    else if (viewMode.value === 'pdsa') fetchPdsaData()
 }
 
 // Watch viewMode to sync and auto-fetch
 watch(viewMode, (newMode) => {
-    if (newMode === 'monthly' || newMode === 'analisa') {
+    if (newMode === 'monthly' || newMode === 'analisa' || newMode === 'pdsa') {
         monthlyFilterDate.value = filters.tgl_transaksi.slice(0, 7)
         analisaFilters.bulan = monthlyFilterDate.value
+        
+        // Ensure Triwulan selector matches
+        if (newMode === 'analisa' || newMode === 'pdsa') {
+            const dateObj = new Date(filters.tgl_transaksi)
+            selectedYear.value = dateObj.getFullYear()
+            const month = dateObj.getMonth() + 1
+            if (month <= 3) selectedTriwulan.value = '03'
+            else if (month <= 6) selectedTriwulan.value = '06'
+            else if (month <= 9) selectedTriwulan.value = '09'
+            else selectedTriwulan.value = '12'
+            
+            // Re-sync to make sure the selectedTriwulan sets the month precisely to the end of the triwulan 
+            // only if they haven't explicitly set it to an end month before
+            const newBulan = `${selectedYear.value}-${selectedTriwulan.value}`
+            monthlyFilterDate.value = newBulan
+            filters.tgl_transaksi = `${newBulan}-01`
+            analisaFilters.bulan = newBulan
+        }
     }
     fetchCorrectData()
 })
@@ -713,6 +1041,134 @@ const monthlyStats = ref({
 
 const isEditingAnalisa = ref(false)
 const allIndicatorStats = ref([]) // For the "All Indicators" summary view
+
+// === PDSA STATE ===
+const pdsaSaving = ref(false)
+const pdsaLoading = ref(false)
+const existingPdsa = ref(null)
+const hasAnalisaForPdsa = ref(false)
+const activeAnalisaIdForPdsa = ref(null)
+
+const pdsaForm = reactive({
+    id: null,
+    topik: '',
+    tim: '',
+    tgl_mulai: '',
+    tgl_selesai: '',
+    p_latar_belakang: '',
+    p_tujuan: '',
+    p_akar_masalah: '',
+    p_rencana_intervensi: '',
+    p_indikator: '',
+    p_cara_ukur: '',
+    p_frekuensi: '',
+    p_target: '',
+    d_uraian: '',
+    d_kendala: '',
+    s_hasil: '',
+    s_analisis: '',
+    s_pembelajaran: '',
+    a_keputusan: 'Adopt',
+    a_tindak_lanjut: '',
+})
+
+const resetPdsaForm = () => {
+    Object.keys(pdsaForm).forEach(key => {
+        pdsaForm[key] = key === 'a_keputusan' ? 'Adopt' : (key === 'id' ? null : '')
+    })
+}
+
+const fetchPdsaData = async () => {
+    if (!selectedIndicator.value || !filters.unit || !analisaFilters.bulan) return
+    
+    pdsaLoading.value = true
+    existingPdsa.value = null
+    hasAnalisaForPdsa.value = false
+    activeAnalisaIdForPdsa.value = null
+    resetPdsaForm()
+
+    try {
+        // Find if Analisa exists in any month of the selected triwulan
+        let months = []
+        if (selectedTriwulan.value === '03') months = ['03', '02', '01']
+        else if (selectedTriwulan.value === '06') months = ['06', '05', '04']
+        else if (selectedTriwulan.value === '09') months = ['09', '08', '07']
+        else if (selectedTriwulan.value === '12') months = ['12', '11', '10']
+        
+        let foundAnalisa = null
+        
+        for (const m of months) {
+            const checkBulan = `${selectedYear.value}-${m}`
+            const params = {
+                dep_id: filters.unit,
+                id_inmut: selectedIndicator.value.id_inmut,
+                bulan: checkBulan
+            }
+            
+            console.log('Checking analisa for:', checkBulan, params)
+            const analisaRes = await api.getAnalisa(params)
+            console.log('Response for', checkBulan, ':', analisaRes.data)
+            
+            const analisaList = analisaRes.data.data?.data || []
+            
+            if (analisaRes.data.success && analisaList.length > 0) {
+                foundAnalisa = analisaList[0]
+                console.log('Found analisa!', foundAnalisa)
+                break // Stop when we find the most recent one in the triwulan
+            }
+        }
+        
+        if (foundAnalisa) {
+            hasAnalisaForPdsa.value = true
+            activeAnalisaIdForPdsa.value = foundAnalisa.id_analisa
+            
+            // Fetch PDSA based on id_analisa
+            const pdsaRes = await api.getPdsa({ id_analisa: activeAnalisaIdForPdsa.value })
+            
+            if (pdsaRes.data.success && pdsaRes.data.data) {
+                existingPdsa.value = pdsaRes.data.data
+                Object.assign(pdsaForm, existingPdsa.value)
+            }
+        } else {
+            hasAnalisaForPdsa.value = false
+        }
+    } catch (error) {
+        console.error('Error fetching PDSA data:', error)
+    } finally {
+        pdsaLoading.value = false
+    }
+}
+
+const savePdsa = async () => {
+    if (!activeAnalisaIdForPdsa.value) {
+        toast.warning('Data analisa tidak ditemukan untuk periode ini')
+        return
+    }
+
+    pdsaSaving.value = true
+    try {
+        const payload = {
+            ...pdsaForm,
+            id_analisa: activeAnalisaIdForPdsa.value,
+            dep_id: filters.unit,
+            id_inmut: selectedIndicator.value.id_inmut
+        }
+
+        const res = await api.storePdsa(payload)
+        
+        if (res.data.success) {
+            toast.success(res.data.message || 'PDSA berhasil disimpan')
+            fetchPdsaData() // Reload
+        } else {
+            toast.error(res.data.message || 'Gagal menyimpan PDSA')
+        }
+    } catch (error) {
+        console.error(error)
+        toast.error('Gagal menyimpan PDSA')
+    } finally {
+        pdsaSaving.value = false
+    }
+}
 
 const fetchUnits = async () => {
     try {
@@ -1650,6 +2106,17 @@ onMounted(() => {
     font-weight: 500 !important;
     margin: 4px 2px !important;
     background: transparent !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: calc(100% - 10px) !important;
+}
+
+.header-vselect .vs__selected-options {
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    align-items: center !important;
 }
 
 .header-vselect .vs__search {

@@ -25,6 +25,10 @@ const service = {
     updateAnalisa: (id, data) => api.put(`/indikator-mutu/analisa/${id}`, data),
     deleteAnalisa: (id) => api.delete(`/indikator-mutu/analisa/${id}`),
 
+    // PDSA
+    getPdsa: (params) => api.get('/indikator-mutu/pdsa', { params }),
+    storePdsa: (data) => api.post('/indikator-mutu/pdsa', data),
+
     // Input Data / Realisasi
     saveRealisasi: (data) => api.post('/indikator-mutu/realisasi', data),
     getRealisasi: (params) => api.get('/indikator-mutu/realisasi', { params }),
