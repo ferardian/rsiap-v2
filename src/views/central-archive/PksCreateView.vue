@@ -41,15 +41,13 @@
 
                 <!-- Nomor PKS -->
                 <div class="col-md-6">
-                  <label class="form-label small fw-bold text-muted">No. PKS Internal <span class="text-danger">*</span></label>
+                  <label class="form-label small fw-bold text-muted">No. PKS Internal <span class="text-muted">(Otomatis)</span></label>
                   <input 
-                    v-model="state.no_pks_internal" 
                     type="text" 
-                    class="form-control" 
-                    placeholder="Contoh: 001/A/PKS/..."
-                   :class="{'is-invalid': errors.no_pks_internal}"
+                    class="form-control bg-light" 
+                    placeholder="Generasi otomatis oleh sistem saat disimpan..."
+                    disabled
                   />
-                  <div class="invalid-feedback">{{ errors.no_pks_internal }}</div>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small fw-bold text-muted">No. PKS Eksternal</label>
@@ -236,7 +234,6 @@ const validate = () => {
     Object.keys(errors).forEach(k => errors[k] = '')
 
     if (!state.judul) { errors.judul = 'Judul wajib diisi'; valid = false }
-    if (!state.no_pks_internal) { errors.no_pks_internal = 'Nomor PKS wajib diisi'; valid = false }
     if (!state.tanggal_awal) { errors.tanggal_awal = 'Tanggal awal wajib diisi'; valid = false }
     if (!state.pj_model) { errors.pj = 'Pilih penanggung jawab'; valid = false }
 
