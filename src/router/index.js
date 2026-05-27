@@ -356,6 +356,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/pengisian-erm',
+    name: 'MonitoringPengisianERM',
+    component: () => import('../views/dashboard/PengisianErmView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/akred/spo',
     name: 'SpoManagement',
     component: () => import('../views/akred/SpoView.vue'),
