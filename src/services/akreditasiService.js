@@ -33,6 +33,13 @@ const service = {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
     deleteDokumen: (id) => api.delete(`/akred/elemen-penilaian-dokumen/${id}`),
+
+    // Tim Akreditasi CRUD
+    getTim: (params = {}) => api.get('/akred/tim', { params }),
+    getTimById: (id, params = {}) => api.get(`/akred/tim/${id}`, { params }),
+    createTim: (payload) => api.post('/akred/tim', payload),
+    updateTim: (id, payload) => api.patch(`/akred/tim/${id}`, payload),
+    deleteTim: (id) => api.delete(`/akred/tim/${id}`),
 };
 
 export default service;

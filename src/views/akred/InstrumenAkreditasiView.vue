@@ -259,7 +259,8 @@
                               class="todo-checkbox-circle me-1" 
                               type="checkbox" 
                               :checked="todo.status === 1"
-                              @change="handleToggleTodo(todo)"
+                              @change="handleToggleTodo(ep, todo)"
+                              :disabled="!canWriteEp(ep)"
                               :id="'search-todo-check-' + todo.id"
                             >
                             <input 
@@ -269,9 +270,9 @@
                               class="form-control form-control-sm font-sans edit-todo-input px-2 py-0.5 rounded shadow-none flex-grow-1" 
                               style="font-size: 0.8rem; height: 26px; border: 1.5px solid #3b82f6; background-color: #fff;"
                               v-model="editingTodoText"
-                              @keydown.enter="saveEditTodo(todo)"
+                              @keydown.enter="saveEditTodo(ep, todo)"
                               @keydown.esc="cancelEditTodo"
-                              @blur="saveEditTodo(todo)"
+                              @blur="saveEditTodo(ep, todo)"
                             >
                             <label 
                               v-else
@@ -279,13 +280,13 @@
                               :class="{ 'text-decoration-line-through text-muted fw-normal': todo.status === 1 }"
                               :for="'search-todo-check-' + todo.id"
                               style="font-size: 0.8rem; font-weight: 500; cursor: pointer;"
-                              @dblclick="startEditTodo(todo)"
+                              @dblclick="canWriteEp(ep) && startEditTodo(todo)"
                               title="Klik ganda untuk mengubah"
                             >
                               {{ todo.todo }}
                             </label>
                           </div>
-                          <div class="d-flex align-items-center gap-1 btn-action-container">
+                          <div v-if="canWriteEp(ep)" class="d-flex align-items-center gap-1 btn-action-container">
                             <button 
                               v-if="editingTodoId !== todo.id"
                               type="button" 
@@ -308,7 +309,7 @@
                       </div>
 
                       <!-- Add Task Form -->
-                      <form @submit.prevent="handleAddTodo(ep)" class="position-relative d-flex align-items-center w-100 mt-2">
+                      <form v-if="canWriteEp(ep)" @submit.prevent="handleAddTodo(ep)" class="position-relative d-flex align-items-center w-100 mt-2">
                         <i class="fas fa-plus text-muted position-absolute ms-3" style="font-size: 0.8rem; pointer-events: none; left: 0;"></i>
                         <input 
                           type="text" 
@@ -336,6 +337,7 @@
                           <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Dokumen Bukti / Berkas Terkait</span>
                         </div>
                         <button 
+                          v-if="canWriteEp(ep)"
                           type="button" 
                           class="btn-upload-toggle flex-shrink-0"
                           :class="{ 'active': showUploadForms[ep.id] }"
@@ -388,6 +390,7 @@
                           </div>
                           
                           <button 
+                            v-if="canWriteEp(ep)"
                             type="button" 
                             class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0 ms-2" 
                             @click="handleDeleteDokumen(ep, doc)"
@@ -581,7 +584,8 @@
                                   class="todo-checkbox-circle me-1" 
                                   type="checkbox" 
                                   :checked="todo.status === 1"
-                                  @change="handleToggleTodo(todo)"
+                                  @change="handleToggleTodo(ep, todo)"
+                                  :disabled="!canWriteEp(ep)"
                                   :id="'todo-check-' + todo.id"
                                 >
                                 <input 
@@ -591,9 +595,9 @@
                                   class="form-control form-control-sm font-sans edit-todo-input px-2 py-0.5 rounded shadow-none flex-grow-1" 
                                   style="font-size: 0.8rem; height: 26px; border: 1.5px solid #3b82f6; background-color: #fff;"
                                   v-model="editingTodoText"
-                                  @keydown.enter="saveEditTodo(todo)"
+                                  @keydown.enter="saveEditTodo(ep, todo)"
                                   @keydown.esc="cancelEditTodo"
-                                  @blur="saveEditTodo(todo)"
+                                  @blur="saveEditTodo(ep, todo)"
                                 >
                                 <label 
                                   v-else
@@ -601,13 +605,13 @@
                                   :class="{ 'text-decoration-line-through text-muted fw-normal': todo.status === 1 }"
                                   :for="'todo-check-' + todo.id"
                                   style="font-size: 0.8rem; font-weight: 500; cursor: pointer;"
-                                  @dblclick="startEditTodo(todo)"
+                                  @dblclick="canWriteEp(ep) && startEditTodo(todo)"
                                   title="Klik ganda untuk mengubah"
                                 >
                                   {{ todo.todo }}
                                 </label>
                               </div>
-                              <div class="d-flex align-items-center gap-1 btn-action-container">
+                              <div v-if="canWriteEp(ep)" class="d-flex align-items-center gap-1 btn-action-container">
                                 <button 
                                   v-if="editingTodoId !== todo.id"
                                   type="button" 
@@ -629,8 +633,8 @@
                             </div>
                           </div>
 
-                          <!-- Add Task Form -->
-                          <form @submit.prevent="handleAddTodo(ep)" class="position-relative d-flex align-items-center w-100 mt-2">
+                           <!-- Add Task Form -->
+                          <form v-if="canWriteEp(ep)" @submit.prevent="handleAddTodo(ep)" class="position-relative d-flex align-items-center w-100 mt-2">
                             <i class="fas fa-plus text-muted position-absolute ms-3" style="font-size: 0.8rem; pointer-events: none; left: 0;"></i>
                             <input 
                               type="text" 
@@ -658,6 +662,7 @@
                               <span class="fw-bold text-dark font-sans" style="font-size: 0.82rem;">Dokumen Bukti / Berkas Terkait</span>
                             </div>
                             <button 
+                              v-if="canWriteEp(ep)"
                               type="button" 
                               class="btn-upload-toggle flex-shrink-0"
                               :class="{ 'active': showUploadForms[ep.id] }"
@@ -710,6 +715,7 @@
                               </div>
                               
                               <button 
+                                v-if="canWriteEp(ep)"
                                 type="button" 
                                 class="btn btn-sm shadow-none d-flex align-items-center justify-content-center border-0 list-btn-delete flex-shrink-0 ms-2" 
                                 @click="handleDeleteDokumen(ep, doc)"
@@ -1047,8 +1053,72 @@ import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import akreditasiService from '@/services/akreditasiService'
 import config from '@/config/api'
+import { useAuthStore } from '@/stores/auth'
 
 const toast = useToast()
+const authStore = useAuthStore()
+
+// User Pokja Write Access Control
+const userPokjaIds = ref([]) // Array of Pokja IDs
+const isCoreTeam = ref(false)
+const isStatusLoaded = ref(false)
+
+const fetchUserTeamStatus = async () => {
+  const currentNip = authStore.user?.data?.detail?.nik || 
+                     authStore.user?.detail?.nik || 
+                     authStore.user?.data?.detail?.nip || 
+                     authStore.user?.detail?.nip || 
+                     authStore.user?.nik || 
+                     authStore.user?.nip || 
+                     authStore.user?.id_user
+
+  if (!currentNip) {
+    isStatusLoaded.value = true
+    return
+  }
+
+  const cNip = String(currentNip).trim()
+
+  try {
+    // Orion backend hanya mendukung filter via POST search, bukan GET params biasa.
+    // Oleh karena itu ambil semua data tim (limit besar) lalu filter di frontend.
+    const response = await akreditasiService.getTim({ limit: 500 })
+    let members = response.data?.data || []
+    
+    // Filter hanya anggota yang NIK/NIP-nya cocok dengan user yang login
+    members = members.filter(m => {
+      const mNik = m.nik ? String(m.nik).trim() : ''
+      const mNip = m.nip ? String(m.nip).trim() : ''
+      return mNik === cNip || mNip === cNip
+    })
+
+    console.debug('[AkredAccess] NIK/NIP:', cNip, '| Members ditemukan:', members.length, members)
+
+    const ids = []
+    members.forEach(member => {
+      if (member.pokja_id === null) {
+        isCoreTeam.value = true
+      } else {
+        ids.push(member.pokja_id)
+      }
+    })
+    userPokjaIds.value = ids
+
+    console.debug('[AkredAccess] isCoreTeam:', isCoreTeam.value, '| userPokjaIds:', userPokjaIds.value)
+  } catch (error) {
+    console.error('Gagal mengecek keanggotaan Pokja:', error)
+  } finally {
+    isStatusLoaded.value = true
+  }
+}
+
+const canWriteEp = (ep) => {
+  if (!isStatusLoaded.value) return false
+  
+  const epPokjaId = selectedPokja.value ? selectedPokja.value.id : ep.standar?.pokja_id
+  if (!epPokjaId) return false
+  return userPokjaIds.value.map(Number).includes(Number(epPokjaId))
+}
 
 const isMobile = ref(false)
 const detectMobile = () => {
@@ -1272,6 +1342,10 @@ const newTodoTexts = ref({})
 
 // Todo list handlers
 const handleAddTodo = async (ep) => {
+  if (!canWriteEp(ep)) {
+    toast.error('Anda tidak memiliki izin untuk menambah tugas di Pokja ini')
+    return
+  }
   const text = newTodoTexts.value[ep.id]?.trim()
   if (!text) return
 
@@ -1297,7 +1371,11 @@ const handleAddTodo = async (ep) => {
   }
 }
 
-const handleToggleTodo = async (todo) => {
+const handleToggleTodo = async (ep, todo) => {
+  if (!canWriteEp(ep)) {
+    toast.error('Anda tidak memiliki izin untuk mengubah status tugas di Pokja ini')
+    return
+  }
   const oldStatus = todo.status
   const newStatus = todo.status === 1 ? 0 : 1
   
@@ -1317,6 +1395,10 @@ const handleToggleTodo = async (todo) => {
 }
 
 const handleDeleteTodo = async (ep, todo) => {
+  if (!canWriteEp(ep)) {
+    toast.error('Anda tidak memiliki izin untuk menghapus tugas di Pokja ini')
+    return
+  }
   const result = await Swal.fire({
     title: 'Hapus Tugas / Catatan?',
     text: `Apakah Anda yakin ingin menghapus "${todo.todo}"?`,
@@ -1369,7 +1451,12 @@ const cancelEditTodo = () => {
   editingTodoText.value = ''
 }
 
-const saveEditTodo = async (todo) => {
+const saveEditTodo = async (ep, todo) => {
+  if (!canWriteEp(ep)) {
+    toast.error('Anda tidak memiliki izin untuk memperbarui tugas di Pokja ini')
+    cancelEditTodo()
+    return
+  }
   const text = editingTodoText.value.trim()
   if (!text) {
     cancelEditTodo()
@@ -1451,6 +1538,10 @@ const handleFileChange = (event, ep) => {
 }
 
 const handleUploadDokumen = async (ep) => {
+  if (!canWriteEp(ep)) {
+    toast.error('Anda tidak memiliki izin untuk mengunggah dokumen di Pokja ini')
+    return
+  }
   const file = documentFiles.value[ep.id]
   const name = documentNames.value[ep.id]?.trim()
 
@@ -1494,6 +1585,10 @@ const handleUploadDokumen = async (ep) => {
 }
 
 const handleDeleteDokumen = async (ep, doc) => {
+  if (!canWriteEp(ep)) {
+    toast.error('Anda tidak memiliki izin untuk menghapus dokumen di Pokja ini')
+    return
+  }
   const result = await Swal.fire({
     title: 'Hapus Dokumen Bukti?',
     text: `Apakah Anda yakin ingin menghapus "${doc.nama}"? Berkas akan dihapus permanen dari server.`,
@@ -1561,6 +1656,7 @@ const handleScroll = () => {
 onMounted(() => {
   detectMobile()
   fetchBabAndPokja()
+  fetchUserTeamStatus()
   window.addEventListener('scroll', handleScroll)
 })
 

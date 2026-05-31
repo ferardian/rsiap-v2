@@ -1128,6 +1128,41 @@ onMounted(() => {
   gap: 1rem;
 }
 
+
+/* Modern Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  text-align: center;
+  background: radial-gradient(circle at center, rgba(248, 250, 252, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
+  border-radius: 16px;
+  grid-column: 1 / -1;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: #3b82f6;
+  margin-bottom: 1.5rem;
+  animation: floatEmptyIcon 4s ease-in-out infinite;
+}
+
+.empty-state p {
+  color: #64748b;
+  font-size: 0.925rem;
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+@keyframes floatEmptyIcon {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
 .btn-cancel { padding: 0.75rem 1.5rem; background: white; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; cursor: pointer; }
 .btn-save { padding: 0.75rem 1.5rem; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
 @media (max-width: 768px) {

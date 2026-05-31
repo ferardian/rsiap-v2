@@ -208,7 +208,6 @@
             <table class="monitoring-table">
               <thead>
                 <tr>
-                  <th>No. Rawat</th>
                   <th>Pasien</th>
                   <th>Tgl Reg</th>
                   <th>Layanan</th>
@@ -234,23 +233,23 @@
               </thead>
               <tbody>
                 <tr v-for="row in tableData" :key="row.no_rawat">
-                  <td class="cell-rawat font-mono text-sm">{{ row.no_rawat }}</td>
                   <td class="cell-pasien">
                     <div class="pasien-info">
                       <span class="pasien-name">{{ row.nm_pasien }}</span>
+                      <span class="pasien-no-rawat font-mono">{{ row.no_rawat }}</span>
                       <span class="pasien-sub font-mono">{{ row.no_rkm_medis }} • {{ row.jk }} • {{ row.umurdaftar }} {{ row.sttsumur }}</span>
                     </div>
                   </td>
-                  <td class="cell-tgl text-sm">{{ formatDate(row.tgl_registrasi) }} <br><span class="text-muted text-xs">{{ row.jam_reg }}</span></td>
+                  <td class="cell-tgl text-xs">{{ formatDate(row.tgl_registrasi) }} <br><span class="text-muted text-xs" style="font-size: 0.65rem;">{{ row.jam_reg }}</span></td>
                   <td>
                     <span :class="['badge-layanan', row.status_lanjut === 'Ranap' ? 'ranap' : 'igd']">
                       {{ row.status_lanjut === 'Ranap' ? 'Ranap' : 'IGD' }}
                     </span>
                   </td>
                   <td class="cell-unit">
-                    <span class="text-sm">{{ row.status_lanjut === 'Ranap' ? (row.nm_bangsal || 'Ranap') : (row.nm_poli || 'IGD') }}</span>
+                    <span class="text-xs">{{ row.status_lanjut === 'Ranap' ? (row.nm_bangsal || 'Ranap') : (row.nm_poli || 'IGD') }}</span>
                   </td>
-                  <td class="cell-dokter text-sm">{{ row.nm_dokter }}</td>
+                  <td class="cell-dokter text-xs">{{ row.nm_dokter }}</td>
                   
                   <!-- Triase (Only UGD) -->
                   <td class="text-center">
@@ -440,7 +439,7 @@
                   </td>
                 </tr>
                 <tr v-if="tableData.length === 0 && !loading">
-                  <td colspan="22" class="empty-state">
+                  <td colspan="21" class="empty-state">
                     <div class="empty-content">
                       <i class="fas fa-folder-open mb-2"></i>
                       <p>Tidak ada data audit yang sesuai filter</p>
@@ -581,7 +580,6 @@
                 <table class="modal-table">
                   <thead>
                     <tr>
-                      <th>No. Rawat</th>
                       <th>Pasien</th>
                       <th>Dokter DPJP</th>
                       <th>Ruang / Poli</th>
@@ -591,10 +589,10 @@
                   </thead>
                   <tbody>
                     <tr v-for="p in modalPatientsList" :key="p.no_rawat">
-                      <td class="font-mono text-xs font-semibold">{{ p.no_rawat }}</td>
                       <td>
                         <div class="pasien-info">
                           <span class="pasien-name">{{ p.nm_pasien }}</span>
+                          <span class="pasien-no-rawat font-mono">{{ p.no_rawat }}</span>
                           <span class="pasien-sub font-mono">{{ p.no_rkm_medis }}</span>
                         </div>
                       </td>
@@ -1128,6 +1126,7 @@ onMounted(() => {
   background-color: #f8fafc;
   min-height: 100vh;
   padding: 1.5rem;
+  overflow-x: hidden;
 }
 
 .main-wrapper {
@@ -1582,12 +1581,17 @@ onMounted(() => {
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  max-width: 100%;
 }
 
 .table-container {
   position: relative;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 550px;
   min-height: 200px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .monitoring-table {
@@ -1599,16 +1603,19 @@ onMounted(() => {
 .monitoring-table th {
   background-color: #f8fafc;
   color: #475569;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 0.5rem 0.6rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: inset 0 -1px 0 #e2e8f0;
 }
 
 .monitoring-table td {
-  padding: 1rem 1.25rem;
+  padding: 0.4rem 0.6rem;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
@@ -1619,9 +1626,9 @@ onMounted(() => {
 
 /* Badges */
 .badge-layanan {
-  padding: 0.25rem 0.6rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -1639,9 +1646,9 @@ onMounted(() => {
 .badge-na {
   background-color: #e2e8f0;
   color: #64748b;
-  padding: 0.25rem 0.6rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
 }
 
@@ -1649,9 +1656,9 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem; height: 1.75rem;
+  width: 1.35rem; height: 1.35rem;
   border-radius: 50%;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   cursor: help;
   position: relative;
 }
@@ -1689,10 +1696,10 @@ onMounted(() => {
 .badge-compliance-final {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.8125rem;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.4rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -1710,17 +1717,45 @@ onMounted(() => {
 .pasien-info {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
 }
 
 .pasien-name {
   font-weight: 700;
   color: #1e293b;
+  font-size: 0.75rem;
 }
 
 .pasien-sub {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #64748b;
+}
+
+.pasien-no-rawat {
+  font-size: 0.68rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.cell-rawat {
+  font-size: 0.72rem !important;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cell-unit, .cell-unit span {
+  font-size: 0.72rem !important;
+  line-height: 1.3;
+}
+
+.cell-tgl {
+  font-size: 0.72rem !important;
+  line-height: 1.3;
+}
+
+.cell-dokter {
+  font-size: 0.72rem !important;
+  line-height: 1.3;
 }
 
 /* Progress bar for Dokter view */

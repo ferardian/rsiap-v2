@@ -101,6 +101,14 @@ export const menuService = {
 
     const response = await api.post('/menu-management/role-permissions/check-access', requestData)
     return response.data
+  },
+
+  async revokeRolePermission(menuId, roleId) {
+    const response = await api.post('/menu-management/role-permissions/revoke', {
+      id_menu: menuId,
+      id_role: roleId
+    })
+    return response.data
   }
 }
 

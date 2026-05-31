@@ -399,6 +399,113 @@
         </div>
       </div>
     </div>
+
+    <!-- Menu Permissions Modal -->
+    <div
+      class="modal fade"
+      :class="{ show: showPermissionsModal }"
+      :style="{ display: showPermissionsModal ? 'block' : 'none' }"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div :class="['modal-header header-permissions', selectedMenuForPermissions?.platform === 'mobile' ? 'header-mobile' : 'header-web']">
+            <h5 class="modal-title d-flex align-items-center gap-2 flex-wrap">
+              <span>🔐 Kelola Hak Akses: {{ selectedMenuForPermissions?.nama_menu }}</span>
+              <span class="badge-platform-header">
+                {{ selectedMenuForPermissions?.platform === 'mobile' ? '📱 Mobile' : '💻 Web' }}
+              </span>
+            </h5>
+            <button type="button" class="btn-close-modal-header" @click="showPermissionsModal = false">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div v-if="loadingPermissions" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-muted">Memuat data hak akses role...</p>
+            </div>
+
+            <div v-else>
+              <div v-if="menuRoles.length === 0" class="text-center py-5">
+                <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Belum ada role yang memiliki akses</h5>
+                <p class="text-muted">Akses dapat ditambahkan melalui menu <strong>Role Menu Management</strong></p>
+              </div>
+
+              <div v-else class="roles-list">
+                <div v-for="role in menuRoles" :key="role.id_role" class="role-item">
+                  <div class="role-details">
+                    <h6 class="role-name-text">{{ role.nama_role }}</h6>
+                    <p class="role-description-text" v-if="role.deskripsi">{{ role.deskripsi }}</p>
+                  </div>
+                  <div class="role-permissions-badges">
+                    <div class="badges-wrapper">
+                      <span v-if="role.pivot.can_view" class="badge-perm badge-view">View</span>
+                      <span v-if="role.pivot.can_create" class="badge-perm badge-create">Create</span>
+                      <span v-if="role.pivot.can_update" class="badge-perm badge-update">Update</span>
+                      <span v-if="role.pivot.can_delete" class="badge-perm badge-delete">Delete</span>
+                      <span v-if="role.pivot.can_export" class="badge-perm badge-export">Export</span>
+                      <span v-if="role.pivot.can_import" class="badge-perm badge-import">Import</span>
+                    </div>
+                  </div>
+                  <div class="role-actions">
+                    <button
+                      class="btn-revoke-role"
+                      @click="confirmRevoke(role)"
+                      title="Copot Akses"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer d-flex flex-row flex-nowrap justify-content-end align-items-center gap-2">
+            <button type="button" class="btn btn-close-modal-custom m-0" @click="showPermissionsModal = false">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Revoke Modal -->
+    <div
+      class="modal fade"
+      :class="{ show: showConfirmRevokeModal }"
+      :style="{ display: showConfirmRevokeModal ? 'block' : 'none' }"
+      tabindex="-1"
+      style="z-index: 1060;"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">⚠️ Konfirmasi Copot Akses</h5>
+            <button type="button" class="btn-close-modal-header" @click="showConfirmRevokeModal = false">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Apakah Anda yakin ingin mencopot hak akses role <strong>{{ roleToRevoke?.nama_role }}</strong> dari menu <strong>{{ selectedMenuForPermissions?.nama_menu }}</strong>?</p>
+            <p class="text-danger"><small>* Tindakan ini akan menghapus seluruh permission role ini untuk menu terkait.</small></p>
+          </div>
+          <div class="modal-footer d-flex flex-row flex-nowrap justify-content-end align-items-center gap-2">
+            <button type="button" class="btn btn-close-modal-custom m-0" @click="showConfirmRevokeModal = false">Batal</button>
+            <button
+              type="button"
+              class="btn btn-confirm-danger m-0"
+              @click="revokePermission"
+              :disabled="revokingRole"
+            >
+              <span v-if="revokingRole" class="spinner-border spinner-border-sm me-2"></span>
+              Copot Akses
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -406,6 +513,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useMenuStore } from '../../stores/menu'
 import { showToast } from '../../utils/notification'
+import { menuService } from '../../services/menuService'
 
 const menuStore = useMenuStore()
 const sidebarBody = ref(null)
@@ -432,6 +540,15 @@ const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const isEditing = ref(false)
 const error = ref(null)
+
+const showPermissionsModal = ref(false)
+const selectedMenuForPermissions = ref(null)
+const menuRoles = ref([])
+const loadingPermissions = ref(false)
+
+const showConfirmRevokeModal = ref(false)
+const roleToRevoke = ref(null)
+const revokingRole = ref(false)
 
 const formData = ref({
   id_menu: null,
@@ -669,9 +786,58 @@ const toggleStatus = () => {
   formData.value.is_active = !(isActive === true || isActive == 1);
 }
 
-const viewMenuPermissions = (menu) => {
-  // TODO: Implement permissions view
-  showToast('Fitur permissions akan segera hadir', 'info')
+const viewMenuPermissions = async (menu) => {
+  selectedMenuForPermissions.value = menu
+  showPermissionsModal.value = true
+  await fetchMenuPermissions()
+}
+
+const fetchMenuPermissions = async () => {
+  if (!selectedMenuForPermissions.value) return
+  loadingPermissions.value = true
+  try {
+    const res = await menuService.getMenu(selectedMenuForPermissions.value.id_menu)
+    if (res.success) {
+      menuRoles.value = res.data.roles || []
+    } else {
+      showToast(res.error || 'Gagal memuat hak akses menu', 'error')
+    }
+  } catch (err) {
+    showToast('Terjadi kesalahan saat memuat hak akses menu', 'error')
+    console.error(err)
+  } finally {
+    loadingPermissions.value = false
+  }
+}
+
+const confirmRevoke = (role) => {
+  roleToRevoke.value = role
+  showConfirmRevokeModal.value = true
+}
+
+const revokePermission = async () => {
+  if (!selectedMenuForPermissions.value || !roleToRevoke.value) return
+  revokingRole.value = true
+  try {
+    const res = await menuService.revokeRolePermission(
+      selectedMenuForPermissions.value.id_menu,
+      roleToRevoke.value.id_role
+    )
+    if (res.success) {
+      showToast('Akses role berhasil dicopot', 'success')
+      showConfirmRevokeModal.value = false
+      roleToRevoke.value = null
+      await fetchMenuPermissions()
+      await fetchMenus()
+    } else {
+      showToast(res.error || 'Gagal mencopot akses role', 'error')
+    }
+  } catch (err) {
+    showToast('Terjadi kesalahan saat mencopot akses role', 'error')
+    console.error(err)
+  } finally {
+    revokingRole.value = false
+  }
 }
 
 // Watch for filter changes to reset pagination
@@ -966,7 +1132,17 @@ watch(showCreateModal, (val) => {
 .modal-dialog {
   margin: 1rem auto;
   animation: modalSlideIn 0.3s ease-out;
+  width: 95%;
+}
+
+.modal-dialog:not(.modal-lg) {
   max-width: 600px;
+}
+
+@media (min-width: 992px) {
+  .modal-dialog.modal-lg {
+    max-width: 800px;
+  }
 }
 
 .modal-content {
@@ -1796,5 +1972,247 @@ watch(showCreateModal, (val) => {
   .row.g-3 .col-md-4, .row.g-3 .col-md-3, .row.g-3 .col-md-2 {
     margin-bottom: 0.75rem;
   }
+}
+
+/* Custom styles for permissions management */
+.header-permissions {
+  color: white;
+}
+
+.header-permissions.header-web {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+}
+
+.header-permissions.header-mobile {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+}
+
+.btn-close-modal-header {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.btn-close-modal-header:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.btn-close-modal-custom {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  width: auto;
+}
+
+.btn-close-modal-custom:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.roles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.role-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.role-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.role-details {
+  flex: 1.5;
+  min-width: 150px;
+}
+
+.role-name-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.role-description-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.role-permissions-badges {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.badges-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  justify-content: center;
+}
+
+.role-actions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-revoke-role {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-revoke-role:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* Badges styling */
+.badge-perm {
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.badge-view {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-create {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-update {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.badge-delete {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.badge-export {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.badge-import {
+  background-color: #e0e7ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+}
+
+@media (max-width: 768px) {
+  .role-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .role-permissions-badges {
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .badges-wrapper {
+    justify-content: flex-start;
+  }
+  .role-actions {
+    justify-content: flex-end;
+  }
+}
+
+.badge-platform-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-confirm-danger {
+  background-color: #ef4444;
+  color: white;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  width: auto;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: auto;
+}
+
+.btn-confirm-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  color: white;
+}
+
+.btn-confirm-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
