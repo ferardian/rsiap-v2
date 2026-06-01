@@ -392,7 +392,7 @@
       :style="{ display: showDeleteModal ? 'block' : 'none' }"
       tabindex="-1"
     >
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">⚠️ Konfirmasi Hapus</h5>
@@ -428,7 +428,7 @@
       :style="{ display: showPermissionsModal ? 'block' : 'none' }"
       tabindex="-1"
     >
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
           <div :class="['modal-header header-permissions', selectedMenuForPermissions?.platform === 'mobile' ? 'header-mobile' : 'header-web']">
             <h5 class="modal-title d-flex align-items-center gap-2 flex-wrap">
@@ -2325,6 +2325,7 @@ watch(showCreateModal, (val) => {
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(4px);
+  flex-shrink: 0;
 }
 
 .btn-close-modal-header:hover {
