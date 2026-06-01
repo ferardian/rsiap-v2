@@ -137,7 +137,7 @@
                 <th class="d-none d-md-table-cell">Platform</th>
                 <th class="d-none d-md-table-cell">Parent</th>
                 <th class="d-none d-md-table-cell">Status</th>
-                <th class="text-center">Aksi</th>
+                <th class="text-center" style="width: 110px; min-width: 110px;">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -173,20 +173,20 @@
                     {{ menu.is_active ? 'Aktif' : 'Tidak Aktif' }}
                   </span>
                 </td>
-                <td class="text-center">
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" @click="editMenu(menu)" title="Edit">
+                <td class="text-center" style="width: 110px; min-width: 110px;">
+                  <div class="d-flex justify-content-center gap-1">
+                    <button class="btn btn-outline-primary action-btn-custom" @click="editMenu(menu)" title="Edit">
                       <i class="fas fa-edit"></i>
                     </button>
                     <button
-                      class="btn btn-outline-info"
+                      class="btn btn-outline-info action-btn-custom"
                       @click="viewMenuPermissions(menu)"
                       title="Permissions"
                     >
                       <i class="fas fa-key"></i>
                     </button>
                     <button
-                      class="btn btn-outline-danger"
+                      class="btn btn-outline-danger action-btn-custom"
                       @click="confirmDelete(menu)"
                       title="Hapus"
                     >
@@ -1403,6 +1403,18 @@ watch(showCreateModal, (val) => {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.action-btn-custom {
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
 .btn-group-sm > .btn {
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
@@ -2172,6 +2184,20 @@ watch(showCreateModal, (val) => {
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
   }
+
+  .action-btn-custom {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.75rem !important;
+    border-radius: 4px !important;
+  }
+
+  .table td:last-child {
+    padding: 0.5rem 0.25rem !important;
+    min-width: 110px !important;
+    width: 110px !important;
+    text-align: center;
+  }
 }
 
 /* Animations */
@@ -2246,9 +2272,9 @@ watch(showCreateModal, (val) => {
     gap: 1px !important;
   }
 
-  /* Prevent column wrapping and fix clipping */
+  /* Prevent column clipping and allow text wrapping */
   .table th, .table td {
-    white-space: nowrap !important;
+    white-space: normal !important;
   }
 
   .table-responsive {
@@ -2263,7 +2289,8 @@ watch(showCreateModal, (val) => {
 
   .table td:last-child {
     padding: 0.5rem 0.25rem !important;
-    min-width: 90px;
+    min-width: 110px !important;
+    width: 110px !important;
     text-align: center;
   }
 
