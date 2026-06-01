@@ -134,9 +134,9 @@
                 </th>
                 <th class="d-none d-md-table-cell">Icon</th>
                 <th class="d-none d-md-table-cell">Route</th>
-                <th>Platform</th>
+                <th class="d-none d-md-table-cell">Platform</th>
                 <th class="d-none d-md-table-cell">Parent</th>
-                <th>Status</th>
+                <th class="d-none d-md-table-cell">Status</th>
                 <th class="text-center">Aksi</th>
               </tr>
             </thead>
@@ -144,22 +144,31 @@
               <tr v-for="menu in paginatedMenus" :key="menu.id_menu">
                 <td>{{ menu.urutan }}</td>
                 <td>
-                  <div class="d-flex align-items-center">
-                    <span class="menu-name">{{ menu.nama_menu }}</span>
-                    <span v-if="menu.children && menu.children.length > 0" class="badge bg-info ms-2">
+                  <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="menu-name fw-semibold text-dark">{{ menu.nama_menu }}</span>
+                    <span v-if="menu.children && menu.children.length > 0" class="badge bg-info">
                       {{ menu.children.length }} sub
+                    </span>
+                  </div>
+                  <!-- Mobile-only compact metadata (Platform & Status) -->
+                  <div class="d-md-none mt-1 d-flex gap-1 align-items-center flex-wrap">
+                    <span :class="['badge rounded-pill', menu.platform === 'mobile' ? 'bg-indigo' : 'bg-blue']" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">
+                      {{ menu.platform === 'mobile' ? '📱 Mobile' : '💻 Web' }}
+                    </span>
+                    <span :class="['badge', menu.is_active ? 'bg-success' : 'bg-danger']" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">
+                      {{ menu.is_active ? 'Aktif' : 'Tidak Aktif' }}
                     </span>
                   </div>
                 </td>
                 <td class="d-none d-md-table-cell"><span class="menu-icon">{{ menu.icon }}</span></td>
                 <td class="d-none d-md-table-cell"><code class="text-muted">{{ menu.route || '-' }}</code></td>
-                <td>
+                <td class="d-none d-md-table-cell">
                   <span :class="['badge rounded-pill', menu.platform === 'mobile' ? 'bg-indigo' : 'bg-blue']">
                     {{ menu.platform === 'mobile' ? '📱 Mobile' : '💻 Web' }}
                   </span>
                 </td>
                 <td class="d-none d-md-table-cell">{{ menu.parent?.nama_menu || '-' }}</td>
-                <td>
+                <td class="d-none d-md-table-cell">
                   <span :class="['badge', menu.is_active ? 'bg-success' : 'bg-danger']">
                     {{ menu.is_active ? 'Aktif' : 'Tidak Aktif' }}
                   </span>
@@ -192,17 +201,23 @@
 
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3 flex-shrink-0 pagination-container">
-          <div class="text-muted">
+          <div class="text-muted pagination-summary">
             Menampilkan {{ startIndex + 1 }}-{{ Math.min(endIndex, filteredMenus.length) }}
             dari {{ filteredMenus.length }} menu
           </div>
-          <nav>
-            <ul class="pagination mb-0">
+          <nav aria-label="Page navigation">
+            <ul class="pagination mb-0 justify-content-center">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage = 1">First</a>
+                <a class="page-link" href="#" @click.prevent="currentPage = 1" title="Halaman Pertama">
+                  <span class="d-none d-sm-inline">First</span>
+                  <span class="d-inline d-sm-none">«</span>
+                </a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#" @click.prevent="currentPage--">Previous</a>
+                <a class="page-link" href="#" @click.prevent="currentPage--" title="Halaman Sebelumnya">
+                  <span class="d-none d-sm-inline">Previous</span>
+                  <span class="d-inline d-sm-none">‹</span>
+                </a>
               </li>
               <li
                 v-for="page in visiblePages"
@@ -213,10 +228,16 @@
                 <a class="page-link" href="#" @click.prevent="currentPage = page">{{ page }}</a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="currentPage++">Next</a>
+                <a class="page-link" href="#" @click.prevent="currentPage++" title="Halaman Selanjutnya">
+                  <span class="d-none d-sm-inline">Next</span>
+                  <span class="d-inline d-sm-none">›</span>
+                </a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" href="#" @click.prevent="currentPage = totalPages">Last</a>
+                <a class="page-link" href="#" @click.prevent="currentPage = totalPages" title="Halaman Terakhir">
+                  <span class="d-none d-sm-inline">Last</span>
+                  <span class="d-inline d-sm-none">»</span>
+                </a>
               </li>
             </ul>
           </nav>
@@ -2118,12 +2139,11 @@ watch(showCreateModal, (val) => {
   }
 
   .pagination {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    width: auto;
+    overflow-x: visible;
     flex-wrap: nowrap;
-    justify-content: flex-start;
-    padding-bottom: 0.5rem;
+    justify-content: center !important;
+    padding-bottom: 0;
   }
 
   .pagination .page-item {
@@ -2242,8 +2262,9 @@ watch(showCreateModal, (val) => {
   }
 
   .table td:last-child {
-    padding-right: 2rem !important; /* Extra large buffer */
-    min-width: 100px; /* Force minimum width to show all 3 small buttons */
+    padding: 0.5rem 0.25rem !important;
+    min-width: 90px;
+    text-align: center;
   }
 
   .row.g-3 .col-md-4, .row.g-3 .col-md-3, .row.g-3 .col-md-2 {
