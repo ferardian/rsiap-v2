@@ -132,10 +132,10 @@
                 <th @click="sortBy('nama_menu')" style="cursor: pointer;">
                   Nama Menu <i class="fas fa-sort"></i>
                 </th>
-                <th>Icon</th>
-                <th>Route</th>
+                <th class="d-none d-md-table-cell">Icon</th>
+                <th class="d-none d-md-table-cell">Route</th>
                 <th>Platform</th>
-                <th>Parent</th>
+                <th class="d-none d-md-table-cell">Parent</th>
                 <th>Status</th>
                 <th class="text-center">Aksi</th>
               </tr>
@@ -151,14 +151,14 @@
                     </span>
                   </div>
                 </td>
-                <td><span class="menu-icon">{{ menu.icon }}</span></td>
-                <td><code class="text-muted">{{ menu.route || '-' }}</code></td>
+                <td class="d-none d-md-table-cell"><span class="menu-icon">{{ menu.icon }}</span></td>
+                <td class="d-none d-md-table-cell"><code class="text-muted">{{ menu.route || '-' }}</code></td>
                 <td>
                   <span :class="['badge rounded-pill', menu.platform === 'mobile' ? 'bg-indigo' : 'bg-blue']">
                     {{ menu.platform === 'mobile' ? '📱 Mobile' : '💻 Web' }}
                   </span>
                 </td>
-                <td>{{ menu.parent?.nama_menu || '-' }}</td>
+                <td class="d-none d-md-table-cell">{{ menu.parent?.nama_menu || '-' }}</td>
                 <td>
                   <span :class="['badge', menu.is_active ? 'bg-success' : 'bg-danger']">
                     {{ menu.is_active ? 'Aktif' : 'Tidak Aktif' }}
@@ -421,6 +421,28 @@
             </button>
           </div>
           <div class="modal-body">
+            <!-- Tab Headers -->
+            <ul class="nav nav-pills modal-tabs mb-4 d-flex gap-2">
+              <li class="nav-item">
+                <button 
+                  type="button"
+                  :class="['tab-btn', activePermissionsTab === 'current' ? 'active' : '']"
+                  @click="activePermissionsTab = 'current'"
+                >
+                  <i class="fas fa-user-shield me-2"></i>Akses Saat Ini
+                </button>
+              </li>
+              <li class="nav-item">
+                <button 
+                  type="button"
+                  :class="['tab-btn', activePermissionsTab === 'bulk' ? 'active' : '']"
+                  @click="activePermissionsTab = 'bulk'"
+                >
+                  <i class="fas fa-plus-circle me-2"></i>Tambah Akses Massal
+                </button>
+              </li>
+            </ul>
+
             <div v-if="loadingPermissions" class="text-center py-5">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -428,11 +450,12 @@
               <p class="mt-2 text-muted">Memuat data hak akses role...</p>
             </div>
 
-            <div v-else>
+            <!-- Tab 1: Current Access -->
+            <div v-else-if="activePermissionsTab === 'current'">
               <div v-if="menuRoles.length === 0" class="text-center py-5">
                 <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">Belum ada role yang memiliki akses</h5>
-                <p class="text-muted">Akses dapat ditambahkan melalui menu <strong>Role Menu Management</strong></p>
+                <p class="text-muted">Gunakan tab <strong>Tambah Akses Massal</strong> untuk memberikan akses menu ini.</p>
               </div>
 
               <div v-else class="roles-list">
@@ -459,6 +482,188 @@
                     >
                       <i class="fas fa-trash-alt"></i>
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 2: Bulk Assign -->
+            <div v-else-if="activePermissionsTab === 'bulk'">
+              <div class="row g-4">
+                <!-- Column 1: Roles Selection -->
+                <div class="col-12 col-md-6 d-flex flex-column" style="min-height: 380px;">
+                  <label class="form-label-custom mb-2">
+                    <i class="fas fa-users me-1"></i> Pilih Role Target
+                  </label>
+                  
+                  <!-- Role Search -->
+                  <div class="input-group modern-input mb-3" style="max-height: 42px;">
+                    <span class="input-group-text bg-transparent border-0">
+                      <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input
+                      v-model="bulkSearchQuery"
+                      type="text"
+                      class="form-control border-0 bg-transparent ps-0"
+                      placeholder="Cari nama role..."
+                      style="box-shadow: none;"
+                    />
+                  </div>
+
+                  <!-- Roles Checklist -->
+                  <div class="roles-checklist-container flex-grow-1">
+                    <div v-if="availableRolesToAssign.length === 0" class="text-center py-5 text-muted">
+                      <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                      <p class="mb-0">Semua role aktif sudah memiliki akses ke menu ini.</p>
+                    </div>
+                    
+                    <div v-else class="checklist-grid">
+                      <label 
+                        v-for="role in availableRolesToAssign" 
+                        :key="role.id_role" 
+                        :class="['checklist-item-card', selectedBulkRoles.includes(role.id_role) ? 'checked' : '']"
+                        style="margin-bottom: 0;"
+                      >
+                        <input
+                          type="checkbox"
+                          :value="role.id_role"
+                          v-model="selectedBulkRoles"
+                          class="d-none"
+                        />
+                        <div class="checklist-item-content">
+                          <div class="item-checkbox-ui">
+                            <i class="fas" :class="selectedBulkRoles.includes(role.id_role) ? 'fa-check-square text-success' : 'fa-square text-muted'"></i>
+                          </div>
+                          <div class="item-text">
+                            <span class="role-title-text">{{ role.nama_role }}</span>
+                            <span class="role-desc-text text-muted" v-if="role.deskripsi">{{ role.deskripsi }}</span>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Column 2: Permissions Configuration -->
+                <div class="col-12 col-md-6">
+                  <div class="card border-0 bg-light-gray p-4 h-100 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <label class="form-label-custom mb-3">
+                      <i class="fas fa-cog me-1"></i> Hak Akses Default
+                    </label>
+
+                    <div class="permission-toggles-grid">
+                      <div class="permission-toggle-item">
+                        <div class="toggle-control">
+                          <div 
+                            class="toggle-switch-sm" 
+                            :class="{ active: bulkPermissions.can_view }"
+                            @click="bulkPermissions.can_view = !bulkPermissions.can_view"
+                          >
+                            <div class="toggle-slider-sm"></div>
+                          </div>
+                        </div>
+                        <div class="toggle-label-desc">
+                          <span class="perm-title text-view">Can View</span>
+                          <span class="perm-desc">Melihat menu di navigasi utama</span>
+                        </div>
+                      </div>
+
+                      <div class="permission-toggle-item">
+                        <div class="toggle-control">
+                          <div 
+                            class="toggle-switch-sm" 
+                            :class="{ active: bulkPermissions.can_create }"
+                            @click="bulkPermissions.can_create = !bulkPermissions.can_create"
+                          >
+                            <div class="toggle-slider-sm"></div>
+                          </div>
+                        </div>
+                        <div class="toggle-label-desc">
+                          <span class="perm-title text-create">Can Create</span>
+                          <span class="perm-desc">Menambah/menyimpan data baru</span>
+                        </div>
+                      </div>
+
+                      <div class="permission-toggle-item">
+                        <div class="toggle-control">
+                          <div 
+                            class="toggle-switch-sm" 
+                            :class="{ active: bulkPermissions.can_update }"
+                            @click="bulkPermissions.can_update = !bulkPermissions.can_update"
+                          >
+                            <div class="toggle-slider-sm"></div>
+                          </div>
+                        </div>
+                        <div class="toggle-label-desc">
+                          <span class="perm-title text-update">Can Update</span>
+                          <span class="perm-desc">Mengubah/mengedit data yang ada</span>
+                        </div>
+                      </div>
+
+                      <div class="permission-toggle-item">
+                        <div class="toggle-control">
+                          <div 
+                            class="toggle-switch-sm" 
+                            :class="{ active: bulkPermissions.can_delete }"
+                            @click="bulkPermissions.can_delete = !bulkPermissions.can_delete"
+                          >
+                            <div class="toggle-slider-sm"></div>
+                          </div>
+                        </div>
+                        <div class="toggle-label-desc">
+                          <span class="perm-title text-delete">Can Delete</span>
+                          <span class="perm-desc">Menghapus data dari sistem</span>
+                        </div>
+                      </div>
+
+                      <div class="permission-toggle-item">
+                        <div class="toggle-control">
+                          <div 
+                            class="toggle-switch-sm" 
+                            :class="{ active: bulkPermissions.can_export }"
+                            @click="bulkPermissions.can_export = !bulkPermissions.can_export"
+                          >
+                            <div class="toggle-slider-sm"></div>
+                          </div>
+                        </div>
+                        <div class="toggle-label-desc">
+                          <span class="perm-title text-export">Can Export</span>
+                          <span class="perm-desc">Mengunduh/mengekspor data (PDF/Excel)</span>
+                        </div>
+                      </div>
+
+                      <div class="permission-toggle-item">
+                        <div class="toggle-control">
+                          <div 
+                            class="toggle-switch-sm" 
+                            :class="{ active: bulkPermissions.can_import }"
+                            @click="bulkPermissions.can_import = !bulkPermissions.can_import"
+                          >
+                            <div class="toggle-slider-sm"></div>
+                          </div>
+                        </div>
+                        <div class="toggle-label-desc">
+                          <span class="perm-title text-import">Can Import</span>
+                          <span class="perm-desc">Mengunggah/mengimpor data dari luar</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top border-light d-flex flex-column gap-2">
+                      <div class="selected-roles-badge-summary mb-2" v-if="selectedBulkRoles.length > 0">
+                        Terpilih: <strong>{{ selectedBulkRoles.length }} role</strong>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-apply-bulk-assign"
+                        @click="bulkAssignPermissions"
+                        :disabled="selectedBulkRoles.length === 0 || bulkAssigning"
+                      >
+                        <i class="fas fa-check-double me-2" v-if="!bulkAssigning"></i>
+                        <span v-else class="spinner-border spinner-border-sm me-2"></span>
+                        Terapkan Akses Massal
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -511,11 +716,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useMenuStore } from '../../stores/menu'
+import { useMenuStore, useRoleStore } from '../../stores/menu'
 import { showToast } from '../../utils/notification'
 import { menuService } from '../../services/menuService'
 
 const menuStore = useMenuStore()
+const roleStore = useRoleStore()
 const sidebarBody = ref(null)
 
 // Responsiveness
@@ -549,6 +755,19 @@ const loadingPermissions = ref(false)
 const showConfirmRevokeModal = ref(false)
 const roleToRevoke = ref(null)
 const revokingRole = ref(false)
+
+const activePermissionsTab = ref('current') // 'current' or 'bulk'
+const selectedBulkRoles = ref([])
+const bulkSearchQuery = ref('')
+const bulkAssigning = ref(false)
+const bulkPermissions = ref({
+  can_view: true,
+  can_create: false,
+  can_update: false,
+  can_delete: false,
+  can_export: false,
+  can_import: false
+})
 
 const formData = ref({
   id_menu: null,
@@ -789,6 +1008,17 @@ const toggleStatus = () => {
 const viewMenuPermissions = async (menu) => {
   selectedMenuForPermissions.value = menu
   showPermissionsModal.value = true
+  activePermissionsTab.value = 'current'
+  selectedBulkRoles.value = []
+  bulkSearchQuery.value = ''
+  bulkPermissions.value = {
+    can_view: true,
+    can_create: false,
+    can_update: false,
+    can_delete: false,
+    can_export: false,
+    can_import: false
+  }
   await fetchMenuPermissions()
 }
 
@@ -807,6 +1037,52 @@ const fetchMenuPermissions = async () => {
     console.error(err)
   } finally {
     loadingPermissions.value = false
+  }
+}
+
+const availableRolesToAssign = computed(() => {
+  const currentRoleIds = menuRoles.value.map(r => r.id_role)
+  let filtered = roleStore.roles.filter(r => !currentRoleIds.includes(r.id_role) && r.is_active)
+  
+  if (bulkSearchQuery.value) {
+    const q = bulkSearchQuery.value.toLowerCase()
+    filtered = filtered.filter(r => r.nama_role.toLowerCase().includes(q))
+  }
+  
+  return filtered
+})
+
+const bulkAssignPermissions = async () => {
+  if (selectedBulkRoles.value.length === 0) {
+    showToast('Pilih minimal satu role terlebih dahulu', 'warning')
+    return
+  }
+  
+  bulkAssigning.value = true
+  try {
+    const payload = {
+      id_roles: selectedBulkRoles.value,
+      ...bulkPermissions.value
+    }
+    const res = await menuService.bulkAssignMenuPermissions(
+      selectedMenuForPermissions.value.id_menu,
+      payload
+    )
+    
+    if (res.success) {
+      showToast('Akses menu berhasil ditambahkan ke role terpilih', 'success')
+      selectedBulkRoles.value = []
+      activePermissionsTab.value = 'current'
+      await fetchMenuPermissions()
+      await fetchMenus()
+    } else {
+      showToast(res.error || 'Gagal menambahkan akses massal', 'error')
+    }
+  } catch (err) {
+    showToast('Terjadi kesalahan saat menyimpan akses massal', 'error')
+    console.error(err)
+  } finally {
+    bulkAssigning.value = false
   }
 }
 
@@ -849,6 +1125,7 @@ watch([filterActive, filterParent, filterPlatform], () => {
 onMounted(() => {
   fetchMenus()
   checkMobile()
+  roleStore.fetchAllRoles()
   window.addEventListener('resize', checkMobile)
 })
 
@@ -2214,5 +2491,213 @@ watch(showCreateModal, (val) => {
 .btn-confirm-danger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Custom styles for bulk permissions management tabs */
+.modal-tabs {
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.tab-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.tab-btn.active {
+  background: #6366f1;
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Scrollable checklist container */
+.roles-checklist-container {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.checklist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checklist-item-card {
+  display: block;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checklist-item-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.checklist-item-card.checked {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.checklist-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.item-checkbox-ui {
+  font-size: 1.15rem;
+}
+
+.item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-title-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.role-desc-text {
+  font-size: 0.75rem;
+}
+
+.form-label-custom {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Permission toggles grid */
+.permission-toggles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.permission-toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.toggle-control {
+  flex-shrink: 0;
+}
+
+.toggle-label-desc {
+  display: flex;
+  flex-direction: column;
+}
+
+.perm-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.perm-desc {
+  font-size: 0.725rem;
+  color: #64748b;
+  margin-top: 0.125rem;
+}
+
+.text-view { color: #0369a1; }
+.text-create { color: #15803d; }
+.text-update { color: #b45309; }
+.text-delete { color: #b91c1c; }
+.text-export { color: #7e22ce; }
+.text-import { color: #4338ca; }
+
+/* Small Toggle Switch */
+.toggle-switch-sm {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background-color: #cbd5e1;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.toggle-switch-sm.active {
+  background-color: #10b981;
+  border-color: #059669;
+}
+
+.toggle-slider-sm {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch-sm.active .toggle-slider-sm {
+  transform: translateX(18px);
+}
+
+/* Apply button */
+.btn-apply-bulk-assign {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-apply-bulk-assign:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-apply-bulk-assign:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.selected-roles-badge-summary {
+  font-size: 0.8rem;
+  color: #475569;
 }
 </style>

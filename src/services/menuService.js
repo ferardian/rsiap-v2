@@ -109,6 +109,11 @@ export const menuService = {
       id_role: roleId
     })
     return response.data
+  },
+
+  async bulkAssignMenuPermissions(menuId, payload) {
+    const response = await api.post(`/menu-management/role-permissions/menu/${menuId}/bulk-assign`, payload)
+    return response.data
   }
 }
 
