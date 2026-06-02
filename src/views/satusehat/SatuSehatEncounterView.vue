@@ -67,13 +67,13 @@
           <table class="table table-hover table-custom mb-0">
             <thead>
               <tr>
-                <th class="ps-4">No. Rawat & Tanggal</th>
-                <th>Pasien</th>
-                <th>Jenis / Kelas</th>
-                <th>Poliklinik</th>
-                <th>ID Encounter</th>
-                <th>Status</th>
-                <th class="text-center">Aksi</th>
+                <th class="ps-4 text-nowrap">No. Rawat & Tanggal</th>
+                <th class="text-nowrap">Pasien</th>
+                <th class="text-center text-nowrap">Jenis / Kelas</th>
+                <th class="text-nowrap">Poliklinik</th>
+                <th class="text-nowrap">ID Encounter</th>
+                <th class="text-nowrap">Status</th>
+                <th class="text-center text-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -102,7 +102,7 @@
                     <i class="fas fa-id-card me-1"></i> {{ item.no_ktp || '-' }}
                   </span>
                 </td>
-                <td>
+                <td class="text-center">
                   <span v-if="item.status_lanjut === 'Ranap'" class="badge badge-soft-danger" title="Inpatient">
                     IMP
                   </span>
@@ -117,20 +117,20 @@
                   <span class="badge bg-light text-dark border">{{ item.nm_poli }}</span>
                 </td>
                 <td>
-                  <div v-if="item.id_encounter">
-                    <span class="text-success fw-bold d-block text-truncate" style="max-width: 250px;" :title="item.id_encounter">
-                      <i class="fas fa-check-circle me-1"></i> {{ item.id_encounter }}
-                    </span>
+                  <div v-if="item.id_encounter" class="badge-id-success" :title="item.id_encounter">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="text-truncate text-monospace" style="max-width: 180px;">{{ item.id_encounter }}</span>
                   </div>
-                  <div v-else class="text-muted text-xs">
-                    <i class="fas fa-times-circle me-1"></i> Belum ada ID
+                  <div v-else class="badge-id-pending">
+                    <i class="fas fa-times-circle"></i>
+                    <span>Belum Sync</span>
                   </div>
                 </td>
                 <td>
                   <div v-if="item.id_encounter" class="badge bg-success">Sukses</div>
-                  <div v-else-if="item.pesan_error" class="d-flex flex-column align-items-start">
-                    <span class="badge bg-danger mb-1">Gagal</span>
-                    <span class="text-danger text-xs fw-bold" style="white-space: normal; max-width: 300px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" :title="item.pesan_error">
+                  <div v-else-if="item.pesan_error" class="d-flex flex-column align-items-start gap-1">
+                    <span class="badge bg-danger">Gagal</span>
+                    <span class="error-text-box" style="max-width: 280px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;" :title="item.pesan_error">
                       {{ item.pesan_error }}
                     </span>
                   </div>
@@ -138,7 +138,7 @@
                 </td>
                 <td class="text-center">
                   <button 
-                    class="btn btn-sm btn-outline-primary py-1 px-2 text-xs" 
+                    class="btn btn-sync-row" 
                     @click="syncSingle(item.no_rawat)"
                     :disabled="syncSingleLoading === item.no_rawat"
                     title="Sync data untuk kunjungan ini saja"
@@ -360,6 +360,7 @@ export default {
   font-size: 0.75rem;
   letter-spacing: 0.5px;
   border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
 }
 
 .table-custom td {
@@ -367,20 +368,101 @@ export default {
 }
 
 .badge-soft-danger {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-  border: 1px solid rgba(220, 53, 69, 0.2);
+  background-color: rgba(220, 53, 69, 0.08) !important;
+  color: #dc3545 !important;
+  border: 1px solid rgba(220, 53, 69, 0.2) !important;
+  padding: 0.4rem 0.75rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.5px;
 }
 
 .badge-soft-warning {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background-color: rgba(245, 158, 11, 0.08) !important;
+  color: #d97706 !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+  padding: 0.4rem 0.75rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.5px;
 }
 
 .badge-soft-info {
-  background-color: rgba(13, 202, 240, 0.1);
-  color: #0dcaf0;
-  border: 1px solid rgba(13, 202, 240, 0.2);
+  background-color: rgba(13, 202, 240, 0.08) !important;
+  color: #0dcaf0 !important;
+  border: 1px solid rgba(13, 202, 240, 0.2) !important;
+  padding: 0.4rem 0.75rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.5px;
+}
+
+.badge-id-success {
+  background-color: rgba(25, 135, 84, 0.08);
+  color: #198754;
+  border: 1px solid rgba(25, 135, 84, 0.15);
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.badge-id-pending {
+  background-color: rgba(108, 117, 125, 0.08);
+  color: #6c757d;
+  border: 1px solid rgba(108, 117, 125, 0.15);
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.error-text-box {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  background-color: rgba(220, 53, 69, 0.04);
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.btn-sync-row {
+  background-color: rgba(94, 114, 228, 0.08);
+  color: #5e72e4;
+  border: 1px solid rgba(94, 114, 228, 0.15);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-sync-row:hover:not(:disabled) {
+  background-color: #5e72e4;
+  color: white;
+  border-color: #5e72e4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(94, 114, 228, 0.25);
+}
+
+.btn-sync-row:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
