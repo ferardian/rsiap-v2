@@ -69,20 +69,22 @@
               <tr>
                 <th class="ps-4">No. Rawat & Tanggal</th>
                 <th>Pasien</th>
+                <th>Jenis / Kelas</th>
                 <th>Poliklinik</th>
                 <th>ID Encounter</th>
                 <th>Status</th>
+                <th class="text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="5" class="text-center py-5">
+                <td colspan="7" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status"></div>
                   <p class="text-muted mt-2 mb-0">Memuat data encounter...</p>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="5" class="text-center py-5">
+                <td colspan="7" class="text-center py-5">
                   <i class="fas fa-inbox fa-3x text-muted mb-3 opacity-50"></i>
                   <h6 class="text-muted">Tidak ada data encounter</h6>
                 </td>
@@ -98,6 +100,17 @@
                   <span class="d-block fw-bold text-dark mb-1">{{ item.nm_pasien }}</span>
                   <span class="text-xs text-muted">
                     <i class="fas fa-id-card me-1"></i> {{ item.no_ktp || '-' }}
+                  </span>
+                </td>
+                <td>
+                  <span v-if="item.status_lanjut === 'Ranap'" class="badge badge-soft-danger" title="Inpatient">
+                    IMP
+                  </span>
+                  <span v-else-if="item.kd_poli === 'IGDK'" class="badge badge-soft-warning" title="Emergency">
+                    EMER
+                  </span>
+                  <span v-else class="badge badge-soft-info" title="Ambulatory">
+                    AMB
                   </span>
                 </td>
                 <td>
@@ -122,6 +135,18 @@
                     </span>
                   </div>
                   <div v-else class="badge bg-secondary">Belum Sinkron</div>
+                </td>
+                <td class="text-center">
+                  <button 
+                    class="btn btn-sm btn-outline-primary py-1 px-2 text-xs" 
+                    @click="syncSingle(item.no_rawat)"
+                    :disabled="syncSingleLoading === item.no_rawat"
+                    title="Sync data untuk kunjungan ini saja"
+                  >
+                    <span v-if="syncSingleLoading === item.no_rawat" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <i v-else class="fas fa-sync-alt me-1"></i>
+                    Sync
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -181,6 +206,7 @@ export default {
         keyword: ''
       },
       syncLoading: false,
+      syncSingleLoading: '',
       pagination: {
         current_page: 1,
         last_page: 1,
@@ -286,6 +312,40 @@ export default {
           this.syncLoading = false;
         }
       }
+    },
+    async syncSingle(noRawat) {
+      this.syncSingleLoading = noRawat;
+      try {
+        const response = await satuSehatService.syncEncounter({
+          noRawat: noRawat
+        });
+
+        if (response.data && response.data.success) {
+          Swal.fire({
+            title: 'Berhasil',
+            text: response.data.message || 'Sinkronisasi kunjungan berhasil',
+            icon: 'success',
+            timer: 3000
+          });
+          this.fetchData();
+        } else {
+          Swal.fire(
+            'Gagal', 
+            (response.data && response.data.message) || 'Terjadi kesalahan saat sinkronisasi', 
+            'error'
+          );
+          this.fetchData();
+        }
+      } catch (error) {
+        console.error('Error syncing single SatuSehat encounter:', error);
+        const errorMsg = error.response && error.response.data && error.response.data.message 
+          ? error.response.data.message 
+          : 'Terjadi kesalahan pada server';
+        Swal.fire('Error', errorMsg, 'error');
+        this.fetchData();
+      } finally {
+        this.syncSingleLoading = '';
+      }
     }
   }
 }
@@ -304,5 +364,23 @@ export default {
 
 .table-custom td {
   vertical-align: middle;
+}
+
+.badge-soft-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.badge-soft-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-soft-info {
+  background-color: rgba(13, 202, 240, 0.1);
+  color: #0dcaf0;
+  border: 1px solid rgba(13, 202, 240, 0.2);
 }
 </style>
