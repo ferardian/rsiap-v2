@@ -140,7 +140,7 @@
                     </button>
                     <!-- Approve Button -->
                     <button 
-                      v-if="mode === 'approval'"
+                      v-if="mode === 'approval' && item.status !== 'disetujui'"
                       class="btn btn-outline-success" 
                       @click="approveSpo(item)"
                       title="Setujui"
