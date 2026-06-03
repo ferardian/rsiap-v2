@@ -100,11 +100,12 @@
               <tr>
                 <th width="5%">#</th>
                 <th width="15%">Nomor</th>
-                <th width="30%">Judul</th>
-                <th width="10%">Jenis</th>
-                <th width="15%">Unit</th>
+                <th width="25%">Judul</th>
+                <th width="8%">Jenis</th>
+                <th width="12%">Unit</th>
                 <th width="10%">Status</th>
                 <th width="10%">Tgl Terbit</th>
+                <th width="10%">Terakhir Update</th>
                 <th width="5%">Aksi</th>
               </tr>
             </thead>
@@ -129,6 +130,7 @@
                   </span>
                 </td>
                 <td>{{ formatDate(item.tgl_terbit) }}</td>
+                <td>{{ formatDateTime(item.updated_at) }}</td>
                 <td>
                   <div class="btn-group btn-group-sm">
                     <button 
@@ -440,6 +442,21 @@ const formatDate = (dateString) => {
     month: 'short',
     year: 'numeric'
   })
+}
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '-'
+  const d = new Date(dateString)
+  const datePart = d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
+  const timePart = d.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+  return `${datePart} ${timePart}`
 }
 
 // Modal actions
