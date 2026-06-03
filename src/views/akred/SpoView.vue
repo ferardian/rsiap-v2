@@ -218,6 +218,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { createPopper } from '@popperjs/core'
+import Swal from 'sweetalert2'
 import spoService from '@/services/spoService'
 import SpoFormModal from '@/components/spo/SpoFormModal.vue'
 import SpoPreviewModal from '@/components/spo/SpoPreviewModal.vue'
@@ -352,25 +353,42 @@ const fetchDepartments = async () => {
 }
 
 const approveSpo = async (item) => {
-  if (!confirm(`Apakah Anda yakin ingin menyetujui SPO: ${item.judul}?`)) return
-  
-  loading.value = true
-  try {
-    await spoService.updateSpo(item.id, { 
-      id: item.id,
-      judul: item.judul, 
-      unit_id: item.unit_id,
-      jenis: item.jenis,
-      status: 'disetujui' 
-    })
-    
-    toast.success('SPO berhasil disetujui')
-    fetchSpo()
-  } catch (error) {
-    console.error(error)
-    toast.error('Gagal menyetujui SPO')
-  } finally {
-    loading.value = false
+  const result = await Swal.fire({
+    title: 'Konfirmasi Approval',
+    html: `Apakah Anda yakin ingin menyetujui SPO:<br><strong class="text-primary">${item.judul}</strong>?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, Setujui!',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#198754',
+    cancelButtonColor: '#6c757d'
+  })
+
+  if (result.isConfirmed) {
+    loading.value = true
+    try {
+      await spoService.updateSpo(item.id, { 
+        id: item.id,
+        judul: item.judul, 
+        unit_id: item.unit_id,
+        jenis: item.jenis,
+        status: 'disetujui' 
+      })
+      
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'SPO telah berhasil disetujui.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      fetchSpo()
+    } catch (error) {
+      console.error(error)
+      Swal.fire('Gagal', 'Gagal menyetujui SPO.', 'error')
+    } finally {
+      loading.value = false
+    }
   }
 }
 
