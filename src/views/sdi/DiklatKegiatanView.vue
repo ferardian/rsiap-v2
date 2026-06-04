@@ -1312,8 +1312,8 @@ const bulkDownloadCertificates = async () => {
           item,
           item.pegawai,
           {
-            direkturNama: 'dr. Himawan Budityastomo, SpOG',
-            ketuaPanitia: 'Ririn Dyah Arum Sari, AMK',
+            direkturNama: item.kegiatan?.ttd1_pegawai?.nama || item.kegiatan?.ttd1 || undefined,
+            ketuaPanitia: item.kegiatan?.ttd2_pegawai?.nama || item.kegiatan?.ttd2 || undefined,
             logoRsiaUrl: logoRsiaAsset,
             logoLarsiUrl: logoLarsiAsset,
           }
@@ -1414,8 +1414,8 @@ const printSertifikat = async (item) => {
       item,
       item.pegawai,
       {
-        direkturNama: 'dr. Himawan Budityastomo, SpOG',
-        ketuaPanitia: 'Ririn Dyah Arum Sari, AMK',
+        direkturNama: item.kegiatan?.ttd1_pegawai?.nama || item.kegiatan?.ttd1 || undefined,
+        ketuaPanitia: item.kegiatan?.ttd2_pegawai?.nama || item.kegiatan?.ttd2 || undefined,
         logoRsiaUrl: logoRsiaAsset,
         logoLarsiUrl: logoLarsiAsset,
       }

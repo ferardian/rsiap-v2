@@ -1121,8 +1121,8 @@ const printSertifikat = async (item) => {
       item,
       selectedEmployee.value,
       {
-        direkturNama: 'dr. Himawan Budityastomo, SpOG',
-        ketuaPanitia: 'Ririn Dyah Arum Sari, AMK',
+        direkturNama: item.kegiatan?.ttd1_pegawai?.nama || item.kegiatan?.ttd1 || undefined,
+        ketuaPanitia: item.kegiatan?.ttd2_pegawai?.nama || item.kegiatan?.ttd2 || undefined,
         logoRsiaUrl: logoRsiaAsset,
         logoLarsiUrl: logoLarsiAsset,
       }
