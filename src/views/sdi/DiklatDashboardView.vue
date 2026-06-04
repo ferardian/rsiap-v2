@@ -1096,4 +1096,13 @@ const unitChartOptions = computed(() => {
     justify-content: space-between;
   }
 }
+
+/* Disable focus ring border on click for all ApexCharts elements */
+:deep(.apexcharts-canvas),
+:deep(.apexcharts-canvas *),
+:deep(svg),
+:deep(svg *) {
+  outline: none !important;
+  box-shadow: none !important;
+}
 </style>
