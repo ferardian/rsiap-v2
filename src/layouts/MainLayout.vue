@@ -94,6 +94,8 @@ const currentPageTitle = computed(() => {
     '/sdi/input-jadwal-admin': 'SDI > Input Jadwal Admin',
     '/sdi/aproval-jadwal-kerja': 'SDI > Approval Jadwal Kerja',
     '/sdi/karyawan': 'SDI > Data Karyawan',
+    '/diklat/karyawan': 'SDI > Diklat Karyawan',
+    '/diklat/kegiatan': 'SDI > Diklat Kegiatan',
     '/admin/menu': 'Admin > Manajemen Menu',
     '/admin/role': 'Admin > Manajemen Role',
     '/admin/user': 'Admin > Manajemen User',

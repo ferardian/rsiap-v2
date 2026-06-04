@@ -224,6 +224,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/diklat/karyawan',
+    name: 'DiklatKaryawan',
+    component: () => import('../views/sdi/DiklatKaryawanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/diklat/kegiatan',
+    name: 'DiklatKegiatan',
+    component: () => import('../views/sdi/DiklatKegiatanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/data-dokter',
     name: 'DataDokter',
     component: () => import('../views/sdi/DokterView.vue'),
