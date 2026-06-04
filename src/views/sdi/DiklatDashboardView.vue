@@ -58,7 +58,7 @@
               </div>
               <div class="stat-content">
                 <h3>{{ stats.kpis?.total_peserta_unik || 0 }}</h3>
-                <p>Karyawan Terlatih (Unik)</p>
+                <p>Karyawan Terlatih</p>
                 <span class="stat-trend positive">{{ getTrainedPercentage }}% dari Total Karyawan</span>
               </div>
             </div>
