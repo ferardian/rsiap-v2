@@ -9,6 +9,13 @@ export const diklatService = {
   },
 
   /**
+   * Get dashboard statistics (KPIs, trends, KARS compliance)
+   */
+  getDashboardStats(params = {}) {
+    return api.get('/diklat/dashboard-stats', { params })
+  },
+
+  /**
    * Search activities (kegiatan) for autocomplete
    */
   getKegiatan(searchQuery = '') {

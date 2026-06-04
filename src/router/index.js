@@ -224,6 +224,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/diklat/dashboard',
+    name: 'DiklatDashboard',
+    component: () => import('../views/sdi/DiklatDashboardView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/diklat/karyawan',
     name: 'DiklatKaryawan',
     component: () => import('../views/sdi/DiklatKaryawanView.vue'),
