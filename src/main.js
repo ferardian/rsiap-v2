@@ -10,8 +10,13 @@ import 'vue-select/dist/vue-select.css'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
 
-import { QuillEditor } from '@vueup/vue-quill'
+import { QuillEditor, Quill } from '@vueup/vue-quill'
+import Table from 'quill/modules/table'
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
+Quill.register({
+  'modules/table': Table
+}, true)
 
 const app = createApp(App)
 

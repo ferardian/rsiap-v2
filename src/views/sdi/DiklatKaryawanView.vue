@@ -443,11 +443,33 @@
                 </div>
 
                 <div class="form-group mb-0">
-                  <label class="form-label extra-small">Materi Pelatihan (Ringkasan)</label>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label extra-small mb-0">Materi Pelatihan (Ringkasan)</label>
+                    <div class="d-flex gap-1">
+                      <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 extra-small" @click="insertRow" title="Tambah Baris Bawah">
+                        + Baris
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 extra-small" @click="deleteRow" title="Hapus Baris">
+                        - Baris
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 extra-small" @click="insertColumn" title="Tambah Kolom Kanan">
+                        + Kolom
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 extra-small" @click="deleteColumn" title="Hapus Kolom">
+                        - Kolom
+                      </button>
+                      <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 extra-small text-danger" @click="deleteTable" title="Hapus Tabel">
+                        Hapus Tabel
+                      </button>
+                    </div>
+                  </div>
                   <QuillEditor
+                    :key="editorKey"
                     theme="snow"
                     content-type="html"
                     v-model:content="form.materi"
+                    :options="editorOptions"
+                    @ready="onEditorReady"
                     style="height: 150px; background-color: white;"
                     placeholder="Contoh: Jadwal, waktu, materi, dan pemateri..."
                   />
@@ -737,7 +759,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import debounce from 'lodash/debounce'
@@ -780,6 +802,134 @@ const showFormSidebar = ref(false)
 const isEditMode = ref(false)
 const submitting = ref(false)
 const selectedDiklatItem = ref(null)
+
+const editorKey = ref(0)
+watch(showFormSidebar, (newVal) => {
+  if (newVal) {
+    editorKey.value++
+  }
+})
+
+let activeQuill = null
+const onEditorReady = (quillInstance) => {
+  activeQuill = quillInstance
+}
+
+const insertRow = () => {
+  if (activeQuill) {
+    const tableModule = activeQuill.getModule('table')
+    if (tableModule) {
+      tableModule.insertRowBelow()
+    }
+  }
+}
+const deleteRow = () => {
+  if (activeQuill) {
+    const tableModule = activeQuill.getModule('table')
+    if (tableModule) {
+      tableModule.deleteRow()
+    }
+  }
+}
+const insertColumn = () => {
+  if (activeQuill) {
+    const tableModule = activeQuill.getModule('table')
+    if (tableModule) {
+      tableModule.insertColumnRight()
+    }
+  }
+}
+const deleteColumn = () => {
+  if (activeQuill) {
+    const tableModule = activeQuill.getModule('table')
+    if (tableModule) {
+      tableModule.deleteColumn()
+    }
+  }
+}
+const deleteTable = () => {
+  if (activeQuill) {
+    const tableModule = activeQuill.getModule('table')
+    if (tableModule) {
+      tableModule.deleteTable()
+    }
+  }
+}
+
+const cleanHtmlTable = (htmlStr) => {
+  if (!htmlStr || htmlStr.trim() === '') return ''
+
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(htmlStr, 'text/html')
+    const tables = doc.querySelectorAll('table')
+    if (tables.length === 0) return htmlStr
+
+    tables.forEach(table => {
+      // 1. Ensure <tbody> exists
+      let tbody = table.querySelector('tbody')
+      if (!tbody) {
+        tbody = doc.createElement('tbody')
+        const children = Array.from(table.childNodes)
+        children.forEach(child => {
+          if (child.nodeName === 'TR') {
+            tbody.appendChild(child)
+          }
+        })
+        table.appendChild(tbody)
+      }
+
+      // 2. Add data-row to td/th cells and clean cell attributes
+      const rows = table.querySelectorAll('tr')
+      rows.forEach((row) => {
+        const rowId = 'row-' + Math.random().toString(36).slice(2, 6)
+        const cells = row.querySelectorAll('td, th')
+        cells.forEach(cell => {
+          cell.setAttribute('data-row', rowId)
+          
+          const allowedAttributes = ['colspan', 'rowspan', 'data-row']
+          const attribs = Array.from(cell.attributes)
+          attribs.forEach(attr => {
+            if (!allowedAttributes.includes(attr.name.toLowerCase())) {
+              cell.removeAttribute(attr.name)
+            }
+          })
+        })
+      })
+
+      // 3. Strip attributes from table, tbody, and tr to avoid MS Word conflicts
+      const cleanElementAttribs = (el, allowed) => {
+        const attribs = Array.from(el.attributes)
+        attribs.forEach(attr => {
+          if (!allowed.includes(attr.name.toLowerCase())) {
+            el.removeAttribute(attr.name)
+          }
+        })
+      }
+      cleanElementAttribs(table, [])
+      cleanElementAttribs(tbody, [])
+      rows.forEach(r => cleanElementAttribs(r, []))
+    })
+
+    return doc.body.innerHTML
+  } catch (e) {
+    console.warn('Error cleaning HTML table:', e)
+    return htmlStr
+  }
+}
+
+const editorOptions = {
+  modules: {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link'],
+      ['table'],
+      ['clean']
+    ],
+    table: true
+  }
+}
 
 // File Upload Drag & Drop State
 const dragOver = ref(false)
@@ -1015,7 +1165,7 @@ const openEditModal = (item) => {
     form.skp = item.kegiatan.skp || ''
     form.penyelenggara = item.kegiatan.penyelenggara || ''
     form.nomor = item.kegiatan.nomor || ''
-    form.materi = item.kegiatan.materi || ''
+    form.materi = cleanHtmlTable(item.kegiatan.materi || '')
     form.ttd1_id = item.kegiatan.ttd1_id || null
     form.ttd2_id = item.kegiatan.ttd2_id || null
   }
@@ -1547,21 +1697,29 @@ const formatBytes = (bytes, decimals = 2) => {
 
 .sidebar-form {
   position: fixed;
-  top: 0;
-  right: -520px;
-  width: 480px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 820px;
   max-width: 95vw;
-  height: 100vh;
+  height: 85vh;
+  max-height: 95vh;
   background: #fff;
   z-index: 1045;
-  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
-  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .sidebar-form.active {
-  right: 0;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .sidebar-content {
@@ -1755,8 +1913,8 @@ const formatBytes = (bytes, decimals = 2) => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .sidebar-form {
-    width: 100vw;
-    right: -100vw;
+    width: 95vw;
+    max-height: 95vh;
   }
 }
 </style>
