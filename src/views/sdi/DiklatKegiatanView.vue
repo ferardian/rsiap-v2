@@ -375,9 +375,39 @@
                 <input type="text" v-model="form.nomor" class="form-control form-control-sm" placeholder="Contoh: 123/SK-DIR/VI/2026" />
               </div>
 
+              <div class="form-group mb-2">
+                <label class="form-label extra-small">Tanda Tangan 1 (Direktur)</label>
+                <v-select
+                  v-model="form.ttd1_id"
+                  :options="pegawaiList"
+                  :reduce="peg => peg.id"
+                  label="nama"
+                  placeholder="Pilih Direktur..."
+                  class="v-select-custom bg-white"
+                />
+              </div>
+
+              <div class="form-group mb-2">
+                <label class="form-label extra-small">Tanda Tangan 2 (Ketua Panitia)</label>
+                <v-select
+                  v-model="form.ttd2_id"
+                  :options="pegawaiList"
+                  :reduce="peg => peg.id"
+                  label="nama"
+                  placeholder="Pilih Ketua Panitia..."
+                  class="v-select-custom bg-white"
+                />
+              </div>
+
               <div class="form-group mb-0">
                 <label class="form-label extra-small">Materi Pelatihan (Ringkasan)</label>
-                <textarea v-model="form.materi" class="form-control form-control-sm" rows="2" placeholder="Contoh: Resusitasi jantung paru, penanganan syok..."></textarea>
+                <QuillEditor
+                  theme="snow"
+                  content-type="html"
+                  v-model:content="form.materi"
+                  style="height: 150px; background-color: white;"
+                  placeholder="Contoh: Jadwal, waktu, materi, dan pemateri..."
+                />
               </div>
             </div>
 
@@ -782,6 +812,8 @@ import { generateSertifikatDiklat, downloadPdfFromBlob, printPdfFromBlob } from 
 import config from '@/config/api'
 import logoRsiaAsset from '@/assets/logo-rsia.png'
 import logoLarsiAsset from '@/assets/logo-larsi.png'
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 const toast = useToast()
 
@@ -797,6 +829,7 @@ const detectMobile = () => {
 const kegiatanList = ref([])
 const loadingKegiatan = ref(false)
 const kegSearchQuery = ref('')
+const pegawaiList = ref([])
 
 // Detail State
 const selectedKegiatan = ref(null)
@@ -866,13 +899,16 @@ const form = reactive({
   penyelenggara: '',
   nomor: '',
   materi: '',
-  file: null
+  file: null,
+  ttd1_id: null,
+  ttd2_id: null
 })
 
 // Initialize Page
 onMounted(() => {
   detectMobile()
   loadKegiatanList()
+  loadPegawaiList()
 })
 
 // === LOAD KEGIATAN LIST ===
@@ -886,6 +922,15 @@ const loadKegiatanList = async () => {
     toast.error('Gagal memuat daftar kegiatan')
   } finally {
     loadingKegiatan.value = false
+  }
+}
+
+const loadPegawaiList = async () => {
+  try {
+    const response = await pegawaiService.getKaryawanList({ limit: 1000 })
+    pegawaiList.value = response.data?.data || []
+  } catch (error) {
+    console.error('Failed to load employee list for select:', error)
   }
 }
 
@@ -1016,6 +1061,8 @@ const resetForm = () => {
   form.nomor = ''
   form.materi = ''
   form.file = null
+  form.ttd1_id = null
+  form.ttd2_id = null
   
   empQuery.value = ''
   empResults.value = []
@@ -1070,6 +1117,8 @@ const openEditModal = (item) => {
     form.penyelenggara = selectedKegiatan.value.penyelenggara || ''
     form.nomor = selectedKegiatan.value.nomor || ''
     form.materi = selectedKegiatan.value.materi || ''
+    form.ttd1_id = selectedKegiatan.value.ttd1_id || null
+    form.ttd2_id = selectedKegiatan.value.ttd2_id || null
   }
   
   showFormSidebar.value = true
@@ -1126,6 +1175,8 @@ const submitForm = async () => {
     if (form.penyelenggara) formData.append('penyelenggara', form.penyelenggara)
     if (form.nomor) formData.append('nomor', form.nomor)
     if (form.materi) formData.append('materi', form.materi)
+    if (form.ttd1_id !== null) formData.append('ttd1_id', form.ttd1_id)
+    if (form.ttd2_id !== null) formData.append('ttd2_id', form.ttd2_id)
 
     try {
       await diklatService.updateDiklat(selectedParticipantItem.value.id, formData)
@@ -1169,6 +1220,8 @@ const submitForm = async () => {
     if (form.penyelenggara) formData.append('penyelenggara', form.penyelenggara)
     if (form.nomor) formData.append('nomor', form.nomor)
     if (form.materi) formData.append('materi', form.materi)
+    if (form.ttd1_id !== null) formData.append('ttd1_id', form.ttd1_id)
+    if (form.ttd2_id !== null) formData.append('ttd2_id', form.ttd2_id)
 
     try {
       const response = await diklatService.storeDiklat(formData)
