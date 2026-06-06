@@ -29,21 +29,136 @@ body {
 }
 
 .card-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-  color: white;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 100%);
+  color: #0f172a;
   padding: 2rem;
   text-align: center;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .card-header h1 {
   font-size: 1.8rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #0f172a;
 }
 
 .card-header p {
-  opacity: 0.9;
   font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* ============================================
+   GLOBAL PAGE HEADER STYLES — White Theme
+   Selaras dengan login screen tone
+   ============================================ */
+
+/* Page Header Container */
+.page-header {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 1rem !important;
+  padding: 1.25rem 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle accent bar on the left */
+.page-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 1rem 0 0 1rem;
+}
+
+/* Header content layout */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Page title */
+.page-title {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 0.2rem !important;
+  line-height: 1.3;
+}
+
+/* Page subtitle */
+.page-subtitle {
+  font-size: 0.875rem !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  font-weight: 400;
+}
+
+/* Header title (alternative naming) */
+.header-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
+}
+
+.header-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ============================================
+   SIDEBAR FORM HEADER — White Theme Override
+   ============================================ */
+.sidebar-header {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 100%) !important;
+  color: #0f172a !important;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.sidebar-header h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #0f172a;
+}
+
+.sidebar-close {
+  background: none;
+  border: none;
+  color: #64748b !important;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.sidebar-close:hover {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
 }
 
 .card-body {

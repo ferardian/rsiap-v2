@@ -362,6 +362,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/indikator-mutu/dashboard',
+    name: 'DashboardIndikatorMutu',
+    component: () => import('../views/indikator-mutu/DashboardIndikatorMutuView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/monitoring-klaim',
     name: 'MonitoringKlaim',
     component: () => import('../views/dashboard/MonitoringKlaimView.vue'),

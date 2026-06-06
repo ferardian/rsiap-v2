@@ -1,0 +1,25 @@
+--- src/views/indikator-mutu/InputDataIndikatorMutuView.vue
++++ src/views/indikator-mutu/InputDataIndikatorMutuView.vue
+@@ -113,16 +113,11 @@
+                     />
+                 </div>
+                 <div class="header-filter-item">
+-                    <div class="header-filter-label">Periode Analisa</div>
+-                    <div class="d-flex gap-2">
+-                        <select class="form-select form-select-sm header-input" v-model="selectedTriwulan" @change="handleTriwulanChange">
+-                            <option value="03">Triwulan 1 (Jan - Mar)</option>
+-                            <option value="06">Triwulan 2 (Apr - Jun)</option>
+-                            <option value="09">Triwulan 3 (Jul - Sep)</option>
+-                            <option value="12">Triwulan 4 (Okt - Des)</option>
+-                        </select>
+-                        <input type="number" class="form-control form-control-sm header-input" style="width: 80px;" v-model="selectedYear" @change="handleTriwulanChange">
+-                    </div>
++                    <div class="header-filter-label">Bulan Analisa</div>
++                    <input 
++                        type="month" 
++                        class="form-control form-control-sm header-input" 
++                        v-model="monthlyFilterDate"
++                        @change="handleMonthlyDateChange"
++                    >
+                 </div>
+                 <div class="header-filter-item unit-select-container">

@@ -197,6 +197,9 @@
                     <button v-if="canDelete" class="btn-delete" @click="confirmDelete(pegawai)" title="Hapus">
                       <i class="fas fa-trash"></i>
                     </button>
+                    <button class="btn-qrcode" @click="openQrModal(pegawai)" title="Generate QR Code">
+                      <i class="fas fa-qrcode"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -317,6 +320,44 @@
           </div>
         </div>
       </div>
+
+      <!-- QR Code Modal -->
+      <div v-if="showQrModal" class="modal-overlay" @click="showQrModal = false">
+        <div class="modal-content qr-modal" @click.stop>
+          <div class="modal-header">
+            <h3><i class="fas fa-qrcode me-2"></i>QR Code Tanda Tangan</h3>
+            <button class="btn-close" @click="showQrModal = false">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="qr-employee-info">
+              <div class="qr-avatar">{{ getInitials(qrPegawai?.nama) }}</div>
+              <div>
+                <div class="qr-name">{{ qrPegawai?.nama }}</div>
+                <div class="qr-nik">NIK: {{ qrPegawai?.nik || qrPegawai?.nip }}</div>
+                <div class="qr-jabatan">{{ qrPegawai?.jbtn || '-' }}</div>
+              </div>
+            </div>
+
+            <div class="qr-wrapper">
+              <canvas ref="qrCanvas" class="qr-canvas"></canvas>
+            </div>
+
+            <div class="qr-text-content">
+              <i class="fas fa-info-circle me-1"></i>
+              <em>{{ qrTextContent }}</em>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="showQrModal = false">Tutup</button>
+            <button class="btn-download-qr" @click="downloadQr">
+              <i class="fas fa-download"></i>
+              Download QR
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Staf Klinis Tab -->
@@ -363,6 +404,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, reactive, nextTick, onBeforeUnmount } from 'vue'
+import QRCode from 'qrcode'
 import { useRouter, useRoute } from 'vue-router'
 import { useMenuStore } from '../../stores/menu'
 import { pegawaiService } from '../../services/pegawaiService'
@@ -416,6 +458,12 @@ const selectedNikForEmail = ref('')
 const selectedNamaForEmail = ref('')
 const submittingEmail = ref(false)
 const autoOpenUpload = ref(false)
+
+// QR Code State
+const showQrModal = ref(false)
+const qrPegawai = ref(null)
+const qrCanvas = ref(null)
+const qrTextContent = ref('')
 
 // Context Menu State
 const contextMenu = reactive({
@@ -689,6 +737,38 @@ const deletePegawai = async () => {
     console.error('Error deleting pegawai:', error)
     alert('Gagal menghapus karyawan')
   }
+}
+
+// QR Code Methods
+const openQrModal = async (pegawai) => {
+  qrPegawai.value = pegawai
+  const nik = pegawai.nik || pegawai.nip || '-'
+  const tanggal = new Date().toLocaleDateString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  })
+  const text = `Ditanda tangani oleh ${pegawai.nama}, NIK: ${nik}, pada tanggal ${tanggal}`
+  qrTextContent.value = text
+  showQrModal.value = true
+
+  await nextTick()
+  try {
+    await QRCode.toCanvas(qrCanvas.value, text, {
+      width: 240,
+      margin: 2,
+      color: { dark: '#1e293b', light: '#ffffff' }
+    })
+  } catch (e) {
+    console.error('QR generate error:', e)
+  }
+}
+
+const downloadQr = () => {
+  if (!qrCanvas.value) return
+  const link = document.createElement('a')
+  const nama = (qrPegawai.value?.nama || 'karyawan').replace(/\s+/g, '_')
+  link.download = `QR_${nama}.png`
+  link.href = qrCanvas.value.toDataURL('image/png')
+  link.click()
 }
 
 // Context Menu Methods
@@ -1304,7 +1384,8 @@ onBeforeUnmount(() => {
 }
 
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-qrcode {
   padding: 0.5rem;
   border: none;
   border-radius: 6px;
@@ -1333,6 +1414,110 @@ onBeforeUnmount(() => {
 
 .btn-delete:hover {
   background: #fecaca;
+}
+
+.btn-qrcode {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.btn-qrcode:hover {
+  background: #7c3aed;
+  color: white;
+}
+
+/* QR Modal Styles */
+.modal-content.qr-modal {
+  max-width: 440px;
+}
+
+.qr-employee-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  border: 1px solid #e2e8f0;
+}
+
+.qr-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qr-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.qr-nik {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.qr-jabatan {
+  font-size: 0.8rem;
+  color: #7c3aed;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.qr-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.qr-canvas {
+  border-radius: 8px;
+}
+
+.qr-text-content {
+  font-size: 0.78rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #e2e8f0;
+  line-height: 1.5;
+}
+
+.btn-download-qr {
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-download-qr:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 

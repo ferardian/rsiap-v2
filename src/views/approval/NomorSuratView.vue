@@ -419,10 +419,10 @@ const handleAction = async (surat, status) => {
       })
     } else {
       const updateFn = activeTab.value === 'internal' ? suratInternalService.updateSuratInternal : suratEksternalService.updateSuratEksternal
-      await updateFn(surat.id, {
-        ...surat,
-        status: status
-      })
+      // Kirim field wajib tapi tanpa object 'undangan' agar tidak memicu validasi ulang tanggal
+      // eslint-disable-next-line no-unused-vars
+      const { undangan, penanggung_jawab, diajukan_oleh, _original, ...safePayload } = surat
+      await updateFn(surat.id, { ...safePayload, status })
     }
 
     Swal.fire({

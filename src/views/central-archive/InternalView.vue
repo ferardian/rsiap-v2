@@ -631,6 +631,13 @@ const saveSurat = async () => {
     const payload = { ...formData.value }
     if (!withUndangan.value) {
       delete payload.undangan
+    } else if (payload.undangan?.tanggal) {
+      // datetime-local gives "YYYY-MM-DDTHH:mm", Laravel needs "YYYY-MM-DD HH:mm:ss"
+      const raw = payload.undangan.tanggal
+      payload.undangan = {
+        ...payload.undangan,
+        tanggal: raw.replace('T', ' ') + (raw.length === 16 ? ':00' : '')
+      }
     }
 
     let response
