@@ -33,6 +33,8 @@ const service = {
     saveRealisasi: (data) => api.post('/indikator-mutu/realisasi', data),
     getRealisasi: (params) => api.get('/indikator-mutu/realisasi', { params }),
     saveRealisasiBulk: (data) => api.post('/indikator-mutu/realisasi/bulk', data),
+    verifyRealisasi: (data) => api.post('/indikator-mutu/realisasi/verifikasi', data),
+    verifyPdsa: (data) => api.post('/indikator-mutu/pdsa/verifikasi', data),
 
     // Feedback Analisa
     getFeedback: (id_analisa) => api.get(`/indikator-mutu/analisa/feedback/${id_analisa}`),
@@ -51,6 +53,12 @@ const service = {
     createSupervisiImplikasi: (data) => api.post('/indikator-mutu/supervisi-implikasi', data),
     updateSupervisiImplikasi: (id, data) => api.put(`/indikator-mutu/supervisi-implikasi/${id}`, data),
     deleteSupervisiImplikasi: (id) => api.delete(`/indikator-mutu/supervisi-implikasi/${id}`),
+
+    // PIC & Validator Mappings
+    getPicValidators: () => api.get('/indikator-mutu/pic-validators'),
+    createPicValidator: (data) => api.post('/indikator-mutu/pic-validators', data),
+    updatePicValidator: (dep_id, data) => api.put(`/indikator-mutu/pic-validators/${dep_id}`, data),
+    deletePicValidator: (dep_id) => api.delete(`/indikator-mutu/pic-validators/${dep_id}`),
 };
 
 // Export service for Indikator Mutu operations

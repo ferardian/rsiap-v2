@@ -1,21 +1,23 @@
 <template>
   <div class="lab-indicator-container p-3 p-md-4">
     <!-- Header Page -->
-    <div class="page-header brand-gradient rounded-4 p-4 mb-4 text-white shadow-lg animate__animated animate__fadeIn">
-      <div class="d-flex align-items-center mb-3">
-        <div class="header-logo bg-white me-3">
-          <img src="@/assets/lab-logo.png" alt="Logo" class="img-fluid p-1">
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-logo me-3">
+            <img src="@/assets/lab-logo.png" alt="Logo" class="img-fluid p-1">
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Indikator Mutu Laboratorium</h3>
+            <p class="page-subtitle mb-0 small">Monitoring & Surveilans Kualitas Pelayanan Laboratorium</p>
+          </div>
         </div>
-        <div>
-          <h3 class="mb-0 fw-bold tracking-tight text-white shadow-text">Indikator Mutu Laboratorium</h3>
-          <p class="mb-0 opacity-75 small">Monitoring & Surveilans Kualitas Pelayanan Laboratorium</p>
+        
+        <!-- Date Filter -->
+        <div class="d-flex align-items-center gap-2 filter-section">
+          <span class="text-muted small fw-bold"><i class="fas fa-calendar-alt me-1 text-primary"></i> Periode</span>
+          <input type="date" v-model="filterDate" class="form-control form-control-sm filter-date" @change="fetchData">
         </div>
-      </div>
-      
-      <!-- Date Filter -->
-      <div class="glass-effect rounded-3 p-2 d-inline-flex align-items-center">
-        <i class="fas fa-calendar-alt mx-2"></i>
-        <input type="date" v-model="filterDate" class="form-control form-control-sm border-0 bg-transparent text-white" @change="fetchData">
       </div>
     </div>
 
@@ -428,11 +430,17 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.brand-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+.card {
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
-.shadow-text { text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.card-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 1rem 1.5rem !important;
+  text-align: left !important;
+}
 
 .header-logo {
   width: 50px;
@@ -441,13 +449,25 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.glass-effect {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.filter-date {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  width: 150px !important;
+}
+
+.filter-date:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .text-xs { font-size: 0.65rem; }
@@ -474,6 +494,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border: 1px solid #e2e8f0 !important;
 }
 
 .form-check-input:checked {
@@ -505,15 +526,68 @@ onMounted(() => {
 
 .transition-all { transition: all 0.3s ease; }
 
-.style-chooser .vs__dropdown-toggle {
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 2px 0;
+/* vue-select Dropdown styling */
+.style-chooser :deep(.vs__dropdown-toggle) {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 4px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
 }
 
-.search-box .input-group-text, 
-.search-box .form-control {
+.style-chooser:focus-within :deep(.vs__dropdown-toggle) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Form input groups */
+.input-group:not(.search-box) {
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.input-group:not(.search-box):focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.input-group:not(.search-box) .input-group-text {
+  background: transparent !important;
+  border: none !important;
+}
+
+.input-group:not(.search-box) .form-control {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Sidebar Search Box styling */
+.search-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.search-box:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.search-box .input-group-text {
+  background: transparent !important;
+  border: none !important;
+}
+
+.search-box .form-control {
+  background: transparent !important;
+  border: none !important;
   font-size: 0.8rem;
 }
 
@@ -532,5 +606,30 @@ onMounted(() => {
 
 @media (max-width: 991px) {
   .lab-indicator-container { padding: 1rem !important; }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .page-title {
+    font-size: 1.25rem !important;
+  }
+
+  .page-subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  .filter-section {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .filter-date {
+    width: 100% !important;
+    flex: 1 !important;
+  }
 }
 </style>

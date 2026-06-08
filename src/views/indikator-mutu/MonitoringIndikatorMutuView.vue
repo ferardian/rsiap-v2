@@ -1,74 +1,70 @@
 <template>
-  <div class="container-fluid p-0">
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <h3 class="fw-bold text-primary mb-1">
-          <i class="fas fa-chart-line me-2"></i>Monitoring Indikator Mutu
-        </h3>
-        <p class="text-muted mb-0">Pantau, analisa, dan pelaporan mutu rumah sakit</p>
+  <div class="container-fluid p-3 p-md-4">
+    <!-- Premium Header Section -->
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Monitoring Indikator Mutu</h3>
+            <p class="page-subtitle mb-0 small">Pantau, analisa, dan pelaporan mutu rumah sakit</p>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <ul class="nav nav-pills mb-3" role="tablist">
-      <li class="nav-item">
+    <nav class="tabs-nav mb-4">
+      <div class="header-tabs-premium">
         <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'monitoring' }" 
-            @click="activeTab = 'monitoring'"
+          class="tab-btn" 
+          :class="{ active: activeTab === 'monitoring' }" 
+          @click="activeTab = 'monitoring'"
         >
-          <i class="fas fa-desktop me-1"></i> Monitoring
+          <i class="fas fa-desktop"></i> Monitoring
         </button>
-      </li>
-      <li class="nav-item">
         <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'analisa' }" 
-            @click="activeTab = 'analisa'"
+          class="tab-btn" 
+          :class="{ active: activeTab === 'analisa' }" 
+          @click="activeTab = 'analisa'"
         >
-          <i class="fas fa-microscope me-1"></i> Analisa Data
+          <i class="fas fa-microscope"></i> Analisa Data
         </button>
-      </li>
-      <li class="nav-item">
         <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'kamus' }" 
-            @click="activeTab = 'kamus'"
+          class="tab-btn" 
+          :class="{ active: activeTab === 'kamus' }" 
+          @click="activeTab = 'kamus'"
         >
-          <i class="fas fa-book me-1"></i> Kamus Indikator
+          <i class="fas fa-book"></i> Kamus Indikator
         </button>
-      </li>
-      <li class="nav-item">
         <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'laporan' }" 
-            @click="activeTab = 'laporan'"
+          class="tab-btn" 
+          :class="{ active: activeTab === 'laporan' }" 
+          @click="activeTab = 'laporan'"
         >
-          <i class="fas fa-file-alt me-1"></i> Laporan
+          <i class="fas fa-file-alt"></i> Laporan
         </button>
-      </li>
-      <li class="nav-item">
         <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'rekap_feedback' }" 
-            @click="activeTab = 'rekap_feedback'"
+          class="tab-btn" 
+          :class="{ active: activeTab === 'rekap_feedback' }" 
+          @click="activeTab = 'rekap_feedback'"
         >
-          <i class="fas fa-comment-medical me-1"></i> Rekap Supervisi
+          <i class="fas fa-comment-medical"></i> Rekap Supervisi
         </button>
-      </li>
-      <li class="nav-item">
         <button 
-            class="nav-link" 
-            :class="{ active: activeTab === 'supervisi_implikasi' }" 
-            @click="activeTab = 'supervisi_implikasi'"
+          class="tab-btn" 
+          :class="{ active: activeTab === 'supervisi_implikasi' }" 
+          @click="activeTab = 'supervisi_implikasi'"
         >
-          <i class="fas fa-clipboard-check me-1"></i> Ceklist Implikasi
+          <i class="fas fa-clipboard-check"></i> Ceklist Implikasi
         </button>
-      </li>
-    </ul>
+      </div>
+    </nav>
 
     <!-- Tab Content -->
-    <div class="card shadow-sm border-0">
+    <div class="content-card">
       <div class="card-body p-4">
         <KeepAlive>
             <MonitoringInmutTab v-if="activeTab === 'monitoring'" />
@@ -112,24 +108,76 @@ const activeTab = ref('monitoring')
 </script>
 
 <style scoped>
-.nav-pills .nav-link {
-    color: #6c757d;
-    cursor: pointer;
-    font-weight: 500;
-    margin-right: 0.5rem;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    transition: all 0.2s;
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.nav-pills .nav-link:hover {
-    background-color: #e9ecef;
-    color: #495057;
+.header-tabs-premium {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.nav-pills .nav-link.active {
-    color: #fff;
-    background-color: #435ebe;
-    font-weight: 600;
+.tab-btn {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-btn:hover:not(.active) {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.content-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .header-tabs-premium {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    white-space: nowrap;
+    justify-content: center;
+  }
 }
 </style>

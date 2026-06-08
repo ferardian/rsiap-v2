@@ -1,8 +1,8 @@
 <template>
-  <div class="container-fluid py-4">
+  <div :class="{ 'container-fluid py-4': mode !== 'approval' }">
     <!-- Header -->
-    <div class="row align-items-center mb-4 g-3">
-      <div class="col-12 col-md-6">
+    <div class="row align-items-center mb-4 g-3" v-if="mode !== 'approval' || isMobile">
+      <div class="col-12 col-md-6" v-if="mode !== 'approval'">
         <h3 class="fw-bold text-primary mb-1">
           <i class="fas fa-file-medical me-2"></i>{{ mode === 'approval' ? 'Approval SPO' : 'Manajemen SPO' }}
         </h3>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeInDown" v-if="showFilters || !isMobile" style="z-index: 100; position: relative;">
+    <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeInDown" v-if="showFilters || !isMobile" style="z-index: 100; position: relative; overflow: visible !important;">
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-3">
@@ -64,7 +64,7 @@
             <label class="form-label small fw-bold text-muted text-uppercase mb-2 tracking-wide">Unit</label>
             <v-select
               :options="departments"
-              label="nama_ruang"
+              label="nama"
               v-model="filters.unit"
               :reduce="dept => dept.dep_id"
               placeholder="Pilih Unit..."
@@ -423,16 +423,16 @@ const resetFilters = () => {
 
 // Helper functions
 const getStatusBadge = (status) => {
-  return status === 'disetujui' ? 'bg-success' : 'bg-warning'
+  return status === 'disetujui' ? 'badge-success-premium' : 'badge-warning-premium'
 }
 
 const getJenisBadge = (jenis) => {
   const badges = {
-    medis: 'bg-primary',
-    penunjang: 'bg-info',
-    umum: 'bg-secondary'
+    medis: 'badge-medis',
+    penunjang: 'badge-penunjang',
+    umum: 'badge-umum'
   }
-  return badges[jenis] || 'bg-secondary'
+  return badges[jenis] || 'badge-umum'
 }
 
 const formatDate = (dateString) => {
@@ -559,11 +559,90 @@ onUnmounted(() => {
   border-bottom: 2px solid #f1f5f9;
 }
 
+.table td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Premium Badges */
+.badge-success-premium {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  font-weight: 600;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.badge-warning-premium {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  font-weight: 600;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.badge-medis {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 600;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.badge-penunjang {
+  background-color: #ecfeff !important;
+  color: #0e7490 !important;
+  font-weight: 600;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.badge-umum {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  font-weight: 600;
+  padding: 0.35em 0.65em;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+/* Premium Form Inputs */
+.form-control, .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #334155;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
 .v-select-custom :deep(.vs__dropdown-toggle) {
   border-radius: 8px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #e2e8f0;
   padding: 4px;
   background: white;
+  transition: all 0.2s ease-in-out;
+}
+
+.v-select-custom:focus-within :deep(.vs__dropdown-toggle) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .v-select-custom :deep(.vs__selected) {
@@ -572,19 +651,70 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+.v-select-custom :deep(.vs__dropdown-menu) {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  z-index: 1050 !important;
+  font-size: 0.875rem !important;
+  color: #334155 !important;
+  padding: 4px 0 !important;
+}
+
+.v-select-custom :deep(.vs__dropdown-option) {
+  padding: 8px 12px !important;
+  color: #475569 !important;
+}
+
+.v-select-custom :deep(.vs__dropdown-option--highlight) {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* Pagination Overrides */
+.pagination .page-link {
+  color: #64748b;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin: 0 2px;
+  padding: 0.375rem 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #cbd5e1;
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.pagination .page-link:hover:not(.active):not(.disabled) {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
 .btn-group-sm .btn {
   padding: 0.25rem 0.5rem;
 }
 
-.page-link {
-  cursor: pointer;
-}
 .btn-outline-indigo {
   color: #4f46e5;
   border-color: #4f46e5;
   font-weight: 600;
   transition: all 0.2s;
 }
+
 .btn-outline-indigo:hover {
   background-color: #4f46e5;
   color: white;

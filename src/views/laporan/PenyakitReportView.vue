@@ -1,73 +1,72 @@
 <template>
-  <div class="penyakit-report-container p-4">
+  <div class="penyakit-report-container p-3 p-md-4">
     <!-- Header Section -->
     <div class="page-header mb-4">
-      <div class="header-content">
-        <div class="header-text">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <h2 class="page-title mb-0">
-              <i class="fas fa-chart-pie me-2"></i>
-              Laporan 10 Besar Penyakit
-            </h2>
-            <button @click="isFilterVisible = !isFilterVisible" class="btn-toggle-filter d-md-none">
-              <i class="fas" :class="isFilterVisible ? 'fa-chevron-up' : 'fa-filter'"></i>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Laporan 10 Besar Penyakit</h3>
+            <p class="page-subtitle mb-0 small">Statistik diagnosa penyakit terbanyak berdasarkan periode</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-card card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
+        <div class="row g-3 align-items-end">
+          <!-- Date Range -->
+          <div class="col-lg-4 col-md-6">
+            <label class="filter-label"><i class="fas fa-calendar-alt me-1 text-primary"></i> Periode</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="date" v-model="filters.tgl_awal" class="form-control form-control-sm filter-date" />
+              <span class="text-muted small fw-bold">s/d</span>
+              <input type="date" v-model="filters.tgl_akhir" class="form-control form-control-sm filter-date" />
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-lg-2 col-md-6">
+            <label class="filter-label"><i class="fas fa-hospital me-1 text-primary"></i> Layanan</label>
+            <select v-model="filters.status" class="form-select form-select-sm modern-select">
+              <option value="all">Semua Layanan</option>
+              <option value="Ralan">Rawat Jalan</option>
+              <option value="Ranap">Rawat Inap</option>
+            </select>
+          </div>
+
+          <!-- Pasien Filter -->
+          <div class="col-lg-2 col-md-4">
+            <label class="filter-label"><i class="fas fa-user-check me-1 text-primary"></i> Status Pasien</label>
+            <select v-model="filters.stts_daftar" class="form-select form-select-sm modern-select">
+              <option value="all">Semua Status</option>
+              <option value="Baru">Pasien Baru</option>
+              <option value="Lama">Pasien Lama</option>
+            </select>
+          </div>
+
+          <!-- Gender Filter -->
+          <div class="col-lg-2 col-md-4">
+            <label class="filter-label"><i class="fas fa-venus-mars me-1 text-primary"></i> Gender</label>
+            <select v-model="filters.jk" class="form-select form-select-sm modern-select">
+              <option value="all">Semua Gender</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
+
+          <!-- Action Button -->
+          <div class="col-lg-2 col-md-4 d-grid">
+            <button @click="loadData" class="btn btn-primary btn-sm rounded-3 fw-bold btn-refresh-custom" :disabled="loading">
+              <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i>
+              Refresh
             </button>
           </div>
-          <p class="page-subtitle mb-0">Statistik diagnosa penyakit terbanyak berdasarkan periode</p>
         </div>
-        
-        <transition name="collapse">
-          <div v-show="isFilterVisible || !isMobile" class="header-actions">
-          <div class="filter-grid">
-            <!-- Date Range -->
-            <div class="filter-group">
-              <label class="filter-label">PERIODE</label>
-              <div class="date-input-group">
-                <input type="date" v-model="filters.tgl_awal" class="form-input" />
-                <span class="date-separator">s/d</span>
-                <input type="date" v-model="filters.tgl_akhir" class="form-input" />
-              </div>
-            </div>
-
-            <!-- Status Filter -->
-            <div class="filter-group">
-              <label class="filter-label">STATUS</label>
-              <select v-model="filters.status" class="form-select">
-                <option value="all">Semua Layanan</option>
-                <option value="Ralan">Rawat Jalan</option>
-                <option value="Ranap">Rawat Inap</option>
-              </select>
-            </div>
-
-            <!-- Pasien Filter -->
-            <div class="filter-group">
-              <label class="filter-label">PASIEN</label>
-              <select v-model="filters.stts_daftar" class="form-select">
-                <option value="all">Semua Status</option>
-                <option value="Baru">Pasien Baru</option>
-                <option value="Lama">Pasien Lama</option>
-              </select>
-            </div>
-
-            <!-- Gender Filter -->
-            <div class="filter-group">
-              <label class="filter-label">GENDER</label>
-              <select v-model="filters.jk" class="form-select">
-                <option value="all">Semua Gender</option>
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
-              </select>
-            </div>
-
-            <div class="filter-group d-flex align-items-end">
-              <button @click="loadData" class="btn-refresh-premium" :disabled="loading">
-                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-      </transition>
       </div>
     </div>
 
@@ -477,184 +476,84 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.page-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
-  padding: 3rem 2rem;
-  border-radius: 0 0 40px 40px;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(30, 58, 138, 0.2);
-  margin: -1.5rem -1.5rem 2rem -1.5rem; /* Full width */
-}
-
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  border-radius: 50%;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 2rem;
-  position: relative;
-  z-index: 1;
-}
-
-.page-title {
-  color: white !important;
-  font-weight: 800;
-  font-size: 1.85rem;
-  margin: 0;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.page-subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
-  margin-top: 0.5rem;
-  padding-left: 2.2rem;
-}
-
-.header-actions {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(15px) saturate(160%);
-  padding: 1.5rem 2.5rem;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.btn-toggle-filter {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.btn-toggle-filter:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Collapse Transition */
-.collapse-enter-active,
-.collapse-leave-active {
-  transition: all 0.3s ease-out;
-  max-height: 500px;
-  opacity: 1;
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.filter-grid {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-end;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Filters Styling */
+.filters-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
 .filter-label {
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  opacity: 0.9;
-}
-
-.date-input-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.98);
-  padding: 0.35rem 0.75rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-.date-separator {
+  display: block;
   color: #64748b;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.form-input, .form-select {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9rem;
-  color: #1e293b;
+  font-size: 0.75rem;
   font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
-.form-input:focus, .form-select:focus {
-  outline: none;
-  background: #fff;
+.filter-date, .modern-select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: 38px;
+}
+
+.filter-date {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-date:focus, .modern-select:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
 }
 
-.btn-refresh-premium {
-  background: white;
-  color: #1e3a8a;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 16px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  display: flex;
+.btn-refresh-custom {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  height: 38px;
+  font-weight: 600;
+  border-radius: 10px !important;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.btn-refresh-premium:hover:not(:disabled) {
-  background: #fff;
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-
-.btn-refresh-premium:active:not(:disabled) {
+.btn-refresh-custom:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
   transform: translateY(-1px);
 }
 
-.btn-refresh-premium:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-refresh-custom:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* Stats Cards */
@@ -665,8 +564,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .stat-icon {
@@ -702,14 +601,14 @@ onMounted(() => {
 .content-card {
   background: white;
   border-radius: 16px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
   overflow: hidden;
 }
 
 .card-header-modern {
   padding: 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
   background: #fff;
 }
 
@@ -832,6 +731,16 @@ onMounted(() => {
   color: #334155;
 }
 
+.table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
 thead th {
   background: #f8fafc;
   font-size: 0.75rem;
@@ -840,6 +749,8 @@ thead th {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-top: none;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 16px;
 }
 
 .loading-overlay {
@@ -860,8 +771,9 @@ thead th {
 }
 
 .badge-total {
-  background: #3b82f6;
-  color: white;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 4px 10px;
@@ -880,7 +792,7 @@ thead th {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -895,11 +807,12 @@ thead th {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
 }
 
 .modal-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -908,15 +821,15 @@ thead th {
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #64748b;
   cursor: pointer;
   padding: 0;
@@ -931,7 +844,7 @@ thead th {
 
 .modal-close:hover {
   background: #f1f5f9;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .modal-body {
@@ -949,18 +862,20 @@ thead th {
 }
 
 .btn-close-modal {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 0.5rem 1.5rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 0.875rem;
 }
 
 .btn-close-modal:hover {
-  background: #2563eb;
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 /* Deadliest Diseases Card */
@@ -976,8 +891,8 @@ thead th {
 }
 
 .deadliest-card:hover {
-  border-color: #fecaca;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+  border-color: #fca5a5;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.05);
   transform: translateY(-2px);
 }
 
@@ -998,7 +913,7 @@ thead th {
   justify-content: center;
   font-weight: 700;
   font-size: 1.25rem;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .deadliest-content {
@@ -1032,86 +947,11 @@ thead th {
 .stat-item i {
   color: #94a3b8;
 }
+
 /* Responsive Adjustments */
-@media (max-width: 1200px) {
-  .header-actions {
-    padding: 1.25rem;
-  }
-  .filter-grid {
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 992px) {
-  .header-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .header-text {
-    text-align: center;
-  }
-  .page-subtitle {
-    padding-left: 0;
-  }
-  .filter-grid {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
-
 @media (max-width: 768px) {
-  .page-header {
-    padding: 3rem 1.25rem;
-    border-radius: 0 0 32px 32px;
-    margin: -1.5rem -1.25rem 2rem -1.25rem;
-  }
-
-  .header-actions {
-    padding: 1.5rem;
-    border-radius: 20px;
-  }
-
-  .filter-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-
-  .date-input-group {
-    flex-direction: column;
-    align-items: stretch;
-    background: transparent;
-    padding: 0;
-    border: none;
-    gap: 0.5rem;
-  }
-
-  .date-separator {
-    text-align: center;
-    color: white;
-    font-size: 0.75rem;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 2px;
-    border-radius: 4px;
-    width: fit-content;
-    margin: 0 auto;
-  }
-
-  .form-input, .form-select {
+  .btn-refresh-custom {
     width: 100%;
-    padding: 0.85rem 1rem;
-    font-size: 0.95rem;
-  }
-
-  .btn-refresh-premium {
-    width: 100%;
-    justify-content: center;
-    padding: 1rem;
-    margin-top: 0.5rem;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
   }
 
   .stat-card {

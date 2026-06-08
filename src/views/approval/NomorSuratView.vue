@@ -1,63 +1,61 @@
 <template>
-  <div class="approval-container">
-    <div class="boxed-layout">
-      <!-- Premium Header Section -->
-    <div class="hero-header">
-      <div class="header-overlay"></div>
-      <div class="header-content">
-        <div class="title-area">
-          <div class="icon-badge">
+  <div class="approval-container p-3 p-md-4">
+    <!-- Premium Header Section -->
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
             <i class="fas fa-file-signature"></i>
           </div>
-          <div class="text-group">
-            <h1>Persetujuan Nomor Surat</h1>
-            <p>Kelola dan verifikasi pengajuan penomoran dokumen resmi rumah sakit</p>
+          <div>
+            <h3 class="page-title mb-0">Persetujuan Nomor Surat</h3>
+            <p class="page-subtitle mb-0 small">Kelola dan verifikasi pengajuan penomoran dokumen resmi rumah sakit</p>
           </div>
         </div>
         
         <div class="header-actions">
-          <button @click="loadData" :disabled="loading" class="btn-refresh-modern">
-            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+          <button @click="loadData" :disabled="loading" class="btn-refresh-custom">
+            <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i>
             <span>Refresh Data</span>
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Stats Grid (Glassmorphism Effect) -->
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-icon info"><i class="fas fa-list-ul"></i></div>
-          <div class="stat-data">
-            <span class="val">{{ currentStats.total || 0 }}</span>
-            <span class="lab">Total Antrian</span>
-          </div>
+    <!-- Stats Grid (Independent Cards below header) -->
+    <div class="stats-row mb-4">
+      <div class="stat-card">
+        <div class="stat-icon-bg info"><i class="fas fa-list-ul"></i></div>
+        <div class="stat-data">
+          <span class="val">{{ currentStats.total || 0 }}</span>
+          <span class="lab">Total Antrian</span>
         </div>
-        <div class="stat-item warning anim-pulse">
-          <div class="stat-icon warn"><i class="fas fa-hourglass-half"></i></div>
-          <div class="stat-data">
-            <span class="val">{{ currentStats.pengajuan || 0 }}</span>
-            <span class="lab">Menunggu Approval</span>
-          </div>
+      </div>
+      <div class="stat-card warning anim-pulse">
+        <div class="stat-icon-bg warn"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-data">
+          <span class="val">{{ currentStats.pengajuan || 0 }}</span>
+          <span class="lab">Menunggu Approval</span>
         </div>
-        <div class="stat-item success">
-          <div class="stat-icon succ"><i class="fas fa-check-double"></i></div>
-          <div class="stat-data">
-            <span class="val">{{ currentStats.disetujui || 0 }}</span>
-            <span class="lab">Telah Disetujui</span>
-          </div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon-bg succ"><i class="fas fa-check-double"></i></div>
+        <div class="stat-data">
+          <span class="val">{{ currentStats.disetujui || 0 }}</span>
+          <span class="lab">Telah Disetujui</span>
         </div>
       </div>
     </div>
 
     <div class="main-content">
       <!-- Navigation Tabs -->
-      <nav class="tabs-nav">
-        <div class="tabs-wrapper">
+      <nav class="tabs-nav mb-4">
+        <div class="header-tabs-premium">
           <button 
             v-for="tab in tabs" 
             :key="tab.id"
             @click="activeTab = tab.id"
-            :class="['tab-pill', { active: activeTab === tab.id }]"
+            :class="['tab-btn', { active: activeTab === tab.id }]"
           >
             <i :class="['fas', tab.icon]"></i>
             <span>{{ tab.label }}</span>
@@ -192,7 +190,6 @@
             </div>
           </template>
         </div>
-      </div>
       </div>
     </div>
   </div>
@@ -520,176 +517,183 @@ const getTabPendingCount = (tabId) => {
 
 <style scoped>
 .approval-container {
-  padding: 1rem;
+  padding: 1.5rem;
   background-color: #f8fafc;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
 }
 
-.boxed-layout {
-  width: 100%;
-  max-width: 100%;
-  background: white;
-  border-radius: 2rem;
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.05);
-  padding: 1.25rem;
+/* Page Header Custom Overlay Override if needed */
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
+}
+
+.btn-refresh-custom {
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-}
-
-/* Header Section */
-.hero-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 2rem;
-  padding: 2.5rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 15px 30px rgba(37, 99, 235, 0.2);
-  margin-bottom: 2rem;
-}
-
-.header-overlay {
-  position: absolute;
-  top: 0; right: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.2), transparent);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  z-index: 10;
-}
-
-.title-area {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.icon-badge {
-  width: 64px; height: 64px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.text-group h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
-.text-group p { color: rgba(255, 255, 255, 0.9); margin: 0.25rem 0 0 0; font-size: 0.95rem; }
-
-.btn-refresh-modern {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: 0.75rem;
+  color: #475569;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-refresh-modern:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
-
-/* Stats Section */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-top: 2rem;
-  position: relative;
-  z-index: 10;
-}
-
-.stat-item {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 1.25rem;
-  border-radius: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-5px);
-}
-
-.stat-icon {
-  width: 48px; height: 48px;
-  border-radius: 0.75rem;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.25rem;
-}
-
-.stat-icon.info { background: rgba(255, 255, 255, 0.2); color: #fff; }
-.stat-icon.warn { background: rgba(255, 255, 255, 0.2); color: #fff; }
-.stat-icon.succ { background: rgba(255, 255, 255, 0.2); color: #fff; }
-
-.stat-data { display: flex; flex-direction: column; }
-.stat-data .val { font-size: 1.5rem; font-weight: 800; line-height: 1.2; color: #fff; }
-.stat-data .lab { font-size: 0.75rem; color: rgba(255, 255, 255, 0.85); font-weight: 700; text-transform: uppercase; }
-
-/* Tabs Navigation */
-.tabs-nav {
-  margin-bottom: 1.5rem;
-  position: relative;
-  z-index: 20;
-}
-
-.tabs-wrapper {
-  background: #f1f5f9;
-  padding: 0.4rem;
-  border-radius: 1.25rem;
-  display: flex;
-  width: fit-content;
-}
-
-.tab-pill {
-  border: none;
-  background: transparent;
-  padding: 0.6rem 1.25rem;
-  border-radius: 0.75rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
-  position: relative;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.notif-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #f43f5e;
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 20px;
+.btn-refresh-custom:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* Stats Section */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.01);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.03);
+}
+
+.stat-icon-bg {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
-  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4);
-  z-index: 10;
+  font-size: 1.25rem;
+}
+
+.stat-icon-bg.info {
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+}
+
+.stat-icon-bg.warn {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.stat-icon-bg.succ {
+  background: #ecfdf5;
+  color: #10b981;
+  border: 1px solid #a7f3d0;
+}
+
+.stat-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-data .val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.stat-data .lab {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* Tabs Navigation */
+.tabs-nav {
+  position: relative;
+  z-index: 20;
+}
+
+.header-tabs-premium {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tab-btn {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.tab-btn:hover:not(.active) {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.notif-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid white;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+  margin-left: 2px;
 }
 
 /* Animations */
@@ -704,17 +708,13 @@ const getTabPendingCount = (tabId) => {
   100% { transform: scale(1) rotate(0); opacity: 1; }
 }
 
-.tab-pill.active {
-  background: #2563eb;
-  color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
 /* Data Card */
 .data-card {
   background: white;
-  border-radius: 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .card-header {
@@ -723,14 +723,24 @@ const getTabPendingCount = (tabId) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #ffffff;
 }
 
-.card-header h3 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.card-header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .badge-count {
   background: #f1f5f9;
   color: #475569;
-  padding: 0.25rem 0.75rem;
-  border-radius: 2rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -747,6 +757,8 @@ const getTabPendingCount = (tabId) => {
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .premium-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
@@ -873,13 +885,11 @@ const getTabPendingCount = (tabId) => {
   .hidden-mobile { display: none; }
   .visible-mobile { display: block; }
 
-  .hero-header { padding: 1.5rem; border-radius: 1.5rem; }
-  .header-content { flex-direction: column; align-items: flex-start; gap: 1rem; }
-  .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-  .stat-item { padding: 1rem; }
+  .stats-row { grid-template-columns: 1fr; gap: 0.75rem; }
+  .stat-card { padding: 1rem; }
   
-  .tabs-wrapper { width: 100%; overflow-x: auto; }
-  .tab-pill { flex: 1; white-space: nowrap; justify-content: center; }
+  .header-tabs-premium { width: 100%; overflow-x: auto; }
+  .tab-btn { flex: 1; white-space: nowrap; justify-content: center; }
 
   .mobile-grid { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
   .m-card { background: #fff; border-radius: 1.25rem; border: 1px solid #e2e8f0; overflow: hidden; }

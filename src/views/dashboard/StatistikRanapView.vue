@@ -1,23 +1,23 @@
 <template>
   <div class="statistik-ranap-container p-3 p-md-4">
     <!-- Header Section -->
-    <div class="dashboard-header brand-gradient shadow-lg rounded-4 p-4 mb-4 text-white">
+    <div class="page-header mb-4">
       <div class="row align-items-center">
         <div class="col-md-7">
           <div class="d-flex align-items-center mb-2">
-            <div class="header-icon-bg me-3 glass-effect">
+            <div class="header-icon-bg me-3">
               <i class="fas fa-chart-line fa-2x"></i>
             </div>
             <div>
-              <h3 class="mb-0 fw-bold tracking-tight">Statistik Rawat Inap</h3>
-              <p class="mb-0 opacity-75">Indikator Mutu Pelayanan Tempat Tidur</p>
+              <h3 class="page-title mb-0">Statistik Rawat Inap</h3>
+              <p class="page-subtitle mb-0">Indikator Mutu Pelayanan Tempat Tidur</p>
             </div>
           </div>
         </div>
         
         <!-- Quick Mode Selector -->
         <div class="col-md-5 mt-3 mt-md-0 d-flex justify-content-md-end">
-          <div class="mode-toggle-group glass-effect rounded-pill p-1">
+          <div class="mode-toggle-group rounded-pill p-1">
             <button 
               @click="setYearlyMode(false)" 
               :class="['mode-pill-btn', { active: !filters.isYearlyMode }]"
@@ -225,12 +225,12 @@
           <div class="trend-card card border-0 shadow-sm rounded-4 p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h5 class="card-title-sm mb-0">Tren Indikator Tahunan <span class="text-primary fw-bold">({{ filters.activeMetric }})</span></h5>
-              <div class="metric-selector btn-group btn-group-sm rounded-3 shadow-sm overflow-hidden">
+              <div class="metric-selector">
                 <button 
                   v-for="m in ['BOR', 'AVLOS', 'TOI', 'BTO']" 
                   :key="m"
                   @click="filters.activeMetric = m"
-                  :class="['btn', filters.activeMetric === m ? 'btn-primary' : 'btn-light']"
+                  :class="['metric-btn', { active: filters.activeMetric === m }]"
                 >
                   {{ m }}
                 </button>
@@ -583,14 +583,23 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.brand-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+.card {
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
-.glass-effect {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.card-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 1rem 1.5rem !important;
+  text-align: left !important;
+}
+
+.card-title-sm {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
 }
 
 .header-icon-bg {
@@ -600,6 +609,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
 }
 
 .tracking-tight { letter-spacing: -0.025em; }
@@ -608,12 +620,16 @@ onMounted(() => {
 .mode-toggle-group {
   display: flex;
   width: fit-content;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 50px;
+  border: 1px solid #e2e8f0;
 }
 
 .mode-pill-btn {
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   padding: 8px 20px;
   border-radius: 50px;
   font-size: 0.85rem;
@@ -623,8 +639,14 @@ onMounted(() => {
 
 .mode-pill-btn.active {
   background: white;
-  color: #1e3a8a;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #1e40af;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  border: 1px solid #bfdbfe;
+}
+
+.category-tabs-wrapper {
+  border-bottom: 1px solid #e2e8f0 !important;
+  background-color: #ffffff;
 }
 
 /* Category Tabs */
@@ -661,6 +683,27 @@ onMounted(() => {
   height: 3px;
   background: #3b82f6;
   border-radius: 3px 3px 0 0;
+}
+
+.filter-row {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0;
+}
+
+.filter-row .form-control,
+.filter-row .form-select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.filter-row .form-control:focus,
+.filter-row .form-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .filter-label {
@@ -784,6 +827,33 @@ onMounted(() => {
   filter: drop-shadow(0 10px 15px rgba(59, 130, 246, 0.1));
 }
 
+/* Trend Metric Selector */
+.metric-selector {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.metric-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.metric-btn.active {
+  background: white;
+  color: #1e40af;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #bfdbfe;
+}
+
 .chart-line-anim {
   stroke-dasharray: 2000;
   stroke-dashoffset: 2000;
@@ -835,9 +905,9 @@ onMounted(() => {
     padding: 0.75rem !important;
   }
 
-  .dashboard-header {
-    padding: 1.5rem !important;
-    border-radius: 0 0 20px 20px !important;
+  .page-header {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
   }
 
   .header-icon-bg {
@@ -845,11 +915,11 @@ onMounted(() => {
     height: 44px;
   }
 
-  .dashboard-header h3 {
+  .page-title {
     font-size: 1.25rem !important;
   }
 
-  .dashboard-header p {
+  .page-subtitle {
     font-size: 0.8rem !important;
   }
 
@@ -1030,7 +1100,7 @@ onMounted(() => {
 
 /* Extra Small Devices */
 @media (max-width: 480px) {
-  .dashboard-header h3 {
+  .page-title {
     font-size: 1.1rem !important;
   }
 

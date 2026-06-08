@@ -665,6 +665,7 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
   margin-bottom: 1.5rem;
   gap: 1rem;
   flex-shrink: 0;
+  overflow: visible !important;
 }
 
 .page-header h2 {

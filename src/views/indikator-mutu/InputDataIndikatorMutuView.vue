@@ -1,184 +1,237 @@
 <template>
-  <div class="container-fluid p-0">
-    <div class="header-title-section mb-3">
-      <h3 class="fw-bold text-primary mb-1">
-        <i class="fas fa-edit me-2"></i>Input Data Indikator Mutu
-      </h3>
-      <p class="text-muted mb-0">Input data realisasi indikator mutu harian</p>
-    </div>
+  <div class="container-fluid p-3 p-md-4">
 
-    <!-- Content -->
-    <!-- Content -->
-    <div class="card shadow-md border-0" style="border-radius: 12px;">
-      <div class="card-header premium-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
-        <div class="d-flex align-items-center gap-3">
-          <div class="mode-segmented-control">
-              <div 
-                  v-for="mode in [
-                      { id: 'daily', label: 'Harian', icon: 'fa-list' },
-                      { id: 'monthly', label: 'Bulanan', icon: 'fa-calendar-alt' },
-                      { id: 'analisa', label: 'Analisa', icon: 'fa-chart-line' },
-                      { id: 'pdsa', label: 'PDSA', icon: 'fa-project-diagram' }
-                  ]" 
-                  :key="mode.id"
-                  class="mode-option"
-                  :class="{ 'active': viewMode === mode.id }"
-                  @click="viewMode = mode.id"
-              >
-                  <i class="fas" :class="mode.icon"></i>
-                  <span>{{ mode.label }}</span>
-              </div>
-              <div class="mode-glider" :style="gliderStyle"></div>
+    <!-- Premium Page Header -->
+    <div class="page-header mb-4" style="overflow: visible !important;">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-edit"></i>
           </div>
-
-          <!-- Context Toggle inside blue header -->
-          <div v-if="isCommitteeMember" class="btn-group context-toggle-premium" role="group">
-            <input type="radio" class="btn-check" name="inputMode" id="modeUnit" value="unit" v-model="inputMode" @change="handleModeChange">
-            <label class="btn btn-outline-light btn-sm px-3" for="modeUnit">
-              <i class="fas fa-hospital me-1"></i> Unit
-            </label>
-            
-            <input type="radio" class="btn-check" name="inputMode" id="modeKomite" value="komite" v-model="inputMode" @change="handleModeChange">
-            <label class="btn btn-outline-light btn-sm px-3" for="modeKomite">
-              <i class="fas fa-users-cog me-1"></i> Komite
-            </label>
+          <div>
+            <h3 class="page-title mb-0">Input Data Indikator Mutu</h3>
+            <p class="page-subtitle mb-0 small">Input data realisasi indikator mutu harian</p>
           </div>
         </div>
-        
-        <!-- Filters Area -->
-        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
-            <!-- DAILY MODE FILTERS -->
-            <template v-if="viewMode === 'daily'">
-                <div class="header-filter-item">
-                    <div class="header-filter-label">Tanggal Transaksi</div>
-                    <input type="date" class="form-control form-control-sm header-input" v-model="filters.tgl_transaksi" @change="fetchIndicators">
-                </div>
-                <div class="header-filter-item unit-select-container">
-                    <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select append-to-body 
-                        :options="units" 
-                        label="nama_ruang" 
-                        v-model="filters.unit"
-                        :reduce="unit => unit.dep_id"
-                        placeholder="Pilih Unit"
-                        class="header-vselect unit-select"
-                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-                        @update:modelValue="fetchIndicators"
-                    />
-                </div>
-            </template>
-
-            <!-- MONTHLY MODE FILTERS -->
-            <template v-else-if="viewMode === 'monthly'">
-                <div class="header-filter-item">
-                    <div class="header-filter-label">Bulan & Tahun</div>
-                    <input type="month" class="form-control form-control-sm header-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
-                </div>
-                <div class="header-filter-item unit-select-container">
-                    <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select append-to-body 
-                        :options="units" 
-                        label="nama_ruang" 
-                        v-model="filters.unit"
-                        :reduce="unit => unit.dep_id"
-                        placeholder="Pilih Unit"
-                        class="header-vselect unit-select"
-                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-                        @update:modelValue="fetchMonthlyData"
-                    />
-                </div>
-                <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
-                    <div class="header-filter-label">Pilih Indikator</div>
-                    <v-select append-to-body 
-                        :options="indicators" 
-                        label="nama_inmut" 
-                        v-model="selectedIndicator"
-                        placeholder="Pilih Indikator untuk Entri..."
-                        class="header-vselect"
-                        @update:modelValue="fetchMonthlyData"
-                    />
-                </div>
-            </template>
-
-            <!-- ANALISA MODE FILTERS -->
-            <template v-else-if="viewMode === 'analisa'">
-                <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
-                    <div class="header-filter-label">Pilih Indikator</div>
-                    <v-select append-to-body 
-                        :options="indicators" 
-                        label="nama_inmut" 
-                        v-model="selectedIndicator"
-                        placeholder="Pilih Indikator..."
-                        class="header-vselect"
-                        @update:modelValue="fetchAnalisaData"
-                    />
-                </div>
-                <div class="header-filter-item">
-                    <div class="header-filter-label">Bulan & Tahun</div>
-                    <input 
-                        type="month" 
-                        class="form-control form-control-sm header-input" 
-                        v-model="monthlyFilterDate"
-                        @change="handleMonthlyDateChange"
-                    >
-                </div>
-                <div class="header-filter-item unit-select-container">
-                    <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select append-to-body 
-                        :options="units" 
-                        label="nama_ruang" 
-                        v-model="filters.unit"
-                        :reduce="unit => unit.dep_id"
-                        placeholder="Pilih Unit"
-                        class="header-vselect unit-select"
-                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-                        @update:modelValue="fetchAnalisaData"
-                    />
-                </div>
-            </template>
-
-            <!-- PDSA MODE FILTERS -->
-            <template v-else-if="viewMode === 'pdsa'">
-                <div class="header-filter-item flex-grow-1" style="max-width: 400px;">
-                    <div class="header-filter-label">Pilih Indikator</div>
-                    <v-select append-to-body 
-                        :options="indicators" 
-                        label="nama_inmut" 
-                        v-model="selectedIndicator"
-                        placeholder="Pilih Indikator..."
-                        class="header-vselect"
-                        @update:modelValue="fetchPdsaData"
-                    />
-                </div>
-                <div class="header-filter-item">
-                    <div class="header-filter-label">Periode Analisa</div>
-                    <div class="d-flex gap-2">
-                        <select class="form-select form-select-sm header-input" v-model="selectedTriwulan" @change="handleTriwulanChange">
-                            <option value="03">Triwulan 1 (Jan - Mar)</option>
-                            <option value="06">Triwulan 2 (Apr - Jun)</option>
-                            <option value="09">Triwulan 3 (Jul - Sep)</option>
-                            <option value="12">Triwulan 4 (Okt - Des)</option>
-                        </select>
-                        <input type="number" class="form-control form-control-sm header-input" style="width: 80px;" v-model="selectedYear" @change="handleTriwulanChange">
-                    </div>
-                </div>
-                <div class="header-filter-item unit-select-container">
-                    <div class="header-filter-label">Unit / Ruangan</div>
-                    <v-select append-to-body 
-                        :options="units" 
-                        label="nama_ruang" 
-                        v-model="filters.unit"
-                        :reduce="unit => unit.dep_id"
-                        placeholder="Pilih Unit"
-                        class="header-vselect unit-select"
-                        :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-                        @update:modelValue="fetchPdsaData"
-                    />
-                </div>
-            </template>
+        <!-- Context Toggle (Komite member only) -->
+        <div v-if="isCommitteeMember" class="context-toggle-wrap">
+          <div class="header-tabs-premium">
+            <button
+              class="tab-btn"
+              :class="{ active: inputMode === 'unit' }"
+              @click="inputMode = 'unit'; handleModeChange()"
+            >
+              <i class="fas fa-hospital"></i> Unit
+            </button>
+            <button
+              class="tab-btn"
+              :class="{ active: inputMode === 'komite' }"
+              @click="inputMode = 'komite'; handleModeChange()"
+            >
+              <i class="fas fa-users-cog"></i> Komite
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- Mode Navigation Tabs -->
+    <nav class="tabs-nav mb-3">
+      <div class="header-tabs-premium">
+        <button class="tab-btn" :class="{ active: viewMode === 'daily' }" @click="viewMode = 'daily'">
+          <i class="fas fa-list"></i> Harian
+        </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'monthly' }" @click="viewMode = 'monthly'">
+          <i class="fas fa-calendar-alt"></i> Bulanan
+        </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'analisa' }" @click="viewMode = 'analisa'">
+          <i class="fas fa-chart-line"></i> Analisa
+        </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'grafik' }" @click="viewMode = 'grafik'">
+          <i class="fas fa-chart-bar"></i> Grafik
+        </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'pdsa' }" @click="viewMode = 'pdsa'">
+          <i class="fas fa-project-diagram"></i> PDSA
+        </button>
+      </div>
+    </nav>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar mb-3">
+      <!-- DAILY MODE FILTERS -->
+      <template v-if="viewMode === 'daily'">
+        <div class="filter-bar-item">
+          <label class="filter-bar-label">Tanggal Transaksi</label>
+          <input type="date" class="filter-date-input" v-model="filters.tgl_transaksi" @change="fetchIndicators">
+        </div>
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            @update:modelValue="fetchIndicators"
+          />
+        </div>
+      </template>
+
+      <!-- MONTHLY MODE FILTERS -->
+      <template v-else-if="viewMode === 'monthly'">
+        <div class="filter-bar-item">
+          <label class="filter-bar-label">Bulan &amp; Tahun</label>
+          <input type="month" class="filter-date-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
+        </div>
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            @update:modelValue="fetchMonthlyData"
+          />
+        </div>
+        <div class="filter-bar-item" style="flex: 2; min-width: 260px;">
+          <label class="filter-bar-label">Pilih Indikator</label>
+          <v-select append-to-body
+            :options="indicators"
+            label="nama_inmut"
+            v-model="selectedIndicator"
+            placeholder="Pilih Indikator untuk Entri..."
+            class="filter-vselect"
+            @update:modelValue="fetchMonthlyData"
+          />
+        </div>
+      </template>
+
+      <!-- ANALISA MODE FILTERS -->
+      <template v-else-if="viewMode === 'analisa'">
+        <div class="filter-bar-item" style="flex: 2; min-width: 260px;">
+          <label class="filter-bar-label">Pilih Indikator</label>
+          <v-select append-to-body
+            :options="indicators"
+            label="nama_inmut"
+            v-model="selectedIndicator"
+            placeholder="Pilih Indikator..."
+            class="filter-vselect"
+            @update:modelValue="fetchAnalisaData"
+          />
+        </div>
+        <div class="filter-bar-item">
+          <label class="filter-bar-label">Bulan &amp; Tahun</label>
+          <input type="month" class="filter-date-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
+        </div>
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            @update:modelValue="fetchAnalisaData"
+          />
+        </div>
+      </template>
+
+      <!-- PDSA MODE FILTERS -->
+      <template v-else-if="viewMode === 'pdsa'">
+        <div class="filter-bar-item" style="flex: 2; min-width: 260px;">
+          <label class="filter-bar-label">Pilih Indikator</label>
+          <v-select append-to-body
+            :options="indicators"
+            label="nama_inmut"
+            v-model="selectedIndicator"
+            placeholder="Pilih Indikator..."
+            class="filter-vselect"
+            @update:modelValue="fetchPdsaData"
+          />
+        </div>
+        <div class="filter-bar-item">
+          <label class="filter-bar-label">Periode Analisa</label>
+          <div class="d-flex gap-2">
+            <select class="filter-select" v-model="selectedTriwulan" @change="handleTriwulanChange">
+              <option value="03">Triwulan 1 (Jan - Mar)</option>
+              <option value="06">Triwulan 2 (Apr - Jun)</option>
+              <option value="09">Triwulan 3 (Jul - Sep)</option>
+              <option value="12">Triwulan 4 (Okt - Des)</option>
+            </select>
+            <input type="number" class="filter-date-input" style="width: 90px;" v-model="selectedYear" @change="handleTriwulanChange">
+          </div>
+        </div>
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            @update:modelValue="fetchPdsaData"
+          />
+        </div>
+      </template>
+
+      <!-- GRAFIK MODE FILTERS -->
+      <template v-else-if="viewMode === 'grafik'">
+        <div class="filter-bar-item">
+          <label class="filter-bar-label">Pilih Bulan &amp; Tahun</label>
+          <input type="month" class="filter-date-input" v-model="grafikBulan" @change="fetchGrafikData">
+        </div>
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            @update:modelValue="handleGrafikUnitChange"
+          />
+        </div>
+      </template>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="content-card">
       <div class="card-body p-0">
+        <!-- Unit PIC & Validator Info Bar -->
+        <div v-if="filters.unit && activeUnitInfo" class="px-4 py-3 bg-light border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <span class="small text-muted fw-bold text-uppercase">
+                    <i class="fas fa-hospital me-1 text-primary"></i> {{ activeUnitInfo.nama_ruang }}
+                </span>
+                <span v-if="activeUnitInfo.nama_pic" class="badge bg-primary-light text-primary rounded-pill px-3 py-2 border border-primary-light small">
+                    <i class="fas fa-user-cog me-1"></i> PIC: {{ activeUnitInfo.nama_pic }}
+                </span>
+                <span v-else class="badge bg-light text-muted rounded-pill px-3 py-2 border small">
+                    <i class="fas fa-user-cog me-1"></i> PIC: -
+                </span>
+                <span v-if="activeUnitInfo.nama_validator" class="badge bg-success-light text-success rounded-pill px-3 py-2 border border-success-light small">
+                    <i class="fas fa-user-check me-1"></i> Validator: {{ activeUnitInfo.nama_validator }}
+                </span>
+                <span v-else class="badge bg-light text-muted rounded-pill px-3 py-2 border small">
+                    <i class="fas fa-user-check me-1"></i> Validator: -
+                </span>
+            </div>
+            <div class="extra-small text-muted fw-bold text-uppercase">
+                Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : 'Analisa') }}
+            </div>
+        </div>
+
         <div v-if="!filters.unit" class="text-center py-5 text-muted">
             <i class="fas fa-hospital-user fa-3x mb-3 opacity-50"></i>
             <p class="mb-0">Silahkan pilih unit / ruangan terlebih dahulu</p>
@@ -196,70 +249,131 @@
         </div>
 
         <div v-else-if="viewMode === 'daily'" class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
+            <table class="premium-table align-middle mb-0">
+                <thead>
                     <tr>
                         <th width="5%" class="text-center">#</th>
-                        <th width="35%">Indikator</th>
+                        <th width="40%">Indikator</th>
                         <th width="15%">Standar</th>
-                        <th width="30%">Input Data</th>
-                        <th width="15%">Hasil</th>
+                        <th width="25%">Input Data</th>
+                        <th width="15%" class="text-end">Hasil &amp; Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(item, index) in indicators" :key="item.id_inmut">
                         <td class="text-center">{{ index + 1 }}</td>
                         <td>
-                            <div class="fw-bold text-primary">{{ item.nama_inmut }}</div>
-                            <small class="text-muted d-block small-text">{{ stripHtml(item.definisi_operasional) }}</small>
+                            <div class="indicator-title">{{ item.nama_inmut }}</div>
+                            <div class="indicator-desc" :title="stripHtml(item.definisi_operasional)">
+                                {{ stripHtml(item.definisi_operasional) }}
+                            </div>
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark border">
-                                {{ getRumusSymbol(item.rumus) }} {{ item.standar }} {{ item.satuan }}
+                            <span class="premium-badge-standar">
+                                <span class="symbol">{{ getRumusSymbol(item.rumus) }}</span>
+                                <span class="val">{{ item.standar }}</span>
+                                <span class="unit">{{ item.satuan }}</span>
                             </span>
                         </td>
                         <td>
-                            <div v-if="item.latest_input_date" class="mb-2">
-                                <span class="badge bg-info text-white" style="font-size: 0.65rem;">
-                                    <i class="fas fa-history me-1"></i> Input Terakhir: {{ formatDate(item.latest_input_date) }}
-                                </span>
+                            <div v-if="item.latest_input_date" class="latest-input-tag">
+                                <i class="fas fa-history me-1"></i> Terakhir: {{ formatDate(item.latest_input_date) }}
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="w-50">
-                                    <small class="d-block text-muted mb-1" style="font-size: 0.75rem;">Numerator</small>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="input-field-wrapper">
+                                    <span class="input-field-label">Numerator</span>
                                     <input 
                                         type="number" 
-                                        class="form-control form-control-sm" 
+                                        class="premium-table-input" 
                                         v-model.number="item.numerator" 
                                         placeholder="0"
                                         min="0"
+                                        :disabled="isRowLockedForUser(item)"
                                     >
                                 </div>
-                                <div class="w-50" v-if="needsDenominator(item)">
-                                    <small class="d-block text-muted mb-1" style="font-size: 0.75rem;">Denominator</small>
+                                <div class="input-field-wrapper" v-if="needsDenominator(item)">
+                                    <span class="input-field-label">Denominator</span>
                                     <input 
                                         type="number" 
-                                        class="form-control form-control-sm" 
+                                        class="premium-table-input" 
                                         v-model.number="item.denominator" 
                                         placeholder="0"
                                         min="0"
+                                        :disabled="isRowLockedForUser(item)"
                                     >
                                 </div>
                             </div>
+                            <div v-if="item.id_rekap && (item.numerator !== item.num_user || (needsDenominator(item) && item.denominator !== item.denum_user))" 
+                                 class="mt-1 text-warning d-flex align-items-center gap-1" 
+                                 style="font-size: 0.72rem; font-weight: 600;">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                Asli: {{ item.num_user }} / {{ item.denum_user }}
+                            </div>
                         </td>
                         <td>
-                            <div class="d-flex flex-column align-items-start gap-2">
-                                <div class="fw-bold" :class="getScoreColor(calculateScore(item), item)">
+                            <div class="d-flex flex-column align-items-end gap-2">
+                                <div class="score-badge" :class="getScoreColor(calculateScore(item), item)">
                                     {{ calculateScore(item) }} %
                                 </div>
-                                <button 
-                                    class="btn btn-sm btn-outline-success" 
-                                    @click="saveItem(item)"
-                                    :disabled="item.isSaving"
-                                >
-                                    <i class="fas fa-save me-1"></i> 
-                                    {{ item.isSaving ? 'Menyimpan...' : 'Simpan' }}
-                                </button>
+
+                                <!-- Verification Status Badge -->
+                                <div v-if="item.id_rekap" class="status-verif-badge" :class="item.status_verifikasi">
+                                    {{ formatVerifStatus(item.status_verifikasi) }}
+                                </div>
+
+                                 <!-- Entry Creator Name & Date -->
+                                 <div v-if="item.id_rekap && item.nama_input" class="text-muted extra-small text-end mt-1" style="font-size: 0.72rem; font-weight: 500; line-height: 1.3;">
+                                     <div class="d-flex align-items-center justify-content-end gap-1">
+                                         <i class="fas fa-user-edit"></i> 
+                                         <span>Entri: {{ item.nama_input }}</span>
+                                     </div>
+                                     <div v-if="item.tanggal_input" class="text-secondary extra-small mt-1" style="font-size: 0.65rem;">
+                                         <i class="fas fa-clock me-1"></i>{{ formatDateTime(item.tanggal_input) }}
+                                     </div>
+                                 </div>
+
+                                <div class="d-flex gap-1 align-items-center">
+                                    <button 
+                                        class="row-save-btn" 
+                                        @click="saveItem(item)"
+                                        :disabled="item.isSaving || isRowLockedForUser(item)"
+                                    >
+                                        <i v-if="item.isSaving" class="fas fa-spinner fa-spin me-1"></i>
+                                        <i v-else class="fas fa-save me-1"></i> 
+                                        {{ item.isSaving ? 'Menyimpan...' : 'Simpan' }}
+                                    </button>
+
+                                    <!-- Verification Actions -->
+                                    <template v-if="item.id_rekap">
+                                        <button 
+                                            v-if="canVerifyAsPic && item.status_verifikasi === 'pending'"
+                                            class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                                            @click="verifyItem(item, 'verified_pic')"
+                                            style="padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;"
+                                            title="Verifikasi sebagai PIC"
+                                        >
+                                            <i class="fas fa-check-double"></i> PIC
+                                        </button>
+                                        <button 
+                                             v-if="canVerifyAsKoor && item.status_verifikasi === 'verified_pic'"
+                                             class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
+                                             @click="verifyItem(item, 'verified_koor')"
+                                             style="padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;"
+                                             title="Verifikasi sebagai Koordinator"
+                                         >
+                                             <i class="fas fa-user-check"></i> Koor
+                                         </button>
+                                        <button 
+                                            v-if="canUnlock(item)"
+                                            class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                            @click="verifyItem(item, 'pending')"
+                                            style="padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;"
+                                            title="Buka Kunci (Setel ke Pending)"
+                                        >
+                                            <i class="fas fa-lock-open"></i> Unlock
+                                        </button>
+                                    </template>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -275,26 +389,89 @@
             </div>
             
             <div v-else>
-                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="mb-0 text-primary">
-                            <i class="fas fa-chart-line me-2"></i> {{ selectedIndicator.nama_inmut }}
-                        </h5>
-                        <small class="text-muted">
-                            Periode: {{ new Date(filters.tgl_transaksi).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) }}
-                        </small>
-                    </div>
-                    <button class="btn btn-primary" @click="saveBulk" :disabled="bulkSaving">
-                        <i class="fas fa-save me-2"></i>
-                        {{ bulkSaving ? 'Menyimpan...' : 'Simpan Semua Data' }}
-                    </button>
+                 <!-- Monthly Info Bar -->
+                 <div class="monthly-info-bar mb-3">
+                     <!-- Left: indicator info + status badge -->
+                     <div class="monthly-info-left">
+                         <div class="monthly-info-icon">
+                             <i class="fas fa-calendar-alt"></i>
+                         </div>
+                         <div class="monthly-info-text">
+                             <span class="monthly-info-title">{{ selectedIndicator.nama_inmut }}</span>
+                             <div class="monthly-info-period">
+                                 <i class="fas fa-clock me-1 opacity-50"></i>
+                                 Periode: {{ new Date(filters.tgl_transaksi).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) }}
+                                 <!-- Bulk month status badge — inline next to period -->
+                                 <span v-if="bulkMonthStatus !== 'no_data'"
+                                       :class="{
+                                         'badge bg-warning text-dark': bulkMonthStatus === 'pending',
+                                         'badge bg-primary text-white': bulkMonthStatus === 'verified_pic',
+                                         'badge bg-success text-white': bulkMonthStatus === 'verified_koor',
+                                         'badge bg-secondary text-white': bulkMonthStatus === 'mixed'
+                                       }"
+                                       style="font-size: 0.68rem; padding: 3px 8px; border-radius: 20px;">
+                                     <i class="fas fa-circle me-1" style="font-size: 0.45rem; vertical-align: middle;"></i>
+                                     {{ bulkMonthStatus === 'pending' ? 'Pending' : bulkMonthStatus === 'verified_pic' ? 'Verified PIC' : bulkMonthStatus === 'verified_koor' ? 'Verified Koor' : 'Campuran' }}
+                                 </span>
+                             </div>
+                         </div>
+                     </div>
+
+                     <!-- Right: all action buttons in ONE horizontal row -->
+                     <div class="monthly-actions-row">
+                         <!-- Bulk Verify PIC -->
+                         <button
+                             v-if="canVerifyBulkAsPic"
+                             class="monthly-action-btn btn-verif-pic"
+                             @click="verifyBulk('verified_pic')"
+                             :disabled="bulkVerifying"
+                             title="Verifikasi seluruh data bulan ini sebagai PIC"
+                         >
+                             <i class="fas" :class="bulkVerifying ? 'fa-spinner fa-spin' : 'fa-check-double'"></i>
+                             Verif PIC
+                         </button>
+                         <!-- Bulk Verify Koor (sequential) -->
+                         <button
+                             v-if="canVerifyBulkAsKoor"
+                             class="monthly-action-btn btn-verif-koor"
+                             @click="verifyBulk('verified_koor')"
+                             :disabled="bulkVerifying"
+                             title="Verifikasi final seluruh data bulan ini sebagai Koordinator"
+                         >
+                             <i class="fas" :class="bulkVerifying ? 'fa-spinner fa-spin' : 'fa-user-check'"></i>
+                             Verif Koor
+                         </button>
+                         <!-- Bulk Unlock -->
+                         <button
+                             v-if="canUnlockBulk"
+                             class="monthly-action-btn btn-unlock"
+                             @click="verifyBulk('pending')"
+                             :disabled="bulkVerifying"
+                             title="Buka kunci seluruh data bulan ini"
+                         >
+                             <i class="fas" :class="bulkVerifying ? 'fa-spinner fa-spin' : 'fa-lock-open'"></i>
+                             Unlock
+                         </button>
+                         <!-- Save all -->
+                         <button class="monthly-save-btn" @click="saveBulk" :disabled="bulkSaving || bulkVerifying">
+                             <i class="fas" :class="bulkSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                             {{ bulkSaving ? 'Menyimpan...' : 'Simpan Semua' }}
+                         </button>
+                     </div>
                  </div>
+
 
                  <div class="calendar-grid">
                     <div v-for="day in calendarDays" :key="day.date" class="calendar-day card" :class="{'has-data': day.hasData, 'is-sunday': day.isSunday}">
-                        <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" :class="day.isSunday ? 'bg-danger text-white' : (day.hasData ? 'bg-success text-white' : 'bg-light')">
+                        <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center"
+                             :title="day.hasData && day.nama_input ? `Pengentri: ${day.nama_input}\nWaktu: ${formatDateTime(day.tanggal_input)}` : null"
+                             :class="day.isSunday ? 'bg-danger text-white' : (day.hasData ? (day.status_verifikasi === 'verified_koor' ? 'bg-success text-white' : day.status_verifikasi === 'verified_pic' ? 'bg-primary text-white' : 'bg-warning text-dark') : 'bg-light')">
                             <small class="fw-bold">{{ day.date.slice(-2) }} {{ day.dayName }}</small>
-                            <i v-if="day.hasData" class="fas fa-check-circle small"></i>
+                            <span v-if="day.hasData && !day.isSunday" style="font-size: 0.6rem;">
+                                <i v-if="day.status_verifikasi === 'verified_koor'" class="fas fa-check-double" title="Verified Koor"></i>
+                                <i v-else-if="day.status_verifikasi === 'verified_pic'" class="fas fa-check" title="Verified PIC"></i>
+                                <i v-else class="fas fa-clock" title="Pending"></i>
+                            </span>
                             <i v-else-if="day.isSunday" class="fas fa-calendar-day small"></i>
                         </div>
                         <div class="card-body p-2" :class="{'bg-light opacity-50': day.date > new Date().toISOString().slice(0, 10)}">
@@ -305,7 +482,7 @@
                                     class="form-control form-control-sm" 
                                     v-model.number="day.numerator" 
                                     min="0" 
-                                    :disabled="day.date > new Date().toISOString().slice(0, 10)"
+                                    :disabled="day.date > new Date().toISOString().slice(0, 10) || isRowLockedForUser(day)"
                                     @input="day.isTouched = true"
                                 >
                             </div>
@@ -316,15 +493,25 @@
                                     class="form-control form-control-sm" 
                                     v-model.number="day.denominator" 
                                     min="0" 
-                                    :disabled="!needsDenominator(selectedIndicator) || day.date > new Date().toISOString().slice(0, 10)" 
+                                    :disabled="!needsDenominator(selectedIndicator) || day.date > new Date().toISOString().slice(0, 10) || isRowLockedForUser(day)" 
                                     @input="day.isTouched = true"
                                 >
                             </div>
+                            <!-- Entry Creator -->
+                             <div v-if="day.hasData && day.nama_input" class="mt-2 pt-1 border-top text-center text-muted" style="font-size: 0.65rem; line-height: 1.2;">
+                                 <div class="text-truncate" :title="`Pengentri: ${day.nama_input}`">
+                                     <i class="fas fa-user-edit" style="font-size: 0.58rem;"></i> {{ day.nama_input }}
+                                 </div>
+                                 <div v-if="day.tanggal_input" class="text-secondary text-truncate mt-1" style="font-size: 0.6rem;" :title="`Waktu: ${formatDateTime(day.tanggal_input)}`">
+                                     <i class="fas fa-clock" style="font-size: 0.55rem;"></i> {{ formatDateTime(day.tanggal_input) }}
+                                 </div>
+                             </div>
                         </div>
                     </div>
                  </div>
             </div>
         </div>
+
 
         <!-- ANALISA VIEW -->
         <div v-else-if="viewMode === 'analisa'" class="p-3">
@@ -426,227 +613,344 @@
             <!-- SELECTED INDICATOR VIEW -->
             <div v-else>
                 <!-- BACK BUTTON -->
-                <div class="mb-4">
-                    <button class="btn btn-sm btn-white border shadow-sm px-4 py-2 rounded-pill text-primary fw-bold hover-elevate transition-all" @click="selectedIndicator = null">
-                        <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar Indikator
-                    </button>
-                </div>
-
-                <!-- DATA ENTRY PROGRESS CARD -->
-                <div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-radius: 15px;">
-                    <div class="card-body p-0">
-                        <div class="p-4" :class="monthlyStats.isComplete ? 'bg-success-light' : 'bg-warning-light'">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 class="fw-bold mb-1" :class="monthlyStats.isComplete ? 'text-success' : 'text-warning-dark'">
-                                        <i class="fas" :class="monthlyStats.isComplete ? 'fa-check-circle' : 'fa-tasks'"></i>
-                                        Status Pengisian Data
-                                    </h5>
-                                    <p class="text-muted small mb-0">{{ selectedIndicator.nama_inmut }}</p>
-                                </div>
-                                <div class="text-end">
-                                    <span class="display-6 fw-bold" :class="monthlyStats.isComplete ? 'text-success' : 'text-warning-dark'">
-                                        {{ monthlyStats.fillPercentage }}%
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <!-- Progress Bar -->
-                            <div class="progress mb-3" style="height: 12px; border-radius: 6px; background-color: rgba(0,0,0,0.05);">
-                                <div 
-                                    class="progress-bar progress-bar-striped progress-bar-animated" 
-                                    role="progressbar" 
-                                    :style="{ width: monthlyStats.fillPercentage + '%' }"
-                                    :class="monthlyStats.isComplete ? 'bg-success' : 'bg-warning'"
-                                ></div>
-                            </div>
-
-                            <!-- Missing Days Info -->
-                            <div v-if="!monthlyStats.isComplete" class="d-flex align-items-middle gap-3 p-3 bg-white rounded-3 border">
-                                <div class="badge bg-warning text-dark p-2 rounded-circle flex-shrink-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-exclamation"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <p class="mb-1 fw-bold text-dark small">Data Belum Lengkap</p>
-                                    <p class="mb-0 text-muted extra-small">
-                                        Terdapat <span class="fw-bold text-danger">{{ monthlyStats.missingDays.length }} tanggal</span> yang belum diisi. Anda tetap dapat memberikan analisa sekarang.
-                                    </p>
-                                    <div class="mt-2 d-flex flex-wrap gap-1">
-                                        <span v-for="day in monthlyStats.missingDays" :key="day" class="badge bg-light text-dark border extra-small">
-                                            Tgl {{ day }}
+                <div id="details-anchor" class="back-nav-bar mb-4" @click="selectedIndicator = null">
+                    <div class="back-nav-icon">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+                    <div class="back-nav-content">
+                        <span class="back-nav-label">Kembali ke Daftar Indikator</span>
+                        <span class="back-nav-sub">{{ selectedIndicator?.nama_inmut }}</span>
+                    </div>
+                    <i class="fas fa-times back-nav-close"></i>
+                </div>                <!-- Side-by-Side Grid Layout -->
+                <div class="row g-4">
+                    <!-- Left Column: Status Pengisian & Stats Summary -->
+                    <div class="col-lg-5">
+                        <!-- DATA ENTRY PROGRESS CARD -->
+                        <div class="card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 15px; display: flex; flex-direction: column;">
+                            <div class="p-4 flex-grow-1" :class="monthlyStats.isComplete ? 'bg-success-light' : 'bg-warning-light'">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h5 class="fw-bold mb-1" :class="monthlyStats.isComplete ? 'text-success' : 'text-warning-dark'">
+                                            <i class="fas" :class="monthlyStats.isComplete ? 'fa-check-circle' : 'fa-tasks'"></i>
+                                            Status Pengisian Data
+                                        </h5>
+                                        <p class="text-muted small mb-0">{{ selectedIndicator.nama_inmut }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="display-6 fw-bold" :class="monthlyStats.isComplete ? 'text-success' : 'text-warning-dark'">
+                                            {{ monthlyStats.fillPercentage }}%
                                         </span>
                                     </div>
                                 </div>
-                                <div v-if="!showAnalisaForm && existingAnalisa.length === 0" class="ms-auto flex-shrink-0">
-                                    <button class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" @click="showAnalisaForm = true">
-                                        <i class="fas fa-pen-fancy me-2"></i> Beri Analisa
-                                    </button>
+                                
+                                <!-- Progress Bar -->
+                                <div class="progress mb-3" style="height: 12px; border-radius: 6px; background-color: rgba(0,0,0,0.05);">
+                                    <div 
+                                        class="progress-bar progress-bar-striped progress-bar-animated" 
+                                        role="progressbar" 
+                                        :style="{ width: monthlyStats.fillPercentage + '%' }"
+                                        :class="monthlyStats.isComplete ? 'bg-success' : 'bg-warning'"
+                                    ></div>
+                                </div>
+
+                                <!-- Missing Days Info -->
+                                <div v-if="!monthlyStats.isComplete" class="d-flex align-items-middle gap-3 p-3 bg-white rounded-3 border">
+                                    <div class="badge bg-warning text-dark p-2 rounded-circle flex-shrink-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-exclamation"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1 fw-bold text-dark small">Data Belum Lengkap</p>
+                                        <p class="mb-0 text-muted extra-small">
+                                            Terdapat <span class="fw-bold text-danger">{{ monthlyStats.missingDays.length }} tanggal</span> yang belum diisi.
+                                        </p>
+                                        <div class="mt-2 d-flex flex-wrap gap-1" style="max-height: 120px; overflow-y: auto;">
+                                            <span v-for="day in monthlyStats.missingDays" :key="day" class="badge bg-light text-dark border extra-small">
+                                                Tgl {{ day }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-else class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 border">
+                                    <div class="badge bg-success p-2 rounded-circle text-white flex-shrink-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <p class="mb-1 fw-bold text-dark small">Data Siap Dianalisa</p>
+                                        <p class="mb-0 text-muted extra-small">Seluruh data pada periode {{ formatMonthYear(analisaFilters.bulan) }} telah terisi lengkap.</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div v-else class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 border">
-                                <div class="badge bg-success p-2 rounded-circle text-white flex-shrink-0" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-check"></i>
+                            <!-- Stats Summary Bar (Inside Card Footer) -->
+                            <div class="bg-white border-top p-3 d-flex justify-content-around flex-wrap gap-2 text-center mt-auto">
+                                <div class="px-2">
+                                    <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Numerator</small>
+                                    <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalNum }}</span>
                                 </div>
-                                <div>
-                                    <p class="mb-1 fw-bold text-dark small">Data Siap Dianalisa</p>
-                                    <p class="mb-0 text-muted extra-small">Seluruh data pada periode {{ formatMonthYear(analisaFilters.bulan) }} telah terisi lengkap.</p>
+                                <div class="vr opacity-25"></div>
+                                <div class="px-2">
+                                    <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Denominator</small>
+                                    <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalDenum }}</span>
                                 </div>
-                                <div v-if="!showAnalisaForm && existingAnalisa.length === 0" class="ms-auto">
-                                    <button class="btn btn-primary btn-sm px-4 rounded-pill shadow-sm" @click="showAnalisaForm = true">
-                                        <i class="fas fa-pen-fancy me-2"></i> Beri Analisa
-                                    </button>
+                                <div class="vr opacity-25"></div>
+                                <div class="px-2">
+                                    <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Target</small>
+                                    <span class="fw-bold text-dark h5 mb-0 text-primary">{{ getTargetDisplay(selectedIndicator) }}</span>
+                                </div>
+                                <div class="vr opacity-25"></div>
+                                <div class="px-2">
+                                    <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Capaian</small>
+                                    <span class="fw-bold h5 mb-0" :class="isTargetMet(monthlyStats) ? 'text-success' : 'text-danger'">{{ monthlyStats.score }}%</span>
+                                </div>
+                                <div class="vr opacity-25"></div>
+                                <div class="px-2">
+                                    <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Status</small>
+                                    <div v-if="isTargetMet(monthlyStats)" class="badge bg-success rounded-pill px-3 py-1 shadow-sm" style="font-size: 0.75rem;">
+                                        TERCAPAI
+                                    </div>
+                                    <div v-else class="badge bg-danger rounded-pill px-3 py-1 shadow-sm" style="font-size: 0.75rem;">
+                                        TIDAK TERCAPAI
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Stats Summary Bar -->
-                        <div class="bg-white border-top p-3 d-flex justify-content-around flex-wrap gap-3 text-center">
-                            <div class="px-2">
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Numerator</small>
-                                <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalNum }}</span>
-                            </div>
-                            <div class="vr opacity-25 d-none d-md-block"></div>
-                            <div class="px-2">
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Denominator</small>
-                                <span class="fw-bold text-dark h5 mb-0">{{ monthlyStats.totalDenum }}</span>
-                            </div>
-                            <div class="vr opacity-25 d-none d-md-block"></div>
-                            <div class="px-2">
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Target</small>
-                                <span class="fw-bold text-dark h5 mb-0 text-primary">{{ getTargetDisplay(selectedIndicator) }}</span>
-                            </div>
-                            <div class="vr opacity-25 d-none d-md-block"></div>
-                            <div class="px-2">
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Capaian</small>
-                                <span class="fw-bold h5 mb-0" :class="isTargetMet(monthlyStats) ? 'text-success' : 'text-danger'">{{ monthlyStats.score }}%</span>
-                            </div>
-                            <div class="vr opacity-25 d-none d-md-block"></div>
-                            <div class="px-2">
-                                <small class="text-muted d-block text-uppercase extra-small fw-bold mb-1">Status</small>
-                                <div v-if="isTargetMet(monthlyStats)" class="badge bg-success rounded-pill px-3 shadow-sm">
-                                    <i class="fas fa-check-circle me-1"></i> TERCAPAI
+                    <!-- Right Column: Form Analisa OR Existing Results / Placeholder -->
+                    <div class="col-lg-7">
+                        <!-- FORM ANALISA (EXPANDABLE) -->
+                        <Transition name="fade-slide">
+                            <div v-if="showAnalisaForm && canVerifyAsKoor" class="card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 12px; display: flex; flex-direction: column;">
+                                <div class="card-header border-0 py-3 px-4 text-start" style="background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;">
+                                    <h6 class="fw-bold text-white mb-0">
+                                        <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
+                                    </h6>
                                 </div>
-                                <div v-else class="badge bg-danger rounded-pill px-3 shadow-sm">
-                                    <i class="fas fa-times-circle me-1"></i> TIDAK TERCAPAI
+                                <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+                                    <div class="flex-grow-1">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Analisa Capaian <span class="text-danger">*</span></label>
+                                            <textarea 
+                                                class="form-control premium-textarea" 
+                                                rows="4" 
+                                                v-model="analisaForm.analisa"
+                                                placeholder="Tuliskan analisa mengapa capaian target terpenuhi atau tidak..."
+                                                style="min-height: 120px;"
+                                            ></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Rencana Tindak Lanjut <span class="text-danger">*</span></label>
+                                            <textarea 
+                                                class="form-control premium-textarea" 
+                                                rows="4" 
+                                                v-model="analisaForm.tindak_lanjut"
+                                                placeholder="Tuliskan langkah konkret perbaikan atau pengembangan ke depan..."
+                                                style="min-height: 120px;"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-auto">
+                                        <button class="btn btn-light btn-sm px-4" @click="showAnalisaForm = false">
+                                            <i class="fas fa-times me-2"></i> Batal
+                                        </button>
+                                        <button 
+                                            class="btn btn-primary btn-sm px-4" 
+                                            @click="saveAnalisa"
+                                            :disabled="analisaSaving"
+                                        >
+                                            <i v-if="analisaSaving" class="fas fa-spinner fa-spin me-2"></i>
+                                            <i v-else class="fas fa-save me-2"></i>
+                                            {{ analisaForm.id_analisa ? 'Update Analisa' : 'Simpan Analisa' }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Transition>
+
+                        <!-- PLACEHOLDER IF NO FORM & NO EXISTING ANALYSIS -->
+                        <div v-if="!showAnalisaForm && existingAnalisa.length === 0" class="card border-0 shadow-sm h-100 d-flex align-items-center justify-content-center text-center p-5 bg-white text-muted" style="border-radius: 12px; min-height: 350px;">
+                            <div>
+                                <i class="fas fa-file-signature fa-3x mb-3 text-secondary opacity-40"></i>
+                                <h6 class="fw-bold text-dark">Belum Ada Analisa Data</h6>
+                                <p class="small text-muted mb-4" style="max-width: 320px;">Data analisa capaian untuk indikator ini pada periode ini belum diisi.</p>
+                                <button v-if="canVerifyAsKoor" class="btn btn-primary px-4 rounded-pill shadow-sm" @click="showAnalisaForm = true">
+                                    <i class="fas fa-pen-fancy me-2"></i> Beri Analisa
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- EXISTING ANALISA RESULTS & COMMITTEE FEEDBACK -->
+                        <div v-if="!showAnalisaForm && existingAnalisa.length > 0">
+                            <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+                                <h6 class="fw-bold text-dark mb-0">
+                                    <i class="fas fa-file-alt text-primary me-2"></i> Hasil Analisa & Feedback
+                                </h6>
+                                <button v-if="!showAnalisaForm && canVerifyAsKoor" class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="showAnalisaForm = true">
+                                    <i class="fas fa-edit me-2"></i> Edit Analisa
+                                </button>
+                            </div>
+                            
+                            <div v-for="item in existingAnalisa" :key="item.id_analisa">
+                                <!-- Unit Analysis Result -->
+                                <div class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px;">
+                                    <div class="bg-primary p-2"></div>
+                                    <div class="card-body p-4">
+                                        <div class="row">
+                                            <div class="col-md-6 border-end">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="badge bg-primary-light text-primary p-2 rounded-3 me-3">
+                                                        <i class="fas fa-search"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold mb-0">Analisa</h6>
+                                                </div>
+                                                <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
+                                                    {{ item.analisa }}
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="badge bg-success-light text-success p-2 rounded-3 me-3">
+                                                        <i class="fas fa-rocket"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold mb-0 text-success">Tindak Lanjut</h6>
+                                                </div>
+                                                <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
+                                                    {{ item.tindak_lanjut }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Committee Feedback Result (If Exists) -->
+                                <div v-if="item.feedback" class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px; border: 1px solid #0d6efd !important;">
+                                    <div class="card-header border-0 py-3 px-3" style="background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;">
+                                        <div class="d-flex align-items-start flex-wrap gap-2 justify-content-between">
+                                            <h6 class="fw-bold text-white mb-0">
+                                                <i class="fas fa-comment-dots me-2"></i> Feedback Komite Mutu
+                                            </h6>
+                                            <span class="badge bg-white text-primary rounded-pill px-2 py-1 shadow-sm flex-shrink-0" style="font-size: 0.72rem;">
+                                                <i class="fas fa-check-circle me-1"></i> Review Selesai
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="mb-3">
+                                            <small class="fw-bold text-primary text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Supervisi</small>
+                                            <div class="text-dark rich-content" v-html="item.feedback.supervisi"></div>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div>
+                                            <small class="fw-bold text-primary text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Rekomendasi / Saran</small>
+                                            <div class="text-dark rich-content" v-html="item.feedback.rekomendasi"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- FORM ANALISA (EXPANDABLE) -->
-                <Transition name="fade-slide">
-                    <div v-if="showAnalisaForm" class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius: 12px;">
-                        <div class="card-header bg-primary border-0 py-3 px-4 text-start">
-                            <h6 class="fw-bold text-white mb-0">
-                                <i class="fas fa-edit me-2"></i> Form Analisa & Tindak Lanjut
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small">Analisa Capaian <span class="text-danger">*</span></label>
-                                <textarea 
-                                    class="form-control premium-textarea" 
-                                    rows="4" 
-                                    v-model="analisaForm.analisa"
-                                    placeholder="Tuliskan analisa mengapa capaian target terpenuhi atau tidak..."
-                                ></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small">Rencana Tindak Lanjut <span class="text-danger">*</span></label>
-                                <textarea 
-                                    class="form-control premium-textarea" 
-                                    rows="4" 
-                                    v-model="analisaForm.tindak_lanjut"
-                                    placeholder="Tuliskan langkah konkret perbaikan atau pengembangan ke depan..."
-                                ></textarea>
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2">
-                                <button class="btn btn-light btn-sm px-4" @click="showAnalisaForm = false">
-                                    <i class="fas fa-times me-2"></i> Batal
-                                </button>
-                                <button 
-                                    class="btn btn-primary btn-sm px-4" 
-                                    @click="saveAnalisa"
-                                    :disabled="analisaSaving"
-                                >
-                                    <i v-if="analisaSaving" class="fas fa-spinner fa-spin me-2"></i>
-                                    <i v-else class="fas fa-save me-2"></i>
-                                    {{ analisaForm.id_analisa ? 'Update Analisa' : 'Simpan Analisa' }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </Transition>
-
-                <!-- EXISTING ANALISA RESULTS & COMMITTEE FEEDBACK -->
-                <div v-if="existingAnalisa.length > 0">
-                    <div class="d-flex align-items-center justify-content-between mb-3 px-1">
-                        <h6 class="fw-bold text-dark mb-0">
-                            <i class="fas fa-file-alt text-primary me-2"></i> Hasil Analisa & Feedback
-                        </h6>
-                        <button v-if="!showAnalisaForm" class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="showAnalisaForm = true">
-                            <i class="fas fa-edit me-2"></i> Edit Analisa
-                        </button>
+        <!-- GRAFIK VIEW -->
+        <div v-else-if="viewMode === 'grafik'" class="p-3 p-md-4">
+            <div v-if="!filters.unit" class="text-center py-5 text-muted">
+                <i class="fas fa-hospital-user fa-3x mb-3 opacity-50"></i>
+                <p>Pilih unit terlebih dahulu untuk melihat grafik</p>
+            </div>
+            <div v-else-if="grafikLoading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-3 small">Memuat data grafik harian...</p>
+            </div>
+            <div v-else>
+                <!-- Header Info -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">
+                            <i class="fas fa-chart-line text-primary me-2"></i>
+                            Tren Capaian Harian Indikator Mutu
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Periode: <span class="fw-semibold text-primary">{{ grafikBulanDisplay }}</span> &mdash; {{ getUnitName() }}
+                        </p>
                     </div>
                     
-                    <div v-for="item in existingAnalisa" :key="item.id_analisa">
-                        <!-- Unit Analysis Result -->
-                        <div class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px;">
-                            <div class="bg-primary p-2"></div>
-                            <div class="card-body p-4">
-                                <div class="row">
-                                    <div class="col-md-6 border-end">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="badge bg-primary-light text-primary p-2 rounded-3 me-3">
-                                                <i class="fas fa-search"></i>
-                                            </div>
-                                            <h6 class="fw-bold mb-0">Analisa</h6>
-                                        </div>
-                                        <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
-                                            {{ item.analisa }}
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="badge bg-success-light text-success p-2 rounded-3 me-3">
-                                                <i class="fas fa-rocket"></i>
-                                            </div>
-                                            <h6 class="fw-bold mb-0 text-success">Tindak Lanjut</h6>
-                                        </div>
-                                        <p class="text-dark mb-0 text-justify" style="line-height: 1.6; font-size: 0.95rem;">
-                                            {{ item.tindak_lanjut }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Summary Counters -->
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="px-3 py-2 bg-light rounded-3 text-center border">
+                            <div class="text-muted extra-small font-medium text-uppercase tracking-wider mb-0.5" style="font-size: 0.65rem;">Total Indikator</div>
+                            <div class="fw-bold text-dark h6 mb-0">{{ grafikDailyData.length }}</div>
                         </div>
+                        <div class="px-3 py-2 rounded-3 text-center border" style="background-color: #f0fdf4; border-color: #bbf7d0 !important;">
+                            <div class="text-success extra-small font-medium text-uppercase tracking-wider mb-0.5" style="font-size: 0.65rem;">Tercapai</div>
+                            <div class="fw-bold text-success h6 mb-0">{{ grafikDailyData.filter(d => d.isMet).length }}</div>
+                        </div>
+                        <div class="px-3 py-2 rounded-3 text-center border" style="background-color: #fef2f2; border-color: #fecaca !important;">
+                            <div class="text-danger extra-small font-medium text-uppercase tracking-wider mb-0.5" style="font-size: 0.65rem;">Belum Tercapai</div>
+                            <div class="fw-bold text-danger h6 mb-0">{{ grafikDailyData.filter(d => !d.isMet).length }}</div>
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- Committee Feedback Result (If Exists) -->
-                        <div v-if="item.feedback" class="card border-0 shadow-sm mb-3 overflow-hidden" style="border-radius: 12px; border: 1px solid #0d6efd !important;">
-                            <div class="card-header bg-primary border-0 py-3 px-3">
-                                <div class="d-flex align-items-start flex-wrap gap-2 justify-content-between">
-                                    <h6 class="fw-bold text-white mb-0">
-                                        <i class="fas fa-comment-dots me-2"></i> Feedback Komite Mutu
+                <!-- Empty state if no indicators -->
+                <div v-if="!grafikDailyData.length" class="text-center py-5 text-muted card border-0 shadow-sm p-5" style="border-radius: 16px;">
+                    <i class="fas fa-inbox fa-3x mb-3 opacity-40 text-primary"></i>
+                    <h6 class="fw-bold text-dark">Tidak Ada Indikator</h6>
+                    <p class="small text-muted mb-0">Belum ada indikator mutu yang terdaftar untuk unit/ruangan ini.</p>
+                </div>
+
+                <!-- Grid of Indicator Cards -->
+                <div v-else class="row g-4">
+                    <div v-for="item in grafikDailyData" :key="item.id_inmut" class="col-12 col-xl-6">
+                        <div class="card border-0 shadow-sm h-100 position-relative" style="border-radius: 16px; overflow: hidden;">
+                            <!-- Card Header with Gradient based on status -->
+                            <div class="card-header border-0 py-3 px-4 d-flex align-items-center justify-content-between gap-3" 
+                                 :style="item.isMet ? 'background: linear-gradient(135deg, #f0fdf4, #f8fafc);' : 'background: linear-gradient(135deg, #fef2f2, #f8fafc);'">
+                                <div style="max-width: 65%;">
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size: 0.9rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" :title="item.nama_inmut">
+                                        {{ item.nama_inmut }}
                                     </h6>
-                                    <span class="badge bg-white text-primary rounded-pill px-2 py-1 shadow-sm flex-shrink-0" style="font-size: 0.72rem;">
-                                        <i class="fas fa-check-circle me-1"></i> Review Selesai
-                                    </span>
+                                    <p class="text-muted extra-small mb-0" style="font-size: 0.75rem;">
+                                        Target: <span class="fw-bold text-dark">{{ getTargetDisplay(item) }}</span>
+                                    </p>
+                                </div>
+                                <div class="text-end" style="min-width: 110px;">
+                                    <!-- Capaian Badge -->
+                                    <div class="badge px-2.5 py-1.5 rounded-pill shadow-sm mb-1 border" 
+                                         :class="item.isMet ? 'bg-success text-white border-success' : 'bg-danger text-white border-danger'" 
+                                         style="font-size: 0.7rem; font-weight: 600;">
+                                        Rata-rata: {{ item.needsDenominator ? item.monthlyAvg + '%' : item.monthlyAvg }}
+                                    </div>
+                                    <!-- Status Text -->
+                                    <div class="extra-small fw-bold" :class="item.isMet ? 'text-success' : 'text-danger'" style="font-size: 0.65rem;">
+                                        <i :class="item.isMet ? 'fas fa-check-circle me-1' : 'fas fa-times-circle me-1'"></i>
+                                        {{ item.isMet ? 'Tercapai' : 'Belum Tercapai' }}
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div class="card-body p-3">
-                                <div class="mb-3">
-                                    <small class="fw-bold text-primary text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Supervisi</small>
-                                    <div class="text-dark rich-content" v-html="item.feedback.supervisi"></div>
+                                <!-- Info bar -->
+                                <div class="d-flex justify-content-between text-muted extra-small mb-2 px-1" style="font-size: 0.75rem;">
+                                    <div>
+                                        <i class="fas fa-calendar-day me-1"></i> Data Terisi: 
+                                        <span class="fw-bold text-dark">{{ item.daysFilledCount }}/{{ item.daysInMonth }} Hari</span>
+                                    </div>
+                                    <div v-if="item.needsDenominator">
+                                        <span>Total Num: <b class="text-primary">{{ item.totalNum }}</b></span> | <span>Total Den: <b class="text-success">{{ item.totalDenum }}</b></span>
+                                    </div>
+                                    <div v-else>
+                                        <span>Total: <b class="text-primary">{{ item.totalNum }}</b></span>
+                                    </div>
                                 </div>
-                                <hr class="my-2">
-                                <div>
-                                    <small class="fw-bold text-primary text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Rekomendasi / Saran</small>
-                                    <div class="text-dark rich-content" v-html="item.feedback.rekomendasi"></div>
-                                </div>
+                                
+                                <!-- ApexChart daily line trend -->
+                                <apexchart type="line" height="230" :options="item.chartOptions" :series="item.series"></apexchart>
                             </div>
                         </div>
                     </div>
@@ -678,10 +982,16 @@
 
                 <!-- PDSA Form Container -->
                 <div v-else class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between p-3 border-0">
-                        <h6 class="fw-bold mb-0">
-                            <i class="fas fa-clipboard-list me-2"></i> FORM PDSA PERBAIKAN MUTU
+                    <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3 px-4 border-0">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-clipboard-list me-2 text-primary"></i> FORM PDSA PERBAIKAN MUTU
                         </h6>
+                        <!-- PDSA Status Badge -->
+                        <div v-if="pdsaForm.id" class="d-flex align-items-center gap-2">
+                            <span class="status-verif-badge" :class="pdsaForm.status_pdsa || 'draft'">
+                                {{ formatPdsaStatus(pdsaForm.status_pdsa) }}
+                            </span>
+                        </div>
                     </div>
                     
                     <div class="card-body p-4 bg-light">
@@ -694,197 +1004,247 @@
                             </div>
                         </div>
 
-                        <!-- Top Info -->
-                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(to right, #f8f9fa, #ffffff); border-left: 4px solid #3b82f6 !important;">
-                            <div class="card-body p-4">
-                                <h6 class="fw-bold text-dark mb-4"><i class="fas fa-info-circle text-primary me-2"></i> Informasi Dasar PDSA</h6>
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-secondary mb-1">Topik Perbaikan</label>
-                                        <input type="text" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.topik" placeholder="Contoh: Menurunkan waktu tunggu obat">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-secondary mb-1">Tim</label>
-                                        <input type="text" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tim" placeholder="Contoh: Tim Farmasi">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-secondary mb-1">Tgl Mulai Uji Coba</label>
-                                        <input type="date" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tgl_mulai">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-secondary mb-1">Tgl Selesai Uji Coba</label>
-                                        <input type="date" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tgl_selesai">
-                                    </div>
-                                </div>
+                        <!-- PDSA Validation Status Indicator -->
+                        <div v-if="pdsaForm.id" class="alert alert-info d-flex align-items-center border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 4px solid #3b82f6 !important; background: linear-gradient(to right, #eff6ff, #f8f9fa);">
+                            <i class="fas fa-shield-alt fa-2x text-primary me-3"></i>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold text-primary mb-1">Status Validasi PDSA</h6>
+                                <p class="mb-0 small text-dark">
+                                    Status saat ini: <strong class="text-capitalize">{{ formatPdsaStatus(pdsaForm.status_pdsa) }}</strong>.
+                                    <span v-if="pdsaForm.status_pdsa === 'validated'">
+                                        Divalidasi oleh Komite Mutu pada {{ formatDate(pdsaForm.validated_at) }}.
+                                    </span>
+                                    <span v-else>
+                                        Menunggu validasi Komite Mutu.
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="ms-3">
+                                <!-- Komite Mutu Validation Actions -->
+                                <button 
+                                    v-if="isKomiteMutu && pdsaForm.status_pdsa !== 'validated'"
+                                    class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
+                                    @click="validatePdsaItem('validated')"
+                                    style="border-radius: 8px; font-weight: 600; padding: 6px 12px;"
+                                >
+                                    <i class="fas fa-check-circle"></i> Validasi PDSA
+                                </button>
+                                <button 
+                                    v-if="isKomiteMutu && pdsaForm.status_pdsa === 'validated'"
+                                    class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
+                                    @click="validatePdsaItem('draft')"
+                                    style="border-radius: 8px; font-weight: 600; padding: 6px 12px;"
+                                >
+                                    <i class="fas fa-lock-open"></i> Unlock PDSA
+                                </button>
                             </div>
                         </div>
 
-                        <!-- 1. PLAN -->
-                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-                                    <div class="badge bg-primary text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">1</div>
-                                    <div>
-                                        <h5 class="fw-bold text-primary mb-0" style="letter-spacing: 0.5px;">PLAN</h5>
-                                        <span class="text-muted small fw-medium">Rencanakan Perbaikan</span>
+                        <!-- PDSA Lock Info Alert for PIC / unauthorized users -->
+                        <div v-if="isPdsaLocked" class="alert alert-warning d-flex align-items-center border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 4px solid #ffc107 !important; background: linear-gradient(to right, #fffde7, #f8f9fa);">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                            <div>
+                                <h6 class="fw-bold text-warning mb-1">Formulir PDSA Terkunci (Hanya Baca)</h6>
+                                <p class="mb-0 small text-dark">
+                                    Formulir PDSA ini hanya dapat diisi atau diperbarui oleh <strong>Validator Data / Koordinator Unit</strong> atau pihak <strong>Komite Mutu</strong>. PIC unit hanya diperkenankan membaca lembar PDSA ini.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Fieldset to wrap and lock PDSA inputs -->
+                        <fieldset :disabled="isPdsaLocked" class="border-0 p-0 m-0">
+                            <!-- Top Info -->
+                            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(to right, #f8f9fa, #ffffff); border-left: 4px solid #3b82f6 !important;">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark mb-4"><i class="fas fa-info-circle text-primary me-2"></i> Informasi Dasar PDSA</h6>
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-secondary mb-1">Topik Perbaikan</label>
+                                            <input type="text" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.topik" placeholder="Contoh: Menurunkan waktu tunggu obat">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-secondary mb-1">Tim</label>
+                                            <input type="text" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tim" placeholder="Contoh: Tim Farmasi">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-secondary mb-1">Tgl Mulai Uji Coba</label>
+                                            <input type="date" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tgl_mulai">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-secondary mb-1">Tgl Selesai Uji Coba</label>
+                                            <input type="date" class="form-control form-control-lg bg-white" style="font-size: 0.95rem;" v-model="pdsaForm.tgl_selesai">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Latar Belakang / Masalah</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_latar_belakang" placeholder="Jelaskan masalah berdasarkan data/keluhan/audit."></textarea>
+                            </div>
+
+                            <!-- 1. PLAN -->
+                            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                        <div class="badge bg-primary text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">1</div>
+                                        <div>
+                                            <h5 class="fw-bold text-primary mb-0" style="letter-spacing: 0.5px;">PLAN</h5>
+                                            <span class="text-muted small fw-medium">Rencanakan Perbaikan</span>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Tujuan Perbaikan</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_tujuan" placeholder="SMART. Contoh: Menurunkan waktu tunggu obat jadi <30 menit dalam 4 minggu."></textarea>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Analisis Singkat Akar Masalah</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_akar_masalah" placeholder="Tulis 1-2 penyebab utama yang akan diuji."></textarea>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Rencana Perubahan / Intervensi</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_rencana_intervensi" placeholder="Apa yang akan dicoba? Siapa PIC? Kapan? Di mana?"></textarea>
-                                    </div>
-                                    <div class="col-12 mt-4">
-                                        <div class="p-4 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da;">
-                                            <h6 class="fw-bold small mb-3 text-secondary text-uppercase"><i class="fas fa-ruler-combined me-2"></i>Rencana Pengukuran</h6>
-                                            <div class="row g-3">
-                                                <div class="col-md-3">
-                                                    <input type="text" class="form-control" v-model="pdsaForm.p_indikator" placeholder="Indikator Pengukuran">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <input type="text" class="form-control" v-model="pdsaForm.p_cara_ukur" placeholder="Cara Ukur">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <input type="text" class="form-control" v-model="pdsaForm.p_frekuensi" placeholder="Frekuensi (Harian/Mingguan)">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <input type="text" class="form-control" v-model="pdsaForm.p_target" placeholder="Target Angka">
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Latar Belakang / Masalah</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_latar_belakang" placeholder="Jelaskan masalah berdasarkan data/keluhan/audit."></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Tujuan Perbaikan</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_tujuan" placeholder="SMART. Contoh: Menurunkan waktu tunggu obat jadi <30 menit dalam 4 minggu."></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Analisis Singkat Akar Masalah</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_akar_masalah" placeholder="Tulis 1-2 penyebab utama yang akan diuji."></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Rencana Perubahan / Intervensi</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.p_rencana_intervensi" placeholder="Apa yang akan dicoba? Siapa PIC? Kapan? Di mana?"></textarea>
+                                        </div>
+                                        <div class="col-12 mt-4">
+                                            <div class="p-4 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da;">
+                                                <h6 class="fw-bold small mb-3 text-secondary text-uppercase"><i class="fas fa-ruler-combined me-2"></i>Rencana Pengukuran</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control" v-model="pdsaForm.p_indikator" placeholder="Indikator Pengukuran">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control" v-model="pdsaForm.p_cara_ukur" placeholder="Cara Ukur">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control" v-model="pdsaForm.p_frekuensi" placeholder="Frekuensi (Harian/Mingguan)">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control" v-model="pdsaForm.p_target" placeholder="Target Angka">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- 2. DO -->
-                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-                                    <div class="badge text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="background-color: #f59e0b; width: 40px; height: 40px; font-size: 1.1rem;">2</div>
-                                    <div>
-                                        <h5 class="fw-bold mb-0" style="color: #d97706; letter-spacing: 0.5px;">DO</h5>
-                                        <span class="text-muted small fw-medium">Lakukan Uji Coba</span>
-                                    </div>
-                                </div>
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Uraian Pelaksanaan</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.d_uraian" placeholder="Tulis singkat apa yang dilakukan sesuai rencana. Catat tanggal mulai."></textarea>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Kendala & Hal yang Berjalan Baik</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.d_kendala" placeholder="Catat apa yang terjadi di lapangan saat uji coba."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. STUDY -->
-                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-                                    <div class="badge bg-info text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">3</div>
-                                    <div>
-                                        <h5 class="fw-bold text-info mb-0" style="letter-spacing: 0.5px;">STUDY</h5>
-                                        <span class="text-muted small fw-medium">Pelajari Hasilnya</span>
-                                    </div>
-                                </div>
-                                <div class="row g-4">
-                                    <div class="col-md-12">
-                                        <label class="form-label small fw-bold text-dark">Hasil & Data</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="2" v-model="pdsaForm.s_hasil" placeholder="Tulis data sebelum dan sesudah."></textarea>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Analisis</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.s_analisis" placeholder="Apakah target tercapai? Mengapa berhasil/gagal? Perubahan mana yang paling berpengaruh?"></textarea>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-dark">Pembelajaran</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.s_pembelajaran" placeholder="Apa yang kita pelajari dari uji coba ini?"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. ACT -->
-                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
-                                    <div class="badge bg-success text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">4</div>
-                                    <div>
-                                        <h5 class="fw-bold text-success mb-0" style="letter-spacing: 0.5px;">ACT</h5>
-                                        <span class="text-muted small fw-medium">Tindak Lanjuti Keputusan</span>
-                                    </div>
-                                </div>
-                                <div class="row g-4">
-                                    <div class="col-md-5">
-                                        <label class="form-label small fw-bold text-dark mb-3">Keputusan Uji Coba</label>
-                                        <div class="d-flex flex-column gap-3">
-                                            <label class="form-check p-3 rounded-3 border" :class="{'border-success bg-success-light': pdsaForm.a_keputusan === 'Adopt', 'bg-light': pdsaForm.a_keputusan !== 'Adopt'}" style="cursor: pointer; transition: all 0.2s;">
-                                                <div class="d-flex align-items-center">
-                                                    <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Adopt" style="transform: scale(1.2);">
-                                                    <div>
-                                                        <span class="fw-bold d-block text-dark">Adopt</span>
-                                                        <span class="small text-muted">Jadikan standar, sebarkan ke unit lain</span>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                            
-                                            <label class="form-check p-3 rounded-3 border" :class="{'border-warning bg-warning-light': pdsaForm.a_keputusan === 'Adapt', 'bg-light': pdsaForm.a_keputusan !== 'Adapt'}" style="cursor: pointer; transition: all 0.2s;">
-                                                <div class="d-flex align-items-center">
-                                                    <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Adapt" style="transform: scale(1.2);">
-                                                    <div>
-                                                        <span class="fw-bold d-block text-dark">Adapt</span>
-                                                        <span class="small text-muted">Modifikasi dan uji lagi di siklus berikutnya</span>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                            
-                                            <label class="form-check p-3 rounded-3 border" :class="{'border-danger bg-danger-light': pdsaForm.a_keputusan === 'Abandon', 'bg-light': pdsaForm.a_keputusan !== 'Abandon'}" style="cursor: pointer; transition: all 0.2s;">
-                                                <div class="d-flex align-items-center">
-                                                    <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Abandon" style="transform: scale(1.2);">
-                                                    <div>
-                                                        <span class="fw-bold d-block text-dark">Abandon</span>
-                                                        <span class="small text-muted">Hentikan, coba intervensi lain</span>
-                                                    </div>
-                                                </div>
-                                            </label>
+                            <!-- 2. DO -->
+                            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                        <div class="badge text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="background-color: #f59e0b; width: 40px; height: 40px; font-size: 1.1rem;">2</div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0" style="color: #d97706; letter-spacing: 0.5px;">DO</h5>
+                                            <span class="text-muted small fw-medium">Lakukan Uji Coba</span>
                                         </div>
                                     </div>
-                                    <div class="col-md-7">
-                                        <label class="form-label small fw-bold text-dark mb-3">Rencana Tindak Lanjut</label>
-                                        <textarea class="form-control bg-white" style="border: 1px solid #dee2e6; min-height: 200px;" rows="7" v-model="pdsaForm.a_tindak_lanjut" placeholder="Jelaskan langkah selanjutnya berdasarkan keputusan di atas secara mendetail."></textarea>
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Uraian Pelaksanaan</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.d_uraian" placeholder="Tulis singkat apa yang dilakukan sesuai rencana. Catat tanggal mulai."></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Kendala & Hal yang Berjalan Baik</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.d_kendala" placeholder="Catat apa yang terjadi di lapangan saat uji coba."></textarea>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Submit Button -->
-                        <div class="d-flex justify-content-end mt-4 pt-4 border-top">
-                            <button class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm d-flex align-items-center gap-2" @click="savePdsa" :disabled="pdsaSaving" style="font-weight: 600; padding: 12px 30px;">
-                                <i v-if="pdsaSaving" class="fas fa-spinner fa-spin"></i>
-                                <i v-else class="fas fa-save"></i>
-                                {{ pdsaForm.id ? 'Perbarui PDSA' : 'Simpan PDSA' }}
-                            </button>
-                        </div>
+                            <!-- 3. STUDY -->
+                            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                        <div class="badge bg-info text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">3</div>
+                                        <div>
+                                            <h5 class="fw-bold text-info mb-0" style="letter-spacing: 0.5px;">STUDY</h5>
+                                            <span class="text-muted small fw-medium">Pelajari Hasilnya</span>
+                                        </div>
+                                    </div>
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <label class="form-label small fw-bold text-dark">Hasil & Data</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="2" v-model="pdsaForm.s_hasil" placeholder="Tulis data sebelum dan sesudah."></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Analisis</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.s_analisis" placeholder="Apakah target tercapai? Mengapa berhasil/gagal? Perubahan mana yang paling berpengaruh?"></textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Pembelajaran</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6;" rows="3" v-model="pdsaForm.s_pembelajaran" placeholder="Apa yang kita pelajari dari uji coba ini?"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. ACT -->
+                            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                        <div class="badge bg-success text-white rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">4</div>
+                                        <div>
+                                            <h5 class="fw-bold text-success mb-0" style="letter-spacing: 0.5px;">ACT</h5>
+                                            <span class="text-muted small fw-medium">Tindak Lanjuti Keputusan</span>
+                                        </div>
+                                    </div>
+                                    <div class="row g-4">
+                                        <div class="col-md-5">
+                                            <label class="form-label small fw-bold text-dark mb-3">Keputusan Uji Coba</label>
+                                            <div class="d-flex flex-column gap-3">
+                                                <label class="form-check p-3 rounded-3 border" :class="{'border-success bg-success-light': pdsaForm.a_keputusan === 'Adopt', 'bg-light': pdsaForm.a_keputusan !== 'Adopt'}" style="cursor: pointer; transition: all 0.2s;">
+                                                    <div class="d-flex align-items-center">
+                                                        <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Adopt" style="transform: scale(1.2);">
+                                                        <div>
+                                                            <span class="fw-bold d-block text-dark">Adopt</span>
+                                                            <span class="small text-muted">Jadikan standar, sebarkan ke unit lain</span>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                                
+                                                <label class="form-check p-3 rounded-3 border" :class="{'border-warning bg-warning-light': pdsaForm.a_keputusan === 'Adapt', 'bg-light': pdsaForm.a_keputusan !== 'Adapt'}" style="cursor: pointer; transition: all 0.2s;">
+                                                    <div class="d-flex align-items-center">
+                                                        <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Adapt" style="transform: scale(1.2);">
+                                                        <div>
+                                                            <span class="fw-bold d-block text-dark">Adapt</span>
+                                                            <span class="small text-muted">Modifikasi dan uji lagi di siklus berikutnya</span>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                                
+                                                <label class="form-check p-3 rounded-3 border" :class="{'border-danger bg-danger-light': pdsaForm.a_keputusan === 'Abandon', 'bg-light': pdsaForm.a_keputusan !== 'Abandon'}" style="cursor: pointer; transition: all 0.2s;">
+                                                    <div class="d-flex align-items-center">
+                                                        <input class="form-check-input mt-0 me-3" type="radio" v-model="pdsaForm.a_keputusan" value="Abandon" style="transform: scale(1.2);">
+                                                        <div>
+                                                            <span class="fw-bold d-block text-dark">Abandon</span>
+                                                            <span class="small text-muted">Hentikan, coba intervensi lain</span>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <label class="form-label small fw-bold text-dark mb-3">Rencana Tindak Lanjut</label>
+                                            <textarea class="form-control bg-white" style="border: 1px solid #dee2e6; min-height: 200px;" rows="7" v-model="pdsaForm.a_tindak_lanjut" placeholder="Jelaskan langkah selanjutnya berdasarkan keputusan di atas secara mendetail."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-flex justify-content-end mt-4 pt-4 border-top">
+                                <button class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm d-flex align-items-center gap-2" @click="savePdsa" :disabled="pdsaSaving || isPdsaLocked" style="font-weight: 600; padding: 12px 30px;">
+                                    <i v-if="pdsaSaving" class="fas fa-spinner fa-spin"></i>
+                                    <i v-else class="fas fa-save"></i>
+                                    {{ pdsaForm.id ? 'Perbarui PDSA' : 'Simpan PDSA' }}
+                                </button>
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+      </div>
     </div>
   </div>
 </template>
@@ -895,6 +1255,8 @@ import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import committeeService from '@/services/committeeService'
 import { useAuthStore } from '@/stores/auth'
+import VueApexCharts from 'vue3-apexcharts'
+const apexchart = VueApexCharts
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -909,14 +1271,20 @@ const filters = reactive({
 })
 
 // === VIEW MODE STATE ===
-const viewMode = ref('daily') // 'daily' | 'monthly' | 'analisa'
+const viewMode = ref('daily') // 'daily' | 'monthly' | 'analisa' | 'grafik' | 'pdsa'
 const selectedIndicator = ref(null)
 const bulkSaving = ref(false)
+const bulkVerifying = ref(false)
 const calendarData = ref([])
+
+// === GRAFIK STATE ===
+const grafikBulan = ref(new Date().toISOString().slice(0, 7)) // Format: YYYY-MM
+const grafikLoading = ref(false)
+const grafikDailyData = ref([])
 
 // === MODE GLIDER LOGIC ===
 const gliderStyle = computed(() => {
-    const modes = ['daily', 'monthly', 'analisa', 'pdsa']
+    const modes = ['daily', 'monthly', 'analisa', 'grafik', 'pdsa']
     const activeIndex = modes.indexOf(viewMode.value)
     return {
         transform: `translateX(${activeIndex * 100}%)`
@@ -927,6 +1295,220 @@ const gliderStyle = computed(() => {
 const inputMode = ref('unit') // 'unit' | 'komite'
 const isCommitteeMember = ref(false)
 const userCommittees = ref([])
+
+// === ROLE CHECK COMPUTED VALUES ===
+const isKomiteMutu = computed(() => {
+    const role = authStore.userRole?.toLowerCase() || '';
+    if (role.includes('pic') || role.includes('penginput')) {
+        return false;
+    }
+    return role.includes('mutu') || role.includes('pmkp') || role.includes('admin') || role.includes('komite');
+});
+
+const activeUnitInfo = computed(() => {
+    if (!filters.unit || !units.value.length) return null;
+    return units.value.find(u => u.dep_id === filters.unit) || null;
+});
+
+const canVerifyAsPic = computed(() => {
+    // Get current logged-in user NIK
+    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik;
+    const role = authStore.userRole?.toLowerCase() || '';
+
+    // 1. Dynamic check: if unit has a PIC NIK mapped, strictly require NIK match
+    if (activeUnitInfo.value && activeUnitInfo.value.nik_pic) {
+        const match = activeUnitInfo.value.nik_pic === userNik;
+        console.log(`[Verify PIC Check] Unit NIK PIC: ${activeUnitInfo.value.nik_pic} | User NIK: ${userNik} | Match: ${match}`);
+        return match;
+    }
+
+    // 2. Fallback to hardcoded role ONLY if database mapping is empty
+    const isPicRole = role.includes('pic');
+    console.log(`[Verify PIC Check] No mapping found. Falling back to role check: ${isPicRole}`);
+    return isPicRole;
+});
+
+const canVerifyAsKoor = computed(() => {
+    // Get current logged-in user NIK
+    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik;
+    const role = authStore.userRole?.toLowerCase() || '';
+
+    // 1. Dynamic check: if unit has a Validator NIK mapped, strictly require NIK match
+    if (activeUnitInfo.value && activeUnitInfo.value.nik_validator) {
+        const match = activeUnitInfo.value.nik_validator === userNik;
+        console.log(`[Verify Koor Check] Unit Validator NIK: ${activeUnitInfo.value.nik_validator} | User NIK: ${userNik} | Match: ${match}`);
+        return match;
+    }
+
+    // 2. Fallback to hardcoded role ONLY if database mapping is empty
+    const isKoorRole = role.includes('koor') || role.includes('coordinator') || role.includes('kabid') || role.includes('kasi');
+    console.log(`[Verify Koor Check] No mapping found. Falling back to role check: ${isKoorRole}`);
+    return isKoorRole;
+});
+
+const isRowLockedForUser = (item) => {
+    const status = item.status_verifikasi || 'pending';
+
+    // 1. If status is PENDING: Only PIC can edit.
+    if (status === 'pending') {
+        if (canVerifyAsPic.value) {
+            return false;
+        }
+        return true;
+    }
+
+    // 2. If status is VERIFIED PIC: Only Validator/Koor can edit.
+    if (status === 'verified_pic') {
+        if (canVerifyAsKoor.value) {
+            return false;
+        }
+        return true;
+    }
+
+    // 3. If status is VERIFIED KOOR: Locked for everyone.
+    if (status === 'verified_koor') {
+        return true;
+    }
+
+    return true;
+};
+
+const canUnlock = (item) => {
+    if (!item.status_verifikasi || item.status_verifikasi === 'pending') {
+        return false;
+    }
+    // Coordinator can unlock any verified data (verified_pic or verified_koor)
+    if (canVerifyAsKoor.value) {
+        return true;
+    }
+    // PIC can only unlock data that they verified themselves (verified_pic) but not verified by coordinator
+    if (canVerifyAsPic.value && item.status_verifikasi === 'verified_pic') {
+        return true;
+    }
+    return false;
+};
+
+// === BULK MONTHLY VERIFICATION ===
+
+// Determine overall status of the current month's data for the selected indicator
+// Possible outcomes: 'pending' | 'verified_pic' | 'verified_koor' | 'mixed' | 'no_data'
+const bulkMonthStatus = computed(() => {
+    if (!calendarData.value || calendarData.value.length === 0) return 'no_data';
+    const statuses = calendarData.value.map(c => c.status_verifikasi || 'pending');
+    const unique = [...new Set(statuses)];
+    if (unique.length === 1) return unique[0]; // all same
+    // If mixed, we report 'mixed' so the UI can show appropriate partial-state info
+    return 'mixed';
+});
+
+// Whether PIC can batch-verify this month's data
+const canVerifyBulkAsPic = computed(() => {
+    if (!canVerifyAsPic.value) return false;
+    const s = bulkMonthStatus.value;
+    // PIC can verify when all data is pending
+    return s === 'pending';
+});
+
+// Whether Koor can batch-verify this month's data
+const canVerifyBulkAsKoor = computed(() => {
+    if (!canVerifyAsKoor.value) return false;
+    const s = bulkMonthStatus.value;
+    // Koor can verify when all data is verified_pic
+    return s === 'verified_pic';
+});
+
+// Whether the batch can be unlocked (set back to pending)
+const canUnlockBulk = computed(() => {
+    const s = bulkMonthStatus.value;
+    if (s === 'no_data' || s === 'pending') return false;
+    if (canVerifyAsKoor.value) return true; // Koor can always unlock
+    // PIC can unlock when data is only at verified_pic (not yet koor-verified)
+    if (canVerifyAsPic.value && s === 'verified_pic') return true;
+    return false;
+});
+
+const isPdsaLocked = computed(() => {
+    // 1. Locked if validated and user is not Komite Mutu
+    if (pdsaForm.status_pdsa === 'validated' && !isKomiteMutu.value) {
+        return true;
+    }
+    // 2. PIC strictly cannot edit/fill PDSA (must be Koordinator/Validator)
+    if (canVerifyAsPic.value) {
+        return true;
+    }
+    // 3. Komite Mutu can always edit/fill
+    if (isKomiteMutu.value) {
+        return false;
+    }
+    // 4. Otherwise, only allowed if they are Koordinator/Validator
+    return !canVerifyAsKoor.value;
+});
+
+const formatVerifStatus = (status) => {
+    const map = {
+        'pending': 'Pending',
+        'verified_pic': 'Verified PIC',
+        'verified_koor': 'Verified Koor',
+        'rejected': 'Rejected'
+    }
+    return map[status] || status || 'Pending'
+}
+
+const formatPdsaStatus = (status) => {
+    const map = {
+        'draft': 'Draft',
+        'submitted': 'Diajukan',
+        'validated': 'Divalidasi',
+        'rejected': 'Ditolak'
+    }
+    return map[status] || status || 'Draft'
+}
+
+const verifyItem = async (item, status) => {
+    item.isSaving = true
+    try {
+        const payload = {
+            id_rekap: [item.id_rekap],
+            status: status
+        }
+        await api.verifyRealisasi(payload)
+        toast.success(`Status data ${item.nama_inmut} berhasil diperbarui`)
+        item.status_verifikasi = status
+        if (status === 'pending') {
+            item.pic_verified_by = null
+            item.koor_verified_by = null
+        }
+    } catch (error) {
+        console.error(error)
+        toast.error('Gagal memperbarui status verifikasi')
+    } finally {
+        item.isSaving = false
+    }
+}
+
+const validatePdsaItem = async (status) => {
+    pdsaSaving.value = true
+    try {
+        const payload = {
+            id_analisa: activeAnalisaIdForPdsa.value,
+            status: status
+        }
+        const res = await api.verifyPdsa(payload)
+        if (res.data.success) {
+            toast.success(`PDSA berhasil ${status === 'validated' ? 'divalidasi' : 'di-unlock'}`)
+            pdsaForm.status_pdsa = status
+            pdsaForm.validated_by = res.data.data?.validated_by
+            pdsaForm.validated_at = res.data.data?.validated_at
+        } else {
+            toast.error(res.data.message || 'Gagal mengubah status validasi PDSA')
+        }
+    } catch (error) {
+        console.error(error)
+        toast.error('Terjadi kesalahan saat validasi PDSA')
+    } finally {
+        pdsaSaving.value = false
+    }
+}
 
 // === INDICATOR SYNC ===
 // selectedIndicator is already defined above in VIEW MODE STATE
@@ -995,13 +1577,15 @@ const fetchCorrectData = () => {
     else if (viewMode.value === 'monthly') fetchMonthlyData()
     else if (viewMode.value === 'analisa') fetchAnalisaData()
     else if (viewMode.value === 'pdsa') fetchPdsaData()
+    else if (viewMode.value === 'grafik') fetchGrafikData()
 }
 
 // Watch viewMode to sync and auto-fetch
 watch(viewMode, (newMode) => {
-    if (newMode === 'monthly' || newMode === 'analisa' || newMode === 'pdsa') {
+    if (newMode === 'monthly' || newMode === 'analisa' || newMode === 'pdsa' || newMode === 'grafik') {
         monthlyFilterDate.value = filters.tgl_transaksi.slice(0, 7)
         analisaFilters.bulan = monthlyFilterDate.value
+        grafikBulan.value = monthlyFilterDate.value
         
         // Ensure Triwulan selector matches
         if (newMode === 'analisa' || newMode === 'pdsa') {
@@ -1070,12 +1654,268 @@ const pdsaForm = reactive({
     s_pembelajaran: '',
     a_keputusan: 'Adopt',
     a_tindak_lanjut: '',
+    status_pdsa: 'draft',
+    validated_by: null,
+    validated_at: null
 })
 
 const resetPdsaForm = () => {
     Object.keys(pdsaForm).forEach(key => {
-        pdsaForm[key] = key === 'a_keputusan' ? 'Adopt' : (key === 'id' ? null : '')
+        if (key === 'a_keputusan') {
+            pdsaForm[key] = 'Adopt'
+        } else if (key === 'status_pdsa') {
+            pdsaForm[key] = 'draft'
+        } else if (key === 'id' || key === 'validated_by' || key === 'validated_at') {
+            pdsaForm[key] = null
+        } else {
+            pdsaForm[key] = ''
+        }
     })
+}
+
+const handleGrafikUnitChange = async () => {
+    await fetchIndicators()
+    fetchGrafikData()
+}
+
+// === GRAFIK DATA FETCHER ===
+const fetchGrafikData = async () => {
+    if (!filters.unit) return
+
+    const [yearStr, monthStr] = grafikBulan.value.split('-')
+    const y = parseInt(yearStr)
+    const m = parseInt(monthStr)
+    const daysInMonth = new Date(y, m, 0).getDate()
+
+    grafikLoading.value = true
+    grafikDailyData.value = []
+
+    try {
+        const response = await api.getRealisasi({
+            dep_id: filters.unit,
+            bulan: m,
+            tahun: y
+        })
+        const allRealisasi = response.data.data || []
+
+        const groupedRealisasi = {}
+        allRealisasi.forEach(r => {
+            if (!groupedRealisasi[r.id_inmut]) {
+                groupedRealisasi[r.id_inmut] = []
+            }
+            groupedRealisasi[r.id_inmut].push(r)
+        })
+
+        const results = indicators.value.map(ind => {
+            const indRealisasi = groupedRealisasi[ind.id_inmut] || []
+            
+            const dailyData = []
+            let totalNum = 0
+            let totalDenum = 0
+            let daysFilledCount = 0
+
+            const realisasiByDay = {}
+            indRealisasi.forEach(r => {
+                const day = new Date(r.tanggal_inmut).getDate()
+                realisasiByDay[day] = r
+            })
+
+            const needsDen = needsDenominator(ind)
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const r = realisasiByDay[d]
+                if (r) {
+                    const numVal = parseInt(r.num) || 0
+                    const denumVal = parseInt(r.denum) || 0
+                    
+                    totalNum += numVal
+                    totalDenum += denumVal
+                    daysFilledCount++
+
+                    let score = 0
+                    if (needsDen) {
+                        score = denumVal > 0 ? parseFloat(((numVal / denumVal) * 100).toFixed(2)) : 0
+                    } else {
+                        score = numVal
+                    }
+
+                    dailyData.push({
+                        day: d,
+                        num: numVal,
+                        denum: denumVal,
+                        score: score,
+                        nama_input: r.nama_input || r.pegawai?.nama || 'Petugas',
+                        tanggal: r.tanggal_inmut
+                    })
+                } else {
+                    dailyData.push({
+                        day: d,
+                        num: null,
+                        denum: null,
+                        score: null,
+                        nama_input: null,
+                        tanggal: `${grafikBulan.value}-${String(d).padStart(2, '0')}`
+                    })
+                }
+            }
+
+            let monthlyAvg = 0
+            if (needsDen) {
+                monthlyAvg = totalDenum > 0 ? parseFloat(((totalNum / totalDenum) * 100).toFixed(2)) : 0
+            } else {
+                monthlyAvg = daysFilledCount > 0 ? parseFloat((totalNum / daysFilledCount).toFixed(2)) : 0
+            }
+
+            const isMet = isTargetMet({
+                ...ind,
+                score: monthlyAvg,
+                totalNum,
+                totalDenum
+            })
+
+            const target = parseFloat(ind.standar) || 0
+            const categories = Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
+            const scoresSeries = dailyData.map(d => d.score)
+
+            const minVal = 0
+            const maxVal = needsDen 
+                ? Math.max(100, ...dailyData.map(d => Math.max(d.num || 0, d.denum || 0)))
+                : Math.max(target * 1.2, ...scoresSeries.filter(s => s !== null).map(Number), 10)
+
+            const chartOptions = {
+                chart: {
+                    id: `chart-${ind.id_inmut}`,
+                    type: 'line',
+                    toolbar: { show: false },
+                    fontFamily: 'Inter, sans-serif',
+                    zoom: { enabled: false }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: needsDen ? [2, 2, 4] : [4]
+                },
+                markers: {
+                    size: needsDen ? [3, 3, 5] : [5],
+                    strokeWidth: 0,
+                    hover: { size: 6 }
+                },
+                colors: needsDen ? ['#10b981', '#3b82f6', '#6366f1'] : ['#3b82f6'],
+                xaxis: {
+                    categories: categories,
+                    title: { text: 'Hari Ke-', style: { fontSize: '11px', color: '#64748b' } },
+                    labels: { style: { fontSize: '10px' } }
+                },
+                yaxis: {
+                    min: minVal,
+                    max: Math.ceil(maxVal),
+                    tickAmount: 5,
+                    labels: {
+                        formatter: v => needsDen ? Math.round(v) : `${Math.round(v)}%`,
+                        style: { fontSize: '10px' }
+                    }
+                },
+                annotations: {
+                    yaxis: [{
+                        y: target,
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        strokeDashArray: 5,
+                        label: {
+                            text: `Target: ${target}${needsDen ? '%' : ''}`,
+                            position: 'left',
+                            offsetX: 10,
+                            style: { color: '#fff', background: '#ef4444', fontSize: '10px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }
+                        }
+                    }]
+                },
+                tooltip: {
+                    custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                        const dayData = dailyData[dataPointIndex]
+                        if (dayData.score === null) {
+                            return `<div class="p-2 bg-white border rounded shadow-sm text-muted small">
+                                <b>Hari ${dataPointIndex + 1}</b><br>
+                                Tidak ada data
+                            </div>`
+                        }
+                        
+                        let detailHtml = ''
+                        if (needsDen) {
+                            detailHtml = `
+                                <div><span class="text-muted">Capaian:</span> <span class="fw-bold text-dark">${dayData.score}%</span></div>
+                                <div><span class="text-muted">Numerator:</span> <span class="fw-bold text-primary">${dayData.num}</span></div>
+                                <div><span class="text-muted">Denominator:</span> <span class="fw-bold text-success">${dayData.denum}</span></div>
+                            `
+                        } else {
+                            detailHtml = `
+                                <div><span class="text-muted">Nilai:</span> <span class="fw-bold text-primary">${dayData.score}</span></div>
+                            `
+                        }
+                        
+                        return `
+                            <div class="p-3 bg-white border rounded shadow-sm small" style="font-family: Inter, sans-serif; line-height: 1.5; color: #1e293b;">
+                                <div class="fw-bold mb-1 border-bottom pb-1 text-dark">Hari ${dayData.day} (${dayData.tanggal})</div>
+                                ${detailHtml}
+                                <div class="mt-1 pt-1 border-top text-muted" style="font-size: 9px;">
+                                    <i class="fas fa-user me-1"></i> ${dayData.nama_input}
+                                </div>
+                            </div>
+                        `
+                    }
+                },
+                grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+                legend: {
+                    show: needsDen,
+                    position: 'top',
+                    horizontalAlign: 'right',
+                    fontSize: '11px',
+                    markers: {
+                        radius: 12
+                    }
+                }
+            }
+
+            const series = []
+            if (needsDen) {
+                series.push({
+                    name: 'Denominator',
+                    data: dailyData.map(d => d.denum)
+                })
+                series.push({
+                    name: 'Numerator',
+                    data: dailyData.map(d => d.num)
+                })
+                series.push({
+                    name: 'Capaian (%)',
+                    data: scoresSeries
+                })
+            } else {
+                series.push({
+                    name: 'Nilai',
+                    data: scoresSeries
+                })
+            }
+
+            return {
+                ...ind,
+                needsDenominator: needsDen,
+                dailyData,
+                totalNum,
+                totalDenum,
+                daysFilledCount,
+                daysInMonth,
+                monthlyAvg,
+                isMet,
+                series,
+                chartOptions
+            }
+        })
+
+        grafikDailyData.value = results
+    } catch (e) {
+        console.error('fetchGrafikData error:', e)
+    } finally {
+        grafikLoading.value = false
+    }
 }
 
 const fetchPdsaData = async () => {
@@ -1140,6 +1980,11 @@ const fetchPdsaData = async () => {
 }
 
 const savePdsa = async () => {
+    if (isPdsaLocked.value) {
+        toast.error('Anda tidak memiliki akses untuk mengisi atau mengubah PDSA.')
+        return
+    }
+
     if (!activeAnalisaIdForPdsa.value) {
         toast.warning('Data analisa tidak ditemukan untuk periode ini')
         return
@@ -1248,8 +2093,19 @@ const fetchIndicators = async () => {
             const saved = realisasiMap.get(item.id_inmut)
             return {
                 ...item,
+                id_rekap: saved ? saved.id_rekap : null,
                 numerator: saved ? saved.num : 0,
                 denominator: saved ? saved.denum : 0,
+                num_user: saved ? saved.num_user : 0,
+                denum_user: saved ? saved.denum_user : 0,
+                status_verifikasi: saved ? saved.status_verifikasi : 'pending',
+                nik_input: saved ? saved.nik_input : null,
+                nama_input: saved && saved.penginput ? saved.penginput.nama : null,
+                tanggal_input: saved ? saved.tanggal_input : null,
+                pic_verified_by: saved ? saved.pic_verified_by : null,
+                pic_verified_at: saved ? saved.pic_verified_at : null,
+                koor_verified_by: saved ? saved.koor_verified_by : null,
+                koor_verified_at: saved ? saved.koor_verified_at : null,
                 isSaving: false
             }
         })
@@ -1273,6 +2129,19 @@ const formatDate = (dateString) => {
     if (!dateString) return '-'
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' }
     return new Date(dateString).toLocaleDateString('id-ID', options)
+}
+
+const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return '-'
+    const options = { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }
+    return new Date(dateTimeString).toLocaleDateString('id-ID', options).replace(',', '')
 }
 
 const getRumusSymbol = (val) => {
@@ -1330,6 +2199,8 @@ const saveItem = async (item) => {
         }
         await api.saveRealisasi(payload)
         toast.success(`Data ${item.nama_inmut} berhasil disimpan`)
+        // Refresh indicator list to populate id_rekap, status_verifikasi, and validation buttons
+        await fetchIndicators()
     } catch (error) {
         console.error(error)
         toast.error('Gagal menyimpan data')
@@ -1379,7 +2250,11 @@ const calendarDays = computed(() => {
             numerator: existing ? existing.num : 0,
             denominator: existing ? existing.denum : 0,
             hasData: !!existing,
-            isTouched: !!existing // Mark as touched if data exists from DB
+            isTouched: !!existing, // Mark as touched if data exists from DB
+            status_verifikasi: existing ? (existing.status_verifikasi || 'pending') : 'pending',
+            nik_input: existing ? existing.nik_input : null,
+            nama_input: existing && existing.penginput ? existing.penginput.nama : null,
+            tanggal_input: existing ? existing.tanggal_input : null
         })
     }
     return days
@@ -1422,9 +2297,9 @@ const saveBulk = async () => {
         // Get current date string for comparison (YYYY-MM-DD)
         const today = new Date().toISOString().slice(0, 10)
         
-        // Map all days, but only those up to today
+        // Map all days, but only those up to today and not locked for the user
         const payload = calendarDays.value
-            .filter(day => day.date <= today)
+            .filter(day => day.date <= today && !isRowLockedForUser(day))
             .map(day => ({
                 id_inmut: selectedIndicator.value.id_inmut,
                 tgl_transaksi: day.date,
@@ -1450,6 +2325,37 @@ const saveBulk = async () => {
         toast.error('Gagal menyimpan data bulk')
     } finally {
         bulkSaving.value = false
+    }
+}
+
+const verifyBulk = async (status) => {
+    if (!selectedIndicator.value || !filters.unit) return;
+    
+    const labels = {
+        verified_pic: 'Verifikasi PIC',
+        verified_koor: 'Verifikasi Koor',
+        pending: 'Buka Kunci (Unlock)'
+    };
+    
+    bulkVerifying.value = true;
+    try {
+        const date = new Date(filters.tgl_transaksi);
+        const payload = {
+            dep_id: filters.unit,
+            bulan: date.getMonth() + 1,
+            tahun: date.getFullYear(),
+            id_inmut: String(selectedIndicator.value.id_inmut),
+            status: status
+        };
+        await api.verifyRealisasi(payload);
+        toast.success(`${labels[status] || 'Status'} bulan ini berhasil diperbarui`);
+        await fetchMonthlyData(); // Refresh calendar data to reflect new statuses
+    } catch (error) {
+        console.error(error);
+        const msg = error?.response?.data?.message || 'Gagal memperbarui status verifikasi bulanan';
+        toast.error(msg);
+    } finally {
+        bulkVerifying.value = false;
     }
 }
 
@@ -1516,7 +2422,7 @@ const fetchAnalisaData = async () => {
                 analisaForm.analisa = data.analisa
                 analisaForm.tindak_lanjut = data.tindak_lanjut
                 isEditingAnalisa.value = true
-                showAnalisaForm.value = true
+                showAnalisaForm.value = canVerifyAsKoor.value
             }
         } else {
             // Fetch ALL realisasi for the unit to calculate progress for ALL indicators
@@ -1686,8 +2592,13 @@ const editAnalisa = async (item) => {
     await nextTick()
     analisaFilters.bulan = itemBulan
     
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Scroll to details anchor
+    nextTick(() => {
+        const el = document.getElementById('details-anchor')
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+    })
 }
 
 const deleteAnalisaItem = async (id) => {
@@ -1710,6 +2621,21 @@ const resetAnalisaForm = () => {
     analisaForm.analisa = ''
     analisaForm.tindak_lanjut = ''
 }
+
+const getIndonesianMonthName = (monthStr) => {
+    const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ]
+    const idx = parseInt(monthStr) - 1
+    return months[idx] || ''
+}
+
+const grafikBulanDisplay = computed(() => {
+    if (!grafikBulan.value) return ''
+    const [y, m] = grafikBulan.value.split('-')
+    return `${getIndonesianMonthName(m)} ${y}`
+})
 
 const calculateCapaian = (num, denum) => {
     if (!denum || denum === 0) return 0
@@ -1747,7 +2673,13 @@ const isTargetMet = (item) => {
     let target, rumus, score
     
     // Check if item has indicator data (either direct or nested)
-    const ind = item.indikator || item
+    let ind = item.indikator || item
+    
+    // Fallback to selectedIndicator if target info is not present directly in the item (e.g. monthlyStats)
+    if (ind.standar === undefined && selectedIndicator.value) {
+        ind = selectedIndicator.value
+    }
+    
     const utama = ind.master_utama || ind.masterUtama
     
     target = parseFloat((utama && utama.standar) ? utama.standar : ind.standar)
@@ -1809,12 +2741,29 @@ const handleModeChange = () => {
 // Unified Watchers
 watch(() => selectedIndicator.value, () => {
     if (viewMode.value === 'monthly') fetchMonthlyData()
-    if (viewMode.value === 'analisa') fetchAnalisaData()
+    if (viewMode.value === 'analisa') {
+        fetchAnalisaData()
+        if (selectedIndicator.value) {
+            // Small delay to ensure Vue transition and DOM heights are fully settled
+            setTimeout(() => {
+                const el = document.getElementById('details-anchor')
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+            }, 250)
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+    }
 })
 
-watch(() => viewMode.value, (newMode) => {
+watch(() => viewMode.value, async (newMode) => {
     if (newMode === 'monthly') fetchMonthlyData()
     if (newMode === 'analisa') fetchAnalisaData()
+    if (newMode === 'grafik') {
+        await fetchIndicators()
+        fetchGrafikData()
+    }
 })
 
 // Re-fetch data if filters change
@@ -1838,6 +2787,244 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Back Navigation Bar */
+/* Monthly Info Bar */
+.monthly-info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #3b82f6;
+    border-radius: 12px;
+    padding: 14px 18px;
+    flex-wrap: wrap;
+}
+
+.monthly-info-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.monthly-info-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 1rem;
+}
+
+.monthly-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.monthly-info-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.monthly-info-period {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.monthly-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.monthly-save-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+}
+
+.monthly-save-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Actions row — always ONE horizontal row, no wrapping */
+.monthly-actions-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
+/* Base action button */
+.monthly-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.monthly-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.monthly-action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+/* PIC — blue */
+.btn-verif-pic {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+.btn-verif-pic:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Koor — green */
+.btn-verif-koor {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+.btn-verif-koor:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+}
+
+/* Unlock — red outline */
+.btn-unlock {
+    background: transparent;
+    color: #dc2626;
+    border: 1.5px solid #dc2626;
+    box-shadow: none;
+}
+.btn-unlock:hover:not(:disabled) {
+    background: #fee2e2;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.back-nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(59, 130, 246, 0.08);
+}
+
+.back-nav-bar:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    border-left-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
+}
+
+.back-nav-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.back-nav-bar:hover .back-nav-icon {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.back-nav-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.back-nav-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e40af;
+    line-height: 1.2;
+}
+
+.back-nav-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.back-nav-close {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.back-nav-bar:hover .back-nav-close {
+    color: #ef4444;
+}
+
 .small-text {
     font-size: 0.8rem;
     line-height: 1.2;
@@ -1920,6 +3107,8 @@ onMounted(() => {
 .bg-warning-light { background-color: #fffbeb !important; }
 .bg-primary-light { background-color: #eff6ff !important; }
 .bg-info-light { background-color: #e0f7fa !important; }
+.border-primary-light { border-color: #bfdbfe !important; }
+.border-success-light { border-color: #bbf7d0 !important; }
 .text-warning-dark { color: #92400e !important; }
 
 .rich-content {
@@ -1963,209 +3152,434 @@ onMounted(() => {
   transform: translateY(-20px);
 }
 
-.premium-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%) !important;
-    color: #ffffff !important;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+/* Page header icon */
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.header-filter-item {
-    display: flex;
-    flex-direction: column;
+/* Tabs */
+.header-tabs-premium {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.header-filter-label {
-    font-size: 0.72rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 5px;
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+.tab-btn {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.header-input {
-    background-color: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
-    color: #2c3e50 !important;
-    border-radius: 8px !important;
-    font-weight: 500;
-    height: 38px !important;
+.tab-btn:hover:not(.active) {
+  color: #0f172a;
+  background: #e2e8f0;
 }
 
-.header-input:focus {
-    border-color: #3498db !important;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important;
+.tab-btn.active {
+  background: white;
+  color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.context-toggle-premium .btn-outline-light {
-    border-color: rgba(255, 255, 255, 0.3) !important;
-    font-weight: 500;
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
 }
 
-.context-toggle-premium .btn-check:checked + .btn {
-    background-color: #ffffff !important;
-    color: #1e3c72 !important;
-    border-color: #ffffff !important;
+.filter-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+  flex: 1;
 }
 
-/* Segmented Control Styles */
-.mode-segmented-control {
-    position: relative;
-    display: flex;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 4px;
-    border-radius: 12px;
-    width: fit-content;
-    user-select: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.filter-bar-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.mode-option {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    z-index: 2;
-    transition: all 0.3s ease;
-    min-width: 110px;
-    flex: 1;
+/* Content card */
+.content-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  overflow: visible;
 }
 
-.mode-option i {
-    font-size: 0.9rem;
-    transition: transform 0.3s ease;
+/* v-select in filter bar */
+.filter-vselect .vs__dropdown-toggle {
+  background-color: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 8px !important;
+  min-height: 38px !important;
+  padding: 0 4px !important;
+  transition: all 0.2s ease;
 }
 
-.mode-option.active {
-    color: #1e40af; /* Matches sidebar dark blue */
+.filter-vselect.vs--open .vs__dropdown-toggle {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
-.mode-option:hover:not(.active) {
-    color: #ffffff;
+.filter-vselect .vs__selected {
+  color: #212529 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
 }
 
-.mode-option:hover i {
-    transform: translateY(-1px);
+.filter-vselect .vs__search::placeholder {
+  color: #adb5bd !important;
+  font-size: 0.85rem !important;
 }
 
-.mode-glider {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    height: calc(100% - 8px);
-    width: calc((100% - 8px) / 3);
-    background: #ffffff;
-    border-radius: 10px;
-    z-index: 1;
-    transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.filter-vselect .vs__open-indicator { fill: #6c757d !important; transform: scale(0.8) !important; }
+.filter-vselect .vs__clear { fill: #6c757d !important; }
+
+.filter-vselect .vs__dropdown-menu {
+  background: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+  border-top: none !important;
+  border-radius: 0 0 8px 8px !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+  z-index: 1050 !important;
 }
 
-/* Specific item width overrides for desktop to keep them centered */
-.mode-segmented-control .mode-option {
-    flex: 0 0 auto;
-    width: 110px;
+.filter-vselect .vs__dropdown-option {
+  color: #212529 !important;
+  padding: 9px 14px !important;
+  font-size: 0.875rem !important;
+  white-space: normal !important;
 }
 
-.mode-glider {
-    width: 110px;
+.filter-vselect .vs__dropdown-option--highlight {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
 }
 
-/* Premium V-Select for Header */
-.header-vselect .vs__dropdown-toggle {
-    background-color: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
-    border-radius: 8px !important;
-    min-height: 38px !important;
-    padding: 0 4px !important;
-    transition: all 0.2s ease;
+/* Premium Filter Inputs */
+.filter-date-input {
+  background-color: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 8px !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #212529 !important;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-/* Force white background for all children of dropdown-toggle */
-.header-vselect .vs__dropdown-toggle * {
-    background-color: transparent !important;
+.filter-date-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
 }
 
-.header-vselect.vs--open .vs__dropdown-toggle {
-    border-color: #3498db !important;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+.filter-select {
+  background-color: #ffffff !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 8px !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #212529 !important;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-.header-vselect .vs__selected {
-    color: #212529 !important;
-    font-size: 0.9rem !important;
-    font-weight: 500 !important;
-    margin: 4px 2px !important;
-    background: transparent !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    display: block !important;
-    max-width: calc(100% - 10px) !important;
+.filter-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
 }
 
-.header-vselect .vs__selected-options {
-    flex-wrap: nowrap !important;
-    overflow: hidden !important;
-    align-items: center !important;
+/* Premium Table */
+.premium-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-.header-vselect .vs__search {
-    color: #212529 !important;
-    font-size: 0.9rem !important;
-    margin: 4px 2px !important;
-    background: transparent !important;
+.premium-table thead th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.75px;
+  padding: 14px 18px;
+  border-bottom: 2px solid #e2e8f0;
+  border-top: none;
 }
 
-.header-vselect .vs__search::placeholder {
-    color: #adb5bd !important;
-    font-size: 0.85rem !important;
+.premium-table tbody tr {
+  transition: all 0.2s ease;
 }
 
-.header-vselect .vs__open-indicator {
-    fill: #6c757d !important;
-    transform: scale(0.8) !important;
+.premium-table tbody tr:hover {
+  background-color: #f8fafc;
 }
 
-.header-vselect .vs__actions {
-    padding: 0 8px !important;
-    background: transparent !important;
+.premium-table tbody td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.header-vselect .vs__clear {
-    fill: #6c757d !important;
+/* Index column */
+.premium-table td.text-center {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
-.header-vselect .vs__dropdown-menu {
-    background: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
-    border-top: none !important;
-    border-radius: 0 0 8px 8px !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-    z-index: 1050 !important;
-    margin-top: -1px !important;
-    padding: 5px 0 !important;
+/* Indicator title & description */
+.indicator-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  line-height: 1.4;
 }
 
-.header-vselect .vs__dropdown-option {
-    color: #212529 !important;
-    padding: 10px 15px !important;
-    font-size: 0.85rem !important;
-    white-space: normal !important;
+.indicator-desc {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  max-width: 450px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
 }
 
-.header-vselect .vs__dropdown-option--highlight {
-    background: #3b82f6 !important;
-    color: #ffffff !important;
+.indicator-desc:hover {
+  white-space: normal;
+  overflow: visible;
+}
+
+/* Standar badge */
+.premium-badge-standar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.premium-badge-standar .symbol {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.premium-badge-standar .val {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.premium-badge-standar .unit {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+/* Input Fields */
+.latest-input-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.input-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  max-width: 130px;
+}
+
+.input-field-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.premium-table-input {
+  width: 100%;
+  height: 36px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.premium-table-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background-color: #ffffff;
+}
+
+/* Row Action button */
+.row-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+  white-space: nowrap;
+}
+
+.row-save-btn:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.row-save-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Score badge */
+.score-badge {
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  min-width: 65px;
+}
+
+.score-badge.text-success {
+  background-color: #f0fdf4 !important;
+  color: #166534 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.score-badge.text-danger {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fee2e2 !important;
+}
+
+.score-badge.text-dark {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Status Verifikasi Badge */
+.status-verif-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.status-verif-badge.pending,
+.status-verif-badge.draft {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.status-verif-badge.verified_pic,
+.status-verif-badge.submitted {
+  background-color: #eff6ff !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.status-verif-badge.verified_koor,
+.status-verif-badge.validated {
+  background-color: #f0fdf4 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.status-verif-badge.rejected {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fee2e2 !important;
 }
 
 </style>

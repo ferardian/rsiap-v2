@@ -2,41 +2,52 @@
   <div class="survey-report-container p-4">
     <!-- Header Section -->
     <div class="page-header mb-4">
-      <div class="header-content">
-        <div class="header-text">
-          <h2 class="page-title mb-0">
-            <i class="fas fa-star me-2 text-warning"></i>
-            Analisis Survey Kepuasan Pasien
-          </h2>
-          <p class="page-subtitle mb-0 text-white-50">Monitoring tingkat kepuasan layanan anjungan mandiri</p>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-star text-warning"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Analisis Survey Kepuasan Pasien</h3>
+            <p class="page-subtitle mb-0 small">Monitoring tingkat kepuasan layanan anjungan mandiri</p>
+          </div>
         </div>
-        
-        <div class="header-filters-wrapper">
-          <div class="filter-item">
-            <label class="filter-label">PERIODE</label>
-            <div class="date-input-group">
-              <input type="date" v-model="filters.tgl_awal" class="form-input" />
-              <span class="text-white-50 px-2">s/d</span>
-              <input type="date" v-model="filters.tgl_akhir" class="form-input" />
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-card card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
+        <div class="row g-3 align-items-end">
+          <!-- Periode -->
+          <div class="col-lg-4 col-md-6">
+            <label class="filter-label"><i class="fas fa-calendar-alt me-1 text-primary"></i> Periode</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="date" v-model="filters.tgl_awal" class="form-control form-control-sm filter-date" />
+              <span class="text-muted small fw-bold">s/d</span>
+              <input type="date" v-model="filters.tgl_akhir" class="form-control form-control-sm filter-date" />
             </div>
           </div>
-          
-          <div class="filter-item">
-            <label class="filter-label">TIPE PASIEN</label>
-            <select v-model="filters.tipe" class="form-select-premium">
+
+          <!-- Tipe Pasien -->
+          <div class="col-lg-3 col-md-6">
+            <label class="filter-label"><i class="fas fa-user-circle me-1 text-primary"></i> Tipe Pasien</label>
+            <select v-model="filters.tipe" class="form-select form-select-sm modern-select">
               <option value="all">Semua Tipe</option>
               <option value="bpjs">BPJS</option>
               <option value="umum">Umum</option>
             </select>
           </div>
 
-          <div class="filter-item action-buttons">
-            <button @click="loadAllData" class="btn-refresh-premium" :disabled="loading">
-              <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Update
+          <!-- Action Buttons -->
+          <div class="col-lg-5 col-md-12 d-flex align-items-center gap-2 mt-3 mt-lg-0 justify-content-lg-end">
+            <button @click="loadAllData" class="btn btn-primary btn-sm rounded-3 fw-bold btn-refresh-custom" :disabled="loading" style="height: 38px; min-width: 120px;">
+              <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i> Update
             </button>
+            
             <div class="dropdown">
-              <button class="btn-export-premium dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-download me-1"></i> Export
+              <button class="btn btn-outline-secondary btn-sm rounded-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" style="height: 38px;">
+                <i class="fas fa-download me-1"></i> Export Data
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4">
                 <li><a @click.prevent="exportToExcel" class="dropdown-item py-2" href="#"><i class="fas fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
@@ -487,60 +498,98 @@ onMounted(() => loadAllData())
   min-height: 100vh;
 }
 
-.page-header {
-  background: linear-gradient(135deg, #0072ff 0%, #00c6ff 100%);
-  padding: 2.5rem;
-  border-radius: 24px;
-  color: white;
-  box-shadow: 0 10px 30px rgba(0, 114, 255, 0.2);
-}
-
-.header-content {
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 2rem;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.header-filters-wrapper {
-  display: flex;
-  align-items: flex-end;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.filter-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.action-buttons {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.75rem;
+/* Filters Styling */
+.filters-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
 .filter-label {
+  display: block;
+  color: #64748b;
   font-size: 0.75rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.05em;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
-.stat-card {
-  border-radius: 20px;
+.filter-date, .modern-select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: 38px;
+}
+
+.filter-date:focus, .modern-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+.btn-refresh-custom {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  height: 38px;
+  font-weight: 600;
+  border-radius: 10px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-custom:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-refresh-custom:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Premium Stat Cards */
+.stat-card.premium {
   padding: 1.5rem;
+  border-radius: 16px;
   color: white;
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.3s;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.stat-card.premium:hover { transform: translateY(-3px); }
+.stat-card.purple { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); }
+.stat-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+.stat-card.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.stat-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 
 .stat-body {
   display: flex;
@@ -548,92 +597,6 @@ onMounted(() => loadAllData())
   gap: 1rem;
   margin-bottom: 1rem;
 }
-
-.stat-footer {
-  width: 100%;
-}
-
-.date-input-group {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.date-input-group input {
-  background: transparent;
-  border: none;
-  color: white;
-  font-weight: 600;
-  outline: none;
-}
-
-.form-select-premium {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  outline: none;
-  cursor: pointer;
-}
-
-.form-select-premium option {
-  color: #334155;
-}
-
-.btn-export-premium {
-  background: #ffffff;
-  color: #334155;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 700;
-  transition: all 0.3s;
-}
-
-.btn-export-premium:hover {
-  background: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-}
-
-.btn-refresh-premium {
-  background: #7c3aed;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 700;
-  transition: all 0.3s;
-}
-
-.btn-refresh-premium:hover {
-  background: #6d28d9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-}
-
-/* Premium Stat Cards */
-.stat-card.premium {
-  padding: 1.5rem;
-  border-radius: 20px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  transition: transform 0.3s;
-}
-
-.stat-card.premium:hover { transform: translateY(-5px); }
-.stat-card.purple { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); }
-.stat-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
-.stat-card.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.stat-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 
 .stat-icon-wrapper {
   position: absolute;
@@ -645,33 +608,45 @@ onMounted(() => loadAllData())
 }
 
 .stat-footer {
-  margin-top: 1rem;
+  margin-top: auto;
   display: flex;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .bg-white-20 { background: rgba(255, 255, 255, 0.2); }
 .text-white-30 { color: rgba(255, 255, 255, 0.3); }
 
+/* Report Cards & Sections */
 .content-card {
   background: white;
-  border-radius: 20px;
-  border: none;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
   overflow: hidden;
-  transition: transform 0.3s;
 }
 
 .card-header-modern {
-  padding: 1.5rem;
-  background: #fff;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-header-modern h5 {
+  color: #0f172a;
 }
 
 /* Review Cards */
 .review-card {
   background: #f8fafc;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.review-card:hover {
+  border-color: #cbd5e1;
+  background-color: #f1f5f9;
 }
 
 .badge-type {
@@ -687,7 +662,7 @@ onMounted(() => loadAllData())
 .review-date { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
 
 .review-text {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #1e293b;
   line-height: 1.5;
@@ -731,7 +706,31 @@ onMounted(() => loadAllData())
 .text-sm { font-size: 0.875rem; }
 .fs-7 { font-size: 0.75rem; }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+/* Table Styles */
+.table thead th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table tbody td {
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>

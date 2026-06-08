@@ -1,39 +1,46 @@
 <template>
   <div class="hais-report-container p-3 p-md-4">
     <!-- Header Section -->
-    <div class="report-header brand-gradient shadow-lg rounded-4 p-4 mb-4 text-white animate__animated animate__fadeIn">
-      <div class="row align-items-center">
-        <div class="col-md-7">
-          <div class="d-flex align-items-center mb-2">
-            <div class="header-icon-bg me-3 glass-effect">
-              <i class="fas fa-chart-pie fa-2x"></i>
-            </div>
-            <div>
-              <h3 class="mb-0 fw-bold tracking-tight">Laporan HAIS Terintegrasi</h3>
-              <p class="mb-0 opacity-75">Healthcare-Associated Infections Surveillance & Monitoring</p>
-            </div>
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Laporan HAIS Terintegrasi</h3>
+            <p class="page-subtitle mb-0 small">Survei & Pemantauan Infeksi Terkait Pelayanan Kesehatan (HAIs)</p>
           </div>
         </div>
-        
-        <!-- Filter Section -->
-        <div class="col-md-5 mt-3 mt-md-0">
-          <div class="glass-effect rounded-3 p-3 d-flex flex-wrap gap-2 align-items-end justify-content-md-end border border-white border-opacity-10">
-            <div class="flex-grow-1" style="min-width: 120px;">
-              <label class="text-xs fw-bold opacity-75 mb-1 text-uppercase">Bulan</label>
-              <select class="form-select form-select-sm border-0 shadow-none glass-input text-white" v-model="filters.bulan">
-                <option v-for="(name, index) in monthNames" :key="index" :value="index + 1" class="text-dark">{{ name }}</option>
-              </select>
-            </div>
-            <div class="flex-grow-1" style="min-width: 100px;">
-              <label class="text-xs fw-bold opacity-75 mb-1 text-uppercase">Tahun</label>
-              <select class="form-select form-select-sm border-0 shadow-none glass-input text-white" v-model="filters.tahun">
-                <option v-for="y in yearRange" :key="y" :value="y" class="text-dark">{{ y }}</option>
-              </select>
-            </div>
-            <button class="btn btn-light btn-sm px-3 shadow-sm fw-bold border-0" @click="fetchData" :disabled="loading">
-               <i v-if="loading" class="spinner-border spinner-border-sm me-1"></i>
-               <i v-else class="fas fa-sync-alt me-1"></i>
-               UPDATE
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-card card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
+        <div class="row g-3 align-items-end">
+          <!-- Month Filter -->
+          <div class="col-md-5 col-sm-6">
+            <label class="filter-label"><i class="fas fa-calendar-alt me-1 text-primary"></i> Bulan</label>
+            <select class="form-select form-select-sm modern-select" v-model="filters.bulan">
+              <option v-for="(name, index) in monthNames" :key="index" :value="index + 1">{{ name }}</option>
+            </select>
+          </div>
+
+          <!-- Year Filter -->
+          <div class="col-md-5 col-sm-6">
+            <label class="filter-label"><i class="fas fa-calendar me-1 text-primary"></i> Tahun</label>
+            <select class="form-select form-select-sm modern-select" v-model="filters.tahun">
+              <option v-for="y in yearRange" :key="y" :value="y">{{ y }}</option>
+            </select>
+          </div>
+
+          <!-- Update Button -->
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-primary btn-sm rounded-3 fw-bold btn-refresh-custom" @click="fetchData" :disabled="loading">
+               <i v-if="loading" class="spinner-border spinner-border-sm me-2"></i>
+               <i v-else class="fas fa-sync-alt me-2"></i>
+               Update
             </button>
           </div>
         </div>
@@ -41,10 +48,10 @@
     </div>
 
     <!-- Main Content -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden animate__animated animate__fadeIn animate__delay-1s">
+    <div class="content-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <!-- Loading Overlay -->
       <div v-if="loading" class="loading-overlay">
-        <div class="spinner-grow text-blue-600" role="status"></div>
+        <div class="spinner-grow text-primary" role="status"></div>
       </div>
 
       <!-- Table Container -->
@@ -191,33 +198,87 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.brand-gradient {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-}
-
-.glass-effect {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 .header-icon-bg {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.glass-input {
-  background: rgba(0, 0, 0, 0.1) !important;
-  color: white !important;
-  border-radius: 6px;
+/* Filters Styling */
+.filters-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
-.glass-input:focus {
-  background: rgba(0, 0, 0, 0.2) !important;
+.filter-label {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.modern-select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: 38px;
+}
+
+.modern-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+.btn-refresh-custom {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  height: 38px;
+  font-weight: 600;
+  border-radius: 10px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-custom:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-refresh-custom:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.content-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
 }
 
 .text-xs { font-size: 0.7rem; }
@@ -231,8 +292,8 @@ onMounted(() => {
 }
 
 .hais-styled-table thead tr th {
-  padding: 0.75rem 0.5rem;
-  border-bottom: 0;
+  padding: 0.85rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
   text-align: center;
 }
 
@@ -251,11 +312,15 @@ onMounted(() => {
 .bg-blue-subtle { background-color: #eff6ff; }
 
 .data-row td {
-  padding: 1rem 0.5rem;
+  padding: 0.85rem 0.5rem;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   border-bottom: 1px solid #f1f5f9;
   transition: background-color 0.2s;
+}
+
+.data-row:last-child td {
+  border-bottom: none;
 }
 
 .data-row:hover td {
@@ -310,8 +375,8 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .report-header {
-    padding: 1.5rem !important;
+  .btn-refresh-custom {
+    width: 100%;
   }
 }
 </style>

@@ -1,56 +1,65 @@
 <template>
-  <div class="diagnosa-prosedur-container p-4">
+  <div class="diagnosa-prosedur-container p-3 p-md-4">
     <!-- Header Section -->
     <div class="page-header mb-4">
-      <div class="header-content">
-        <div class="header-text">
-          <h2 class="page-title">
-            <i class="fas fa-file-medical-alt me-2"></i>
-            Laporan Diagnosa & Prosedur
-          </h2>
-          <p class="page-subtitle">Analisis statistik ICD-10 (Diagnosa) dan ICD-9 (Prosedur) pasien</p>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-file-medical-alt"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Laporan Diagnosa & Prosedur</h3>
+            <p class="page-subtitle mb-0 small">Analisis statistik ICD-10 (Diagnosa) dan ICD-9 (Prosedur) pasien</p>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <div class="header-actions">
-          <div class="filter-wrapper align-items-end">
-            <div class="filter-group">
-              <label class="filter-label">PERIODE</label>
-              <div class="date-range-picker">
-                <input type="date" v-model="filters.tgl_awal" class="form-input-premium" />
-                <span class="sep">s/d</span>
-                <input type="date" v-model="filters.tgl_akhir" class="form-input-premium" />
-              </div>
+    <!-- Filters Section -->
+    <div class="filters-card card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
+        <div class="row g-3 align-items-end">
+          <!-- Date Range -->
+          <div class="col-lg-4 col-md-6">
+            <label class="filter-label"><i class="fas fa-calendar-alt me-1 text-primary"></i> Periode</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="date" v-model="filters.tgl_awal" class="form-control form-control-sm filter-date" />
+              <span class="text-muted small fw-bold">s/d</span>
+              <input type="date" v-model="filters.tgl_akhir" class="form-control form-control-sm filter-date" />
             </div>
+          </div>
 
-            <div class="filter-group">
-              <label class="filter-label">LAYANAN</label>
-              <select v-model="filters.status" class="form-select-premium">
-                <option value="all">Semua Layanan</option>
-                <option value="Ralan">Rawat Jalan</option>
-                <option value="Ranap">Rawat Inap</option>
-              </select>
-            </div>
+          <!-- Status Filter -->
+          <div class="col-lg-2 col-md-6">
+            <label class="filter-label"><i class="fas fa-hospital me-1 text-primary"></i> Layanan</label>
+            <select v-model="filters.status" class="form-select form-select-sm modern-select">
+              <option value="all">Semua Layanan</option>
+              <option value="Ralan">Rawat Jalan</option>
+              <option value="Ranap">Rawat Inap</option>
+            </select>
+          </div>
 
-            <div class="filter-group flex-grow-1">
-              <label class="filter-label">CARI DIAGNOSA / PROSEDUR</label>
-              <div class="search-input-wrapper">
-                <i class="fas fa-search search-icon"></i>
-                <input 
-                  type="text" 
-                  v-model="filters.keyword" 
-                  class="form-input-premium w-100 ps-5" 
-                  placeholder="Ketik kode atau nama..."
-                  @keyup.enter="refreshData"
-                />
-              </div>
+          <!-- Search Filter -->
+          <div class="col-lg-4 col-md-8">
+            <label class="filter-label"><i class="fas fa-search me-1 text-primary"></i> Cari Diagnosa / Prosedur</label>
+            <div class="search-input-wrapper">
+              <i class="fas fa-search search-icon"></i>
+              <input 
+                type="text" 
+                v-model="filters.keyword" 
+                class="form-control form-control-sm filter-search ps-5" 
+                placeholder="Ketik kode atau nama..."
+                @keyup.enter="refreshData"
+              />
             </div>
+          </div>
 
-            <div class="filter-group">
-              <button @click="refreshData" class="btn-refresh-premium" :disabled="loading">
-                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
-                Tampilkan
-              </button>
-            </div>
+          <!-- Action Button -->
+          <div class="col-lg-2 col-md-4 d-grid">
+            <button @click="refreshData" class="btn btn-primary btn-sm rounded-3 fw-bold btn-refresh-custom" :disabled="loading">
+              <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i>
+              Tampilkan
+            </button>
           </div>
         </div>
       </div>
@@ -185,19 +194,19 @@
     <div class="modal fade" id="patientListModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
-          <!-- Enhanced Header with Gradient -->
-          <div class="modal-header-premium d-flex justify-content-between align-items-center p-4">
+          <!-- Clean White Modal Header -->
+          <div class="modal-header d-flex justify-content-between align-items-center p-4 border-bottom">
             <div class="d-flex align-items-center gap-3">
-              <div class="header-icon-circle shadow-sm">
+              <div class="header-icon-circle shadow-sm border">
                 <i class="fas fa-user-injured text-primary"></i>
               </div>
               <div class="header-text">
-                <h5 class="modal-title fw-800 text-white mb-0">
+                <h5 class="modal-title fw-800 text-dark mb-0">
                   Daftar Pasien
                 </h5>
                 <div class="d-flex align-items-center gap-2 mt-1">
-                  <span class="badge bg-white text-primary fw-bold shadow-sm">{{ selectedItem?.kd_penyakit || selectedItem?.kode }}</span>
-                  <span class="text-white-50 small fw-600">{{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}</span>
+                  <span class="badge bg-primary-soft text-primary fw-bold">{{ selectedItem?.kd_penyakit || selectedItem?.kode }}</span>
+                  <span class="text-muted small fw-600">{{ selectedItem?.nm_penyakit || selectedItem?.nm_prosedur }}</span>
                 </div>
               </div>
             </div>
@@ -216,26 +225,25 @@
             <div class="modal-filters p-3 bg-light border-bottom">
               <div class="row g-2 align-items-center">
                 <div class="col-md-5">
-                  <div class="search-input-wrapper shadow-sm">
+                  <div class="search-input-wrapper">
                     <i class="fas fa-search search-icon"></i>
                     <input 
                       type="text" 
                       v-model="patientSearch" 
-                      class="form-input-premium w-100 ps-5" 
+                      class="form-control form-control-sm filter-search ps-5" 
                       placeholder="Cari Pasien..."
-                      style="height: 38px; font-size: 0.85rem;"
                     />
                   </div>
                 </div>
                 <div class="col-md-3">
-                  <select v-model="patientStatusFilter" class="form-select-premium w-100 shadow-sm" style="height: 38px; font-size: 0.85rem;">
+                  <select v-model="patientStatusFilter" class="form-select form-select-sm modern-select">
                     <option value="all">Semua Layanan</option>
                     <option value="Ralan">Rawat Jalan</option>
                     <option value="Ranap">Rawat Inap</option>
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <select v-model="patientPjFilter" class="form-select-premium w-100 shadow-sm" style="height: 38px; font-size: 0.85rem;">
+                  <select v-model="patientPjFilter" class="form-select form-select-sm modern-select">
                     <option value="all">Semua Pembiayaan</option>
                     <option v-for="pj in uniquePj" :key="pj" :value="pj">{{ pj }}</option>
                   </select>
@@ -538,56 +546,61 @@ watch(activeTab, () => {
   min-height: 100vh;
 }
 
-.page-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  padding: 2.5rem;
-  border-radius: 20px;
-  color: white;
-  box-shadow: 0 10px 25px rgba(30, 58, 138, 0.15);
-}
-
-.page-title {
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  margin-bottom: 0.5rem;
-}
-
-.page-subtitle {
-  opacity: 0.85;
-  font-size: 1rem;
-}
-
-.header-actions {
-  margin-top: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
-  border-radius: 15px;
-  backdrop-filter: blur(5px);
-}
-
-.filter-wrapper {
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Filters Styling */
+.filters-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
 .filter-label {
+  display: block;
+  color: #64748b;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
-.date-range-picker {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.filter-date, .modern-select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: 38px;
+}
+
+.filter-date {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-date:focus, .modern-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
 }
 
 .search-input-wrapper {
@@ -597,44 +610,54 @@ watch(activeTab, () => {
 
 .search-icon {
   position: absolute;
-  left: 1.25rem;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
   pointer-events: none;
+  font-size: 0.875rem;
 }
 
-.form-input-premium, .form-select-premium {
-  background: white;
-  border: none;
-  padding: 0 1rem;
-  height: 44px;
-  border-radius: 10px;
+.filter-search {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
   font-weight: 600;
-  color: #1e293b;
-  outline: none;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  color: #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: 38px;
+  width: 100%;
 }
 
-.btn-refresh-premium {
-  background: #f59e0b;
-  color: white;
-  border: none;
-  padding: 0 1.5rem;
-  height: 44px;
-  border-radius: 10px;
-  font-weight: 700;
-  transition: all 0.2s;
-  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-  display: flex;
+.filter-search:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+.btn-refresh-custom {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  height: 38px;
+  font-weight: 600;
+  border-radius: 10px !important;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  transition: all 0.2s ease;
 }
 
-.btn-refresh-premium:hover:not(:disabled) {
-  background: #d97706;
-  transform: translateY(-2px);
+.btn-refresh-custom:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-refresh-custom:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* Stats Cards */
@@ -645,7 +668,8 @@ watch(activeTab, () => {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
   border-left: 5px solid transparent;
 }
 
@@ -676,6 +700,7 @@ watch(activeTab, () => {
   font-weight: 800;
   color: #1e293b;
   margin-bottom: 0.3rem;
+  font-size: 1.5rem;
 }
 
 .stats-footer {
@@ -689,30 +714,39 @@ watch(activeTab, () => {
   background: white;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
 }
 
 .tabs-header {
   display: flex;
-  background: #f1f5f9;
+  background: #f8fafc;
   padding: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .tab-btn {
-  padding: 1rem 2rem;
-  border: none;
+  padding: 0.85rem 1.5rem;
+  border: 1px solid transparent;
   background: transparent;
   font-weight: 700;
   color: #64748b;
-  border-radius: 12px;
+  border-radius: 10px;
   transition: all 0.2s;
   flex: 1;
+  font-size: 0.9rem;
+}
+
+.tab-btn:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
 }
 
 .tab-btn.active {
   background: white;
   color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .loading-state {
@@ -727,7 +761,7 @@ watch(activeTab, () => {
   background: white;
   padding: 1.5rem;
   border-radius: 15px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e2e8f0;
   height: 100%;
 }
 
@@ -740,11 +774,18 @@ watch(activeTab, () => {
 .btn-export {
   background: #ecfdf5;
   color: #059669;
-  border: none;
+  border: 1px solid #a7f3d0;
   padding: 0.4rem 1rem;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-export:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #047857;
 }
 
 .clickable-row {
@@ -755,63 +796,69 @@ watch(activeTab, () => {
 .clickable-row:hover {
   background-color: #f8fafc !important;
   transform: scale(1.005);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .fw-800 { font-weight: 800; }
 .fw-600 { font-weight: 600; }
 
-/* Modal Premium Styles */
-.modal-header-premium {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  border: none;
+/* Modal Styles */
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.modal-title {
+  color: #0f172a;
+  font-weight: 800;
 }
 
 .header-icon-circle {
-  width: 48px;
-  height: 48px;
-  background: white;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .patient-count-badge {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 0.4rem 0.85rem;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  min-width: 80px;
+  min-width: 70px;
 }
 
 .count-num {
-  color: white;
+  color: #3b82f6;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
 .count-label {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.65rem;
+  color: #64748b;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .btn-close-custom {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
-  color: white;
+  border-radius: 8px;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -819,7 +866,8 @@ watch(activeTab, () => {
 }
 
 .btn-close-custom:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #e2e8f0;
+  color: #0f172a;
   transform: rotate(90deg);
 }
 
@@ -834,6 +882,12 @@ watch(activeTab, () => {
   flex: 0 0 auto !important;
   width: auto !important;
   margin: 0 !important;
+}
+
+.modal-filters {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .bg-blue-soft, .bg-primary-soft { background-color: #eff6ff; }
@@ -861,23 +915,29 @@ watch(activeTab, () => {
 /* Custom Table */
 .custom-table-premium thead th, .custom-table-patient thead th {
   background: #f8fafc;
-  color: #475569;
+  color: #64748b;
   text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.5px;
-  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
   border-top: none;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .custom-table-patient tbody tr {
   transition: all 0.2s;
 }
 
-.custom-table-patient tbody td {
-  padding: 0.75rem 1rem;
+.custom-table-premium tbody td, .custom-table-patient tbody td {
+  padding: 0.85rem 1rem;
   vertical-align: middle;
   border-bottom: 1px solid #f1f5f9;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+}
+
+.custom-table-premium tbody tr:last-child td, .custom-table-patient tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .rank-num {
@@ -919,18 +979,12 @@ watch(activeTab, () => {
 }
 
 @media (max-width: 768px) {
-  .header-actions {
-    padding: 1rem;
-  }
-  .filter-wrapper {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .date-range-picker {
+  .btn-refresh-custom {
     width: 100%;
   }
-  .form-input-premium {
-    flex: 1;
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
   }
 }
 </style>

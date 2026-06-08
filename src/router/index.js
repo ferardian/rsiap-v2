@@ -368,6 +368,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/indikator-mutu/validator-pic',
+    name: 'ValidatorPicIndikatorMutu',
+    component: () => import('../views/indikator-mutu/ValidatorPicView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/monitoring-klaim',
     name: 'MonitoringKlaim',
     component: () => import('../views/dashboard/MonitoringKlaimView.vue'),

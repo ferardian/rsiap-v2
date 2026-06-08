@@ -952,14 +952,15 @@ onUnmounted(() => {
 <style scoped>
 /* New Compact Header Styles */
 .page-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+  background: #ffffff;
   padding: 1.5rem 1rem;
-  border-radius: 0 0 24px 24px;
+  border-radius: 1rem;
   margin-bottom: 1.5rem;
-  color: white;
+  color: #0f172a;
   position: relative;
   overflow: visible;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
   z-index: 100;
 }
 
@@ -974,14 +975,14 @@ onUnmounted(() => {
 .header-icon-box {
   width: 42px;
   height: 42px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #eff6ff;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  color: #60a5fa;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
 }
 
 .page-title {
@@ -990,20 +991,22 @@ onUnmounted(() => {
   margin: 0;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  color: #0f172a !important;
 }
 
 .page-subtitle {
   font-size: 0.85rem;
-  opacity: 0.7;
+  color: #64748b !important;
   margin: 0.25rem 0 0 0;
+  opacity: 1 !important;
 }
 
 .header-filter-bar {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
   padding: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .filter-items-container {
@@ -1024,14 +1027,14 @@ onUnmounted(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   padding-left: 0.25rem;
 }
 
 /* Compact Inputs */
 .mini-input, .mini-select {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 0.4rem 0.75rem;
   font-size: 0.85rem;
@@ -1039,16 +1042,22 @@ onUnmounted(() => {
   color: #1e293b;
   outline: none;
   height: 36px;
+  transition: border-color 0.2s;
+}
+
+.mini-input:focus, .mini-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .compact-date-range {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   padding: 2px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #e2e8f0;
 }
 
 .compact-date-range .mini-input {
@@ -1065,16 +1074,17 @@ onUnmounted(() => {
 
 .compact-mode-selector {
   display: flex;
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
   padding: 3px;
   border-radius: 10px;
   height: 36px;
+  border: 1px solid #e2e8f0;
 }
 
 .compact-mode-selector button {
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   padding: 0 0.85rem;
   border-radius: 8px;
   font-size: 0.75rem;
@@ -1089,7 +1099,8 @@ onUnmounted(() => {
 .compact-mode-selector button.active {
   background: white;
   color: #1e40af;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+  border: 1px solid #dbeafe;
 }
 
 .poli-unit {
@@ -1114,9 +1125,9 @@ onUnmounted(() => {
 }
 
 .btn-refresh-pill {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
   padding: 0 1rem;
   border-radius: 10px;
   height: 36px;
@@ -1130,7 +1141,8 @@ onUnmounted(() => {
 }
 
 .btn-refresh-pill:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
+  background: #dbeafe;
+  border-color: #93c5fd;
   transform: translateY(-1px);
 }
 
@@ -1139,9 +1151,9 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1160,7 +1172,7 @@ onUnmounted(() => {
 @media (max-width: 992px) {
   .page-header {
     padding: 1.25rem 1rem;
-    border-radius: 0;
+    border-radius: 0.75rem;
   }
   
   .header-main-info .ms-auto {
@@ -1170,14 +1182,16 @@ onUnmounted(() => {
 
   .header-filter-bar {
     padding: 1rem;
-    background: rgba(15, 23, 42, 0.95);
+    background: #f8fafc;
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    border-radius: 0 0 20px 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    border-radius: 0 0 16px 16px;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 99;
   }
 
   .filter-items-container {

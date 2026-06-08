@@ -1,24 +1,32 @@
 <template>
-  <div class="unified-approval-page">
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header bg-primary text-white border-bottom-0 pt-3 px-3 d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0 text-white">Approval Berkas</h5>
-        <ul class="nav nav-tabs card-header-tabs approval-tabs ms-auto">
-          <li class="nav-item" v-for="tab in tabs" :key="tab.id">
-            <a 
-              class="nav-link" 
-              :class="{ active: activeTab === tab.id }"
-              href="#"
-              @click.prevent="activeTab = tab.id"
-            >
-              <i :class="[tab.icon, 'me-2']"></i>
-              {{ tab.label }}
-            </a>
-          </li>
-        </ul>
+  <div class="unified-approval-page p-3 p-md-4">
+    <!-- Header Section -->
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-file-signature"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Approval Berkas</h3>
+            <p class="page-subtitle mb-0 small">Verifikasi dan persetujuan berkas dokumen SPO, PERDIR, dan SK</p>
+          </div>
+        </div>
+        
+        <div class="header-tabs-premium">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="['tab-btn', { active: activeTab === tab.id }]"
+          >
+            <i :class="[tab.icon, 'me-1']"></i> {{ tab.label }}
+          </button>
+        </div>
       </div>
     </div>
 
+    <!-- Content -->
     <div class="tab-content">
       <keep-alive>
         <component 
@@ -71,47 +79,55 @@ const activeComponent = computed(() => {
 </script>
 
 <style scoped>
-.unified-approval-page .card {
-  background-color: #ffffff !important;
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
   border-radius: 12px;
-}
-
-.unified-approval-page .card-header {
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* Modern Segmented Control Style */
-.approval-tabs {
-  background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white on blue */
-  padding: 0.25rem;
-  border-radius: 0.75rem;
-  border: none !important;
-  display: inline-flex;
-}
-
-.approval-tabs .nav-link {
-  border: none !important;
-  border-radius: 0.5rem;
-  color: rgba(255, 255, 255, 0.8) !important; /* White text */
-  font-weight: 500;
-  padding: 0.6rem 1.25rem;
-  margin: 0;
-  background: transparent !important;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.approval-tabs .nav-link:hover:not(.active) {
-  background-color: rgba(255,255,255,0.1) !important;
-  color: #ffffff !important;
+.header-tabs-premium {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
-.approval-tabs .nav-link.active {
-  background-color: #ffffff !important;
-  color: #2563eb !important; /* Blue text */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  font-weight: 600;
-  transform: translateY(0);
+.tab-btn {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-btn:hover:not(.active) {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 </style>
+

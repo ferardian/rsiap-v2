@@ -1,36 +1,35 @@
 <template>
-  <div class="dashboard-inmut">
+  <div class="dashboard-inmut p-3 p-md-4">
 
-    <!-- ===== HERO HEADER ===== -->
-    <div class="hero-header mb-4">
-      <div class="hero-bg"></div>
-      <div class="hero-content">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-shield-alt"></i>
+          </div>
           <div>
-            <div class="hero-badge mb-2">
-              <i class="fas fa-shield-alt me-1"></i> PMKP – Peningkatan Mutu & Keselamatan Pasien
-            </div>
-            <h2 class="hero-title mb-1">Dashboard Indikator Mutu</h2>
-            <p class="hero-subtitle mb-0">
-              Pantau capaian mutu rumah sakit secara real-time berdasarkan kategori indikator
+            <h3 class="page-title mb-0">Dashboard Indikator Mutu</h3>
+            <p class="page-subtitle mb-0 small">
+              Pantau capaian mutu rumah sakit secara real-time berdasarkan kategori indikator (PMKP)
             </p>
           </div>
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <!-- Period Filter -->
-            <div class="filter-glass">
-              <label class="filter-label"><i class="fas fa-calendar me-1"></i> Periode</label>
-              <input
-                type="month"
-                class="filter-input"
-                v-model="filters.bulan"
-                @change="fetchAll"
-              />
-            </div>
-            <button class="btn-refresh" @click="fetchAll" :disabled="loading.any">
-              <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading.any }"></i>
-              Refresh
-            </button>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <!-- Period Filter -->
+          <div class="filter-container-custom">
+            <input
+              type="month"
+              class="filter-month-input"
+              v-model="filters.bulan"
+              @change="fetchAll"
+            />
           </div>
+          <button class="btn-refresh-custom" @click="fetchAll" :disabled="loading.any">
+            <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loading.any }"></i>
+            Refresh
+          </button>
         </div>
       </div>
     </div>
@@ -47,20 +46,19 @@
       <!-- ===== GLOBAL SUMMARY CARDS ===== -->
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-          <div class="summary-card summary-total">
-            <div class="summary-icon">
+          <div class="premium-summary-card">
+            <div class="summary-icon-bg total">
               <i class="fas fa-clipboard-list"></i>
             </div>
             <div class="summary-info">
               <div class="summary-value">{{ globalStats.total }}</div>
               <div class="summary-label">Total Indikator</div>
             </div>
-            <div class="summary-pulse"></div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="summary-card summary-achieved">
-            <div class="summary-icon">
+          <div class="premium-summary-card">
+            <div class="summary-icon-bg achieved">
               <i class="fas fa-check-double"></i>
             </div>
             <div class="summary-info">
@@ -70,8 +68,8 @@
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="summary-card summary-failed">
-            <div class="summary-icon">
+          <div class="premium-summary-card">
+            <div class="summary-icon-bg failed">
               <i class="fas fa-times-circle"></i>
             </div>
             <div class="summary-info">
@@ -81,16 +79,13 @@
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="summary-card summary-rate">
-            <div class="summary-icon">
+          <div class="premium-summary-card">
+            <div class="summary-icon-bg rate">
               <i class="fas fa-percentage"></i>
             </div>
             <div class="summary-info">
               <div class="summary-value">{{ globalStats.ratePercent }}%</div>
               <div class="summary-label">Tingkat Keberhasilan</div>
-            </div>
-            <div class="summary-trend" :class="globalStats.ratePercent >= 80 ? 'trend-up' : 'trend-down'">
-              <i :class="globalStats.ratePercent >= 80 ? 'fas fa-arrow-trend-up' : 'fas fa-arrow-trend-down'"></i>
             </div>
           </div>
         </div>
@@ -124,8 +119,8 @@
           <!-- Overall Progress Bar -->
           <div class="section-progress-wrap mt-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <small class="text-white opacity-75">Keberhasilan Keseluruhan</small>
-              <small class="text-white fw-bold">{{ kategorisData[ki]?.tercapai ?? 0 }} / {{ kategorisData[ki]?.total ?? 0 }}</small>
+              <small class="text-muted opacity-75">Keberhasilan Keseluruhan</small>
+              <small class="text-slate-800 fw-bold">{{ kategorisData[ki]?.tercapai ?? 0 }} / {{ kategorisData[ki]?.total ?? 0 }}</small>
             </div>
             <div class="section-progress-bar">
               <div
@@ -488,105 +483,82 @@ onMounted(() => {
 <style scoped>
 /* ===== BASE ===== */
 .dashboard-inmut {
-  padding: 0;
   min-height: 100vh;
-  background: #f0f2f5;
+  background: #f8fafc;
 }
 
-/* ===== HERO HEADER ===== */
-.hero-header {
-  position: relative;
-  border-radius: 20px;
-  overflow: hidden;
-  padding: 2rem 2.5rem;
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4f46e5 100%);
-  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.3);
-}
-
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.3) 0%, transparent 60%),
-    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-.hero-content { position: relative; z-index: 1; }
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.9);
-  padding: 4px 12px;
-  border-radius: 50px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(255,255,255,0.2);
-  backdrop-filter: blur(4px);
-}
-
-.hero-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.5px;
-}
-
-.hero-subtitle {
-  color: rgba(255,255,255,0.75);
-  font-size: 0.95rem;
-}
-
-.filter-glass {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
+/* ===== PAGE HEADER ===== */
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
   border-radius: 12px;
-  padding: 8px 14px;
-  backdrop-filter: blur(8px);
-}
-
-.filter-label {
-  display: block;
-  color: rgba(255,255,255,0.7);
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.filter-input {
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 600;
-  outline: none;
-  width: 140px;
-  cursor: pointer;
-}
-.filter-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-
-.btn-refresh {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-weight: 600;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
+}
+
+.filter-container-custom {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  transition: all 0.2s ease;
+}
+
+.filter-container-custom:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-month-input {
+  background: transparent;
+  border: none;
+  color: #334155;
   font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  width: 140px;
+}
+
+.btn-refresh-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  height: 38px;
   cursor: pointer;
   transition: all 0.2s;
-  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-.btn-refresh:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
-.btn-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-refresh-custom:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.btn-refresh-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* ===== LOADING ===== */
 .loading-state { display: flex; justify-content: center; align-items: center; min-height: 300px; }
@@ -601,65 +573,93 @@ onMounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ===== SUMMARY CARDS ===== */
-.summary-card {
-  position: relative;
+.premium-summary-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.summary-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important; }
-
-.summary-total {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  box-shadow: 0 4px 20px rgba(79,70,229,0.25);
-}
-.summary-achieved {
-  background: linear-gradient(135deg, #059669, #10b981);
-  box-shadow: 0 4px 20px rgba(5,150,105,0.25);
-}
-.summary-failed {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  box-shadow: 0 4px 20px rgba(220,38,38,0.25);
-}
-.summary-rate {
-  background: linear-gradient(135deg, #d97706, #f59e0b);
-  box-shadow: 0 4px 20px rgba(217,119,6,0.25);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
 }
 
-.summary-icon {
-  width: 48px; height: 48px; border-radius: 12px;
-  background: rgba(255,255,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.25rem; color: white; flex-shrink: 0;
+.premium-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
 }
+
+.summary-icon-bg {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.summary-icon-bg.total {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+
+.summary-icon-bg.achieved {
+  background: #ecfdf5;
+  color: #10b981;
+  border: 1px solid #d1fae5;
+}
+
+.summary-icon-bg.failed {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+}
+
+.summary-icon-bg.rate {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fef3c7;
+}
+
 .summary-value {
-  font-size: 2rem; font-weight: 800; color: white; line-height: 1;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
 }
-.summary-label { font-size: 0.78rem; color: rgba(255,255,255,0.8); font-weight: 500; margin-top: 2px; }
-.summary-pulse {
-  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(255,255,255,0.08);
+
+.summary-label {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 2px;
 }
-.summary-trend {
-  position: absolute; right: 12px; bottom: 12px;
-  font-size: 1rem; opacity: 0.6;
-}
-.trend-up { color: #d1fae5; }
-.trend-down { color: #fee2e2; }
 
 /* ===== SECTION HEADER ===== */
 .kategori-section {}
 
 .section-header {
-  background: var(--cat-gradient);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.section-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--cat-color);
 }
 
 .section-header-inner {
@@ -668,32 +668,33 @@ onMounted(() => {
 
 .section-icon-wrap {
   width: 52px; height: 52px; border-radius: 14px;
-  background: rgba(255,255,255,0.2);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; color: white; flex-shrink: 0;
+  font-size: 1.4rem; color: var(--cat-color); flex-shrink: 0;
 }
 
-.section-title { font-size: 1.1rem; font-weight: 700; color: white; margin: 0; }
-.section-desc { font-size: 0.8rem; color: rgba(255,255,255,0.75); }
+.section-title { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0; }
+.section-desc { font-size: 0.8rem; color: #64748b; }
 
 .section-badge-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .section-badge {
   display: inline-flex; align-items: center;
   padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
 }
-.badge-total { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); }
-.badge-ok { background: rgba(209,250,229,0.25); color: #d1fae5; border: 1px solid rgba(209,250,229,0.4); }
-.badge-warn { background: rgba(254,243,199,0.25); color: #fef3c7; border: 1px solid rgba(254,243,199,0.4); }
+.badge-total { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.badge-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.badge-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
 
 .section-progress-wrap {}
 .section-progress-bar {
-  height: 8px; border-radius: 4px; background: rgba(255,255,255,0.2); overflow: visible; position: relative;
+  height: 8px; border-radius: 4px; background: #f1f5f9; overflow: visible; position: relative;
 }
 .section-progress-fill {
   height: 100%; border-radius: 4px;
-  background: rgba(255,255,255,0.9);
+  background: var(--cat-color);
   transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 /* ===== SKELETON ===== */
@@ -839,11 +840,9 @@ onMounted(() => {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .hero-header { padding: 1.25rem; border-radius: 14px; }
-  .hero-title { font-size: 1.3rem; }
   .section-header { padding: 1rem 1.25rem; border-radius: 12px; }
   .section-header-inner { gap: 0.75rem; }
   .section-badge-group { gap: 0.35rem; }
-  .filter-input { width: 110px; }
+  .filter-month-input { width: 110px; }
 }
 </style>

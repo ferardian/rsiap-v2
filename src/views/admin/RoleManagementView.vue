@@ -488,7 +488,7 @@ const getUserCountForRole = (roleId) => {
 }
 
 const filteredRoles = computed(() => {
-  const roles = roleStore.rolesWithUserCount
+  const roles = roleStore.rolesWithUserCount || []
   if (!roleSearchQuery.value) return roles
 
   const query = roleSearchQuery.value.toLowerCase()

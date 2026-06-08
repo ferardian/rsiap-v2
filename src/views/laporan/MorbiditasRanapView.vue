@@ -1,56 +1,68 @@
 <template>
   <div class="morbiditas-ranap-container p-3 p-md-4">
     <!-- Header Section -->
-    <div class="page-header mb-4 mt-n3 mx-n3 mt-md-n4 mx-md-n4">
-      <div class="header-content d-flex flex-column flex-md-row justify-content-between align-items-md-center px-4 py-3 py-md-5">
-        <div class="header-text mb-3 mb-md-0">
-          <h2 class="page-title mb-1">
-            <i class="fas fa-hospital-user me-2"></i>
-            Morbiditas Pasien Rawat Inap
-          </h2>
-          <p class="page-subtitle mb-0">Laporan Morbiditas (SIRS/RL) Berdasarkan Kelompok Umur & Jenis Kelamin</p>
+    <div class="page-header mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
+            <i class="fas fa-hospital-user"></i>
+          </div>
+          <div>
+            <h3 class="page-title mb-0">Morbiditas Pasien Rawat Inap</h3>
+            <p class="page-subtitle mb-0 small">Laporan Morbiditas (SIRS/RL) Berdasarkan Kelompok Umur & Jenis Kelamin</p>
+          </div>
         </div>
-        
-        <div class="header-filters p-3 p-md-4">
-          <div class="row g-2 align-items-end">
-            <div class="col-12 col-md-auto">
-              <label class="filter-label">MODE LAPORAN</label>
-              <div class="btn-group w-100 rounded-12 overflow-hidden">
-                <button @click="filters.mode = 'bulanan'" class="btn btn-sm py-2 px-3 border-0 transition-all" 
-                  :class="filters.mode === 'bulanan' ? 'btn-primary shadow' : 'bg-white text-dark border-end'"> BULANAN </button>
-                <button @click="filters.mode = 'tahunan'" class="btn btn-sm py-2 px-3 border-0 transition-all" 
-                  :class="filters.mode === 'tahunan' ? 'btn-primary shadow' : 'bg-white text-dark'"> TAHUNAN </button>
-              </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-card card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3">
+        <div class="row g-3 align-items-end">
+          <!-- Mode Laporan -->
+          <div class="col-lg-3 col-md-6">
+            <label class="filter-label"><i class="fas fa-sliders-h me-1 text-primary"></i> Mode Laporan</label>
+            <div class="mode-toggle">
+              <button @click="filters.mode = 'bulanan'" class="mode-btn" :class="{ active: filters.mode === 'bulanan' }">Bulanan</button>
+              <button @click="filters.mode = 'tahunan'" class="mode-btn" :class="{ active: filters.mode === 'tahunan' }">Tahunan</button>
             </div>
-            <div class="col-6 col-md-auto" v-if="filters.mode === 'bulanan'">
-              <label class="filter-label">BULAN</label>
-              <select v-model="filters.month" class="form-select-modern">
-                <option v-for="(name, index) in months" :key="index" :value="String(index + 1).padStart(2, '0')">
-                  {{ name }}
-                </option>
-              </select>
-            </div>
-            <div class="col-6 col-md-auto">
-              <label class="filter-label">TAHUN</label>
-              <select v-model="filters.year" class="form-select-modern">
-                <option v-for="y in years" :key="y" :value="String(y)">{{ y }}</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-auto">
-              <label class="filter-label">JENIS PASIEN</label>
-              <select v-model="filters.kd_sps" class="form-select-modern">
-                <option value="">SEMUA PASIEN</option>
-                <option v-for="sps in specialties" :key="sps.kd_sps" :value="sps.kd_sps">
-                  {{ sps.nm_sps }}
-                </option>
-              </select>
-            </div>
-            <div class="col-12 col-md-auto d-grid">
-              <button @click="loadData" class="btn-refresh-modern" :disabled="loading">
-                <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i>
-                {{ loading ? 'Memuat...' : 'Refresh' }}
-              </button>
-            </div>
+          </div>
+
+          <!-- Bulan (Only Bulanan) -->
+          <div class="col-lg-2 col-md-6" v-if="filters.mode === 'bulanan'">
+            <label class="filter-label"><i class="fas fa-calendar-alt me-1 text-primary"></i> Bulan</label>
+            <select v-model="filters.month" class="form-select form-select-sm modern-select">
+              <option v-for="(name, index) in months" :key="index" :value="String(index + 1).padStart(2, '0')">
+                {{ name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Tahun -->
+          <div class="col-lg-2 col-md-6" :class="{'col-lg-3': filters.mode === 'tahunan'}">
+            <label class="filter-label"><i class="fas fa-calendar me-1 text-primary"></i> Tahun</label>
+            <select v-model="filters.year" class="form-select form-select-sm modern-select">
+              <option v-for="y in years" :key="y" :value="String(y)">{{ y }}</option>
+            </select>
+          </div>
+
+          <!-- Jenis Pasien -->
+          <div class="col-lg-3 col-md-6" :class="{'col-lg-4': filters.mode === 'tahunan'}">
+            <label class="filter-label"><i class="fas fa-user-friends me-1 text-primary"></i> Jenis Pasien</label>
+            <select v-model="filters.kd_sps" class="form-select form-select-sm modern-select">
+              <option value="">Semua Pasien</option>
+              <option v-for="sps in specialties" :key="sps.kd_sps" :value="sps.kd_sps">
+                {{ sps.nm_sps }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Refresh Button -->
+          <div class="col-lg-2 col-md-6 d-grid">
+            <button @click="loadData" class="btn btn-primary btn-sm rounded-3 fw-bold btn-refresh-custom" :disabled="loading">
+              <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i>
+              Refresh
+            </button>
           </div>
         </div>
       </div>
@@ -379,83 +391,127 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.page-header {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-  border-radius: 0 0 40px 40px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
+.header-icon-bg {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.5rem;
 }
 
-.page-title {
-  color: white;
-  font-weight: 800;
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
-}
-
-.page-subtitle {
-  color: rgba(255,255,255,0.8);
-  font-size: 0.95rem;
-}
-
-.header-filters {
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.2);
+/* Filters Styling */
+.filters-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
 }
 
 .filter-label {
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 700;
-  margin-bottom: 4px;
   display: block;
-}
-
-.form-select-modern {
-  background: rgba(255,255,255,0.95);
-  border: 0;
-  border-radius: 12px;
-  padding: 0.6rem 1rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #1e3a8a;
-}
-
-.btn-refresh-modern {
-  background: #34d399;
-  color: white;
-  border: 0;
-  border-radius: 12px;
-  padding: 0.6rem 1.5rem;
+  color: #64748b;
+  font-size: 0.75rem;
   font-weight: 700;
-  box-shadow: 0 4px 10px rgba(52, 211, 153, 0.3);
-  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
-.rounded-12 { border-radius: 12px; }
-.transition-all { transition: all 0.2s ease; }
-.btn-primary.shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; }
+/* Mode Toggle Styles */
+.mode-toggle {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  height: 38px;
+  align-items: center;
+}
 
-.btn-refresh-modern:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
+.mode-btn {
+  flex: 1;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.modern-select {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: 38px;
+}
+
+.modern-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  outline: none;
+}
+
+.btn-refresh-custom {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  height: 38px;
+  font-weight: 600;
+  border-radius: 10px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-custom:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-refresh-custom:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* Report Table Styling */
 .report-card {
-  border-radius: 24px;
+  border-radius: 16px;
   background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
   overflow: hidden;
-  box-shadow: 0 4px 25px rgba(0,0,0,0.05);
 }
 
-.bg-primary-soft { background-color: #eef2ff; }
-.bg-success-soft { background-color: #f0fdf4; }
-.bg-danger-soft { background-color: #fef2f2; }
+.bg-primary-soft { background-color: #eff6ff !important; color: #3b82f6 !important; }
+.bg-success-soft { background-color: #ecfdf5 !important; color: #059669 !important; }
+.bg-danger-soft { background-color: #fef2f2 !important; color: #dc2626 !important; }
+.bg-info-soft { background-color: #f0f9ff !important; color: #0284c7 !important; }
 .text-pink { color: #db2777; }
-.bg-info-soft { background-color: #ecf8ff; }
 
 .table-responsive-modern {
   max-height: 70vh;
@@ -469,7 +525,17 @@ onMounted(() => {
   z-index: 100;
 }
 
-.header-row-1 th { background: #f8fafc; font-weight: 800; border-bottom: 0 !important; }
+.header-row-1 th, .header-row-2 th, .header-row-3 th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-color: #e2e8f0 !important;
+  vertical-align: middle;
+}
+
 .age-group-header { 
   background: #f1f5f9; 
   font-weight: 700; 
@@ -478,9 +544,20 @@ onMounted(() => {
   border-left: 1px solid #e2e8f0 !important;
 }
 
-.gender-header { font-weight: 800; background: #fff; border-bottom: 2px solid #e2e8f0 !important; }
-.male { color: #3b82f6; border-left: 1px solid #e2e8f0 !important; }
-.female { color: #db2777; }
+.gender-header { 
+  font-weight: 800; 
+  background: #ffffff; 
+  border-bottom: 2px solid #e2e8f0 !important; 
+}
+
+.male { 
+  color: #3b82f6; 
+  border-left: 1px solid #e2e8f0 !important; 
+}
+
+.female { 
+  color: #db2777; 
+}
 
 .fixed-col {
   position: sticky !important;
@@ -488,6 +565,7 @@ onMounted(() => {
   z-index: 20;
   background-color: #ffffff !important; 
   border-right: 1px solid #e2e8f0 !important;
+  border-color: #e2e8f0 !important;
 }
 
 .fixed-col:nth-of-type(3) {
@@ -498,8 +576,9 @@ onMounted(() => {
 /* Ensure header fixed columns stay above everything */
 thead .header-fixed {
   z-index: 150 !important;
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
   border-bottom: 2px solid #e2e8f0 !important;
+  color: #475569;
 }
 
 tfoot {
@@ -525,6 +604,7 @@ tfoot .footer-fixed {
   background-color: #ffffff !important;
   opacity: 1 !important;
   position: relative; /* Create stacking context */
+  border-color: #cbd5e1 !important;
 }
 
 .footer-row-lp td {
@@ -538,12 +618,12 @@ tfoot .footer-fixed {
 
 /* Specific background overrides for total columns and sum columns */
 .footer-row-lp .bg-yellow-soft { background-color: #fffbeb !important; }
-.footer-row-lp .bg-success-soft { background-color: #f0fdf4 !important; }
-.footer-row-lp .bg-danger-soft { background-color: #fef2f2 !important; }
+.footer-row-lp .bg-success-soft { background-color: #ecfdf5 !important; color: #059669 !important; }
+.footer-row-lp .bg-danger-soft { background-color: #fef2f2 !important; color: #dc2626 !important; }
 
-.footer-row-combined .bg-primary-soft { background-color: #eef2ff !important; }
-.footer-row-combined .bg-success { background-color: #198754 !important; }
-.footer-row-combined .bg-danger { background-color: #dc3545 !important; }
+.footer-row-combined .bg-primary-soft { background-color: #eff6ff !important; color: #3b82f6 !important; }
+.footer-row-combined .bg-success { background-color: #10b981 !important; color: #ffffff !important; }
+.footer-row-combined .bg-danger { background-color: #ef4444 !important; color: #ffffff !important; }
 
 .footer-row-lp .bg-dark { background-color: #1e293b !important; color: #ffffff !important; }
 
@@ -587,5 +667,8 @@ tfoot .footer-fixed {
 @media (max-width: 768px) {
   .page-header { border-radius: 0; margin-bottom: 0; }
   .report-card { border-radius: 0; border: 0; }
+  .btn-refresh-custom {
+    width: 100%;
+  }
 }
 </style>

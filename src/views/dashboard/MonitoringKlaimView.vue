@@ -1,20 +1,20 @@
 <template>
   <div class="monitoring-klaim-container p-3 p-md-4">
     <!-- Header Section -->
-    <div class="dashboard-header brand-gradient shadow-sm rounded-4 p-4 mb-4 text-white">
+    <div class="page-header mb-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div class="d-flex align-items-center">
-          <div class="header-icon-bg me-3 glass-effect">
+          <div class="header-icon-bg me-3">
             <i class="fas fa-file-invoice-dollar"></i>
           </div>
           <div>
-            <h3 class="mb-0 fw-bold tracking-tight">Monitoring Klaim BPJS</h3>
-            <p class="mb-0 opacity-75 small">Statistik Pengajuan dan Status Klaim (Data Internal tersinkronisasi)</p>
+            <h3 class="page-title mb-0">Monitoring Klaim BPJS</h3>
+            <p class="page-subtitle mb-0 small">Statistik Pengajuan dan Status Klaim (Data Internal tersinkronisasi)</p>
           </div>
         </div>
 
         <div class="action-buttons d-flex gap-3 align-items-center">
-          <div class="mode-toggle-group glass-effect rounded-pill p-1 shadow-sm">
+          <div class="mode-toggle-group rounded-pill p-1">
             <button @click="setYearlyMode(true)" :class="['mode-pill-btn', { active: filters.isYearlyMode }]">
               <i class="fas fa-calendar-alt me-2"></i> Tahunan
             </button>
@@ -23,7 +23,7 @@
             </button>
           </div>
           
-          <button v-if="!filters.isYearlyMode" class="btn btn-glass-success rounded-pill px-4" @click="syncData" :disabled="syncing">
+          <button v-if="!filters.isYearlyMode" class="btn btn-sync-pill rounded-pill px-4" @click="syncData" :disabled="syncing">
             <i :class="['fas', syncing ? 'fa-spinner fa-spin' : 'fa-sync-alt', 'me-2']"></i> Sync Data
           </button>
         </div>
@@ -227,10 +227,9 @@
 
       <!-- Data Table -->
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-primary py-3 px-4 d-flex justify-content-between align-items-center border-0">
+        <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
-            <div class="header-accent-line me-3 bg-white opacity-50"></div>
-            <h6 class="mb-0 fw-bold text-white"><i class="fas fa-list me-2 text-white"></i>Rincian Berkas SEP</h6>
+            <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Rincian Berkas SEP</h6>
           </div>
           <div class="d-flex align-items-center gap-3">
             <span class="badge premium-count-badge rounded-pill px-3 py-2 fw-bold">
@@ -724,28 +723,27 @@ onMounted(() => {
   margin: 0 auto;
 }
 
+.card {
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+}
+
+.card-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 1rem 1.5rem !important;
+  text-align: left !important;
+}
+
 .filters-card {
   position: relative;
   z-index: 100; /* Ensure dropdowns are above following sections */
 }
 
-.brand-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-}
-
-.glass-effect {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
-}
-
-.btn-glass-success {
-  background: rgba(16, 185, 129, 0.2);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
+.btn-sync-pill {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
   font-weight: 700;
   font-size: 0.82rem;
   padding: 0 1.25rem;
@@ -753,11 +751,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
-.btn-glass-success:hover {
-  background: rgba(16, 185, 129, 0.4);
+.btn-sync-pill:hover:not(:disabled) {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
   transform: translateY(-1px);
 }
 
@@ -771,6 +771,9 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
 }
 
 .header-icon-bg i {
@@ -782,13 +785,17 @@ onMounted(() => {
 /* Mode Pill Button */
 .mode-toggle-group {
   display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 50px;
+  border: 1px solid #e2e8f0;
 }
 .mode-pill-btn {
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.7);
+  color: #64748b;
   padding: 0 1.5rem;
-  height: 38px;
+  height: 32px;
   border-radius: 50rem;
   font-size: 0.82rem;
   font-weight: 700;
@@ -799,25 +806,28 @@ onMounted(() => {
 }
 .mode-pill-btn.active {
   background: #ffffff;
-  color: #1e3a8a;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  color: #1e40af;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  border: 1px solid #bfdbfe;
 }
 
 /* Modern Select Styles */
 .modern-select {
   border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   border-radius: 10px;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1e293b;
+  color: #334155;
   transition: all 0.2s;
   cursor: pointer;
 }
 
 .modern-select:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .w-40 { width: 40%; }
@@ -826,6 +836,8 @@ onMounted(() => {
 /* Segmented Control */
 .segmented-control {
   height: 40px;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
 }
 .seg-btn {
   border: none;
@@ -838,8 +850,9 @@ onMounted(() => {
 }
 .seg-btn.active {
   background: #ffffff;
-  color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+  color: #1e40af;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #bfdbfe;
 }
 
 /* Modern V-Select Alt */
@@ -854,12 +867,13 @@ onMounted(() => {
   border-radius: 10px;
   height: 40px;
   padding: 0 4px;
-  background: transparent;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
 }
 
 .modern-v-select-alt:focus-within {
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
 }
 
 .modern-v-select-alt:focus-within :deep(.vs__dropdown-toggle) {
@@ -920,12 +934,13 @@ onMounted(() => {
 
 .modern-input-group-premium {
   border: 1px solid #e2e8f0;
-  background: #fff;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s;
 }
 .modern-input-group-premium:focus-within {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
 }
 
 @keyframes pulseGentle {
@@ -1149,7 +1164,12 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .dashboard-header h3 { font-size: 1.5rem; }
+  .page-header {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+  }
+  .page-title { font-size: 1.25rem !important; }
+  .page-subtitle { font-size: 0.8rem !important; }
   .stat-card { padding: 1.25rem !important; }
 }
 </style>
