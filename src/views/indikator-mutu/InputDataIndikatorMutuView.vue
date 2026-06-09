@@ -1349,12 +1349,9 @@ const canVerifyAsKoor = computed(() => {
 const isRowLockedForUser = (item) => {
     const status = item.status_verifikasi || 'pending';
 
-    // 1. If status is PENDING: Only PIC can edit.
+    // 1. If status is PENDING: Anyone can edit and fill.
     if (status === 'pending') {
-        if (canVerifyAsPic.value) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     // 2. If status is VERIFIED PIC: Only Validator/Koor can edit.
