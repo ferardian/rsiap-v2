@@ -164,7 +164,11 @@
                 :class="{ 'active-standard-item': activeStandardKode === std.kode }"
                 @click="scrollToStandard(std.kode)"
               >
-                <span class="fw-bold">{{ std.kode }}</span>
+                <div class="d-flex align-items-center" style="min-width: 0;">
+                  <span class="fw-bold">{{ std.kode }}</span>
+                  <i v-if="getStandardTodoProgress(std).total > 0" class="fas fa-tasks text-warning ms-2" style="font-size: 0.65rem;" :title="`Ada ${getStandardTodoProgress(std).total} tugas/catatan (${getStandardTodoProgress(std).completed} selesai)`"></i>
+                  <i v-if="getStandardDokumenCount(std) > 0" class="fas fa-paperclip text-success ms-2" style="font-size: 0.65rem;" :title="`Ada ${getStandardDokumenCount(std)} dokumen bukti`"></i>
+                </div>
                 <i class="fas fa-chevron-right text-muted extra-small"></i>
               </button>
             </div>
@@ -868,7 +872,11 @@
               data-bs-dismiss="offcanvas"
               @click="scrollToStandard(std.kode)"
             >
-              <span class="fw-bold text-dark-blue">{{ std.kode }}</span>
+              <div class="d-flex align-items-center" style="min-width: 0;">
+                <span class="fw-bold text-dark-blue">{{ std.kode }}</span>
+                <i v-if="getStandardTodoProgress(std).total > 0" class="fas fa-tasks text-warning ms-2" style="font-size: 0.75rem;" :title="`Ada ${getStandardTodoProgress(std).total} tugas/catatan (${getStandardTodoProgress(std).completed} selesai)`"></i>
+                <i v-if="getStandardDokumenCount(std) > 0" class="fas fa-paperclip text-success ms-2" style="font-size: 0.75rem;" :title="`Ada ${getStandardDokumenCount(std)} dokumen bukti`"></i>
+              </div>
               <span v-if="getStandardTodoProgress(std).total > 0" class="badge rounded-pill bg-soft-success text-success extra-small fw-bold">
                 {{ getStandardTodoProgress(std).completed }}/{{ getStandardTodoProgress(std).total }}
               </span>
@@ -1505,6 +1513,17 @@ const getStandardTodoProgress = (std) => {
     }
   })
   return { completed, total }
+}
+
+const getStandardDokumenCount = (std) => {
+  if (!std || !std.elemen_penilaians || std.elemen_penilaians.length === 0) return 0
+  let count = 0
+  std.elemen_penilaians.forEach(ep => {
+    if (ep.dokumens) {
+      count += ep.dokumens.length
+    }
+  })
+  return count
 }
 
 // Document Evidence Handlers
