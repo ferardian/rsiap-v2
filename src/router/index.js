@@ -446,6 +446,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/keuangan/hutang-vendor-farmasi',
+    name: 'HutangVendorFarmasi',
+    component: () => import('../views/keuangan/HutangVendorFarmasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/helpdesk/tiket-masuk',
     name: 'TiketMasukHelpdesk',
     component: () => import('../views/helpdesk/TiketMasukView.vue'),
