@@ -1953,6 +1953,186 @@ const stripHtml = (html) => {
     return tmp.textContent || tmp.innerText || ""
 }
 
+const generateDailyChartImage = (indicator, dailyData, targetValue) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1000
+    canvas.height = 350
+    const ctx = canvas.getContext('2d')
+    
+    // Fill background
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    const needsDen = needsDenominator(indicator)
+    const target = parseFloat(targetValue) || 0
+    
+    // Margin and drawing dimensions
+    const paddingLeft = 60
+    const paddingRight = 40
+    const paddingTop = 40
+    const paddingBottom = 40
+    const plotWidth = canvas.width - paddingLeft - paddingRight
+    const plotHeight = canvas.height - paddingTop - paddingBottom
+    
+    // Find min/max values
+    let maxVal = 0
+    dailyData.forEach(d => {
+        if (needsDen) {
+            if (d.num !== null) maxVal = Math.max(maxVal, d.num)
+            if (d.denum !== null) maxVal = Math.max(maxVal, d.denum)
+            if (d.score !== null) maxVal = Math.max(maxVal, d.score)
+        } else {
+            if (d.score !== null) maxVal = Math.max(maxVal, d.score)
+        }
+    })
+    
+    if (needsDen) {
+        maxVal = Math.max(100, maxVal)
+    } else {
+        maxVal = Math.max(target * 1.2, maxVal, 10)
+    }
+    
+    // Y-axis scale helper
+    const getPlotY = (val) => {
+        if (val === null || val === undefined) return null
+        return paddingTop + plotHeight - ((val / maxVal) * plotHeight)
+    }
+    
+    // X-axis scale helper (days 1 to daysInMonth)
+    const daysCount = dailyData.length
+    const getPlotX = (index) => {
+        return paddingLeft + (index / (daysCount - 1)) * plotWidth
+    }
+    
+    // Draw Grid Lines (Y-Axis ticks)
+    const ticksCount = 5
+    ctx.strokeStyle = '#f1f5f9'
+    ctx.lineWidth = 1
+    ctx.fillStyle = '#64748b'
+    ctx.font = '10px Inter, Arial, sans-serif'
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'middle'
+    
+    for (let i = 0; i <= ticksCount; i++) {
+        const val = (i / ticksCount) * maxVal
+        const y = getPlotY(val)
+        
+        // Grid line
+        ctx.beginPath()
+        ctx.moveTo(paddingLeft, y)
+        ctx.lineTo(canvas.width - paddingRight, y)
+        ctx.stroke()
+        
+        // Label
+        const labelText = needsDen ? Math.round(val) : `${Math.round(val)}%`
+        ctx.fillText(labelText, paddingLeft - 8, y)
+    }
+    
+    // Draw X-Axis Labels (Day 1 to daysCount)
+    ctx.fillStyle = '#64748b'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+    for (let i = 0; i < daysCount; i++) {
+        if (i % 2 === 0 || i === daysCount - 1) {
+            const x = getPlotX(i)
+            ctx.fillText(String(i + 1), x, paddingTop + plotHeight + 6)
+        }
+    }
+    
+    // Draw Standard/Target line (Red dotted line)
+    if (target > 0) {
+        const targetY = getPlotY(target)
+        ctx.strokeStyle = '#ef4444'
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([5, 5])
+        ctx.beginPath()
+        ctx.moveTo(paddingLeft, targetY)
+        ctx.lineTo(canvas.width - paddingRight, targetY)
+        ctx.stroke()
+        ctx.setLineDash([])
+        
+        // Label for Target
+        ctx.fillStyle = '#ef4444'
+        ctx.font = 'bold 10px Inter, Arial, sans-serif'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(`Target: ${target}${needsDen ? '%' : ''}`, paddingLeft + 10, targetY - 4)
+    }
+    
+    // Helper function to draw series
+    const drawSeriesLine = (ctx, data, getX, getY, valAccessor, color, lineWidth, dash = []) => {
+        const points = []
+        for (let i = 0; i < data.length; i++) {
+            const val = valAccessor(data[i])
+            if (val !== null && val !== undefined) {
+                points.push({ x: getX(i), y: getY(val) })
+            }
+        }
+        
+        if (points.length === 0) return
+        
+        ctx.strokeStyle = color
+        ctx.lineWidth = lineWidth
+        if (dash.length > 0) ctx.setLineDash(dash)
+        
+        ctx.beginPath()
+        ctx.moveTo(points[0].x, points[0].y)
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y)
+        }
+        ctx.stroke()
+        ctx.setLineDash([])
+        
+        ctx.fillStyle = color
+        points.forEach(pt => {
+            ctx.beginPath()
+            ctx.arc(pt.x, pt.y, lineWidth + 1, 0, 2 * Math.PI)
+            ctx.fill()
+        })
+    }
+
+    // Draw the series data lines
+    if (needsDen) {
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.denum, '#3b82f6', 2, [4, 4])
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.num, '#10b981', 2, [2, 2])
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.score, '#6366f1', 4, [])
+    } else {
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.score, '#3b82f6', 4, [])
+    }
+    
+    // Draw Legend
+    ctx.font = 'bold 11px Inter, Arial, sans-serif'
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'left'
+    
+    let legendX = paddingLeft
+    const drawLegendItem = (label, color, dash = []) => {
+        ctx.fillStyle = '#1e293b'
+        
+        ctx.strokeStyle = color
+        ctx.lineWidth = 3
+        if (dash.length > 0) ctx.setLineDash(dash)
+        ctx.beginPath()
+        ctx.moveTo(legendX, paddingTop / 2)
+        ctx.lineTo(legendX + 15, paddingTop / 2)
+        ctx.stroke()
+        ctx.setLineDash([])
+        
+        ctx.fillText(label, legendX + 20, paddingTop / 2)
+        legendX += ctx.measureText(label).width + 50
+    }
+    
+    if (needsDen) {
+        drawLegendItem('Denominator', '#3b82f6', [4, 4])
+        drawLegendItem('Numerator', '#10b981', [2, 2])
+        drawLegendItem('Capaian (%)', '#6366f1', [])
+    } else {
+        drawLegendItem('Capaian', '#3b82f6', [])
+    }
+    
+    return canvas.toDataURL('image/png')
+}
+
 const exportRegisterBulanan = async (format) => {
     if (!modalFilters.unit) {
         toast.warning('Silakan pilih unit terlebih dahulu')
@@ -2279,7 +2459,62 @@ const exportRegisterBulanan = async (format) => {
                     }
                 })
 
+                // Generate and draw daily trend chart
+                const dailyChartData = []
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
+                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    
+                    if (r) {
+                        const numVal = r.num !== null && r.num !== undefined ? parseInt(r.num) : null
+                        const denumVal = r.denum !== null && r.denum !== undefined ? parseInt(r.denum) : null
+                        let scoreVal = null
+                        if (needsDenominator(indicator)) {
+                            if (denumVal !== null && denumVal > 0 && numVal !== null) {
+                                scoreVal = parseFloat(((numVal / denumVal) * 100).toFixed(2))
+                            }
+                        } else if (numVal !== null) {
+                            scoreVal = numVal
+                        }
+                        
+                        dailyChartData.push({
+                            num: numVal,
+                            denum: denumVal,
+                            score: scoreVal
+                        })
+                    } else {
+                        dailyChartData.push({
+                            num: null,
+                            denum: null,
+                            score: null
+                        })
+                    }
+                }
+
                 let runningY = doc.lastAutoTable.finalY || 58
+                
+                try {
+                    const chartImg = generateDailyChartImage(indicator, dailyChartData, indicator.standar)
+                    const chartHeight = 45
+                    const chartWidth = 180
+                    
+                    if (runningY + chartHeight + 8 > 275) {
+                        doc.addPage()
+                        runningY = 36
+                    } else {
+                        runningY += 4
+                    }
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setFontSize(8.5)
+                    doc.setTextColor(59, 130, 246)
+                    doc.text('GRAFIK TREN HARIAN', 15, runningY)
+                    
+                    doc.addImage(chartImg, 'PNG', 15, runningY + 2, chartWidth, chartHeight)
+                    runningY = runningY + 2 + chartHeight
+                } catch (chartErr) {
+                    console.error('Failed to draw chart in PDF:', chartErr)
+                }
 
                 // 1. Draw Analysis & Follow-up section (if exists)
                 const indAnalisa = analisaListAll.find(a => a.id_inmut === indicator.id_inmut)
