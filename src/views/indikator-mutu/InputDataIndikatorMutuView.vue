@@ -227,8 +227,20 @@
                     <i class="fas fa-user-check me-1"></i> Validator: -
                 </span>
             </div>
-            <div class="extra-small text-muted fw-bold text-uppercase">
-                Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : 'Analisa') }}
+            <div class="d-flex align-items-center gap-2">
+                <!-- Export Dropdown -->
+                <div class="dropdown position-relative" v-if="filters.unit">
+                    <button class="btn btn-xs btn-outline-danger dropdown-toggle fw-bold" type="button" @click.stop="toggleRegisterExportDropdown" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 8px;">
+                        <i class="fas fa-file-export me-1"></i> Register Harian
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="showRegisterExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 150px; font-size: 0.8rem;">
+                        <li><a class="dropdown-item py-2" @click.prevent="exportRegisterBulanan('pdf')" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
+                        <li><a class="dropdown-item py-2" @click.prevent="exportRegisterBulanan('excel')" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
+                    </ul>
+                </div>
+                <div class="extra-small text-muted fw-bold text-uppercase ms-2 d-none d-sm-block">
+                    Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : 'Analisa') }}
+                </div>
             </div>
         </div>
 
@@ -1250,12 +1262,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import committeeService from '@/services/committeeService'
 import { useAuthStore } from '@/stores/auth'
 import VueApexCharts from 'vue3-apexcharts'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
+import pdfHeader from '@/assets/pdf-header.png'
+import pdfFooter from '@/assets/pdf-footer.png'
+import QRCode from 'qrcode'
 const apexchart = VueApexCharts
 
 const authStore = useAuthStore()
@@ -2778,8 +2796,389 @@ watch(() => analisaFilters.bulan, () => {
     }
 })
 
+// === REGISTER EXPORT CODE ===
+const showRegisterExportDropdown = ref(false)
+const toggleRegisterExportDropdown = () => {
+    showRegisterExportDropdown.value = !showRegisterExportDropdown.value
+}
+
+// Close dropdown on outside click
+const closeDropdownOnOutsideClick = () => {
+    showRegisterExportDropdown.value = false
+}
+
+const formatDateIndoFull = (dateStr) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+}
+
+const formatDateIndoShort = (dateStr) => {
+    if (!dateStr) return '-'
+    const parts = dateStr.slice(0, 10).split('-')
+    if (parts.length !== 3) return dateStr
+    return `${parts[2]}-${parts[1]}-${parts[0]}`
+}
+
+const getValDisplay = (val, originalVal) => {
+    const finalVal = val !== null && val !== undefined ? val : '-'
+    const origVal = originalVal !== null && originalVal !== undefined ? originalVal : '-'
+    
+    if (finalVal === '-' && origVal === '-') return '-'
+    
+    return `${finalVal} (Pra: ${origVal})`
+}
+
+const exportRegisterBulanan = async (format) => {
+    if (!filters.unit) {
+        toast.warning('Silakan pilih unit terlebih dahulu')
+        return
+    }
+    loading.value = true
+    try {
+        const dateStr = monthlyFilterDate.value || filters.tgl_transaksi.slice(0, 7)
+        const [year, month] = dateStr.split('-').map(x => parseInt(x))
+        
+        // Fetch all realisasi records for this month and unit
+        const response = await api.getRealisasi({
+            dep_id: filters.unit,
+            bulan: month,
+            tahun: year
+        })
+        const realisasiList = response.data.data || []
+        
+        if (realisasiList.length === 0) {
+            toast.warning('Tidak ada data entrian harian untuk periode ini.')
+            loading.value = false
+            return
+        }
+
+        const daysInMonth = new Date(year, month, 0).getDate()
+        const unitName = activeUnitInfo.value?.nama_ruang || filters.unit
+
+        if (format === 'excel') {
+            const wb = XLSX.utils.book_new()
+            
+            for (const indicator of indicators.value) {
+                const indRealisasi = realisasiList.filter(r => r.id_inmut === indicator.id_inmut)
+                
+                const wsData = [
+                    ['BUKU REGISTER HARIAN INDIKATOR MUTU'],
+                    [`Unit: ${unitName} | Periode: ${formatMonthYear(dateStr)}`],
+                    [`Indikator: ${indicator.nama_inmut}`],
+                    [],
+                    [
+                        'No', 'Tanggal', 
+                        'Num (Sebelum Validasi)', 'Denum (Sebelum Validasi)', 'Hasil (Sebelum Validasi)', 
+                        'Num (Setelah Validasi)', 'Denum (Setelah Validasi)', 'Hasil (Setelah Validasi)', 
+                        'Penginput', 'Tgl/Jam Input', 'TTE Penginput', 
+                        'Verifikator PIC', 'Tgl/Jam Verif PIC', 'TTE PIC', 
+                        'Verifikator Koor', 'Tgl/Jam Verif Koor', 'TTE Koor'
+                    ]
+                ]
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
+                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    
+                    if (r) {
+                        const numUserStr = r.num_user !== null && r.num_user !== undefined ? r.num_user : '-'
+                        const denumUserStr = needsDenominator(indicator) ? (r.denum_user !== null && r.denum_user !== undefined ? r.denum_user : '-') : '-'
+                        
+                        let scoreValUser = '-'
+                        if (needsDenominator(indicator)) {
+                            if (r.denum_user > 0) {
+                                scoreValUser = `${Math.round((r.num_user / r.denum_user) * 100 * 100) / 100}%`
+                            }
+                        } else if (r.num_user !== null && r.num_user !== undefined) {
+                            scoreValUser = `${r.num_user}`
+                        }
+
+                        const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
+                        const denumStr = needsDenominator(indicator) ? (r.denum !== null && r.denum !== undefined ? r.denum : '-') : '-'
+                        
+                        let scoreVal = '-'
+                        if (needsDenominator(indicator)) {
+                            if (r.denum > 0) {
+                                scoreVal = `${Math.round((r.num / r.denum) * 100 * 100) / 100}%`
+                            }
+                        } else if (r.num !== null && r.num !== undefined) {
+                            scoreVal = `${r.num}`
+                        }
+
+                        const tteInput = r.nik_input ? `TTE-ELEKTRONIK-PENGINPUT-${r.nik_input}` : '-'
+                        const ttePic = r.pic_verified_by ? `TTE-ELEKTRONIK-PIC-${r.pic_verified_by}` : '-'
+                        const tteKoor = r.koor_verified_by ? `TTE-ELEKTRONIK-KOOR-${r.koor_verified_by}` : '-'
+
+                        wsData.push([
+                            d,
+                            formatDateIndoShort(targetDateStr),
+                            numUserStr,
+                            denumUserStr,
+                            scoreValUser,
+                            numStr,
+                            denumStr,
+                            scoreVal,
+                            r.penginput?.nama || r.nik_input || '-',
+                            r.tanggal_input ? formatDateTime(r.tanggal_input) : '-',
+                            tteInput,
+                            r.pic_verified?.nama || r.pic_verified_by || '-',
+                            r.pic_verified_at ? formatDateTime(r.pic_verified_at) : '-',
+                            ttePic,
+                            r.koor_verified?.nama || r.koor_verified_by || '-',
+                            r.koor_verified_at ? formatDateTime(r.koor_verified_at) : '-',
+                            tteKoor
+                        ])
+                    } else {
+                        wsData.push([
+                            d,
+                            formatDateIndoShort(targetDateStr),
+                            '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'
+                        ])
+                    }
+                }
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData)
+                // Limit sheet name to 30 characters
+                const sheetName = indicator.nama_inmut.replace(/[\[\]\*\?:\/\\]/g, '').slice(0, 30)
+                XLSX.utils.book_append_sheet(wb, ws, sheetName)
+            }
+            
+            XLSX.writeFile(wb, `Buku_Register_Harian_${unitName.replace(/\s+/g, '_')}_${dateStr}.xlsx`)
+            toast.success('Buku Register Harian Excel berhasil diunduh')
+
+        } else if (format === 'pdf') {
+            const doc = new jsPDF('p', 'mm', 'a4')
+            const headerImg = await loadImage(pdfHeader)
+            const footerImg = await loadImage(pdfFooter)
+            
+            let firstPage = true
+
+            for (const indicator of indicators.value) {
+                if (!firstPage) {
+                    doc.addPage()
+                }
+                firstPage = false
+
+                const indRealisasi = realisasiList.filter(r => r.id_inmut === indicator.id_inmut)
+                
+                // Pre-generate QR codes for this indicator's daily logs
+                const qrCache = {}
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
+                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    
+                    if (r) {
+                        qrCache[d] = {}
+                        if (r.nik_input) {
+                            const name = r.penginput?.nama || r.nik_input
+                            const txt = `TTE Penginput\nNama: ${name}\nNIK: ${r.nik_input}\nTanggal: ${formatDateTime(r.tanggal_input)}`
+                            qrCache[d].inputQR = await generateQRCode(txt)
+                        }
+                        if (r.pic_verified_by) {
+                            const name = r.pic_verified?.nama || r.pic_verified_by
+                            const txt = `TTE PIC Verifikator\nNama: ${name}\nNIK: ${r.pic_verified_by}\nTanggal: ${formatDateTime(r.pic_verified_at)}`
+                            qrCache[d].picQR = await generateQRCode(txt)
+                        }
+                        if (r.koor_verified_by) {
+                            const name = r.koor_verified?.nama || r.koor_verified_by
+                            const txt = `TTE Koor Verifikator\nNama: ${name}\nNIK: ${r.koor_verified_by}\nTanggal: ${formatDateTime(r.koor_verified_at)}`
+                            qrCache[d].koorQR = await generateQRCode(txt)
+                        }
+                    }
+                }
+
+                // Title Section
+                doc.setFont('Helvetica', 'bold')
+                doc.setFontSize(10)
+                doc.setTextColor(0, 0, 0)
+                doc.text('BUKU REGISTER HARIAN INDIKATOR MUTU', 105, 36, { align: 'center' })
+                
+                doc.setFontSize(8.5)
+                doc.text(`Indikator : ${indicator.nama_inmut}`, 15, 44)
+                doc.setFont('Helvetica', 'normal')
+                doc.text(`Unit Kerja: ${unitName}`, 15, 49)
+                doc.text(`Periode   : ${formatMonthYear(dateStr)}`, 15, 54)
+
+                const tableData = []
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
+                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+
+                    if (r) {
+                        const numUserStr = r.num_user !== null && r.num_user !== undefined ? r.num_user : '-'
+                        const denumUserStr = needsDenominator(indicator) ? (r.denum_user !== null && r.denum_user !== undefined ? r.denum_user : '-') : '-'
+                        
+                        let scoreValUser = '-'
+                        if (needsDenominator(indicator)) {
+                            if (r.denum_user > 0) {
+                                scoreValUser = `${Math.round((r.num_user / r.denum_user) * 100 * 100) / 100}%`
+                            }
+                        } else if (r.num_user !== null && r.num_user !== undefined) {
+                            scoreValUser = `${r.num_user}`
+                        }
+
+                        const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
+                        const denumStr = needsDenominator(indicator) ? (r.denum !== null && r.denum !== undefined ? r.denum : '-') : '-'
+                        
+                        let scoreVal = '-'
+                        if (needsDenominator(indicator)) {
+                            if (r.denum > 0) {
+                                scoreVal = `${Math.round((r.num / r.denum) * 100 * 100) / 100}%`
+                            }
+                        } else if (r.num !== null && r.num !== undefined) {
+                            scoreVal = `${r.num}`
+                        }
+
+                        const inputName = r.penginput?.nama || r.nik_input || '-'
+                        const inputTime = r.tanggal_input ? formatDateTime(r.tanggal_input).slice(11) : '-'
+                        const inputDate = r.tanggal_input ? formatDateTime(r.tanggal_input).slice(0, 10) : '-'
+                        const inputText = r.nik_input ? `${inputName}\nNIK: ${r.nik_input}\n${inputDate} ${inputTime}` : '-'
+
+                        const picName = r.pic_verified?.nama || r.pic_verified_by || '-'
+                        const picTime = r.pic_verified_at ? formatDateTime(r.pic_verified_at).slice(11) : '-'
+                        const picDate = r.pic_verified_at ? formatDateTime(r.pic_verified_at).slice(0, 10) : '-'
+                        const picTextStr = r.pic_verified_by ? `${picName}\nNIK: ${r.pic_verified_by}\n${picDate} ${picTime}` : '-'
+
+                        const koorName = r.koor_verified?.nama || r.koor_verified_by || '-'
+                        const koorTime = r.koor_verified_at ? formatDateTime(r.koor_verified_at).slice(11) : '-'
+                        const koorDate = r.koor_verified_at ? formatDateTime(r.koor_verified_at).slice(0, 10) : '-'
+                        const koorTextStr = r.koor_verified_by ? `${koorName}\nNIK: ${r.koor_verified_by}\n${koorDate} ${koorTime}` : '-'
+
+                        tableData.push([
+                            d,
+                            formatDateIndoShort(targetDateStr),
+                            numUserStr,
+                            denumUserStr,
+                            scoreValUser,
+                            numStr,
+                            denumStr,
+                            scoreVal,
+                            inputText,
+                            picTextStr,
+                            koorTextStr
+                        ])
+                    } else {
+                        tableData.push([
+                            d,
+                            formatDateIndoShort(targetDateStr),
+                            '-', '-', '-', '-', '-', '-', '-', '-', '-'
+                        ])
+                    }
+                }
+
+                autoTable(doc, {
+                    startY: 58,
+                    margin: { left: 15, right: 15, bottom: 20 },
+                    tableWidth: 180,
+                    head: [
+                        [
+                            { content: 'NO', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+                            { content: 'TANGGAL', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+                            { content: 'SEBELUM VALIDASI', colSpan: 3, styles: { halign: 'center' } },
+                            { content: 'SETELAH VALIDASI', colSpan: 3, styles: { halign: 'center' } },
+                            { content: 'PENGINPUT', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+                            { content: 'VERIFIKASI PIC', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
+                            { content: 'VERIFIKASI KOOR', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }
+                        ],
+                        [
+                            { content: 'NUM', styles: { halign: 'center' } },
+                            { content: 'DEN', styles: { halign: 'center' } },
+                            { content: 'HASIL', styles: { halign: 'center' } },
+                            { content: 'NUM', styles: { halign: 'center' } },
+                            { content: 'DEN', styles: { halign: 'center' } },
+                            { content: 'HASIL', styles: { halign: 'center' } }
+                        ]
+                    ],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 7 },
+                    styles: { fontSize: 6, cellPadding: { top: 2, bottom: 2, left: 1, right: 1 }, font: 'Helvetica', valign: 'middle' },
+                    columnStyles: {
+                        0: { cellWidth: 6, halign: 'center', fontStyle: 'bold' },
+                        1: { cellWidth: 14, halign: 'center' },
+                        2: { cellWidth: 8, halign: 'center' },
+                        3: { cellWidth: 10, halign: 'center' },
+                        4: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
+                        5: { cellWidth: 8, halign: 'center' },
+                        6: { cellWidth: 10, halign: 'center' },
+                        7: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
+                        8: { cellWidth: 34, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } },
+                        9: { cellWidth: 34, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } },
+                        10: { cellWidth: 36, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } }
+                    },
+                    didDrawCell: (data) => {
+                        if (data.cell.section === 'body') {
+                            const dIndex = data.row.index + 1
+                            const cache = qrCache[dIndex]
+                            if (cache) {
+                                const qrSize = 8
+                                const cell = data.cell
+                                const qrY = cell.y + (cell.height - qrSize) / 2
+                                if (data.column.index === 8 && cache.inputQR) {
+                                    doc.addImage(cache.inputQR, 'PNG', cell.x + cell.width - 10, qrY, qrSize, qrSize)
+                                } else if (data.column.index === 9 && cache.picQR) {
+                                    doc.addImage(cache.picQR, 'PNG', cell.x + cell.width - 10, qrY, qrSize, qrSize)
+                                } else if (data.column.index === 10 && cache.koorQR) {
+                                    doc.addImage(cache.koorQR, 'PNG', cell.x + cell.width - 10, qrY, qrSize, qrSize)
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+
+            // Draw header and footer on all pages
+            const pageCount = doc.internal.getNumberOfPages()
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i)
+                if (headerImg) {
+                    doc.addImage(headerImg, 'PNG', 0, 0, 210, 27.01)
+                }
+                if (footerImg) {
+                    doc.addImage(footerImg, 'PNG', 0, 285.82, 210, 11.18) // A4 portrait height is 297mm. 297 - 11.18 = 285.82
+                }
+            }
+
+            const pdfBlob = doc.output('blob')
+            const url = URL.createObjectURL(pdfBlob)
+            window.open(url, '_blank')
+            toast.success('Buku Register Harian PDF berhasil dibuka')
+        }
+    } catch (error) {
+        console.error('Export failed:', error)
+        toast.error('Gagal mengekspor Buku Register Harian')
+    } finally {
+        loading.value = false
+    }
+}
+
+const loadImage = (src) => {
+    return new Promise((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+        img.src = src
+    })
+}
+
+const generateQRCode = async (text) => {
+    try {
+        return await QRCode.toDataURL(text, { width: 100, margin: 1 })
+    } catch (err) {
+        console.error('Error generating QR code:', err)
+        return null
+    }
+}
+
 onMounted(() => {
     fetchUnits()
+    window.addEventListener('click', closeDropdownOnOutsideClick)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('click', closeDropdownOnOutsideClick)
 })
 </script>
 

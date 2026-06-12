@@ -1431,10 +1431,10 @@ const exportToPDF = async (item) => {
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
       if (headerImg) {
-        doc.addImage(headerImg, 'PNG', 0, 0, 210, 27.78)
+        doc.addImage(headerImg, 'PNG', 0, 0, 210, 27.01)
       }
       if (footerImg) {
-        doc.addImage(footerImg, 'PNG', 0, 285.45, 210, 11.55)
+        doc.addImage(footerImg, 'PNG', 0, 285.82, 210, 11.18)
       }
     }
 
