@@ -1978,6 +1978,19 @@ const exportRegisterBulanan = async (format) => {
             tahun: year
         })
         const realisasiList = response.data.data || []
+
+        // Fetch all analysis records for this month and unit
+        let analisaListAll = []
+        try {
+            const getAnalisaRes = await api.getAnalisa({
+                dep_id: modalFilters.unit,
+                bulan: dateStr,
+                limit: 100
+            })
+            analisaListAll = getAnalisaRes.data.success ? (getAnalisaRes.data.data?.data || getAnalisaRes.data.data || []) : []
+        } catch (e) {
+            console.error('Failed to fetch analysis records:', e)
+        }
         
         if (realisasiList.length === 0) {
             toast.warning('Tidak ada data entrian harian untuk periode ini.')
@@ -2256,6 +2269,67 @@ const exportRegisterBulanan = async (format) => {
                         }
                     }
                 })
+
+                // Draw Analysis & Recommendation section (if exists)
+                const indAnalisa = analisaListAll.find(a => a.id_inmut === indicator.id_inmut)
+                if (indAnalisa && (indAnalisa.analisa || indAnalisa.tindak_lanjut)) {
+                    let currentY = doc.lastAutoTable.finalY || 58
+                    
+                    const boxWidth = 180
+                    const boxPadding = 4
+                    const labelHeight = 4
+                    const spaceBetween = 3
+                    
+                    const txtAnalisa = indAnalisa.analisa || '-'
+                    const splitAnalisa = doc.splitTextToSize(txtAnalisa, boxWidth - (boxPadding * 2))
+                    const heightAnalisa = (splitAnalisa.length * 3.5)
+                    
+                    const txtTindakLanjut = indAnalisa.tindak_lanjut || '-'
+                    const splitTindakLanjut = doc.splitTextToSize(txtTindakLanjut, boxWidth - (boxPadding * 2))
+                    const heightTindakLanjut = (splitTindakLanjut.length * 3.5)
+                    
+                    const totalBoxHeight = (boxPadding * 2) + labelHeight + heightAnalisa + spaceBetween + labelHeight + heightTindakLanjut
+                    
+                    if (currentY + totalBoxHeight + 8 > 280) {
+                        doc.addPage()
+                        currentY = 36
+                    } else {
+                        currentY += 8
+                    }
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setFontSize(8.5)
+                    doc.setTextColor(67, 94, 190)
+                    doc.text('ANALISIS & TINDAK LANJUT BULANAN', 15, currentY)
+                    
+                    const boxStartY = currentY + 2
+                    
+                    doc.setDrawColor(226, 232, 240)
+                    doc.setFillColor(248, 250, 252)
+                    doc.rect(15, boxStartY, boxWidth, totalBoxHeight, 'FD')
+                    
+                    let textY = boxStartY + boxPadding + 3
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setFontSize(7.5)
+                    doc.setTextColor(51, 65, 85)
+                    doc.text('Analisis Capaian:', 15 + boxPadding, textY)
+                    textY += 4
+                    
+                    doc.setFont('Helvetica', 'normal')
+                    doc.setTextColor(15, 23, 42)
+                    doc.text(splitAnalisa, 15 + boxPadding, textY)
+                    textY += heightAnalisa + spaceBetween
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setTextColor(51, 65, 85)
+                    doc.text('Rencana Tindak Lanjut (Rekomendasi):', 15 + boxPadding, textY)
+                    textY += 4
+                    
+                    doc.setFont('Helvetica', 'normal')
+                    doc.setTextColor(15, 23, 42)
+                    doc.text(splitTindakLanjut, 15 + boxPadding, textY)
+                }
             }
 
             const pageCount = doc.internal.getNumberOfPages()
