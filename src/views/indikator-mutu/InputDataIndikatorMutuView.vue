@@ -2860,6 +2860,8 @@ const exportRegisterBulanan = async (format) => {
         } catch (e) {
             console.error('Failed to fetch analysis records:', e)
         }
+
+        // Feedback is loaded directly with getAnalisa records
         
         if (realisasiList.length === 0) {
             toast.warning('Tidak ada data entrian harian untuk periode ini.')
@@ -3141,11 +3143,11 @@ const exportRegisterBulanan = async (format) => {
                     }
                 })
 
-                // Draw Analysis & Recommendation section (if exists)
+                let runningY = doc.lastAutoTable.finalY || 58
+
+                // 1. Draw Analysis & Follow-up section (if exists)
                 const indAnalisa = analisaListAll.find(a => a.id_inmut === indicator.id_inmut)
                 if (indAnalisa && (indAnalisa.analisa || indAnalisa.tindak_lanjut)) {
-                    let currentY = doc.lastAutoTable.finalY || 58
-                    
                     const boxWidth = 180
                     const boxPadding = 4
                     const labelHeight = 4
@@ -3161,19 +3163,19 @@ const exportRegisterBulanan = async (format) => {
                     
                     const totalBoxHeight = (boxPadding * 2) + labelHeight + heightAnalisa + spaceBetween + labelHeight + heightTindakLanjut
                     
-                    if (currentY + totalBoxHeight + 8 > 280) {
+                    if (runningY + totalBoxHeight + 8 > 280) {
                         doc.addPage()
-                        currentY = 36
+                        runningY = 36
                     } else {
-                        currentY += 8
+                        runningY += 8
                     }
                     
                     doc.setFont('Helvetica', 'bold')
                     doc.setFontSize(8.5)
                     doc.setTextColor(67, 94, 190)
-                    doc.text('ANALISIS & TINDAK LANJUT BULANAN', 15, currentY)
+                    doc.text('ANALISIS & TINDAK LANJUT BULANAN', 15, runningY)
                     
-                    const boxStartY = currentY + 2
+                    const boxStartY = runningY + 2
                     
                     doc.setDrawColor(226, 232, 240)
                     doc.setFillColor(248, 250, 252)
@@ -3194,12 +3196,91 @@ const exportRegisterBulanan = async (format) => {
                     
                     doc.setFont('Helvetica', 'bold')
                     doc.setTextColor(51, 65, 85)
-                    doc.text('Rencana Tindak Lanjut (Rekomendasi):', 15 + boxPadding, textY)
+                    doc.text('Rencana Tindak Lanjut:', 15 + boxPadding, textY)
                     textY += 4
                     
                     doc.setFont('Helvetica', 'normal')
                     doc.setTextColor(15, 23, 42)
                     doc.text(splitTindakLanjut, 15 + boxPadding, textY)
+                    
+                    runningY = boxStartY + totalBoxHeight
+                }
+
+                // 2. Draw Supervisi & Rekomendasi section (if exists)
+                let hasSupervisiSection = false
+                let supervisiText = '-'
+                let rekomendasiText = '-'
+                
+                if (indAnalisa && indAnalisa.feedback) {
+                    const fb = indAnalisa.feedback
+                    const fbSupervisi = stripHtml(fb.supervisi).trim()
+                    const fbRekomendasi = stripHtml(fb.rekomendasi).trim()
+                    
+                    if (fbSupervisi && fbSupervisi !== '-' && fbSupervisi !== '') {
+                        supervisiText = fbSupervisi
+                    }
+                    if (fbRekomendasi && fbRekomendasi !== '-' && fbRekomendasi !== '') {
+                        rekomendasiText = fbRekomendasi
+                    }
+                    
+                    if (supervisiText !== '-' || rekomendasiText !== '-') {
+                        hasSupervisiSection = true
+                    }
+                }
+                
+                if (hasSupervisiSection) {
+                    const boxWidth = 180
+                    const boxPadding = 4
+                    const labelHeight = 4
+                    const spaceBetween = 3
+                    
+                    const splitSupervisi = doc.splitTextToSize(supervisiText, boxWidth - (boxPadding * 2))
+                    const heightSupervisi = (splitSupervisi.length * 3.5)
+                    
+                    const splitRekomendasi = doc.splitTextToSize(rekomendasiText, boxWidth - (boxPadding * 2))
+                    const heightRekomendasi = (splitRekomendasi.length * 3.5)
+                    
+                    const totalBoxHeight = (boxPadding * 2) + labelHeight + heightSupervisi + spaceBetween + labelHeight + heightRekomendasi
+                    
+                    if (runningY + totalBoxHeight + 8 > 280) {
+                        doc.addPage()
+                        runningY = 36
+                    } else {
+                        runningY += 8
+                    }
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setFontSize(8.5)
+                    doc.setTextColor(16, 185, 129)
+                    doc.text('SUPERVISI & REKOMENDASI MUTU UNIT', 15, runningY)
+                    
+                    const boxStartY = runningY + 2
+                    
+                    doc.setDrawColor(209, 250, 229)
+                    doc.setFillColor(240, 253, 250)
+                    doc.rect(15, boxStartY, boxWidth, totalBoxHeight, 'FD')
+                    
+                    let textY = boxStartY + boxPadding + 3
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setFontSize(7.5)
+                    doc.setTextColor(51, 65, 85)
+                    doc.text('Hasil Supervisi Mutu (Temuan):', 15 + boxPadding, textY)
+                    textY += 4
+                    
+                    doc.setFont('Helvetica', 'normal')
+                    doc.setTextColor(15, 23, 42)
+                    doc.text(splitSupervisi, 15 + boxPadding, textY)
+                    textY += heightSupervisi + spaceBetween
+                    
+                    doc.setFont('Helvetica', 'bold')
+                    doc.setTextColor(51, 65, 85)
+                    doc.text('Rekomendasi Tindak Lanjut:', 15 + boxPadding, textY)
+                    textY += 4
+                    
+                    doc.setFont('Helvetica', 'normal')
+                    doc.setTextColor(15, 23, 42)
+                    doc.text(splitRekomendasi, 15 + boxPadding, textY)
                 }
             }
 
