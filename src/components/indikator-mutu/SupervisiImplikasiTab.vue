@@ -168,16 +168,46 @@
                   class="style-chooser style-chooser-sm"
                 />
               </div>
-              <div class="col-md-6 text-start mt-2">
-                <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.8rem;">Supervisor (Komite Mutu)</label>
-                <v-select 
-                  :options="committeeMembers" 
-                  label="nama" 
-                  v-model="form.nik_supervisor"
-                  :reduce="m => m.nik"
-                  placeholder="Pilih Supervisor Komite Mutu..."
-                  class="style-chooser style-chooser-sm"
-                />
+              <!-- 3 Supervisor Selectors per Category -->
+              <div class="col-12 mt-2">
+                <div class="p-2 bg-light border border-light-subtle rounded-3">
+                  <div class="fw-bold text-secondary mb-2" style="font-size: 0.8rem;"><i class="fas fa-users me-1"></i> Supervisor per Kategori (Komite Mutu)</div>
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.78rem;"><i class="fas fa-chart-line me-1 text-primary"></i> Indikator Mutu</label>
+                      <v-select 
+                        :options="committeeMembers" 
+                        label="nama" 
+                        v-model="form.nik_supervisor_mutu"
+                        :reduce="m => m.nik"
+                        placeholder="Pilih Supervisor Mutu..."
+                        class="style-chooser style-chooser-sm"
+                      />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.78rem;"><i class="fas fa-user-shield me-1 text-success"></i> Keselamatan Pasien</label>
+                      <v-select 
+                        :options="committeeMembers" 
+                        label="nama" 
+                        v-model="form.nik_supervisor_kp"
+                        :reduce="m => m.nik"
+                        placeholder="Pilih Supervisor KP..."
+                        class="style-chooser style-chooser-sm"
+                      />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.78rem;"><i class="fas fa-exclamation-triangle me-1 text-warning"></i> Manajemen Risiko</label>
+                      <v-select 
+                        :options="committeeMembers" 
+                        label="nama" 
+                        v-model="form.nik_supervisor_mr"
+                        :reduce="m => m.nik"
+                        placeholder="Pilih Supervisor MR..."
+                        class="style-chooser style-chooser-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="col-md-3 text-start mt-2">
                 <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.8rem;">Periode Bulan</label>
@@ -211,7 +241,7 @@
                       {{ d.unsur_disupervisi }}
                     </td>
                     <td class="text-center">
-                      <div class="d-flex justify-content-center gap-1">
+                      <div class="d-flex justify-content-center gap-1 flex-wrap">
                         <button 
                           type="button" 
                           class="btn btn-sm fw-bold btn-toggle" 
@@ -228,10 +258,35 @@
                         >
                           Tidak
                         </button>
+                        <button 
+                          type="button" 
+                          class="btn btn-sm fw-bold btn-toggle" 
+                          :class="d.jawaban === 'Belum Isi' ? 'btn-secondary text-white shadow-sm' : 'btn-outline-secondary'"
+                          @click="d.jawaban = 'Belum Isi'"
+                        >
+                          -
+                        </button>
                       </div>
                     </td>
                     <td>
                       <input type="text" class="form-control form-control-sm input-premium" v-model="d.temuan_masalah" placeholder="Ketik temuan...">
+                    </td>
+                  </tr>
+
+                  <!-- Rekomendasi Indikator Mutu -->
+                  <tr class="table-light">
+                    <td colspan="4" class="p-2 text-start">
+                      <div class="d-flex flex-column">
+                        <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.8rem;">
+                          <i class="fas fa-comment-medical text-primary me-1"></i> Rekomendasi Indikator Mutu
+                        </label>
+                        <textarea 
+                          class="form-control form-control-sm input-premium" 
+                          v-model="form.rekomendasi_mutu" 
+                          rows="2" 
+                          placeholder="Ketik rekomendasi tindak lanjut indikator mutu di sini..."
+                        ></textarea>
+                      </div>
                     </td>
                   </tr>
 
@@ -245,7 +300,7 @@
                       {{ d.unsur_disupervisi }}
                     </td>
                     <td class="text-center">
-                      <div class="d-flex justify-content-center gap-1">
+                      <div class="d-flex justify-content-center gap-1 flex-wrap">
                         <button 
                           type="button" 
                           class="btn btn-sm fw-bold btn-toggle" 
@@ -262,10 +317,35 @@
                         >
                           Tidak
                         </button>
+                        <button 
+                          type="button" 
+                          class="btn btn-sm fw-bold btn-toggle" 
+                          :class="d.jawaban === 'Belum Isi' ? 'btn-secondary text-white shadow-sm' : 'btn-outline-secondary'"
+                          @click="d.jawaban = 'Belum Isi'"
+                        >
+                          -
+                        </button>
                       </div>
                     </td>
                     <td>
                       <input type="text" class="form-control form-control-sm input-premium" v-model="d.temuan_masalah" placeholder="Ketik temuan...">
+                    </td>
+                  </tr>
+
+                  <!-- Rekomendasi Keselamatan Pasien -->
+                  <tr class="table-light">
+                    <td colspan="4" class="p-2 text-start">
+                      <div class="d-flex flex-column">
+                        <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.8rem;">
+                          <i class="fas fa-comment-medical text-success me-1"></i> Rekomendasi Keselamatan Pasien
+                        </label>
+                        <textarea 
+                          class="form-control form-control-sm input-premium" 
+                          v-model="form.rekomendasi_kp" 
+                          rows="2" 
+                          placeholder="Ketik rekomendasi tindak lanjut keselamatan pasien di sini..."
+                        ></textarea>
+                      </div>
                     </td>
                   </tr>
 
@@ -279,7 +359,7 @@
                       {{ d.unsur_disupervisi }}
                     </td>
                     <td class="text-center">
-                      <div class="d-flex justify-content-center gap-1">
+                      <div class="d-flex justify-content-center gap-1 flex-wrap">
                         <button 
                           type="button" 
                           class="btn btn-sm fw-bold btn-toggle" 
@@ -296,27 +376,39 @@
                         >
                           Tidak
                         </button>
+                        <button 
+                          type="button" 
+                          class="btn btn-sm fw-bold btn-toggle" 
+                          :class="d.jawaban === 'Belum Isi' ? 'btn-secondary text-white shadow-sm' : 'btn-outline-secondary'"
+                          @click="d.jawaban = 'Belum Isi'"
+                        >
+                          -
+                        </button>
                       </div>
                     </td>
                     <td>
                       <input type="text" class="form-control form-control-sm input-premium" v-model="d.temuan_masalah" placeholder="Ketik temuan...">
                     </td>
                   </tr>
+
+                  <!-- Rekomendasi Manajemen Risiko -->
+                  <tr class="table-light">
+                    <td colspan="4" class="p-2 text-start">
+                      <div class="d-flex flex-column">
+                        <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.8rem;">
+                          <i class="fas fa-comment-medical text-warning me-1"></i> Rekomendasi Manajemen Risiko
+                        </label>
+                        <textarea 
+                          class="form-control form-control-sm input-premium" 
+                          v-model="form.rekomendasi_mr" 
+                          rows="2" 
+                          placeholder="Ketik rekomendasi tindak lanjut manajemen risiko di sini..."
+                        ></textarea>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
-            </div>
-
-            <!-- Rekomendasi Section -->
-            <div class="mt-3 p-3 bg-light rounded-3 text-start border border-light-subtle">
-              <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.85rem;">
-                <i class="fas fa-comment-medical text-primary me-1"></i> Rekomendasi
-              </label>
-              <textarea 
-                class="form-control input-premium" 
-                v-model="form.rekomendasi" 
-                rows="3" 
-                placeholder="Ketik rekomendasi tindak lanjut hasil supervisi..."
-              ></textarea>
             </div>
           </div>
 
@@ -463,6 +555,8 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import logoSquare from '@/assets/logo.png'
 import logoLarsi from '@/assets/logo-larsi.png'
+import pdfHeader from '@/assets/pdf-header.png'
+import pdfFooter from '@/assets/pdf-footer.png'
 import QRCode from 'qrcode'
 import { useAuthStore } from '@/stores/auth'
 import { pegawaiService } from '@/services/pegawaiService'
@@ -472,6 +566,7 @@ const toast = useToast()
 const authStore = useAuthStore()
 const staffList = ref([])
 const committeeMembers = ref([])
+const ketuaPmkp = ref({ nik: '1.205.0818', nama: 'dr. Aci Dwi Lestari' })
 
 const loadImage = (src) => {
   return new Promise((resolve) => {
@@ -532,6 +627,12 @@ const form = reactive({
   status: 'final',
   rekomendasi: '',
   nik_supervisor: null,
+  nik_supervisor_mutu: null,
+  nik_supervisor_kp: null,
+  nik_supervisor_mr: null,
+  rekomendasi_mutu: '',
+  rekomendasi_kp: '',
+  rekomendasi_mr: '',
   details: []
 })
 
@@ -733,6 +834,19 @@ const fetchCommitteeMembers = async () => {
   try {
     const response = await committeeService.getAllMembers()
     if (response.data.success) {
+      // Find PMKP Ketua
+      const pmkpKetua = response.data.data.find(member => {
+        const komiteNama = member.komite?.nama?.toUpperCase() || ''
+        const jabatanNama = member.jabatan?.nama?.toUpperCase() || ''
+        return komiteNama.includes('PMKP') && jabatanNama === 'KETUA'
+      })
+      if (pmkpKetua) {
+        ketuaPmkp.value = {
+          nik: pmkpKetua.nik,
+          nama: pmkpKetua.pegawai?.nama || pmkpKetua.nik
+        }
+      }
+
       committeeMembers.value = response.data.data
         .filter(member => {
           const komiteNama = member.komite?.nama?.toUpperCase() || ''
@@ -789,6 +903,12 @@ const openCreateModal = () => {
   form.status = 'final'
   form.rekomendasi = ''
   form.nik_supervisor = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik || null
+  form.nik_supervisor_mutu = null
+  form.nik_supervisor_kp = null
+  form.nik_supervisor_mr = null
+  form.rekomendasi_mutu = ''
+  form.rekomendasi_kp = ''
+  form.rekomendasi_mr = ''
   
   const sourceElements = templateElements.value.length > 0 ? templateElements.value : defaultElements
   
@@ -796,7 +916,7 @@ const openCreateModal = () => {
     no_unsur: el.no_unsur,
     kategori: el.kategori,
     unsur_disupervisi: el.unsur_disupervisi,
-    jawaban: 'Ya',
+    jawaban: 'Belum Isi',
     temuan_masalah: '',
     isEditingText: false
   }))
@@ -818,6 +938,12 @@ const openEditModal = async (item) => {
       form.status = data.status
       form.rekomendasi = data.rekomendasi || ''
       form.nik_supervisor = data.nik_supervisor || null
+      form.nik_supervisor_mutu = data.nik_supervisor_mutu || null
+      form.nik_supervisor_kp = data.nik_supervisor_kp || null
+      form.nik_supervisor_mr = data.nik_supervisor_mr || null
+      form.rekomendasi_mutu = data.rekomendasi_mutu || ''
+      form.rekomendasi_kp = data.rekomendasi_kp || ''
+      form.rekomendasi_mr = data.rekomendasi_mr || ''
       form.details = data.detail.map(d => ({
         no_unsur: d.no_unsur,
         kategori: d.kategori,
@@ -862,6 +988,12 @@ const saveSupervisi = async () => {
       status: form.status,
       rekomendasi: form.rekomendasi,
       nik_supervisor: form.nik_supervisor,
+      nik_supervisor_mutu: form.nik_supervisor_mutu,
+      nik_supervisor_kp: form.nik_supervisor_kp,
+      nik_supervisor_mr: form.nik_supervisor_mr,
+      rekomendasi_mutu: form.rekomendasi_mutu,
+      rekomendasi_kp: form.rekomendasi_kp,
+      rekomendasi_mr: form.rekomendasi_mr,
       details: form.details
     }
 
@@ -960,32 +1092,9 @@ const exportToPDF = async (item) => {
 
     const doc = new jsPDF('p', 'mm', 'a4')
     
-    // Header Kop
-    const logoImg = await loadImage(logoSquare)
-    if (logoImg) {
-      doc.addImage(logoImg, 'PNG', 15, 8, 15, 15)
-    }
-
-    const larsiImg = await loadImage(logoLarsi)
-    if (larsiImg) {
-      const larsiHeight = 12
-      const larsiWidth = larsiHeight * (larsiImg.naturalWidth / larsiImg.naturalHeight)
-      doc.addImage(larsiImg, 'PNG', 195 - larsiWidth, 9, larsiWidth, larsiHeight)
-    }
-
-    doc.setFont('Helvetica', 'bold')
-    doc.setFontSize(11)
-    doc.text('RSIA AISYIYAH PEKAJANGAN PEKALONGAN', 33, 12)
-    
-    doc.setFont('Helvetica', 'normal')
-    doc.setFontSize(7.5)
-    doc.setTextColor(100, 116, 139)
-    doc.text('Jl. Raya Pekajangan No. 612, Pekajangan, Kec. Kedungwuni, Pekalongan, Jawa Tengah 51151', 33, 17)
-    doc.text('Telp: (0285) 785909 | Email: rsiapeka@yahoo.co.id', 33, 21)
-    
-    doc.setDrawColor(0, 0, 0)
-    doc.setLineWidth(0.5)
-    doc.line(15, 27, 195, 27) // Line separator
+    // Load Header and Footer templates
+    const headerImg = await loadImage(pdfHeader)
+    const footerImg = await loadImage(pdfFooter)
 
     // Title Section below KOP
     doc.setTextColor(0, 0, 0)
@@ -1009,133 +1118,330 @@ const exportToPDF = async (item) => {
     doc.text('Tanggal Penilaian', 120, 47)
     doc.text(`: ${formatDate(detailItem.tgl_supervisi)}`, 150, 47)
 
-    // Table Data
-    const tableData = []
+    // Generate QR codes
+    const supervisorMutuName = detailItem.supervisor_mutu?.nama || detailItem.supervisorMutu?.nama || '-'
+    const supervisorKpName = detailItem.supervisor_kp?.nama || detailItem.supervisorKp?.nama || '-'
+    const supervisorMrName = detailItem.supervisor_mr?.nama || detailItem.supervisorMr?.nama || '-'
+    const koordinatorName = detailItem.koordinator?.nama || detailItem.nama_responden || '-'
+
+    const supervisorMutuQRText = `Ditandatangani secara elektronik oleh:\nNama: ${supervisorMutuName}\nJabatan: Supervisor Indikator Mutu\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const supervisorKpQRText = `Ditandatangani secara elektronik oleh:\nNama: ${supervisorKpName}\nJabatan: Supervisor Keselamatan Pasien\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const supervisorMrQRText = `Ditandatangani secara elektronik oleh:\nNama: ${supervisorMrName}\nJabatan: Supervisor Manajemen Risiko\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const respondentQRText = `Ditandatangani secara elektronik oleh:\nNama: ${koordinatorName}\nJabatan: Kepala Unit\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+
+    const supervisorMutuQR = await generateQRCode(supervisorMutuQRText)
+    const supervisorKpQR = await generateQRCode(supervisorKpQRText)
+    const supervisorMrQR = await generateQRCode(supervisorMrQRText)
+    const respondentQR = await generateQRCode(respondentQRText)
+
+    const ketuaPmkpName = ketuaPmkp.value.nama || 'dr. Aci Dwi Lestari'
+    const ketuaPmkpQRText = `Ditandatangani secara elektronik oleh:\nNama: ${ketuaPmkpName}\nJabatan: Ketua Komite PMKP\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const ketuaPmkpQR = await generateQRCode(ketuaPmkpQRText)
+
+    // --- 1. INDIKATOR MUTU ---
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.text('I. INDIKATOR MUTU', 15, 64)
     
-    // Kategori MUTU
-    tableData.push([{ content: 'MUTU', colSpan: 5, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }])
-    detailItem.detail.filter(x => x.kategori === 'MUTU').forEach(d => {
-      tableData.push([
+    const tableDataMutu = []
+    detailItem.detail.filter(x => x.kategori === 'MUTU').forEach((d, idx) => {
+      const row = [
         d.no_unsur,
         d.unsur_disupervisi,
         d.jawaban === 'Ya' ? 'V' : '',
         d.jawaban === 'Tidak' ? 'V' : '',
+        d.jawaban === 'Belum Isi' ? 'V' : '',
         d.temuan_masalah || '-'
-      ])
-    })
-
-    // Kategori KESELAMATAN PASIEN
-    tableData.push([{ content: 'KESELAMATAN PASIEN', colSpan: 5, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }])
-    detailItem.detail.filter(x => x.kategori === 'KESELAMATAN PASIEN').forEach(d => {
-      tableData.push([
-        d.no_unsur,
-        d.unsur_disupervisi,
-        d.jawaban === 'Ya' ? 'V' : '',
-        d.jawaban === 'Tidak' ? 'V' : '',
-        d.temuan_masalah || '-'
-      ])
-    })
-
-    // Kategori MANAJEMEN RISIKO
-    tableData.push([{ content: 'MANAJEMEN RISIKO', colSpan: 5, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }])
-    detailItem.detail.filter(x => x.kategori === 'MANAJEMEN RISIKO').forEach(d => {
-      tableData.push([
-        d.no_unsur,
-        d.unsur_disupervisi,
-        d.jawaban === 'Ya' ? 'V' : '',
-        d.jawaban === 'Tidak' ? 'V' : '',
-        d.temuan_masalah || '-'
-      ])
+      ]
+      if (idx === 0) {
+        row.push({ content: '', rowSpan: 7 })
+      }
+      tableDataMutu.push(row)
     })
 
     autoTable(doc, {
-      startY: 63,
-      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'TEMUAN MASALAH']],
-      body: tableData,
+      startY: 68,
+      margin: { left: 15, right: 15 },
+      tableWidth: 180,
+      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'BELUM ISI', 'TEMUAN MASALAH', 'SUPERVISOR']],
+      body: tableDataMutu,
       theme: 'grid',
       headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
-      styles: { fontSize: 8, cellPadding: 2.5, font: 'Helvetica' },
+      styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 1, right: 1 }, font: 'Helvetica' },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 96 },
-        2: { cellWidth: 14, halign: 'center' },
-        3: { cellWidth: 16, halign: 'center' },
-        4: { cellWidth: 44 }
+        0: { cellWidth: 8, halign: 'center', fontStyle: 'bold' },
+        1: { cellWidth: 75 },
+        2: { cellWidth: 10, halign: 'center' },
+        3: { cellWidth: 12, halign: 'center' },
+        4: { cellWidth: 18, halign: 'center' },
+        5: { cellWidth: 30 },
+        6: { cellWidth: 27 }
+      },
+      didDrawCell: (data) => {
+        if (data.column.index === 6 && data.cell.section === 'body' && data.row.index === 0) {
+          if (supervisorMutuQR) {
+            const cell = data.cell
+            const qrSize = 11 // Smaller QR code
+            const contentHeight = qrSize + 11
+            const startY = cell.y + (cell.height - contentHeight) / 2
+            
+            // 1. Draw Label at the top
+            doc.setFont('Helvetica', 'normal')
+            doc.setFontSize(5.5)
+            doc.text('Supervisor Mutu,', cell.x + cell.width / 2, startY + 2.5, { align: 'center' })
+
+            // 2. Draw QR Code in the middle
+            doc.addImage(supervisorMutuQR, 'PNG', cell.x + (cell.width - qrSize) / 2, startY + 4.5, qrSize, qrSize)
+
+            // 3. Draw Name at the bottom
+            doc.setFont('Helvetica', 'bold')
+            doc.setFontSize(5.5)
+            const splitName = doc.splitTextToSize(supervisorMutuName, cell.width - 2)
+            doc.text(splitName, cell.x + cell.width / 2, startY + 4.5 + qrSize + 3.5, { align: 'center' })
+          }
+        }
       }
     })
 
-    // Generate QR codes
-    const supervisorName = detailItem.supervisor?.nama || authStore.user?.data?.detail?.nama || authStore.userName || 'Komite Mutu'
-    const koordinatorName = detailItem.koordinator?.nama || detailItem.nama_responden || '-'
+    let currentY = doc.lastAutoTable.finalY + 4
 
-    const respondentQRText = `Ditandatangani secara elektronik oleh:\nNama: ${koordinatorName}\nJabatan: Kepala Unit\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
-    const supervisorQRText = `Ditandatangani secara elektronik oleh:\nNama: ${supervisorName}\nJabatan: Supervisor\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
-
-    const respondentQR = await generateQRCode(respondentQRText)
-    const supervisorQR = await generateQRCode(supervisorQRText)
-
-    // Recommendations
-    let currentY = doc.lastAutoTable.finalY + 10
-    if (detailItem.rekomendasi) {
-      doc.setFont('Helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.text('Rekomendasi:', 15, currentY)
-      
-      doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(8)
-      const splitRekomendasi = doc.splitTextToSize(detailItem.rekomendasi, 180)
-      doc.text(splitRekomendasi, 15, currentY + 5)
-      currentY += 5 + (splitRekomendasi.length * 4.5) + 10
-    } else {
-      currentY += 5
-    }
-
-    // Check page boundaries for signatures
-    if (currentY + 45 > 280) {
-      doc.addPage()
-      currentY = 25
-    }
-
-    // Signatures
-    const finalY = currentY
-    doc.setFontSize(9)
-    doc.setFont('Helvetica', 'normal')
-    
-    // Date on the right column
-    const dateText = `Pekalongan, ${formatDateIndo(detailItem.tgl_supervisi)}`
-    doc.text(dateText, 153, finalY, { align: 'center' })
-    
-    // Labels
-    doc.text('Kepala Unit', 40, finalY + 5, { align: 'center' })
-    doc.text('Supervisor', 153, finalY + 5, { align: 'center' })
-
-    if (respondentQR) {
-      doc.addImage(respondentQR, 'PNG', 31, finalY + 8, 18, 18)
-    }
-    if (supervisorQR) {
-      doc.addImage(supervisorQR, 'PNG', 144, finalY + 8, 18, 18)
-    }
-
-    doc.setFontSize(9)
+    // Draw recommendation for MUTU below the table
     doc.setFont('Helvetica', 'bold')
-    doc.text(`( ${koordinatorName} )`, 40, finalY + 31, { align: 'center' })
-    doc.text(`( ${supervisorName} )`, 153, finalY + 31, { align: 'center' })
+    doc.setFontSize(8.5)
+    doc.text('Rekomendasi Indikator Mutu:', 15, currentY)
 
-    // Format filename: Supervisi_Implikasi_[Unit]_[Bulan]_[Tahun].pdf
-    const unitName = detailItem.departemen?.nama || detailItem.nama_ruang || detailItem.dep_id || 'Unit'
-    const cleanUnitName = unitName.replace(/[^a-zA-Z0-9-_]/g, '_')
-    
-    let formattedPeriod = 'Bulan_Tahun'
-    if (detailItem.bulan) {
-      const [year, month] = detailItem.bulan.split('-')
-      const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-      const monthName = monthNames[parseInt(month) - 1] || 'Bulan'
-      formattedPeriod = `${monthName}_${year}`
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    const rekomendasiMutuText = detailItem.rekomendasi_mutu || '-'
+    const splitMutu = doc.splitTextToSize(rekomendasiMutuText, 180)
+    doc.text(splitMutu, 15, currentY + 4)
+
+    currentY += 4 + (splitMutu.length * 4) + 6
+
+    // --- 2. KESELAMATAN PASIEN ---
+    if (currentY + 50 > 280) {
+      doc.addPage()
+      currentY = 32
     }
 
-    doc.save(`Supervisi_Implikasi_${cleanUnitName}_${formattedPeriod}.pdf`)
-    toast.success('PDF berhasil di-download')
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.text('II. KESELAMATAN PASIEN', 15, currentY)
+    
+    const tableDataKp = []
+    detailItem.detail.filter(x => x.kategori === 'KESELAMATAN PASIEN').forEach((d, idx) => {
+      const row = [
+        d.no_unsur,
+        d.unsur_disupervisi,
+        d.jawaban === 'Ya' ? 'V' : '',
+        d.jawaban === 'Tidak' ? 'V' : '',
+        d.jawaban === 'Belum Isi' ? 'V' : '',
+        d.temuan_masalah || '-'
+      ]
+      if (idx === 0) {
+        row.push({ content: '', rowSpan: 2 })
+      }
+      tableDataKp.push(row)
+    })
+
+    const tableKpY = currentY + 3
+    autoTable(doc, {
+      startY: tableKpY,
+      margin: { left: 15, right: 15 },
+      tableWidth: 180,
+      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'BELUM ISI', 'TEMUAN MASALAH', 'SUPERVISOR']],
+      body: tableDataKp,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
+      styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 1, right: 1 }, font: 'Helvetica' },
+      bodyStyles: { cellPadding: { top: 6, bottom: 6, left: 1, right: 1 } }, // taller rows for body only
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center', fontStyle: 'bold' },
+        1: { cellWidth: 75 },
+        2: { cellWidth: 10, halign: 'center' },
+        3: { cellWidth: 12, halign: 'center' },
+        4: { cellWidth: 18, halign: 'center' },
+        5: { cellWidth: 30 },
+        6: { cellWidth: 27 }
+      },
+      didDrawCell: (data) => {
+        if (data.column.index === 6 && data.cell.section === 'body' && data.row.index === 0) {
+          if (supervisorKpQR) {
+            const cell = data.cell
+            const qrSize = 11
+            const contentHeight = qrSize + 11
+            const startY = cell.y + (cell.height - contentHeight) / 2
+            
+            // 1. Draw Label at the top
+            doc.setFont('Helvetica', 'normal')
+            doc.setFontSize(5.5)
+            doc.text('Supervisor KP,', cell.x + cell.width / 2, startY + 2.5, { align: 'center' })
+
+            // 2. Draw QR Code in the middle
+            doc.addImage(supervisorKpQR, 'PNG', cell.x + (cell.width - qrSize) / 2, startY + 4.5, qrSize, qrSize)
+
+            // 3. Draw Name at the bottom
+            doc.setFont('Helvetica', 'bold')
+            doc.setFontSize(5.5)
+            const splitName = doc.splitTextToSize(supervisorKpName, cell.width - 2)
+            doc.text(splitName, cell.x + cell.width / 2, startY + 4.5 + qrSize + 3.5, { align: 'center' })
+          }
+        }
+      }
+    })
+
+    currentY = doc.lastAutoTable.finalY + 4
+
+    // Draw recommendation for KP below the table
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.text('Rekomendasi Keselamatan Pasien:', 15, currentY)
+
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    const rekomendasiKpText = detailItem.rekomendasi_kp || '-'
+    const splitKp = doc.splitTextToSize(rekomendasiKpText, 180)
+    doc.text(splitKp, 15, currentY + 4)
+
+    currentY += 4 + (splitKp.length * 4) + 6
+
+    // --- 3. MANAJEMEN RISIKO ---
+    if (currentY + 85 > 280) {
+      doc.addPage()
+      currentY = 32
+    }
+
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.text('III. MANAJEMEN RISIKO', 15, currentY)
+    
+    const tableDataMr = []
+    detailItem.detail.filter(x => x.kategori === 'MANAJEMEN RISIKO').forEach((d, idx) => {
+      const row = [
+        d.no_unsur,
+        d.unsur_disupervisi,
+        d.jawaban === 'Ya' ? 'V' : '',
+        d.jawaban === 'Tidak' ? 'V' : '',
+        d.jawaban === 'Belum Isi' ? 'V' : '',
+        d.temuan_masalah || '-'
+      ]
+      if (idx === 0) {
+        row.push({ content: '', rowSpan: 2 })
+      }
+      tableDataMr.push(row)
+    })
+
+    const tableMrY = currentY + 3
+    autoTable(doc, {
+      startY: tableMrY,
+      margin: { left: 15, right: 15 },
+      tableWidth: 180,
+      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'BELUM ISI', 'TEMUAN MASALAH', 'SUPERVISOR']],
+      body: tableDataMr,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
+      styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 1, right: 1 }, font: 'Helvetica' },
+      bodyStyles: { cellPadding: { top: 6, bottom: 6, left: 1, right: 1 } }, // taller rows for body only
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center', fontStyle: 'bold' },
+        1: { cellWidth: 75 },
+        2: { cellWidth: 10, halign: 'center' },
+        3: { cellWidth: 12, halign: 'center' },
+        4: { cellWidth: 18, halign: 'center' },
+        5: { cellWidth: 30 },
+        6: { cellWidth: 27 }
+      },
+      didDrawCell: (data) => {
+        if (data.column.index === 6 && data.cell.section === 'body' && data.row.index === 0) {
+          if (supervisorMrQR) {
+            const cell = data.cell
+            const qrSize = 11
+            const contentHeight = qrSize + 11
+            const startY = cell.y + (cell.height - contentHeight) / 2
+            
+            // 1. Draw Label at the top
+            doc.setFont('Helvetica', 'normal')
+            doc.setFontSize(5.5)
+            doc.text('Supervisor MR,', cell.x + cell.width / 2, startY + 2.5, { align: 'center' })
+
+            // 2. Draw QR Code in the middle
+            doc.addImage(supervisorMrQR, 'PNG', cell.x + (cell.width - qrSize) / 2, startY + 4.5, qrSize, qrSize)
+
+            // 3. Draw Name at the bottom
+            doc.setFont('Helvetica', 'bold')
+            doc.setFontSize(5.5)
+            const splitName = doc.splitTextToSize(supervisorMrName, cell.width - 2)
+            doc.text(splitName, cell.x + cell.width / 2, startY + 4.5 + qrSize + 3.5, { align: 'center' })
+          }
+        }
+      }
+    })
+
+    currentY = doc.lastAutoTable.finalY + 4
+
+    // Draw recommendation for MR below the table
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.text('Rekomendasi Manajemen Risiko:', 15, currentY)
+
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    const rekomendasiMrText = detailItem.rekomendasi_mr || '-'
+    const splitMr = doc.splitTextToSize(rekomendasiMrText, 180)
+    doc.text(splitMr, 15, currentY + 4)
+
+    currentY += 4 + (splitMr.length * 4) + 6
+
+    // Draw Kepala Unit signature on the left
+    if (currentY + 42 > 280) {
+      doc.addPage()
+      currentY = 32
+    }
+
+    const dateText = `Pekalongan, ${formatDateIndo(detailItem.tgl_supervisi)}`
+    const centerKoorX = 15 + 30
+    const centerKetuaX = 195 - 30
+    
+    // Right: Date, Mengetahui, Ketua Komite PMKP
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text(dateText, centerKetuaX, currentY + 4, { align: 'center' })
+    doc.text('Mengetahui,', centerKetuaX, currentY + 9, { align: 'center' })
+    doc.text('Ketua Komite PMKP,', centerKetuaX, currentY + 14, { align: 'center' })
+    if (ketuaPmkpQR) {
+      doc.addImage(ketuaPmkpQR, 'PNG', centerKetuaX - 9, currentY + 17, 18, 18)
+    }
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.text(`( ${ketuaPmkpName} )`, centerKetuaX, currentY + 39, { align: 'center' })
+
+    // Left: Kepala Unit
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text('Kepala Unit,', centerKoorX, currentY + 14, { align: 'center' })
+    if (respondentQR) {
+      doc.addImage(respondentQR, 'PNG', centerKoorX - 9, currentY + 17, 18, 18)
+    }
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.text(`( ${koordinatorName} )`, centerKoorX, currentY + 39, { align: 'center' })
+
+    // Draw header and footer on all pages
+    const pageCount = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      if (headerImg) {
+        doc.addImage(headerImg, 'PNG', 0, 0, 210, 27.78)
+      }
+      if (footerImg) {
+        doc.addImage(footerImg, 'PNG', 0, 285.45, 210, 11.55)
+      }
+    }
+
+    const pdfBlob = doc.output('blob')
+    const url = URL.createObjectURL(pdfBlob)
+    window.open(url, '_blank')
+    toast.success('PDF berhasil dibuka di tab baru')
   } catch (error) {
     console.error('Error PDF:', error)
     toast.error('Gagal mengekspor PDF')
