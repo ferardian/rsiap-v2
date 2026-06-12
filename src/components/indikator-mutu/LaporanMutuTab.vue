@@ -1955,8 +1955,8 @@ const stripHtml = (html) => {
 
 const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     const canvas = document.createElement('canvas')
-    canvas.width = 1000
-    canvas.height = 350
+    canvas.width = 1800
+    canvas.height = 600
     const ctx = canvas.getContext('2d')
     
     // Fill background
@@ -1967,10 +1967,10 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     const target = parseFloat(targetValue) || 0
     
     // Margin and drawing dimensions
-    const paddingLeft = 60
-    const paddingRight = 40
-    const paddingTop = 40
-    const paddingBottom = 40
+    const paddingLeft = 90
+    const paddingRight = 50
+    const paddingTop = 70
+    const paddingBottom = 70
     const plotWidth = canvas.width - paddingLeft - paddingRight
     const plotHeight = canvas.height - paddingTop - paddingBottom
     
@@ -2006,10 +2006,10 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     
     // Draw Grid Lines (Y-Axis ticks)
     const ticksCount = 5
-    ctx.strokeStyle = '#f1f5f9'
-    ctx.lineWidth = 1
-    ctx.fillStyle = '#64748b'
-    ctx.font = '10px Inter, Arial, sans-serif'
+    ctx.strokeStyle = '#e2e8f0'
+    ctx.lineWidth = 1.5
+    ctx.fillStyle = '#475569'
+    ctx.font = 'bold 18px Inter, Arial, sans-serif'
     ctx.textAlign = 'right'
     ctx.textBaseline = 'middle'
     
@@ -2025,17 +2025,18 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
         
         // Label
         const labelText = needsDen ? Math.round(val) : `${Math.round(val)}%`
-        ctx.fillText(labelText, paddingLeft - 8, y)
+        ctx.fillText(labelText, paddingLeft - 15, y)
     }
     
     // Draw X-Axis Labels (Day 1 to daysCount)
-    ctx.fillStyle = '#64748b'
+    ctx.fillStyle = '#475569'
+    ctx.font = 'bold 18px Inter, Arial, sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'top'
     for (let i = 0; i < daysCount; i++) {
         if (i % 2 === 0 || i === daysCount - 1) {
             const x = getPlotX(i)
-            ctx.fillText(String(i + 1), x, paddingTop + plotHeight + 6)
+            ctx.fillText(String(i + 1), x, paddingTop + plotHeight + 12)
         }
     }
     
@@ -2043,8 +2044,8 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     if (target > 0) {
         const targetY = getPlotY(target)
         ctx.strokeStyle = '#ef4444'
-        ctx.lineWidth = 1.5
-        ctx.setLineDash([5, 5])
+        ctx.lineWidth = 3
+        ctx.setLineDash([8, 8])
         ctx.beginPath()
         ctx.moveTo(paddingLeft, targetY)
         ctx.lineTo(canvas.width - paddingRight, targetY)
@@ -2053,10 +2054,10 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
         
         // Label for Target
         ctx.fillStyle = '#ef4444'
-        ctx.font = 'bold 10px Inter, Arial, sans-serif'
+        ctx.font = 'bold 18px Inter, Arial, sans-serif'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'bottom'
-        ctx.fillText(`Target: ${target}${needsDen ? '%' : ''}`, paddingLeft + 10, targetY - 4)
+        ctx.fillText(`Target: ${target}${needsDen ? '%' : ''}`, paddingLeft + 15, targetY - 6)
     }
     
     // Helper function to draw series
@@ -2086,45 +2087,49 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
         ctx.fillStyle = color
         points.forEach(pt => {
             ctx.beginPath()
-            ctx.arc(pt.x, pt.y, lineWidth + 1, 0, 2 * Math.PI)
+            ctx.arc(pt.x, pt.y, lineWidth + 2, 0, 2 * Math.PI)
             ctx.fill()
         })
     }
 
     // Draw the series data lines
     if (needsDen) {
-        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.denum, '#3b82f6', 2, [4, 4])
-        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.num, '#10b981', 2, [2, 2])
-        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.score, '#6366f1', 4, [])
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.denum, '#3b82f6', 3, [8, 8])
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.num, '#10b981', 3, [4, 4])
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.score, '#6366f1', 6, [])
     } else {
-        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.score, '#3b82f6', 4, [])
+        drawSeriesLine(ctx, dailyData, getPlotX, getPlotY, d => d.score, '#3b82f6', 6, [])
     }
     
     // Draw Legend
-    ctx.font = 'bold 11px Inter, Arial, sans-serif'
+    ctx.font = 'bold 20px Inter, Arial, sans-serif'
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'left'
     
     let legendX = paddingLeft
     const drawLegendItem = (label, color, dash = []) => {
-        ctx.fillStyle = '#1e293b'
-        
         ctx.strokeStyle = color
-        ctx.lineWidth = 3
+        ctx.lineWidth = 4
         if (dash.length > 0) ctx.setLineDash(dash)
         ctx.beginPath()
         ctx.moveTo(legendX, paddingTop / 2)
-        ctx.lineTo(legendX + 15, paddingTop / 2)
+        ctx.lineTo(legendX + 25, paddingTop / 2)
         ctx.stroke()
         ctx.setLineDash([])
         
-        ctx.fillText(label, legendX + 20, paddingTop / 2)
-        legendX += ctx.measureText(label).width + 50
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.arc(legendX + 12.5, paddingTop / 2, 6, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        ctx.fillStyle = '#1e293b'
+        ctx.fillText(label, legendX + 35, paddingTop / 2)
+        legendX += ctx.measureText(label).width + 75
     }
     
     if (needsDen) {
-        drawLegendItem('Denominator', '#3b82f6', [4, 4])
-        drawLegendItem('Numerator', '#10b981', [2, 2])
+        drawLegendItem('Denominator', '#3b82f6', [8, 8])
+        drawLegendItem('Numerator', '#10b981', [4, 4])
         drawLegendItem('Capaian (%)', '#6366f1', [])
     } else {
         drawLegendItem('Capaian', '#3b82f6', [])
@@ -2493,9 +2498,9 @@ const exportRegisterBulanan = async (format) => {
 
                 let runningY = doc.lastAutoTable.finalY || 58
                 
-                try {
+                                try {
                     const chartImg = generateDailyChartImage(indicator, dailyChartData, indicator.standar)
-                    const chartHeight = 45
+                    const chartHeight = 60
                     const chartWidth = 180
                     
                     if (runningY + chartHeight + 8 > 275) {
