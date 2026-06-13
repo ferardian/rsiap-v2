@@ -601,7 +601,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
           <div class="modal-header text-white py-3 px-4 rounded-top-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #435ebe, #2a4185);">
-            <h5 class="modal-title fw-bold m-0 d-flex align-items-center"><i class="fas fa-book me-2"></i> Buku Register Harian</h5>
+            <h5 class="modal-title fw-bold m-0 d-flex align-items-center"><i class="fas fa-book me-2"></i> Data Input Harian</h5>
             <button type="button" class="btn-close btn-close-white" @click="showRegisterModal = false" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4">
@@ -2205,7 +2205,7 @@ const exportRegisterBulanan = async (format) => {
                 const indRealisasi = realisasiList.filter(r => r.id_inmut === indicator.id_inmut)
                 
                 const wsData = [
-                    ['BUKU REGISTER HARIAN INDIKATOR MUTU'],
+                    ['DATA INPUT HARIAN INDIKATOR MUTU'],
                     [`Unit: ${unitName} | Periode: ${formatMonthYear(dateStr)}`],
                     [`Indikator: ${indicator.nama_inmut}`],
                     [],
@@ -2285,8 +2285,8 @@ const exportRegisterBulanan = async (format) => {
                 XLSX.utils.book_append_sheet(wb, ws, sheetName)
             }
             
-            XLSX.writeFile(wb, `Buku_Register_Harian_${unitName.replace(/\s+/g, '_')}_${dateStr}.xlsx`)
-            toast.success('Buku Register Harian Excel berhasil diunduh')
+            XLSX.writeFile(wb, `Data_Input_Harian_${unitName.replace(/\s+/g, '_')}_${dateStr}.xlsx`)
+            toast.success('Data Input Harian Excel berhasil diunduh')
 
         } else if (format === 'pdf') {
             const doc = new jsPDF('p', 'mm', 'a4')
@@ -2331,7 +2331,7 @@ const exportRegisterBulanan = async (format) => {
                 doc.setFont('Helvetica', 'bold')
                 doc.setFontSize(10)
                 doc.setTextColor(0, 0, 0)
-                doc.text('BUKU REGISTER HARIAN INDIKATOR MUTU', 105, 36, { align: 'center' })
+                doc.text('DATA INPUT HARIAN INDIKATOR MUTU', 105, 36, { align: 'center' })
                 
                 doc.setFontSize(8.5)
                 doc.text(`Indikator : ${indicator.nama_inmut}`, 15, 44)
@@ -2676,11 +2676,11 @@ const exportRegisterBulanan = async (format) => {
             const pdfBlob = doc.output('blob')
             const url = URL.createObjectURL(pdfBlob)
             window.open(url, '_blank')
-            toast.success('Buku Register Harian PDF berhasil dibuka')
+            toast.success('Data Input Harian PDF berhasil dibuka')
         }
     } catch (error) {
         console.error('Export failed:', error)
-        toast.error('Gagal mengekspor Buku Register Harian')
+        toast.error('Gagal mengekspor Data Input Harian')
     } finally {
         loading.value = false
     }
