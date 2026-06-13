@@ -19,7 +19,10 @@
             <i class="fas fa-users"></i>
           </div>
           <div class="stat-info">
-            <h3>{{ stats.total || 0 }}</h3>
+            <div class="d-flex align-items-baseline gap-2">
+              <h3>{{ stats.total || 0 }}</h3>
+              <span class="text-muted small fw-bold" style="font-size: 0.85rem">(L: {{ getGenderCount('L') }} | P: {{ getGenderCount('P') }})</span>
+            </div>
             <p>Total Karyawan Aktif</p>
           </div>
         </div>
@@ -198,8 +201,23 @@
     </div>
 
       <!-- Unit Kerja -->
-      <div class="col-md-12 mt-4">
-        <h5 class="section-title mb-3"><i class="fas fa-building me-2"></i>Berdasarkan Unit Kerja</h5>
+      <div class="row" style="margin-top: 5.5rem !important;">
+        <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="section-title mb-0"><i class="fas fa-building me-2"></i>Berdasarkan Unit Kerja</h5>
+          <div class="d-flex gap-2">
+            <button class="btn-export-excel" @click="exportUnitExcel" :disabled="exportLoading">
+              <i v-if="exportLoading" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-file-excel"></i>
+              <span>Export Excel</span>
+            </button>
+            <button class="btn-export-pdf" @click="exportUnitPDF" :disabled="exportLoading">
+              <i v-if="exportLoading" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-file-pdf"></i>
+              <span>Export PDF</span>
+            </button>
+          </div>
+        </div>
         <div class="category-card h-100 overflow-hidden">
           <div class="category-body p-4 d-flex flex-column justify-content-center h-100 no-scroll">
              <div class="row g-4 align-items-stretch">
@@ -248,9 +266,11 @@
           </div>
         </div>
       </div>
+    </div>
 
     <!-- Pendidikan -->
-    <div class="col-md-12 mt-4">
+    <div class="row" style="margin-top: 5.5rem !important;">
+      <div class="col-md-12">
       <h5 class="section-title mb-3"><i class="fas fa-graduation-cap me-2"></i>Berdasarkan Pendidikan</h5>
       <div class="category-card h-100 overflow-hidden">
         <div class="category-body p-4 d-flex flex-column justify-content-center h-100 no-scroll">
@@ -300,6 +320,7 @@
         </div>
       </div>
     </div>
+  </div>
 
     <!-- Tren Pergerakan Karyawan (Compact Matrix) -->
     <h5 class="section-title mb-3 mt-5"><i class="fas fa-chart-line me-2"></i>Statistik Masuk & Keluar Karyawan {{ selectedYear }}</h5>
@@ -506,8 +527,14 @@
 import { ref, onMounted, computed } from 'vue'
 import { pegawaiService } from '@/services/pegawaiService'
 import VueApexCharts from 'vue3-apexcharts'
+import * as XLSX from 'xlsx'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import { useToast } from 'vue-toastification'
 
+const toast = useToast()
 const loading = ref(true)
+const exportLoading = ref(false)
 const stats = ref({})
 const selectedYear = ref(new Date().getFullYear())
 const isCurrentYear = computed(() => selectedYear.value == new Date().getFullYear())
@@ -546,6 +573,245 @@ const fetchData = async () => {
     console.error('Error fetching statistics:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const isMale = (jk) => {
+  const val = (jk || '').toUpperCase().trim();
+  return val === 'L' || val === 'LAKI-LAKI' || val === 'PRIA';
+}
+
+const isFemale = (jk) => {
+  const val = (jk || '').toUpperCase().trim();
+  return val === 'P' || val === 'PEREMPUAN' || val === 'WANITA';
+}
+
+const exportUnitExcel = async () => {
+  if (!stats.value.unit_kerja || stats.value.unit_kerja.length === 0) {
+    toast.warning('Tidak ada data unit kerja untuk diexport')
+    return
+  }
+  
+  exportLoading.value = true
+  try {
+    const response = await pegawaiService.getKaryawanList({ limit: 1500 })
+    const allEmployees = response.data.data || response.data || []
+    
+    const wsData = []
+    const merges = []
+    
+    // Title rows
+    wsData.push(['DATA DETAIL KARYAWAN PER UNIT KERJA & JENIS KELAMIN'])
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } })
+    
+    wsData.push([`Periode Tahun: ${selectedYear.value}`])
+    merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 5 } })
+    
+    wsData.push([`Dicetak pada: ${new Date().toLocaleString('id-ID')}`])
+    merges.push({ s: { r: 2, c: 0 }, e: { r: 2, c: 5 } })
+    
+    const totalMale = allEmployees.filter(emp => isMale(emp.jk)).length
+    const totalFemale = allEmployees.filter(emp => isFemale(emp.jk)).length
+    wsData.push([`Total Keseluruhan - Laki-laki: ${totalMale} | Perempuan: ${totalFemale} | Total Karyawan: ${allEmployees.length}`])
+    merges.push({ s: { r: 3, c: 0 }, e: { r: 3, c: 5 } })
+    
+    wsData.push([]) // Spacer
+    
+    let currentRow = 5
+    
+    stats.value.unit_kerja.forEach(unit => {
+      const deptEmployees = allEmployees.filter(emp => emp.departemen === unit.name)
+      const maleEmployees = deptEmployees.filter(emp => isMale(emp.jk))
+      const femaleEmployees = deptEmployees.filter(emp => isFemale(emp.jk))
+      
+      // Unit Header Row
+      wsData.push([`${unit.name.toUpperCase()} (L: ${maleEmployees.length}, P: ${femaleEmployees.length}, Total: ${deptEmployees.length})`])
+      merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 5 } })
+      currentRow++
+      
+      if (maleEmployees.length > 0) {
+        wsData.push(['LAKI-LAKI'])
+        merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 5 } })
+        currentRow++
+        
+        wsData.push(['No', 'NIK', 'Nama', 'Jabatan', 'Status Kerja', 'Pendidikan'])
+        currentRow++
+        
+        maleEmployees.forEach((emp, idx) => {
+          wsData.push([idx + 1, emp.nik, emp.nama, emp.jbtn, emp.stts_kerja, emp.pendidikan])
+          currentRow++
+        })
+      }
+      
+      if (femaleEmployees.length > 0) {
+        wsData.push(['PEREMPUAN'])
+        merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 5 } })
+        currentRow++
+        
+        wsData.push(['No', 'NIK', 'Nama', 'Jabatan', 'Status Kerja', 'Pendidikan'])
+        currentRow++
+        
+        femaleEmployees.forEach((emp, idx) => {
+          wsData.push([idx + 1, emp.nik, emp.nama, emp.jbtn, emp.stts_kerja, emp.pendidikan])
+          currentRow++
+        })
+      }
+      
+      if (deptEmployees.length === 0) {
+        wsData.push(['Tidak ada data karyawan'])
+        merges.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 5 } })
+        currentRow++
+      }
+      
+      wsData.push([]) // Spacer row
+      currentRow++
+    })
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    ws['!merges'] = merges
+    
+    ws['!cols'] = [
+      { wch: 6 },   // No
+      { wch: 15 },  // NIK
+      { wch: 35 },  // Nama
+      { wch: 30 },  // Jabatan
+      { wch: 20 },  // Status Kerja
+      { wch: 20 }   // Pendidikan
+    ]
+    
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Karyawan Per Unit")
+    XLSX.writeFile(wb, `Karyawan_Per_Unit_${selectedYear.value}.xlsx`)
+    toast.success('Excel berhasil di-download')
+  } catch (error) {
+    console.error('Error exporting excel:', error)
+    toast.error('Gagal mengekspor data ke Excel')
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+const exportUnitPDF = async () => {
+  if (!stats.value.unit_kerja || stats.value.unit_kerja.length === 0) {
+    toast.warning('Tidak ada data unit kerja untuk diexport')
+    return
+  }
+  
+  exportLoading.value = true
+  try {
+    const response = await pegawaiService.getKaryawanList({ limit: 1500 })
+    const allEmployees = response.data.data || response.data || []
+    
+    const doc = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = doc.internal.pageSize.width || 210
+    const pageHeight = doc.internal.pageSize.height || 297
+    const margin = 14
+    
+    // Header Title
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(16)
+    doc.setTextColor(30, 41, 59)
+    doc.text("DATA KARYAWAN PER UNIT KERJA", margin, 15)
+    
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(100)
+    doc.text(`Periode Tahun: ${selectedYear.value}`, margin, 21)
+    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, margin, 26)
+    
+    const totalMale = allEmployees.filter(emp => isMale(emp.jk)).length
+    const totalFemale = allEmployees.filter(emp => isFemale(emp.jk)).length
+    doc.setFont("helvetica", "bold")
+    doc.text(`Total Keseluruhan - Laki-laki: ${totalMale} | Perempuan: ${totalFemale} | Total Karyawan: ${allEmployees.length}`, margin, 31)
+    
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0.5)
+    doc.line(margin, 34, pageWidth - margin, 34)
+    
+    let currentY = 39
+    
+    stats.value.unit_kerja.forEach((unit, uIdx) => {
+      const deptEmployees = allEmployees.filter(emp => emp.departemen === unit.name)
+      const sortedEmployees = [...deptEmployees].sort((a, b) => {
+        const aJk = isMale(a.jk) ? 0 : 1
+        const bJk = isMale(b.jk) ? 0 : 1
+        return aJk - bJk || a.nama.localeCompare(b.nama)
+      })
+      
+      const maleCount = deptEmployees.filter(emp => isMale(emp.jk)).length
+      const femaleCount = deptEmployees.filter(emp => isFemale(emp.jk)).length
+      
+      if (currentY > pageHeight - 35) {
+        doc.addPage()
+        currentY = 15
+      }
+      
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(11)
+      doc.setTextColor(30, 41, 59)
+      doc.text(`${uIdx + 1}. ${unit.name.toUpperCase()}`, margin, currentY)
+      
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(9.5)
+      doc.setTextColor(71, 85, 105)
+      const statsText = `Laki-laki: ${maleCount} | Perempuan: ${femaleCount} | Total: ${deptEmployees.length}`
+      const statsTextWidth = doc.getTextWidth(statsText)
+      doc.text(statsText, pageWidth - margin - statsTextWidth, currentY)
+      
+      currentY += 4
+      
+      const tableRows = sortedEmployees.map((emp, index) => [
+        index + 1,
+        emp.nik,
+        emp.nama,
+        emp.jbtn,
+        isMale(emp.jk) ? 'L' : 'P',
+        emp.stts_kerja,
+        emp.pendidikan
+      ])
+      
+      if (tableRows.length === 0) {
+        tableRows.push([{ content: 'Tidak ada data karyawan', colSpan: 7, styles: { halign: 'center', fontStyle: 'italic' } }])
+      }
+      
+      autoTable(doc, {
+        startY: currentY,
+        head: [['No', 'NIK', 'Nama Karyawan', 'Jabatan', 'L/P', 'Status Kerja', 'Pendidikan']],
+        body: tableRows,
+        theme: 'striped',
+        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+        styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
+        columnStyles: {
+          0: { cellWidth: 8, halign: 'center' },
+          1: { cellWidth: 18 },
+          2: { cellWidth: 45 },
+          3: { cellWidth: 40 },
+          4: { cellWidth: 10, halign: 'center' },
+          5: { cellWidth: 30 },
+          6: { cellWidth: 30 }
+        },
+        margin: { left: margin, right: margin }
+      })
+      
+      currentY = doc.lastAutoTable.finalY + 8
+    })
+    
+    const totalPages = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(8)
+      doc.setTextColor(148, 163, 184)
+      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
+    }
+    
+    doc.save(`Karyawan_Per_Unit_${selectedYear.value}.pdf`)
+    toast.success('PDF berhasil di-download')
+  } catch (error) {
+    console.error('Error exporting PDF:', error)
+    toast.error('Gagal mengekspor data ke PDF')
+  } finally {
+    exportLoading.value = false
   }
 }
 
@@ -2332,4 +2598,55 @@ onMounted(() => {
 }
 .dot.masuk { background: #3b82f6; }
 .dot.keluar { background: #f43f5e; }
+
+.btn-export-excel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.825rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+
+.btn-export-excel:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-export-pdf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.825rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+
+.btn-export-pdf:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #dc2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.btn-export-excel:disabled,
+.btn-export-pdf:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 </style>
