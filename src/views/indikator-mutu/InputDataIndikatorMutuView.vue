@@ -239,7 +239,7 @@
                     </ul>
                 </div>
                 <div class="extra-small text-muted fw-bold text-uppercase ms-2 d-none d-sm-block">
-                    Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : 'Analisa') }}
+                    Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : (viewMode === 'grafik' ? 'Grafik' : (viewMode === 'pdsa' ? 'PDSA' : 'Analisa'))) }}
                 </div>
             </div>
         </div>
