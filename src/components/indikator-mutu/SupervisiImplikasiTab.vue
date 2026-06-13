@@ -43,15 +43,15 @@
     <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-primary text-white">
+          <table class="table table-hover align-middle mb-0" style="font-size: 0.8rem;">
+            <thead class="bg-primary text-white" style="font-size: 0.78rem;">
               <tr>
-                <th width="5%" class="text-center py-3">#</th>
-                <th width="15%" class="text-center">Tanggal</th>
-                <th width="20%">Unit / Ruang</th>
-                <th width="20%">Responden</th>
-                <th width="20%" class="text-center">Kepatuhan Unsur</th>
-                <th width="20%" class="text-center">Aksi</th>
+                <th width="5%" class="text-center py-2">#</th>
+                <th width="15%" class="text-center py-2">Tanggal</th>
+                <th width="20%" class="py-2">Unit / Ruang</th>
+                <th width="20%" class="py-2">Responden</th>
+                <th width="20%" class="text-center py-2">Kepatuhan Unsur</th>
+                <th width="20%" class="text-center py-2">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -68,20 +68,20 @@
                 </td>
               </tr>
               <tr v-for="(item, index) in items" :key="item.id">
-                <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
-                <td class="text-center fw-bold text-secondary">{{ formatDate(item.tgl_supervisi) }}</td>
+                <td class="text-center" style="font-size: 0.75rem;">{{ (page - 1) * limit + index + 1 }}</td>
+                <td class="text-center fw-bold text-secondary" style="font-size: 0.75rem;">{{ formatDate(item.tgl_supervisi) }}</td>
                 <td>
-                  <span class="badge bg-info-subtle text-info border-info-subtle small fw-bold px-3">
+                  <span class="badge bg-info-subtle text-info border-info-subtle fw-bold" style="font-size: 0.7rem; padding: 3px 8px;">
                     <i class="fas fa-hospital-user me-1"></i> {{ item.departemen?.nama || item.dep_id }}
                   </span>
                 </td>
-                <td class="fw-bold text-dark">{{ item.nama_responden }}</td>
+                <td class="fw-bold text-dark" style="font-size: 0.78rem;">{{ item.nama_responden }}</td>
                 <td class="text-center">
                   <div class="d-flex flex-column align-items-center">
-                    <span class="badge rounded-pill px-3" :class="getScoreClass(calculateCompliance(item))" style="font-size: 0.8rem;">
+                    <span class="badge rounded-pill" :class="getScoreClass(calculateCompliance(item))" style="font-size: 0.72rem; padding: 3px 8px;">
                       {{ calculateCompliance(item) }} % Ya
                     </span>
-                    <small class="text-muted mt-1" style="font-size: 0.7rem;">
+                    <small class="text-muted mt-1" style="font-size: 0.65rem;">
                       Mutu: {{ countCategoryYa(item, 'MUTU') }}/7 • 
                       Pasien: {{ countCategoryYa(item, 'KESELAMATAN PASIEN') }}/2 • 
                       Risiko: {{ countCategoryYa(item, 'MANAJEMEN RISIKO') }}/2
@@ -89,14 +89,14 @@
                   </div>
                 </td>
                 <td class="text-center">
-                  <div class="d-inline-flex gap-2">
-                    <button class="btn btn-sm btn-info text-white fw-bold" @click="exportToPDF(item)" title="Cetak PDF">
-                      <i class="fas fa-file-pdf"></i> PDF
+                  <div class="d-inline-flex gap-1">
+                    <button class="btn btn-info text-white fw-bold d-inline-flex align-items-center justify-content-center" @click="exportToPDF(item)" title="Cetak PDF" style="font-size: 0.7rem; padding: 3px 8px; line-height: 1.2; border-radius: 6px;">
+                      <i class="fas fa-file-pdf me-1"></i> PDF
                     </button>
-                    <button class="btn btn-sm btn-warning text-white fw-bold" @click="openEditModal(item)" title="Edit Supervisi">
-                      <i class="fas fa-edit"></i> Edit
+                    <button class="btn btn-warning text-white fw-bold d-inline-flex align-items-center justify-content-center" @click="openEditModal(item)" title="Edit Supervisi" style="font-size: 0.7rem; padding: 3px 8px; line-height: 1.2; border-radius: 6px;">
+                      <i class="fas fa-edit me-1"></i> Edit
                     </button>
-                    <button class="btn btn-sm btn-danger fw-bold" @click="confirmDelete(item)" title="Hapus">
+                    <button class="btn btn-danger fw-bold d-inline-flex align-items-center justify-content-center" @click="confirmDelete(item)" title="Hapus" style="font-size: 0.7rem; padding: 3px 8px; line-height: 1.2; border-radius: 6px;">
                       <i class="fas fa-trash-alt"></i>
                     </button>
                   </div>
@@ -1150,7 +1150,6 @@ const exportToPDF = async (item) => {
         d.unsur_disupervisi,
         d.jawaban === 'Ya' ? 'V' : '',
         d.jawaban === 'Tidak' ? 'V' : '',
-        d.jawaban === 'Belum Isi' ? 'V' : '',
         d.temuan_masalah || '-'
       ]
       if (idx === 0) {
@@ -1163,22 +1162,21 @@ const exportToPDF = async (item) => {
       startY: 68,
       margin: { left: 15, right: 15 },
       tableWidth: 180,
-      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'BELUM ISI', 'TEMUAN MASALAH', 'SUPERVISOR']],
+      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'TEMUAN MASALAH', 'SUPERVISOR']],
       body: tableDataMutu,
       theme: 'grid',
       headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
       styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 1, right: 1 }, font: 'Helvetica' },
       columnStyles: {
         0: { cellWidth: 8, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 85 },
+        2: { cellWidth: 12, halign: 'center' },
         3: { cellWidth: 12, halign: 'center' },
-        4: { cellWidth: 18, halign: 'center' },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 27 }
+        4: { cellWidth: 36 },
+        5: { cellWidth: 27 }
       },
       didDrawCell: (data) => {
-        if (data.column.index === 6 && data.cell.section === 'body' && data.row.index === 0) {
+        if (data.column.index === 5 && data.cell.section === 'body' && data.row.index === 0) {
           if (supervisorMutuQR) {
             const cell = data.cell
             const qrSize = 11 // Smaller QR code
@@ -1235,7 +1233,6 @@ const exportToPDF = async (item) => {
         d.unsur_disupervisi,
         d.jawaban === 'Ya' ? 'V' : '',
         d.jawaban === 'Tidak' ? 'V' : '',
-        d.jawaban === 'Belum Isi' ? 'V' : '',
         d.temuan_masalah || '-'
       ]
       if (idx === 0) {
@@ -1249,7 +1246,7 @@ const exportToPDF = async (item) => {
       startY: tableKpY,
       margin: { left: 15, right: 15 },
       tableWidth: 180,
-      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'BELUM ISI', 'TEMUAN MASALAH', 'SUPERVISOR']],
+      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'TEMUAN MASALAH', 'SUPERVISOR']],
       body: tableDataKp,
       theme: 'grid',
       headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
@@ -1257,15 +1254,14 @@ const exportToPDF = async (item) => {
       bodyStyles: { cellPadding: { top: 6, bottom: 6, left: 1, right: 1 } }, // taller rows for body only
       columnStyles: {
         0: { cellWidth: 8, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 85 },
+        2: { cellWidth: 12, halign: 'center' },
         3: { cellWidth: 12, halign: 'center' },
-        4: { cellWidth: 18, halign: 'center' },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 27 }
+        4: { cellWidth: 36 },
+        5: { cellWidth: 27 }
       },
       didDrawCell: (data) => {
-        if (data.column.index === 6 && data.cell.section === 'body' && data.row.index === 0) {
+        if (data.column.index === 5 && data.cell.section === 'body' && data.row.index === 0) {
           if (supervisorKpQR) {
             const cell = data.cell
             const qrSize = 11
@@ -1322,7 +1318,6 @@ const exportToPDF = async (item) => {
         d.unsur_disupervisi,
         d.jawaban === 'Ya' ? 'V' : '',
         d.jawaban === 'Tidak' ? 'V' : '',
-        d.jawaban === 'Belum Isi' ? 'V' : '',
         d.temuan_masalah || '-'
       ]
       if (idx === 0) {
@@ -1336,7 +1331,7 @@ const exportToPDF = async (item) => {
       startY: tableMrY,
       margin: { left: 15, right: 15 },
       tableWidth: 180,
-      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'BELUM ISI', 'TEMUAN MASALAH', 'SUPERVISOR']],
+      head: [['NO', 'UNSUR YANG DISUPERVISI', 'YA', 'TIDAK', 'TEMUAN MASALAH', 'SUPERVISOR']],
       body: tableDataMr,
       theme: 'grid',
       headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
@@ -1344,15 +1339,14 @@ const exportToPDF = async (item) => {
       bodyStyles: { cellPadding: { top: 6, bottom: 6, left: 1, right: 1 } }, // taller rows for body only
       columnStyles: {
         0: { cellWidth: 8, halign: 'center', fontStyle: 'bold' },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 85 },
+        2: { cellWidth: 12, halign: 'center' },
         3: { cellWidth: 12, halign: 'center' },
-        4: { cellWidth: 18, halign: 'center' },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 27 }
+        4: { cellWidth: 36 },
+        5: { cellWidth: 27 }
       },
       didDrawCell: (data) => {
-        if (data.column.index === 6 && data.cell.section === 'body' && data.row.index === 0) {
+        if (data.column.index === 5 && data.cell.section === 'body' && data.row.index === 0) {
           if (supervisorMrQR) {
             const cell = data.cell
             const qrSize = 11
