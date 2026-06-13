@@ -230,8 +230,8 @@
             <div class="d-flex align-items-center gap-2">
                 <!-- Export Dropdown -->
                 <div class="dropdown position-relative" v-if="filters.unit">
-                    <button class="btn btn-xs btn-outline-danger dropdown-toggle fw-bold" type="button" @click.stop="toggleRegisterExportDropdown" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 8px;">
-                        <i class="fas fa-file-export me-1"></i> Register Harian
+                    <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white" type="button" @click.stop="toggleRegisterExportDropdown" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626;">
+                        <i class="fas fa-file-export me-1"></i> Input Harian
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="showRegisterExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 150px; font-size: 0.8rem;">
                         <li><a class="dropdown-item py-2" @click.prevent="exportRegisterBulanan('pdf')" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
