@@ -377,6 +377,7 @@
               <table class="table table-hover align-middle mb-0 text-sm">
                 <thead class="bg-light-subtle">
                   <tr>
+                    <th style="width: 5%"></th>
                     <th>No. Faktur</th>
                     <th>No. Order</th>
                     <th>Tgl Datang (Pesan)</th>
@@ -389,44 +390,98 @@
                 </thead>
                 <tbody>
                   <tr v-if="detailLoading">
-                    <td colspan="8" class="text-center py-5">
+                    <td colspan="9" class="text-center py-5">
                       <div class="spinner-border text-primary spinner-sm mb-2" role="status"></div>
                       <p class="mb-0 text-muted small">Memuat rincian faktur...</p>
                     </td>
                   </tr>
                   <tr v-else-if="detailInvoices.length === 0">
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
                       <i class="fas fa-file-invoice fa-2x mb-3 text-light"></i>
                       <p class="mb-0 small">Tidak ada rincian faktur outstanding.</p>
                     </td>
                   </tr>
-                  <tr v-else v-for="inv in detailInvoices" :key="inv.no_faktur" class="hover-row-light">
-                    <td>
-                      <span class="fw-bold text-dark font-monospace">{{ inv.no_faktur }}</span>
-                    </td>
-                    <td>
-                      <span class="text-muted font-monospace">{{ inv.no_order || '-' }}</span>
-                    </td>
-                    <td class="text-nowrap">{{ formatDate(inv.tgl_pesan) }}</td>
-                    <td class="text-nowrap">
-                      <span :class="{'text-danger fw-bold': isOverdue(inv.tgl_tempo)}">
-                        {{ formatDate(inv.tgl_tempo) }}
-                        <i v-if="isOverdue(inv.tgl_tempo)" class="fas fa-exclamation-circle ms-1" title="Jatuh Tempo!"></i>
-                      </span>
-                    </td>
-                    <td class="text-end numeric-text font-500">{{ formatRupiah(inv.tagihan) }}</td>
-                    <td class="text-end numeric-text text-success font-500">{{ formatRupiah(inv.besar_bayar) }}</td>
-                    <td class="text-end text-danger numeric-text fw-bold">{{ formatRupiah(inv.sisa_hutang) }}</td>
-                    <td class="text-center">
-                      <span :class="getStatusBadgeClass(inv.status)">
-                        {{ inv.status }}
-                      </span>
-                    </td>
-                  </tr>
+                  <template v-else v-for="inv in detailInvoices" :key="inv.no_faktur">
+                    <tr class="hover-row-light">
+                      <td class="text-center">
+                        <button 
+                          v-if="inv.pembayaran && inv.pembayaran.length > 0"
+                          @click="toggleInvoice(inv.no_faktur)"
+                          class="btn btn-link btn-xs p-0 text-decoration-none shadow-none text-muted"
+                          style="width: 24px; height: 24px;"
+                        >
+                          <i class="fas fa-fw" :class="expandedInvoices[inv.no_faktur] ? 'fa-chevron-down text-primary' : 'fa-chevron-right'"></i>
+                        </button>
+                        <span v-else class="text-muted opacity-50 small">-</span>
+                      </td>
+                      <td>
+                        <span class="fw-bold text-dark font-monospace">{{ inv.no_faktur }}</span>
+                      </td>
+                      <td>
+                        <span class="text-muted font-monospace">{{ inv.no_order || '-' }}</span>
+                      </td>
+                      <td class="text-nowrap">{{ formatDate(inv.tgl_pesan) }}</td>
+                      <td class="text-nowrap">
+                        <span :class="{'text-danger fw-bold': isOverdue(inv.tgl_tempo)}">
+                          {{ formatDate(inv.tgl_tempo) }}
+                          <i v-if="isOverdue(inv.tgl_tempo)" class="fas fa-exclamation-circle ms-1" title="Jatuh Tempo!"></i>
+                        </span>
+                      </td>
+                      <td class="text-end numeric-text font-500">{{ formatRupiah(inv.tagihan) }}</td>
+                      <td class="text-end numeric-text text-success font-500">{{ formatRupiah(inv.besar_bayar) }}</td>
+                      <td class="text-end text-danger numeric-text fw-bold">{{ formatRupiah(inv.sisa_hutang) }}</td>
+                      <td class="text-center">
+                        <span :class="getStatusBadgeClass(inv.status)">
+                          {{ inv.status }}
+                        </span>
+                      </td>
+                    </tr>
+                    <!-- Rincian Pembayaran Breakdown Row -->
+                    <tr v-if="expandedInvoices[inv.no_faktur] && inv.pembayaran && inv.pembayaran.length > 0">
+                      <td colspan="9" class="p-3 bg-light-subtle border-bottom">
+                        <div class="px-3 py-2 bg-white rounded-3 border shadow-sm">
+                          <div class="d-flex align-items-center mb-2 pb-1 border-bottom">
+                            <i class="fas fa-receipt text-success me-2"></i>
+                            <span class="fw-bold text-dark small">Rincian Transaksi Pembayaran</span>
+                          </div>
+                          <div class="table-responsive">
+                            <table class="table table-sm table-borderless align-middle mb-0 text-xs text-muted">
+                              <thead>
+                                <tr class="text-muted border-bottom" style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
+                                  <th style="width: 15%">No. Bukti</th>
+                                  <th style="width: 15%">Tgl. Bayar</th>
+                                  <th style="width: 25%">Akun Bayar</th>
+                                  <th class="text-end" style="width: 15%">Pembayaran</th>
+                                  <th>Keterangan</th>
+                                  <th style="width: 15%">Petugas</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="p in inv.pembayaran" :key="p.no_bukti + p.tgl_bayar" class="border-bottom-dashed">
+                                  <td>
+                                    <span class="badge bg-success-light text-success rounded-pill fw-bold px-2 py-1">{{ p.no_bukti }}</span>
+                                  </td>
+                                  <td class="text-nowrap">{{ formatDate(p.tgl_bayar) }}</td>
+                                  <td class="fw-bold text-dark">{{ p.nama_bayar || '-' }}</td>
+                                  <td class="text-end text-success fw-bold numeric-text">{{ formatRupiah(p.besar_bayar) }}</td>
+                                  <td class="text-wrap small text-dark">{{ p.keterangan || '-' }}</td>
+                                  <td>
+                                    <span class="small text-muted" :title="p.nip">
+                                      <i class="fas fa-user-circle me-1"></i> {{ p.nama_petugas || p.nip || '-' }}
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
                 </tbody>
                 <tfoot v-if="detailInvoices.length > 0 && !detailLoading">
                   <tr class="table-light fw-bold border-top">
-                    <td colspan="4" class="text-center font-monospace">TOTAL OUTSTANDING</td>
+                    <td colspan="5" class="text-center font-monospace">TOTAL OUTSTANDING</td>
                     <td class="text-end numeric-text font-600">
                       {{ formatRupiah(detailInvoices.reduce((acc, c) => acc + parseFloat(c.tagihan), 0)) }}
                     </td>
@@ -502,6 +557,12 @@ const filters = reactive({
 // Detail drill down state (Helicopter View)
 const detailLoading = ref(false)
 const detailInvoices = ref([])
+const expandedInvoices = ref({})
+
+const toggleInvoice = (no_faktur) => {
+  expandedInvoices.value[no_faktur] = !expandedInvoices.value[no_faktur]
+}
+
 const selectedSupplier = reactive({
   code: '',
   nama: '',
@@ -596,6 +657,7 @@ const openDetailModal = async (supplierItem) => {
   selectedSupplier.outstanding = parseFloat(supplierItem.sisa_hutang)
   
   detailInvoices.value = []
+  expandedInvoices.value = {}
   detailLoading.value = true
 
   // Open the Modal UI
@@ -694,32 +756,68 @@ const exportToExcel = () => {
 
 // Export Supplier Invoice Details list to Excel (Helicopter View detail download)
 const exportDetailToExcel = () => {
-  const data = detailInvoices.value.map(inv => ({
-    'No. Faktur': inv.no_faktur,
-    'No. Order': inv.no_order || '-',
-    'Tanggal Datang': inv.tgl_pesan,
-    'Tanggal Jatuh Tempo': inv.tgl_tempo,
-    'Tagihan': parseFloat(inv.tagihan),
-    'Besar Bayar': parseFloat(inv.besar_bayar),
-    'Sisa Hutang': parseFloat(inv.sisa_hutang),
-    'Status': inv.status
-  }))
-
-  const ws = XLSX.utils.json_to_sheet(data)
+  const wsData = []
   
-  // Summary Row inside detail Sheet
-  const totalRow = {
-    'No. Faktur': 'TOTAL OUTSTANDING',
-    'No. Order': '',
-    'Tanggal Datang': '',
-    'Tanggal Jatuh Tempo': '',
-    'Tagihan': detailInvoices.value.reduce((acc, c) => acc + parseFloat(c.tagihan), 0),
-    'Besar Bayar': detailInvoices.value.reduce((acc, c) => acc + parseFloat(c.besar_bayar), 0),
-    'Sisa Hutang': selectedSupplier.outstanding,
-    'Status': ''
-  }
-  XLSX.utils.sheet_add_json(ws, [totalRow], { skipHeader: true, origin: -1 })
+  // Headers
+  wsData.push([
+    'No. Faktur',
+    'No. Order',
+    'Tanggal Datang',
+    'Tanggal Jatuh Tempo',
+    'Tagihan',
+    'Sudah Dibayar',
+    'Sisa Hutang',
+    'Status',
+    'Rincian Transaksi Pembayaran'
+  ])
 
+  detailInvoices.value.forEach(inv => {
+    // Invoice Main Row
+    wsData.push([
+      inv.no_faktur,
+      inv.no_order || '-',
+      inv.tgl_pesan,
+      inv.tgl_tempo,
+      parseFloat(inv.tagihan),
+      parseFloat(inv.besar_bayar),
+      parseFloat(inv.sisa_hutang),
+      inv.status,
+      ''
+    ])
+
+    // If there are payments, list them as indented sub-rows
+    if (inv.pembayaran && inv.pembayaran.length > 0) {
+      inv.pembayaran.forEach(p => {
+        wsData.push([
+          '', 
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '   └─ Bayar:',
+          `Bukti: ${p.no_bukti} | Tgl: ${p.tgl_bayar} | Akun: ${p.nama_bayar} | Nominal: ${formatRupiah(p.besar_bayar)} | Keterangan: ${p.keterangan || '-'} | Petugas: ${p.nama_petugas || p.nip || '-'}`
+        ])
+      })
+    }
+  })
+
+  // Summary Row inside detail Sheet
+  wsData.push([])
+  wsData.push([
+    'TOTAL OUTSTANDING',
+    '',
+    '',
+    '',
+    detailInvoices.value.reduce((acc, c) => acc + parseFloat(c.tagihan), 0),
+    detailInvoices.value.reduce((acc, c) => acc + parseFloat(c.besar_bayar), 0),
+    selectedSupplier.outstanding,
+    '',
+    ''
+  ])
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, "Rincian Faktur")
   XLSX.writeFile(wb, `Rincian_Hutang_${selectedSupplier.code}_${today}.xlsx`)
@@ -868,16 +966,36 @@ const exportDetailToPDF = async () => {
   doc.text(`Total Outstanding: ${formatRupiah(selectedSupplier.outstanding)}`, 15, 53)
 
   const head = [['No. Faktur', 'No. Order', 'Tgl Datang', 'Tgl Tempo', 'Tagihan', 'Sudah Dibayar', 'Sisa Hutang', 'Status']]
-  const body = detailInvoices.value.map(inv => [
-    inv.no_faktur,
-    inv.no_order || '-',
-    formatDate(inv.tgl_pesan),
-    formatDate(inv.tgl_tempo),
-    formatRupiah(inv.tagihan),
-    formatRupiah(inv.besar_bayar),
-    formatRupiah(inv.sisa_hutang),
-    inv.status
-  ])
+  const body = []
+  
+  detailInvoices.value.forEach(inv => {
+    body.push([
+      inv.no_faktur,
+      inv.no_order || '-',
+      formatDate(inv.tgl_pesan),
+      formatDate(inv.tgl_tempo),
+      formatRupiah(inv.tagihan),
+      formatRupiah(inv.besar_bayar),
+      formatRupiah(inv.sisa_hutang),
+      inv.status
+    ])
+
+    // If there are payments, push them as sub-rows in the PDF table
+    if (inv.pembayaran && inv.pembayaran.length > 0) {
+      inv.pembayaran.forEach(p => {
+        body.push([
+          `   └─ Bukti: ${p.no_bukti}`,
+          `Tgl: ${formatDate(p.tgl_bayar)}`,
+          `Akun: ${p.nama_bayar || '-'}`,
+          '', 
+          `Bayar: ${formatRupiah(p.besar_bayar)}`,
+          `Ket: ${p.keterangan || '-'}`,
+          `Petugas: ${p.nama_petugas || p.nip || '-'}`,
+          ''
+        ])
+      })
+    }
+  })
 
   body.push([
     'TOTAL OUTSTANDING',
@@ -902,9 +1020,19 @@ const exportDetailToPDF = async () => {
       6: { halign: 'right', fontStyle: 'bold' }
     },
     didParseCell: (data) => {
+      // Bold final row (total)
       if (data.row.index === body.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fillColor = [241, 245, 249];
+      }
+      
+      // Style payment sub-rows (italic, small font, gray background)
+      const rowData = data.row.raw;
+      if (rowData && rowData[0] && typeof rowData[0] === 'string' && rowData[0].startsWith('   └─')) {
+        data.cell.styles.fontStyle = 'italic';
+        data.cell.styles.fontSize = 7;
+        data.cell.styles.fillColor = [252, 252, 252];
+        data.cell.styles.textColor = [100, 116, 139];
       }
     }
   })
@@ -1122,6 +1250,15 @@ onMounted(() => {
 
 .btn-detail-drill:hover {
   transform: scale(1.05);
+}
+
+.bg-success-light {
+  background-color: #ecfdf5 !important;
+  color: #059669 !important;
+}
+
+.border-bottom-dashed {
+  border-bottom: 1px dashed #e2e8f0 !important;
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
