@@ -288,7 +288,7 @@
                   <button 
                     @click="openDetailModal(item)" 
                     class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 btn-detail-drill"
-                    title="Helicopter View - Lihat rincian faktur"
+                    title="Lihat rincian faktur"
                   >
                     <i class="fas fa-expand me-1"></i> Rincian
                   </button>
@@ -334,7 +334,7 @@
                 <div class="icon-box-sm bg-primary-subtle text-primary rounded-3 p-2 me-3 d-inline-flex">
                   <i class="fas fa-info-circle"></i>
                 </div>
-                Helicopter View: Rincian Hutang Faktur
+                Rincian Hutang Faktur
               </h5>
               <p class="mb-0 text-muted small mt-1">
                 Supplier: <span class="fw-bold text-dark">{{ selectedSupplier.nama }}</span> ({{ selectedSupplier.code }})
