@@ -90,13 +90,13 @@
                 </td>
                 <td class="text-center">
                   <div class="d-inline-flex gap-1">
-                    <button class="btn btn-info text-white fw-bold d-inline-flex align-items-center justify-content-center" @click="exportToPDF(item)" title="Cetak PDF" style="font-size: 0.7rem; padding: 3px 8px; line-height: 1.2; border-radius: 6px;">
+                    <button class="btn btn-info text-white fw-bold d-inline-flex align-items-center justify-content-center" @click="exportToPDF(item)" title="Cetak PDF" style="font-size: 0.78rem; padding: 5px 12px; line-height: 1.4; border-radius: 6px;">
                       <i class="fas fa-file-pdf me-1"></i> PDF
                     </button>
-                    <button class="btn btn-warning text-white fw-bold d-inline-flex align-items-center justify-content-center" @click="openEditModal(item)" title="Edit Supervisi" style="font-size: 0.7rem; padding: 3px 8px; line-height: 1.2; border-radius: 6px;">
+                    <button class="btn btn-warning text-white fw-bold d-inline-flex align-items-center justify-content-center" @click="openEditModal(item)" title="Edit Supervisi" style="font-size: 0.78rem; padding: 5px 12px; line-height: 1.4; border-radius: 6px;">
                       <i class="fas fa-edit me-1"></i> Edit
                     </button>
-                    <button class="btn btn-danger fw-bold d-inline-flex align-items-center justify-content-center" @click="confirmDelete(item)" title="Hapus" style="font-size: 0.7rem; padding: 3px 8px; line-height: 1.2; border-radius: 6px;">
+                    <button class="btn btn-danger fw-bold d-inline-flex align-items-center justify-content-center" @click="confirmDelete(item)" title="Hapus" style="font-size: 0.78rem; padding: 5px 12px; line-height: 1.4; border-radius: 6px;">
                       <i class="fas fa-trash-alt"></i>
                     </button>
                   </div>
