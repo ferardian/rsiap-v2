@@ -2846,7 +2846,7 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     // Margin and drawing dimensions
     const paddingLeft = 90
     const paddingRight = 50
-    const paddingTop = 70
+    const paddingTop = 110
     const paddingBottom = 70
     const plotWidth = canvas.width - paddingLeft - paddingRight
     const plotHeight = canvas.height - paddingTop - paddingBottom
@@ -2989,18 +2989,18 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
         ctx.lineWidth = 4
         if (dash.length > 0) ctx.setLineDash(dash)
         ctx.beginPath()
-        ctx.moveTo(legendX, paddingTop / 2)
-        ctx.lineTo(legendX + 25, paddingTop / 2)
+        ctx.moveTo(legendX, 50)
+        ctx.lineTo(legendX + 25, 50)
         ctx.stroke()
         ctx.setLineDash([])
         
         ctx.fillStyle = color
         ctx.beginPath()
-        ctx.arc(legendX + 12.5, paddingTop / 2, 6, 0, 2 * Math.PI)
+        ctx.arc(legendX + 12.5, 50, 6, 0, 2 * Math.PI)
         ctx.fill()
         
         ctx.fillStyle = '#1e293b'
-        ctx.fillText(label, legendX + 35, paddingTop / 2)
+        ctx.fillText(label, legendX + 35, 50)
         legendX += ctx.measureText(label).width + 75
     }
     
