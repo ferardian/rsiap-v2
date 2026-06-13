@@ -17,15 +17,53 @@
         </div>
         
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <!-- Period Filter -->
+          <!-- Tahun Filter -->
           <div class="filter-container-custom">
-            <input
-              type="month"
-              class="filter-month-input"
-              v-model="filters.bulan"
-              @change="fetchAll"
-            />
+            <select class="filter-month-input" v-model="filters.tahun" @change="fetchAll" style="width: auto; min-width: 60px;">
+              <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+            </select>
           </div>
+          
+          <!-- Jenis Laporan Filter -->
+          <div class="filter-container-custom">
+            <select class="filter-month-input" v-model="filters.tipe" @change="fetchAll" style="width: auto; min-width: 90px;">
+              <option value="bulanan">Bulanan</option>
+              <option value="triwulan">Triwulan</option>
+              <option value="semester">Semester</option>
+              <option value="tahunan">Tahunan</option>
+            </select>
+          </div>
+
+          <!-- Periode Filter -->
+          <div class="filter-container-custom" v-if="filters.tipe !== 'tahunan'">
+            <select class="filter-month-input" v-model="filters.periode" @change="fetchAll" style="width: auto; min-width: 100px;">
+              <template v-if="filters.tipe === 'bulanan'">
+                <option :value="1">Januari</option>
+                <option :value="2">Februari</option>
+                <option :value="3">Maret</option>
+                <option :value="4">April</option>
+                <option :value="5">Mei</option>
+                <option :value="6">Juni</option>
+                <option :value="7">Juli</option>
+                <option :value="8">Agustus</option>
+                <option :value="9">September</option>
+                <option :value="10">Oktober</option>
+                <option :value="11">November</option>
+                <option :value="12">Desember</option>
+              </template>
+              <template v-else-if="filters.tipe === 'triwulan'">
+                <option :value="1">Triwulan I</option>
+                <option :value="2">Triwulan II</option>
+                <option :value="3">Triwulan III</option>
+                <option :value="4">Triwulan IV</option>
+              </template>
+              <template v-else-if="filters.tipe === 'semester'">
+                <option :value="1">Semester 1</option>
+                <option :value="2">Semester 2</option>
+              </template>
+            </select>
+          </div>
+
           <button class="btn-refresh-custom" @click="fetchAll" :disabled="loading.any">
             <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loading.any }"></i>
             Refresh
@@ -266,7 +304,16 @@ import api from '@/services/indikatorMutuService'
 const toast = useToast()
 
 const filters = reactive({
-  bulan: new Date().toISOString().slice(0, 7) // YYYY-MM
+  tahun: new Date().getFullYear(),
+  tipe: 'tahunan',
+  periode: new Date().getMonth() + 1
+})
+
+const currentYear = new Date().getFullYear()
+const years = computed(() => {
+  const yrs = []
+  for (let y = currentYear; y >= currentYear - 5; y--) yrs.push(y)
+  return yrs
 })
 
 // Define the 3 categories
@@ -350,12 +397,17 @@ const fetchKategori = async (index) => {
     const masterItems = masterData.data || []
 
     // For each master indicator, try to fetch monitoring data
-    const [bulanYear, bulanMonth] = filters.bulan.split('-')
-    const monitoringRes = await api.getMonitoring({
-      bulan: filters.bulan,
+    const params = {
+      tahun: filters.tahun,
+      tipe: filters.tipe,
       limit: 100,
       page: 1
-    })
+    }
+    if (filters.tipe !== 'tahunan') {
+      params.periode = filters.periode
+    }
+
+    const monitoringRes = await api.getMonitoring(params)
     const monitoringItems = monitoringRes.data?.data?.data || []
 
     // Merge: for each master item, find monitoring data
