@@ -26,7 +26,7 @@
           
           <!-- Jenis Laporan Filter -->
           <div class="filter-container-custom">
-            <select class="filter-month-input" v-model="filters.tipe" @change="fetchAll" style="width: auto; min-width: 90px;">
+            <select class="filter-month-input" v-model="filters.tipe" @change="handleTipeChange" style="width: auto; min-width: 90px;">
               <option value="bulanan">Bulanan</option>
               <option value="triwulan">Triwulan</option>
               <option value="semester">Semester</option>
@@ -72,6 +72,26 @@
       </div>
     </div>
 
+    <!-- ===== TOP LEVEL TAB SWITCHER ===== -->
+    <div class="top-tab-switcher mb-4">
+      <button 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'mutu' }" 
+        @click="activeTab = 'mutu'"
+      >
+        <i class="fas fa-chart-line me-2"></i>
+        Mutu
+      </button>
+      <button 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'ikp' }" 
+        @click="activeTab = 'ikp'"
+      >
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        IKP
+      </button>
+    </div>
+
     <!-- ===== LOADING STATE ===== -->
     <div v-if="loading.any && !hasSomeData" class="loading-state">
       <div class="loading-spinner">
@@ -81,216 +101,347 @@
     </div>
 
     <template v-else>
-      <!-- ===== GLOBAL SUMMARY CARDS ===== -->
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-          <div class="premium-summary-card">
-            <div class="summary-icon-bg total">
-              <i class="fas fa-clipboard-list"></i>
+      <div v-if="activeTab === 'mutu'">
+        <!-- ===== GLOBAL SUMMARY CARDS ===== -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="premium-summary-card">
+              <div class="summary-icon-bg total">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+              <div class="summary-info">
+                <div class="summary-value">{{ globalStats.total }}</div>
+                <div class="summary-label">Total Indikator</div>
+              </div>
             </div>
-            <div class="summary-info">
-              <div class="summary-value">{{ globalStats.total }}</div>
-              <div class="summary-label">Total Indikator</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="premium-summary-card">
+              <div class="summary-icon-bg achieved">
+                <i class="fas fa-check-double"></i>
+              </div>
+              <div class="summary-info">
+                <div class="summary-value">{{ globalStats.tercapai }}</div>
+                <div class="summary-label">Tercapai</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="premium-summary-card">
+              <div class="summary-icon-bg failed">
+                <i class="fas fa-times-circle"></i>
+              </div>
+              <div class="summary-info">
+                <div class="summary-value">{{ globalStats.tidakTercapai }}</div>
+                <div class="summary-label">Tidak Tercapai</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="premium-summary-card">
+              <div class="summary-icon-bg rate">
+                <i class="fas fa-percentage"></i>
+              </div>
+              <div class="summary-info">
+                <div class="summary-value">{{ globalStats.ratePercent }}%</div>
+                <div class="summary-label">Tingkat Keberhasilan</div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="premium-summary-card">
-            <div class="summary-icon-bg achieved">
-              <i class="fas fa-check-double"></i>
-            </div>
-            <div class="summary-info">
-              <div class="summary-value">{{ globalStats.tercapai }}</div>
-              <div class="summary-label">Tercapai</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="premium-summary-card">
-            <div class="summary-icon-bg failed">
-              <i class="fas fa-times-circle"></i>
-            </div>
-            <div class="summary-info">
-              <div class="summary-value">{{ globalStats.tidakTercapai }}</div>
-              <div class="summary-label">Tidak Tercapai</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="premium-summary-card">
-            <div class="summary-icon-bg rate">
-              <i class="fas fa-percentage"></i>
-            </div>
-            <div class="summary-info">
-              <div class="summary-value">{{ globalStats.ratePercent }}%</div>
-              <div class="summary-label">Tingkat Keberhasilan</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- ===== KATEGORI SECTIONS ===== -->
-      <div v-for="(kategori, ki) in kategoris" :key="ki" class="kategori-section mb-5">
+        <!-- ===== KATEGORI SECTIONS (MUTU) ===== -->
+        <div v-for="(kategori, ki) in kategoris.slice(0, 3)" :key="ki" class="kategori-section mb-5">
 
-        <!-- Section Header -->
-        <div class="section-header" :style="{ '--cat-color': kategori.color, '--cat-gradient': kategori.gradient }">
-          <div class="section-header-inner">
-            <div class="section-icon-wrap">
+          <!-- Section Header -->
+          <div class="section-header" :style="{ '--cat-color': kategori.color, '--cat-gradient': kategori.gradient }">
+            <div class="section-header-inner">
+              <div class="section-icon-wrap">
+                <i :class="kategori.icon"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="section-title mb-1">{{ kategori.nama }}</h5>
+                <p class="section-desc mb-0">{{ kategori.desc }}</p>
+              </div>
+              <div class="section-badge-group">
+                <span class="section-badge badge-total">
+                  <i class="fas fa-list me-1"></i>
+                  {{ kategorisData[ki]?.total ?? 0 }} Indikator
+                </span>
+                <span class="section-badge" :class="(kategorisData[ki]?.ratePercent ?? 0) >= 80 ? 'badge-ok' : 'badge-warn'">
+                  <i class="fas fa-bullseye me-1"></i>
+                  {{ kategorisData[ki]?.ratePercent ?? 0 }}% Tercapai
+                </span>
+              </div>
+            </div>
+
+            <!-- Overall Progress Bar -->
+            <div class="section-progress-wrap mt-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <small class="text-muted opacity-75">Keberhasilan Keseluruhan</small>
+                <small class="text-slate-800 fw-bold">{{ kategorisData[ki]?.tercapai ?? 0 }} / {{ kategorisData[ki]?.total ?? 0 }}</small>
+              </div>
+              <div class="section-progress-bar">
+                <div
+                  class="section-progress-fill"
+                  :style="{ width: (kategorisData[ki]?.ratePercent ?? 0) + '%' }"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Skeleton and Cards for Mutu Indicators -->
+          <!-- Loading skeleton -->
+          <div v-if="loading[ki]" class="row g-3 mt-1">
+            <div v-for="s in 3" :key="s" class="col-md-6 col-lg-4">
+              <div class="indicator-card skeleton-card">
+                <div class="skeleton-line" style="width: 70%; height: 18px;"></div>
+                <div class="skeleton-line mt-2" style="width: 50%; height: 12px;"></div>
+                <div class="skeleton-line mt-3" style="width: 100%; height: 8px;"></div>
+                <div class="skeleton-line mt-2" style="width: 90%; height: 8px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicator Cards -->
+          <div v-else-if="kategorisData[ki]?.items?.length" class="row g-3 mt-1">
+            <div
+              v-for="item in kategorisData[ki].items"
+              :key="item.id_master"
+              class="col-md-6 col-lg-4"
+            >
+              <div class="indicator-card" :class="getCardClass(item)">
+                <!-- Status ribbon -->
+                <div class="card-ribbon" :class="getRibbonClass(item)"></div>
+
+                <!-- Card Header -->
+                <div class="indicator-card-header">
+                  <div class="indicator-meta">
+                    <span class="indicator-unit" v-if="item.pj">
+                      <i class="fas fa-user-tie me-1"></i>{{ item.pj }}
+                    </span>
+                    <span class="indicator-unit" v-else>
+                      <i class="fas fa-hospital me-1"></i>{{ item.unit_name || 'RS' }}
+                    </span>
+                    <span class="status-dot" :class="getStatusDotClass(item)" :title="getStatusLabel(item)"></span>
+                  </div>
+                  <h6 class="indicator-name">{{ item.nama_indikator || item.nama_inmut }}</h6>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="indicator-stats">
+                  <div class="stat-item">
+                    <div class="stat-icon stat-icon-num">
+                      <i class="fas fa-calculator"></i>
+                    </div>
+                    <div>
+                      <div class="stat-label">Numerator</div>
+                      <div class="stat-value">{{ item.total_numerator != null ? item.total_numerator : '–' }}</div>
+                    </div>
+                  </div>
+                  <div class="stat-divider"></div>
+                  <div class="stat-item">
+                    <div class="stat-icon stat-icon-den">
+                      <i class="fas fa-divide"></i>
+                    </div>
+                    <div>
+                      <div class="stat-label">Denominator</div>
+                      <div class="stat-value">{{ item.total_denominator != null ? item.total_denominator : '–' }}</div>
+                    </div>
+                  </div>
+                  <div class="stat-divider"></div>
+                  <div class="stat-item">
+                    <div class="stat-icon stat-icon-target">
+                      <i class="fas fa-bullseye"></i>
+                    </div>
+                    <div>
+                      <div class="stat-label">Target</div>
+                      <div class="stat-value">{{ getTargetDisplay(item) }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Score Bar -->
+                <div class="score-section">
+                  <div class="d-flex justify-content-between align-items-end mb-1">
+                    <span class="score-label">{{ getScoreLabel() }}</span>
+                    <span class="score-value" :class="isTargetMet(item) ? 'score-good' : 'score-bad'">
+                      {{ item.capaian != null ? item.capaian + '%' : 'Belum Ada Data' }}
+                    </span>
+                  </div>
+                  <div class="score-bar">
+                    <div
+                      class="score-fill"
+                      :class="isTargetMet(item) ? 'fill-good' : (item.capaian != null ? 'fill-bad' : 'fill-empty')"
+                      :style="{ width: (item.capaian != null ? Math.min(item.capaian, 100) : 0) + '%' }"
+                    ></div>
+                    <!-- Target marker -->
+                    <div
+                      class="score-target-marker"
+                      :style="{ left: Math.min(getNumericTarget(item), 100) + '%' }"
+                      :title="'Target: ' + getTargetDisplay(item)"
+                    ></div>
+                  </div>
+                  <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted" style="font-size: 0.68rem;">0%</small>
+                    <small class="text-muted" style="font-size: 0.68rem;">100%</small>
+                  </div>
+                </div>
+
+                <!-- Footer Status -->
+                <div class="indicator-footer">
+                  <span class="status-badge" :class="getStatusBadgeClass(item)">
+                    <i :class="getStatusIcon(item)" class="me-1"></i>
+                    {{ getStatusLabel(item) }}
+                  </span>
+                  <span class="data-count" v-if="item.last_filled">
+                    <i class="fas fa-calendar-check me-1"></i>{{ formatDate(item.last_filled) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="empty-state">
+            <div class="empty-icon">
               <i :class="kategori.icon"></i>
             </div>
-            <div class="flex-grow-1">
-              <h5 class="section-title mb-1">{{ kategori.nama }}</h5>
-              <p class="section-desc mb-0">{{ kategori.desc }}</p>
-            </div>
-            <div class="section-badge-group">
-              <span class="section-badge badge-total">
-                <i class="fas fa-list me-1"></i>
-                {{ kategorisData[ki]?.total ?? 0 }} Indikator
-              </span>
-              <span class="section-badge" :class="(kategorisData[ki]?.ratePercent ?? 0) >= 80 ? 'badge-ok' : 'badge-warn'">
-                <i class="fas fa-bullseye me-1"></i>
-                {{ kategorisData[ki]?.ratePercent ?? 0 }}% Tercapai
-              </span>
-            </div>
+            <p class="empty-text">Belum ada data indikator untuk kategori ini</p>
+            <small class="text-muted">Tambah indikator melalui menu Master Indikator Mutu</small>
           </div>
 
-          <!-- Overall Progress Bar -->
-          <div class="section-progress-wrap mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <small class="text-muted opacity-75">Keberhasilan Keseluruhan</small>
-              <small class="text-slate-800 fw-bold">{{ kategorisData[ki]?.tercapai ?? 0 }} / {{ kategorisData[ki]?.total ?? 0 }}</small>
-            </div>
-            <div class="section-progress-bar">
-              <div
-                class="section-progress-fill"
-                :style="{ width: (kategorisData[ki]?.ratePercent ?? 0) + '%' }"
-              ></div>
-            </div>
-          </div>
         </div>
-
-        <!-- Loading skeleton -->
-        <div v-if="loading[ki]" class="row g-3 mt-1">
-          <div v-for="s in 3" :key="s" class="col-md-6 col-lg-4">
-            <div class="indicator-card skeleton-card">
-              <div class="skeleton-line" style="width: 70%; height: 18px;"></div>
-              <div class="skeleton-line mt-2" style="width: 50%; height: 12px;"></div>
-              <div class="skeleton-line mt-3" style="width: 100%; height: 8px;"></div>
-              <div class="skeleton-line mt-2" style="width: 90%; height: 8px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Indicator Cards -->
-        <div v-else-if="kategorisData[ki]?.items?.length" class="row g-3 mt-1">
-          <div
-            v-for="item in kategorisData[ki].items"
-            :key="item.id_master"
-            class="col-md-6 col-lg-4"
-          >
-            <div class="indicator-card" :class="getCardClass(item)">
-              <!-- Status ribbon -->
-              <div class="card-ribbon" :class="getRibbonClass(item)"></div>
-
-              <!-- Card Header -->
-              <div class="indicator-card-header">
-                <div class="indicator-meta">
-                  <span class="indicator-unit" v-if="item.pj">
-                    <i class="fas fa-user-tie me-1"></i>{{ item.pj }}
-                  </span>
-                  <span class="indicator-unit" v-else>
-                    <i class="fas fa-hospital me-1"></i>{{ item.unit_name || 'RS' }}
-                  </span>
-                  <span class="status-dot" :class="getStatusDotClass(item)" :title="getStatusLabel(item)"></span>
-                </div>
-                <h6 class="indicator-name">{{ item.nama_indikator || item.nama_inmut }}</h6>
-              </div>
-
-              <!-- Stats Row -->
-              <div class="indicator-stats">
-                <div class="stat-item">
-                  <div class="stat-icon stat-icon-num">
-                    <i class="fas fa-calculator"></i>
-                  </div>
-                  <div>
-                    <div class="stat-label">Numerator</div>
-                    <div class="stat-value">{{ item.total_numerator != null ? item.total_numerator : '–' }}</div>
-                  </div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                  <div class="stat-icon stat-icon-den">
-                    <i class="fas fa-divide"></i>
-                  </div>
-                  <div>
-                    <div class="stat-label">Denominator</div>
-                    <div class="stat-value">{{ item.total_denominator != null ? item.total_denominator : '–' }}</div>
-                  </div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                  <div class="stat-icon stat-icon-target">
-                    <i class="fas fa-bullseye"></i>
-                  </div>
-                  <div>
-                    <div class="stat-label">Target</div>
-                    <div class="stat-value">{{ getTargetDisplay(item) }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Score Bar -->
-              <div class="score-section">
-                <div class="d-flex justify-content-between align-items-end mb-1">
-                  <span class="score-label">Capaian Bulan Ini</span>
-                  <span class="score-value" :class="isTargetMet(item) ? 'score-good' : 'score-bad'">
-                    {{ item.capaian != null ? item.capaian + '%' : 'Belum Ada Data' }}
-                  </span>
-                </div>
-                <div class="score-bar">
-                  <div
-                    class="score-fill"
-                    :class="isTargetMet(item) ? 'fill-good' : (item.capaian != null ? 'fill-bad' : 'fill-empty')"
-                    :style="{ width: (item.capaian != null ? Math.min(item.capaian, 100) : 0) + '%' }"
-                  ></div>
-                  <!-- Target marker -->
-                  <div
-                    class="score-target-marker"
-                    :style="{ left: Math.min(getNumericTarget(item), 100) + '%' }"
-                    :title="'Target: ' + getTargetDisplay(item)"
-                  ></div>
-                </div>
-                <div class="d-flex justify-content-between mt-1">
-                  <small class="text-muted" style="font-size: 0.68rem;">0%</small>
-                  <small class="text-muted" style="font-size: 0.68rem;">100%</small>
-                </div>
-              </div>
-
-              <!-- Footer Status -->
-              <div class="indicator-footer">
-                <span class="status-badge" :class="getStatusBadgeClass(item)">
-                  <i :class="getStatusIcon(item)" class="me-1"></i>
-                  {{ getStatusLabel(item) }}
-                </span>
-                <span class="data-count" v-if="item.last_filled">
-                  <i class="fas fa-calendar-check me-1"></i>{{ formatDate(item.last_filled) }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div v-else class="empty-state">
-          <div class="empty-icon">
-            <i :class="kategori.icon"></i>
-          </div>
-          <p class="empty-text">Belum ada data indikator untuk kategori ini</p>
-          <small class="text-muted">Tambah indikator melalui menu Master Indikator Mutu</small>
-        </div>
-
       </div>
 
+      <div v-else-if="activeTab === 'ikp'">
+        <div class="kategori-section mb-5">
+          <!-- Section Header for IKP -->
+          <div class="section-header" :style="{ '--cat-color': kategoris[3].color, '--cat-gradient': kategoris[3].gradient }">
+            <div class="section-header-inner">
+              <div class="section-icon-wrap">
+                <i :class="kategoris[3].icon"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="section-title mb-1">{{ kategoris[3].nama }}</h5>
+                <p class="section-desc mb-0">{{ kategoris[3].desc }}</p>
+              </div>
+              <div class="section-badge-group">
+                <span class="section-badge badge-total">
+                  <i class="fas fa-list me-1"></i>
+                  {{ kategorisData[3]?.total ?? 0 }} Insiden
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom IKP Section -->
+          <!-- Loading skeleton -->
+          <div v-if="loading[3]" class="row g-3 mt-1">
+            <div class="col-12">
+              <div class="ikp-detail-card py-5 text-center">
+                <div class="spinner-ring mx-auto mb-3"></div>
+                <span class="text-muted">Memuat data insiden keselamatan pasien...</span>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="kategorisData[3]?.data" class="mt-3 d-flex flex-column gap-4">
+            <!-- Row 1: Charts -->
+            <div class="row g-3">
+              <!-- Tren Bulanan (Area Chart) -->
+              <div class="col-lg-8 col-md-7">
+                <div class="ikp-detail-card h-100">
+                  <h6 class="ikp-card-header-title mb-3">
+                    <i class="fas fa-chart-line me-2 text-danger"></i>
+                    Tren Kejadian Bulanan (Tahun {{ filters.tahun }})
+                  </h6>
+                  <div style="height: 280px;">
+                    <apexchart type="area" height="100%" :options="trendChartOptions" :series="trendSeries"></apexchart>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Sebaran Jenis Kejadian (Donut Chart) -->
+              <div class="col-lg-4 col-md-5">
+                <div class="ikp-detail-card h-100">
+                  <h6 class="ikp-card-header-title mb-3">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>
+                    Sebaran Jenis Kejadian
+                  </h6>
+                  <div style="height: 280px; display: flex; align-items: center; justify-content: center;">
+                    <apexchart type="donut" width="100%" height="100%" :options="jenisChartOptions" :series="jenisChartData.series"></apexchart>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: Detailed Stats & Lists -->
+            <div class="row g-3">
+              <!-- Summary Card Total Insiden & Textual Sebaran -->
+              <div class="col-md-4">
+                <div class="d-flex flex-column gap-3 h-100">
+                  <div class="ikp-summary-card py-4">
+                    <div class="ikp-card-title">Total Kejadian</div>
+                    <div class="ikp-card-value text-danger">{{ kategorisData[3].data.total_insiden }}</div>
+                    <div class="ikp-card-desc">Laporan Insiden Keselamatan Pasien (IKP)</div>
+                  </div>
+                  
+                  <div class="ikp-detail-card flex-grow-1">
+                    <h6 class="ikp-card-header-title mb-2"><i class="fas fa-list-ol me-2 text-primary"></i>Detail Sebaran Jenis</h6>
+                    <div class="jenis-grid" style="grid-template-columns: 1fr; gap: 0.5rem;">
+                      <div v-for="j in kategorisData[3].data.jenis_overview" :key="j.alias" class="jenis-item" style="padding: 0.4rem 0.6rem;">
+                        <div class="jenis-alias-badge" :class="j.alias.toLowerCase()" style="min-width: 42px; font-size: 0.7rem; padding: 2px 6px;">{{ j.alias }}</div>
+                        <div class="flex-grow-1 d-flex justify-content-between align-items-center">
+                          <span class="jenis-name fw-medium text-slate-700" style="font-size: 0.75rem;">{{ j.nama_jenis_insiden }}</span>
+                          <span class="jenis-count badge bg-light text-dark fw-bold border" style="font-size: 0.7rem; padding: 2px 6px;">{{ j.jumlah }} Kejadian</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Grading Risiko Overview -->
+              <div class="col-md-4">
+                <div class="ikp-detail-card h-100">
+                  <h6 class="ikp-card-header-title mb-3"><i class="fas fa-shield-virus me-2 text-success"></i>Grading Risiko (Risk Matrix)</h6>
+                  <div class="grading-list d-flex flex-column gap-2">
+                    <div v-for="g in kategorisData[3].data.grading_overview" :key="g.grading_risiko" class="grading-item d-flex align-items-center p-2 rounded border-start border-4 bg-light shadow-sm" :style="{ borderLeftColor: getGradingHexColor(g.grading_risiko) }">
+                      <span class="grading-label fw-bold text-slate-700 ms-2">{{ g.grading_risiko }}</span>
+                      <span class="grading-value ms-auto badge fw-bold" :style="{ backgroundColor: getGradingHexColor(g.grading_risiko), color: g.grading_risiko === 'Kuning' ? '#000' : '#fff' }">{{ g.total }} Insiden</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Unit Terbanyak -->
+              <div class="col-md-4">
+                <div class="ikp-detail-card h-100">
+                  <h6 class="ikp-card-header-title mb-3"><i class="fas fa-hospital-user me-2 text-warning"></i>Unit dengan Insiden Terbanyak</h6>
+                  <div class="unit-list d-flex flex-column gap-2">
+                    <div v-for="(u, idx) in kategorisData[3].data.top_units" :key="u.nama_unit" class="unit-item d-flex align-items-center p-2 bg-light rounded border border-light shadow-sm">
+                      <span class="unit-rank badge bg-secondary text-white me-2">{{ idx + 1 }}</span>
+                      <span class="unit-name text-slate-700 fw-medium">{{ u.nama_unit }}</span>
+                      <span class="unit-value ms-auto badge bg-light text-dark border fw-bold">{{ u.jumlah }} Insiden</span>
+                    </div>
+                    <div v-if="!kategorisData[3].data.top_units?.length" class="text-muted text-center py-4">
+                      Tidak ada laporan insiden pada periode ini
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="empty-state">
+            <div class="empty-icon">
+              <i :class="kategoris[3].icon"></i>
+            </div>
+            <p class="empty-text">Gagal memuat data IKP</p>
+          </div>
+        </div>
+      </div>
     </template>
 
   </div>
@@ -300,7 +451,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
+import VueApexCharts from 'vue3-apexcharts'
 
+const apexchart = VueApexCharts
 const toast = useToast()
 
 const filters = reactive({
@@ -309,6 +462,20 @@ const filters = reactive({
   periode: new Date().getMonth() + 1
 })
 
+const activeTab = ref('mutu')
+
+const handleTipeChange = () => {
+  const currentMonth = new Date().getMonth() + 1
+  if (filters.tipe === 'bulanan') {
+    filters.periode = currentMonth
+  } else if (filters.tipe === 'triwulan') {
+    filters.periode = Math.ceil(currentMonth / 3)
+  } else if (filters.tipe === 'semester') {
+    filters.periode = currentMonth <= 6 ? 1 : 2
+  }
+  fetchAll()
+}
+
 const currentYear = new Date().getFullYear()
 const years = computed(() => {
   const yrs = []
@@ -316,7 +483,7 @@ const years = computed(() => {
   return yrs
 })
 
-// Define the 3 categories
+// Define the 4 categories
 const kategoris = [
   {
     key: 'nasional',
@@ -341,6 +508,14 @@ const kategoris = [
     icon: 'fas fa-door-open',
     color: '#059669',
     gradient: 'linear-gradient(135deg, #059669, #10b981)'
+  },
+  {
+    key: 'ikp',
+    nama: 'Insiden Keselamatan Pasien (IKP)',
+    desc: 'Laporan insiden keselamatan pasien berdasarkan jenis dan grading risiko',
+    icon: 'fas fa-exclamation-triangle',
+    color: '#dc2626',
+    gradient: 'linear-gradient(135deg, #dc2626, #f87171)'
   }
 ]
 
@@ -348,20 +523,23 @@ const kategoris = [
 const kategorisData = reactive({
   0: { items: [], total: 0, tercapai: 0, tidakTercapai: 0, ratePercent: 0 },
   1: { items: [], total: 0, tercapai: 0, tidakTercapai: 0, ratePercent: 0 },
-  2: { items: [], total: 0, tercapai: 0, tidakTercapai: 0, ratePercent: 0 }
+  2: { items: [], total: 0, tercapai: 0, tidakTercapai: 0, ratePercent: 0 },
+  3: { items: [], total: 0, data: null }
 })
 
 const loading = reactive({
   0: false,
   1: false,
   2: false,
+  3: false,
   any: false
 })
 
 const hasSomeData = computed(() =>
   kategorisData[0].items.length > 0 ||
   kategorisData[1].items.length > 0 ||
-  kategorisData[2].items.length > 0
+  kategorisData[2].items.length > 0 ||
+  kategorisData[3].data !== null
 )
 
 const globalStats = computed(() => {
@@ -375,89 +553,255 @@ const globalStats = computed(() => {
   return { total, tercapai, tidakTercapai, ratePercent }
 })
 
-// Map kategori names for the API
-const kategoriApiMap = [
-  'Indikator Mutu Nasional',
-  'Indikator Mutu Prioritas Rumah Sakit',
-  'Indikator Mutu Prioritas Unit'
-]
-
-const fetchKategori = async (index) => {
-  loading[index] = true
+const fetchAll = async () => {
   loading.any = true
+  loading[0] = true
+  loading[1] = true
+  loading[2] = true
+  loading[3] = true
   try {
-    // Fetch master indicators for this category
-    const masterRes = await api.getUtama({
-      limit: 100,
-      page: 1,
-      kategori: kategoriApiMap[index],
-      status: '1'
-    })
-    const masterData = masterRes.data.data
-    const masterItems = masterData.data || []
-
-    // For each master indicator, try to fetch monitoring data
     const params = {
       tahun: filters.tahun,
       tipe: filters.tipe,
-      limit: 100,
+      limit: 1000,
       page: 1
     }
     if (filters.tipe !== 'tahunan') {
       params.periode = filters.periode
     }
 
-    const monitoringRes = await api.getMonitoring(params)
+    const [monitoringRes, ikpRes] = await Promise.all([
+      api.getMonitoring(params),
+      api.getIkpData(params)
+    ])
+
     const monitoringItems = monitoringRes.data?.data?.data || []
 
-    // Merge: for each master item, find monitoring data
-    const mergedItems = masterItems.map(master => {
-      const monitoring = monitoringItems.find(m =>
-        m.id_master === master.id_master ||
-        m.nama_inmut === master.nama_indikator
-      )
-      return {
-        ...master,
-        // monitoring API uses: score, total_num, total_denum, last_filled
-        capaian: monitoring ? parseFloat(monitoring.score) : null,
-        total_numerator: monitoring ? monitoring.total_num : null,
-        total_denominator: monitoring ? monitoring.total_denum : null,
-        last_filled: monitoring ? monitoring.last_filled : null,
-        // rumus from monitoring (numeric codes)
-        rumus_code: monitoring ? (monitoring.rumus || monitoring.rumus_utama) : (master.rumus || null)
+    const items0 = []
+    const items1 = []
+    const items2 = []
+
+    monitoringItems.forEach(item => {
+      const processedItem = {
+        ...item,
+        id_master: item.id_master,
+        nama_indikator: item.nama_inmut,
+        standar: item.standar || item.standar_utama,
+        satuan: item.satuan || item.satuan_utama,
+        rumus: item.rumus || item.rumus_utama,
+        capaian: item.has_data && item.total_denum > 0 ? parseFloat(item.score) : null,
+        total_numerator: item.has_data ? item.total_num : null,
+        total_denominator: item.has_data ? item.total_denum : null,
+        last_filled: item.last_filled,
+        rumus_code: item.rumus || item.rumus_utama,
+        unit_name: item.nama_ruang
+      }
+
+      const katUtama = (item.kategori_utama || '').toLowerCase()
+      const namaJenis = (item.nama_jenis || '').toLowerCase()
+
+      if (katUtama.includes('nasional') || namaJenis.includes('nasional')) {
+        items0.push(processedItem)
+      } else if (
+        katUtama.includes('rumah sakit') || 
+        namaJenis.includes('rumah sakit') || 
+        namaJenis === 'skp'
+      ) {
+        items1.push(processedItem)
+      } else {
+        items2.push(processedItem)
       }
     })
 
-    // Calculate stats
-    const tercapai = mergedItems.filter(item => isTargetMet(item)).length
-    const tidakTercapai = mergedItems.filter(item => item.capaian != null && !isTargetMet(item)).length
-    const ratePercent = mergedItems.length > 0
-      ? Math.round((tercapai / mergedItems.length) * 100)
-      : 0
+    const setKategoriData = (index, items) => {
+      const tercapai = items.filter(item => isTargetMet(item)).length
+      const tidakTercapai = items.filter(item => item.capaian != null && !isTargetMet(item)).length
+      const ratePercent = items.length > 0
+        ? Math.round((tercapai / items.length) * 100)
+        : 0
 
-    kategorisData[index] = {
-      items: mergedItems,
-      total: mergedItems.length,
-      tercapai,
-      tidakTercapai,
-      ratePercent
+      kategorisData[index] = {
+        items,
+        total: items.length,
+        tercapai,
+        tidakTercapai,
+        ratePercent
+      }
     }
+
+    setKategoriData(0, items0)
+    setKategoriData(1, items1)
+    setKategoriData(2, items2)
+
+    kategorisData[3] = {
+      items: [],
+      total: ikpRes.data?.data?.total_insiden || 0,
+      data: ikpRes.data?.data || null
+    }
+
   } catch (error) {
-    console.error(`Error fetching kategori ${index}:`, error)
-    // Silently fail - show empty state
+    console.error('Error fetching dashboard:', error)
+    toast.error('Gagal memuat data dashboard')
   } finally {
-    loading[index] = false
-    loading.any = Object.keys(loading).filter(k => k !== 'any').some(k => loading[k])
+    loading[0] = false
+    loading[1] = false
+    loading[2] = false
+    loading[3] = false
+    loading.any = false
   }
 }
 
-const fetchAll = async () => {
-  loading.any = true
-  await Promise.all([fetchKategori(0), fetchKategori(1), fetchKategori(2)])
-  loading.any = false
+// Helpers
+const monthNames = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+]
+const romanQuarters = ['I', 'II', 'III', 'IV']
+
+const getScoreLabel = () => {
+  switch (filters.tipe) {
+    case 'bulanan': {
+      const mName = monthNames[filters.periode - 1] || 'Bulan Ini'
+      return `Capaian ${mName}`
+    }
+    case 'triwulan': {
+      const qName = romanQuarters[filters.periode - 1] || 'Ini'
+      return `Capaian Triwulan ${qName}`
+    }
+    case 'semester': {
+      return `Capaian Semester ${filters.periode}`
+    }
+    case 'tahunan': {
+      return `Capaian Tahun ${filters.tahun}`
+    }
+    default: {
+      return 'Capaian Periode Ini'
+    }
+  }
 }
 
-// Helpers
+const getGradingHexColor = (colorName) => {
+  const map = {
+    'Biru': '#3b82f6',
+    'Hijau': '#10b981',
+    'Kuning': '#eab308',
+    'Merah': '#ef4444'
+  }
+  return map[colorName] || '#94a3b8'
+}
+
+// IKP Charts computed data
+const trendSeries = computed(() => {
+  const data = Array(12).fill(0)
+  const trend = kategorisData[3]?.data?.bulanan_trend || []
+  trend.forEach(item => {
+    const idx = parseInt(item.bulan, 10) - 1
+    if (idx >= 0 && idx < 12) {
+      data[idx] = parseInt(item.jumlah, 10)
+    }
+  })
+  return [{
+    name: 'Jumlah Kejadian',
+    data: data
+  }]
+})
+
+const trendChartOptions = computed(() => ({
+  chart: {
+    type: 'area',
+    toolbar: { show: false },
+    zoom: { enabled: false }
+  },
+  colors: ['#ef4444'],
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.35,
+      opacityTo: 0.05,
+      stops: [50, 100, 100]
+    }
+  },
+  dataLabels: { enabled: false },
+  stroke: { curve: 'smooth', width: 3 },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+    labels: {
+      style: { colors: '#64748b', fontWeight: 600 }
+    }
+  },
+  yaxis: {
+    labels: {
+      style: { colors: '#64748b', fontWeight: 600 }
+    }
+  },
+  tooltip: {
+    theme: 'light',
+    y: {
+      formatter: (val) => `${val} Kejadian`
+    }
+  },
+  grid: {
+    borderColor: '#f1f5f9',
+    strokeDashArray: 4
+  }
+}))
+
+const jenisChartData = computed(() => {
+  const overview = kategorisData[3]?.data?.jenis_overview || []
+  const labels = overview.map(o => `${o.alias} (${o.nama_jenis_insiden})`)
+  const series = overview.map(o => parseInt(o.jumlah, 10))
+  return { labels, series }
+})
+
+const jenisChartOptions = computed(() => ({
+  chart: {
+    type: 'donut',
+    fontFamily: 'Inter, sans-serif'
+  },
+  labels: jenisChartData.value.labels,
+  colors: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#7c3aed', '#64748b'],
+  legend: {
+    position: 'bottom',
+    fontSize: '11px',
+    fontWeight: 600,
+    labels: { colors: '#475569' }
+  },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '78%',
+        labels: {
+          show: true,
+          name: {
+            show: true,
+            fontSize: '12px',
+            fontWeight: 600,
+            color: '#64748b',
+            offsetY: -8
+          },
+          value: {
+            show: true,
+            fontSize: '20px',
+            fontWeight: 800,
+            color: '#1e293b',
+            offsetY: 6,
+            formatter: (val) => val
+          },
+          total: {
+            show: true,
+            label: 'Total',
+            color: '#64748b',
+            fontSize: '12px',
+            fontWeight: 600,
+            formatter: () => kategorisData[3]?.data?.total_insiden || 0
+          }
+        }
+      }
+    }
+  },
+  dataLabels: { enabled: false }
+}))
 const getNumericTarget = (item) => {
   const standar = parseFloat(item.standar || item.standar_utama)
   return isNaN(standar) ? 80 : Math.min(standar, 100)
@@ -896,5 +1240,167 @@ onMounted(() => {
   .section-header-inner { gap: 0.75rem; }
   .section-badge-group { gap: 0.35rem; }
   .filter-month-input { width: 110px; }
+}
+
+/* ===== IKP CUSTOM SECTION ===== */
+.ikp-summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.ikp-card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+.ikp-card-value {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.ikp-card-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.ikp-detail-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.ikp-card-header-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+}
+.jenis-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 576px) {
+  .jenis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.jenis-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+.jenis-alias-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: center;
+  min-width: 48px;
+  color: white;
+}
+.jenis-alias-badge.knc { background-color: #3b82f6; }
+.jenis-alias-badge.ktc { background-color: #10b981; }
+.jenis-alias-badge.kpc { background-color: #f59e0b; }
+.jenis-alias-badge.ktd { background-color: #ef4444; }
+.jenis-alias-badge.sentinel { background-color: #7c3aed; }
+.jenis-alias-badge.ksd { background-color: #64748b; }
+
+.jenis-info {
+  display: flex;
+  flex-direction: column;
+}
+.jenis-name {
+  font-size: 0.8rem;
+  color: #334155;
+}
+.jenis-count {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.grading-list, .unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.grading-item, .unit-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+.grading-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+.unit-rank {
+  font-weight: 700;
+  font-size: 0.8rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #cbd5e1;
+  color: #334155;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+
+/* ===== TOP LEVEL TAB SWITCHER ===== */
+.top-tab-switcher {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+.tab-btn:hover {
+  color: #334155;
+}
+.tab-btn.active {
+  color: #3b82f6;
+}
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #3b82f6;
+  border-radius: 2px;
 }
 </style>

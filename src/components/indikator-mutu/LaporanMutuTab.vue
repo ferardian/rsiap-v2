@@ -98,7 +98,7 @@
             </div>
 
             <!-- Cari Indikator Filter -->
-            <div class="col-lg-2">
+            <div class="col-lg">
                 <label class="filter-label"><i class="fas fa-search me-1"></i> Cari Indikator</label>
                 <input 
                     type="text" 
@@ -111,14 +111,14 @@
             </div>
 
             <!-- Action Area -->
-            <div class="col-lg-2">
+            <div class="col-lg-auto">
                 <label class="filter-label" style="visibility: hidden;">Action</label>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-refresh rounded-3 btn-sm px-2" @click="fetchData" title="Refresh Data" style="height: 38px; width: 38px;">
+                <div class="d-flex gap-2 action-area-buttons">
+                    <button class="btn btn-refresh rounded-3 btn-sm px-2" @click="fetchData" title="Refresh Data" style="height: 38px; width: 38px; flex-shrink: 0;">
                         <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
                     </button>
-                    <div class="dropdown flex-grow-1" ref="exportDropdownRef">
-                        <button class="btn btn-outline-danger rounded-3 w-100 dropdown-toggle btn-sm fw-bold" type="button" @click.stop="toggleExportDropdown" :disabled="loading || printingProgress > 0" style="height: 38px;">
+                    <div class="dropdown" ref="exportDropdownRef" style="min-width: 90px; flex-shrink: 0;">
+                        <button class="btn btn-danger text-white rounded-3 w-100 dropdown-toggle btn-sm fw-bold px-2" type="button" @click.stop="toggleExportDropdown" :disabled="loading || printingProgress > 0" style="height: 38px; font-size: 11px;">
                             <i class="fas fa-file-export me-1"></i> 
                             <span v-if="printingProgress > 0" style="font-size: 10px;">{{ printingProgress }}%</span>
                             <span v-else>Ekspor</span>
@@ -126,10 +126,12 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 show" v-if="showExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 200px;">
                             <li><a class="dropdown-item py-2" @click.prevent="handleExportRekap" href="#"><i class="fas fa-list-alt me-2 text-primary"></i> Rekapitulasi (Tabel)</a></li>
                             <li><a class="dropdown-item py-2" @click.prevent="handleExportFull" href="#"><i class="fas fa-file-medical me-2 text-danger"></i> Laporan Lengkap (Semua)</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item py-2" @click.prevent="openRegisterModal" href="#"><i class="fas fa-book me-2 text-warning"></i> Buku Register Harian</a></li>
                         </ul>
                     </div>
+                    <button class="btn btn-warning rounded-3 btn-sm fw-bold px-2 text-white flex-shrink-0" @click="openRegisterModal" :disabled="loading" style="height: 38px; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                        <i class="fas fa-book"></i>
+                        <span>Data Harian</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -619,8 +621,7 @@
               />
             </div>
           </div>
-          <div class="modal-footer bg-light border-0 py-3 px-4 rounded-bottom-4 d-flex justify-content-between">
-            <button type="button" class="btn btn-light rounded-3 fw-bold border py-2 px-3" @click="showRegisterModal = false">Batal</button>
+          <div class="modal-footer bg-light border-0 py-3 px-4 rounded-bottom-4 d-flex justify-content-between modal-action-buttons">
             <div class="d-flex gap-2">
               <button type="button" class="btn btn-success rounded-3 fw-bold py-2 px-3" @click="executeExport('excel')">
                 <i class="fas fa-file-excel me-1"></i> Excel
@@ -629,6 +630,7 @@
                 <i class="fas fa-file-pdf me-1"></i> PDF
               </button>
             </div>
+            <button type="button" class="btn btn-light rounded-3 fw-bold border py-2 px-3" @click="showRegisterModal = false">Batal</button>
           </div>
         </div>
       </div>
@@ -2784,6 +2786,15 @@ const exportRegisterBulanan = async (format) => {
 .modern-select :deep(.vs__dropdown-option--highlight) {
     background: #435ebe !important;
     color: #fff !important;
+}
+
+.action-area-buttons .btn,
+.modal-action-buttons .btn {
+    width: auto !important;
+}
+
+.action-area-buttons .dropdown .btn {
+    width: 100% !important;
 }
 
 .btn-refresh {

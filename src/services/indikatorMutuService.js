@@ -14,6 +14,7 @@ const service = {
     deleteRuang: (id) => api.delete(`/indikator-mutu/master/ruang/${id}`),
     // Monitoring
     getMonitoring: (params) => api.get('/indikator-mutu/monitoring', { params }),
+    getIkpData: (params) => api.get('/indikator-mutu/monitoring/ikp', { params }),
     getUnits: () => api.get('/indikator-mutu/monitoring/units'),
     getLaporan: (params) => api.get('/indikator-mutu/laporan', { params }),
     getLaporanDetail: (params) => api.get('/indikator-mutu/laporan/detail', { params }),
