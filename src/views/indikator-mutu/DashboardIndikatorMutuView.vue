@@ -295,8 +295,8 @@
                   <h6 class="indicator-name">{{ item.nama_indikator || item.nama_inmut }}</h6>
                 </div>
 
-                <!-- Stats Row -->
-                <div class="indicator-stats">
+                <!-- Stats Row / Chart Row -->
+                <div v-if="filters.tipe !== 'tahunan'" class="indicator-stats">
                   <div class="stat-item">
                     <div class="stat-icon stat-icon-num">
                       <i class="fas fa-calculator"></i>
@@ -326,6 +326,16 @@
                       <div class="stat-value">{{ getTargetDisplay(item) }}</div>
                     </div>
                   </div>
+                </div>
+
+                <!-- Yearly Monthly Chart -->
+                <div v-else class="monthly-chart-container mb-3">
+                  <apexchart 
+                    type="line" 
+                    height="150" 
+                    :options="getChartOptions(item, kategori.color)" 
+                    :series="getChartSeries(item)"
+                  ></apexchart>
                 </div>
 
                 <!-- Score Bar -->
@@ -693,7 +703,8 @@ const fetchAll = async () => {
         last_filled: item.last_filled,
         rumus_code: item.rumus || item.rumus_utama,
         unit_name: item.nama_ruang,
-        monthly_filled: item.monthly_filled || []
+        monthly_filled: item.monthly_filled || [],
+        monthly_breakdown: item.monthly_breakdown || {}
       }
 
       const katUtama = (item.kategori_utama || '').toLowerCase()
@@ -968,6 +979,89 @@ const getStatusLabel = (item) => {
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const getChartSeries = (item) => {
+  const capaianData = Array(12).fill(null)
+  const targetData = Array(12).fill(getNumericTarget(item))
+  
+  if (item.monthly_breakdown) {
+    for (let m = 1; m <= 12; m++) {
+      const mData = item.monthly_breakdown[m]
+      if (mData && mData.has_data) {
+        capaianData[m - 1] = parseFloat(mData.score)
+      } else {
+        capaianData[m - 1] = null
+      }
+    }
+  }
+  
+  return [
+    {
+      name: 'Capaian RS',
+      data: capaianData
+    },
+    {
+      name: 'Target',
+      data: targetData
+    }
+  ]
+}
+
+const getChartOptions = (item, themeColor) => {
+  return {
+    chart: {
+      type: 'line',
+      height: 140,
+      sparkline: { enabled: false },
+      toolbar: { show: false },
+      zoom: { enabled: false }
+    },
+    colors: [themeColor, '#ef4444'],
+    stroke: {
+      curve: 'smooth',
+      width: [3, 2],
+      dashArray: [0, 4]
+    },
+    markers: {
+      size: [4, 0]
+    },
+    grid: {
+      borderColor: '#f1f5f9',
+      strokeDashArray: 2,
+      padding: { top: 5, bottom: 5, left: 10, right: 10 }
+    },
+    xaxis: {
+      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+      labels: {
+        style: { fontSize: '9px', colors: '#64748b', fontWeight: 600 }
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: {
+      min: 0,
+      max: 100,
+      tickAmount: 4,
+      labels: {
+        style: { fontSize: '9px', colors: '#64748b', fontWeight: 600 },
+        formatter: (val) => `${val}%`
+      }
+    },
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'right',
+      fontSize: '9px',
+      markers: { width: 6, height: 6 }
+    },
+    tooltip: {
+      theme: 'light',
+      y: {
+        formatter: (val) => val !== null ? `${val}%` : 'Tidak Ada Data'
+      }
+    }
+  }
 }
 
 const isMonthFilled = (item, m) => {
@@ -1677,5 +1771,14 @@ onMounted(() => {
   background-color: #f8fafc;
   color: #94a3b8;
   border: 1px solid #e2e8f0;
+}
+
+/* ===== MONTHLY CHART ===== */
+.monthly-chart-container {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.5rem;
+  border: 1px solid #f1f5f9;
+  min-height: 160px;
 }
 </style>
