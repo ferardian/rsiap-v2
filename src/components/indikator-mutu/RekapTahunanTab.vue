@@ -54,7 +54,7 @@
       <table class="table table-rekap align-middle">
         <thead>
           <tr>
-            <th class="sticky-no text-center">No</th>
+            <th class="sticky-no text-center" style="width: 60px; min-width: 60px;">No</th>
             <th class="sticky-name">Nama Indikator</th>
             <th class="text-center" style="width: 110px;">Target</th>
             <th v-for="m in 12" :key="m" class="text-center" style="width: 260px;">
@@ -65,7 +65,7 @@
         <tbody>
           <tr v-for="(item, idx) in filteredItems" :key="item.id_master || item.id_inmut">
             <!-- Sticky Columns -->
-            <td class="sticky-no text-center fw-bold text-slate-500">{{ idx + 1 }}</td>
+            <td class="sticky-no text-center fw-bold text-slate-500" style="width: 60px; min-width: 60px;">{{ idx + 1 }}</td>
             <td class="sticky-name indicator-name-cell fw-bold text-slate-800">
               {{ item.nama_inmut }}
               <div v-if="item.nama_ruang" class="text-xs text-slate-400 font-normal mt-1">
@@ -416,23 +416,37 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* Sticky Left Columns in Body */
+/* Force all regular body td cells into z-index 0 so they
+   never paint above the sticky columns */
+.table-rekap tbody td {
+  position: relative;
+  z-index: 0;
+  padding: 10px;
+  vertical-align: top;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+}
+
+/* Sticky Left Columns in Body — raised above regular cells */
 .table-rekap td.sticky-no {
   position: sticky;
   left: 0;
-  z-index: 2;
+  z-index: 10 !important;
   background: #ffffff !important;
   border-right: 1px solid #e2e8f0;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
 }
 
 .table-rekap td.sticky-name {
   position: sticky;
-  left: 50px;
-  z-index: 2;
+  left: 60px;
+  z-index: 10 !important;
   background: #ffffff !important;
   border-right: none;
-  /* Shadow as a visual divider that scrolls with the sticky column */
-  box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.08);
+  /* Shadow as visual divider */
+  box-shadow: 4px 0 10px -2px rgba(0, 0, 0, 0.1);
 }
 
 .indicator-name-cell {
@@ -457,30 +471,26 @@ onMounted(() => {
   border-bottom: 2px solid #e2e8f0;
 }
 
-/* Sticky Corner Headers (Top and Left) */
+/* Sticky Corner Headers (Top and Left) — highest z-index */
 .table-rekap th.sticky-no {
   position: sticky;
   top: 0;
   left: 0;
-  z-index: 5;
+  z-index: 20 !important;
   background-color: #f8fafc;
   border-right: 1px solid #e2e8f0;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
 }
 
 .table-rekap th.sticky-name {
   position: sticky;
   top: 0;
-  left: 50px;
-  z-index: 5;
+  left: 60px;
+  z-index: 20 !important;
   background-color: #f8fafc;
   border-right: 2px solid #cbd5e1;
-}
-
-.table-rekap td {
-  padding: 10px;
-  vertical-align: top;
-  border-bottom: 1px solid #e2e8f0;
-  border-right: 1px solid #f1f5f9;
 }
 
 .table-rekap tr:hover td {
@@ -517,18 +527,20 @@ onMounted(() => {
   border: 1px solid #f1f5f9;
   border-radius: 8px;
   padding: 8px;
-  transition: all 0.2s;
   min-height: 75px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  /* Do NOT use transition: all or transform here — they create
+     new stacking contexts that punch above sticky z-index */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 .analysis-snippet-box:hover {
   background-color: #f1f5f9;
   border-color: #e2e8f0;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  /* No transform, no box-shadow — avoids stacking context creation */
 }
+
 
 .text-truncate-2 {
   display: -webkit-box;
