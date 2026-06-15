@@ -135,50 +135,96 @@
     <!-- Modal Detail Analisa -->
     <div v-if="modal.show" class="rekap-modal-overlay" @click.self="closeModal">
       <div class="rekap-modal-container">
-        <div class="rekap-modal-header" :style="{ backgroundColor: getKategoriColor() }">
-          <h5 class="rekap-modal-title text-white">Detail Analisa & Tindak Lanjut</h5>
-          <button class="rekap-modal-close text-white" @click="closeModal">&times;</button>
-        </div>
-        <div class="rekap-modal-body">
-          <div class="mb-3">
-            <h6 class="text-slate-800 fw-bold" style="line-height: 1.4;">{{ modal.indicatorName }}</h6>
-            <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
-              <span class="badge bg-secondary py-1 px-2 font-monospace" style="font-size: 0.72rem;">
-                Bulan: {{ monthNames[modal.month - 1] }} {{ filters.tahun }}
-              </span>
-              <span class="badge py-1 px-2 font-monospace" :class="modal.isMet ? 'bg-success' : 'bg-danger'" style="font-size: 0.72rem;">
-                Capaian: {{ modal.score != null ? modal.score + '%' : 'Belum Ada Data' }}
-              </span>
-              <span class="badge bg-warning text-dark py-1 px-2 font-monospace" style="font-size: 0.72rem;">
-                Target: {{ modal.target }}
-              </span>
+
+        <!-- ── HEADER ── -->
+        <div class="rekap-modal-header" :style="{ background: `linear-gradient(135deg, ${getKategoriColor()}, ${getKategoriColorDark()})` }">
+          <div class="d-flex align-items-center gap-3">
+            <div class="modal-header-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <div>
+              <div class="modal-header-eyebrow">Detail Analisa &amp; Tindak Lanjut</div>
+              <h5 class="rekap-modal-title text-white mb-0">{{ modal.indicatorName }}</h5>
             </div>
           </div>
-          <hr />
-          <div class="rekap-modal-content">
-            <div v-if="modal.analyses && modal.analyses.length">
-              <div v-for="(ana, idx) in modal.analyses" :key="idx" class="analysis-detail-block p-3 mb-3 bg-light rounded border">
-                <div class="fw-bold text-indigo mb-2 border-bottom pb-1" v-if="filters.kategori !== 'prioritas_unit'">
-                  <i class="fas fa-hospital me-1"></i>{{ ana.nama_ruang }}
+          <button class="rekap-modal-close" @click="closeModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- ── META CHIPS ── -->
+        <div class="modal-meta-bar">
+          <div class="modal-chip chip-period">
+            <i class="fas fa-calendar-alt me-1"></i>
+            {{ monthNames[modal.month - 1] }} {{ filters.tahun }}
+          </div>
+          <div class="modal-chip" :class="modal.isMet ? 'chip-success' : 'chip-danger'">
+            <i :class="modal.isMet ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'" class="me-1"></i>
+            Capaian: <strong>{{ modal.score != null ? modal.score + '%' : '–' }}</strong>
+          </div>
+          <div class="modal-chip chip-target">
+            <i class="fas fa-bullseye me-1"></i>
+            Target: <strong>{{ modal.target }}</strong>
+          </div>
+        </div>
+
+        <!-- ── BODY ── -->
+        <div class="rekap-modal-body">
+          <!-- analyses list -->
+          <div v-if="modal.analyses && modal.analyses.length">
+            <div
+              v-for="(ana, idx) in modal.analyses"
+              :key="idx"
+              class="modal-analysis-block"
+              :style="{ '--accent': getKategoriColor() }"
+            >
+              <!-- unit header (non-prioritas_unit only) -->
+              <div class="modal-unit-header" v-if="filters.kategori !== 'prioritas_unit'">
+                <div class="modal-unit-avatar" :style="{ background: getKategoriColor() }">
+                  {{ (ana.nama_ruang || '?').charAt(0).toUpperCase() }}
                 </div>
-                <div class="mb-3">
-                  <div class="text-xs text-muted fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Analisa Masalah:</div>
-                  <p class="mb-0 text-slate-800 small whitespace-pre-wrap">{{ ana.analisa }}</p>
+                <span class="modal-unit-name">{{ ana.nama_ruang }}</span>
+                <span class="modal-unit-badge">Unit {{ idx + 1 }}</span>
+              </div>
+
+              <!-- Analisa -->
+              <div class="modal-section">
+                <div class="modal-section-label modal-section-label--analisa">
+                  <i class="fas fa-microscope"></i>
+                  Analisa Masalah
                 </div>
-                <div>
-                  <div class="text-xs text-muted fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Rekomendasi / Rencana Tindak Lanjut:</div>
-                  <p class="mb-0 text-indigo small whitespace-pre-wrap">{{ ana.tindak_lanjut }}</p>
+                <p class="modal-section-text">{{ ana.analisa || '–' }}</p>
+              </div>
+
+              <!-- Tindak Lanjut -->
+              <div class="modal-section modal-section--tl">
+                <div class="modal-section-label modal-section-label--tl">
+                  <i class="fas fa-tasks"></i>
+                  Rencana Tindak Lanjut
                 </div>
+                <p class="modal-section-text">{{ ana.tindak_lanjut || '–' }}</p>
               </div>
             </div>
-            <div v-else class="text-center py-4 text-muted italic">
-              Belum ada data analisa yang dilaporkan untuk bulan ini.
-            </div>
+          </div>
+
+          <!-- empty -->
+          <div v-else class="modal-empty-state">
+            <i class="fas fa-clipboard-list modal-empty-icon"></i>
+            <p class="modal-empty-text">Belum ada data analisa untuk bulan ini.</p>
           </div>
         </div>
+
+        <!-- ── FOOTER ── -->
         <div class="rekap-modal-footer">
-          <button class="btn btn-sm btn-secondary" @click="closeModal">Tutup</button>
+          <div class="modal-footer-count" v-if="modal.analyses && modal.analyses.length">
+            <i class="fas fa-layer-group me-1"></i>
+            {{ modal.analyses.length }} unit melaporkan
+          </div>
+          <button class="modal-close-btn" @click="closeModal">
+            <i class="fas fa-times me-2"></i>Tutup
+          </button>
         </div>
+
       </div>
     </div>
   </div>
@@ -237,6 +283,16 @@ const getKategoriColor = () => {
   const opt = kategoriOptions.find(o => o.key === filters.kategori)
   return opt ? opt.color : '#4f46e5'
 }
+
+const getKategoriColorDark = () => {
+  const darkMap = {
+    nasional: '#3730a3',
+    prioritas_rs: '#0e7490',
+    prioritas_unit: '#047857'
+  }
+  return darkMap[filters.kategori] || '#3730a3'
+}
+
 
 const fetchData = async () => {
   loading.value = true
@@ -561,8 +617,9 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -571,66 +628,287 @@ onMounted(() => {
 }
 
 .rekap-modal-container {
-  background-color: #ffffff;
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 20px;
   width: 100%;
-  max-width: 600px;
-  max-height: 85vh;
+  max-width: 640px;
+  max-height: 88vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: slide-up 0.25s ease-out;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 24px 48px -8px rgba(0, 0, 0, 0.24),
+    0 8px 16px -4px rgba(0, 0, 0, 0.12);
+  animation: modal-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes slide-up {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes modal-in {
+  from { transform: translateY(24px) scale(0.97); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
 }
 
+/* — Header — */
 .rekap-modal-header {
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.modal-header-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.modal-header-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 4px;
 }
 
 .rekap-modal-title {
+  font-size: 1rem;
   font-weight: 700;
+  line-height: 1.4;
+  color: #fff;
   margin: 0;
 }
 
 .rekap-modal-close {
-  background: transparent;
+  background: rgba(255,255,255,0.15);
   border: none;
-  font-size: 1.6rem;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.9rem;
   cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  opacity: 0.8;
-  transition: opacity 0.2s;
+  flex-shrink: 0;
+  transition: background 0.2s;
 }
 .rekap-modal-close:hover {
-  opacity: 1;
+  background: rgba(255,255,255,0.25);
 }
 
+/* — Meta chips bar — */
+.modal-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0.85rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.chip-period {
+  background: #e2e8f0;
+  color: #475569;
+}
+.chip-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+.chip-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.chip-target {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* — Body — */
 .rekap-modal-body {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.rekap-modal-body::-webkit-scrollbar { width: 6px; }
+.rekap-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+/* — Analysis block — */
+.modal-analysis-block {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid var(--accent, #4f46e5);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.modal-unit-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-unit-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.modal-unit-name {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #1e293b;
   flex: 1;
 }
 
-.rekap-modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #f1f5f9;
-  display: flex;
-  justify-content: flex-end;
-  background-color: #f8fafc;
+.modal-unit-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.analysis-detail-block {
-  border-color: #e2e8f0 !important;
+/* — Section (Analisa / TL) — */
+.modal-section {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
 }
+.modal-section:last-child { border-bottom: none; }
+
+.modal-section--tl {
+  background: #fafbff;
+}
+
+.modal-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.modal-section-label--analisa {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+.modal-section-label--tl {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.modal-section-text {
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* — Empty state — */
+.modal-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+.modal-empty-icon {
+  font-size: 2.5rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+}
+.modal-empty-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* — Footer — */
+.rekap-modal-footer {
+  padding: 0.85rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.modal-footer-count {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 20px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.02em;
+}
+.modal-close-btn:hover {
+  background: #0f172a;
+  transform: translateY(-1px);
+}
+
+
 
 /* ===== SKELETON ===== */
 .spinner-ring {
