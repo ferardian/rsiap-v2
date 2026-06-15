@@ -209,6 +209,54 @@
             </div>
           </div>
 
+          <!-- KATEGORI SPECIFIC SUMMARY CARDS -->
+          <div class="row g-3 mb-4 mt-2">
+            <div class="col-6 col-md-3">
+              <div class="premium-summary-card sub-card" :style="{ borderLeft: '4px solid ' + kategori.color }">
+                <div class="summary-icon-bg sub-icon total" :style="{ background: kategori.color + '15', color: kategori.color }">
+                  <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="summary-info">
+                  <div class="summary-value sub-value">{{ kategorisData[ki]?.total ?? 0 }}</div>
+                  <div class="summary-label sub-label">Total Indikator</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="premium-summary-card sub-card" style="borderLeft: 4px solid #10b981;">
+                <div class="summary-icon-bg sub-icon achieved" style="background: #ecfdf5; color: #10b981;">
+                  <i class="fas fa-check-double"></i>
+                </div>
+                <div class="summary-info">
+                  <div class="summary-value sub-value">{{ kategorisData[ki]?.tercapai ?? 0 }}</div>
+                  <div class="summary-label sub-label">Tercapai</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="premium-summary-card sub-card" style="borderLeft: 4px solid #ef4444;">
+                <div class="summary-icon-bg sub-icon failed" style="background: #fef2f2; color: #ef4444;">
+                  <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="summary-info">
+                  <div class="summary-value sub-value">{{ kategorisData[ki]?.tidakTercapai ?? 0 }}</div>
+                  <div class="summary-label sub-label">Tidak Tercapai</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="premium-summary-card sub-card" :style="{ borderLeft: '4px solid ' + kategori.color }">
+                <div class="summary-icon-bg sub-icon rate" :style="{ background: kategori.color + '15', color: kategori.color }">
+                  <i class="fas fa-percentage"></i>
+                </div>
+                <div class="summary-info">
+                  <div class="summary-value sub-value">{{ kategorisData[ki]?.ratePercent ?? 0 }}%</div>
+                  <div class="summary-label sub-label">Tingkat Keberhasilan</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Skeleton and Cards for Mutu Indicators -->
           <!-- Loading skeleton -->
           <div v-if="loading[ki]" class="row g-3 mt-1">
@@ -1474,5 +1522,27 @@ onMounted(() => {
   background: #059669;
   color: white;
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+/* ===== SPECIFIC SUB TAB CARDS ===== */
+.premium-summary-card.sub-card {
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+}
+
+.premium-summary-card.sub-card .sub-value {
+  font-size: 1.55rem;
+}
+
+.premium-summary-card.sub-card .sub-label {
+  font-size: 0.72rem;
+}
+
+.summary-icon-bg.sub-icon {
+  width: 38px;
+  height: 38px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  border: none;
 }
 </style>
