@@ -431,17 +431,17 @@
                     :class="getImpRowClass(item)"
                     @click="toggleExpandImpRow(item.id_master)"
                   >
-                    <td class="text-center fw-bold text-slate-500">{{ idx + 1 }}</td>
-                    <td class="fw-bold text-slate-800" style="min-width: 250px;">
+                     <td class="text-center fw-bold text-slate-500">{{ idx + 1 }}</td>
+                    <td class="fw-bold text-slate-800 indicator-name-cell" style="min-width: 250px;">
                       {{ item.nama_indikator || item.nama_inmut }}
                     </td>
                     <td>
-                      <div class="d-flex flex-column gap-1">
-                        <span class="imp-pj-text text-slate-700" v-if="item.pj">
+                      <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="imp-pj-text text-slate-700 fw-semibold" v-if="item.pj">
                           <i class="fas fa-user-tie me-1 text-slate-400"></i>{{ item.pj }}
                         </span>
-                        <span class="imp-unit-badge">
-                          <i class="fas fa-hospital me-1 text-slate-400"></i>{{ item.unit_count }} Unit
+                        <span class="imp-unit-badge py-0 px-2 small">
+                          {{ item.unit_count }} Unit
                         </span>
                       </div>
                     </td>
@@ -1943,11 +1943,21 @@ onMounted(() => {
   background-color: #f8fafc;
   color: #475569;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 1rem 0.75rem;
+  padding: 6px 8px;
   border-bottom: 2px solid #e2e8f0;
+}
+
+.imp-dashboard-table td {
+  padding: 6px 8px;
+  font-size: 0.78rem;
+}
+
+.indicator-name-cell {
+  font-size: 0.82rem !important;
+  line-height: 1.3;
 }
 
 .imp-main-row {
