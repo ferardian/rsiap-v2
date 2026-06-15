@@ -81,7 +81,7 @@
             <!-- Month Columns -->
             <td v-for="m in 12" :key="m" class="month-cell">
               <div v-if="item.monthly_data && item.monthly_data[m] && item.monthly_data[m].has_data" class="month-cell-content">
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                   <span class="badge rounded-2 py-1 px-2 font-monospace" :class="isTargetMet(item, item.monthly_data[m].score) ? 'bg-success-light text-success-dark' : 'bg-danger-light text-danger-dark'">
                     Capaian: {{ item.monthly_data[m].score }}%
                   </span>
