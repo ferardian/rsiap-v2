@@ -295,8 +295,8 @@
                   <h6 class="indicator-name">{{ item.nama_indikator || item.nama_inmut }}</h6>
                 </div>
 
-                <!-- Stats Row / Chart Row -->
-                <div v-if="filters.tipe !== 'tahunan'" class="indicator-stats">
+                <!-- Stats Row (Bulanan only) -->
+                <div v-if="filters.tipe === 'bulanan'" class="indicator-stats">
                   <div class="stat-item">
                     <div class="stat-icon stat-icon-num">
                       <i class="fas fa-calculator"></i>
@@ -328,7 +328,7 @@
                   </div>
                 </div>
 
-                <!-- Yearly Monthly Chart -->
+                <!-- Monthly Chart (Tahunan, Triwulan, Semester) -->
                 <div v-else class="monthly-chart-container mb-3">
                   <apexchart 
                     type="line" 
@@ -365,23 +365,23 @@
                   </div>
                 </div>
 
-                <!-- Monthly Reporting Monitoring (Yearly mode only) -->
-                <div v-if="filters.tipe === 'tahunan'" class="monthly-monitoring-container mb-3">
+                <!-- Monthly Reporting Monitoring (Tahunan, Triwulan, Semester) -->
+                <div v-if="filters.tipe !== 'bulanan'" class="monthly-monitoring-container mb-3">
                   <div class="monthly-title mb-2">Monitoring Pelaporan</div>
                   <div class="table-responsive select-none">
                     <table class="table table-bordered table-sm monthly-table text-center align-middle mb-0">
                       <thead>
                         <tr>
-                          <th :style="{ backgroundColor: kategori.color }">Tahun</th>
-                          <th v-for="mName in ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']" :key="mName" :style="{ backgroundColor: kategori.color }">
-                            {{ mName }}
+                          <th :style="{ backgroundColor: kategori.color }">{{ getPeriodHeaderLabel() }}</th>
+                          <th v-for="mNum in periodMonths" :key="mNum" :style="{ backgroundColor: kategori.color }">
+                            {{ monthShortNames[mNum - 1] }}
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td class="fw-bold filter-year text-slate-700">{{ filters.tahun }}</td>
-                          <td v-for="m in 12" :key="m">
+                          <td class="fw-bold filter-year text-slate-700">{{ getPeriodRowLabel() }}</td>
+                          <td v-for="m in periodMonths" :key="m">
                             <div class="month-status-box" :class="getMonthStatus(item, m)">
                               <i :class="getMonthIconClass(item, m)"></i>
                             </div>
@@ -766,7 +766,35 @@ const monthNames = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ]
+const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 const romanQuarters = ['I', 'II', 'III', 'IV']
+
+// Returns the list of month numbers relevant to current filter
+const periodMonths = computed(() => {
+  if (filters.tipe === 'tahunan') {
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  } else if (filters.tipe === 'triwulan') {
+    const q = parseInt(filters.periode, 10)
+    return q === 1 ? [1, 2, 3] : q === 2 ? [4, 5, 6] : q === 3 ? [7, 8, 9] : [10, 11, 12]
+  } else if (filters.tipe === 'semester') {
+    return parseInt(filters.periode, 10) === 1 ? [1, 2, 3, 4, 5, 6] : [7, 8, 9, 10, 11, 12]
+  }
+  return []
+})
+
+const getPeriodHeaderLabel = () => {
+  if (filters.tipe === 'tahunan') return 'Tahun'
+  if (filters.tipe === 'triwulan') return `TW ${romanQuarters[filters.periode - 1] || ''}`
+  if (filters.tipe === 'semester') return `Sem. ${filters.periode}`
+  return 'Periode'
+}
+
+const getPeriodRowLabel = () => {
+  if (filters.tipe === 'tahunan') return filters.tahun
+  if (filters.tipe === 'triwulan') return `TW ${romanQuarters[filters.periode - 1] || ''}`
+  if (filters.tipe === 'semester') return `S${filters.periode}`
+  return filters.tahun
+}
 
 const getScoreLabel = () => {
   switch (filters.tipe) {
@@ -982,33 +1010,25 @@ const formatDate = (dateStr) => {
 }
 
 const getChartSeries = (item) => {
-  const capaianData = Array(12).fill(null)
-  const targetData = Array(12).fill(getNumericTarget(item))
+  const months = periodMonths.value
+  const target = getNumericTarget(item)
   
-  if (item.monthly_breakdown) {
-    for (let m = 1; m <= 12; m++) {
-      const mData = item.monthly_breakdown[m]
-      if (mData && mData.has_data) {
-        capaianData[m - 1] = parseFloat(mData.score)
-      } else {
-        capaianData[m - 1] = null
-      }
-    }
-  }
+  const capaianData = months.map(m => {
+    const mData = item.monthly_breakdown && item.monthly_breakdown[m]
+    return (mData && mData.has_data) ? parseFloat(mData.score) : null
+  })
+
+  const targetData = months.map(() => target)
   
   return [
-    {
-      name: 'Capaian RS',
-      data: capaianData
-    },
-    {
-      name: 'Target',
-      data: targetData
-    }
+    { name: 'Capaian', data: capaianData },
+    { name: 'Target', data: targetData }
   ]
 }
 
 const getChartOptions = (item, themeColor) => {
+  const months = periodMonths.value
+  const categories = months.map(m => monthShortNames[m - 1])
   return {
     chart: {
       type: 'line',
@@ -1032,7 +1052,7 @@ const getChartOptions = (item, themeColor) => {
       padding: { top: 5, bottom: 5, left: 10, right: 10 }
     },
     xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+      categories,
       labels: {
         style: { fontSize: '9px', colors: '#64748b', fontWeight: 600 }
       },
