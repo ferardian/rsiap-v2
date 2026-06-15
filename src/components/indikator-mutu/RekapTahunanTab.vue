@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- Filters Header Section -->
-    <div class="row g-3 mb-4 justify-content-between align-items-center">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
       <!-- Kategori Sub-Tabs -->
-      <div class="col-md-8">
+      <div>
         <div class="sub-tab-switcher">
           <button 
             v-for="sub in kategoriOptions" 
@@ -19,26 +19,26 @@
       </div>
 
       <!-- Year and Search Filters -->
-      <div class="col-md-4 d-flex justify-content-md-end align-items-center gap-2 flex-wrap">
+      <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style="max-width: 500px;">
         <!-- Search input -->
-        <div class="search-box-custom me-2" style="min-width: 180px; flex: 1;">
+        <div class="search-box-custom flex-grow-1">
           <input 
             type="text" 
             v-model="searchQuery" 
             placeholder="Cari indikator..." 
-            class="form-control form-control-sm search-input-custom"
+            class="form-control form-control-sm search-input-custom w-100"
           />
         </div>
 
         <!-- Year select -->
-        <div class="filter-container-custom" style="height: 32px; padding: 0.2rem 0.5rem;">
+        <div class="filter-container-custom">
           <select class="filter-month-input text-slate-700" v-model="filters.tahun" @change="fetchData" style="width: auto; font-size: 0.8rem; font-weight: 700;">
             <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>
 
         <!-- Refresh button -->
-        <button class="btn btn-sm btn-outline-secondary" @click="fetchData" :disabled="loading" title="Refresh">
+        <button class="btn btn-sm btn-outline-secondary btn-refresh-rekap" @click="fetchData" :disabled="loading" title="Refresh">
           <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
         </button>
       </div>
@@ -85,7 +85,8 @@
                   <span class="badge rounded-2 py-1 px-2 font-monospace" :class="isTargetMet(item, item.monthly_data[m].score) ? 'bg-success-light text-success-dark' : 'bg-danger-light text-danger-dark'">
                     Capaian: {{ item.monthly_data[m].score }}%
                   </span>
-                  <button class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.65rem;" @click="openDetailModal(item, m)">
+                  <button class="btn btn-xs btn-primary text-white d-inline-flex align-items-center gap-1 border-0" style="font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;" @click="openDetailModal(item, m)">
+                    <i class="fas fa-eye" style="font-size: 0.6rem;"></i>
                     Detail
                   </button>
                 </div>
@@ -615,6 +616,8 @@ onMounted(() => {
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
+  height: 32px;
+  padding: 0 0.5rem;
 }
 .filter-month-input {
   background: transparent;
@@ -633,11 +636,30 @@ onMounted(() => {
   font-size: 0.8rem;
   padding: 0.35rem 0.75rem;
   transition: all 0.2s ease;
+  height: 32px;
 }
 .search-input-custom:focus {
   background-color: #ffffff;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
+}
+
+.btn-refresh-rekap {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  background: #ffffff;
+  width: 32px;
+  padding: 0;
+}
+.btn-refresh-rekap:hover {
+  background-color: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
 }
 </style>
