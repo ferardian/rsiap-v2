@@ -355,6 +355,33 @@
                   </div>
                 </div>
 
+                <!-- Monthly Reporting Monitoring (Yearly mode only) -->
+                <div v-if="filters.tipe === 'tahunan'" class="monthly-monitoring-container mb-3">
+                  <div class="monthly-title mb-2">Monitoring Pelaporan</div>
+                  <div class="table-responsive select-none">
+                    <table class="table table-bordered table-sm monthly-table text-center align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th :style="{ backgroundColor: kategori.color }">Tahun</th>
+                          <th v-for="mName in ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']" :key="mName" :style="{ backgroundColor: kategori.color }">
+                            {{ mName }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td class="fw-bold filter-year text-slate-700">{{ filters.tahun }}</td>
+                          <td v-for="m in 12" :key="m">
+                            <div class="month-status-box" :class="getMonthStatus(item, m)">
+                              <i :class="getMonthIconClass(item, m)"></i>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
                 <!-- Footer Status -->
                 <div class="indicator-footer">
                   <span class="status-badge" :class="getStatusBadgeClass(item)">
@@ -665,7 +692,8 @@ const fetchAll = async () => {
         total_denominator: item.has_data ? item.total_denum : null,
         last_filled: item.last_filled,
         rumus_code: item.rumus || item.rumus_utama,
-        unit_name: item.nama_ruang
+        unit_name: item.nama_ruang,
+        monthly_filled: item.monthly_filled || []
       }
 
       const katUtama = (item.kategori_utama || '').toLowerCase()
@@ -940,6 +968,38 @@ const getStatusLabel = (item) => {
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const isMonthFilled = (item, m) => {
+  return Array.isArray(item.monthly_filled) && item.monthly_filled.includes(m)
+}
+
+const getMonthStatus = (item, m) => {
+  if (isMonthFilled(item, m)) {
+    return 'filled'
+  }
+  
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+  const filterYear = parseInt(filters.tahun, 10)
+  
+  if (filterYear < currentYear || (filterYear === currentYear && m <= currentMonth)) {
+    return 'edit'
+  }
+  
+  return 'locked'
+}
+
+const getMonthIconClass = (item, m) => {
+  const status = getMonthStatus(item, m)
+  if (status === 'filled') {
+    return 'fas fa-check'
+  } else if (status === 'edit') {
+    return 'far fa-edit'
+  } else {
+    return 'fas fa-lock'
+  }
 }
 
 onMounted(() => {
@@ -1544,5 +1604,78 @@ onMounted(() => {
   font-size: 0.95rem;
   border-radius: 10px;
   border: none;
+}
+
+/* ===== MONTHLY MONITORING TABLE ===== */
+.monthly-monitoring-container {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.monthly-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.monthly-table {
+  font-size: 0.68rem;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.monthly-table th {
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 5px 2px;
+  border: 1px solid #cbd5e1;
+  text-align: center;
+}
+
+.monthly-table td {
+  padding: 3px 2px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+.monthly-table td.filter-year {
+  font-weight: 700;
+  color: #475569;
+  background-color: #f8fafc;
+}
+
+/* Status boxes in cells */
+.month-status-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+}
+
+.month-status-box.filled {
+  background-color: #ecfdf5;
+  color: #10b981;
+  border: 1px solid #a7f3d0;
+}
+
+.month-status-box.edit {
+  background-color: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+}
+
+.month-status-box.locked {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
 }
 </style>
