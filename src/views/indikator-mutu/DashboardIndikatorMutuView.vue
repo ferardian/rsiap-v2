@@ -150,8 +150,27 @@
           </div>
         </div>
 
+        <!-- ===== SUB TAB SWITCHER (INM, IMPRS, IMP) ===== -->
+        <div class="sub-tab-switcher mb-4">
+          <button 
+            v-for="sub in kategoris.slice(0, 3)" 
+            :key="sub.key"
+            class="sub-tab-btn" 
+            :class="[sub.key, { active: activeSubTab === sub.key }]"
+            @click="activeSubTab = sub.key"
+          >
+            <i :class="[sub.icon, 'me-1']"></i>
+            <span>{{ sub.alias }}</span>
+          </button>
+        </div>
+
         <!-- ===== KATEGORI SECTIONS (MUTU) ===== -->
-        <div v-for="(kategori, ki) in kategoris.slice(0, 3)" :key="ki" class="kategori-section mb-5">
+        <div 
+          v-for="(kategori, ki) in kategoris.slice(0, 3)" 
+          :key="ki" 
+          v-show="activeSubTab === kategori.key"
+          class="kategori-section mb-5"
+        >
 
           <!-- Section Header -->
           <div class="section-header" :style="{ '--cat-color': kategori.color, '--cat-gradient': kategori.gradient }">
@@ -463,6 +482,7 @@ const filters = reactive({
 })
 
 const activeTab = ref('mutu')
+const activeSubTab = ref('nasional')
 
 const handleTipeChange = () => {
   const currentMonth = new Date().getMonth() + 1
@@ -487,6 +507,7 @@ const years = computed(() => {
 const kategoris = [
   {
     key: 'nasional',
+    alias: 'INM',
     nama: 'Indikator Mutu Nasional',
     desc: 'Indikator yang ditetapkan secara nasional oleh Kemenkes RI',
     icon: 'fas fa-flag',
@@ -495,6 +516,7 @@ const kategoris = [
   },
   {
     key: 'prioritas_rs',
+    alias: 'IMPRS',
     nama: 'Indikator Mutu Prioritas Rumah Sakit',
     desc: 'Indikator prioritas yang ditetapkan oleh manajemen rumah sakit',
     icon: 'fas fa-hospital',
@@ -503,6 +525,7 @@ const kategoris = [
   },
   {
     key: 'prioritas_unit',
+    alias: 'IMP',
     nama: 'Indikator Mutu Prioritas Unit',
     desc: 'Indikator mutu yang dikelola oleh masing-masing unit pelayanan',
     icon: 'fas fa-door-open',
@@ -1402,5 +1425,54 @@ onMounted(() => {
   height: 3px;
   background-color: #3b82f6;
   border-radius: 2px;
+}
+
+/* ===== SUB TAB SWITCHER ===== */
+.sub-tab-switcher {
+  display: flex;
+  gap: 0.75rem;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  width: fit-content;
+  border: 1px solid #e2e8f0;
+}
+
+.sub-tab-btn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-tab-btn:hover {
+  color: #334155;
+}
+
+/* Active styles based on active key */
+.sub-tab-btn.active.nasional {
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.sub-tab-btn.active.prioritas_rs {
+  background: #0891b2;
+  color: white;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
+}
+
+.sub-tab-btn.active.prioritas_unit {
+  background: #059669;
+  color: white;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
 }
 </style>
