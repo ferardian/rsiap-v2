@@ -270,8 +270,8 @@
             </div>
           </div>
 
-          <!-- Indicator Cards -->
-          <div v-else-if="kategorisData[ki]?.items?.length" class="row g-3 mt-1">
+          <!-- Indicator Cards (INM & IMPRS) -->
+          <div v-else-if="kategorisData[ki]?.items?.length && ki !== 2" class="row g-3 mt-1">
             <div
               v-for="item in kategorisData[ki].items"
               :key="item.id_master"
@@ -284,12 +284,14 @@
                 <!-- Card Header -->
                 <div class="indicator-card-header">
                   <div class="indicator-meta">
-                    <span class="indicator-unit" v-if="item.pj">
-                      <i class="fas fa-user-tie me-1"></i>{{ item.pj }}
-                    </span>
-                    <span class="indicator-unit" v-else>
-                      <i class="fas fa-hospital me-1"></i>{{ item.unit_name || 'RS' }}
-                    </span>
+                    <div class="d-flex gap-1 align-items-center flex-wrap">
+                      <span class="indicator-unit" v-if="item.pj">
+                        <i class="fas fa-user-tie me-1"></i>{{ item.pj }}
+                      </span>
+                      <span class="indicator-unit">
+                        <i class="fas fa-hospital me-1"></i>{{ item.unit_count || 0 }} Unit
+                      </span>
+                    </div>
                     <span class="status-dot" :class="getStatusDotClass(item)" :title="getStatusLabel(item)"></span>
                   </div>
                   <h6 class="indicator-name">{{ item.nama_indikator || item.nama_inmut }}</h6>
@@ -404,6 +406,136 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Indicator Table (IMP - Expandable Table) -->
+          <div v-else-if="kategorisData[ki]?.items?.length && ki === 2" class="table-responsive mt-3 rounded-4 shadow-sm border border-light overflow-hidden bg-white select-none">
+            <table class="table align-middle mb-0 imp-dashboard-table">
+              <thead>
+                <tr>
+                  <th class="text-center" style="width: 60px;">No</th>
+                  <th>Nama Indikator</th>
+                  <th>Penanggung Jawab</th>
+                  <th class="text-center">Numerator</th>
+                  <th class="text-center">Denominator</th>
+                  <th class="text-center">Target</th>
+                  <th class="text-center">Capaian</th>
+                  <th class="text-center" style="width: 160px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="(item, idx) in kategorisData[ki].items" :key="item.id_master">
+                  <!-- Main Row -->
+                  <tr 
+                    class="imp-main-row" 
+                    :class="getImpRowClass(item)"
+                    @click="toggleExpandImpRow(item.id_master)"
+                  >
+                    <td class="text-center fw-bold text-slate-500">{{ idx + 1 }}</td>
+                    <td class="fw-bold text-slate-800" style="min-width: 250px;">
+                      {{ item.nama_indikator || item.nama_inmut }}
+                    </td>
+                    <td>
+                      <div class="d-flex flex-column gap-1">
+                        <span class="imp-pj-text text-slate-700" v-if="item.pj">
+                          <i class="fas fa-user-tie me-1 text-slate-400"></i>{{ item.pj }}
+                        </span>
+                        <span class="imp-unit-badge">
+                          <i class="fas fa-hospital me-1 text-slate-400"></i>{{ item.unit_count }} Unit
+                        </span>
+                      </div>
+                    </td>
+                    <td class="text-center font-monospace fw-bold text-slate-700">
+                      {{ item.total_numerator != null ? item.total_numerator : '–' }}
+                    </td>
+                    <td class="text-center font-monospace fw-bold text-slate-700">
+                      {{ item.total_denominator != null ? item.total_denominator : '–' }}
+                    </td>
+                    <td class="text-center fw-bold text-warning-dark">
+                      {{ getTargetDisplay(item) }}
+                    </td>
+                    <td class="text-center fw-extrabold text-slate-800">
+                      <span :class="isTargetMet(item) ? 'text-success' : (item.capaian != null ? 'text-danger' : 'text-muted')">
+                        {{ item.capaian != null ? item.capaian + '%' : 'Belum Ada Data' }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="status-badge" :class="getStatusBadgeClass(item)">
+                          <i :class="getStatusIcon(item)" class="me-1"></i>
+                          {{ getStatusLabel(item) }}
+                        </span>
+                        <i class="fas" :class="expandedImpRow === item.id_master ? 'fa-chevron-up text-slate-400' : 'fa-chevron-down text-slate-400'"></i>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Expanded Row -->
+                  <tr v-if="expandedImpRow === item.id_master" class="imp-expanded-row">
+                    <td colspan="8" class="p-4 bg-slate-50 border-0">
+                      <div class="row g-4">
+                        <!-- Chart Column -->
+                        <div class="col-12 col-lg-7">
+                          <div class="expanded-card-section">
+                            <h6 class="expanded-section-title mb-3">
+                              <i class="fas fa-chart-line me-2 text-indigo"></i>
+                              Tren Capaian Mutu
+                            </h6>
+                            <div class="monthly-chart-container">
+                              <apexchart 
+                                type="line" 
+                                height="180" 
+                                :options="getChartOptions(item, kategori.color)" 
+                                :series="getChartSeries(item)"
+                              ></apexchart>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Monitoring Column -->
+                        <div class="col-12 col-lg-5">
+                          <div class="expanded-card-section h-100">
+                            <h6 class="expanded-section-title mb-3">
+                              <i class="fas fa-calendar-check me-2 text-indigo"></i>
+                              Monitoring Pelaporan
+                            </h6>
+                            <div class="monthly-monitoring-container mt-0 pt-0 border-0">
+                              <div class="table-responsive select-none">
+                                <table class="table table-bordered table-sm monthly-table text-center align-middle mb-0">
+                                  <thead>
+                                    <tr>
+                                      <th :style="{ backgroundColor: kategori.color }">{{ getPeriodHeaderLabel() }}</th>
+                                      <th v-for="mNum in periodMonths" :key="mNum" :style="{ backgroundColor: kategori.color }">
+                                        {{ monthShortNames[mNum - 1] }}
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td class="fw-bold filter-year text-slate-700">{{ getPeriodRowLabel() }}</td>
+                                      <td v-for="m in periodMonths" :key="m">
+                                        <div class="month-status-box" :class="getMonthStatus(item, m)">
+                                          <i :class="getMonthIconClass(item, m)"></i>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                              <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" v-if="item.last_filled">
+                                <span class="data-count mb-0">
+                                  <i class="fas fa-calendar-alt me-1"></i>Pengisian Terakhir: {{ formatDate(item.last_filled) }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
           </div>
 
           <!-- Empty State -->
@@ -569,6 +701,15 @@ const filters = reactive({
 const activeTab = ref('mutu')
 const activeSubTab = ref('nasional')
 
+const expandedImpRow = ref(null)
+const toggleExpandImpRow = (id_master) => {
+  expandedImpRow.value = expandedImpRow.value === id_master ? null : id_master
+}
+const getImpRowClass = (item) => {
+  if (item.capaian == null) return 'imp-row-no-data'
+  return isTargetMet(item) ? 'imp-row-achieved' : 'imp-row-not-achieved'
+}
+
 const handleTipeChange = () => {
   const currentMonth = new Date().getMonth() + 1
   if (filters.tipe === 'bulanan') {
@@ -662,6 +803,7 @@ const globalStats = computed(() => {
 })
 
 const fetchAll = async () => {
+  expandedImpRow.value = null
   loading.any = true
   loading[0] = true
   loading[1] = true
@@ -679,49 +821,37 @@ const fetchAll = async () => {
     }
 
     const [monitoringRes, ikpRes] = await Promise.all([
-      api.getMonitoring(params),
+      api.getDashboardKumulatif(params),
       api.getIkpData(params)
     ])
 
-    const monitoringItems = monitoringRes.data?.data?.data || []
+    const dataObj = monitoringRes.data?.data || {}
+    const rawNasional = dataObj.nasional || []
+    const rawPrioritasRs = dataObj.prioritas_rs || []
+    const rawPrioritasUnit = dataObj.prioritas_unit || []
 
-    const items0 = []
-    const items1 = []
-    const items2 = []
-
-    monitoringItems.forEach(item => {
-      const processedItem = {
+    const mapItem = (item) => {
+      return {
         ...item,
         id_master: item.id_master,
         nama_indikator: item.nama_inmut,
-        standar: item.standar || item.standar_utama,
-        satuan: item.satuan || item.satuan_utama,
-        rumus: item.rumus || item.rumus_utama,
+        standar: item.standar,
+        satuan: item.satuan,
+        rumus: item.rumus,
         capaian: item.has_data && item.total_denum > 0 ? parseFloat(item.score) : null,
         total_numerator: item.has_data ? item.total_num : null,
         total_denominator: item.has_data ? item.total_denum : null,
         last_filled: item.last_filled,
-        rumus_code: item.rumus || item.rumus_utama,
-        unit_name: item.nama_ruang,
+        rumus_code: item.rumus,
+        unit_count: item.unit_count || 0,
         monthly_filled: item.monthly_filled || [],
         monthly_breakdown: item.monthly_breakdown || {}
       }
+    }
 
-      const katUtama = (item.kategori_utama || '').toLowerCase()
-      const namaJenis = (item.nama_jenis || '').toLowerCase()
-
-      if (katUtama.includes('nasional') || namaJenis.includes('nasional')) {
-        items0.push(processedItem)
-      } else if (
-        katUtama.includes('rumah sakit') || 
-        namaJenis.includes('rumah sakit') || 
-        namaJenis === 'skp'
-      ) {
-        items1.push(processedItem)
-      } else {
-        items2.push(processedItem)
-      }
-    })
+    const items0 = rawNasional.map(mapItem)
+    const items1 = rawPrioritasRs.map(mapItem)
+    const items2 = rawPrioritasUnit.map(mapItem)
 
     const setKategoriData = (index, items) => {
       const tercapai = items.filter(item => isTargetMet(item)).length
@@ -1800,5 +1930,91 @@ onMounted(() => {
   padding: 0.5rem;
   border: 1px solid #f1f5f9;
   min-height: 160px;
+}
+
+/* ===== EXPANDABLE IMP TABLE ===== */
+.imp-dashboard-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.imp-dashboard-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.imp-main-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Row colors */
+.imp-row-achieved {
+  background-color: rgba(16, 185, 129, 0.04);
+}
+.imp-row-achieved:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.imp-row-not-achieved {
+  background-color: rgba(239, 68, 68, 0.04);
+}
+.imp-row-not-achieved:hover {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+.imp-row-no-data {
+  background-color: #ffffff;
+}
+.imp-row-no-data:hover {
+  background-color: #f8fafc;
+}
+
+.imp-pj-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.imp-unit-badge {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+  background-color: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.imp-expanded-row {
+  background-color: #f8fafc;
+}
+
+.expanded-card-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.expanded-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.text-warning-dark {
+  color: #d97706 !important;
+}
+
+.bg-slate-50 {
+  background-color: #f8fafc !important;
 }
 </style>
