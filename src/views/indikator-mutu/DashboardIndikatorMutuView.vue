@@ -314,7 +314,7 @@
                       <i class="fas fa-divide"></i>
                     </div>
                     <div>
-                      <div class="stat-label">Denominator</div>
+                      <div class="stat-label">Denumerator</div>
                       <div class="stat-value">{{ item.total_denominator != null ? item.total_denominator : '–' }}</div>
                     </div>
                   </div>
@@ -417,7 +417,7 @@
                   <th>Nama Indikator</th>
                   <th>Penanggung Jawab</th>
                   <th class="text-center">Numerator</th>
-                  <th class="text-center">Denominator</th>
+                  <th class="text-center">Denumerator</th>
                   <th class="text-center">Target</th>
                   <th class="text-center">Capaian</th>
                   <th class="text-center" style="width: 160px;">Status</th>
