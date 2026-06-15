@@ -20,6 +20,13 @@
       <div class="header-tabs-premium">
         <button 
           class="tab-btn" 
+          :class="{ active: activeTab === 'rekap_tahunan' }" 
+          @click="activeTab = 'rekap_tahunan'"
+        >
+          <i class="fas fa-calendar-alt"></i> Rekap Tahunan
+        </button>
+        <button 
+          class="tab-btn" 
           :class="{ active: activeTab === 'monitoring' }" 
           @click="activeTab = 'monitoring'"
         >
@@ -67,6 +74,10 @@
     <div class="content-card">
       <div class="card-body p-4">
         <KeepAlive>
+            <RekapTahunanTab v-if="activeTab === 'rekap_tahunan'" />
+        </KeepAlive>
+        
+        <KeepAlive>
             <MonitoringInmutTab v-if="activeTab === 'monitoring'" />
         </KeepAlive>
         
@@ -97,6 +108,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import RekapTahunanTab from '@/components/indikator-mutu/RekapTahunanTab.vue'
 import MonitoringInmutTab from '@/components/indikator-mutu/MonitoringInmutTab.vue'
 import AnalisaMutuTab from '@/components/indikator-mutu/AnalisaMutuTab.vue'
 import KamusInmutTab from '@/components/indikator-mutu/KamusInmutTab.vue'
@@ -104,7 +116,7 @@ import LaporanMutuTab from '@/components/indikator-mutu/LaporanMutuTab.vue'
 import RekapFeedbackTab from '@/components/indikator-mutu/RekapFeedbackTab.vue'
 import SupervisiImplikasiTab from '@/components/indikator-mutu/SupervisiImplikasiTab.vue'
 
-const activeTab = ref('monitoring')
+const activeTab = ref('rekap_tahunan')
 </script>
 
 <style scoped>

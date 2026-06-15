@@ -16,6 +16,7 @@ const service = {
     getMonitoring: (params) => api.get('/indikator-mutu/monitoring', { params }),
     getDashboardKumulatif: (params) => api.get('/indikator-mutu/monitoring/dashboard', { params }),
     getIkpData: (params) => api.get('/indikator-mutu/monitoring/ikp', { params }),
+    getRekapTahunan: (params) => api.get('/indikator-mutu/monitoring/rekap-tahunan', { params }),
     getUnits: () => api.get('/indikator-mutu/monitoring/units'),
     getLaporan: (params) => api.get('/indikator-mutu/laporan', { params }),
     getLaporanDetail: (params) => api.get('/indikator-mutu/laporan/detail', { params }),
