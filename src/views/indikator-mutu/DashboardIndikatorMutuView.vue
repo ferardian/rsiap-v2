@@ -666,6 +666,57 @@
                     </div>
                   </div>
                 </div>
+            </div>
+          </div>
+            <!-- Row 3: Checklist Pelaporan IKP -->
+            <div class="ikp-detail-card mt-2">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <h6 class="ikp-card-header-title border-0 pb-0 mb-0">
+                  <i class="fas fa-calendar-check me-2 text-danger"></i>
+                  Monitoring Pelaporan IKP Unit Kerja (Tahun {{ filters.tahun }})
+                </h6>
+                <div class="search-box-custom">
+                  <input 
+                    type="text" 
+                    v-model="ikpSearchQuery" 
+                    placeholder="Cari unit kerja..." 
+                    class="form-control form-control-sm search-input-custom"
+                  />
+                </div>
+              </div>
+
+              <div class="table-responsive rounded-3 border bg-white select-none">
+                <table class="table table-bordered table-sm align-middle text-center mb-0 ikp-checklist-table">
+                  <thead>
+                    <tr>
+                      <th class="text-start ps-3" style="width: 250px; background-color: #dc2626;">Unit Kerja</th>
+                      <th v-for="m in 12" :key="m" style="width: 60px; background-color: #dc2626;">
+                        {{ monthShortNames[m - 1] }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in displayedChecklist" :key="item.unit_id">
+                      <td class="text-start ps-3 fw-bold text-slate-700">{{ item.nama_unit }}</td>
+                      <td v-for="m in 12" :key="m">
+                        <div class="month-status-box" :class="getIkpMonthStatus(item, m)">
+                          <i :class="getIkpMonthIconClass(item, m)"></i>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-if="!displayedChecklist.length">
+                      <td colspan="13" class="text-muted py-3">Tidak ada unit kerja yang cocok</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Expand Button -->
+              <div class="text-center mt-3" v-if="hasMoreUnits && !ikpSearchQuery">
+                <button class="btn btn-sm btn-outline-danger px-4 fw-bold" @click="isIkpExpanded = !isIkpExpanded">
+                  <i class="fas me-1" :class="isIkpExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                  {{ isIkpExpanded ? 'Sembunyikan Unit' : `Tampilkan Seluruh Unit (${totalUnitsCount - 5} Unit Lainnya)` }}
+                </button>
               </div>
             </div>
           </div>
@@ -708,6 +759,59 @@ const toggleExpandImpRow = (id) => {
 const getImpRowClass = (item) => {
   if (item.capaian == null) return 'imp-row-no-data'
   return isTargetMet(item) ? 'imp-row-achieved' : 'imp-row-not-achieved'
+}
+
+const ikpSearchQuery = ref('')
+const isIkpExpanded = ref(false)
+
+const filteredIkpChecklist = computed(() => {
+  const list = kategorisData[3]?.data?.reporting_checklist || []
+  if (!ikpSearchQuery.value) return list
+  const query = ikpSearchQuery.value.toLowerCase()
+  return list.filter(item => item.nama_unit && item.nama_unit.toLowerCase().includes(query))
+})
+
+const displayedChecklist = computed(() => {
+  const list = filteredIkpChecklist.value
+  if (isIkpExpanded.value || ikpSearchQuery.value) return list
+  return list.slice(0, 5)
+})
+
+const totalUnitsCount = computed(() => {
+  return (kategorisData[3]?.data?.reporting_checklist || []).length
+})
+
+const hasMoreUnits = computed(() => {
+  return filteredIkpChecklist.value.length > 5
+})
+
+const getIkpMonthStatus = (item, m) => {
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+  const filterYear = parseInt(filters.tahun, 10)
+  
+  if (filterYear > currentYear || (filterYear === currentYear && m > currentMonth)) {
+    return 'locked'
+  }
+  
+  const monthData = item.months && item.months[m]
+  if (monthData && monthData.is_reported) {
+    return 'filled'
+  }
+  
+  return 'edit'
+}
+
+const getIkpMonthIconClass = (item, m) => {
+  const status = getIkpMonthStatus(item, m)
+  if (status === 'filled') {
+    return 'fas fa-check'
+  } else if (status === 'edit') {
+    return 'far fa-edit'
+  } else {
+    return 'fas fa-lock'
+  }
 }
 
 const handleTipeChange = () => {
@@ -2028,5 +2132,37 @@ onMounted(() => {
 
 .bg-slate-50 {
   background-color: #f8fafc !important;
+}
+
+/* ===== IKP CHECKLIST TABLE ===== */
+.ikp-checklist-table th {
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 4px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.search-box-custom {
+  position: relative;
+  min-width: 200px;
+}
+
+.search-input-custom {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.search-input-custom:focus {
+  background-color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  outline: none;
 }
 </style>
