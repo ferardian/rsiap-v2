@@ -3725,6 +3725,19 @@ onBeforeUnmount(() => {
 }
 
 /* Tabs */
+.tabs-nav {
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: block;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.tabs-nav::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
 .header-tabs-premium {
   display: flex;
   background: #f1f5f9;
@@ -3749,6 +3762,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .tab-btn:hover:not(.active) {
@@ -4299,6 +4313,69 @@ onBeforeUnmount(() => {
   .card-header .style-chooser {
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  /* Tabs Nav Mobile Fix */
+  .tabs-nav .header-tabs-premium {
+    max-width: none !important;
+    width: max-content !important;
+    flex-wrap: nowrap !important;
+  }
+
+  /* Context Toggle Mobile Layout */
+  .context-toggle-wrap {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+  .context-toggle-wrap .header-tabs-premium {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .context-toggle-wrap .tab-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* Page Header Title Scaling */
+  .page-header h3 {
+    font-size: 1.25rem !important;
+  }
+  .header-icon-bg {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    font-size: 1.2rem !important;
+  }
+
+  /* Filter Bar Mobile Stacking */
+  .filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  .filter-bar-item {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  /* Monthly Info Bar Mobile Styling */
+  .monthly-info-left {
+    flex-wrap: wrap !important;
+  }
+  .monthly-info-title {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  .monthly-actions-row {
+    width: 100% !important;
+  }
+  .monthly-save-btn {
+    width: 100% !important;
+    justify-content: center !important;
   }
 }
 
