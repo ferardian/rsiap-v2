@@ -62,6 +62,10 @@ const service = {
     createPicValidator: (data) => api.post('/indikator-mutu/pic-validators', data),
     updatePicValidator: (dep_id, data) => api.put(`/indikator-mutu/pic-validators/${dep_id}`, data),
     deletePicValidator: (dep_id) => api.delete(`/indikator-mutu/pic-validators/${dep_id}`),
+
+    // Validasi Bulanan
+    getValidasiBulanan: (params) => api.get('/indikator-mutu/validasi', { params }),
+    storeValidasiBulanan: (data) => api.post('/indikator-mutu/validasi', data),
 };
 
 // Export service for Indikator Mutu operations

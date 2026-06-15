@@ -44,12 +44,13 @@
         <button class="tab-btn" :class="{ active: viewMode === 'monthly' }" @click="viewMode = 'monthly'">
           <i class="fas fa-calendar-alt"></i> Bulanan
         </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'validasi' }" @click="viewMode = 'validasi'">
+          <i class="fas fa-check-circle"></i> Validasi Data
+        </button>
         <button class="tab-btn" :class="{ active: viewMode === 'analisa' }" @click="viewMode = 'analisa'">
           <i class="fas fa-chart-line"></i> Analisa
         </button>
-        <button class="tab-btn" :class="{ active: viewMode === 'grafik' }" @click="viewMode = 'grafik'">
-          <i class="fas fa-chart-bar"></i> Grafik
-        </button>
+
         <button class="tab-btn" :class="{ active: viewMode === 'pdsa' }" @click="viewMode = 'pdsa'">
           <i class="fas fa-project-diagram"></i> PDSA
         </button>
@@ -107,6 +108,26 @@
             placeholder="Pilih Indikator untuk Entri..."
             class="filter-vselect"
             @update:modelValue="fetchMonthlyData"
+          />
+        </div>
+      </template>
+
+      <!-- VALIDASI MODE FILTERS -->
+      <template v-else-if="viewMode === 'validasi'">
+        <div class="filter-bar-item">
+          <label class="filter-bar-label">Bulan &amp; Tahun</label>
+          <input type="month" class="filter-date-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
+        </div>
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
           />
         </div>
       </template>
@@ -183,26 +204,7 @@
         </div>
       </template>
 
-      <!-- GRAFIK MODE FILTERS -->
-      <template v-else-if="viewMode === 'grafik'">
-        <div class="filter-bar-item">
-          <label class="filter-bar-label">Pilih Bulan &amp; Tahun</label>
-          <input type="month" class="filter-date-input" v-model="grafikBulan" @change="fetchGrafikData">
-        </div>
-        <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
-          <v-select append-to-body
-            :options="units"
-            label="nama_ruang"
-            v-model="filters.unit"
-            :reduce="unit => unit.dep_id"
-            placeholder="Pilih Unit"
-            class="filter-vselect unit-select"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-            @update:modelValue="handleGrafikUnitChange"
-          />
-        </div>
-      </template>
+
     </div>
 
     <!-- Main Content Card -->
@@ -239,7 +241,7 @@
                     </ul>
                 </div>
                 <div class="extra-small text-muted fw-bold text-uppercase ms-2 d-none d-sm-block">
-                    Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : (viewMode === 'grafik' ? 'Grafik' : (viewMode === 'pdsa' ? 'PDSA' : 'Analisa'))) }}
+                    Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : (viewMode === 'validasi' ? 'Validasi Data' : (viewMode === 'pdsa' ? 'PDSA' : 'Analisa'))) }}
                 </div>
             </div>
         </div>
@@ -315,12 +317,6 @@
                                     >
                                 </div>
                             </div>
-                            <div v-if="item.id_rekap && (item.numerator !== item.num_user || (needsDenominator(item) && item.denominator !== item.denum_user))" 
-                                 class="mt-1 text-warning d-flex align-items-center gap-1" 
-                                 style="font-size: 0.72rem; font-weight: 600;">
-                                <i class="fas fa-exclamation-triangle"></i> 
-                                Asli: {{ item.num_user }} / {{ item.denum_user }}
-                            </div>
                         </td>
                         <td>
                             <div class="d-flex flex-column align-items-end gap-2">
@@ -329,8 +325,8 @@
                                 </div>
 
                                 <!-- Verification Status Badge -->
-                                <div v-if="item.id_rekap" class="status-verif-badge" :class="item.status_verifikasi">
-                                    {{ formatVerifStatus(item.status_verifikasi) }}
+                                <div v-if="isRowLockedForUser(item)" class="badge bg-danger-light text-danger border border-danger-light py-1 px-2.5 rounded-pill fw-semibold extra-small" style="font-size: 0.7rem;">
+                                    <i class="fas fa-lock me-1"></i> Terkunci
                                 </div>
 
                                  <!-- Entry Creator Name & Date -->
@@ -354,37 +350,6 @@
                                         <i v-else class="fas fa-save me-1"></i> 
                                         {{ item.isSaving ? 'Menyimpan...' : 'Simpan' }}
                                     </button>
-
-                                    <!-- Verification Actions -->
-                                    <template v-if="item.id_rekap">
-                                        <button 
-                                            v-if="canVerifyAsPic && item.status_verifikasi === 'pending'"
-                                            class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
-                                            @click="verifyItem(item, 'verified_pic')"
-                                            style="padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;"
-                                            title="Verifikasi sebagai PIC"
-                                        >
-                                            <i class="fas fa-check-double"></i> PIC
-                                        </button>
-                                        <button 
-                                             v-if="canVerifyAsKoor && item.status_verifikasi === 'verified_pic'"
-                                             class="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
-                                             @click="verifyItem(item, 'verified_koor')"
-                                             style="padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;"
-                                             title="Verifikasi sebagai Koordinator"
-                                         >
-                                             <i class="fas fa-user-check"></i> Koor
-                                         </button>
-                                        <button 
-                                            v-if="canUnlock(item)"
-                                            class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center"
-                                            @click="verifyItem(item, 'pending')"
-                                            style="padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 0.78rem;"
-                                            title="Buka Kunci (Setel ke Pending)"
-                                        >
-                                            <i class="fas fa-lock-open"></i> Unlock
-                                        </button>
-                                    </template>
                                 </div>
                             </div>
                         </td>
@@ -413,17 +378,10 @@
                              <div class="monthly-info-period">
                                  <i class="fas fa-clock me-1 opacity-50"></i>
                                  Periode: {{ new Date(filters.tgl_transaksi).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) }}
-                                 <!-- Bulk month status badge — inline next to period -->
-                                 <span v-if="bulkMonthStatus !== 'no_data'"
-                                       :class="{
-                                         'badge bg-warning text-dark': bulkMonthStatus === 'pending',
-                                         'badge bg-primary text-white': bulkMonthStatus === 'verified_pic',
-                                         'badge bg-success text-white': bulkMonthStatus === 'verified_koor',
-                                         'badge bg-secondary text-white': bulkMonthStatus === 'mixed'
-                                       }"
+                                 <span :class="isIndicatorMonthlyLocked(selectedIndicator.id_inmut) ? 'badge bg-success text-white' : 'badge bg-warning text-dark'"
                                        style="font-size: 0.68rem; padding: 3px 8px; border-radius: 20px;">
                                      <i class="fas fa-circle me-1" style="font-size: 0.45rem; vertical-align: middle;"></i>
-                                     {{ bulkMonthStatus === 'pending' ? 'Pending' : bulkMonthStatus === 'verified_pic' ? 'Verified PIC' : bulkMonthStatus === 'verified_koor' ? 'Verified Koor' : 'Campuran' }}
+                                     {{ isIndicatorMonthlyLocked(selectedIndicator.id_inmut) ? 'Divalidasi' : 'Pending/Draft' }}
                                  </span>
                              </div>
                          </div>
@@ -431,41 +389,8 @@
 
                      <!-- Right: all action buttons in ONE horizontal row -->
                      <div class="monthly-actions-row">
-                         <!-- Bulk Verify PIC -->
-                         <button
-                             v-if="canVerifyBulkAsPic"
-                             class="monthly-action-btn btn-verif-pic"
-                             @click="verifyBulk('verified_pic')"
-                             :disabled="bulkVerifying"
-                             title="Verifikasi seluruh data bulan ini sebagai PIC"
-                         >
-                             <i class="fas" :class="bulkVerifying ? 'fa-spinner fa-spin' : 'fa-check-double'"></i>
-                             Verif PIC
-                         </button>
-                         <!-- Bulk Verify Koor (sequential) -->
-                         <button
-                             v-if="canVerifyBulkAsKoor"
-                             class="monthly-action-btn btn-verif-koor"
-                             @click="verifyBulk('verified_koor')"
-                             :disabled="bulkVerifying"
-                             title="Verifikasi final seluruh data bulan ini sebagai Koordinator"
-                         >
-                             <i class="fas" :class="bulkVerifying ? 'fa-spinner fa-spin' : 'fa-user-check'"></i>
-                             Verif Koor
-                         </button>
-                         <!-- Bulk Unlock -->
-                         <button
-                             v-if="canUnlockBulk"
-                             class="monthly-action-btn btn-unlock"
-                             @click="verifyBulk('pending')"
-                             :disabled="bulkVerifying"
-                             title="Buka kunci seluruh data bulan ini"
-                         >
-                             <i class="fas" :class="bulkVerifying ? 'fa-spinner fa-spin' : 'fa-lock-open'"></i>
-                             Unlock
-                         </button>
                          <!-- Save all -->
-                         <button class="monthly-save-btn" @click="saveBulk" :disabled="bulkSaving || bulkVerifying">
+                         <button class="monthly-save-btn" @click="saveBulk" :disabled="bulkSaving || isRowLockedForUser(selectedIndicator)">
                              <i class="fas" :class="bulkSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
                              {{ bulkSaving ? 'Menyimpan...' : 'Simpan Semua' }}
                          </button>
@@ -522,6 +447,22 @@
                     </div>
                  </div>
             </div>
+        </div>
+
+        <!-- VALIDASI DATA VIEW -->
+        <div v-else-if="viewMode === 'validasi'" class="p-3">
+            <div v-if="!filters.unit" class="text-center py-5 text-muted">
+                <i class="fas fa-hospital-user fa-3x mb-3 opacity-50"></i>
+                <p class="mb-0">Silahkan pilih unit / ruangan terlebih dahulu</p>
+            </div>
+            <ValidasiDataTab 
+                v-else
+                :dep-id="filters.unit"
+                :monthly-date="monthlyFilterDate"
+                :user-nik="userNik"
+                :is-committee-member="isCommitteeMember"
+                :active-unit-info="activeUnitInfo"
+            />
         </div>
 
 
@@ -593,6 +534,12 @@
                                     </div>
                                 </div>
 
+
+                                <!-- Mini Chart Preview -->
+                                <div v-if="item.chartOptions" class="mt-3 bg-light rounded-3 p-1 position-relative" style="height: 145px; overflow: hidden;" @click.stop>
+                                    <apexchart type="line" height="135" :options="item.chartOptions" :series="item.series"></apexchart>
+                                </div>
+
                                 <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
                                     <div class="text-start">
                                         <small class="text-muted d-block extra-small">CAPAIAN</small>
@@ -637,9 +584,9 @@
                 </div>                <!-- Side-by-Side Grid Layout -->
                 <div class="row g-4">
                     <!-- Left Column: Status Pengisian & Stats Summary -->
-                    <div class="col-lg-5">
+                    <div class="col-lg-5 d-flex flex-column gap-4">
                         <!-- DATA ENTRY PROGRESS CARD -->
-                        <div class="card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 15px; display: flex; flex-direction: column;">
+                        <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 15px; display: flex; flex-direction: column;">
                             <div class="p-4 flex-grow-1" :class="monthlyStats.isComplete ? 'bg-success-light' : 'bg-warning-light'">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div>
@@ -726,6 +673,19 @@
                                         TIDAK TERCAPAI
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily Trend Chart Card -->
+                        <div v-if="selectedIndicatorChartData" class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                            <div class="card-header bg-white border-0 py-3 px-4">
+                                <h6 class="fw-bold text-dark mb-0">
+                                    <i class="fas fa-chart-line text-primary me-2"></i>
+                                    Tren Capaian Harian
+                                </h6>
+                            </div>
+                            <div class="card-body p-3">
+                                <apexchart type="line" height="230" :options="selectedIndicatorChartData.chartOptions" :series="selectedIndicatorChartData.series"></apexchart>
                             </div>
                         </div>
                     </div>
@@ -869,106 +829,7 @@
             </div>
         </div>
 
-        <!-- GRAFIK VIEW -->
-        <div v-else-if="viewMode === 'grafik'" class="p-3 p-md-4">
-            <div v-if="!filters.unit" class="text-center py-5 text-muted">
-                <i class="fas fa-hospital-user fa-3x mb-3 opacity-50"></i>
-                <p>Pilih unit terlebih dahulu untuk melihat grafik</p>
-            </div>
-            <div v-else-if="grafikLoading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="text-muted mt-3 small">Memuat data grafik harian...</p>
-            </div>
-            <div v-else>
-                <!-- Header Info -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-1">
-                            <i class="fas fa-chart-line text-primary me-2"></i>
-                            Tren Capaian Harian Indikator Mutu
-                        </h5>
-                        <p class="text-muted small mb-0">
-                            Periode: <span class="fw-semibold text-primary">{{ grafikBulanDisplay }}</span> &mdash; {{ getUnitName() }}
-                        </p>
-                    </div>
-                    
-                    <!-- Summary Counters -->
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="px-3 py-2 bg-light rounded-3 text-center border">
-                            <div class="text-muted extra-small font-medium text-uppercase tracking-wider mb-0.5" style="font-size: 0.65rem;">Total Indikator</div>
-                            <div class="fw-bold text-dark h6 mb-0">{{ grafikDailyData.length }}</div>
-                        </div>
-                        <div class="px-3 py-2 rounded-3 text-center border" style="background-color: #f0fdf4; border-color: #bbf7d0 !important;">
-                            <div class="text-success extra-small font-medium text-uppercase tracking-wider mb-0.5" style="font-size: 0.65rem;">Tercapai</div>
-                            <div class="fw-bold text-success h6 mb-0">{{ grafikDailyData.filter(d => d.isMet).length }}</div>
-                        </div>
-                        <div class="px-3 py-2 rounded-3 text-center border" style="background-color: #fef2f2; border-color: #fecaca !important;">
-                            <div class="text-danger extra-small font-medium text-uppercase tracking-wider mb-0.5" style="font-size: 0.65rem;">Belum Tercapai</div>
-                            <div class="fw-bold text-danger h6 mb-0">{{ grafikDailyData.filter(d => !d.isMet).length }}</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Empty state if no indicators -->
-                <div v-if="!grafikDailyData.length" class="text-center py-5 text-muted card border-0 shadow-sm p-5" style="border-radius: 16px;">
-                    <i class="fas fa-inbox fa-3x mb-3 opacity-40 text-primary"></i>
-                    <h6 class="fw-bold text-dark">Tidak Ada Indikator</h6>
-                    <p class="small text-muted mb-0">Belum ada indikator mutu yang terdaftar untuk unit/ruangan ini.</p>
-                </div>
-
-                <!-- Grid of Indicator Cards -->
-                <div v-else class="row g-4">
-                    <div v-for="item in grafikDailyData" :key="item.id_inmut" class="col-12 col-xl-6">
-                        <div class="card border-0 shadow-sm h-100 position-relative" style="border-radius: 16px; overflow: hidden;">
-                            <!-- Card Header with Gradient based on status -->
-                            <div class="card-header border-0 py-3 px-4 d-flex align-items-center justify-content-between gap-3" 
-                                 :style="item.isMet ? 'background: linear-gradient(135deg, #f0fdf4, #f8fafc);' : 'background: linear-gradient(135deg, #fef2f2, #f8fafc);'">
-                                <div style="max-width: 65%;">
-                                    <h6 class="fw-bold text-dark mb-1" style="font-size: 0.9rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" :title="item.nama_inmut">
-                                        {{ item.nama_inmut }}
-                                    </h6>
-                                    <p class="text-muted extra-small mb-0" style="font-size: 0.75rem;">
-                                        Target: <span class="fw-bold text-dark">{{ getTargetDisplay(item) }}</span>
-                                    </p>
-                                </div>
-                                <div class="text-end" style="min-width: 110px;">
-                                    <!-- Capaian Badge -->
-                                    <div class="badge px-2.5 py-1.5 rounded-pill shadow-sm mb-1 border" 
-                                         :class="item.isMet ? 'bg-success text-white border-success' : 'bg-danger text-white border-danger'" 
-                                         style="font-size: 0.7rem; font-weight: 600;">
-                                        Rata-rata: {{ item.needsDenominator ? item.monthlyAvg + '%' : item.monthlyAvg }}
-                                    </div>
-                                    <!-- Status Text -->
-                                    <div class="extra-small fw-bold" :class="item.isMet ? 'text-success' : 'text-danger'" style="font-size: 0.65rem;">
-                                        <i :class="item.isMet ? 'fas fa-check-circle me-1' : 'fas fa-times-circle me-1'"></i>
-                                        {{ item.isMet ? 'Tercapai' : 'Belum Tercapai' }}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="card-body p-3">
-                                <!-- Info bar -->
-                                <div class="d-flex justify-content-between text-muted extra-small mb-2 px-1" style="font-size: 0.75rem;">
-                                    <div>
-                                        <i class="fas fa-calendar-day me-1"></i> Data Terisi: 
-                                        <span class="fw-bold text-dark">{{ item.daysFilledCount }}/{{ item.daysInMonth }} Hari</span>
-                                    </div>
-                                    <div v-if="item.needsDenominator">
-                                        <span>Total Num: <b class="text-primary">{{ item.totalNum }}</b></span> | <span>Total Den: <b class="text-success">{{ item.totalDenum }}</b></span>
-                                    </div>
-                                    <div v-else>
-                                        <span>Total: <b class="text-primary">{{ item.totalNum }}</b></span>
-                                    </div>
-                                </div>
-                                
-                                <!-- ApexChart daily line trend -->
-                                <apexchart type="line" height="230" :options="item.chartOptions" :series="item.series"></apexchart>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- PDSA VIEW -->
         <div v-else-if="viewMode === 'pdsa'" class="p-3">
@@ -1274,6 +1135,8 @@ import * as XLSX from 'xlsx'
 import pdfHeader from '@/assets/pdf-header.png'
 import pdfFooter from '@/assets/pdf-footer.png'
 import QRCode from 'qrcode'
+import ValidasiDataTab from '@/components/indikator-mutu/ValidasiDataTab.vue'
+
 const apexchart = VueApexCharts
 
 const authStore = useAuthStore()
@@ -1282,6 +1145,52 @@ const loading = ref(false)
 const units = ref([])
 const indicators = ref([])
 const isUnitLocked = ref(false)
+
+const userNik = computed(() => authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik || '')
+
+const monthlyValidations = ref([])
+const selectedIndicatorChartData = ref(null)
+
+const fetchMonthlyValidations = async () => {
+    if (!filters.unit) {
+        monthlyValidations.value = []
+        return
+    }
+    
+    let y, m
+    if (viewMode.value === 'daily') {
+        if (!filters.tgl_transaksi) return
+        const parts = filters.tgl_transaksi.split('-')
+        y = parseInt(parts[0], 10)
+        m = parseInt(parts[1], 10)
+    } else {
+        if (!monthlyFilterDate.value) return
+        const parts = monthlyFilterDate.value.split('-')
+        y = parseInt(parts[0], 10)
+        m = parseInt(parts[1], 10)
+    }
+    
+    try {
+        const res = await api.getValidasiBulanan({
+            dep_id: filters.unit,
+            bulan: m,
+            tahun: y
+        })
+        if (res.data && res.data.success) {
+            monthlyValidations.value = res.data.data
+        } else {
+            monthlyValidations.value = []
+        }
+    } catch (e) {
+        console.error("Gagal memuat status validasi bulanan:", e)
+        monthlyValidations.value = []
+    }
+}
+
+const isIndicatorMonthlyLocked = (id_inmut) => {
+    const val = monthlyValidations.value.find(v => v.id_inmut === id_inmut)
+    return val && val.status === 'verified'
+}
 
 const filters = reactive({
     tgl_transaksi: new Date().toISOString().slice(0, 10),
@@ -1295,14 +1204,11 @@ const bulkSaving = ref(false)
 const bulkVerifying = ref(false)
 const calendarData = ref([])
 
-// === GRAFIK STATE ===
-const grafikBulan = ref(new Date().toISOString().slice(0, 7)) // Format: YYYY-MM
-const grafikLoading = ref(false)
-const grafikDailyData = ref([])
+
 
 // === MODE GLIDER LOGIC ===
 const gliderStyle = computed(() => {
-    const modes = ['daily', 'monthly', 'analisa', 'grafik', 'pdsa']
+    const modes = ['daily', 'monthly', 'validasi', 'analisa', 'pdsa']
     const activeIndex = modes.indexOf(viewMode.value)
     return {
         transform: `translateX(${activeIndex * 100}%)`
@@ -1329,14 +1235,12 @@ const activeUnitInfo = computed(() => {
 });
 
 const canVerifyAsPic = computed(() => {
-    // Get current logged-in user NIK
-    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik;
     const role = authStore.userRole?.toLowerCase() || '';
 
     // 1. Dynamic check: if unit has a PIC NIK mapped, strictly require NIK match
     if (activeUnitInfo.value && activeUnitInfo.value.nik_pic) {
-        const match = activeUnitInfo.value.nik_pic === userNik;
-        console.log(`[Verify PIC Check] Unit NIK PIC: ${activeUnitInfo.value.nik_pic} | User NIK: ${userNik} | Match: ${match}`);
+        const match = activeUnitInfo.value.nik_pic === userNik.value;
+        console.log(`[Verify PIC Check] Unit NIK PIC: ${activeUnitInfo.value.nik_pic} | User NIK: ${userNik.value} | Match: ${match}`);
         return match;
     }
 
@@ -1347,14 +1251,12 @@ const canVerifyAsPic = computed(() => {
 });
 
 const canVerifyAsKoor = computed(() => {
-    // Get current logged-in user NIK
-    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik;
     const role = authStore.userRole?.toLowerCase() || '';
 
     // 1. Dynamic check: if unit has a Validator NIK mapped, strictly require NIK match
     if (activeUnitInfo.value && activeUnitInfo.value.nik_validator) {
-        const match = activeUnitInfo.value.nik_validator === userNik;
-        console.log(`[Verify Koor Check] Unit Validator NIK: ${activeUnitInfo.value.nik_validator} | User NIK: ${userNik} | Match: ${match}`);
+        const match = activeUnitInfo.value.nik_validator === userNik.value;
+        console.log(`[Verify Koor Check] Unit Validator NIK: ${activeUnitInfo.value.nik_validator} | User NIK: ${userNik.value} | Match: ${match}`);
         return match;
     }
 
@@ -1365,82 +1267,12 @@ const canVerifyAsKoor = computed(() => {
 });
 
 const isRowLockedForUser = (item) => {
-    const status = item.status_verifikasi || 'pending';
-
-    // 1. If status is PENDING: Anyone can edit and fill.
-    if (status === 'pending') {
-        return false;
-    }
-
-    // 2. If status is VERIFIED PIC: Only Validator/Koor can edit.
-    if (status === 'verified_pic') {
-        if (canVerifyAsKoor.value) {
-            return false;
-        }
-        return true;
-    }
-
-    // 3. If status is VERIFIED KOOR: Locked for everyone.
-    if (status === 'verified_koor') {
-        return true;
-    }
-
-    return true;
+    const id_inmut = item.id_inmut || selectedIndicator.value?.id_inmut;
+    if (!id_inmut) return false;
+    return isIndicatorMonthlyLocked(id_inmut);
 };
 
-const canUnlock = (item) => {
-    if (!item.status_verifikasi || item.status_verifikasi === 'pending') {
-        return false;
-    }
-    // Coordinator can unlock any verified data (verified_pic or verified_koor)
-    if (canVerifyAsKoor.value) {
-        return true;
-    }
-    // PIC can only unlock data that they verified themselves (verified_pic) but not verified by coordinator
-    if (canVerifyAsPic.value && item.status_verifikasi === 'verified_pic') {
-        return true;
-    }
-    return false;
-};
 
-// === BULK MONTHLY VERIFICATION ===
-
-// Determine overall status of the current month's data for the selected indicator
-// Possible outcomes: 'pending' | 'verified_pic' | 'verified_koor' | 'mixed' | 'no_data'
-const bulkMonthStatus = computed(() => {
-    if (!calendarData.value || calendarData.value.length === 0) return 'no_data';
-    const statuses = calendarData.value.map(c => c.status_verifikasi || 'pending');
-    const unique = [...new Set(statuses)];
-    if (unique.length === 1) return unique[0]; // all same
-    // If mixed, we report 'mixed' so the UI can show appropriate partial-state info
-    return 'mixed';
-});
-
-// Whether PIC can batch-verify this month's data
-const canVerifyBulkAsPic = computed(() => {
-    if (!canVerifyAsPic.value) return false;
-    const s = bulkMonthStatus.value;
-    // PIC can verify when all data is pending
-    return s === 'pending';
-});
-
-// Whether Koor can batch-verify this month's data
-const canVerifyBulkAsKoor = computed(() => {
-    if (!canVerifyAsKoor.value) return false;
-    const s = bulkMonthStatus.value;
-    // Koor can verify when all data is verified_pic
-    return s === 'verified_pic';
-});
-
-// Whether the batch can be unlocked (set back to pending)
-const canUnlockBulk = computed(() => {
-    const s = bulkMonthStatus.value;
-    if (s === 'no_data' || s === 'pending') return false;
-    if (canVerifyAsKoor.value) return true; // Koor can always unlock
-    // PIC can unlock when data is only at verified_pic (not yet koor-verified)
-    if (canVerifyAsPic.value && s === 'verified_pic') return true;
-    return false;
-});
 
 const isPdsaLocked = computed(() => {
     // 1. Locked if validated and user is not Komite Mutu
@@ -1479,27 +1311,6 @@ const formatPdsaStatus = (status) => {
     return map[status] || status || 'Draft'
 }
 
-const verifyItem = async (item, status) => {
-    item.isSaving = true
-    try {
-        const payload = {
-            id_rekap: [item.id_rekap],
-            status: status
-        }
-        await api.verifyRealisasi(payload)
-        toast.success(`Status data ${item.nama_inmut} berhasil diperbarui`)
-        item.status_verifikasi = status
-        if (status === 'pending') {
-            item.pic_verified_by = null
-            item.koor_verified_by = null
-        }
-    } catch (error) {
-        console.error(error)
-        toast.error('Gagal memperbarui status verifikasi')
-    } finally {
-        item.isSaving = false
-    }
-}
 
 const validatePdsaItem = async (status) => {
     pdsaSaving.value = true
@@ -1592,15 +1403,13 @@ const fetchCorrectData = () => {
     else if (viewMode.value === 'monthly') fetchMonthlyData()
     else if (viewMode.value === 'analisa') fetchAnalisaData()
     else if (viewMode.value === 'pdsa') fetchPdsaData()
-    else if (viewMode.value === 'grafik') fetchGrafikData()
 }
 
 // Watch viewMode to sync and auto-fetch
 watch(viewMode, (newMode) => {
-    if (newMode === 'monthly' || newMode === 'analisa' || newMode === 'pdsa' || newMode === 'grafik') {
+    if (newMode === 'monthly' || newMode === 'analisa' || newMode === 'pdsa') {
         monthlyFilterDate.value = filters.tgl_transaksi.slice(0, 7)
         analisaFilters.bulan = monthlyFilterDate.value
-        grafikBulan.value = monthlyFilterDate.value
         
         // Ensure Triwulan selector matches
         if (newMode === 'analisa' || newMode === 'pdsa') {
@@ -1688,248 +1497,212 @@ const resetPdsaForm = () => {
     })
 }
 
-const handleGrafikUnitChange = async () => {
-    await fetchIndicators()
-    fetchGrafikData()
-}
 
-// === GRAFIK DATA FETCHER ===
-const fetchGrafikData = async () => {
-    if (!filters.unit) return
 
-    const [yearStr, monthStr] = grafikBulan.value.split('-')
-    const y = parseInt(yearStr)
-    const m = parseInt(monthStr)
-    const daysInMonth = new Date(y, m, 0).getDate()
+// === BUILD CHART DATA FOR SPECIFIC INDICATOR ===
+const buildChartDataForIndicator = (ind, indRealisasi, daysInMonth, yearMonth, isMini = false) => {
+    const dailyData = []
+    let totalNum = 0
+    let totalDenum = 0
+    let daysFilledCount = 0
 
-    grafikLoading.value = true
-    grafikDailyData.value = []
-
-    try {
-        const response = await api.getRealisasi({
-            dep_id: filters.unit,
-            bulan: m,
-            tahun: y
-        })
-        const allRealisasi = response.data.data || []
-
-        const groupedRealisasi = {}
-        allRealisasi.forEach(r => {
-            if (!groupedRealisasi[r.id_inmut]) {
-                groupedRealisasi[r.id_inmut] = []
-            }
-            groupedRealisasi[r.id_inmut].push(r)
-        })
-
-        const results = indicators.value.map(ind => {
-            const indRealisasi = groupedRealisasi[ind.id_inmut] || []
-            
-            const dailyData = []
-            let totalNum = 0
-            let totalDenum = 0
-            let daysFilledCount = 0
-
-            const realisasiByDay = {}
-            indRealisasi.forEach(r => {
-                const day = new Date(r.tanggal_inmut).getDate()
+    const realisasiByDay = {}
+    indRealisasi.forEach(r => {
+        if (r.tanggal_inmut) {
+            const dateOnly = r.tanggal_inmut.split(' ')[0]
+            const parts = dateOnly.split('-')
+            if (parts.length === 3) {
+                const day = parseInt(parts[2], 10)
                 realisasiByDay[day] = r
+            }
+        }
+    })
+
+    const needsDen = needsDenominator(ind)
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const r = realisasiByDay[d]
+        if (r) {
+            const numVal = parseInt(r.num) || 0
+            const denumVal = parseInt(r.denum) || 0
+            
+            totalNum += numVal
+            totalDenum += denumVal
+            daysFilledCount++
+
+            let score = 0
+            if (needsDen) {
+                score = denumVal > 0 ? parseFloat(((numVal / denumVal) * 100).toFixed(2)) : 0
+            } else {
+                score = numVal
+            }
+
+            dailyData.push({
+                day: d,
+                num: numVal,
+                denum: denumVal,
+                score: score,
+                nama_input: r.nama_input || r.pegawai?.nama || 'Petugas',
+                tanggal: r.tanggal_inmut
             })
+        } else {
+            dailyData.push({
+                day: d,
+                num: null,
+                denum: null,
+                score: null,
+                nama_input: null,
+                tanggal: `${yearMonth}-${String(d).padStart(2, '0')}`
+            })
+        }
+    }
 
-            const needsDen = needsDenominator(ind)
+    let monthlyAvg = 0
+    if (needsDen) {
+        monthlyAvg = totalDenum > 0 ? parseFloat(((totalNum / totalDenum) * 100).toFixed(2)) : 0
+    } else {
+        monthlyAvg = daysFilledCount > 0 ? parseFloat((totalNum / daysFilledCount).toFixed(2)) : 0
+    }
 
-            for (let d = 1; d <= daysInMonth; d++) {
-                const r = realisasiByDay[d]
-                if (r) {
-                    const numVal = parseInt(r.num) || 0
-                    const denumVal = parseInt(r.denum) || 0
-                    
-                    totalNum += numVal
-                    totalDenum += denumVal
-                    daysFilledCount++
+    const isMet = isTargetMet({
+        ...ind,
+        score: monthlyAvg,
+        totalNum,
+        totalDenum
+    })
 
-                    let score = 0
-                    if (needsDen) {
-                        score = denumVal > 0 ? parseFloat(((numVal / denumVal) * 100).toFixed(2)) : 0
-                    } else {
-                        score = numVal
-                    }
+    const target = parseFloat(ind.standar) || 0
+    const categories = Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
+    const scoresSeries = dailyData.map(d => d.score)
 
-                    dailyData.push({
-                        day: d,
-                        num: numVal,
-                        denum: denumVal,
-                        score: score,
-                        nama_input: r.nama_input || r.pegawai?.nama || 'Petugas',
-                        tanggal: r.tanggal_inmut
-                    })
+    const minVal = 0
+    const maxVal = needsDen 
+        ? Math.max(100, ...dailyData.map(d => Math.max(d.num || 0, d.denum || 0)))
+        : Math.max(target * 1.2, ...scoresSeries.filter(s => s !== null).map(Number), 10)
+
+    const chartOptions = {
+        chart: {
+            id: `chart-${ind.id_inmut}`,
+            type: 'line',
+            toolbar: { show: false },
+            fontFamily: 'Inter, sans-serif',
+            zoom: { enabled: false }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: needsDen ? [2, 2, 4] : [4]
+        },
+        markers: {
+            size: needsDen ? [3, 3, 5] : [5],
+            strokeWidth: 0,
+            hover: { size: 6 }
+        },
+        colors: needsDen ? ['#10b981', '#3b82f6', '#6366f1'] : ['#3b82f6'],
+        xaxis: {
+            categories: categories,
+            title: { text: isMini ? '' : 'Hari Ke-', style: { fontSize: '11px', color: '#64748b' } },
+            labels: { style: { fontSize: '10px' } }
+        },
+        yaxis: {
+            min: minVal,
+            max: Math.ceil(maxVal),
+            tickAmount: isMini ? 3 : 5,
+            labels: {
+                formatter: v => needsDen ? Math.round(v) : `${Math.round(v)}%`,
+                style: { fontSize: '10px' }
+            }
+        },
+        annotations: {
+            yaxis: [{
+                y: target,
+                borderColor: '#ef4444',
+                borderWidth: 2,
+                strokeDashArray: 5,
+                label: {
+                    text: `Target: ${target}${needsDen ? '%' : ''}`,
+                    position: 'left',
+                    offsetX: 10,
+                    style: { color: '#fff', background: '#ef4444', fontSize: '10px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }
+                }
+            }]
+        },
+        tooltip: {
+            custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                const dayData = dailyData[dataPointIndex]
+                if (dayData.score === null) {
+                    return `<div class="p-2 bg-white border rounded shadow-sm text-muted small">
+                        <b>Hari ${dataPointIndex + 1}</b><br>
+                        Tidak ada data
+                    </div>`
+                }
+                
+                let detailHtml = ''
+                if (needsDen) {
+                    detailHtml = `
+                        <div><span class="text-muted">Capaian:</span> <span class="fw-bold text-dark">${dayData.score}%</span></div>
+                        <div><span class="text-muted">Numerator:</span> <span class="fw-bold text-primary">${dayData.num}</span></div>
+                        <div><span class="text-muted">Denominator:</span> <span class="fw-bold text-success">${dayData.denum}</span></div>
+                    `
                 } else {
-                    dailyData.push({
-                        day: d,
-                        num: null,
-                        denum: null,
-                        score: null,
-                        nama_input: null,
-                        tanggal: `${grafikBulan.value}-${String(d).padStart(2, '0')}`
-                    })
+                    detailHtml = `
+                        <div><span class="text-muted">Nilai:</span> <span class="fw-bold text-primary">${dayData.score}</span></div>
+                    `
                 }
+                
+                return `
+                    <div class="p-3 bg-white border rounded shadow-sm small" style="font-family: Inter, sans-serif; line-height: 1.5; color: #1e293b;">
+                        <div class="fw-bold mb-1 border-bottom pb-1 text-dark">Hari ${dayData.day} (${dayData.tanggal})</div>
+                        ${detailHtml}
+                        <div class="mt-1 pt-1 border-top text-muted" style="font-size: 9px;">
+                            <i class="fas fa-user me-1"></i> ${dayData.nama_input}
+                        </div>
+                    </div>
+                `
             }
+        },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+        legend: {
+            show: isMini ? false : needsDen,
+            position: 'top',
+            horizontalAlign: 'right',
+            fontSize: isMini ? '9px' : '11px',
+            markers: { radius: 12 }
+        }
+    }
 
-            let monthlyAvg = 0
-            if (needsDen) {
-                monthlyAvg = totalDenum > 0 ? parseFloat(((totalNum / totalDenum) * 100).toFixed(2)) : 0
-            } else {
-                monthlyAvg = daysFilledCount > 0 ? parseFloat((totalNum / daysFilledCount).toFixed(2)) : 0
-            }
-
-            const isMet = isTargetMet({
-                ...ind,
-                score: monthlyAvg,
-                totalNum,
-                totalDenum
-            })
-
-            const target = parseFloat(ind.standar) || 0
-            const categories = Array.from({ length: daysInMonth }, (_, i) => String(i + 1))
-            const scoresSeries = dailyData.map(d => d.score)
-
-            const minVal = 0
-            const maxVal = needsDen 
-                ? Math.max(100, ...dailyData.map(d => Math.max(d.num || 0, d.denum || 0)))
-                : Math.max(target * 1.2, ...scoresSeries.filter(s => s !== null).map(Number), 10)
-
-            const chartOptions = {
-                chart: {
-                    id: `chart-${ind.id_inmut}`,
-                    type: 'line',
-                    toolbar: { show: false },
-                    fontFamily: 'Inter, sans-serif',
-                    zoom: { enabled: false }
-                },
-                stroke: {
-                    curve: 'smooth',
-                    width: needsDen ? [2, 2, 4] : [4]
-                },
-                markers: {
-                    size: needsDen ? [3, 3, 5] : [5],
-                    strokeWidth: 0,
-                    hover: { size: 6 }
-                },
-                colors: needsDen ? ['#10b981', '#3b82f6', '#6366f1'] : ['#3b82f6'],
-                xaxis: {
-                    categories: categories,
-                    title: { text: 'Hari Ke-', style: { fontSize: '11px', color: '#64748b' } },
-                    labels: { style: { fontSize: '10px' } }
-                },
-                yaxis: {
-                    min: minVal,
-                    max: Math.ceil(maxVal),
-                    tickAmount: 5,
-                    labels: {
-                        formatter: v => needsDen ? Math.round(v) : `${Math.round(v)}%`,
-                        style: { fontSize: '10px' }
-                    }
-                },
-                annotations: {
-                    yaxis: [{
-                        y: target,
-                        borderColor: '#ef4444',
-                        borderWidth: 2,
-                        strokeDashArray: 5,
-                        label: {
-                            text: `Target: ${target}${needsDen ? '%' : ''}`,
-                            position: 'left',
-                            offsetX: 10,
-                            style: { color: '#fff', background: '#ef4444', fontSize: '10px', fontWeight: 'bold', padding: { left: 4, right: 4, top: 2, bottom: 2 } }
-                        }
-                    }]
-                },
-                tooltip: {
-                    custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                        const dayData = dailyData[dataPointIndex]
-                        if (dayData.score === null) {
-                            return `<div class="p-2 bg-white border rounded shadow-sm text-muted small">
-                                <b>Hari ${dataPointIndex + 1}</b><br>
-                                Tidak ada data
-                            </div>`
-                        }
-                        
-                        let detailHtml = ''
-                        if (needsDen) {
-                            detailHtml = `
-                                <div><span class="text-muted">Capaian:</span> <span class="fw-bold text-dark">${dayData.score}%</span></div>
-                                <div><span class="text-muted">Numerator:</span> <span class="fw-bold text-primary">${dayData.num}</span></div>
-                                <div><span class="text-muted">Denominator:</span> <span class="fw-bold text-success">${dayData.denum}</span></div>
-                            `
-                        } else {
-                            detailHtml = `
-                                <div><span class="text-muted">Nilai:</span> <span class="fw-bold text-primary">${dayData.score}</span></div>
-                            `
-                        }
-                        
-                        return `
-                            <div class="p-3 bg-white border rounded shadow-sm small" style="font-family: Inter, sans-serif; line-height: 1.5; color: #1e293b;">
-                                <div class="fw-bold mb-1 border-bottom pb-1 text-dark">Hari ${dayData.day} (${dayData.tanggal})</div>
-                                ${detailHtml}
-                                <div class="mt-1 pt-1 border-top text-muted" style="font-size: 9px;">
-                                    <i class="fas fa-user me-1"></i> ${dayData.nama_input}
-                                </div>
-                            </div>
-                        `
-                    }
-                },
-                grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
-                legend: {
-                    show: needsDen,
-                    position: 'top',
-                    horizontalAlign: 'right',
-                    fontSize: '11px',
-                    markers: {
-                        radius: 12
-                    }
-                }
-            }
-
-            const series = []
-            if (needsDen) {
-                series.push({
-                    name: 'Denominator',
-                    data: dailyData.map(d => d.denum)
-                })
-                series.push({
-                    name: 'Numerator',
-                    data: dailyData.map(d => d.num)
-                })
-                series.push({
-                    name: 'Capaian (%)',
-                    data: scoresSeries
-                })
-            } else {
-                series.push({
-                    name: 'Nilai',
-                    data: scoresSeries
-                })
-            }
-
-            return {
-                ...ind,
-                needsDenominator: needsDen,
-                dailyData,
-                totalNum,
-                totalDenum,
-                daysFilledCount,
-                daysInMonth,
-                monthlyAvg,
-                isMet,
-                series,
-                chartOptions
-            }
+    const series = []
+    if (needsDen) {
+        series.push({
+            name: 'Denominator',
+            data: dailyData.map(d => d.denum)
         })
+        series.push({
+            name: 'Numerator',
+            data: dailyData.map(d => d.num)
+        })
+        series.push({
+            name: 'Capaian (%)',
+            data: scoresSeries
+        })
+    } else {
+        series.push({
+            name: 'Nilai',
+            data: scoresSeries
+        })
+    }
 
-        grafikDailyData.value = results
-    } catch (e) {
-        console.error('fetchGrafikData error:', e)
-    } finally {
-        grafikLoading.value = false
+    return {
+        ...ind,
+        needsDenominator: needsDen,
+        dailyData,
+        totalNum,
+        totalDenum,
+        daysFilledCount,
+        daysInMonth,
+        monthlyAvg,
+        isMet,
+        series,
+        chartOptions
     }
 }
 
@@ -2076,6 +1849,7 @@ const fetchIndicators = async () => {
 
     loading.value = true
     try {
+        await fetchMonthlyValidations()
         const params = {
             limit: 100,
             status: '1'
@@ -2280,6 +2054,7 @@ const fetchMonthlyData = async () => {
     
     loading.value = true
     try {
+        await fetchMonthlyValidations()
         const date = new Date(filters.tgl_transaksi)
         const params = {
             dep_id: filters.unit,
@@ -2343,36 +2118,7 @@ const saveBulk = async () => {
     }
 }
 
-const verifyBulk = async (status) => {
-    if (!selectedIndicator.value || !filters.unit) return;
-    
-    const labels = {
-        verified_pic: 'Verifikasi PIC',
-        verified_koor: 'Verifikasi Koor',
-        pending: 'Buka Kunci (Unlock)'
-    };
-    
-    bulkVerifying.value = true;
-    try {
-        const date = new Date(filters.tgl_transaksi);
-        const payload = {
-            dep_id: filters.unit,
-            bulan: date.getMonth() + 1,
-            tahun: date.getFullYear(),
-            id_inmut: String(selectedIndicator.value.id_inmut),
-            status: status
-        };
-        await api.verifyRealisasi(payload);
-        toast.success(`${labels[status] || 'Status'} bulan ini berhasil diperbarui`);
-        await fetchMonthlyData(); // Refresh calendar data to reflect new statuses
-    } catch (error) {
-        console.error(error);
-        const msg = error?.response?.data?.message || 'Gagal memperbarui status verifikasi bulanan';
-        toast.error(msg);
-    } finally {
-        bulkVerifying.value = false;
-    }
-}
+
 
 // === ANALISA MODE FUNCTIONS ===
 const fetchAnalisaData = async () => {
@@ -2384,6 +2130,7 @@ const fetchAnalisaData = async () => {
     resetAnalisaForm()
     isEditingAnalisa.value = false
     showAnalisaForm.value = false // Hide form on indicator change
+    selectedIndicatorChartData.value = null
     monthlyStats.value = {
         totalNum: 0,
         totalDenum: 0,
@@ -2410,7 +2157,7 @@ const fetchAnalisaData = async () => {
         if (isSpecialized) {
             // Fetch monthly data for a SPECIFIC indicator
             const realisasiRes = await api.getRealisasi({ dep_id: filters.unit, bulan: m, tahun: y, id_inmut: selectedIndicator.value.id_inmut })
-            const currentIndRealisasi = (realisasiRes.data.data || []).filter(r => r.id_inmut === selectedIndicator.value.id_inmut)
+            const currentIndRealisasi = (realisasiRes.data.data || []).filter(r => Number(r.id_inmut) === Number(selectedIndicator.value.id_inmut))
             
             let totalNum = 0, totalDenum = 0
             currentIndRealisasi.forEach(r => {
@@ -2418,7 +2165,11 @@ const fetchAnalisaData = async () => {
                 totalDenum += parseInt(r.denum) || 0
             })
             
-            const filledDays = new Set(currentIndRealisasi.map(r => new Date(r.tanggal_inmut).getDate()))
+            const filledDays = new Set(currentIndRealisasi.map(r => {
+                const dateOnly = r.tanggal_inmut.split(' ')[0]
+                const parts = dateOnly.split('-')
+                return parseInt(parts[2], 10)
+            }))
             const missingDays = []
             for (let d = 1; d <= daysInMonth; d++) if (!filledDays.has(d)) missingDays.push(d)
             
@@ -2429,6 +2180,14 @@ const fetchAnalisaData = async () => {
                 missingDays,
                 fillPercentage: Math.round(((daysInMonth - missingDays.length) / daysInMonth) * 100)
             }
+
+            // Build chart data for the selected indicator
+            selectedIndicatorChartData.value = buildChartDataForIndicator(
+                selectedIndicator.value,
+                currentIndRealisasi,
+                daysInMonth,
+                analisaFilters.bulan
+            )
 
             // Auto-populate form
             if (existingAnalisa.value.length > 0) {
@@ -2454,7 +2213,12 @@ const fetchAnalisaData = async () => {
             // Map indicators to their current stats
             allIndicatorStats.value = indicators.value.map(ind => {
                 const indRealisasi = groupedRealisasi[ind.id_inmut] || []
-                const filledDays = new Set(indRealisasi.map(r => new Date(r.tanggal_inmut).getDate()))
+                const filledDays = new Set(indRealisasi.map(r => {
+                    if (!r.tanggal_inmut) return 0
+                    const dateOnly = r.tanggal_inmut.split(' ')[0]
+                    const parts = dateOnly.split('-')
+                    return parseInt(parts[2], 10)
+                }))
                 const filledCount = filledDays.size
                 const progress = Math.round((filledCount / daysInMonth) * 100)
                 const isComplete = filledCount === daysInMonth
@@ -2467,6 +2231,14 @@ const fetchAnalisaData = async () => {
                 // Check if already analyzed
                 const analyzis = existingAnalisa.value.find(ans => ans.id_inmut === ind.id_inmut)
 
+                const chartData = buildChartDataForIndicator(
+                    ind,
+                    indRealisasi,
+                    daysInMonth,
+                    analisaFilters.bulan,
+                    true // isMini
+                )
+
                 return {
                     ...ind,
                     progress,
@@ -2474,7 +2246,9 @@ const fetchAnalisaData = async () => {
                     score,
                     isAnalyzed: !!analyzis,
                     analysisId: analyzis?.id_analisa,
-                    hasFeedback: !!analyzis?.feedback
+                    hasFeedback: !!analyzis?.feedback,
+                    chartOptions: chartData.chartOptions,
+                    series: chartData.series
                 }
             })
         }
@@ -2646,12 +2420,6 @@ const getIndonesianMonthName = (monthStr) => {
     return months[idx] || ''
 }
 
-const grafikBulanDisplay = computed(() => {
-    if (!grafikBulan.value) return ''
-    const [y, m] = grafikBulan.value.split('-')
-    return `${getIndonesianMonthName(m)} ${y}`
-})
-
 const calculateCapaian = (num, denum) => {
     if (!denum || denum === 0) return 0
     return ((num / denum) * 100).toFixed(2)
@@ -2775,10 +2543,6 @@ watch(() => selectedIndicator.value, () => {
 watch(() => viewMode.value, async (newMode) => {
     if (newMode === 'monthly') fetchMonthlyData()
     if (newMode === 'analisa') fetchAnalisaData()
-    if (newMode === 'grafik') {
-        await fetchIndicators()
-        fetchGrafikData()
-    }
 })
 
 // Re-fetch data if filters change
