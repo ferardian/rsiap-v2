@@ -421,7 +421,7 @@ onMounted(() => {
   position: sticky;
   left: 0;
   z-index: 2;
-  background-color: #ffffff;
+  background: #ffffff !important;
   border-right: 1px solid #e2e8f0;
 }
 
@@ -429,8 +429,10 @@ onMounted(() => {
   position: sticky;
   left: 50px;
   z-index: 2;
-  background-color: #ffffff;
-  border-right: 2px solid #cbd5e1;
+  background: #ffffff !important;
+  border-right: none;
+  /* Shadow as a visual divider that scrolls with the sticky column */
+  box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.08);
 }
 
 .indicator-name-cell {
@@ -487,7 +489,7 @@ onMounted(() => {
 
 .table-rekap tr:hover td.sticky-no,
 .table-rekap tr:hover td.sticky-name {
-  background-color: #f8fafc;
+  background: #f1f5f9 !important;
 }
 
 /* Cell contents */
