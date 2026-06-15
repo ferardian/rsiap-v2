@@ -374,12 +374,39 @@ onMounted(() => {
 
 /* ===== TABLE LAYOUT ===== */
 .table-rekap-container {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 68vh;
   border-radius: 14px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   background: white;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
 }
+
+.table-rekap-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-rekap-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 14px;
+}
+
+.table-rekap-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 14px;
+  border: 2px solid #f8fafc;
+}
+
+.table-rekap-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 
 .table-rekap {
   width: max-content;
@@ -389,23 +416,19 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* Sticky Column Styles */
-.table-rekap th.sticky-no,
+/* Sticky Left Columns in Body */
 .table-rekap td.sticky-no {
   position: sticky;
   left: 0;
-  z-index: 3;
-  width: 50px;
+  z-index: 2;
   background-color: #ffffff;
   border-right: 1px solid #e2e8f0;
 }
 
-.table-rekap th.sticky-name,
 .table-rekap td.sticky-name {
   position: sticky;
   left: 50px;
-  z-index: 3;
-  width: 280px;
+  z-index: 2;
   background-color: #ffffff;
   border-right: 2px solid #cbd5e1;
 }
@@ -417,7 +440,11 @@ onMounted(() => {
   line-height: 1.4;
 }
 
+/* Sticky Headers (Top only) */
 .table-rekap th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   background-color: #f8fafc;
   color: #475569;
   font-weight: 700;
@@ -428,10 +455,23 @@ onMounted(() => {
   border-bottom: 2px solid #e2e8f0;
 }
 
-.table-rekap th.sticky-no,
-.table-rekap th.sticky-name {
+/* Sticky Corner Headers (Top and Left) */
+.table-rekap th.sticky-no {
+  position: sticky;
+  top: 0;
+  left: 0;
   z-index: 5;
   background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+}
+
+.table-rekap th.sticky-name {
+  position: sticky;
+  top: 0;
+  left: 50px;
+  z-index: 5;
+  background-color: #f8fafc;
+  border-right: 2px solid #cbd5e1;
 }
 
 .table-rekap td {
