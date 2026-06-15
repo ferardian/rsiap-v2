@@ -424,12 +424,12 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="(item, idx) in kategorisData[ki].items" :key="item.id_master">
+                <template v-for="(item, idx) in kategorisData[ki].items" :key="item.id_inmut">
                   <!-- Main Row -->
                   <tr 
                     class="imp-main-row" 
                     :class="getImpRowClass(item)"
-                    @click="toggleExpandImpRow(item.id_master)"
+                    @click="toggleExpandImpRow(item.id_inmut)"
                   >
                      <td class="text-center fw-bold text-slate-500">{{ idx + 1 }}</td>
                     <td class="fw-bold text-slate-800 indicator-name-cell" style="min-width: 250px;">
@@ -441,7 +441,7 @@
                           <i class="fas fa-user-tie me-1 text-slate-400"></i>{{ item.pj }}
                         </span>
                         <span class="imp-unit-badge py-0 px-2 small">
-                          {{ item.unit_count }} Unit
+                          <i class="fas fa-hospital me-1 text-slate-400"></i>{{ item.unit_name || 'Unit' }}
                         </span>
                       </div>
                     </td>
@@ -465,13 +465,13 @@
                           <i :class="getStatusIcon(item)" class="me-1"></i>
                           {{ getStatusLabel(item) }}
                         </span>
-                        <i class="fas" :class="expandedImpRow === item.id_master ? 'fa-chevron-up text-slate-400' : 'fa-chevron-down text-slate-400'"></i>
+                        <i class="fas" :class="expandedImpRow === item.id_inmut ? 'fa-chevron-up text-slate-400' : 'fa-chevron-down text-slate-400'"></i>
                       </div>
                     </td>
                   </tr>
 
                   <!-- Expanded Row -->
-                  <tr v-if="expandedImpRow === item.id_master" class="imp-expanded-row">
+                  <tr v-if="expandedImpRow === item.id_inmut" class="imp-expanded-row">
                     <td colspan="8" class="p-4 bg-slate-50 border-0">
                       <div class="row g-4">
                         <!-- Chart Column -->
@@ -702,8 +702,8 @@ const activeTab = ref('mutu')
 const activeSubTab = ref('nasional')
 
 const expandedImpRow = ref(null)
-const toggleExpandImpRow = (id_master) => {
-  expandedImpRow.value = expandedImpRow.value === id_master ? null : id_master
+const toggleExpandImpRow = (id) => {
+  expandedImpRow.value = expandedImpRow.value === id ? null : id
 }
 const getImpRowClass = (item) => {
   if (item.capaian == null) return 'imp-row-no-data'
@@ -833,6 +833,7 @@ const fetchAll = async () => {
     const mapItem = (item) => {
       return {
         ...item,
+        id_inmut: item.id_inmut,
         id_master: item.id_master,
         nama_indikator: item.nama_inmut,
         standar: item.standar,
@@ -844,6 +845,7 @@ const fetchAll = async () => {
         last_filled: item.last_filled,
         rumus_code: item.rumus,
         unit_count: item.unit_count || 0,
+        unit_name: item.nama_ruang || '',
         monthly_filled: item.monthly_filled || [],
         monthly_breakdown: item.monthly_breakdown || {}
       }
