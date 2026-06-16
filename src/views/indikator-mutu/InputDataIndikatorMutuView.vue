@@ -2798,6 +2798,35 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     return canvas.toDataURL('image/png')
 }
 
+const calculateAgreementRateForExport = (indicator, realisasiList, validation) => {
+    const indRealisasi = realisasiList.filter(r => r.id_inmut === indicator.id_inmut)
+    const numAwal = indRealisasi.reduce((acc, r) => acc + (r.num || 0), 0)
+    const denumAwal = indRealisasi.reduce((acc, r) => acc + (r.denum || 0), 0)
+
+    const numValidasi = validation ? (validation.num_validasi !== null && validation.num_validasi !== undefined ? validation.num_validasi : numAwal) : numAwal
+    const denumValidasi = validation ? (validation.denum_validasi !== null && validation.denum_validasi !== undefined ? validation.denum_validasi : denumAwal) : denumAwal
+
+    let accuracyNum = 100
+    const maxNum = Math.max(numAwal, numValidasi)
+    if (maxNum > 0) {
+        accuracyNum = (1 - Math.abs(numAwal - numValidasi) / maxNum) * 100
+    }
+
+    let accuracyDenum = 100
+    const maxDenum = Math.max(denumAwal, denumValidasi)
+    if (maxDenum > 0) {
+        accuracyDenum = (1 - Math.abs(denumAwal - denumValidasi) / maxDenum) * 100
+    }
+
+    const hasDenum = needsDenominator(indicator)
+    if (!hasDenum) {
+        accuracyDenum = 100
+    }
+
+    const agreementRate = (accuracyNum + accuracyDenum) / 2
+    return Math.round(agreementRate * 100) / 100
+}
+
 const exportRegisterBulanan = async (format, indicatorId = null) => {
     if (!filters.unit) {
         toast.warning('Silakan pilih unit terlebih dahulu')
@@ -2876,16 +2905,20 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                 const wsData = [
                     ['DATA INPUT HARIAN INDIKATOR MUTU'],
                     [`Unit: ${unitName} | Periode: ${formatMonthYear(dateStr)}`],
-                    [`Indikator: ${indicator.nama_inmut}`],
-                    [],
-                    [
-                        'No', 'Tanggal', 
-                        'Num (Sebelum Validasi)', 'Denum (Sebelum Validasi)', 'Hasil (Sebelum Validasi)', 
-                        'Num (Setelah Validasi)', 'Denum (Setelah Validasi)', 'Hasil (Setelah Validasi)', 
-                        'Penginput', 'Tgl/Jam Input', 'TTE Penginput', 
-                        'Verifikator Koor', 'Tgl/Jam Verif Koor', 'TTE Koor'
-                    ]
+                    [`Indikator: ${indicator.nama_inmut}`]
                 ]
+                if (isVerified) {
+                    const arVal = calculateAgreementRateForExport(indicator, realisasiList, validation)
+                    wsData.push([`Agreement Rate: ${arVal}% ${arVal >= 90 ? '(VALID)' : '(TIDAK VALID)'}`])
+                }
+                wsData.push([]) // spacer
+                wsData.push([
+                    'No', 'Tanggal', 
+                    'Num (Sebelum Validasi)', 'Denum (Sebelum Validasi)', 'Hasil (Sebelum Validasi)', 
+                    'Num (Setelah Validasi)', 'Denum (Setelah Validasi)', 'Hasil (Setelah Validasi)', 
+                    'Penginput', 'Tgl/Jam Input', 'TTE Penginput', 
+                    'Verifikator Koor', 'Tgl/Jam Verif Koor', 'TTE Koor'
+                ])
 
                 for (let d = 1; d <= daysInMonth; d++) {
                     const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
@@ -2996,6 +3029,21 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                 doc.setFont('Helvetica', 'normal')
                 doc.text(`Unit Kerja: ${unitName}`, 15, 49)
                 doc.text(`Periode   : ${formatMonthYear(dateStr)}`, 15, 54)
+                
+                let tableStartY = 58
+                if (isVerified) {
+                    const arVal = calculateAgreementRateForExport(indicator, realisasiList, validation)
+                    doc.setFont('Helvetica', 'bold')
+                    if (arVal >= 90) {
+                        doc.setTextColor(5, 150, 105) // Green
+                    } else {
+                        doc.setTextColor(220, 38, 38) // Red
+                    }
+                    doc.text(`Agreement Rate : ${arVal}% ${arVal >= 90 ? '(VALID)' : '(TIDAK VALID)'}`, 15, 59)
+                    doc.setTextColor(0, 0, 0) // Reset to black
+                    doc.setFont('Helvetica', 'normal')
+                    tableStartY = 64
+                }
 
                 const tableData = []
                 for (let d = 1; d <= daysInMonth; d++) {
@@ -3044,7 +3092,7 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                 }
 
                 autoTable(doc, {
-                    startY: 58,
+                    startY: tableStartY,
                     margin: { left: 15, right: 15, bottom: 20 },
                     tableWidth: 180,
                     head: [
