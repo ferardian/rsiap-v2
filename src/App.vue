@@ -48,4 +48,15 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Custom NProgress loading bar style to match the brand color */
+#nprogress .bar {
+  background: #dc2626 !important;
+  height: 3px !important;
+  z-index: 9999 !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px #dc2626, 0 0 5px #dc2626 !important;
+}
 </style>
