@@ -129,38 +129,32 @@
                 </div>
                 
                 <!-- Editable if pending or rejected and user is coordinator -->
-                <div v-else-if="canEdit" class="d-flex flex-column align-items-center gap-2">
-                  <div class="d-flex align-items-center gap-2 justify-content-center">
-                    <div class="input-validate-wrapper">
-                      <span class="input-label">Num</span>
-                      <input 
-                        type="number" 
-                        class="form-control form-control-sm text-center" 
-                        v-model.number="item.num_validasi" 
-                        min="0"
-                        placeholder="0"
-                        style="width: 55px; height: 30px; font-size: 0.8rem; border-radius: 6px; padding: 2px;"
-                      >
-                    </div>
-                    <span class="text-muted fw-bold" style="margin-top: 14px;">/</span>
-                    <div class="input-validate-wrapper">
-                      <span class="input-label">Den</span>
-                      <input 
-                        type="number" 
-                        class="form-control form-control-sm text-center" 
-                        v-model.number="item.denum_validasi" 
-                        min="0"
-                        placeholder="0"
-                        :disabled="!needsDenominator(item)"
-                        style="width: 55px; height: 30px; font-size: 0.8rem; border-radius: 6px; padding: 2px;"
-                      >
-                    </div>
+                <div v-else-if="canEdit" class="d-flex flex-column align-items-center gap-1">
+                  <div class="d-flex align-items-center gap-1 justify-content-center">
+                    <input 
+                      type="number" 
+                      class="form-control form-control-sm text-center px-1" 
+                      v-model.number="item.num_validasi" 
+                      min="0"
+                      placeholder="0"
+                      style="width: 50px; height: 28px; font-size: 0.85rem; border-radius: 6px; font-weight: 600;"
+                    >
+                    <span class="text-muted fw-light" style="font-size: 1.1rem; margin: 0 2px;">/</span>
+                    <input 
+                      type="number" 
+                      class="form-control form-control-sm text-center px-1" 
+                      v-model.number="item.denum_validasi" 
+                      min="0"
+                      placeholder="0"
+                      :disabled="!needsDenominator(item)"
+                      style="width: 50px; height: 28px; font-size: 0.85rem; border-radius: 6px; font-weight: 600;"
+                    >
                   </div>
-                  <div class="text-center">
+                  <div class="text-center mt-1">
                     <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">
-                      Koreksi: <span class="text-primary">{{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%</span>
+                      Koreksi: <span class="text-primary fw-bold">{{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%</span>
                     </div>
-                    <div class="mt-1">
+                    <div class="mt-1" v-if="item.num_validasi !== item.num_awal || item.denum_validasi !== item.denum_awal">
                       <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
                         <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
                         AR: {{ calculateAgreementRate(item) }}%
@@ -178,7 +172,7 @@
                   <div class="percentage small mt-1">
                     {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
                   </div>
-                  <div class="mt-2">
+                  <div class="mt-2" v-if="item.status !== 'pending' || item.num_validasi !== item.num_awal || item.denum_validasi !== item.denum_awal">
                     <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
                       <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
                       AR: {{ calculateAgreementRate(item) }}%
