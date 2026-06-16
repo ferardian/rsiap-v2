@@ -1813,27 +1813,51 @@ const fetchUnits = async () => {
                                 authStore.user?.detail?.departemen || 
                                 authStore.user?.dep_id
         
-        if (userDepNameOrId) {
-            const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
-            
-            if (myUnit) {
-                filters.unit = myUnit.dep_id
-                isUnitLocked.value = true
-                console.log('Unit locked to user department:', myUnit.nama_ruang)
-            }
-        }
-
-        if (units.value.length > 0 && !filters.unit) {
-            filters.unit = units.value[0].dep_id
-        }
-
-        // Check committee membership
+        // Check committee membership first so we know if the user is a committee member
         if (userNik) {
             const commRes = await committeeService.getByNik(userNik)
             if (commRes.data.success && commRes.data.data.length > 0) {
                 userCommittees.value = commRes.data.data
                 isCommitteeMember.value = true
             }
+        }
+        
+        if (userDepNameOrId) {
+            const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId).toUpperCase().trim())
+            
+            if (isPharmacyUser && !isCommitteeMember.value) {
+                // Filter dropdown to only show Outpatient and Inpatient Pharmacy (FAR1, FAR2)
+                units.value = units.value.filter(u => ['FAR1', 'FAR2'].includes(u.dep_id))
+                
+                // Default unit selection: if logged in as FAR1 (Inap), select FAR1. Otherwise default to FAR2 (Rawat Jalan)
+                if (userDepNameOrId === 'FAR1' || String(userDepNameOrId).toUpperCase().trim() === 'FARMASI RAWAT INAP') {
+                    filters.unit = 'FAR1'
+                } else {
+                    filters.unit = 'FAR2'
+                }
+                
+                // Allow them to switch between FAR1 and FAR2 (do not lock)
+                isUnitLocked.value = false
+                console.log('Pharmacy units (FAR1, FAR2) unlocked for pharmacy user')
+            } else if (!isCommitteeMember.value) {
+                const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
+                
+                if (myUnit) {
+                    filters.unit = myUnit.dep_id
+                    isUnitLocked.value = true
+                    console.log('Unit locked to user department:', myUnit.nama_ruang)
+                }
+            } else {
+                isUnitLocked.value = false
+                const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
+                if (myUnit) {
+                    filters.unit = myUnit.dep_id
+                }
+            }
+        }
+
+        if (units.value.length > 0 && !filters.unit) {
+            filters.unit = units.value[0].dep_id
         }
         
         if (filters.unit) {
@@ -2507,8 +2531,18 @@ const handleModeChange = () => {
         const userDepNameOrId = authStore.user?.data?.detail?.departemen || 
                                 authStore.user?.detail?.departemen || 
                                 authStore.user?.dep_id
-        const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
-        if (myUnit) filters.unit = myUnit.dep_id
+        
+        const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId).toUpperCase().trim())
+        
+        if (isPharmacyUser && !isCommitteeMember.value) {
+            // Keep the selected pharmacy unit if already selected (FAR1 or FAR2), otherwise default to FAR2
+            if (!['FAR1', 'FAR2'].includes(filters.unit)) {
+                filters.unit = 'FAR2'
+            }
+        } else {
+            const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
+            if (myUnit) filters.unit = myUnit.dep_id
+        }
     } else {
         // Switch to the first committee's department
         if (userCommittees.value.length > 0) {
