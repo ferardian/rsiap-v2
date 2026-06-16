@@ -39,6 +39,21 @@
 
     <!-- Main Content Table -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div v-if="items.some(i => i.status === 'verified')" class="card-header bg-white py-3 px-4 d-flex align-items-center justify-content-between border-bottom">
+        <span class="fw-bold text-dark small text-uppercase">
+          <i class="fas fa-check-double text-success me-1"></i> Laporan Terverifikasi
+        </span>
+        <!-- Single Export Dropdown -->
+        <div class="dropdown position-relative">
+          <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white" type="button" @click.stop="toggleTabExportDropdown" style="font-size: 0.72rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626; border: none;">
+            <i class="fas fa-file-export me-1"></i> Unduh Laporan
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="showTabExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 140px; font-size: 0.8rem; text-align: left;">
+            <li><a class="dropdown-item py-2" @click.prevent="triggerTabExport('pdf')" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
+            <li><a class="dropdown-item py-2" @click.prevent="triggerTabExport('excel')" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
+          </ul>
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="table align-middle premium-validation-table mb-0">
           <thead>
@@ -203,17 +218,6 @@
                   <!-- Action for verified status -->
                   <template v-else>
                     <div class="d-flex align-items-center gap-2 justify-content-end">
-                      <!-- Export Dropdown -->
-                      <div class="dropdown position-relative d-inline-block">
-                        <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white btn-action" type="button" @click.stop="toggleRowExportDropdown(item.id_inmut)" style="font-size: 0.72rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626; border: none;">
-                          <i class="fas fa-file-export me-1"></i> Unduh
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="activeExportRowId === item.id_inmut" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 130px; font-size: 0.8rem; text-align: left;">
-                          <li><a class="dropdown-item py-2" @click.prevent="triggerExport('pdf', item.id_inmut)" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
-                          <li><a class="dropdown-item py-2" @click.prevent="triggerExport('excel', item.id_inmut)" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
-                        </ul>
-                      </div>
-
                       <button 
                         v-if="canEdit"
                         class="btn btn-xs btn-outline-danger btn-action-unlock" 
@@ -319,21 +323,17 @@ const activeRejectItem = ref(null)
 const rejectNote = ref('')
 
 // Export Dropdown State
-const activeExportRowId = ref(null)
-const toggleRowExportDropdown = (id) => {
-  if (activeExportRowId.value === id) {
-    activeExportRowId.value = null
-  } else {
-    activeExportRowId.value = id
-  }
+const showTabExportDropdown = ref(false)
+const toggleTabExportDropdown = () => {
+  showTabExportDropdown.value = !showTabExportDropdown.value
 }
-const triggerExport = (format, indicatorId) => {
-  activeExportRowId.value = null
-  emit('export', { format, indicatorId })
+const triggerTabExport = (format) => {
+  showTabExportDropdown.value = false
+  emit('export', { format, indicatorId: null })
 }
 
 const closeDropdown = () => {
-  activeExportRowId.value = null
+  showTabExportDropdown.value = false
 }
 
 onMounted(() => {
