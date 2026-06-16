@@ -122,6 +122,7 @@
                   </div>
                   <div class="mt-2">
                     <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                      <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
                       AR: {{ calculateAgreementRate(item) }}%
                     </span>
                   </div>
@@ -138,8 +139,10 @@
                         v-model.number="item.num_validasi" 
                         min="0"
                         placeholder="0"
+                        style="width: 55px; height: 30px; font-size: 0.8rem; border-radius: 6px; padding: 2px;"
                       >
                     </div>
+                    <span class="text-muted fw-bold" style="margin-top: 14px;">/</span>
                     <div class="input-validate-wrapper">
                       <span class="input-label">Den</span>
                       <input 
@@ -149,16 +152,20 @@
                         min="0"
                         placeholder="0"
                         :disabled="!needsDenominator(item)"
+                        style="width: 55px; height: 30px; font-size: 0.8rem; border-radius: 6px; padding: 2px;"
                       >
                     </div>
                   </div>
-                  <div class="percentage small text-primary fw-semibold">
-                    Koreksi: {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
-                  </div>
-                  <div class="mt-1">
-                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
-                      AR: {{ calculateAgreementRate(item) }}% {{ calculateAgreementRate(item) >= 90 ? '(Valid)' : '(Tidak Valid)' }}
-                    </span>
+                  <div class="text-center">
+                    <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">
+                      Koreksi: <span class="text-primary">{{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%</span>
+                    </div>
+                    <div class="mt-1">
+                      <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                        <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+                        AR: {{ calculateAgreementRate(item) }}%
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -173,6 +180,7 @@
                   </div>
                   <div class="mt-2">
                     <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                      <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
                       AR: {{ calculateAgreementRate(item) }}%
                     </span>
                   </div>
@@ -849,21 +857,25 @@ const submitRejection = async () => {
 .badge-ar-valid {
   background-color: rgba(16, 185, 129, 0.08);
   color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  font-size: 0.7rem;
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .badge-ar-invalid {
   background-color: rgba(239, 68, 68, 0.08);
   color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  font-size: 0.7rem;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>
