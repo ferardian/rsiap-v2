@@ -120,6 +120,11 @@
                   <div class="percentage text-success small mt-1 fw-semibold">
                     {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
                   </div>
+                  <div class="mt-2">
+                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                      AR: {{ calculateAgreementRate(item) }}%
+                    </span>
+                  </div>
                 </div>
                 
                 <!-- Editable if pending or rejected and user is coordinator -->
@@ -150,6 +155,11 @@
                   <div class="percentage small text-primary fw-semibold">
                     Koreksi: {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
                   </div>
+                  <div class="mt-1">
+                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                      AR: {{ calculateAgreementRate(item) }}% {{ calculateAgreementRate(item) >= 90 ? '(Valid)' : '(Tidak Valid)' }}
+                    </span>
+                  </div>
                 </div>
 
                 <div v-else class="validated-scores text-muted">
@@ -160,6 +170,11 @@
                   </div>
                   <div class="percentage small mt-1">
                     {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
+                  </div>
+                  <div class="mt-2">
+                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                      AR: {{ calculateAgreementRate(item) }}%
+                    </span>
                   </div>
                 </div>
               </td>
@@ -409,6 +424,34 @@ const calculatePercentage = (num, denum) => {
   return Math.round((num / denum) * 100 * 100) / 100
 }
 
+const calculateAgreementRate = (item) => {
+  const numAwal = item.num_awal || 0
+  const numValidasi = item.num_validasi !== undefined && item.num_validasi !== null ? item.num_validasi : numAwal
+  
+  const denumAwal = item.denum_awal || 0
+  const denumValidasi = item.denum_validasi !== undefined && item.denum_validasi !== null ? item.denum_validasi : denumAwal
+
+  let accuracyNum = 100
+  const maxNum = Math.max(numAwal, numValidasi)
+  if (maxNum > 0) {
+    accuracyNum = (1 - Math.abs(numAwal - numValidasi) / maxNum) * 100
+  }
+
+  let accuracyDenum = 100
+  const maxDenum = Math.max(denumAwal, denumValidasi)
+  if (maxDenum > 0) {
+    accuracyDenum = (1 - Math.abs(denumAwal - denumValidasi) / maxDenum) * 100
+  }
+
+  const hasDenum = needsDenominator(item)
+  if (!hasDenum) {
+    accuracyDenum = 100
+  }
+
+  const agreementRate = (accuracyNum + accuracyDenum) / 2
+  return Math.round(agreementRate * 100) / 100
+}
+
 const needsDenominator = (item) => {
   // If rumus is standard or item needs denominator
   return item.rumus !== '1' && item.rumus !== 'J' // adjust based on standard formula logic
@@ -444,6 +487,25 @@ const formatDateTime = (dateStr) => {
 
 // Action Submit Validation
 const submitValidation = async (item, status, note = '') => {
+  if (status === 'verified') {
+    const ar = calculateAgreementRate(item)
+    if (ar < 90) {
+      const confirmResult = await Swal.fire({
+        title: 'Agreement Rate < 90%',
+        text: `Tingkat kesepakatan (Agreement Rate) untuk indikator ini adalah ${ar}%, di bawah batas minimum 90%. Apakah Anda yakin tetap ingin menyetujui data ini?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Setujui',
+        cancelButtonText: 'Batal'
+      })
+      if (!confirmResult.isConfirmed) {
+        return
+      }
+    }
+  }
+
   item.isSubmitting = true
   const { bulan, tahun } = parsedPeriod.value
   
@@ -782,5 +844,26 @@ const submitRejection = async () => {
 .form-control:focus {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.badge-ar-valid {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.badge-ar-invalid {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
 }
 </style>
