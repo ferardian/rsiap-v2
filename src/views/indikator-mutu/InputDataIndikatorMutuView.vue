@@ -482,7 +482,7 @@
                 </div>
 
                 <div v-else class="row g-3">
-                    <div v-for="item in allIndicatorStats" :key="item.id_inmut" class="col-md-6 col-lg-4">
+                    <div v-for="item in allIndicatorStats" :key="item.id_inmut" class="col-md-6 col-lg-6">
                         <div class="card h-100 border-0 shadow-sm hover-elevate overflow-hidden" 
                              style="border-radius: 12px; cursor: pointer; transition: all 0.3s ease;"
                              @click="selectedIndicator = item">
