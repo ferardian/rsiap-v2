@@ -202,20 +202,33 @@
 
                   <!-- Action for verified status -->
                   <template v-else>
-                    <button 
-                      v-if="canEdit"
-                      class="btn btn-xs btn-outline-danger btn-action-unlock" 
-                      @click="submitValidation(item, 'pending')"
-                      :disabled="item.isSubmitting"
-                      title="Buka kunci validasi"
-                    >
-                      <i v-if="item.isSubmitting" class="fas fa-spinner fa-spin"></i>
-                      <i v-else class="fas fa-lock-open"></i>
-                      Unlock
-                    </button>
-                    <span v-else class="badge bg-light text-muted border py-1.5 px-3 rounded-3" style="font-size: 0.72rem; font-weight: 500;">
-                      <i class="fas fa-lock me-1"></i> Dikunci
-                    </span>
+                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                      <!-- Export Dropdown -->
+                      <div class="dropdown position-relative d-inline-block">
+                        <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white btn-action" type="button" @click.stop="toggleRowExportDropdown(item.id_inmut)" style="font-size: 0.72rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626; border: none;">
+                          <i class="fas fa-file-export me-1"></i> Unduh
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="activeExportRowId === item.id_inmut" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 130px; font-size: 0.8rem; text-align: left;">
+                          <li><a class="dropdown-item py-2" @click.prevent="triggerExport('pdf', item.id_inmut)" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
+                          <li><a class="dropdown-item py-2" @click.prevent="triggerExport('excel', item.id_inmut)" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
+                        </ul>
+                      </div>
+
+                      <button 
+                        v-if="canEdit"
+                        class="btn btn-xs btn-outline-danger btn-action-unlock" 
+                        @click="submitValidation(item, 'pending')"
+                        :disabled="item.isSubmitting"
+                        title="Buka kunci validasi"
+                      >
+                        <i v-if="item.isSubmitting" class="fas fa-spinner fa-spin"></i>
+                        <i v-else class="fas fa-lock-open"></i>
+                        Unlock
+                      </button>
+                      <span v-else class="badge bg-light text-muted border py-1.5 px-3 rounded-3" style="font-size: 0.72rem; font-weight: 500;">
+                        <i class="fas fa-lock me-1"></i> Dikunci
+                      </span>
+                    </div>
                   </template>
                 </div>
               </td>
@@ -268,9 +281,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import inmutService from '@/services/indikatorMutuService'
 import Swal from 'sweetalert2'
+
+const emit = defineEmits(['export'])
 
 const props = defineProps({
   depId: {
@@ -302,6 +317,32 @@ const loading = ref(false)
 const showRejectModal = ref(false)
 const activeRejectItem = ref(null)
 const rejectNote = ref('')
+
+// Export Dropdown State
+const activeExportRowId = ref(null)
+const toggleRowExportDropdown = (id) => {
+  if (activeExportRowId.value === id) {
+    activeExportRowId.value = null
+  } else {
+    activeExportRowId.value = id
+  }
+}
+const triggerExport = (format, indicatorId) => {
+  activeExportRowId.value = null
+  emit('export', { format, indicatorId })
+}
+
+const closeDropdown = () => {
+  activeExportRowId.value = null
+}
+
+onMounted(() => {
+  document.addEventListener('click', closeDropdown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeDropdown)
+})
 
 // Check if user has permission to edit/validate
 const canEdit = computed(() => {

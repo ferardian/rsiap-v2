@@ -230,16 +230,6 @@
                 </span>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <!-- Export Dropdown -->
-                <div class="dropdown position-relative" v-if="filters.unit">
-                    <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white" type="button" @click.stop="toggleRegisterExportDropdown" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626;">
-                        <i class="fas fa-file-export me-1"></i> Input Harian
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="showRegisterExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 150px; font-size: 0.8rem;">
-                        <li><a class="dropdown-item py-2" @click.prevent="exportRegisterBulanan('pdf')" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
-                        <li><a class="dropdown-item py-2" @click.prevent="exportRegisterBulanan('excel')" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
-                    </ul>
-                </div>
                 <div class="extra-small text-muted fw-bold text-uppercase ms-2 d-none d-sm-block">
                     Mode: {{ viewMode === 'daily' ? 'Harian' : (viewMode === 'monthly' ? 'Bulanan' : (viewMode === 'validasi' ? 'Validasi Data' : (viewMode === 'pdsa' ? 'PDSA' : 'Analisa'))) }}
                 </div>
@@ -462,6 +452,7 @@
                 :user-nik="userNik"
                 :is-committee-member="isCommitteeMember"
                 :active-unit-info="activeUnitInfo"
+                @export="handleTabExport"
             />
         </div>
 
@@ -2595,14 +2586,8 @@ watch(() => analisaFilters.bulan, () => {
 })
 
 // === REGISTER EXPORT CODE ===
-const showRegisterExportDropdown = ref(false)
-const toggleRegisterExportDropdown = () => {
-    showRegisterExportDropdown.value = !showRegisterExportDropdown.value
-}
-
-// Close dropdown on outside click
-const closeDropdownOnOutsideClick = () => {
-    showRegisterExportDropdown.value = false
+const handleTabExport = ({ format, indicatorId }) => {
+    exportRegisterBulanan(format, indicatorId)
 }
 
 const formatDateIndoFull = (dateStr) => {
@@ -2813,7 +2798,7 @@ const generateDailyChartImage = (indicator, dailyData, targetValue) => {
     return canvas.toDataURL('image/png')
 }
 
-const exportRegisterBulanan = async (format) => {
+const exportRegisterBulanan = async (format, indicatorId = null) => {
     if (!filters.unit) {
         toast.warning('Silakan pilih unit terlebih dahulu')
         return
@@ -2824,11 +2809,15 @@ const exportRegisterBulanan = async (format) => {
         const [year, month] = dateStr.split('-').map(x => parseInt(x))
         
         // Fetch all realisasi records for this month and unit
-        const response = await api.getRealisasi({
+        const realisasiParams = {
             dep_id: filters.unit,
             bulan: month,
             tahun: year
-        })
+        }
+        if (indicatorId) {
+            realisasiParams.id_inmut = indicatorId
+        }
+        const response = await api.getRealisasi(realisasiParams)
         const realisasiList = response.data.data || []
 
         // Fetch all analysis records for this month and unit
@@ -2844,8 +2833,21 @@ const exportRegisterBulanan = async (format) => {
             console.error('Failed to fetch analysis records:', e)
         }
 
-        // Feedback is loaded directly with getAnalisa records
-        
+        // Fetch monthly validation info
+        let validationsList = []
+        try {
+            const valRes = await api.getValidasiBulanan({
+                dep_id: filters.unit,
+                bulan: month,
+                tahun: year
+            })
+            if (valRes.data && valRes.data.success) {
+                validationsList = valRes.data.data || []
+            }
+        } catch (e) {
+            console.error('Failed to fetch monthly validation:', e)
+        }
+
         if (realisasiList.length === 0) {
             toast.warning('Tidak ada data entrian harian untuk periode ini.')
             loading.value = false
@@ -2855,12 +2857,22 @@ const exportRegisterBulanan = async (format) => {
         const daysInMonth = new Date(year, month, 0).getDate()
         const unitName = activeUnitInfo.value?.nama_ruang || filters.unit
 
+        const targetIndicators = indicatorId
+            ? indicators.value.filter(ind => Number(ind.id_inmut) === Number(indicatorId))
+            : indicators.value
+
         if (format === 'excel') {
             const wb = XLSX.utils.book_new()
             
-            for (const indicator of indicators.value) {
+            for (const indicator of targetIndicators) {
                 const indRealisasi = realisasiList.filter(r => r.id_inmut === indicator.id_inmut)
+                const validation = validationsList.find(v => Number(v.id_inmut) === Number(indicator.id_inmut))
+                const isVerified = validation && validation.status === 'verified'
                 
+                const validatorName = validation ? (validation.validator_nama || validation.verified_by || '-') : '-'
+                const verifiedAt = validation && validation.verified_at ? formatDateTime(validation.verified_at) : '-'
+                const verifiedBy = validation ? validation.verified_by : null
+
                 const wsData = [
                     ['DATA INPUT HARIAN INDIKATOR MUTU'],
                     [`Unit: ${unitName} | Periode: ${formatMonthYear(dateStr)}`],
@@ -2871,7 +2883,6 @@ const exportRegisterBulanan = async (format) => {
                         'Num (Sebelum Validasi)', 'Denum (Sebelum Validasi)', 'Hasil (Sebelum Validasi)', 
                         'Num (Setelah Validasi)', 'Denum (Setelah Validasi)', 'Hasil (Setelah Validasi)', 
                         'Penginput', 'Tgl/Jam Input', 'TTE Penginput', 
-                        'Verifikator PIC', 'Tgl/Jam Verif PIC', 'TTE PIC', 
                         'Verifikator Koor', 'Tgl/Jam Verif Koor', 'TTE Koor'
                     ]
                 ]
@@ -2881,18 +2892,6 @@ const exportRegisterBulanan = async (format) => {
                     const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
                     
                     if (r) {
-                        const numUserStr = r.num_user !== null && r.num_user !== undefined ? r.num_user : '-'
-                        const denumUserStr = needsDenominator(indicator) ? (r.denum_user !== null && r.denum_user !== undefined ? r.denum_user : '-') : '-'
-                        
-                        let scoreValUser = '-'
-                        if (needsDenominator(indicator)) {
-                            if (r.denum_user > 0) {
-                                scoreValUser = `${Math.round((r.num_user / r.denum_user) * 100 * 100) / 100}%`
-                            }
-                        } else if (r.num_user !== null && r.num_user !== undefined) {
-                            scoreValUser = `${r.num_user}`
-                        }
-
                         const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
                         const denumStr = needsDenominator(indicator) ? (r.denum !== null && r.denum !== undefined ? r.denum : '-') : '-'
                         
@@ -2906,33 +2905,29 @@ const exportRegisterBulanan = async (format) => {
                         }
 
                         const tteInput = r.nik_input ? `TTE-ELEKTRONIK-PENGINPUT-${r.nik_input}` : '-'
-                        const ttePic = r.pic_verified_by ? `TTE-ELEKTRONIK-PIC-${r.pic_verified_by}` : '-'
-                        const tteKoor = r.koor_verified_by ? `TTE-ELEKTRONIK-KOOR-${r.koor_verified_by}` : '-'
+                        const tteKoor = isVerified && verifiedBy ? `TTE-ELEKTRONIK-KOOR-${verifiedBy}` : '-'
 
                         wsData.push([
                             d,
                             formatDateIndoShort(targetDateStr),
-                            numUserStr,
-                            denumUserStr,
-                            scoreValUser,
+                            numStr,
+                            denumStr,
+                            scoreVal,
                             numStr,
                             denumStr,
                             scoreVal,
                             r.penginput?.nama || r.nik_input || '-',
                             r.tanggal_input ? formatDateTime(r.tanggal_input) : '-',
                             tteInput,
-                            r.pic_verified?.nama || r.pic_verified_by || '-',
-                            r.pic_verified_at ? formatDateTime(r.pic_verified_at) : '-',
-                            ttePic,
-                            r.koor_verified?.nama || r.koor_verified_by || '-',
-                            r.koor_verified_at ? formatDateTime(r.koor_verified_at) : '-',
+                            isVerified ? validatorName : '-',
+                            isVerified ? verifiedAt : '-',
                             tteKoor
                         ])
                     } else {
                         wsData.push([
                             d,
                             formatDateIndoShort(targetDateStr),
-                            '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'
+                            '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'
                         ])
                     }
                 }
@@ -2943,7 +2938,10 @@ const exportRegisterBulanan = async (format) => {
                 XLSX.utils.book_append_sheet(wb, ws, sheetName)
             }
             
-            XLSX.writeFile(wb, `Data_Input_Harian_${unitName.replace(/\s+/g, '_')}_${dateStr}.xlsx`)
+            const filename = indicatorId 
+                ? `Data_Input_Harian_${unitName.replace(/\s+/g, '_')}_${dateStr}_${indicatorId}.xlsx`
+                : `Data_Input_Harian_${unitName.replace(/\s+/g, '_')}_${dateStr}.xlsx`
+            XLSX.writeFile(wb, filename)
             toast.success('Data Input Harian Excel berhasil diunduh')
 
         } else if (format === 'pdf') {
@@ -2953,14 +2951,20 @@ const exportRegisterBulanan = async (format) => {
             
             let firstPage = true
 
-            for (const indicator of indicators.value) {
+            for (const indicator of targetIndicators) {
                 if (!firstPage) {
                     doc.addPage()
                 }
                 firstPage = false
 
                 const indRealisasi = realisasiList.filter(r => r.id_inmut === indicator.id_inmut)
+                const validation = validationsList.find(v => Number(v.id_inmut) === Number(indicator.id_inmut))
+                const isVerified = validation && validation.status === 'verified'
                 
+                const validatorName = validation ? (validation.validator_nama || validation.verified_by || '-') : '-'
+                const verifiedAt = validation && validation.verified_at ? formatDateTime(validation.verified_at) : '-'
+                const verifiedBy = validation ? validation.verified_by : null
+
                 // Pre-generate QR codes for this indicator's daily logs
                 const qrCache = {}
                 for (let d = 1; d <= daysInMonth; d++) {
@@ -2974,14 +2978,8 @@ const exportRegisterBulanan = async (format) => {
                             const txt = `TTE Penginput\nNama: ${name}\nNIK: ${r.nik_input}\nTanggal: ${formatDateTime(r.tanggal_input)}`
                             qrCache[d].inputQR = await generateQRCode(txt)
                         }
-                        if (r.pic_verified_by) {
-                            const name = r.pic_verified?.nama || r.pic_verified_by
-                            const txt = `TTE PIC Verifikator\nNama: ${name}\nNIK: ${r.pic_verified_by}\nTanggal: ${formatDateTime(r.pic_verified_at)}`
-                            qrCache[d].picQR = await generateQRCode(txt)
-                        }
-                        if (r.koor_verified_by) {
-                            const name = r.koor_verified?.nama || r.koor_verified_by
-                            const txt = `TTE Koor Verifikator\nNama: ${name}\nNIK: ${r.koor_verified_by}\nTanggal: ${formatDateTime(r.koor_verified_at)}`
+                        if (isVerified && verifiedBy) {
+                            const txt = `TTE Koor Verifikator\nNama: ${validatorName}\nNIK: ${verifiedBy}\nTanggal: ${verifiedAt}`
                             qrCache[d].koorQR = await generateQRCode(txt)
                         }
                     }
@@ -3005,18 +3003,6 @@ const exportRegisterBulanan = async (format) => {
                     const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
 
                     if (r) {
-                        const numUserStr = r.num_user !== null && r.num_user !== undefined ? r.num_user : '-'
-                        const denumUserStr = needsDenominator(indicator) ? (r.denum_user !== null && r.denum_user !== undefined ? r.denum_user : '-') : '-'
-                        
-                        let scoreValUser = '-'
-                        if (needsDenominator(indicator)) {
-                            if (r.denum_user > 0) {
-                                scoreValUser = `${Math.round((r.num_user / r.denum_user) * 100 * 100) / 100}%`
-                            }
-                        } else if (r.num_user !== null && r.num_user !== undefined) {
-                            scoreValUser = `${r.num_user}`
-                        }
-
                         const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
                         const denumStr = needsDenominator(indicator) ? (r.denum !== null && r.denum !== undefined ? r.denum : '-') : '-'
                         
@@ -3034,34 +3020,25 @@ const exportRegisterBulanan = async (format) => {
                         const inputDate = r.tanggal_input ? formatDateTime(r.tanggal_input).slice(0, 10) : '-'
                         const inputText = r.nik_input ? `${inputName}\nNIK: ${r.nik_input}\n${inputDate} ${inputTime}` : '-'
 
-                        const picName = r.pic_verified?.nama || r.pic_verified_by || '-'
-                        const picTime = r.pic_verified_at ? formatDateTime(r.pic_verified_at).slice(11) : '-'
-                        const picDate = r.pic_verified_at ? formatDateTime(r.pic_verified_at).slice(0, 10) : '-'
-                        const picTextStr = r.pic_verified_by ? `${picName}\nNIK: ${r.pic_verified_by}\n${picDate} ${picTime}` : '-'
-
-                        const koorName = r.koor_verified?.nama || r.koor_verified_by || '-'
-                        const koorTime = r.koor_verified_at ? formatDateTime(r.koor_verified_at).slice(11) : '-'
-                        const koorDate = r.koor_verified_at ? formatDateTime(r.koor_verified_at).slice(0, 10) : '-'
-                        const koorTextStr = r.koor_verified_by ? `${koorName}\nNIK: ${r.koor_verified_by}\n${koorDate} ${koorTime}` : '-'
+                        const koorTextStr = isVerified && verifiedBy ? `${validatorName}\nNIK: ${verifiedBy}\n${verifiedAt}` : '-'
 
                         tableData.push([
                             d,
                             formatDateIndoShort(targetDateStr),
-                            numUserStr,
-                            denumUserStr,
-                            scoreValUser,
+                            numStr,
+                            denumStr,
+                            scoreVal,
                             numStr,
                             denumStr,
                             scoreVal,
                             inputText,
-                            picTextStr,
                             koorTextStr
                         ])
                     } else {
                         tableData.push([
                             d,
                             formatDateIndoShort(targetDateStr),
-                            '-', '-', '-', '-', '-', '-', '-', '-', '-'
+                            '-', '-', '-', '-', '-', '-', '-', '-'
                         ])
                     }
                 }
@@ -3077,7 +3054,6 @@ const exportRegisterBulanan = async (format) => {
                             { content: 'SEBELUM VALIDASI', colSpan: 3, styles: { halign: 'center' } },
                             { content: 'SETELAH VALIDASI', colSpan: 3, styles: { halign: 'center' } },
                             { content: 'PENGINPUT', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
-                            { content: 'VERIFIKASI PIC', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },
                             { content: 'VERIFIKASI KOOR', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }
                         ],
                         [
@@ -3102,9 +3078,8 @@ const exportRegisterBulanan = async (format) => {
                         5: { cellWidth: 8, halign: 'center' },
                         6: { cellWidth: 10, halign: 'center' },
                         7: { cellWidth: 10, halign: 'center', fontStyle: 'bold' },
-                        8: { cellWidth: 34, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } },
-                        9: { cellWidth: 34, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } },
-                        10: { cellWidth: 36, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } }
+                        8: { cellWidth: 50, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } },
+                        9: { cellWidth: 54, halign: 'left', cellPadding: { top: 2, bottom: 2, left: 1, right: 11 } }
                     },
                     didDrawCell: (data) => {
                         if (data.cell.section === 'body') {
@@ -3116,9 +3091,7 @@ const exportRegisterBulanan = async (format) => {
                                 const qrY = cell.y + (cell.height - qrSize) / 2
                                 if (data.column.index === 8 && cache.inputQR) {
                                     doc.addImage(cache.inputQR, 'PNG', cell.x + cell.width - 10, qrY, qrSize, qrSize)
-                                } else if (data.column.index === 9 && cache.picQR) {
-                                    doc.addImage(cache.picQR, 'PNG', cell.x + cell.width - 10, qrY, qrSize, qrSize)
-                                } else if (data.column.index === 10 && cache.koorQR) {
+                                } else if (data.column.index === 9 && cache.koorQR) {
                                     doc.addImage(cache.koorQR, 'PNG', cell.x + cell.width - 10, qrY, qrSize, qrSize)
                                 }
                             }
@@ -3367,11 +3340,6 @@ const generateQRCode = async (text) => {
 
 onMounted(() => {
     fetchUnits()
-    window.addEventListener('click', closeDropdownOnOutsideClick)
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener('click', closeDropdownOnOutsideClick)
 })
 </script>
 
