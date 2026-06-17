@@ -48,7 +48,10 @@
 
       <!-- Main Content -->
       <main class="main-content">
-        <router-view v-slot="{ Component }">
+        <transition v-if="$slots.default" name="fade" mode="out-in">
+          <slot />
+        </transition>
+        <router-view v-else v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
           </transition>

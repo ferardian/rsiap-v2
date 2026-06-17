@@ -1,32 +1,31 @@
 <template>
-  <component :is="layout">
-    <router-view />
-  </component>
+  <router-view v-slot="{ Component, route }">
+    <component :is="getLayout(route)">
+      <component :is="Component" />
+    </component>
+  </router-view>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import MainLayout from './layouts/MainLayout.vue'
 
-const route = useRoute()
 const authStore = useAuthStore()
 
-// Default layout is div (empty), unless requiresAuth is true then use MainLayout
-const layout = computed(() => {
+// Resolve layout using slot-scoped route to ensure synchronicity with the component lifecycle
+const getLayout = (route) => {
   // Override layout if specified in route meta
   if (route.meta.layout === 'empty') {
     return 'div'
   }
 
   // If route requires auth, use MainLayout
-  // Check both meta and auth state to be safe
   if (route.meta.requiresAuth || (route.name !== 'Login' && authStore.isAuthenticated)) {
     return MainLayout
   }
   return 'div'
-})
+}
 
 onMounted(() => {
   // Initialize auth state when app starts

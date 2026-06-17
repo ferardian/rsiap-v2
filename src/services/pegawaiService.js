@@ -33,8 +33,13 @@ export const pegawaiService = {
      * Update employee
      */
     updatePegawai(nik, data) {
-        // If data contains files (photo), we should use FormData and POST with _method PUT
-        // For now, assume JSON-only updates
+        if (data instanceof FormData) {
+            return api.post(`/sdi/pegawai/${nik}`, data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+        }
         return api.put(`/sdi/pegawai/${nik}`, data)
     },
 
@@ -205,6 +210,13 @@ export const pegawaiService = {
      */
     deleteBerkas(nik, kode, berkas) {
         return api.post('/sdi/pegawai/delete/berkas', { nik, kode, berkas })
+    },
+
+    /**
+     * Get list of mapping jabatan
+     */
+    getMappingJabatan(params = {}) {
+        return api.get('/sdi/mapping-jabatan', { params })
     },
 
     /**

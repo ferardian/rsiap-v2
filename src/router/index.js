@@ -214,6 +214,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/struktur-organisasi-unit',
+    name: 'StrukturOrganisasiUnit',
+    component: () => import('../views/sdi/StrukturOrganisasiUnitView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/karyawan',
     name: 'DataKaryawan',
     component: () => import('../views/sdi/KaryawanView.vue'),

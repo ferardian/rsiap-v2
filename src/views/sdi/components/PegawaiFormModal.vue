@@ -122,16 +122,39 @@
                 />
               </div>
                <div class="form-group">
-                <label>Pendidikan <span class="required">*</span></label>
-                <select v-model="form.pendidikan" required>
-                  <option value="">Pilih Pendidikan</option>
-                  <option v-for="item in master.pendidikan" :key="item.tingkat" :value="item.tingkat">
-                    {{ item.tingkat }}
-                  </option>
-                </select>
-              </div>
-            </div>
-          </div>
+                 <label>Pendidikan <span class="required">*</span></label>
+                 <select v-model="form.pendidikan" required>
+                   <option value="">Pilih Pendidikan</option>
+                   <option v-for="item in master.pendidikan" :key="item.tingkat" :value="item.tingkat">
+                     {{ item.tingkat }}
+                   </option>
+                 </select>
+               </div>
+               <div class="form-group">
+                 <label>Foto Karyawan</label>
+                 <div class="file-upload-wrapper">
+                   <input 
+                     type="file" 
+                     ref="fileInput"
+                     @change="handleFileChange" 
+                     accept="image/jpeg,image/jpg,image/png"
+                     class="file-upload-input"
+                     style="display: none;"
+                   />
+                   <div class="file-upload-preview" v-if="photoPreview || (isEdit && form.photo && form.photo !== '-')">
+                     <img :src="photoPreview || getPhotoUrl(form.photo)" alt="Preview Foto" class="preview-img" />
+                     <button type="button" class="btn-remove-photo" @click="removePhoto" title="Hapus Foto">
+                       <i class="fas fa-trash"></i>
+                     </button>
+                   </div>
+                   <div class="file-upload-placeholder" v-else @click="triggerFileInput">
+                     <i class="fas fa-cloud-upload-alt"></i>
+                     <span>Pilih Foto (Maks. 2MB)</span>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
 
           <!-- SECTION 2: Employment Information -->
           <div class="form-section">
@@ -341,6 +364,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { pegawaiService } from '../../../services/pegawaiService'
 import { useToast } from 'vue-toastification'
+import config from '../../../config/api'
 
 const props = defineProps({
   show: Boolean,
@@ -351,6 +375,54 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved'])
 const toast = useToast()
 const loading = ref(false)
+
+const fileInput = ref(null)
+const selectedFile = ref(null)
+const photoPreview = ref(null)
+const photoDeleted = ref(false)
+
+const triggerFileInput = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Format file tidak didukung. Harap pilih gambar JPEG, JPG, atau PNG.')
+    if (fileInput.value) fileInput.value.value = ''
+    return
+  }
+
+  // Validate file size (2MB)
+  const maxSize = 2 * 1024 * 1024
+  if (file.size > maxSize) {
+    toast.error('Ukuran file terlalu besar. Maksimal ukuran file adalah 2MB.')
+    if (fileInput.value) fileInput.value.value = ''
+    return
+  }
+
+  selectedFile.value = file
+  photoPreview.value = URL.createObjectURL(file)
+  photoDeleted.value = false
+}
+
+const removePhoto = () => {
+  selectedFile.value = null
+  photoPreview.value = null
+  photoDeleted.value = true
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+const getPhotoUrl = (photo) => {
+  if (!photo || photo === '-') return ''
+  return `${config.public.PHOTO_URL}${photo}`
+}
 
 const form = ref({
   nik: '',
@@ -414,6 +486,12 @@ const master = ref({
 })
 
 const resetForm = () => {
+  selectedFile.value = null
+  photoPreview.value = null
+  photoDeleted.value = false
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
   form.value = {
     nik: '',
     nama: '',
@@ -464,6 +542,12 @@ const resetForm = () => {
 
 // Initialize form when editing
 watch(() => props.pegawaiData, (newVal) => {
+  selectedFile.value = null
+  photoPreview.value = null
+  photoDeleted.value = false
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
   if (newVal && props.isEdit) {
     // Fill form with employee data
     Object.keys(form.value).forEach(key => {
@@ -555,12 +639,35 @@ const handleSubmit = async () => {
       }
     })
 
+    // Prepare FormData if we have a file or photo was deleted
+    let submitData;
+    if (selectedFile.value || photoDeleted.value) {
+      submitData = new FormData()
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== null && payload[key] !== undefined) {
+          submitData.append(key, payload[key])
+        }
+      })
+      if (selectedFile.value) {
+        submitData.append('file', selectedFile.value)
+      }
+      if (photoDeleted.value) {
+        submitData.append('delete_old_photo', '1')
+        submitData.append('photo', '-')
+      }
+    } else {
+      submitData = payload
+    }
+
     let response;
     if (props.isEdit) {
-      response = await pegawaiService.updatePegawai(payload.nik, payload)
+      if (submitData instanceof FormData) {
+        submitData.append('_method', 'PUT')
+      }
+      response = await pegawaiService.updatePegawai(payload.nik, submitData)
       toast.success('Data karyawan berhasil diperbarui')
     } else {
-      response = await pegawaiService.createPegawai(payload)
+      response = await pegawaiService.createPegawai(submitData)
       toast.success('Karyawan baru berhasil ditambahkan')
     }
     
@@ -851,5 +958,91 @@ onMounted(() => {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+}
+
+/* File Upload Styles */
+.file-upload-wrapper {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.file-upload-wrapper:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.file-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
+  padding: 1rem;
+}
+
+.file-upload-placeholder i {
+  font-size: 2rem;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+.file-upload-wrapper:hover .file-upload-placeholder i,
+.file-upload-wrapper:hover .file-upload-placeholder {
+  color: #3b82f6;
+}
+
+.file-upload-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.btn-remove-photo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.8125rem;
+  z-index: 10;
+}
+
+.btn-remove-photo:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
 }
 </style>

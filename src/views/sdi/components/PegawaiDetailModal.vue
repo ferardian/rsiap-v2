@@ -11,7 +11,8 @@
       <div class="modal-body" v-if="pegawai">
         <div class="employee-header mb-4">
           <div class="avatar-large">
-            <span class="initials">{{ getInitials(pegawai.nama) }}</span>
+            <img v-if="pegawai.photo && pegawai.photo !== '-'" :src="getPhotoUrl(pegawai.photo)" :alt="pegawai.nama" class="avatar-img" />
+            <span v-else class="initials">{{ getInitials(pegawai.nama) }}</span>
           </div>
           <div class="employee-title">
             <h2>{{ pegawai.nama }}</h2>
@@ -284,7 +285,8 @@ watch(() => props.pegawai, (newVal) => {
 }, { deep: true })
 
 const getPhotoUrl = (photo) => {
-  return `/storage/pegawai/${photo}`
+  if (!photo || photo === '-') return ''
+  return `${config.public.PHOTO_URL}${photo}`
 }
 
 const formatDate = (date) => {
