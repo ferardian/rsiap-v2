@@ -138,9 +138,15 @@
                 <td>
                   <div class="fw-bold text-primary mb-1">{{ item.nama_inmut }}</div>
                   <small class="text-muted d-block mb-1">{{ item.nama_ruang }}</small>
-                  <span v-if="item.feedback" class="badge bg-success shadow-sm rounded-pill px-2 py-1" style="font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px;">
+                  <span v-if="item.feedback" class="badge bg-success shadow-sm rounded-pill px-2 py-1 mb-1" style="font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px;">
                       <i class="fas fa-check-circle me-1"></i> TER-SUPERVISI ({{ formatDate(item.feedback.tgl_feedback) }})
                   </span>
+                  <div v-if="item.created_at" class="text-muted extra-small mt-1" style="font-size: 0.68rem; font-weight: 500;">
+                      <i class="fas fa-clock me-1"></i>{{ formatDateTime(item.created_at) }}
+                  </div>
+                  <div class="text-secondary extra-small" style="font-size: 0.68rem; font-weight: 500;">
+                      <i class="fas fa-user-edit me-1"></i>Analis: {{ item.analis ? item.analis.nama : (item.nik_analis || '-') }}
+                  </div>
                 </td>
                 <td>
                     <div class="mb-2">
@@ -690,6 +696,12 @@ const syncData = () => {
 const formatDate = (dateString) => {
     if(!dateString) return '-'
     const options = { year: 'numeric', month: 'short', day: 'numeric' }
+    return new Date(dateString).toLocaleDateString('id-ID', options)
+}
+
+const formatDateTime = (dateString) => {
+    if(!dateString) return '-'
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }
     return new Date(dateString).toLocaleDateString('id-ID', options)
 }
 

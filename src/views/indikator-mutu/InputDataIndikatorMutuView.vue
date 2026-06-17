@@ -787,6 +787,16 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="card-footer bg-white border-top py-2.5 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div class="d-flex align-items-center gap-1 text-muted extra-small" style="font-size: 0.72rem; font-weight: 500;">
+                                            <i class="fas fa-user-edit"></i>
+                                            <span>Analis: {{ item.analis ? item.analis.nama : (item.nik_analis || '-') }}</span>
+                                        </div>
+                                        <div v-if="item.created_at" class="d-flex align-items-center gap-1 text-secondary extra-small" style="font-size: 0.72rem; font-weight: 500;">
+                                            <i class="fas fa-clock"></i>
+                                            <span>Disimpan: {{ formatDateTime(item.created_at) }}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Committee Feedback Result (If Exists) -->
