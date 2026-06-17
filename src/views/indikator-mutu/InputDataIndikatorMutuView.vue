@@ -1839,7 +1839,7 @@ const fetchUnits = async () => {
                     console.log('Unit locked to user department:', myUnit.nama_ruang)
                 }
             } else {
-                isUnitLocked.value = false
+                isUnitLocked.value = (inputMode.value === 'unit')
                 const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
                 if (myUnit) {
                     filters.unit = myUnit.dep_id
@@ -2530,9 +2530,11 @@ const handleModeChange = () => {
             if (!['FAR1', 'FAR2'].includes(filters.unit)) {
                 filters.unit = 'FAR2'
             }
+            isUnitLocked.value = false
         } else {
             const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
             if (myUnit) filters.unit = myUnit.dep_id
+            isUnitLocked.value = true
         }
     } else {
         // Switch to the first committee's department
@@ -2542,6 +2544,7 @@ const handleModeChange = () => {
                 filters.unit = commDepId
             }
         }
+        isUnitLocked.value = false
     }
     fetchIndicators()
 }
