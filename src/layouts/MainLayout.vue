@@ -93,6 +93,7 @@ const currentPageTitle = computed(() => {
   const breadcrumbMap = {
     '/dashboard': 'Dashboard',
     '/dashboard/overview': 'Dashboard',
+    '/dashboard/verif-lembur': 'SDI > Verifikasi Lembur',
     '/sdi/jadwal': 'SDI > Pengajuan Jadwal',
     '/sdi/input-jadwal-admin': 'SDI > Input Jadwal Admin',
     '/sdi/aproval-jadwal-kerja': 'SDI > Approval Jadwal Kerja',

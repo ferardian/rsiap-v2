@@ -214,6 +214,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/verif-lembur',
+    name: 'VerifLembur',
+    component: () => import('../views/dashboard/VerifLemburView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/aproval-jadwal-tambahan',
     name: 'ApprovalJadwalTambahan',
     component: () => import('../views/sdi/ApprovalJadwalTambahanView.vue'),
