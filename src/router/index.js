@@ -208,6 +208,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/approval/lembur',
+    name: 'ApprovalLembur',
+    component: () => import('../views/approval/LemburView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/sdi/aproval-jadwal-tambahan',
     name: 'ApprovalJadwalTambahan',
     component: () => import('../views/sdi/ApprovalJadwalTambahanView.vue'),

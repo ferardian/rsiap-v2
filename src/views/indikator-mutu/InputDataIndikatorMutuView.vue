@@ -389,15 +389,18 @@
 
 
                  <div class="calendar-grid">
-                    <div v-for="day in calendarDays" :key="day.date" class="calendar-day card" :class="{'has-data': day.hasData, 'is-sunday': day.isSunday}">
+                    <div v-for="day in calendarDays" :key="day.date" class="calendar-day card" :class="{'has-data': day.hasData, 'is-sunday': day.isSunday, 'not-filled': !day.hasData && day.date <= new Date().toISOString().slice(0, 10)}">
                         <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center"
                              :title="day.hasData && day.nama_input ? `Pengentri: ${day.nama_input}\nWaktu: ${formatDateTime(day.tanggal_input)}` : null"
-                             :class="day.isSunday ? 'bg-danger text-white' : (day.hasData ? (day.status_verifikasi === 'verified_koor' ? 'bg-success text-white' : day.status_verifikasi === 'verified_pic' ? 'bg-primary text-white' : 'bg-warning text-dark') : 'bg-light')">
+                             :class="day.isSunday ? 'bg-danger text-white' : (day.hasData ? (day.status_verifikasi === 'verified_koor' ? 'bg-success text-white' : day.status_verifikasi === 'verified_pic' ? 'bg-primary text-white' : 'bg-warning text-dark') : (day.date <= new Date().toISOString().slice(0, 10) ? 'bg-danger-light text-danger border-danger-light' : 'bg-light'))">
                             <small class="fw-bold">{{ day.date.slice(-2) }} {{ day.dayName }}</small>
                             <span v-if="day.hasData && !day.isSunday" style="font-size: 0.6rem;">
                                 <i v-if="day.status_verifikasi === 'verified_koor'" class="fas fa-check-double" title="Verified Koor"></i>
                                 <i v-else-if="day.status_verifikasi === 'verified_pic'" class="fas fa-check" title="Verified PIC"></i>
                                 <i v-else class="fas fa-clock" title="Pending"></i>
+                            </span>
+                            <span v-else-if="!day.hasData && day.date <= new Date().toISOString().slice(0, 10)" style="font-size: 0.75rem;">
+                                <i class="fas fa-exclamation-triangle" :class="day.isSunday ? 'text-white' : 'text-danger'" title="Belum Diisi"></i>
                             </span>
                             <i v-else-if="day.isSunday" class="fas fa-calendar-day small"></i>
                         </div>
@@ -1198,6 +1201,15 @@ const filters = reactive({
     unit: null
 })
 
+const getLocalDateStr = (dateVal) => {
+    if (!dateVal) return ''
+    const d = new Date(dateVal)
+    if (isNaN(d.getTime())) return ''
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${d.getFullYear()}-${mm}-${dd}`
+}
+
 // === VIEW MODE STATE ===
 const viewMode = ref('daily') // 'daily' | 'monthly' | 'analisa' | 'grafik' | 'pdsa'
 const selectedIndicator = ref(null)
@@ -1510,10 +1522,9 @@ const buildChartDataForIndicator = (ind, indRealisasi, daysInMonth, yearMonth, i
     const realisasiByDay = {}
     indRealisasi.forEach(r => {
         if (r.tanggal_inmut) {
-            const dateOnly = r.tanggal_inmut.split(' ')[0]
-            const parts = dateOnly.split('-')
-            if (parts.length === 3) {
-                const day = parseInt(parts[2], 10)
+            const d = new Date(r.tanggal_inmut)
+            if (!isNaN(d.getTime())) {
+                const day = d.getDate()
                 realisasiByDay[day] = r
             }
         }
@@ -2191,9 +2202,9 @@ const fetchAnalisaData = async () => {
             })
             
             const filledDays = new Set(currentIndRealisasi.map(r => {
-                const dateOnly = r.tanggal_inmut.split(' ')[0]
-                const parts = dateOnly.split('-')
-                return parseInt(parts[2], 10)
+                if (!r.tanggal_inmut) return 0
+                const d = new Date(r.tanggal_inmut)
+                return !isNaN(d.getTime()) ? d.getDate() : 0
             }))
             const missingDays = []
             for (let d = 1; d <= daysInMonth; d++) if (!filledDays.has(d)) missingDays.push(d)
@@ -2240,9 +2251,8 @@ const fetchAnalisaData = async () => {
                 const indRealisasi = groupedRealisasi[ind.id_inmut] || []
                 const filledDays = new Set(indRealisasi.map(r => {
                     if (!r.tanggal_inmut) return 0
-                    const dateOnly = r.tanggal_inmut.split(' ')[0]
-                    const parts = dateOnly.split('-')
-                    return parseInt(parts[2], 10)
+                    const d = new Date(r.tanggal_inmut)
+                    return !isNaN(d.getTime()) ? d.getDate() : 0
                 }))
                 const filledCount = filledDays.size
                 const progress = Math.round((filledCount / daysInMonth) * 100)
@@ -2935,7 +2945,7 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
 
                 for (let d = 1; d <= daysInMonth; d++) {
                     const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
-                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    const r = indRealisasi.find(item => item.tanggal_inmut && getLocalDateStr(item.tanggal_inmut) === targetDateStr)
                     
                     if (r) {
                         const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
@@ -3015,7 +3025,7 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                 const qrCache = {}
                 for (let d = 1; d <= daysInMonth; d++) {
                     const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
-                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    const r = indRealisasi.find(item => item.tanggal_inmut && getLocalDateStr(item.tanggal_inmut) === targetDateStr)
                     
                     if (r) {
                         qrCache[d] = {}
@@ -3061,7 +3071,7 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                 const tableData = []
                 for (let d = 1; d <= daysInMonth; d++) {
                     const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
-                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    const r = indRealisasi.find(item => item.tanggal_inmut && getLocalDateStr(item.tanggal_inmut) === targetDateStr)
 
                     if (r) {
                         const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
@@ -3164,7 +3174,7 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                 const dailyChartData = []
                 for (let d = 1; d <= daysInMonth; d++) {
                     const targetDateStr = `${year}-${month.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`
-                    const r = indRealisasi.find(item => item.tanggal_inmut && item.tanggal_inmut.slice(0, 10) === targetDateStr)
+                    const r = indRealisasi.find(item => item.tanggal_inmut && getLocalDateStr(item.tanggal_inmut) === targetDateStr)
                     
                     if (r) {
                         const numVal = r.num !== null && r.num !== undefined ? parseInt(r.num) : null
@@ -3672,6 +3682,10 @@ onMounted(() => {
     background-color: #dc3545 !important;
     color: white !important;
 }
+.calendar-day.not-filled {
+    border: 2px dashed #dc3545 !important;
+    background-color: #fef2f2 !important;
+}
 
 /* Premium Filter Styles */
 .filter-container {
@@ -3728,6 +3742,8 @@ onMounted(() => {
 .border-primary-light { border-color: #bfdbfe !important; }
 .border-success-light { border-color: #bbf7d0 !important; }
 .text-warning-dark { color: #92400e !important; }
+.bg-danger-light { background-color: #fef2f2 !important; }
+.border-danger-light { border-color: #fecaca !important; }
 
 .rich-content {
     font-size: 0.95rem;

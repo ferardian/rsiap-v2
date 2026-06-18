@@ -26,8 +26,12 @@
 
         <!-- Department Select -->
         <div class="filter-group">
-          <select v-model="selectedDept" class="filter-select">
-            <option value="ALL">Semua Unit Kerja</option>
+          <select 
+            v-model="selectedDept" 
+            class="filter-select"
+            :disabled="isDeptLocked"
+          >
+            <option v-if="!isDeptLocked" value="ALL">Semua Unit Kerja</option>
             <option v-for="dept in departments" :key="dept.dep_id" :value="dept.dep_id">
               {{ dept.nama }}
             </option>
@@ -162,14 +166,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { pegawaiService } from '../../services/pegawaiService'
 import config from '../../config/api'
 import TreeNode from './components/TreeNode.vue'
+import { useAuthStore } from '../../stores/auth'
+
+const authStore = useAuthStore()
 
 // State
 const loading = ref(true)
+
+const isDeptLocked = computed(() => {
+  return !!authStore.userDepartment && authStore.userDepartment !== '-'
+})
+
 const selectedDept = ref('ALL')
+
+// Sync and lock department selection
+watch(() => authStore.userDepartment, (newDept) => {
+  if (isDeptLocked.value && newDept && newDept !== '-') {
+    selectedDept.value = newDept
+  }
+}, { immediate: true })
+
 const searchQuery = ref('')
 const selectedNode = ref(null)
 
