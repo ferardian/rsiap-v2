@@ -506,7 +506,7 @@ watch(() => authStore.userDepartment, (newDept) => {
 const tabs = computed(() => [
   {
     value: 'pending_mgr',
-    label: 'Menunggu Unit Manager',
+    label: 'Menunggu Koordinator',
     icon: 'fa-user-tie',
     count: lemburList.value.filter(item => item.status === 'PENGAJUAN').length
   },
