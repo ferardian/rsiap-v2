@@ -782,12 +782,11 @@ const handleEmployeeBlur = () => {
   }, 250)
 }
 
-const generateSplNumber = () => {
+const generateSplNumber = async () => {
   const dateObj = new Date(splForm.value.tanggal || new Date())
   const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
   const roman = romanMonths[dateObj.getMonth()]
   const year = dateObj.getFullYear()
-  const randomSuffix = Math.floor(100 + Math.random() * 900)
   
   let deptCode = 'SDI'
   if (isDeptLocked.value && authStore.userDepartment) {
@@ -803,7 +802,25 @@ const generateSplNumber = () => {
     mappedDeptCode = 'SDM'
   }
   
-  splForm.value.no_spl = `${randomSuffix}/SPKL-${mappedDeptCode}/${roman}/${year}`
+  splForm.value.no_spl = 'Menghitung...'
+  
+  let splSeqNum = 100
+  try {
+    const res = await lemburService.getLastSplNumber()
+    if (res.data && res.data.success && res.data.data) {
+      const lastNo = res.data.data
+      const prefix = lastNo.split('/')[0]
+      const num = parseInt(prefix, 10)
+      if (!isNaN(num)) {
+        splSeqNum = num + 1
+      }
+    }
+  } catch (error) {
+    console.error('Gagal mengambil nomor SPL terakhir:', error)
+    splSeqNum = Math.floor(100 + Math.random() * 900)
+  }
+  
+  splForm.value.no_spl = `${splSeqNum}/SPKL-${mappedDeptCode}/${roman}/${year}`
 }
 
 const fetchSplList = async (page = 1) => {

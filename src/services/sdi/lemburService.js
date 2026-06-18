@@ -13,6 +13,9 @@ export const lemburService = {
   getSplList(params) {
     return api.get('/sdi/lembur/spl', { params });
   },
+  getLastSplNumber() {
+    return api.get('/sdi/lembur/spl/last');
+  },
   storeSpl(payload) {
     return api.post('/sdi/lembur/spl', payload);
   },
