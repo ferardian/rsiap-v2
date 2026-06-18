@@ -349,12 +349,7 @@
                 <!-- No. SPL -->
                 <div class="form-group">
                   <label class="form-label">Nomor SPL <span class="required">*</span></label>
-                  <div class="input-with-button">
-                    <input type="text" v-model="splForm.no_spl" placeholder="Contoh: 954/SPKL-SDM/VI/2026" class="form-input" required />
-                    <button type="button" @click="generateSplNumber" class="btn-secondary-action" title="Generate nomor otomatis">
-                      <i class="fas fa-magic mr-1"></i> Auto
-                    </button>
-                  </div>
+                  <input type="text" v-model="splForm.no_spl" placeholder="Nomor SPKL akan terisi otomatis..." class="form-input" disabled readonly required />
                 </div>
 
                 <!-- Pegawai Dropdown -->
@@ -500,6 +495,17 @@ watch(() => authStore.userDepartment, (newDept) => {
   if (isDeptLocked.value && newDept && newDept !== '-') {
     filter.value.department = newDept
     splModal.value.filter.department = newDept
+  }
+}, { immediate: true })
+
+// Auto generate SPL number on form input changes or when switching to create tab
+watch([
+  () => splForm.value.tanggal,
+  () => splForm.value.selectedPegawai,
+  () => splModal.value.activeTab
+], () => {
+  if (splModal.value.activeTab === 'create') {
+    generateSplNumber()
   }
 }, { immediate: true })
 
@@ -1796,6 +1802,14 @@ select.filter-input {
   color: #1e293b;
   outline: none;
   transition: all 0.2s;
+}
+
+.form-input:disabled,
+.form-input[readonly] {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
 }
 
 .form-input:focus {
