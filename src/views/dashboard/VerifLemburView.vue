@@ -350,7 +350,7 @@
                 <div class="form-group">
                   <label class="form-label">Nomor SPL <span class="required">*</span></label>
                   <div class="input-with-button">
-                    <input type="text" v-model="splForm.no_spl" placeholder="Contoh: 001/SPL/SDI/VI/2026" class="form-input" required />
+                    <input type="text" v-model="splForm.no_spl" placeholder="Contoh: 954/SPKL-SDM/VI/2026" class="form-input" required />
                     <button type="button" @click="generateSplNumber" class="btn-secondary-action" title="Generate nomor otomatis">
                       <i class="fas fa-magic mr-1"></i> Auto
                     </button>
@@ -792,7 +792,12 @@ const generateSplNumber = () => {
     deptCode = splModal.value.filter.department
   }
   
-  splForm.value.no_spl = `${randomSuffix}/SPL/${deptCode}/${roman}/${year}`
+  let mappedDeptCode = deptCode || ''
+  if (mappedDeptCode.toUpperCase() === 'SDI' || mappedDeptCode.toUpperCase() === 'DM9') {
+    mappedDeptCode = 'SDM'
+  }
+  
+  splForm.value.no_spl = `${randomSuffix}/SPKL-${mappedDeptCode}/${roman}/${year}`
 }
 
 const fetchSplList = async (page = 1) => {
