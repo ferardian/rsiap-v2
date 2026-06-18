@@ -409,7 +409,7 @@ const handleAction = async (surat, status) => {
       
       await currentService.update(surat.id, {
         nomor: surat._original.nomor,
-        tgl_terbit: surat._original.tgl_terbit.split(' ')[0],
+        tgl_terbit: getLocalDateString(surat._original.tgl_terbit),
         pj: surat._original.pj,
         perihal: surat._original.perihal,
         status_approval: status
@@ -419,6 +419,9 @@ const handleAction = async (surat, status) => {
       // Kirim field wajib tapi tanpa object 'undangan' agar tidak memicu validasi ulang tanggal
       // eslint-disable-next-line no-unused-vars
       const { undangan, penanggung_jawab, diajukan_oleh, _original, ...safePayload } = surat
+      if (safePayload.tgl_terbit) {
+        safePayload.tgl_terbit = getLocalDateString(safePayload.tgl_terbit)
+      }
       await updateFn(surat.id, { ...safePayload, status })
     }
 
@@ -441,6 +444,15 @@ const handleAction = async (surat, status) => {
 }
 
 // Helpers
+const getLocalDateString = (dateStr) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const getDay = (dateStr) => dateStr ? new Date(dateStr).getDate() : '-'
 const getMonth = (dateStr) => {
   if (!dateStr) return '-'

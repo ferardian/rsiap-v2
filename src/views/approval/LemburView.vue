@@ -577,6 +577,18 @@ const formatDateTime = (dateStr) => {
   })
 }
 
+const formatToLocalSql = (dateStr) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
 const getInitials = (name) => {
   if (!name) return '?'
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
@@ -599,23 +611,60 @@ const canApprove = (item) => {
 const handleApprove = async (item) => {
   const targetStatus = item.status === 'PENGAJUAN' ? 'ACC1' : 'ACC2'
   
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return 0
+    const parts = timeStr.split(':')
+    if (parts.length < 3) return 0
+    const hours = parseInt(parts[0], 10) || 0
+    const minutes = parseInt(parts[1], 10) || 0
+    const seconds = parseInt(parts[2], 10) || 0
+    return Math.round(hours * 60 + minutes + seconds / 60)
+  }
+
+  const minutesToTime = (totalMinutes) => {
+    const mins = parseInt(totalMinutes, 10) || 0
+    const hrs = Math.floor(mins / 60)
+    const remainingMins = mins % 60
+    const pad = (num) => String(num).padStart(2, '0')
+    return `${pad(hrs)}:${pad(remainingMins)}:00`
+  }
+
+  const formatToHumanTime = (timeStr) => {
+    if (!timeStr) return ''
+    const parts = timeStr.split(':')
+    if (parts.length < 3) return ''
+    const hours = parseInt(parts[0], 10) || 0
+    const minutes = parseInt(parts[1], 10) || 0
+    const seconds = parseInt(parts[2], 10) || 0
+    
+    const totalMinutes = Math.round(hours * 60 + minutes + seconds / 60)
+    const h = Math.floor(totalMinutes / 60)
+    const m = totalMinutes % 60
+    
+    let result = ''
+    if (h > 0) result += `${h} jam `
+    if (m > 0 || h === 0) result += `${m} menit`
+    return result.trim()
+  }
+  
   const result = await Swal.fire({
     title: 'Setujui Lembur Pegawai?',
     html: `
       <div style="text-align: left; font-size: 0.9rem; color: #475569;">
         <p><strong>Nama:</strong> ${item.pegawai?.nama}</p>
         <p><strong>Kegiatan:</strong> ${item.kegiatan}</p>
-        <p><strong>Durasi Pengajuan:</strong> ${item.durasi_pengajuan}</p>
+        <p><strong>Durasi Pengajuan:</strong> ${item.durasi_pengajuan} (${formatToHumanTime(item.durasi_pengajuan)} / ${timeToMinutes(item.durasi_pengajuan)} menit)</p>
       </div>
       <div style="margin-top: 1.5rem; text-align: left;">
         <label style="font-weight: 600; font-size: 0.85rem; color: #1e293b; display: block; margin-bottom: 0.5rem;">
-          Durasi Disetujui (HH:MM:SS)
+          Durasi Disetujui (Menit)
         </label>
         <input 
           id="swal-input-durasi" 
+          type="number"
           class="swal2-input" 
-          value="${item.durasi_pengajuan}" 
-          placeholder="00:00:00" 
+          value="${timeToMinutes(item.durasi_pengajuan)}" 
+          placeholder="Masukkan durasi dalam menit" 
           style="width: 100%; margin: 0; box-sizing: border-box;"
         />
       </div>
@@ -628,13 +677,13 @@ const handleApprove = async (item) => {
     cancelButtonText: 'Batal',
     reverseButtons: true,
     preConfirm: () => {
-      const durasi = document.getElementById('swal-input-durasi').value
-      const regex = /^\d{2}:\d{2}:\d{2}$/
-      if (!regex.test(durasi)) {
-        Swal.showValidationMessage('Format durasi tidak valid! Harus HH:MM:SS (contoh: 02:30:00)')
+      const minutesVal = document.getElementById('swal-input-durasi').value
+      const mins = parseInt(minutesVal, 10)
+      if (isNaN(mins) || mins < 0) {
+        Swal.showValidationMessage('Durasi harus berupa angka menit yang valid!')
         return false
       }
-      return durasi
+      return minutesToTime(mins)
     }
   })
 
@@ -643,7 +692,7 @@ const handleApprove = async (item) => {
   try {
     const payload = {
       id: item.id,
-      jam_datang: item.jam_datang.replace('T', ' ').substring(0, 19),
+      jam_datang: formatToLocalSql(item.jam_datang),
       status: targetStatus,
       durasi_acc: result.value
     }
@@ -677,7 +726,7 @@ const handleReject = async (item) => {
   try {
     const payload = {
       id: item.id,
-      jam_datang: item.jam_datang.replace('T', ' ').substring(0, 19)
+      jam_datang: formatToLocalSql(item.jam_datang)
     }
     
     const res = await lemburService.rejectLembur(payload)
