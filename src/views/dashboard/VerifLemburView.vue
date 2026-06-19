@@ -18,6 +18,14 @@
 
     <!-- Filters & Content Card -->
     <div class="content-card">
+      <!-- Cutoff Warning Banner -->
+      <div class="cutoff-alert-banner">
+        <span class="pulse-dot"></span>
+        <span>
+          <strong>Batas Waktu Approval (Cutoff):</strong> Pengajuan lembur bulan lalu maksimal disetujui pada <strong>tanggal 2 pukul 23:59</strong> di bulan berjalan.
+        </span>
+      </div>
+
       <div class="filter-section border-b border-gray-100">
         <h3>Daftar Pengajuan Lembur</h3>
         
@@ -601,7 +609,35 @@ const canApprove = (item) => {
   return item.status === 'ACC1'
 }
 
+const isPastCutoff = (jamDatangStr) => {
+  if (!jamDatangStr) return false
+  
+  const jamDatang = new Date(jamDatangStr)
+  const today = new Date()
+  
+  const reqYear = jamDatang.getFullYear()
+  const reqMonth = jamDatang.getMonth() // 0-indexed
+  
+  const cutoffYear = reqMonth === 11 ? reqYear + 1 : reqYear
+  const cutoffMonth = reqMonth === 11 ? 0 : reqMonth + 1
+  
+  const cutoffDate = new Date(cutoffYear, cutoffMonth, 2, 23, 59, 59, 999)
+  
+  return today > cutoffDate
+}
+
 const handleApprove = async (item) => {
+  if (isPastCutoff(item.jam_datang)) {
+    Swal.fire({
+      title: 'Batas Waktu Terlewati',
+      text: 'Maaf, batas waktu approval (cutoff) untuk pengajuan lembur ini sudah terlewati (maksimal tanggal 2 bulan berikutnya pukul 23:59).',
+      icon: 'error',
+      confirmButtonColor: '#3b82f6',
+      confirmButtonText: 'Mengerti'
+    })
+    return
+  }
+
   const targetStatus = 'ACC2'
   
   const timeToMinutes = (timeStr) => {
@@ -2033,5 +2069,43 @@ select.filter-input {
 .selected-pegawai-details i,
 .btn-secondary-action i {
   margin-right: 0.5rem !important;
+}
+
+/* Cutoff Alert Banner */
+.cutoff-alert-banner {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-left: 4px solid #d97706;
+  color: #92400e;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 1.5rem 1.5rem 0 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.05);
+}
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #d97706;
+  border-radius: 50%;
+  margin-right: 10px;
+  display: inline-block;
+  animation: pulse-animation 1.5s infinite;
+}
+@keyframes pulse-animation {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(217, 119, 6, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+  }
 }
 </style>
