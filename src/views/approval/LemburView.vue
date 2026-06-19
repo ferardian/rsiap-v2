@@ -650,23 +650,47 @@ const handleApprove = async (item) => {
   const result = await Swal.fire({
     title: 'Setujui Lembur Pegawai?',
     html: `
-      <div style="text-align: left; font-size: 0.9rem; color: #475569;">
-        <p><strong>Nama:</strong> ${item.pegawai?.nama}</p>
-        <p><strong>Kegiatan:</strong> ${item.kegiatan}</p>
-        <p><strong>Durasi Pengajuan:</strong> ${item.durasi_pengajuan} (${formatToHumanTime(item.durasi_pengajuan)} / ${timeToMinutes(item.durasi_pengajuan)} menit)</p>
-      </div>
-      <div style="margin-top: 1.5rem; text-align: left;">
-        <label style="font-weight: 600; font-size: 0.85rem; color: #1e293b; display: block; margin-bottom: 0.5rem;">
-          Durasi Disetujui (Menit)
-        </label>
-        <input 
-          id="swal-input-durasi" 
-          type="number"
-          class="swal2-input" 
-          value="${timeToMinutes(item.durasi_pengajuan)}" 
-          placeholder="Masukkan durasi dalam menit" 
-          style="width: 100%; margin: 0; box-sizing: border-box;"
-        />
+      <div class="swal-custom-container" style="text-align: left; font-family: 'Inter', sans-serif;">
+        <div style="background-color: #f8fafc; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-bottom: 1.25rem;">
+          <div style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+            <span style="color: #64748b; font-size: 0.8rem; font-weight: 500;">PEGAWAI</span>
+            <span style="color: #64748b; font-size: 0.8rem; font-weight: 500;">DURASI PENGAJUAN</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="font-weight: 600; color: #1e293b; font-size: 0.95rem;">${item.pegawai?.nama}</div>
+            <div style="font-weight: 600; color: #0f766e; font-size: 0.95rem; text-align: right;">
+              ${item.durasi_pengajuan} <span style="font-weight: 400; font-size: 0.8rem; color: #64748b;">(${formatToHumanTime(item.durasi_pengajuan)})</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label for="swal-input-kegiatan" style="font-weight: 600; font-size: 0.85rem; color: #334155; display: block; margin-bottom: 0.5rem; display: flex; align-items: center;">
+            <i class="fas fa-edit" style="margin-right: 6px; color: #10b981;"></i> Kegiatan Lembur <span style="color: #ef4444; margin-left: 2px;">*</span>
+          </label>
+          <textarea 
+            id="swal-input-kegiatan" 
+            placeholder="Tuliskan detail kegiatan atau tugas lembur yang dilaksanakan..." 
+            style="width: 100%; min-height: 80px; padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9rem; box-sizing: border-box; resize: vertical; outline: none; transition: border-color 0.2s;"
+            onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+            onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';"
+          >${item.kegiatan === '-' ? '' : item.kegiatan}</textarea>
+        </div>
+
+        <div>
+          <label for="swal-input-durasi" style="font-weight: 600; font-size: 0.85rem; color: #334155; display: block; margin-bottom: 0.5rem; display: flex; align-items: center;">
+            <i class="far fa-clock" style="margin-right: 6px; color: #10b981;"></i> Durasi Disetujui (Menit) <span style="color: #ef4444; margin-left: 2px;">*</span>
+          </label>
+          <input 
+            id="swal-input-durasi" 
+            type="number"
+            value="${timeToMinutes(item.durasi_pengajuan)}" 
+            placeholder="Masukkan durasi dalam menit" 
+            style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+            onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+            onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';"
+          />
+        </div>
       </div>
     `,
     icon: 'question',
@@ -683,7 +707,21 @@ const handleApprove = async (item) => {
         Swal.showValidationMessage('Durasi harus berupa angka menit yang valid!')
         return false
       }
-      return minutesToTime(mins)
+      
+      const kegiatanVal = document.getElementById('swal-input-kegiatan').value.trim()
+      if (!kegiatanVal) {
+        Swal.showValidationMessage('Kegiatan lembur wajib diisi!')
+        return false
+      }
+      if (kegiatanVal.length > 200) {
+        Swal.showValidationMessage('Kegiatan lembur tidak boleh lebih dari 200 karakter!')
+        return false
+      }
+      
+      return {
+        durasi_acc: minutesToTime(mins),
+        kegiatan: kegiatanVal
+      }
     }
   })
 
@@ -694,7 +732,8 @@ const handleApprove = async (item) => {
       id: item.id,
       jam_datang: formatToLocalSql(item.jam_datang),
       status: targetStatus,
-      durasi_acc: result.value
+      durasi_acc: result.value.durasi_acc,
+      kegiatan: result.value.kegiatan
     }
     
     const res = await lemburService.approveLembur(payload)
