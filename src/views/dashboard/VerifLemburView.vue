@@ -152,14 +152,14 @@
 
                 <!-- Durations -->
                 <td class="text-center">
-                  <div class="duration-stack">
-                    <div class="duration-item text-muted" title="Durasi Pengajuan">
-                      <i class="far fa-hourglass mr-1"></i>
-                      <span>{{ item.durasi_pengajuan }}</span>
+                  <div class="duration-card">
+                    <div class="duration-line" title="Durasi Pengajuan">
+                      <i class="far fa-hourglass duration-icon text-slate-400"></i>
+                      <span class="duration-text">{{ formatDuration(item.durasi_pengajuan) }}</span>
                     </div>
-                    <div v-if="item.status !== 'PENGAJUAN' && item.status !== 'DITOLAK'" class="duration-item text-success mt-1" title="Durasi disetujui">
-                      <i class="fas fa-check-circle mr-1"></i>
-                      <span>{{ item.durasi_acc }}</span>
+                    <div v-if="item.status !== 'PENGAJUAN' && item.status !== 'DITOLAK'" class="duration-line approved" title="Durasi Disetujui">
+                      <i class="fas fa-check-circle duration-icon" style="color: #10b981;"></i>
+                      <span class="duration-text font-semibold" style="color: #059669;">{{ formatDuration(item.durasi_acc === '00:00:00' || !item.durasi_acc || item.durasi_acc === '-' ? item.durasi_pengajuan : item.durasi_acc) }}</span>
                     </div>
                   </div>
                 </td>
@@ -626,8 +626,52 @@ const isPastCutoff = (jamDatangStr) => {
   return today > cutoffDate
 }
 
+const formatDuration = (durationStr) => {
+  if (!durationStr || durationStr === '-' || durationStr === '00:00:00') return '-'
+  
+  // If it's a time string (HH:MM:SS or HH:MM)
+  if (durationStr.includes(':')) {
+    const parts = durationStr.split(':')
+    const hours = parseInt(parts[0], 10) || 0
+    const minutes = parseInt(parts[1], 10) || 0
+    const totalMinutes = hours * 60 + minutes
+    
+    if (hours > 0) {
+      return `${totalMinutes} mnt (${hours}j ${minutes}m)`
+    }
+    return `${totalMinutes} menit`
+  }
+  
+  // If it's already a number or contains text like "menit"
+  const num = parseInt(durationStr.replace(/[^0-9]/g, ''), 10)
+  if (isNaN(num)) return durationStr
+  
+  const hours = Math.floor(num / 60)
+  const minutes = num % 60
+  if (hours > 0) {
+    return `${num} mnt (${hours}j ${minutes}m)`
+  }
+  return `${num} menit`
+}
+
+const parseToMinutes = (durationStr) => {
+  if (!durationStr || durationStr === '-') return 0
+  
+  if (durationStr.includes(':')) {
+    const parts = durationStr.split(':')
+    const hours = parseInt(parts[0], 10) || 0
+    const minutes = parseInt(parts[1], 10) || 0
+    const seconds = parseInt(parts[2], 10) || 0
+    return Math.round(hours * 60 + minutes + seconds / 60)
+  }
+  
+  const num = parseInt(durationStr.replace(/[^0-9]/g, ''), 10)
+  return isNaN(num) ? 0 : num
+}
+
 const handleApprove = async (item) => {
-  if (isPastCutoff(item.jam_datang)) {
+  // Only enforce cutoff for non-SDI users (isDeptLocked is true)
+  if (isDeptLocked.value && isPastCutoff(item.jam_datang)) {
     Swal.fire({
       title: 'Batas Waktu Terlewati',
       text: 'Maaf, batas waktu approval (cutoff) untuk pengajuan lembur ini sudah terlewati (maksimal tanggal 2 bulan berikutnya pukul 23:59).',
@@ -640,40 +684,12 @@ const handleApprove = async (item) => {
 
   const targetStatus = 'ACC2'
   
-  const timeToMinutes = (timeStr) => {
-    if (!timeStr) return 0
-    const parts = timeStr.split(':')
-    if (parts.length < 3) return 0
-    const hours = parseInt(parts[0], 10) || 0
-    const minutes = parseInt(parts[1], 10) || 0
-    const seconds = parseInt(parts[2], 10) || 0
-    return Math.round(hours * 60 + minutes + seconds / 60)
-  }
-
   const minutesToTime = (totalMinutes) => {
     const mins = parseInt(totalMinutes, 10) || 0
     const hrs = Math.floor(mins / 60)
     const remainingMins = mins % 60
     const pad = (num) => String(num).padStart(2, '0')
     return `${pad(hrs)}:${pad(remainingMins)}:00`
-  }
-
-  const formatToHumanTime = (timeStr) => {
-    if (!timeStr) return ''
-    const parts = timeStr.split(':')
-    if (parts.length < 3) return ''
-    const hours = parseInt(parts[0], 10) || 0
-    const minutes = parseInt(parts[1], 10) || 0
-    const seconds = parseInt(parts[2], 10) || 0
-    
-    const totalMinutes = Math.round(hours * 60 + minutes + seconds / 60)
-    const h = Math.floor(totalMinutes / 60)
-    const m = totalMinutes % 60
-    
-    let result = ''
-    if (h > 0) result += `${h} jam `
-    if (m > 0 || h === 0) result += `${m} menit`
-    return result.trim()
   }
   
   const result = await Swal.fire({
@@ -688,7 +704,7 @@ const handleApprove = async (item) => {
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div style="font-weight: 600; color: #1e293b; font-size: 0.95rem;">${item.pegawai?.nama}</div>
             <div style="font-weight: 600; color: #0f766e; font-size: 0.95rem; text-align: right;">
-              ${item.durasi_pengajuan} <span style="font-weight: 400; font-size: 0.8rem; color: #64748b;">(${formatToHumanTime(item.durasi_pengajuan)})</span>
+              ${formatDuration(item.durasi_pengajuan)}
             </div>
           </div>
         </div>
@@ -713,7 +729,7 @@ const handleApprove = async (item) => {
           <input 
             id="swal-input-durasi" 
             type="number"
-            value="${timeToMinutes(item.durasi_pengajuan)}" 
+            value="${parseToMinutes(item.durasi_pengajuan)}" 
             placeholder="Masukkan durasi dalam menit" 
             style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
             onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
@@ -1408,20 +1424,41 @@ select.filter-input {
 }
 
 /* Durations */
-.duration-stack {
-  display: flex;
+.duration-card {
+  display: inline-flex;
   flex-direction: column;
-  align-items: center;
-  font-weight: 600;
-  font-size: 0.875rem;
+  gap: 4px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 140px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  text-align: left;
 }
 
-.duration-item {
-  display: inline-flex;
+.duration-line {
+  display: flex;
   align-items: center;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  background: #f8fafc;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.duration-line.approved {
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 4px;
+  margin-top: 2px;
+}
+
+.duration-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.duration-text {
+  white-space: nowrap;
 }
 
 /* Kegiatan */
