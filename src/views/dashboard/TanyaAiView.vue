@@ -1,12 +1,10 @@
 <template>
   <div class="tanya-ai-container">
-    <div class="page-header d-flex justify-content-between align-items-center flex-shrink-0">
-      <div class="header-left">
-        <h4 class="page-title">
-          <i class="fas fa-brain ai-icon-gradient"></i> Tanya RSIA-AI
-        </h4>
-        <p class="page-subtitle">Tanyakan apa saja mengenai data operasional dan informasi umum rumah sakit secara real-time</p>
-      </div>
+    <div class="page-header flex-shrink-0">
+      <h4 class="page-title">
+        <i class="fas fa-brain ai-icon-gradient"></i> <span>Tanya RSIA-AI</span>
+      </h4>
+      <p class="page-subtitle">Tanyakan apa saja mengenai data operasional RS secara real-time</p>
     </div>
 
     <!-- Main Chat Workspace -->
@@ -19,11 +17,11 @@
             <div class="ai-avatar-pulse"></div>
             <i class="fas fa-robot"></i>
           </div>
-          <h3 class="welcome-title mt-4">Halo, {{ userName }}! 👋</h3>
+          <h3 class="welcome-title mt-3">Halo, {{ userName }}! 👋</h3>
           <p class="welcome-subtitle">Saya adalah RSIA-AI. Saya dapat membantu Anda menelusuri data pasien, jadwal dokter, statistik unit, atau informasi internal rumah sakit lainnya.</p>
           
-          <div class="example-questions-container mt-5">
-            <h6 class="text-uppercase tracking-wider text-muted font-bold mb-3 small">Coba tanyakan seperti ini:</h6>
+          <div class="example-questions-container mt-4">
+            <h6 class="text-uppercase tracking-wider text-muted font-bold mb-2 small">Coba tanyakan seperti ini:</h6>
             <div class="questions-grid">
               <button 
                 v-for="(q, idx) in exampleQuestions" 
@@ -284,29 +282,39 @@ onMounted(() => {
 
 .page-header {
   background: white;
-  padding: 1.25rem 1.5rem;
-  border-radius: 1rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.875rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1 !important;
+}
+
+.page-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0;
+  padding-left: 1.75rem;
 }
 
 .ai-icon-gradient {
   background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.page-subtitle {
-  color: #64748b;
-  margin-bottom: 0;
-  font-size: 0.875rem;
+  background-clip: text;
+  line-height: 1;
+  flex-shrink: 0;
+  display: inline-block;
+  transform: translateY(0.06em);
 }
 
 .btn-outline-secondary-modern {
@@ -352,7 +360,7 @@ onMounted(() => {
 /* Welcome Screen */
 .welcome-pane {
   max-width: 600px;
-  margin: 3rem auto;
+  margin: 1.5rem auto;
 }
 
 .ai-avatar-large {
@@ -360,12 +368,12 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
   color: white;
-  font-size: 2.25rem;
+  font-size: 1.8rem;
   box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
 }
 
@@ -408,15 +416,15 @@ onMounted(() => {
 
 .welcome-subtitle {
   color: #475569;
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .questions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -428,9 +436,9 @@ onMounted(() => {
 .question-chip {
   background: white;
   border: 1px solid #e2e8f0;
-  padding: 0.875rem 1.25rem;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
   text-align: left;
   color: #334155;
   font-weight: 500;
@@ -748,19 +756,30 @@ onMounted(() => {
 
 /* ── Mobile Layout Overrides ────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Container: hide header card, remove gap, fix height */
+  /* Container: small gap, fix height */
   .tanya-ai-container {
     height: calc(100vh - 92px); /* 60px top-header + 2×1rem padding */
-    gap: 0;
+    gap: 0.4rem;
     padding-bottom: 0;
   }
 
-  /* Hide page header — breadcrumb already shows "Tanya Ai" */
+  /* Compact header on mobile */
   .page-header {
-    display: none;
+    padding: 0.4rem 1rem;
+    border-radius: 0.625rem;
   }
 
-  /* Chat workspace fills all remaining space */
+  .page-title {
+    font-size: 0.9rem;
+    gap: 0.3rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.7rem;
+    padding-left: 1.2rem;
+  }
+
+  /* Chat workspace fills remaining space */
   .chat-workspace {
     border-radius: 0.75rem;
     flex: 1;
