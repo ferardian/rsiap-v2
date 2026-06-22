@@ -46,7 +46,8 @@
             :class="msg.role === 'user' ? 'message-user' : 'message-assistant'"
           >
             <div class="message-avatar">
-              <i :class="msg.role === 'user' ? 'fas fa-user-circle' : 'fas fa-robot'"></i>
+              <i v-if="msg.role === 'user'" class="fas fa-circle-user"></i>
+              <i v-else class="fas fa-robot"></i>
             </div>
             <div class="message-bubble-wrapper">
               <div class="message-sender-name">{{ msg.role === 'user' ? 'Anda' : 'RSIA-AI' }}</div>
@@ -103,12 +104,13 @@
           ></textarea>
           <button 
             class="btn btn-send-message" 
+            :class="{ 'is-loading': isLoading }"
             @click="sendMessage"
             :disabled="!inputMessage.trim() || isLoading"
             title="Kirim pesan"
           >
             <i class="fas fa-paper-plane" v-if="!isLoading"></i>
-            <span v-else class="spinner-border spinner-border-sm"></span>
+            <span v-else class="ai-spinner"></span>
           </button>
         </div>
       </div>
@@ -479,9 +481,14 @@ onMounted(() => {
   border-radius: 50%;
   background: #f1f5f9;
   color: #64748b;
-  font-size: 1.5rem;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.message-avatar i {
+  font-size: 1.35rem;
+  line-height: 1;
+  display: block;
 }
 
 .message-user .message-avatar {
@@ -625,6 +632,7 @@ onMounted(() => {
   border: none;
   transition: all 0.2s ease;
   margin-bottom: 0.2rem;
+  overflow: visible;
 }
 
 .btn-send-message:hover:not(:disabled) {
@@ -632,10 +640,34 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-.btn-send-message:disabled {
+.btn-send-message:disabled:not(.is-loading) {
   background: #cbd5e1;
   color: #94a3b8;
   cursor: not-allowed;
+}
+
+/* Keep button blue and show loading cursor when loading */
+.btn-send-message.is-loading {
+  background: #2563eb;
+  color: white;
+  cursor: wait;
+  opacity: 0.85;
+}
+
+/* Custom spinner - white circle ring */
+.ai-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ai-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Typing loading dots */
