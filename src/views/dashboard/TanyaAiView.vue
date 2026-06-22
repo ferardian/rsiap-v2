@@ -745,4 +745,109 @@ onMounted(() => {
   transform: translateY(-20px);
   opacity: 0;
 }
+
+/* ── Mobile Layout Overrides ────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Container: hide header card, remove gap, fix height */
+  .tanya-ai-container {
+    height: calc(100vh - 92px); /* 60px top-header + 2×1rem padding */
+    gap: 0;
+    padding-bottom: 0;
+  }
+
+  /* Hide page header — breadcrumb already shows "Tanya Ai" */
+  .page-header {
+    display: none;
+  }
+
+  /* Chat workspace fills all remaining space */
+  .chat-workspace {
+    border-radius: 0.75rem;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Reduce chat history padding */
+  .chat-history-container {
+    padding: 0.875rem 0.75rem;
+  }
+
+  /* Welcome pane smaller on mobile */
+  .welcome-pane {
+    margin: 1.5rem auto;
+  }
+
+  .ai-avatar-large {
+    width: 60px;
+    height: 60px;
+    font-size: 1.75rem;
+  }
+
+  .welcome-title {
+    font-size: 1.1rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .example-questions-container {
+    margin-top: 1.5rem !important;
+  }
+
+  /* Message row wider on mobile */
+  .message-row {
+    max-width: 95%;
+    gap: 0.5rem;
+  }
+
+  /* Smaller avatars */
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .message-avatar i {
+    font-size: 1.1rem;
+  }
+
+  /* Tighter bubble */
+  .message-bubble {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .message-sender-name {
+    font-size: 0.7rem;
+    margin-bottom: 0.15rem;
+  }
+
+  /* Quick chips bar */
+  .chat-chips-row {
+    padding: 0.35rem 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .chat-mini-chip {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+  }
+
+  /* Input area */
+  .chat-input-wrapper {
+    padding: 0.75rem;
+  }
+
+  .chat-input-field {
+    font-size: 0.875rem;
+  }
+
+  .btn-send-message {
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+  }
+}
 </style>
+
