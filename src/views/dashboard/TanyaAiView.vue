@@ -1,10 +1,13 @@
 <template>
   <div class="tanya-ai-container">
     <div class="page-header flex-shrink-0">
-      <h4 class="page-title">
-        <i class="fas fa-brain ai-icon-gradient"></i> <span>Tanya RSIA-AI</span>
-      </h4>
-      <p class="page-subtitle">Tanyakan apa saja mengenai data operasional RS secara real-time</p>
+      <div class="header-main-content">
+        <i class="fas fa-brain ai-icon-gradient"></i>
+        <div class="header-text-group">
+          <h4 class="page-title">Tanya RSIA-AI</h4>
+          <p class="page-subtitle">Tanyakan apa saja mengenai data operasional RS secara real-time</p>
+        </div>
+      </div>
     </div>
 
     <!-- Main Chat Workspace -->
@@ -288,22 +291,32 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
+.header-main-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.header-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .page-title {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1e293b;
+  margin-top: 0 !important;
   margin-bottom: 0.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
+  display: block;
 }
 
 .page-subtitle {
   font-size: 0.8rem;
   color: #94a3b8;
   margin-bottom: 0;
-  padding-left: 1.75rem;
+  padding-left: 0;
 }
 
 .ai-icon-gradient {
@@ -314,7 +327,8 @@ onMounted(() => {
   line-height: 1;
   flex-shrink: 0;
   display: inline-block;
-  transform: translateY(0.06em);
+  font-size: 1.35rem !important;
+  margin-top: 0.18em;
 }
 
 .btn-outline-secondary-modern {
@@ -769,14 +783,19 @@ onMounted(() => {
     border-radius: 0.625rem;
   }
 
+  .header-main-content {
+    gap: 0.3rem;
+  }
+
+
+
   .page-title {
     font-size: 0.9rem;
-    gap: 0.3rem;
   }
 
   .page-subtitle {
     font-size: 0.7rem;
-    padding-left: 1.2rem;
+    padding-left: 0;
   }
 
   /* Chat workspace fills remaining space */
