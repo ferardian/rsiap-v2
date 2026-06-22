@@ -56,6 +56,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/dashboard/tanya-ai',
+    name: 'TanyaAi',
+    component: () => import('../views/dashboard/TanyaAiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/bed/display',
     name: 'BedAvailabilityDisplay',
     component: () => import('../views/dashboard/BedAvailabilityView.vue'),

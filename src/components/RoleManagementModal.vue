@@ -330,7 +330,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoleStore } from '../stores/menu'
+import { useRoleStore } from '../stores/role'
 import { showToast } from '../utils/notification'
 
 // Emits

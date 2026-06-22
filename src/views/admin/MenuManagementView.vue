@@ -737,7 +737,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useMenuStore, useRoleStore } from '../../stores/menu'
+import { useMenuStore } from '../../stores/menu'
+import { useRoleStore } from '../../stores/role'
 import { showToast } from '../../utils/notification'
 import { menuService } from '../../services/menuService'
 
