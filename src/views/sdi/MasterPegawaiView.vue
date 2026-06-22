@@ -30,9 +30,8 @@
         <div v-if="activeTab === 'departemen'" key="departemen">
           <DepartemenModule />
         </div>
-        <div v-else-if="activeTab === 'jabatan'" key="jabatan" class="text-center py-5">
-          <i class="fas fa-hammer fa-3x text-muted mb-3"></i>
-          <h5 class="text-muted">Modul Jabatan sedang dalam pengembangan</h5>
+        <div v-else-if="activeTab === 'jabatan'" key="jabatan">
+          <JabatanModule />
         </div>
         <div v-else-if="activeTab === 'mapping-jabatan'" key="mapping-jabatan">
           <MappingJabatanModule />
@@ -45,6 +44,7 @@
 <script setup>
 import { ref } from 'vue';
 import DepartemenModule from './components/DepartemenModule.vue';
+import JabatanModule from './components/JabatanModule.vue';
 import MappingJabatanModule from './components/MappingJabatanModule.vue';
 
 const activeTab = ref('departemen');
