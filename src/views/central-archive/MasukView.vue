@@ -426,11 +426,11 @@ const isEdit = ref(false)
 const editId = ref(null)
 
 const formData = ref({
-  no_simrs: new Date().toISOString().split('T')[0],
+  no_simrs: formatDateISO(new Date()),
   no_surat: '-',
   perihal: '',
   pengirim: '',
-  tgl_surat: new Date().toISOString().split('T')[0],
+  tgl_surat: formatDateISO(new Date()),
   pelaksanaan: '',
   pelaksanaan_end: '',
   tempat: '',
@@ -509,11 +509,11 @@ const openAddModal = () => {
   isEdit.value = false
   editId.value = null
   formData.value = {
-    no_simrs: new Date().toISOString().split('T')[0],
+    no_simrs: formatDateISO(new Date()),
     no_surat: '-',
     perihal: '',
     pengirim: '',
-    tgl_surat: new Date().toISOString().split('T')[0],
+    tgl_surat: formatDateISO(new Date()),
     pelaksanaan: '',
     pelaksanaan_end: '',
     tempat: '',
@@ -531,13 +531,13 @@ const openEditModal = (item) => {
   editId.value = item.no
   
   formData.value = {
-    no_simrs: item.no_simrs ? item.no_simrs.split('T')[0] : '',
+    no_simrs: formatDateISO(item.no_simrs),
     no_surat: item.no_surat || '-',
     perihal: item.perihal || '',
     pengirim: item.pengirim || '',
-    tgl_surat: item.tgl_surat ? item.tgl_surat.split('T')[0] : '',
-    pelaksanaan: item.pelaksanaan && item.pelaksanaan !== '0000-00-00' ? item.pelaksanaan.split('T')[0] : '',
-    pelaksanaan_end: item.pelaksanaan_end && item.pelaksanaan_end !== '0000-00-00' ? item.pelaksanaan_end.split('T')[0] : '',
+    tgl_surat: formatDateISO(item.tgl_surat),
+    pelaksanaan: formatDateISO(item.pelaksanaan),
+    pelaksanaan_end: formatDateISO(item.pelaksanaan_end),
     tempat: item.tempat || '',
     ket: item.ket || '-',
     berkas: item.berkas || ''
@@ -671,11 +671,11 @@ const submitUpload = async () => {
     data.append('file', uploadInput.value.files[0])
     
     // To satisfy validation / backend requirement we may need to append the required basic fields
-    data.append('no_simrs', uploadItem.value.no_simrs.split('T')[0])
+    data.append('no_simrs', formatDateISO(uploadItem.value.no_simrs))
     data.append('no_surat', uploadItem.value.no_surat || '-')
     data.append('perihal', uploadItem.value.perihal)
     data.append('pengirim', uploadItem.value.pengirim)
-    data.append('tgl_surat', uploadItem.value.tgl_surat.split('T')[0])
+    data.append('tgl_surat', formatDateISO(uploadItem.value.tgl_surat))
     data.append('ket', uploadItem.value.ket || '-')
 
     await suratMasukService.updateSuratMasuk(uploadItem.value.no, data)
@@ -691,18 +691,57 @@ const submitUpload = async () => {
   }
 }
 
-// Formatters & Helpers
-const formatDateFull = (dateStr) => {
-  if (!dateStr || dateStr === '0000-00-00') return '-'
+const parseDateLocal = (dateStr) => {
+  if (!dateStr || dateStr === '0000-00-00') return null
+  if (dateStr instanceof Date) return dateStr
+  if (typeof dateStr === 'string') {
+    // If it's a date-only string like YYYY-MM-DD
+    const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+    if (dateOnlyPattern.test(dateStr)) {
+      const parts = dateStr.split('-')
+      return new Date(parts[0], parts[1] - 1, parts[2])
+    }
+    // If it's a date-only string with slashes YYYY/MM/DD
+    const slashPattern = /^\d{4}\/\d{2}\/\d{2}$/
+    if (slashPattern.test(dateStr)) {
+      const parts = dateStr.split('/')
+      return new Date(parts[0], parts[1] - 1, parts[2])
+    }
+    // If it's an ISO format with 'T' but has no timezone suffix (Z or +), replace '-' to force local parsing.
+    if (dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      const cleanStr = dateStr.split('.')[0]
+      const parts = cleanStr.split('T')
+      const datePart = parts[0].replace(/-/g, '/')
+      const timePart = parts[1]
+      return new Date(`${datePart} ${timePart}`)
+    }
+  }
   const d = new Date(dateStr)
+  return isNaN(d.getTime()) ? null : d
+}
+
+const formatDateFull = (dateStr) => {
+  const d = parseDateLocal(dateStr)
+  if (!d) return '-'
   return d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 const formatDateSIMRS = (dateStr) => {
-  if (!dateStr || dateStr === '0000-00-00') return '-'
-  const datePart = dateStr.split('T')[0]
-  const val = datePart.split('-').reverse().join('/')
-  return val
+  const d = parseDateLocal(dateStr)
+  if (!d) return '-'
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateISO = (dateStr) => {
+  const d = parseDateLocal(dateStr)
+  if (!d) return ''
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 const getViaIcon = (ket) => {
