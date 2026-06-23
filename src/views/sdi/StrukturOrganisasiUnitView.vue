@@ -177,7 +177,21 @@ const authStore = useAuthStore()
 // State
 const loading = ref(true)
 
+const isAdministrator = computed(() => {
+  const roleName = (authStore.userRole || '').toLowerCase()
+  const userName = (authStore.userName || '').toLowerCase()
+  const position = (authStore.user?.detail?.jbtn || authStore.user?.data?.detail?.jbtn || '').toLowerCase()
+  
+  return roleName.includes('admin') || 
+         roleName.includes('administrator') || 
+         userName.includes('admin') || 
+         position.includes('admin')
+})
+
 const isDeptLocked = computed(() => {
+  if (isAdministrator.value) {
+    return false
+  }
   return !!authStore.userDepartment && authStore.userDepartment !== '-'
 })
 

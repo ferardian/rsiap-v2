@@ -118,8 +118,10 @@
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon patients">👥</div>
+          <div class="stat-card patients-card">
+            <div class="stat-icon patients">
+              <i class="fas fa-users"></i>
+            </div>
             <div class="stat-content">
               <h3>{{ dashboardStats.pasien?.total || 0 }}</h3>
               <p>Total Pasien</p>
@@ -127,8 +129,10 @@
             </div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-icon today-visits">🏥</div>
+          <div class="stat-card ranap-card">
+            <div class="stat-icon today-visits">
+              <i class="fas fa-procedures"></i>
+            </div>
             <div class="stat-content">
               <h3>{{ dashboardStats.pasien?.ranap || 0 }}</h3>
               <p>Kunjungan Rawat Inap</p>
@@ -136,8 +140,10 @@
             </div>
           </div>
 
-           <div class="stat-card">
-            <div class="stat-icon surgeries">🚶</div>
+           <div class="stat-card ralan-card">
+            <div class="stat-icon surgeries">
+              <i class="fas fa-user-doctor"></i>
+            </div>
             <div class="stat-content">
               <h3>{{ dashboardStats.pasien?.ralan || 0 }}</h3>
               <p>Kunjungan Rawat Jalan</p>
@@ -145,8 +151,10 @@
             </div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-icon emergency">🚑</div>
+          <div class="stat-card igd-card">
+            <div class="stat-icon emergency">
+              <i class="fas fa-truck-medical"></i>
+            </div>
             <div class="stat-content">
               <h3>{{ dashboardStats.pasien?.igd || 0 }}</h3>
               <p>Kunjungan IGD</p>
@@ -248,7 +256,7 @@
 
         <!-- Quick Stats Cards -->
         <div class="quick-stats-section">
-          <h3>📊 Statistik Rumah Sakit</h3>
+          <h3><i class="fas fa-chart-line"></i> Statistik Rumah Sakit</h3>
           
           <div v-if="loadingStats" class="stats-loading">
             <i class="fas fa-spinner fa-spin"></i> Memuat statistik...
@@ -257,15 +265,19 @@
           <div v-else class="quick-stats-grid">
             <!-- 1. Pasien Hari Ini -->
             <div class="quick-stat-card pasien-card">
-              <div class="stat-icon-wrapper pasien-gradient">
-                <i class="fas fa-user-injured"></i>
+              <div class="card-header-row">
+                <div class="stat-icon-wrapper pasien-gradient">
+                  <i class="fas fa-user-injured"></i>
+                </div>
+                <div class="card-title-block">
+                  <h4>{{ dashboardStats.pasien?.total || 0 }}</h4>
+                  <p>Pasien Hari Ini</p>
+                </div>
               </div>
-              <div class="stat-details">
-                <h4>{{ dashboardStats.pasien?.total || 0 }}</h4>
-                <p>Pasien Hari Ini</p>
+              <div class="stat-breakdown-full">
                 <div class="stat-breakdown-grid">
                   <div v-for="(count, poli) in dashboardStats.pasien?.per_poli || {}" :key="poli" class="breakdown-grid-item">
-                    <span class="poli-name">{{ poli }}</span>
+                    <span class="poli-name" :title="poli">{{ poli }}</span>
                     <span class="poli-count">{{ count }}</span>
                   </div>
                 </div>
@@ -274,15 +286,19 @@
 
             <!-- 2. Pegawai Aktif -->
             <div class="quick-stat-card pegawai-card">
-              <div class="stat-icon-wrapper pegawai-gradient">
-                <i class="fas fa-users"></i>
+              <div class="card-header-row">
+                <div class="stat-icon-wrapper pegawai-gradient">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="card-title-block">
+                  <h4>{{ dashboardStats.pegawai?.total || 0 }}</h4>
+                  <p>Pegawai Aktif</p>
+                </div>
               </div>
-              <div class="stat-details">
-                <h4>{{ dashboardStats.pegawai?.total || 0 }}</h4>
-                <p>Pegawai Aktif</p>
+              <div class="stat-breakdown-full">
                 <div class="stat-breakdown-grid">
                   <div v-for="(count, category) in dashboardStats.pegawai?.breakdown" :key="category" class="breakdown-grid-item">
-                    <span class="poli-name">{{ category }}</span>
+                    <span class="poli-name" :title="category">{{ category }}</span>
                     <span class="poli-count">{{ count }}</span>
                   </div>
                 </div>
@@ -291,12 +307,16 @@
 
             <!-- 3. Cuti Bulan Ini -->
             <div class="quick-stat-card cuti-card">
-              <div class="stat-icon-wrapper cuti-gradient">
-                <i class="fas fa-calendar-check"></i>
+              <div class="card-header-row">
+                <div class="stat-icon-wrapper cuti-gradient">
+                  <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="card-title-block">
+                  <h4>{{ dashboardStats.cuti?.bulan_ini || 0 }}</h4>
+                  <p>Cuti Bulan Ini</p>
+                </div>
               </div>
-              <div class="stat-details">
-                <h4>{{ dashboardStats.cuti?.bulan_ini || 0 }}</h4>
-                <p>Cuti Bulan Ini</p>
+              <div class="stat-breakdown-full">
                 <div class="stat-breakdown">
                   <span class="breakdown-item pending">Pending: {{ dashboardStats.cuti?.pending || 0 }}</span>
                   <span class="breakdown-item approved">Approved: {{ dashboardStats.cuti?.approved || 0 }}</span>
@@ -306,108 +326,88 @@
 
             <!-- 4. Total Tempat Tidur -->
             <div class="quick-stat-card bed-card">
-              <div class="stat-icon-wrapper bed-gradient">
-                <i class="fas fa-bed"></i>
+              <div class="card-header-row">
+                <div class="stat-icon-wrapper bed-gradient">
+                  <i class="fas fa-bed"></i>
+                </div>
+                <div class="card-title-block">
+                  <h4>{{ dashboardStats.bed?.total || 0 }}</h4>
+                  <p>Total Tempat Tidur</p>
+                </div>
               </div>
-              <div class="stat-details">
-                <h4>{{ dashboardStats.bed?.total || 0 }}</h4>
-                <p>Total Tempat Tidur</p>
+              <div class="stat-breakdown-full">
                 <div class="stat-breakdown">
                   <span class="breakdown-item available">Tersedia: {{ dashboardStats.bed?.tersedia || 0 }}</span>
                   <span class="breakdown-item occupied">Terisi: {{ dashboardStats.bed?.terisi || 0 }}</span>
                 </div>
               </div>
             </div>
-
-            <!-- 5. Approval Pending (Hidden) -->
-            <!--
-            <div class="quick-stat-card approval-card">
-              <div class="stat-icon-wrapper approval-gradient">
-                <i class="fas fa-clock"></i>
-              </div>
-              <div class="stat-details">
-                <h4>{{ dashboardStats.approval?.total_pending || 0 }}</h4>
-                <p>Approval Pending</p>
-                <div class="stat-breakdown">
-                  <span class="breakdown-item">Cuti: {{ dashboardStats.approval?.cuti_pending || 0 }}</span>
-                  <span class="breakdown-item">Jadwal: {{ dashboardStats.approval?.jadwal_pending || 0 }}</span>
-                </div>
-              </div>
-            </div>
-            -->
-
           </div>
-
         </div>
 
         <!-- Jadwal Petugas Code Blue -->
         <div class="codeblue-schedule-section">
           <div class="section-header-with-action">
-            <h3><i class="fas fa-user-md"></i> Jadwal Petugas Code Blue Hari Ini</h3>
+            <h3><i class="fas fa-user-md"></i> Petugas Code Blue</h3>
             <button @click="navigateToCodeBlueManagement" class="btn-manage-codeblue">
               <i class="fas fa-edit"></i>
-              <span>Kelola Jadwal</span>
+              <span>Kelola</span>
+            </button>
+          </div>
+
+          <!-- Shift Tabs -->
+          <div class="codeblue-tabs">
+            <button 
+              @click="activeShiftTab = 'pagi'" 
+              class="cb-tab-btn pagi" 
+              :class="{ active: activeShiftTab === 'pagi' }"
+            >
+              <i class="fas fa-sun"></i> <span>Pagi</span>
+            </button>
+            <button 
+              @click="activeShiftTab = 'siang'" 
+              class="cb-tab-btn siang" 
+              :class="{ active: activeShiftTab === 'siang' }"
+            >
+              <i class="fas fa-cloud-sun"></i> <span>Siang</span>
+            </button>
+            <button 
+              @click="activeShiftTab = 'malam'" 
+              class="cb-tab-btn malam" 
+              :class="{ active: activeShiftTab === 'malam' }"
+            >
+              <i class="fas fa-moon"></i> <span>Malam</span>
             </button>
           </div>
           
-          <div class="codeblue-shifts-grid">
-            <!-- Shift Pagi -->
-            <div class="shift-card pagi-shift">
-              <div class="shift-header">
-                <i class="fas fa-sun"></i>
-                <span>Shift Pagi</span>
-              </div>
+          <div class="codeblue-shift-display">
+            <!-- Dynamic Shift Card -->
+            <div :class="['shift-card', `${activeShiftTab}-shift`, 'active-shift-card']">
               <div class="shift-team">
-                <div class="team-member leader" v-if="codeBlueSchedule.pagi?.LEADER">
-                  <span class="member-role">Leader</span>
-                  <span class="member-name">{{ codeBlueSchedule.pagi.LEADER.nama }}</span>
+                <div class="team-member-item leader-item" v-if="codeBlueSchedule[activeShiftTab]?.LEADER">
+                  <div class="member-avatar leader-avatar">
+                    <i class="fas fa-user-md"></i>
+                  </div>
+                  <div class="member-info">
+                    <span class="member-name">{{ codeBlueSchedule[activeShiftTab].LEADER.nama }}</span>
+                    <span class="member-role">Leader Shift</span>
+                  </div>
                 </div>
                 <template v-for="i in 5" :key="i">
-                  <div class="team-member" v-if="codeBlueSchedule.pagi?.[`ANGGOTA ${i}`]">
-                    <span class="member-role">Anggota {{ i }}</span>
-                    <span class="member-name">{{ codeBlueSchedule.pagi[`ANGGOTA ${i}`].nama }}</span>
+                  <div class="team-member-item" v-if="codeBlueSchedule[activeShiftTab]?.[`ANGGOTA ${i}`]">
+                    <div class="member-avatar">
+                      <i class="fas fa-user-nurse"></i>
+                    </div>
+                    <div class="member-info">
+                      <span class="member-name">{{ codeBlueSchedule[activeShiftTab][`ANGGOTA ${i}`].nama }}</span>
+                      <span class="member-role">Anggota {{ i }}</span>
+                    </div>
                   </div>
                 </template>
-              </div>
-            </div>
-
-            <!-- Shift Siang -->
-            <div class="shift-card siang-shift">
-              <div class="shift-header">
-                <i class="fas fa-cloud-sun"></i>
-                <span>Shift Siang</span>
-              </div>
-              <div class="shift-team">
-                <div class="team-member leader" v-if="codeBlueSchedule.siang?.LEADER">
-                  <span class="member-role">Leader</span>
-                  <span class="member-name">{{ codeBlueSchedule.siang.LEADER.nama }}</span>
+                <div v-if="!codeBlueSchedule[activeShiftTab]?.LEADER && !codeBlueSchedule[activeShiftTab]?.['ANGGOTA 1']" class="empty-shift-team">
+                  <i class="fas fa-users-slash"></i>
+                  <span>Jadwal tidak tersedia</span>
                 </div>
-                <template v-for="i in 5" :key="i">
-                  <div class="team-member" v-if="codeBlueSchedule.siang?.[`ANGGOTA ${i}`]">
-                    <span class="member-role">Anggota {{ i }}</span>
-                    <span class="member-name">{{ codeBlueSchedule.siang[`ANGGOTA ${i}`].nama }}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
-
-            <!-- Shift Malam -->
-            <div class="shift-card malam-shift">
-              <div class="shift-header">
-                <i class="fas fa-moon"></i>
-                <span>Shift Malam</span>
-              </div>
-              <div class="shift-team">
-                <div class="team-member leader" v-if="codeBlueSchedule.malam?.LEADER">
-                  <span class="member-role">Leader</span>
-                  <span class="member-name">{{ codeBlueSchedule.malam.LEADER.nama }}</span>
-                </div>
-                <template v-for="i in 5" :key="i">
-                  <div class="team-member" v-if="codeBlueSchedule.malam?.[`ANGGOTA ${i}`]">
-                    <span class="member-role">Anggota {{ i }}</span>
-                    <span class="member-name">{{ codeBlueSchedule.malam[`ANGGOTA ${i}`].nama }}</span>
-                  </div>
-                </template>
               </div>
             </div>
           </div>
@@ -532,6 +532,16 @@ const selectedPeriod = ref('today')
 const customStartDate = ref('')
 const customEndDate = ref('')
 const isFilterOpen = ref(false)
+
+// Code Blue Shift Active Tab
+const currentHour = new Date().getHours()
+let initialShift = 'pagi'
+if (currentHour >= 14 && currentHour < 21) {
+  initialShift = 'siang'
+} else if (currentHour >= 21 || currentHour < 7) {
+  initialShift = 'malam'
+}
+const activeShiftTab = ref(initialShift)
 
 // Watch for changes in user department (e.g. after refreshUserData)
 watch(() => authStore.user?.data?.detail?.departemen, (newVal) => {
@@ -1017,6 +1027,7 @@ onUnmounted(() => {
 .personal-alert-content strong {
   font-size: 1rem;
   margin-bottom: 0.125rem;
+  color: #d9480f;
 }
 
 .personal-alert-content span {
@@ -1139,51 +1150,89 @@ onUnmounted(() => {
   padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
+  gap: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f1f5f9;
+  transition: all 0.25s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
 .stat-icon {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
+  transition: all 0.2s ease;
 }
 
-.stat-icon.patients { background: #e0f2fe; }
-.stat-icon.today-visits { background: #dcfce7; }
-.stat-icon.emergency { background: #fee2e2; }
-.stat-icon.surgeries { background: #fef3c7; }
+.stat-card:hover .stat-icon {
+  transform: scale(1.05);
+}
+
+.stat-icon.patients {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}
+
+.stat-icon.today-visits {
+  background-color: #ecfdf5;
+  color: #10b981;
+}
+
+.stat-icon.surgeries {
+  background-color: #f5f3ff;
+  color: #8b5cf6;
+}
+
+.stat-icon.emergency {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
 
 .stat-content h3 {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
+  font-size: 2.1rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin-bottom: 0.1rem;
+  letter-spacing: -0.01em;
 }
 
 .stat-content p {
-  color: #6b7280;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
 }
 
 .stat-trend {
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  display: inline-block;
 }
 
-.stat-trend.positive { color: #10b981; }
-.stat-trend.negative { color: #ef4444; }
-.stat-trend.neutral { color: #6b7280; }
+.stat-trend.positive {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.stat-trend.negative {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.stat-trend.neutral {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 /* Dashboard Sections */
 .dashboard-sections {
@@ -1194,28 +1243,42 @@ onUnmounted(() => {
 }
 
 .quick-stats-section,
-/* Code Blue Schedule Section */
 .codeblue-schedule-section,
 .reviews-section {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f1f5f9;
+  align-self: start; /* Prevent awkward stretching */
 }
 
 .quick-stats-section {
-  align-self: start;
   grid-column: span 2;
 }
 
 .quick-stats-section h3,
-.codeblue-schedule-section h3 {
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  font-size: 1.2rem;
+.codeblue-schedule-section h3,
+.reviews-section h3 {
+  color: #0f172a;
+  margin-bottom: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+}
+
+.quick-stats-section h3 i {
+  color: #4f46e5;
+}
+
+.codeblue-schedule-section h3 i {
+  color: #ef4444;
+}
+
+.reviews-section h3 i {
+  color: #fbbf24;
 }
 
 /* Section Header with Action Button */
@@ -1223,53 +1286,87 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .section-header-with-action h3 {
-  margin-bottom: 0;
-}
-
-.codeblue-schedule-section h3 i {
-  color: #3b82f6;
+  margin-bottom: 0 !important;
 }
 
 /* Manage Code Blue Button */
 .btn-manage-codeblue {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
 .btn-manage-codeblue:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-manage-codeblue:active {
   transform: translateY(0);
 }
 
-.btn-manage-codeblue i {
-  font-size: 0.875rem;
+/* Code Blue Tabs */
+.codeblue-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.25rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #e2e8f0;
 }
 
-/* Code Blue Shifts Grid */
-.codeblue-shifts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.25rem;
+.cb-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cb-tab-btn:hover {
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.cb-tab-btn.active {
+  background: white;
+  color: #0f172a;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.cb-tab-btn.pagi.active {
+  color: #b45309;
+}
+.cb-tab-btn.siang.active {
+  color: #2563eb;
+}
+.cb-tab-btn.malam.active {
+  color: #4f46e5;
 }
 
 /* Shift Card */
@@ -1277,58 +1374,23 @@ onUnmounted(() => {
   background: white;
   border-radius: 16px;
   padding: 1.25rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 2px solid #f1f5f9;
 }
 
 .shift-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
+
+.shift-card.pagi-shift { border-color: rgba(245, 158, 11, 0.2); }
+.shift-card.siang-shift { border-color: rgba(59, 130, 246, 0.2); }
+.shift-card.malam-shift { border-color: rgba(99, 102, 241, 0.2); }
 
 .shift-card.pagi-shift:hover { border-color: #f59e0b; }
 .shift-card.siang-shift:hover { border-color: #3b82f6; }
 .shift-card.malam-shift:hover { border-color: #6366f1; }
-
-/* Shift Header */
-.shift-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.pagi-shift .shift-header {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #92400e;
-}
-
-.pagi-shift .shift-header i {
-  color: #f59e0b;
-}
-
-.siang-shift .shift-header {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
-}
-
-.siang-shift .shift-header i {
-  color: #3b82f6;
-}
-
-.malam-shift .shift-header {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #3730a3;
-}
-
-.malam-shift .shift-header i {
-  color: #6366f1;
-}
 
 /* Shift Team */
 .shift-team {
@@ -1337,58 +1399,110 @@ onUnmounted(() => {
   gap: 0.75rem;
 }
 
-/* Team Member */
-.team-member {
+/* Team Member Item (Upgraded avatar style) */
+.team-member-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f9fafb;
-  border-radius: 8px;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  background: #f8fafc;
+  border-radius: 12px;
   transition: all 0.2s ease;
+  border: 1px solid #f1f5f9;
 }
 
-.team-member:hover {
-  background: #f3f4f6;
+.team-member-item:hover {
+  background: #f1f5f9;
   transform: translateX(4px);
+  border-color: #e2e8f0;
 }
 
-.team-member.leader {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border: 2px solid #3b82f6;
-  font-weight: 600;
+.team-member-item.leader-item {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
 }
 
-.team-member.leader:hover {
-  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+.team-member-item.leader-item:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
 }
 
-.member-role {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
+.member-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
 }
 
-.team-member.leader .member-role {
-  color: #1e40af;
-  font-weight: 700;
+.leader-avatar {
+  background: #3b82f6;
+  color: white;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Enable text ellipsis on flex children */
+  flex: 1;
 }
 
 .member-name {
-  font-size: 0.875rem;
-  color: #1f2937;
+  font-size: 0.85rem;
+  color: #1e293b;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-role {
+  font-size: 0.725rem;
+  color: #64748b;
   font-weight: 500;
 }
 
-.team-member.leader .member-name {
+.leader-item .member-name {
   color: #1e3a8a;
   font-weight: 700;
+}
+
+.leader-item .member-role {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.empty-shift-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #94a3b8;
+  gap: 0.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+}
+
+.empty-shift-team i {
+  font-size: 1.5rem;
+}
+
+.empty-shift-team span {
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 /* Quick Stats Grid */
 .quick-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
 }
 
@@ -1404,47 +1518,76 @@ onUnmounted(() => {
   color: #3b82f6;
 }
 
-/* Quick Stat Card */
+/* Quick Stat Card (Grid Split Layout) */
 .quick-stat-card {
   background: white;
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 1px solid #f1f5f9;
 }
 
 .quick-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .quick-stat-card.pasien-card:hover { border-color: #3b82f6; }
 .quick-stat-card.pegawai-card:hover { border-color: #10b981; }
 .quick-stat-card.cuti-card:hover { border-color: #f59e0b; }
 .quick-stat-card.bed-card:hover { border-color: #8b5cf6; }
-.quick-stat-card.approval-card:hover { border-color: #ef4444; }
-.quick-stat-card.mutu-card:hover { border-color: #14b8a6; }
-.quick-stat-card.farmasi-card:hover { border-color: #ec4899; }
-.quick-stat-card.bed-total-card:hover { border-color: #3b82f6; }
-.quick-stat-card.bed-available-card:hover { border-color: #10b981; }
-.quick-stat-card.bed-occupied-card:hover { border-color: #ef4444; }
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.card-title-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card-title-block h4 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.card-title-block p {
+  color: #64748b;
+  font-size: 0.725rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-breakdown-full {
+  width: 100%;
+}
 
 /* Stat Icon Wrapper */
 .stat-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  font-size: 1.35rem;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .pasien-gradient {
@@ -1463,101 +1606,55 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
 }
 
-.total-gradient {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-}
-
-.available-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.occupied-gradient {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-.approval-gradient {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-}
-
-.mutu-gradient {
-  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-}
-
-.farmasi-gradient {
-  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-}
-
-/* Stat Details */
-.stat-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.stat-details h4 {
-  font-size: 2.25rem;
-  font-weight: 800;
-  color: #1f2937;
-  margin: 0 0 0.25rem 0;
-  line-height: 1;
-}
-
-.stat-details p {
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin: 0 0 0.75rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 /* Stat Breakdown */
 .stat-breakdown {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .breakdown-item {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.625rem;
-  background: #f3f4f6;
-  color: #4b5563;
-  border-radius: 12px;
-  font-weight: 500;
+  font-size: 0.725rem;
+  padding: 0.3rem 0.65rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 8px;
+  font-weight: 600;
   white-space: nowrap;
+  border: 1px solid #e2e8f0;
 }
 
 .breakdown-item.pending {
   background: #fef3c7;
   color: #92400e;
+  border-color: #fde68a;
 }
 
 .breakdown-item.approved {
   background: #d1fae5;
   color: #065f46;
+  border-color: #a7f3d0;
 }
 
 .breakdown-item.available {
   background: #d1fae5;
   color: #065f46;
+  border-color: #a7f3d0;
 }
 
 .breakdown-item.occupied {
   background: #fee2e2;
   color: #991b1b;
+  border-color: #fecaca;
 }
 
-.breakdown-item.aman {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-/* Stat Breakdown Grid - for pasien poli */
+/* Stat Breakdown Grid - for pasien & pegawai */
 .stat-breakdown-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.375rem;
-  max-height: 250px;
+  gap: 0.35rem;
+  max-height: 180px;
   overflow-y: auto;
   padding-right: 0.25rem;
 }
@@ -1567,7 +1664,7 @@ onUnmounted(() => {
 }
 
 .stat-breakdown-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
   border-radius: 10px;
 }
 
@@ -1584,15 +1681,23 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.25rem 0.5rem;
+  padding: 0.4rem 0.6rem;
   background: #f8fafc;
-  border-radius: 6px;
-  font-size: 0.7rem;
+  border-radius: 8px;
+  font-size: 0.775rem;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.breakdown-grid-item:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  transform: translateX(2px);
 }
 
 .poli-name {
-  color: #64748b;
-  font-weight: 500;
+  color: #475569;
+  font-weight: 600;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1601,11 +1706,15 @@ onUnmounted(() => {
 }
 
 .poli-count {
-  color: #1e293b;
+  color: #0f172a;
   font-weight: 700;
-  font-size: 0.75rem;
-  min-width: 20px;
-  text-align: right;
+  font-size: 0.775rem;
+  min-width: 22px;
+  text-align: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.05rem 0.25rem;
 }
 
 .activities-list {
@@ -1658,52 +1767,120 @@ onUnmounted(() => {
 /* System Status */
 .system-status {
   background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f1f5f9;
 }
 
 .system-status h3 {
-  color: #1f2937;
+  color: #0f172a;
   margin-bottom: 1.5rem;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .status-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 1rem 1.25rem;
   background: #f8fafc;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.status-item:hover {
+  border-color: #cbd5e1;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 
 .status-label {
-  font-weight: 500;
-  color: #374151;
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.9rem;
 }
 
 .status-indicator {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.875rem;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-indicator::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .status-indicator.online {
-  background: #dcfce7;
-  color: #16a34a;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-indicator.online::before {
+  background-color: #10b981;
+  box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+  animation: pulse-green 1.5s infinite;
 }
 
 .status-indicator.warning {
-  background: #fef3c7;
-  color: #d97706;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-indicator.warning::before {
+  background-color: #f59e0b;
+  box-shadow: 0 0 0 rgba(245, 158, 11, 0.4);
+  animation: pulse-orange 1.5s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes pulse-orange {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0px rgba(245, 158, 11, 0);
+  }
 }
 
 /* Patient Stats Gradients */
@@ -1756,17 +1933,17 @@ onUnmounted(() => {
   gap: 0.75rem !important;
 }
 
-/* Filter Tabs - Ensure Horizontal Layout */
+/* Filter Tabs - Sliding Pill Control */
 .filter-tabs-container {
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 0 !important;
-  background: white;
-  border-radius: 0.75rem;
-  padding: 0.375rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  border: 1px solid #e5e7eb;
+  background: #f1f5f9;
+  border-radius: 30px;
+  padding: 0.25rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
 }
 
 .filter-tab-item {
@@ -1775,44 +1952,43 @@ onUnmounted(() => {
   align-items: center !important;
   justify-content: center !important;
   gap: 0.5rem !important;
-  padding: 0.625rem 1rem !important;
-  border-radius: 0.5rem !important;
-  font-size: 0.875rem !important;
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 30px !important;
+  font-size: 0.85rem !important;
   font-weight: 600 !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   cursor: pointer !important;
   white-space: nowrap !important;
   user-select: none !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
 }
 
 .filter-tab-item.active {
-  background: #2563eb !important;
-  color: white !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
-}
-
-.filter-tab-item:not(.active) {
-  color: #4b5563 !important;
-  background: transparent !important;
+  background: white !important;
+  color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08) !important;
+  border: 1px solid rgba(59, 130, 246, 0.05) !important;
 }
 
 .filter-tab-item:not(.active):hover {
-  color: #111827 !important;
-  background: #f9fafb !important;
+  color: #1e293b !important;
+  background: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Custom Date Inputs Styling */
 .custom-date-input {
-  padding: 0.625rem 0.75rem !important;
-  font-size: 0.875rem !important;
-  color: #374151 !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
   font-weight: 500 !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 0.5rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 20px !important;
   outline: none !important;
   background: white !important;
   width: 9rem !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.2s ease !important;
 }
 
 .custom-date-input:focus {
@@ -1821,8 +1997,8 @@ onUnmounted(() => {
 }
 
 .date-separator {
-  color: #9ca3af !important;
-  font-weight: 500 !important;
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
   font-size: 1rem !important;
 }
 
@@ -1830,19 +2006,22 @@ onUnmounted(() => {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: #2563eb !important;
+  background: #3b82f6 !important;
   color: white !important;
-  padding: 0.625rem 1rem !important;
-  border-radius: 0.5rem !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
   cursor: pointer !important;
-  transition: all 0.15s ease !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2) !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .custom-date-apply:hover {
-  background: #1d4ed8 !important;
+  background: #2563eb !important;
+  transform: scale(1.05);
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.3) !important;
 }
 
 .custom-date-apply:active {
@@ -1855,40 +2034,69 @@ onUnmounted(() => {
   align-items: center !important;
   justify-content: center !important;
   gap: 0.5rem !important;
-  padding: 0.625rem 1rem !important;
-  background: #f3f4f6 !important;
-  color: #6b7280 !important;
-  border: 2px solid #e5e7eb !important;
-  border-radius: 0.5rem !important;
-  font-size: 0.875rem !important;
+  padding: 0.5rem 1rem !important;
+  background: white !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 30px !important;
+  color: #64748b !important;
   font-weight: 600 !important;
+  font-size: 0.85rem !important;
   cursor: pointer !important;
+  position: relative !important;
   transition: all 0.2s ease !important;
   white-space: nowrap !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
 }
 
 .btn-auto-reload:hover {
-  background: #e5e7eb !important;
-  border-color: #d1d5db !important;
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
 }
 
 .btn-auto-reload.active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: white !important;
-  border-color: #10b981 !important;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08) !important;
 }
 
 .btn-auto-reload.active:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  background: #dbeafe !important;
+  border-color: #2563eb !important;
 }
 
 .btn-auto-reload i {
-  font-size: 0.875rem !important;
+  font-size: 0.85rem !important;
+  transition: transform 0.2s;
 }
 
 .btn-auto-reload.active i.fa-spin {
   animation: spin 2s linear infinite !important;
+}
+
+.reload-pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+  animation: pulse-reload 1.5s infinite;
+}
+
+@keyframes pulse-reload {
+  0% {
+    box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(16, 185, 129, 0);
+  }
 }
 
 @keyframes spin {
@@ -2191,9 +2399,10 @@ onUnmounted(() => {
 }
 
 .reviews-section h3 {
-  color: #1f2937;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+  color: #0f172a;
+  margin-bottom: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
   position: sticky;
   top: 0;
   background: white;
@@ -2205,17 +2414,39 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.reviews-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.reviews-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.reviews-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.reviews-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .place-rating-summary {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1.25rem;
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border-radius: 10px;
-  margin-bottom: 1rem;
-  border: 1px solid #fde68a;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.05);
 }
 
 .place-rating-score {
@@ -2225,9 +2456,10 @@ onUnmounted(() => {
 }
 
 .rating-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #92400e;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #b45309;
+  letter-spacing: -0.01em;
 }
 
 .rating-stars {
@@ -2236,33 +2468,38 @@ onUnmounted(() => {
 }
 
 .rating-stars .fa-star {
-  font-size: 0.75rem;
-  color: #d1d5db;
+  font-size: 0.8rem;
+  color: #cbd5e1;
 }
 
 .rating-stars .fa-star.active {
-  color: #f59e0b;
+  color: #fbbf24;
 }
 
 .rating-total {
-  font-size: 0.8rem;
-  color: #92400e;
-  opacity: 0.8;
+  font-size: 0.825rem;
+  color: #b45309;
+  font-weight: 600;
+  opacity: 0.9;
 }
 
 .review-card {
   background: #f8fafc;
-  border-radius: 10px;
-  padding: 1rem;
+  border-radius: 12px;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  transition: background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.01);
 }
 
 .review-card:hover {
-  background: #f1f5f9;
+  background: white;
+  border-color: #e2e8f0;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
 .review-header {
@@ -2278,10 +2515,11 @@ onUnmounted(() => {
 }
 
 .reviewer-avatar {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1.5px solid #e2e8f0;
 }
 
 .reviewer-meta {
@@ -2290,36 +2528,38 @@ onUnmounted(() => {
 }
 
 .reviewer-name {
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #1e293b;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  transition: color 0.2s;
 }
 
 .reviewer-name:hover {
-  text-decoration: underline;
-  color: #2563eb;
+  text-decoration: none;
+  color: #3b82f6;
 }
 
 .review-time {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .review-rating {
-  color: #d1d5db; /* Inactive star color */
-  font-size: 0.875rem;
+  color: #cbd5e1;
+  font-size: 0.8rem;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .review-rating .active {
-  color: #f59e0b; /* Active star color */
+  color: #fbbf24;
 }
 
 .review-body p {
-  color: #4b5563;
-  font-size: 0.9rem;
+  color: #475569;
+  font-size: 0.875rem;
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
@@ -2330,10 +2570,11 @@ onUnmounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: 2rem;
-  color: #6b7280;
+  padding: 2.5rem;
+  color: #64748b;
   background: white;
-  border-radius: 12px;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
 }
 
 /* Mood Combined Section Styles */
