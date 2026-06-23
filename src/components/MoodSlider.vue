@@ -81,7 +81,7 @@ const loading = ref(false)
 const isPaused = ref(false)
 const sliderTrack = ref(null)
 
-const shouldAnimate = computed(() => moods.value.length > 5)
+const shouldAnimate = computed(() => moods.value.length > 3)
 
 const displayMoods = computed(() => {
   if (moods.value.length === 0) return []
@@ -193,9 +193,15 @@ onMounted(() => {
 }
 
 .mood-slider-wrapper {
-  overflow: hidden;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
   position: relative;
   mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.mood-slider-wrapper::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }
 
 .mood-slider-track {
