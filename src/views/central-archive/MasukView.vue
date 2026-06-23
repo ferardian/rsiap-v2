@@ -404,6 +404,61 @@ import { ref, onMounted } from 'vue'
 import { suratMasukService } from '@/services/suratMasukService'
 import Swal from 'sweetalert2'
 
+// Formatters & Helpers (moved up to prevent ReferenceError during setup initialization)
+const parseDateLocal = (dateStr) => {
+  if (!dateStr || dateStr === '0000-00-00') return null
+  if (dateStr instanceof Date) return dateStr
+  if (typeof dateStr === 'string') {
+    // If it's a date-only string like YYYY-MM-DD
+    const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+    if (dateOnlyPattern.test(dateStr)) {
+      const parts = dateStr.split('-')
+      return new Date(parts[0], parts[1] - 1, parts[2])
+    }
+    // If it's a date-only string with slashes YYYY/MM/DD
+    const slashPattern = /^\d{4}\/\d{2}\/\d{2}$/
+    if (slashPattern.test(dateStr)) {
+      const parts = dateStr.split('/')
+      return new Date(parts[0], parts[1] - 1, parts[2])
+    }
+    // If it's an ISO format with 'T' but has no timezone suffix (Z or +), replace '-' to force local parsing.
+    if (dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      const cleanStr = dateStr.split('.')[0]
+      const parts = cleanStr.split('T')
+      const datePart = parts[0].replace(/-/g, '/')
+      const timePart = parts[1]
+      return new Date(`${datePart} ${timePart}`)
+    }
+  }
+  const d = new Date(dateStr)
+  return isNaN(d.getTime()) ? null : d
+}
+
+const formatDateFull = (dateStr) => {
+  const d = parseDateLocal(dateStr)
+  if (!d) return '-'
+  return d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const formatDateSIMRS = (dateStr) => {
+  const d = parseDateLocal(dateStr)
+  if (!d) return '-'
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateISO = (dateStr) => {
+  const d = parseDateLocal(dateStr)
+  if (!d) return ''
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+
 // State
 const loading = ref(false)
 const submitting = ref(false)
@@ -691,58 +746,6 @@ const submitUpload = async () => {
   }
 }
 
-const parseDateLocal = (dateStr) => {
-  if (!dateStr || dateStr === '0000-00-00') return null
-  if (dateStr instanceof Date) return dateStr
-  if (typeof dateStr === 'string') {
-    // If it's a date-only string like YYYY-MM-DD
-    const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
-    if (dateOnlyPattern.test(dateStr)) {
-      const parts = dateStr.split('-')
-      return new Date(parts[0], parts[1] - 1, parts[2])
-    }
-    // If it's a date-only string with slashes YYYY/MM/DD
-    const slashPattern = /^\d{4}\/\d{2}\/\d{2}$/
-    if (slashPattern.test(dateStr)) {
-      const parts = dateStr.split('/')
-      return new Date(parts[0], parts[1] - 1, parts[2])
-    }
-    // If it's an ISO format with 'T' but has no timezone suffix (Z or +), replace '-' to force local parsing.
-    if (dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
-      const cleanStr = dateStr.split('.')[0]
-      const parts = cleanStr.split('T')
-      const datePart = parts[0].replace(/-/g, '/')
-      const timePart = parts[1]
-      return new Date(`${datePart} ${timePart}`)
-    }
-  }
-  const d = new Date(dateStr)
-  return isNaN(d.getTime()) ? null : d
-}
-
-const formatDateFull = (dateStr) => {
-  const d = parseDateLocal(dateStr)
-  if (!d) return '-'
-  return d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-const formatDateSIMRS = (dateStr) => {
-  const d = parseDateLocal(dateStr)
-  if (!d) return '-'
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${day}/${month}/${year}`
-}
-
-const formatDateISO = (dateStr) => {
-  const d = parseDateLocal(dateStr)
-  if (!d) return ''
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
 
 const getViaIcon = (ket) => {
   if (ket === 'wa') return 'fab fa-whatsapp'
