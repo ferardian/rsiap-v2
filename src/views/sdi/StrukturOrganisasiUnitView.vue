@@ -24,18 +24,29 @@
           </button>
         </div>
 
-        <!-- Department Select -->
+        <!-- Unit Toggle Tabs -->
         <div class="filter-group">
-          <select 
-            v-model="selectedDept" 
-            class="filter-select"
-            :disabled="isDeptLocked"
-          >
-            <option v-if="!isDeptLocked" value="ALL">Semua Unit Kerja</option>
-            <option v-for="dept in departments" :key="dept.dep_id" :value="dept.dep_id">
-              {{ dept.nama }}
-            </option>
-          </select>
+          <div class="tab-toggle-container">
+            <button 
+              type="button"
+              class="tab-toggle-btn"
+              :class="{ active: selectedDept === 'ALL' }"
+              @click="selectedDept = 'ALL'"
+            >
+              <i class="fas fa-sitemap"></i>
+              <span>Semua Unit</span>
+            </button>
+            <button 
+              v-if="hasUserDept"
+              type="button"
+              class="tab-toggle-btn"
+              :class="{ active: selectedDept === authStore.userDepartment }"
+              @click="selectedDept = authStore.userDepartment"
+            >
+              <i class="fas fa-building"></i>
+              <span>{{ userDeptName }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- Canvas Controls -->
@@ -197,10 +208,28 @@ const isDeptLocked = computed(() => {
 
 const selectedDept = ref('ALL')
 
-// Sync and lock department selection
+const hasUserDept = computed(() => {
+  return !!authStore.userDepartment && authStore.userDepartment !== '-'
+})
+
+const userDeptName = computed(() => {
+  const deptId = authStore.userDepartment
+  if (!deptId || deptId === '-') return ''
+  const dept = departments.value.find(d => d.dep_id === deptId)
+  return dept ? dept.nama : deptId
+})
+
+const isInitialized = ref(false)
+
+// Sync and set initial department selection on load
 watch(() => authStore.userDepartment, (newDept) => {
-  if (isDeptLocked.value && newDept && newDept !== '-') {
-    selectedDept.value = newDept
+  if (!isInitialized.value && newDept && newDept !== '-') {
+    if (isDeptLocked.value) {
+      selectedDept.value = newDept
+    } else {
+      selectedDept.value = 'ALL'
+    }
+    isInitialized.value = true
   }
 }, { immediate: true })
 
@@ -533,25 +562,45 @@ onMounted(() => {
   color: #64748b;
 }
 
-/* Filter Group */
-.filter-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
+/* Filter Group - Tab Toggle Style */
+.tab-toggle-container {
+  display: flex;
+  background: #f1f5f9;
+  padding: 0.25rem;
   border-radius: 10px;
-  background-color: #f8fafc;
-  font-size: 0.875rem;
-  outline: none;
-  color: #334155;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  max-width: 240px;
-  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  gap: 0.25rem;
 }
 
-.filter-select:focus {
-  border-color: #3b82f6;
+.tab-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.tab-toggle-btn:hover:not(.active) {
+  color: #1e293b;
+  background: rgba(226, 232, 240, 0.6);
+}
+
+.tab-toggle-btn.active {
   background: white;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.tab-toggle-btn i {
+  font-size: 0.85rem;
 }
 
 /* Canvas Controls */
