@@ -374,7 +374,7 @@ const loadTeam = async () => {
 
 const loadPokja = async () => {
   try {
-    const response = await akreditasiService.getPokja()
+    const response = await akreditasiService.getPokja({ limit: 100 })
     // Sort pokjas by their urutan field
     pokjaList.value = (response.data.data || []).sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
   } catch (error) {
