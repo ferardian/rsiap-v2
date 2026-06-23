@@ -14,15 +14,15 @@
     </div>
 
     <div class="mood-slider-wrapper" @mouseenter="pauseScroll" @mouseleave="resumeScroll">
+      <!-- Row 1 -->
       <div 
-        ref="sliderTrack"
-        class="mood-slider-track" 
-        :class="{ 'is-paused': isPaused, 'should-animate': shouldAnimate }"
+        v-if="moodsRow1.length > 0"
+        class="mood-slider-track row-left" 
+        :class="{ 'is-paused': isPaused, 'should-animate': shouldAnimateRow1 }"
       >
-        <!-- Double the list for infinite scroll effect -->
         <div 
-          v-for="(item, index) in displayMoods" 
-          :key="`${item.id}-${index}`"
+          v-for="(item, index) in displayMoodsRow1" 
+          :key="`row1-${item.id}-${index}`"
           class="mood-card-premium"
         >
           <div class="mood-card-glass">
@@ -52,15 +52,55 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Placeholder if no data -->
-        <div v-if="loading && !moods.length" class="loading-state">
-          <div v-for="n in 5" :key="n" class="skeleton-card"></div>
+      <!-- Row 2 -->
+      <div 
+        v-if="moodsRow2.length > 0"
+        class="mood-slider-track row-right" 
+        :class="{ 'is-paused': isPaused, 'should-animate': shouldAnimateRow2 }"
+      >
+        <div 
+          v-for="(item, index) in displayMoodsRow2" 
+          :key="`row2-${item.id}-${index}`"
+          class="mood-card-premium"
+        >
+          <div class="mood-card-glass">
+            <div class="avatar-container">
+              <img 
+                :src="getPhotoUrl(item.pegawai?.photo)" 
+                :alt="item.pegawai?.nama"
+                class="employee-photo"
+                @error="handleImageError"
+              />
+              <div class="mood-badge" :class="`mood-${item.mood}`">
+                <i :class="getMoodIcon(item.mood)"></i>
+              </div>
+            </div>
+            <div class="employee-info">
+              <span class="emp-name">{{ item.pegawai?.nama || 'Anonymous' }}</span>
+              <div class="mood-tags" v-if="item.tags && item.tags.length">
+                <span 
+                  v-for="tag in item.tags.slice(0, 1)" 
+                  :key="tag.id" 
+                  class="mood-tag-mini"
+                >
+                  #{{ tag.nama }}
+                </span>
+              </div>
+              <span class="time-ago">{{ formatTime(item.created_at) }}</span>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div v-if="!loading && !moods.length" class="empty-state">
-          <p>No mood check-ins today yet.</p>
-        </div>
+      <!-- Placeholder if no data -->
+      <div v-if="loading && !moods.length" class="loading-state">
+        <div v-for="n in 5" :key="n" class="skeleton-card"></div>
+      </div>
+
+      <div v-if="!loading && !moods.length" class="empty-state">
+        <p>No mood check-ins today yet.</p>
       </div>
     </div>
   </div>
@@ -78,17 +118,48 @@ dayjs.extend(relativeTime)
 const moods = ref([])
 const loading = ref(false)
 const isPaused = ref(false)
-const sliderTrack = ref(null)
 
-const shouldAnimate = computed(() => moods.value.length > 3)
-
-const displayMoods = computed(() => {
-  if (moods.value.length === 0) return []
-  // Only repeat items if we want to animate (for infinite scroll effect)
-  if (shouldAnimate.value) {
-    return [...moods.value, ...moods.value, ...moods.value]
+const moodsRow1 = computed(() => {
+  if (moods.value.length < 4) {
+    return moods.value
   }
-  return moods.value
+  return moods.value.filter((_, idx) => idx % 2 === 0)
+})
+
+const moodsRow2 = computed(() => {
+  if (moods.value.length < 4) {
+    return []
+  }
+  return moods.value.filter((_, idx) => idx % 2 !== 0)
+})
+
+const shouldAnimateRow1 = computed(() => {
+  if (moods.value.length < 4) {
+    return moods.value.length > 3
+  }
+  return moodsRow1.value.length > 1
+})
+
+const shouldAnimateRow2 = computed(() => {
+  return moodsRow2.value.length > 1
+})
+
+const displayMoodsRow1 = computed(() => {
+  const list = moodsRow1.value
+  if (list.length === 0) return []
+  if (shouldAnimateRow1.value) {
+    return [...list, ...list, ...list]
+  }
+  return list
+})
+
+const displayMoodsRow2 = computed(() => {
+  const list = moodsRow2.value
+  if (list.length === 0) return []
+  if (shouldAnimateRow2.value) {
+    return [...list, ...list, ...list]
+  }
+  return list
 })
 
 const fetchMoods = async () => {
@@ -192,35 +263,38 @@ onMounted(() => {
 }
 
 .mood-slider-wrapper {
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
+  overflow: hidden;
   position: relative;
   mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-}
-
-.mood-slider-wrapper::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
 }
 
 .mood-slider-track {
   display: flex;
   gap: 1.5rem;
   width: max-content;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
 }
 
-.mood-slider-track.should-animate {
-  animation: scroll 40s linear infinite;
+.mood-slider-track.row-left.should-animate {
+  animation: scroll-left 40s linear infinite;
+}
+
+.mood-slider-track.row-right.should-animate {
+  animation: scroll-right 40s linear infinite;
 }
 
 .mood-slider-track.is-paused {
   animation-play-state: paused;
 }
 
-@keyframes scroll {
+@keyframes scroll-left {
   0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-33.33% - 1rem)); }
+  100% { transform: translateX(calc(-33.33% - 0.5rem)); }
+}
+
+@keyframes scroll-right {
+  0% { transform: translateX(calc(-33.33% - 0.5rem)); }
+  100% { transform: translateX(0); }
 }
 
 @keyframes pulse {
