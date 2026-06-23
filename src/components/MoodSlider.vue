@@ -17,8 +17,7 @@
       <div 
         ref="sliderTrack"
         class="mood-slider-track" 
-        :class="{ 'is-paused': isPaused }"
-        :style="{ animation: shouldAnimate ? 'scroll 40s linear infinite' : 'none' }"
+        :class="{ 'is-paused': isPaused, 'should-animate': shouldAnimate }"
       >
         <!-- Double the list for infinite scroll effect -->
         <div 
@@ -208,8 +207,11 @@ onMounted(() => {
   display: flex;
   gap: 1.5rem;
   width: max-content;
-  animation: scroll 40s linear infinite;
   padding: 1rem 0;
+}
+
+.mood-slider-track.should-animate {
+  animation: scroll 40s linear infinite;
 }
 
 .mood-slider-track.is-paused {
