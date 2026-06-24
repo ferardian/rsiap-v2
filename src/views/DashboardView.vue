@@ -456,28 +456,7 @@
         </div>
       </section>
 
-      <!-- System Status -->
-      <section class="system-status">
-        <h3>Status Sistem</h3>
-        <div class="status-grid">
-          <div class="status-item">
-            <span class="status-label">Database</span>
-            <span class="status-indicator online">Online</span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">API Server</span>
-            <span class="status-indicator online">Online</span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">BPJS Integration</span>
-            <span class="status-indicator online">Online</span>
-          </div>
-          <div class="status-item">
-            <span class="status-label">Backup System</span>
-            <span class="status-indicator warning">Warning</span>
-          </div>
-        </div>
-      </section>
+
     </main>
 
     <!-- Menu Management Modal -->
@@ -1764,124 +1743,7 @@ onUnmounted(() => {
   font-size: 0.8rem;
 }
 
-/* System Status */
-.system-status {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem 1.75rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  border: 1px solid #f1f5f9;
-}
 
-.system-status h3 {
-  color: #0f172a;
-  margin-bottom: 1.5rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-}
-
-.status-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #f1f5f9;
-  transition: all 0.2s ease;
-}
-
-.status-item:hover {
-  border-color: #cbd5e1;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-}
-
-.status-label {
-  font-weight: 600;
-  color: #334155;
-  font-size: 0.9rem;
-}
-
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.875rem;
-  border-radius: 30px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.status-indicator::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.status-indicator.online {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.status-indicator.online::before {
-  background-color: #10b981;
-  box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-  animation: pulse-green 1.5s infinite;
-}
-
-.status-indicator.warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.status-indicator.warning::before {
-  background-color: #f59e0b;
-  box-shadow: 0 0 0 rgba(245, 158, 11, 0.4);
-  animation: pulse-orange 1.5s infinite;
-}
-
-@keyframes pulse-green {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0px rgba(16, 185, 129, 0);
-  }
-}
-
-@keyframes pulse-orange {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0px rgba(245, 158, 11, 0);
-  }
-}
 
 /* Patient Stats Gradients */
 .total-pasien-gradient {
