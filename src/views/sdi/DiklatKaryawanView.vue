@@ -770,7 +770,7 @@ import config from '@/config/api'
 import logoRsiaAsset from '@/assets/logo-rsia.png'
 import logoLarsiAsset from '@/assets/logo-larsi.png'
 import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import 'quill/dist/quill.snow.css'
 
 const toast = useToast()
 
@@ -886,8 +886,9 @@ const cleanHtmlTable = (htmlStr) => {
         const cells = row.querySelectorAll('td, th')
         cells.forEach(cell => {
           cell.setAttribute('data-row', rowId)
+          cell.classList.add('ql-table-cell')
           
-          const allowedAttributes = ['colspan', 'rowspan', 'data-row']
+          const allowedAttributes = ['colspan', 'rowspan', 'data-row', 'class']
           const attribs = Array.from(cell.attributes)
           attribs.forEach(attr => {
             if (!allowedAttributes.includes(attr.name.toLowerCase())) {

@@ -54,6 +54,13 @@ export const diklatService = {
   },
 
   /**
+   * Update details of an activity (kegiatan) directly
+   */
+  updateKegiatan(id, data) {
+    return api.post(`/diklat/kegiatan/update/${id}`, data)
+  },
+
+  /**
    * Delete a training record by ID
    */
   deleteDiklat(id) {

@@ -20,11 +20,10 @@
               <i class="fas fa-list-ul me-2 opacity-75"></i>Daftar Kegiatan
             </h6>
             <button 
-              class="btn btn-sm btn-light text-primary fw-bold font-sans rounded-3 px-2 py-1"
+              class="btn-baru-custom font-sans"
               @click="openAddKegiatanModal"
-              style="font-size: 0.78rem;"
             >
-              <i class="fas fa-plus me-1"></i> Baru
+              <i class="fas fa-plus"></i> Baru
             </button>
           </div>
           
@@ -66,9 +65,19 @@
                 @click="selectKegiatan(keg)"
               >
                 <div class="d-flex align-items-center justify-content-between w-100">
-                  <span :class="['badge rounded-pill extra-small px-2 py-0.5', keg.kategori === 'Internal' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning-dark']">
-                    {{ keg.kategori || 'Eksternal' }}
-                  </span>
+                  <div class="d-flex align-items-center gap-2">
+                    <span :class="['badge rounded-pill extra-small px-2 py-0.5', keg.kategori === 'Internal' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning-dark']">
+                      {{ keg.kategori || 'Eksternal' }}
+                    </span>
+                    <button 
+                      class="btn-edit-kegiatan-icon border-0 bg-transparent text-secondary p-0" 
+                      @click.stop="openEditKegiatanModal(keg)"
+                      title="Edit Kegiatan"
+                      style="font-size: 0.75rem; cursor: pointer; width: auto !important;"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
                   <span class="text-muted extra-small font-mono">
                     {{ formatDate(keg.tgl_mulai) }}
                   </span>
@@ -309,8 +318,8 @@
             
             <!-- STATE: EDITING EXISTING RECORD OR CREATING A NEW KEGIATAN -->
             <!-- We display Kegiatan Details fields -->
-            <div v-if="formMode === 'create_kegiatan' || isEditMode" class="bg-light p-3 rounded-3 border mb-3 animate__animated animate__fadeIn">
-              <h6 class="fw-bold mb-3 small text-muted"><i class="fas fa-info-circle me-1"></i>Detail Kegiatan</h6>
+            <div v-if="formMode === 'create_kegiatan' || formMode === 'edit_kegiatan' || isEditMode" class="form-section-card animate__animated animate__fadeIn">
+              <h6 class="form-section-title"><i class="fas fa-info-circle"></i>Detail Kegiatan</h6>
               
               <div class="form-group mb-2">
                 <label class="form-label extra-small">Nama Kegiatan <span class="text-danger">*</span></label>
@@ -435,17 +444,20 @@
 
             <!-- STATE: ADDING PARTICIPANT TO EXISTING KEGIATAN -->
             <!-- We show selected kegiatan name read-only -->
-            <div v-if="formMode === 'add_participant'" class="form-group mb-3 bg-light p-3 rounded-3 border">
-              <label class="form-label small text-muted"><i class="fas fa-calendar-alt me-1"></i>Kegiatan Pelatihan</label>
-              <div class="fw-bold text-dark">{{ selectedKegiatan?.nama_kegiatan }}</div>
-              <div class="small text-muted">
-                {{ selectedKegiatan?.kategori }} • {{ formatDate(selectedKegiatan?.tgl_mulai) }} • {{ selectedKegiatan?.tempat }}
+            <div v-if="formMode === 'add_participant'" class="form-info-box animate__animated animate__fadeIn">
+              <label class="form-label small text-muted"><i class="fas fa-calendar-alt me-1 text-primary"></i>Kegiatan Pelatihan</label>
+              <div class="fw-bold text-dark-blue fs-6 mt-1">{{ selectedKegiatan?.nama_kegiatan }}</div>
+              <div class="small text-muted mt-1">
+                <span class="badge bg-primary-subtle text-primary me-2">{{ selectedKegiatan?.kategori }}</span>
+                <i class="fas fa-calendar-alt me-1 opacity-75"></i>{{ formatDate(selectedKegiatan?.tgl_mulai) }}
+                <span class="mx-2">•</span>
+                <i class="fas fa-map-marker-alt me-1 opacity-75"></i>{{ selectedKegiatan?.tempat }}
               </div>
             </div>
 
             <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
             <!-- Required only in Create Kegiatan mode or Add Participant mode -->
-            <div v-if="!isEditMode" class="form-group mb-3 position-relative">
+            <div v-if="!isEditMode && formMode !== 'edit_kegiatan'" class="form-group mb-3 position-relative">
               <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
               <div class="search-box position-relative">
                 <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="z-index: 5;"></i>
@@ -480,23 +492,23 @@
               </div>
 
               <!-- Selected Indicator -->
-              <div v-if="selectedEmpRecord" class="mt-2 p-2 bg-primary-subtle rounded text-primary small d-flex align-items-center justify-content-between">
+              <div v-if="selectedEmpRecord" class="selected-emp-badge animate__animated animate__fadeIn">
                 <div>
-                  <i class="fas fa-check-circle me-1"></i>
-                  <strong>Terpilih:</strong> {{ selectedEmpRecord.nama }} (NIK: {{ selectedEmpRecord.nik }})
+                  <i class="fas fa-check-circle me-2 text-primary"></i>
+                  <strong>Terpilih:</strong> {{ selectedEmpRecord.nama }} <span class="font-mono text-muted-dark small ms-2">({{ selectedEmpRecord.nik }})</span>
                 </div>
               </div>
             </div>
 
             <!-- In edit mode, we just show employee info read-only -->
-            <div v-else class="form-group mb-3 bg-light p-3 rounded-3 border">
-              <label class="form-label small text-muted"><i class="fas fa-user me-1"></i>Pegawai</label>
-              <div class="fw-bold text-dark">{{ selectedParticipantItem?.pegawai?.nama }}</div>
-              <div class="small text-muted font-mono">NIK: {{ selectedParticipantItem?.pegawai?.nik }}</div>
+            <div v-else-if="formMode !== 'edit_kegiatan'" class="form-info-box animate__animated animate__fadeIn">
+              <label class="form-label small text-muted"><i class="fas fa-user me-1 text-primary"></i>Pegawai</label>
+              <div class="fw-bold text-dark mt-1">{{ selectedParticipantItem?.pegawai?.nama }}</div>
+              <div class="small text-muted font-mono mt-1">NIK: {{ selectedParticipantItem?.pegawai?.nik }}</div>
             </div>
 
             <!-- Peran / Peserta Role -->
-            <div class="form-group mb-3">
+            <div v-if="formMode !== 'edit_kegiatan'" class="form-group mb-3">
               <label class="form-label"><i class="fas fa-user-tag me-1"></i>Peran Pegawai <span class="text-danger">*</span></label>
               <select v-model="form.peserta" class="form-select" required>
                 <option value="Peserta">Peserta</option>
@@ -505,10 +517,10 @@
               </select>
             </div>
 
-            <hr class="my-4 text-muted-light" />
+            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan'" />
 
             <!-- File Upload / Bukti sertifikat -->
-            <div class="form-group mb-4">
+            <div v-if="formMode !== 'edit_kegiatan'" class="form-group mb-4">
               <label class="form-label"><i class="fas fa-file-upload me-1"></i>Berkas Sertifikat / Bukti</label>
               
               <!-- Drag and drop zone -->
@@ -835,7 +847,7 @@ import config from '@/config/api'
 import logoRsiaAsset from '@/assets/logo-rsia.png'
 import logoLarsiAsset from '@/assets/logo-larsi.png'
 import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import 'quill/dist/quill.snow.css'
 
 const toast = useToast()
 
@@ -898,7 +910,8 @@ const showFormSidebar = ref(false)
 const isEditMode = ref(false)
 const submitting = ref(false)
 const selectedParticipantItem = ref(null)
-// Mode: 'create_kegiatan' | 'add_participant' | 'edit'
+const selectedKegiatanToEdit = ref(null)
+// Mode: 'create_kegiatan' | 'add_participant' | 'edit' | 'edit_kegiatan'
 const formMode = ref('add_participant')
 
 const editorKey = ref(0)
@@ -911,6 +924,9 @@ watch(showFormSidebar, (newVal) => {
 let activeQuill = null
 const onEditorReady = (quillInstance) => {
   activeQuill = quillInstance
+  if (form.materi) {
+    quillInstance.clipboard.dangerouslyPasteHTML(form.materi)
+  }
 }
 
 const insertRow = () => {
@@ -984,8 +1000,9 @@ const cleanHtmlTable = (htmlStr) => {
         const cells = row.querySelectorAll('td, th')
         cells.forEach(cell => {
           cell.setAttribute('data-row', rowId)
+          cell.classList.add('ql-table-cell')
           
-          const allowedAttributes = ['colspan', 'rowspan', 'data-row']
+          const allowedAttributes = ['colspan', 'rowspan', 'data-row', 'class']
           const attribs = Array.from(cell.attributes)
           attribs.forEach(attr => {
             if (!allowedAttributes.includes(attr.name.toLowerCase())) {
@@ -1266,11 +1283,34 @@ const openEditModal = (item) => {
     form.skp = selectedKegiatan.value.skp || ''
     form.penyelenggara = selectedKegiatan.value.penyelenggara || ''
     form.nomor = selectedKegiatan.value.nomor || ''
-    form.nomor = selectedKegiatan.value.nomor || ''
     form.materi = cleanHtmlTable(selectedKegiatan.value.materi || '')
     form.ttd1_id = selectedKegiatan.value.ttd1_id || null
     form.ttd2_id = selectedKegiatan.value.ttd2_id || null
   }
+  
+  showFormSidebar.value = true
+}
+
+const openEditKegiatanModal = (keg) => {
+  resetForm()
+  isEditMode.value = false
+  formMode.value = 'edit_kegiatan'
+  selectedKegiatanToEdit.value = keg
+  
+  // Fill kegiatan data
+  form.id_kegiatan = keg.id
+  form.nama_kegiatan = keg.nama_kegiatan || ''
+  form.tempat = keg.tempat || ''
+  form.kategori = keg.kategori || 'Internal'
+  form.tgl_mulai = keg.tgl_mulai || ''
+  form.tgl_akhir = keg.tgl_akhir || ''
+  form.jpl = keg.jpl || ''
+  form.skp = keg.skp || ''
+  form.penyelenggara = keg.penyelenggara || ''
+  form.nomor = keg.nomor || ''
+  form.materi = cleanHtmlTable(keg.materi || '')
+  form.ttd1_id = keg.ttd1_id || null
+  form.ttd2_id = keg.ttd2_id || null
   
   showFormSidebar.value = true
 }
@@ -1282,6 +1322,9 @@ const closeSidebar = () => {
 
 // Validation Computed
 const isFormValid = computed(() => {
+  if (formMode.value === 'edit_kegiatan') {
+    return form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai
+  }
   if (isEditMode.value) {
     return form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai && form.peserta
   }
@@ -1295,6 +1338,7 @@ const isFormValid = computed(() => {
 })
 
 const sidebarTitle = computed(() => {
+  if (formMode.value === 'edit_kegiatan') return 'Edit Detail Kegiatan'
   if (isEditMode.value) return 'Edit Record Peserta & Kegiatan'
   if (formMode.value === 'add_participant') return 'Tambah Peserta Kegiatan'
   if (formMode.value === 'create_kegiatan') return 'Tambah Kegiatan Baru'
@@ -1306,6 +1350,45 @@ const submitForm = async () => {
   if (!isFormValid.value) return
   submitting.value = true
   
+  // Appending conditional logic based on form mode
+  if (formMode.value === 'edit_kegiatan') {
+    const payload = {
+      nama_kegiatan: form.nama_kegiatan,
+      tempat: form.tempat,
+      kategori: form.kategori,
+      tgl_mulai: form.tgl_mulai,
+      tgl_akhir: form.tgl_akhir || null,
+      jpl: form.jpl || null,
+      skp: form.skp || null,
+      penyelenggara: form.penyelenggara || null,
+      nomor: form.nomor || null,
+      materi: form.materi || null,
+      ttd1_id: form.ttd1_id || null,
+      ttd2_id: form.ttd2_id || null,
+    }
+
+    try {
+      await diklatService.updateKegiatan(selectedKegiatanToEdit.value.id, payload)
+      toast.success('Detail kegiatan berhasil diperbarui')
+      showFormSidebar.value = false
+      await loadKegiatanList()
+      if (selectedKegiatan.value && selectedKegiatan.value.id === selectedKegiatanToEdit.value.id) {
+        const updatedKeg = kegiatanList.value.find(k => k.id === selectedKegiatanToEdit.value.id)
+        if (updatedKeg) {
+          selectedKegiatan.value = updatedKeg
+          loadParticipants(updatedKeg.id)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update kegiatan:', error)
+      const errorMsg = error.response?.data?.message || 'Gagal memperbarui kegiatan'
+      toast.error(errorMsg)
+    } finally {
+      submitting.value = false
+    }
+    return
+  }
+
   const formData = new FormData()
   formData.append('peserta', form.peserta)
   
@@ -1937,8 +2020,8 @@ const formatBytes = (bytes, decimals = 2) => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
   z-index: 1040;
   opacity: 0;
   visibility: hidden;
@@ -1961,14 +2044,15 @@ const formatBytes = (bytes, decimals = 2) => {
   max-height: 95vh;
   background: #fff;
   z-index: 1045;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-radius: 16px;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid #e2e8f0;
 }
 
 .sidebar-form.active {
@@ -1985,41 +2069,47 @@ const formatBytes = (bytes, decimals = 2) => {
 }
 
 .sidebar-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 1.25rem 1.5rem !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   flex-shrink: 0;
 }
 
 .sidebar-header h5 {
-  color: white;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
   margin: 0;
-  font-weight: 700;
-  font-size: 1.05rem;
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
+.sidebar-header h5 i {
+  color: #2563eb !important;
+}
+
 .sidebar-close {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
 }
 
 .sidebar-close:hover {
-  background: rgba(255,255,255,0.25);
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  transform: rotate(90deg);
 }
 
 .sidebar-body {
@@ -2040,13 +2130,242 @@ const formatBytes = (bytes, decimals = 2) => {
 }
 
 .sidebar-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+  padding: 1rem 1.5rem !important;
+  border-top: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  display: flex !important;
+  gap: 0.75rem !important;
+  justify-content: flex-end !important;
+  flex-shrink: 0 !important;
+}
+
+/* Custom Styles for Buttons in Footer */
+.sidebar-footer .btn {
+  width: auto !important;
+  min-width: 100px !important;
+  padding: 0.55rem 1.25rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar-footer .btn-secondary {
+  background: #ffffff !important;
+  color: #64748b !important;
+  border: 1.5px solid #e2e8f0 !important;
+}
+
+.sidebar-footer .btn-secondary:hover {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.sidebar-footer .btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.15) !important;
+}
+
+.sidebar-footer .btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25) !important;
+  transform: translateY(-1px);
+}
+
+.sidebar-footer .btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Custom Form Styling Overrides */
+.form-section-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 4px solid #3b82f6 !important;
+  border-radius: 12px !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.form-info-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.25rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.form-section-title {
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  color: #1e3a8a !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1.5px solid #f1f5f9 !important;
+  padding-bottom: 0.5rem !important;
+  margin-bottom: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.form-section-title i {
+  color: #2563eb !important;
+}
+
+.sidebar-body .form-label {
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 0.4rem !important;
+  font-size: 0.8rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+}
+
+.sidebar-body .form-control,
+.sidebar-body .form-select {
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  color: #1e293b !important;
+  background-color: #f8fafc !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar-body .form-control:focus,
+.sidebar-body .form-select:focus {
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+  outline: none !important;
+}
+
+.sidebar-body .form-control::placeholder {
+  color: #94a3b8 !important;
+}
+
+.sidebar-body .form-group {
+  margin-bottom: 1.25rem !important;
+}
+
+.sidebar-body .btn-xs {
+  width: auto !important;
+  font-size: 0.72rem !important;
+  padding: 0.15rem 0.4rem !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.2rem !important;
+}
+
+/* Custom styles for vue-select */
+.v-select-custom :deep(.vs__dropdown-toggle) {
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 2px 0 !important;
+  background-color: #f8fafc !important;
+  font-size: 0.85rem !important;
+  transition: all 0.2s ease !important;
+}
+.v-select-custom.vs--open :deep(.vs__dropdown-toggle) {
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+.v-select-custom :deep(.vs__selected) {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+.v-select-custom :deep(.vs__actions svg) {
+  fill: #64748b !important;
+}
+.v-select-custom :deep(.vs__dropdown-menu) {
+  border-color: #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  font-size: 0.85rem !important;
+}
+.v-select-custom :deep(.vs__dropdown-option--highlight) {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* Quill Editor Premium Layout styling */
+.sidebar-body :deep(.ql-toolbar.ql-snow) {
+  border: 1.5px solid #e2e8f0 !important;
+  border-bottom: none !important;
+  border-top-left-radius: 8px !important;
+  border-top-right-radius: 8px !important;
+  background-color: #f8fafc !important;
+  padding: 8px !important;
+}
+.sidebar-body :deep(.ql-container.ql-snow) {
+  border: 1.5px solid #e2e8f0 !important;
+  border-bottom-left-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  font-size: 0.85rem !important;
+  font-family: inherit !important;
+}
+.sidebar-body :deep(.ql-editor) {
+  min-height: 120px !important;
+}
+
+/* Selected Employee Badge */
+.selected-emp-badge {
+  background-color: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #1e40af !important;
+  border-radius: 8px !important;
+  padding: 0.6rem 1rem !important;
+  font-size: 0.8rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Custom button style for "+ Baru" */
+.btn-baru-custom {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 0.4rem 0.9rem !important;
+  font-size: 0.8rem !important;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer;
+  width: auto !important;
   flex-shrink: 0;
+}
+
+.btn-baru-custom:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  box-shadow: 0 6px 12px rgba(5, 150, 105, 0.3) !important;
+  transform: translateY(-1.5px);
+}
+
+.btn-baru-custom:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
+}
+
+.btn-baru-custom i {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.btn-baru-custom:hover i {
+  transform: rotate(90deg);
 }
 
 .extra-small {
@@ -2108,6 +2427,20 @@ const formatBytes = (bytes, decimals = 2) => {
   }
 }
 
+.btn-edit-kegiatan-icon {
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.82rem;
+}
+
+.btn-edit-kegiatan-icon:hover {
+  color: #f59e0b !important;
+  transform: scale(1.15);
+}
+
 .materi-html-container {
   font-size: 0.92rem;
   line-height: 1.6;
@@ -2131,5 +2464,31 @@ const formatBytes = (bytes, decimals = 2) => {
 .materi-html-container table th {
   background-color: #f8fafc;
   font-weight: 700;
+}
+
+/* Styling tables inside the Quill editor */
+.sidebar-body :deep(.ql-editor table) {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 8px 0 !important;
+}
+
+.sidebar-body :deep(.ql-editor table td),
+.sidebar-body :deep(.ql-editor table th) {
+  border: 1px solid #cbd5e1 !important;
+  padding: 6px 10px !important;
+  min-width: 50px !important;
+  text-align: left;
+}
+
+.sidebar-body :deep(.ql-editor table th) {
+  background-color: #f8fafc !important;
+  font-weight: bold !important;
+}
+
+.sidebar-body :deep(.ql-editor .ql-table-block) {
+  border: 1px solid #cbd5e1 !important;
+  padding: 6px 10px !important;
+  background-color: #ffffff;
 }
 </style>
