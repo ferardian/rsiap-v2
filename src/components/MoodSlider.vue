@@ -420,4 +420,23 @@ onMounted(() => {
   padding: 2rem;
   color: #94a3b8;
 }
+
+@media (max-width: 640px) {
+  .slider-header-luxury {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 0 0.25rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .premium-title {
+    font-size: 1.1rem !important;
+  }
+  
+  .count-badge {
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.7rem !important;
+  }
+}
 </style>

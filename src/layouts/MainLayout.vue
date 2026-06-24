@@ -245,7 +245,9 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .content-wrapper {
     margin-left: 0 !important;
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
   
   .content-wrapper.sidebar-collapsed {
@@ -531,6 +533,8 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .main-content {
     padding: 1rem;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }
 

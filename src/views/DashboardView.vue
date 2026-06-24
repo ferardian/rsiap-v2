@@ -2072,11 +2072,17 @@ onUnmounted(() => {
 
 /* Mobile Optimization - Small Screens */
 @media (max-width: 640px) {
+  .dashboard-page {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
   /* Ensure dashboard-main has padding */
   .dashboard-main {
-    padding: 1rem !important;
+    padding: 0.5rem !important; /* Reduced from 1rem to maximize usable space on mobile */
     overflow-x: hidden !important;
     width: 100% !important;
+    max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
@@ -2090,6 +2096,7 @@ onUnmounted(() => {
 
   /* Filter Tabs - Full Width Stack */
   .filter-tabs-container {
+    display: flex !important;
     width: 100% !important;
     flex-direction: column !important;
     gap: 0.5rem !important;
@@ -2197,9 +2204,21 @@ onUnmounted(() => {
     gap: 1rem !important;
   }
 
+  /* Card Containers Mobile Spacing Override */
+  .quick-stats-section,
+  .codeblue-schedule-section,
+  .reviews-section {
+    padding: 1rem !important; /* Reduced card padding from 1.5rem to 1rem to fit screens */
+  }
+
   /* Quick Stats Section */
   .quick-stats-section h3 {
     font-size: 1.125rem !important;
+  }
+
+  .quick-stats-grid {
+    grid-template-columns: 1fr !important; /* Stack stats cards vertically on mobile */
+    gap: 1rem !important;
   }
 
   .quick-stat-card {
@@ -2226,6 +2245,56 @@ onUnmounted(() => {
   .breakdown-grid-item,
   .breakdown-item {
     font-size: 0.75rem !important;
+  }
+
+  /* Code Blue Header Wrap & Mobile Adjustments */
+  .section-header-with-action {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .section-header-with-action h3 {
+    margin-bottom: 0 !important;
+  }
+
+  .codeblue-tabs {
+    gap: 0.25rem !important;
+    padding: 0.25rem !important;
+  }
+
+  .cb-tab-btn {
+    padding: 0.5rem 0.35rem !important;
+    font-size: 0.75rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .cb-tab-btn span {
+    font-size: 0.75rem !important;
+  }
+
+  /* Google Reviews Mobile Stacking */
+  .place-rating-summary {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .review-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
+  .reviewer-info {
+    width: 100% !important;
+  }
+
+  .review-rating {
+    align-self: flex-start !important;
   }
 }
 
