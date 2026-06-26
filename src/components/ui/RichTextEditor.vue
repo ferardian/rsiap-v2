@@ -154,7 +154,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, watch, onMounted } from 'vue'
+import { onBeforeUnmount, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -197,6 +197,171 @@ const ListTabHandler = Extension.create({
     }
   }
 })
+
+// =================== WORD PASTE PARSER ===================
+
+// Check if HTML is from Microsoft Word
+const isWordHtml = (html) => {
+  return html.includes('mso-list') || html.includes('MsoListParagraph') || html.includes('schemas-microsoft')
+}
+
+// Build nested ol/ul string from flat list of { level, content }
+// Produces the nested li structure needed by Tiptap
+const buildNestedHtmlFromItems = (flatItems) => {
+  // flatItems: Array of { level: number (0-based), type: 'ol'|'ul'|'p', content: string }
+  let result = ''
+  // stack entries: { level, type, items: string }
+  const stack = []
+
+  const flushTo = (targetLevel) => {
+    while (stack.length > 0 && stack[stack.length - 1].level > targetLevel) {
+      const closed = stack.pop()
+      const closedHtml = `<${closed.type}>${closed.items}</${closed.type}>`
+      if (stack.length > 0) {
+        // Inject into last </li> of parent
+        const parent = stack[stack.length - 1]
+        const idx = parent.items.lastIndexOf('</li>')
+        if (idx !== -1) {
+          parent.items = parent.items.substring(0, idx) + closedHtml + '</li>'
+        } else {
+          parent.items += closedHtml
+        }
+      } else {
+        result += closedHtml
+      }
+    }
+  }
+
+  flatItems.forEach(item => {
+    if (item.type === 'p') {
+      flushTo(-1)
+      result += `<p>${item.content}</p>`
+      return
+    }
+    const { level, type, content } = item
+    flushTo(level - 1)
+    const top = stack[stack.length - 1]
+    if (top && top.level === level && top.type === type) {
+      top.items += `<li>${content}</li>`
+    } else {
+      stack.push({ level, type, items: `<li>${content}</li>` })
+    }
+  })
+
+  flushTo(-1)
+  return result
+}
+
+// Parse Word HTML (mso-list based) into clean nested HTML
+const parseWordMsoHtml = (html) => {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const body = doc.body
+
+  const flatItems = []
+  let foundList = false
+
+  // Process all block elements in order
+  const walk = (node) => {
+    if (node.nodeType !== Node.ELEMENT_NODE) return
+    const tag = node.tagName.toLowerCase()
+
+    if (tag === 'p' || tag === 'li') {
+      const style = node.getAttribute('style') || ''
+      const cls = node.getAttribute('class') || ''
+
+      // Check for mso-list in style or class (MsoListParagraph)
+      const msoMatch = style.match(/mso-list:[^;]*\blevel(\d+)\b/)
+      const isMsoListClass = cls.includes('MsoListParagraph') || cls.includes('MsoList')
+
+      if (msoMatch || isMsoListClass) {
+        foundList = true
+        const level = msoMatch ? parseInt(msoMatch[1]) - 1 : 0 // 0-based
+
+        // Clone and clean Word-specific spans
+        const cloned = node.cloneNode(true)
+
+        // Remove <!--[if !supportLists]--> span blocks (contain auto-number text)
+        // These typically have mso-list in their style
+        cloned.querySelectorAll('span').forEach(span => {
+          const spanStyle = span.getAttribute('style') || ''
+          if (spanStyle.includes('mso-list') || spanStyle.includes('mso-tab-count')) {
+            span.remove()
+          }
+        })
+
+        const content = cloned.innerHTML.trim()
+        if (content) {
+          flatItems.push({ level, type: 'ol', content })
+        }
+      } else {
+        // Regular paragraph
+        const content = node.textContent.trim()
+        if (content) {
+          flatItems.push({ level: -1, type: 'p', content: node.innerHTML.trim() })
+        }
+      }
+    } else if (tag !== 'script' && tag !== 'style') {
+      // Recurse into other containers (div, body, etc.)
+      Array.from(node.childNodes).forEach(walk)
+    }
+  }
+
+  Array.from(body.childNodes).forEach(walk)
+
+  if (!foundList) return null
+  return buildNestedHtmlFromItems(flatItems)
+}
+
+// Fallback: parse plain text with visible prefix patterns (e.g. typed "A." manually)
+const PLAIN_PATTERNS = [
+  { level: 0, type: 'ul', detect: /^[\u2022\u25cf\u25e6\u2013\u2212\u00b7]\s+/, strip: /^[\u2022\u25cf\u25e6\u2013\u2212\u00b7]\s+/ },
+  { level: 0, type: 'ol', detect: /^[A-Z]\.[\t \u00A0]/, strip: /^[A-Z]\.\s+/ },
+  { level: 1, type: 'ol', detect: /^\d+\.[\t \u00A0]/, strip: /^\d+\.\s+/ },
+  { level: 2, type: 'ol', detect: /^[a-z]\.[\t \u00A0]/, strip: /^[a-z]\.\s+/ },
+  { level: 3, type: 'ol', detect: /^\d+\)[\t \u00A0]/, strip: /^\d+\)\s+/ },
+  { level: 4, type: 'ol', detect: /^[a-z]\)[\t \u00A0]/, strip: /^[a-z]\)\s+/ },
+  { level: 5, type: 'ol', detect: /^[ivxlcdm]+\)[\t \u00A0]/i, strip: /^[ivxlcdm]+\)\s+/i },
+]
+
+const parsePlainTextToNestedHtml = (text) => {
+  const lines = text.split(/\r?\n/)
+  const flatItems = []
+
+  lines.forEach(rawLine => {
+    const line = rawLine.trimStart()
+    if (!line) {
+      flatItems.push({ level: -1, type: 'p', content: '' })
+      return
+    }
+    let matched = null
+    for (const p of PLAIN_PATTERNS) {
+      if (p.detect.test(line)) { matched = p; break }
+    }
+    if (matched) {
+      flatItems.push({
+        level: matched.level,
+        type: matched.type,
+        content: line.replace(matched.strip, '').trim()
+      })
+    } else {
+      flatItems.push({ level: -1, type: 'p', content: line })
+    }
+  })
+
+  return buildNestedHtmlFromItems(flatItems)
+}
+
+const looksLikeManualList = (text) => {
+  const lines = text.split(/\r?\n/).filter(l => l.trim())
+  let count = 0
+  for (const line of lines) {
+    for (const p of PLAIN_PATTERNS) {
+      if (p.detect.test(line.trimStart())) { count++; break }
+    }
+  }
+  return count > 0 && count / lines.length >= 0.3
+}
 
 // robust parser to convert flat lists with class 'ql-indent-X' from Quill into nested lists for Tiptap
 const convertQuillToNested = (html) => {
@@ -270,187 +435,6 @@ const convertQuillToNested = (html) => {
   return doc.body.innerHTML;
 }
 
-// Helpers for clean copy-pasting from Word (rebuilding nested lists from prefix patterns)
-const listPatterns = [
-  { level: 0, type: 'ol', regex: /^[A-Z]\.[ \t\u00A0]+/ }, // A. B. C.
-  { level: 1, type: 'ol', regex: /^\d+\.[ \t\u00A0]+/ },   // 1. 2. 3.
-  { level: 2, type: 'ol', regex: /^[a-z]\.[ \t\u00A0]+/ },   // a. b. c.
-  { level: 3, type: 'ol', regex: /^\d+\)[ \t\u00A0]+/ },    // 1) 2) 3)
-  { level: 4, type: 'ol', regex: /^[a-z]\)[ \t\u00A0]+/ },    // a) b) c)
-  { level: 5, type: 'ol', regex: /^[ivxldcm]+\)[ \t\u00A0]+/ }, // i) ii) iii)
-  { level: 0, type: 'ul', regex: /^[\u2022\u00b7\u2013\u2212\u25cf\-*o][ \t\u00A0]+/ } // Bullet
-]
-
-const stripCharsFromStart = (node, count) => {
-  if (count <= 0) return
-  const walk = (n) => {
-    if (n.nodeType === Node.TEXT_NODE) {
-      const len = n.nodeValue.length
-      if (len <= count) {
-        count -= len
-        n.nodeValue = ''
-      } else {
-        n.nodeValue = n.nodeValue.substring(count)
-        count = 0
-      }
-    } else {
-      const children = Array.from(n.childNodes)
-      for (const child of children) {
-        walk(child)
-        if (count === 0) break
-      }
-    }
-  }
-  walk(node)
-}
-
-const flattenHtmlLists = (container) => {
-  const lists = container.querySelectorAll('ol, ul, li')
-  for (let i = lists.length - 1; i >= 0; i--) {
-    const listNode = lists[i]
-    if (listNode.parentNode) {
-      if (listNode.tagName.toLowerCase() === 'li') {
-        const p = document.createElement('p')
-        while (listNode.firstChild) {
-          p.appendChild(listNode.firstChild)
-        }
-        for (const attr of listNode.attributes) {
-          p.setAttribute(attr.name, attr.value)
-        }
-        listNode.parentNode.replaceChild(p, listNode)
-      } else {
-        const parent = listNode.parentNode
-        while (listNode.firstChild) {
-          parent.insertBefore(listNode.firstChild, listNode)
-        }
-        parent.removeChild(listNode)
-      }
-    }
-  }
-}
-
-const rebuildLists = (container) => {
-  const children = Array.from(container.childNodes)
-  const newChildren = []
-  let listStack = []
-
-  const closeListsToLevel = (level) => {
-    while (listStack.length > 0 && listStack[listStack.length - 1].level > level) {
-      listStack.pop()
-    }
-  }
-
-  children.forEach(node => {
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      newChildren.push(node)
-      return
-    }
-
-    const tagName = node.tagName.toLowerCase()
-    const isParagraphOrList = tagName === 'p' || tagName === 'li' || tagName === 'div' || tagName === 'span'
-
-    let matchedPattern = null
-    let matchResult = null
-
-    if (isParagraphOrList) {
-      for (const pattern of listPatterns) {
-        const match = node.textContent.match(pattern.regex)
-        if (match) {
-          matchedPattern = pattern
-          matchResult = match
-          break
-        }
-      }
-    }
-
-    if (matchedPattern) {
-      const prefixLength = matchResult[0].length
-      stripCharsFromStart(node, prefixLength)
-
-      const level = matchedPattern.level
-      const type = matchedPattern.type
-
-      const li = document.createElement('li')
-      while (node.firstChild) {
-        li.appendChild(node.firstChild)
-      }
-      for (const attr of node.attributes) {
-        if (attr.name !== 'class' && attr.name !== 'style') {
-          li.setAttribute(attr.name, attr.value)
-        }
-      }
-
-      closeListsToLevel(level)
-
-      if (listStack.length > 0) {
-        const current = listStack[listStack.length - 1]
-        if (current.level === level && current.type === type) {
-          current.listDom.appendChild(li)
-          current.lastLi = li
-        } else if (level > current.level) {
-          if (!current.lastLi) {
-            current.lastLi = document.createElement('li')
-            current.listDom.appendChild(current.lastLi)
-          }
-          const subList = document.createElement(type)
-          current.lastLi.appendChild(subList)
-          subList.appendChild(li)
-          listStack.push({ type, level, listDom: subList, lastLi: li })
-        } else {
-          listStack.pop()
-          const parentContainer = listStack.length > 0 ? listStack[listStack.length - 1].lastLi : null
-          const newList = document.createElement(type)
-          if (parentContainer) {
-            parentContainer.appendChild(newList)
-          } else {
-            newChildren.push(newList)
-          }
-          newList.appendChild(li)
-          listStack.push({ type, level, listDom: newList, lastLi: li })
-        }
-      } else {
-        const rootList = document.createElement(type)
-        newChildren.push(rootList)
-        rootList.appendChild(li)
-        listStack.push({ type, level, listDom: rootList, lastLi: li })
-      }
-    } else {
-      listStack = []
-      newChildren.push(node)
-    }
-  })
-
-  container.innerHTML = ''
-  newChildren.forEach(child => container.appendChild(child))
-}
-
-const hasListPrefixes = (container) => {
-  const elements = container.querySelectorAll('p, li, div, span')
-  for (const el of elements) {
-    const text = el.textContent
-    for (const pattern of listPatterns) {
-      if (pattern.regex.test(text)) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-const cleanPastedWordHtml = (html) => {
-  if (!html) return html
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
-  const body = doc.body
-
-  if (hasListPrefixes(body)) {
-    flattenHtmlLists(body)
-    rebuildLists(body)
-  }
-
-  return body.innerHTML
-}
-
 const editor = useEditor({
   content: convertQuillToNested(props.modelValue),
   extensions: [
@@ -459,8 +443,32 @@ const editor = useEditor({
     ListTabHandler
   ],
   editorProps: {
-    transformPastedHTML(html) {
-      return cleanPastedWordHtml(html)
+    handlePaste(view, event) {
+      const clipboardData = event.clipboardData
+      if (!clipboardData) return false
+
+      const htmlData = clipboardData.getData('text/html')
+      const plainText = clipboardData.getData('text/plain')
+
+      // Approach 1: Word HTML with mso-list (auto-numbered lists from Word)
+      if (htmlData && isWordHtml(htmlData)) {
+        const parsed = parseWordMsoHtml(htmlData)
+        if (parsed) {
+          event.preventDefault()
+          editor.value.commands.insertContent(parsed)
+          return true
+        }
+      }
+
+      // Approach 2: Plain text with visible prefixes (manually typed or copied as text)
+      if (plainText && looksLikeManualList(plainText)) {
+        event.preventDefault()
+        const html = parsePlainTextToNestedHtml(plainText)
+        editor.value.commands.insertContent(html)
+        return true
+      }
+
+      return false
     }
   },
   onUpdate: () => {
