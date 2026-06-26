@@ -333,40 +333,36 @@
                 <i class="fas fa-exchange-alt"></i>
               </div>
               <div class="timeline-card">
-                <div class="card-header">
-                  <span class="emp-tag">
-                    <i class="fas fa-user text-indigo-500"></i>
-                    <strong>{{ log.pegawai?.nama || 'N/A' }}</strong> 
-                    <span class="text-xs text-gray-400">({{ log.pegawai?.nik || '-' }})</span>
-                  </span>
-                  <span class="time-tag">
-                    <i class="far fa-clock"></i>
-                    {{ formatDateTime(log.created_at) }}
-                  </span>
-                </div>
-                <div class="card-body">
-                  <div class="change-details">
-                    <div class="date-badge">
-                      Tanggal {{ log.tanggal }} {{ months[parseInt(log.bulan) - 1] }} {{ log.tahun }}
-                    </div>
-                    <div class="shift-comparison">
-                      <span class="shift-badge shift-old" :class="getShiftColorClass(log.shift_sebelumnya)">
-                        {{ log.shift_sebelumnya || '-' }}
-                      </span>
-                      <i class="fas fa-long-arrow-alt-right text-gray-400 mx-2" style="margin: 0 0.5rem;"></i>
-                      <span class="shift-badge shift-new" :class="getShiftColorClass(log.shift_baru)">
-                        {{ log.shift_baru }}
-                      </span>
+                <div class="card-compact-row">
+                  <div class="card-left-section">
+                    <span class="emp-tag-compact">
+                      <i class="fas fa-user text-indigo-500" style="font-size: 0.75rem;"></i>
+                      <strong>{{ log.pegawai?.nama || 'N/A' }}</strong> 
+                      <span class="text-xs text-gray-400">({{ log.pegawai?.nik || '-' }})</span>
+                    </span>
+                    <div class="card-meta-compact mt-1" style="margin-top: 0.15rem;">
+                      <span>Oleh: <strong>{{ log.penulis?.nama || log.oleh_nik }}</strong> ({{ log.oleh_nik }})</span>
+                      <span v-if="log.keterangan" class="ml-2" style="margin-left: 0.5rem; color: #94a3b8;">| Ket: {{ log.keterangan }}</span>
                     </div>
                   </div>
-                  <div class="card-meta mt-2 text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1" style="display: flex; gap: 1rem; font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">
-                    <span>
-                      <i class="fas fa-user-edit"></i> Oleh: 
-                      <strong>{{ log.penulis?.nama || log.oleh_nik }}</strong> 
-                      <span class="text-[10px] text-gray-400">({{ log.oleh_nik }})</span>
-                    </span>
-                    <span v-if="log.keterangan">
-                      <i class="fas fa-info-circle"></i> Ket: {{ log.keterangan }}
+                  <div class="card-right-section">
+                    <div class="change-details-compact">
+                      <span class="date-text-compact">
+                        Tgl {{ log.tanggal }} {{ months[parseInt(log.bulan) - 1] }} {{ log.tahun }}
+                      </span>
+                      <div class="shift-comparison-compact" style="margin-left: 0.75rem;">
+                        <span class="shift-badge shift-old" :class="getShiftColorClass(log.shift_sebelumnya)" style="font-size: 0.65rem; padding: 1px 4px; min-width: 40px;">
+                          {{ log.shift_sebelumnya || '-' }}
+                        </span>
+                        <i class="fas fa-long-arrow-alt-right text-gray-400 mx-1" style="margin: 0 0.25rem; font-size: 0.75rem;"></i>
+                        <span class="shift-badge shift-new" :class="getShiftColorClass(log.shift_baru)" style="font-size: 0.65rem; padding: 1px 4px; min-width: 40px;">
+                          {{ log.shift_baru }}
+                        </span>
+                      </div>
+                    </div>
+                    <span class="time-tag-compact" style="margin-top: 0.15rem; display: block;">
+                      <i class="far fa-clock"></i>
+                      {{ formatDateTime(log.created_at) }}
                     </span>
                   </div>
                 </div>
@@ -1378,8 +1374,8 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 .logs-timeline {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding-left: 0.75rem;
+  gap: 0.5rem;
+  padding-left: 0.5rem;
   position: relative;
   text-align: left;
 }
@@ -1389,99 +1385,110 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
   position: absolute;
   top: 0.5rem;
   bottom: 0.5rem;
-  left: 20px;
+  left: 14px;
   width: 2px;
   background: #cbd5e1;
 }
 
 .timeline-item {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   position: relative;
+  align-items: center;
 }
 
 .timeline-badge {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #e0f2fe;
   color: #0284c7;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   flex-shrink: 0;
   z-index: 2;
-  border: 2px solid white;
-  box-shadow: 0 0 0 2px #cbd5e1;
+  border: 1.5px solid white;
+  box-shadow: 0 0 0 1.5px #cbd5e1;
 }
 
 .timeline-card {
   flex: 1;
   background: white;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   transition: all 0.2s;
 }
 
 .timeline-card:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transform: translateX(3px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border-color: #94a3b8;
 }
 
-.card-header {
+.card-compact-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.emp-tag {
-  font-size: 0.85rem;
-  color: #1e293b;
+.card-left-section {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  flex-direction: column;
+  flex: 1;
+  min-width: 250px;
 }
 
-.time-tag {
-  font-size: 0.75rem;
-  color: #94a3b8;
+.card-right-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 200px;
+}
+
+.emp-tag-compact {
+  font-size: 0.825rem;
+  color: #1e293b;
   display: flex;
   align-items: center;
   gap: 0.3rem;
 }
 
-.change-details {
+.card-meta-compact {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.change-details-compact {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  justify-content: flex-end;
 }
 
-.date-badge {
-  background: #f1f5f9;
-  color: #475569;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
+.date-text-compact {
+  font-size: 0.75rem;
   font-weight: 600;
+  color: #475569;
 }
 
-.shift-comparison {
+.shift-comparison-compact {
   display: flex;
   align-items: center;
 }
 
 .shift-old, .shift-new {
-  min-width: 50px !important;
+  min-width: 40px !important;
   display: inline-block;
+}
+
+.time-tag-compact {
+  font-size: 0.675rem;
+  color: #94a3b8;
 }
 
 .btn-ai {
