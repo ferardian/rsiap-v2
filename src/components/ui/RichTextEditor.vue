@@ -158,7 +158,7 @@ import { onBeforeUnmount, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
-import { Extension } from '@tiptap/core'
+import { Extension, wrappingInputRule } from '@tiptap/core'
 
 const props = defineProps({
   modelValue: {
@@ -180,7 +180,7 @@ const ListTabHandler = Extension.create({
     const editor = this.editor
     return {
       Tab: () => {
-        if (editor.isActive('listItem')) {
+        if (editor.isActive('orderedList') || editor.isActive('bulletList')) {
           editor.commands.sinkListItem('listItem')
           return true
         }
@@ -188,13 +188,35 @@ const ListTabHandler = Extension.create({
         return editor.commands.insertContent('\u00A0\u00A0\u00A0\u00A0')
       },
       'Shift-Tab': () => {
-        if (editor.isActive('listItem')) {
+        if (editor.isActive('orderedList') || editor.isActive('bulletList')) {
           editor.commands.liftListItem('listItem')
           return true
         }
         return false
       }
     }
+  },
+  addInputRules() {
+    return [
+      wrappingInputRule({
+        find: /^([A-Z])\.\s$/,
+        type: this.editor.schema.nodes.orderedList,
+        getAttributes: match => {
+          const charCode = match[1].charCodeAt(0)
+          const start = charCode - 65 + 1 // 'A' is 65
+          return { start }
+        }
+      }),
+      wrappingInputRule({
+        find: /^([a-z])\.\s$/,
+        type: this.editor.schema.nodes.orderedList,
+        getAttributes: match => {
+          const charCode = match[1].charCodeAt(0)
+          const start = charCode - 97 + 1 // 'a' is 97
+          return { start }
+        }
+      })
+    ]
   }
 })
 
@@ -369,7 +391,44 @@ const looksLikeManualList = (text) => {
       if (p.detect.test(line.trimStart())) { count++; break }
     }
   }
-  return count > 0 && count / lines.length >= 0.3
+  return count > 0 && (count / lines.length >= 0.1 || count >= 2)
+}
+
+const stripPrefixFromLiNode = (li, stripRegex) => {
+  const walk = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const match = node.nodeValue.match(stripRegex)
+      if (match) {
+        node.nodeValue = node.nodeValue.replace(stripRegex, '')
+        return true
+      }
+    } else {
+      for (const child of node.childNodes) {
+        if (walk(child)) return true
+      }
+    }
+    return false
+  }
+  walk(li)
+}
+
+const cleanHtmlListPrefixes = (html) => {
+  if (!html) return html
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  
+  const lis = doc.querySelectorAll('li')
+  lis.forEach(li => {
+    const text = li.textContent.trimStart()
+    for (const p of PLAIN_PATTERNS) {
+      if (p.detect.test(text)) {
+        stripPrefixFromLiNode(li, p.strip)
+        break
+      }
+    }
+  })
+  
+  return doc.body.innerHTML
 }
 
 // robust parser to convert flat lists with class 'ql-indent-X' from Quill into nested lists for Tiptap
@@ -452,6 +511,9 @@ const editor = useEditor({
     ListTabHandler
   ],
   editorProps: {
+    transformPastedHTML(html) {
+      return cleanHtmlListPrefixes(html)
+    },
     handlePaste(view, event) {
       const clipboardData = event.clipboardData
       if (!clipboardData) return false
@@ -469,7 +531,11 @@ const editor = useEditor({
         }
       }
 
-      // Approach 2: Plain text with visible prefixes (manually typed or copied as text)
+      // Approach 2: Prioritize plain text parsing when manual list prefixes are detected.
+      // This is the same behaviour as Cmd+Shift+V: when content has A./1./a. prefixes in
+      // plain text, we use our structured parser regardless of whether HTML is available.
+      // This prevents double-numbering caused by HTML that carries both <li> structure
+      // AND visible prefix characters in the text content.
       if (plainText && looksLikeManualList(plainText)) {
         event.preventDefault()
         const html = parsePlainTextToNestedHtml(plainText)
@@ -477,6 +543,8 @@ const editor = useEditor({
         return true
       }
 
+      // Approach 3: For non-list HTML content, check if it came from outside the editor
+      // and let the default Tiptap paste + transformPastedHTML handle it.
       return false
     }
   },
@@ -487,10 +555,13 @@ const editor = useEditor({
 
 // Watch modelValue changes to update editor dynamically (preventing feedback loops)
 watch(() => props.modelValue, (newValue) => {
-  const isSame = convertQuillToNested(newValue) === editor.value.getHTML()
-  if (isSame) return
+  // If the new value is exactly what the editor already has, do nothing
+  if (newValue === editor.value.getHTML()) return
   
-  editor.value.commands.setContent(convertQuillToNested(newValue), false)
+  const converted = convertQuillToNested(newValue)
+  if (converted === editor.value.getHTML()) return
+  
+  editor.value.commands.setContent(converted, false)
 })
 
 onBeforeUnmount(() => {
