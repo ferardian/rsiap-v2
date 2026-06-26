@@ -31,6 +31,9 @@
           <button @click="openPatternModal" class="btn btn-secondary">
             <i class="fas fa-magic"></i> Isi Pola
           </button>
+          <button @click="openLogsModal" class="btn btn-history">
+            <i class="fas fa-history"></i> Riwayat Log
+          </button>
           
           <!-- AI Schedule Button -->
           <button 
@@ -260,6 +263,140 @@
         </div>
       </div>
     </div>
+
+    <!-- History Logs Modal -->
+    <div v-if="showLogsModal" class="modal-overlay" @click.self="closeLogsModal">
+      <div class="modal-content logs-modal">
+        <div class="modal-header">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-history text-sky-600 text-xl" style="font-size: 1.25rem;"></i>
+            <h3 style="margin: 0;">Riwayat Perubahan Jadwal</h3>
+          </div>
+          <button @click="closeLogsModal" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-y: auto;">
+          <!-- Filters inside modal -->
+          <div class="modal-filter-bar mb-4">
+            <div class="filter-grid">
+              <div class="filter-item">
+                <label>Bulan</label>
+                <select v-model="logFilter.month" class="form-select w-full" @change="fetchLogs(1)">
+                  <option value="">Semua Bulan</option>
+                  <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>Tahun</label>
+                <select v-model="logFilter.year" class="form-select w-full" @change="fetchLogs(1)">
+                  <option value="">Semua Tahun</option>
+                  <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>Unit/Departemen</label>
+                <select v-model="logFilter.department" class="form-select w-full" @change="fetchLogs(1)">
+                  <option value="all">Semua Unit</option>
+                  <option v-for="opt in departmentOptions.filter(d => d.id !== 'all')" :key="opt.id" :value="opt.id">
+                    {{ opt.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="filter-item search-item">
+                <label>Cari Pegawai (Nama/NIK)</label>
+                <div class="input-with-icon">
+                  <input 
+                    v-model="logFilter.search" 
+                    type="text" 
+                    placeholder="Ketik nama atau NIK..." 
+                    class="form-input w-full"
+                    @input="handleLogsSearch"
+                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.5rem;"
+                  >
+                  <i class="fas fa-search search-icon" style="position: absolute; right: 0.75rem; color: #94a3b8;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logs Content -->
+          <div v-if="loadingLogs" class="loading-state py-8 text-center" style="padding: 2rem 0;">
+            <div class="spinner" style="margin: 0 auto 1rem;"></div>
+            <p>Memuat riwayat perubahan...</p>
+          </div>
+          <div v-else-if="logs.length === 0" class="empty-state py-12 text-center text-gray-500" style="padding: 3rem 0; color: #64748b;">
+            <i class="fas fa-clipboard-list text-4xl mb-3 text-gray-300" style="font-size: 2rem; margin-bottom: 0.75rem; display: block;"></i>
+            <p>Tidak ada riwayat perubahan jadwal yang ditemukan pada filter ini.</p>
+          </div>
+          <div v-else class="logs-timeline">
+            <div class="timeline-item" v-for="log in logs" :key="log.id">
+              <div class="timeline-badge">
+                <i class="fas fa-exchange-alt"></i>
+              </div>
+              <div class="timeline-card">
+                <div class="card-header">
+                  <span class="emp-tag">
+                    <i class="fas fa-user text-indigo-500"></i>
+                    <strong>{{ log.pegawai?.nama || 'N/A' }}</strong> 
+                    <span class="text-xs text-gray-400">({{ log.pegawai?.nik || '-' }})</span>
+                  </span>
+                  <span class="time-tag">
+                    <i class="far fa-clock"></i>
+                    {{ formatDateTime(log.created_at) }}
+                  </span>
+                </div>
+                <div class="card-body">
+                  <div class="change-details">
+                    <div class="date-badge">
+                      Tanggal {{ log.tanggal }} {{ months[parseInt(log.bulan) - 1] }} {{ log.tahun }}
+                    </div>
+                    <div class="shift-comparison">
+                      <span class="shift-badge shift-old" :class="getShiftColorClass(log.shift_sebelumnya)">
+                        {{ log.shift_sebelumnya || '-' }}
+                      </span>
+                      <i class="fas fa-long-arrow-alt-right text-gray-400 mx-2" style="margin: 0 0.5rem;"></i>
+                      <span class="shift-badge shift-new" :class="getShiftColorClass(log.shift_baru)">
+                        {{ log.shift_baru }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="card-meta mt-2 text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1" style="display: flex; gap: 1rem; font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">
+                    <span>
+                      <i class="fas fa-user-edit"></i> Oleh: 
+                      <strong>{{ log.penulis?.nama || log.oleh_nik }}</strong> 
+                      <span class="text-[10px] text-gray-400">({{ log.oleh_nik }})</span>
+                    </span>
+                    <span v-if="log.keterangan">
+                      <i class="fas fa-info-circle"></i> Ket: {{ log.keterangan }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-bar mt-6 flex justify-between items-center" v-if="logPagination.last_page > 1" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-top: 1.5rem;">
+              <button 
+                @click="changeLogsPage(logPagination.current_page - 1)" 
+                :disabled="logPagination.current_page === 1"
+                class="btn btn-secondary btn-sm"
+              >
+                <i class="fas fa-chevron-left"></i> Seb
+              </button>
+              <span class="text-xs font-semibold text-gray-600" style="font-size: 0.75rem; font-weight: 600; color: #475569;">
+                Halaman {{ logPagination.current_page }} dari {{ logPagination.last_page }}
+              </span>
+              <button 
+                @click="changeLogsPage(logPagination.current_page + 1)" 
+                :disabled="logPagination.current_page === logPagination.last_page"
+                class="btn btn-secondary btn-sm"
+              >
+                Sel <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -313,6 +450,22 @@ const selectedDay = ref(null)
 // Pattern Modal State
 const showPatternModal = ref(false)
 const patternRules = ref(new Array(7).fill(null)) // 0=Sun, 6=Sat
+
+// Logs Modal State
+const showLogsModal = ref(false)
+const loadingLogs = ref(false)
+const logs = ref([])
+const logFilter = ref({
+  month: '',
+  year: '',
+  department: 'all',
+  search: ''
+})
+const logPagination = ref({
+  current_page: 1,
+  last_page: 1,
+  total: 0
+})
 
 // Computed
 const daysInMonth = computed(() => {
@@ -676,6 +829,76 @@ const clearPendingChanges = async () => {
         pendingChanges.value = {}
         hasChanges.value = false
     }
+}
+
+// Logs Modal & Timeline Logic
+const openLogsModal = () => {
+  logFilter.value.month = filter.value.month
+  logFilter.value.year = filter.value.year
+  logFilter.value.department = filter.value.department
+  logFilter.value.search = ''
+  
+  showLogsModal.value = true
+  fetchLogs(1)
+}
+
+const closeLogsModal = () => {
+  showLogsModal.value = false
+}
+
+const fetchLogs = async (page = 1) => {
+  loadingLogs.value = true
+  try {
+    const res = await jadwalPegawaiService.getLogs(
+      logFilter.value.month,
+      logFilter.value.year,
+      logFilter.value.department,
+      logFilter.value.search,
+      page
+    )
+    if (res.data && res.data.data) {
+      logs.value = res.data.data.data || []
+      logPagination.value = {
+        current_page: res.data.data.current_page || 1,
+        last_page: res.data.data.last_page || 1,
+        total: res.data.data.total || 0
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch schedule logs', err)
+  } finally {
+    loadingLogs.value = false
+  }
+}
+
+let logsSearchTimeout = null
+const handleLogsSearch = () => {
+  if (logsSearchTimeout) clearTimeout(logsSearchTimeout)
+  logsSearchTimeout = setTimeout(() => {
+    fetchLogs(1)
+  }, 500)
+}
+
+const changeLogsPage = (page) => {
+  if (page >= 1 && page <= logPagination.value.last_page) {
+    fetchLogs(page)
+  }
+}
+
+const formatDateTime = (dateStr) => {
+  if (!dateStr) return '-'
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (e) {
+    return dateStr
+  }
 }
 
 // AI Schedule Generation
@@ -1087,6 +1310,178 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 }
 .btn-secondary:hover {
   background: #475569;
+}
+
+.btn-history {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.4);
+}
+.btn-history:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Logs Modal & Timeline Styles */
+.logs-modal {
+  max-width: 900px;
+  width: 95%;
+}
+
+.modal-filter-bar {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  margin-bottom: 1.5rem;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.filter-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.search-item {
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .search-item {
+    grid-column: span 1;
+  }
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.logs-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-left: 0.75rem;
+  position: relative;
+  text-align: left;
+}
+
+.logs-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 20px;
+  width: 2px;
+  background: #cbd5e1;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+}
+
+.timeline-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  z-index: 2;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px #cbd5e1;
+}
+
+.timeline-card {
+  flex: 1;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+}
+
+.timeline-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border-color: #94a3b8;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.emp-tag {
+  font-size: 0.85rem;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.time-tag {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.change-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.date-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.shift-comparison {
+  display: flex;
+  align-items: center;
+}
+
+.shift-old, .shift-new {
+  min-width: 50px !important;
+  display: inline-block;
 }
 
 .btn-ai {

@@ -11,6 +11,17 @@ export const jadwalPegawaiService = {
         return api.get('/sdi/jadwal-pegawai', { params })
     },
 
+    // Get schedule modification logs
+    getLogs(month, year, department, search, page = 1) {
+        const params = { page }
+        if (month) params.bulan = month
+        if (year) params.tahun = year
+        if (department && department !== 'all') params.departemen = department
+        if (search) params.search = search
+
+        return api.get('/sdi/jadwal-pegawai/log', { params })
+    },
+
     // Get available shifts
     getShifts() {
         return api.get('/sdi/shifts')
