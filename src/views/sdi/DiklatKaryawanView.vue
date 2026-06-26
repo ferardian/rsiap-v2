@@ -1532,13 +1532,15 @@ const closePreviewModal = () => {
 }
 
 const getDocUrl = (doc) => {
+  const token = localStorage.getItem('access_token')
+  const tokenParam = token ? `?token=${token}` : ''
   if (doc && typeof doc === 'object') {
     if (doc.isPengajuan) {
-      return `${config.public.API_V2_URL}/diklat/pengajuan/download/${doc.id}`
+      return `${config.public.API_V2_URL}/diklat/pengajuan/download/${doc.id}${tokenParam}`
     }
-    return `${config.public.API_V2_URL}/diklat/download/${doc.file}`
+    return `${config.public.API_V2_URL}/diklat/download/${doc.file}${tokenParam}`
   }
-  return `${config.public.API_V2_URL}/diklat/download/${doc}`
+  return `${config.public.API_V2_URL}/diklat/download/${doc}${tokenParam}`
 }
 
 // === CETAK SERTIFIKAT INTERNAL (PDF Generator + Preview Modal) ===
