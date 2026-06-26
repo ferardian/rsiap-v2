@@ -213,12 +213,13 @@ const buildNestedHtmlFromItems = (flatItems) => {
   // stack entries: { level, type, items: string }
   const stack = []
 
-  const flushTo = (targetLevel) => {
+  // Close only levels STRICTLY DEEPER than targetLevel (do NOT close targetLevel itself)
+  const closeDeeper = (targetLevel) => {
     while (stack.length > 0 && stack[stack.length - 1].level > targetLevel) {
       const closed = stack.pop()
       const closedHtml = `<${closed.type}>${closed.items}</${closed.type}>`
       if (stack.length > 0) {
-        // Inject into last </li> of parent
+        // Inject nested list into last </li> of parent level
         const parent = stack[stack.length - 1]
         const idx = parent.items.lastIndexOf('</li>')
         if (idx !== -1) {
@@ -232,23 +233,31 @@ const buildNestedHtmlFromItems = (flatItems) => {
     }
   }
 
+  const flushAll = () => closeDeeper(-1)
+
   flatItems.forEach(item => {
     if (item.type === 'p') {
-      flushTo(-1)
-      result += `<p>${item.content}</p>`
+      flushAll()
+      if (item.content) result += `<p>${item.content}</p>`
       return
     }
     const { level, type, content } = item
-    flushTo(level - 1)
+
+    // Close only levels DEEPER than current — do NOT close same-level entries
+    // This is the key fix: same-level items continue in the same <ol>
+    closeDeeper(level)
+
     const top = stack[stack.length - 1]
-    if (top && top.level === level && top.type === type) {
+    if (top && top.level === level) {
+      // Same level: append to existing list (counter continues correctly)
       top.items += `<li>${content}</li>`
     } else {
+      // New/deeper level: push a new list onto the stack
       stack.push({ level, type, items: `<li>${content}</li>` })
     }
   })
 
-  flushTo(-1)
+  flushAll()
   return result
 }
 
