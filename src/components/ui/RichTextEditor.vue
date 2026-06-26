@@ -270,6 +270,187 @@ const convertQuillToNested = (html) => {
   return doc.body.innerHTML;
 }
 
+// Helpers for clean copy-pasting from Word (rebuilding nested lists from prefix patterns)
+const listPatterns = [
+  { level: 0, type: 'ol', regex: /^[A-Z]\.[ \t\u00A0]+/ }, // A. B. C.
+  { level: 1, type: 'ol', regex: /^\d+\.[ \t\u00A0]+/ },   // 1. 2. 3.
+  { level: 2, type: 'ol', regex: /^[a-z]\.[ \t\u00A0]+/ },   // a. b. c.
+  { level: 3, type: 'ol', regex: /^\d+\)[ \t\u00A0]+/ },    // 1) 2) 3)
+  { level: 4, type: 'ol', regex: /^[a-z]\)[ \t\u00A0]+/ },    // a) b) c)
+  { level: 5, type: 'ol', regex: /^[ivxldcm]+\)[ \t\u00A0]+/ }, // i) ii) iii)
+  { level: 0, type: 'ul', regex: /^[\u2022\u00b7\u2013\u2212\u25cf\-*o][ \t\u00A0]+/ } // Bullet
+]
+
+const stripCharsFromStart = (node, count) => {
+  if (count <= 0) return
+  const walk = (n) => {
+    if (n.nodeType === Node.TEXT_NODE) {
+      const len = n.nodeValue.length
+      if (len <= count) {
+        count -= len
+        n.nodeValue = ''
+      } else {
+        n.nodeValue = n.nodeValue.substring(count)
+        count = 0
+      }
+    } else {
+      const children = Array.from(n.childNodes)
+      for (const child of children) {
+        walk(child)
+        if (count === 0) break
+      }
+    }
+  }
+  walk(node)
+}
+
+const flattenHtmlLists = (container) => {
+  const lists = container.querySelectorAll('ol, ul, li')
+  for (let i = lists.length - 1; i >= 0; i--) {
+    const listNode = lists[i]
+    if (listNode.parentNode) {
+      if (listNode.tagName.toLowerCase() === 'li') {
+        const p = document.createElement('p')
+        while (listNode.firstChild) {
+          p.appendChild(listNode.firstChild)
+        }
+        for (const attr of listNode.attributes) {
+          p.setAttribute(attr.name, attr.value)
+        }
+        listNode.parentNode.replaceChild(p, listNode)
+      } else {
+        const parent = listNode.parentNode
+        while (listNode.firstChild) {
+          parent.insertBefore(listNode.firstChild, listNode)
+        }
+        parent.removeChild(listNode)
+      }
+    }
+  }
+}
+
+const rebuildLists = (container) => {
+  const children = Array.from(container.childNodes)
+  const newChildren = []
+  let listStack = []
+
+  const closeListsToLevel = (level) => {
+    while (listStack.length > 0 && listStack[listStack.length - 1].level > level) {
+      listStack.pop()
+    }
+  }
+
+  children.forEach(node => {
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      newChildren.push(node)
+      return
+    }
+
+    const tagName = node.tagName.toLowerCase()
+    const isParagraphOrList = tagName === 'p' || tagName === 'li' || tagName === 'div' || tagName === 'span'
+
+    let matchedPattern = null
+    let matchResult = null
+
+    if (isParagraphOrList) {
+      for (const pattern of listPatterns) {
+        const match = node.textContent.match(pattern.regex)
+        if (match) {
+          matchedPattern = pattern
+          matchResult = match
+          break
+        }
+      }
+    }
+
+    if (matchedPattern) {
+      const prefixLength = matchResult[0].length
+      stripCharsFromStart(node, prefixLength)
+
+      const level = matchedPattern.level
+      const type = matchedPattern.type
+
+      const li = document.createElement('li')
+      while (node.firstChild) {
+        li.appendChild(node.firstChild)
+      }
+      for (const attr of node.attributes) {
+        if (attr.name !== 'class' && attr.name !== 'style') {
+          li.setAttribute(attr.name, attr.value)
+        }
+      }
+
+      closeListsToLevel(level)
+
+      if (listStack.length > 0) {
+        const current = listStack[listStack.length - 1]
+        if (current.level === level && current.type === type) {
+          current.listDom.appendChild(li)
+          current.lastLi = li
+        } else if (level > current.level) {
+          if (!current.lastLi) {
+            current.lastLi = document.createElement('li')
+            current.listDom.appendChild(current.lastLi)
+          }
+          const subList = document.createElement(type)
+          current.lastLi.appendChild(subList)
+          subList.appendChild(li)
+          listStack.push({ type, level, listDom: subList, lastLi: li })
+        } else {
+          listStack.pop()
+          const parentContainer = listStack.length > 0 ? listStack[listStack.length - 1].lastLi : null
+          const newList = document.createElement(type)
+          if (parentContainer) {
+            parentContainer.appendChild(newList)
+          } else {
+            newChildren.push(newList)
+          }
+          newList.appendChild(li)
+          listStack.push({ type, level, listDom: newList, lastLi: li })
+        }
+      } else {
+        const rootList = document.createElement(type)
+        newChildren.push(rootList)
+        rootList.appendChild(li)
+        listStack.push({ type, level, listDom: rootList, lastLi: li })
+      }
+    } else {
+      listStack = []
+      newChildren.push(node)
+    }
+  })
+
+  container.innerHTML = ''
+  newChildren.forEach(child => container.appendChild(child))
+}
+
+const hasListPrefixes = (container) => {
+  const elements = container.querySelectorAll('p, li, div, span')
+  for (const el of elements) {
+    const text = el.textContent
+    for (const pattern of listPatterns) {
+      if (pattern.regex.test(text)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+const cleanPastedWordHtml = (html) => {
+  if (!html) return html
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const body = doc.body
+
+  if (hasListPrefixes(body)) {
+    flattenHtmlLists(body)
+    rebuildLists(body)
+  }
+
+  return body.innerHTML
+}
+
 const editor = useEditor({
   content: convertQuillToNested(props.modelValue),
   extensions: [
@@ -277,6 +458,11 @@ const editor = useEditor({
     Underline,
     ListTabHandler
   ],
+  editorProps: {
+    transformPastedHTML(html) {
+      return cleanPastedWordHtml(html)
+    }
+  },
   onUpdate: () => {
     emit('update:modelValue', editor.value.getHTML())
   }
