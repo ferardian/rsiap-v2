@@ -521,7 +521,20 @@ const editor = useEditor({
       const htmlData = clipboardData.getData('text/html')
       const plainText = clipboardData.getData('text/plain')
 
-      // Approach 1: Word HTML with mso-list (auto-numbered lists from Word)
+      // Approach 1 (PRIORITY): Plain text with visible prefixes (A./1./a./bullet).
+      // This runs BEFORE Word HTML parsing, so Cmd+V from Word behaves the same
+      // as Cmd+Shift+V when the content has explicit list prefixes in plain text.
+      // This prevents the Word HTML parser from producing double-numbered output.
+      if (plainText && looksLikeManualList(plainText)) {
+        event.preventDefault()
+        const html = parsePlainTextToNestedHtml(plainText)
+        editor.value.commands.insertContent(html)
+        return true
+      }
+
+      // Approach 2 (FALLBACK): Word HTML with mso-list, only when plain text
+      // does NOT already look like a list (e.g. Word bullet symbols like • that
+      // are not captured by our PLAIN_PATTERNS).
       if (htmlData && isWordHtml(htmlData)) {
         const parsed = parseWordMsoHtml(htmlData)
         if (parsed) {
@@ -531,20 +544,7 @@ const editor = useEditor({
         }
       }
 
-      // Approach 2: Prioritize plain text parsing when manual list prefixes are detected.
-      // This is the same behaviour as Cmd+Shift+V: when content has A./1./a. prefixes in
-      // plain text, we use our structured parser regardless of whether HTML is available.
-      // This prevents double-numbering caused by HTML that carries both <li> structure
-      // AND visible prefix characters in the text content.
-      if (plainText && looksLikeManualList(plainText)) {
-        event.preventDefault()
-        const html = parsePlainTextToNestedHtml(plainText)
-        editor.value.commands.insertContent(html)
-        return true
-      }
-
-      // Approach 3: For non-list HTML content, check if it came from outside the editor
-      // and let the default Tiptap paste + transformPastedHTML handle it.
+      // Approach 3: Non-list HTML — let default Tiptap paste + transformPastedHTML handle it.
       return false
     }
   },
