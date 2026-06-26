@@ -1151,4 +1151,221 @@ onMounted(() => {
 .btn-refresh-empty:hover i {
   transform: rotate(180deg);
 }
+
+/* Custom nested list numbering counters inside detail view */
+.html-content >>> ol {
+  counter-reset: nested-counter-0;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+}
+
+.html-content >>> ol li {
+  position: relative;
+  list-style-type: none !important;
+  counter-increment: nested-counter-0;
+  padding-left: 1.5rem !important;
+  margin-bottom: 0.25rem;
+}
+
+.html-content >>> ol li::before {
+  content: counter(nested-counter-0, upper-alpha) ". " !important;
+  position: absolute;
+  left: 0 !important;
+  text-align: right;
+  width: 1.2rem;
+  color: inherit;
+}
+
+/* Level 1: ol ol */
+.html-content >>> ol ol {
+  counter-reset: nested-counter-1;
+  padding-left: 0 !important;
+  margin-top: 0.25rem;
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ol ol li {
+  counter-increment: nested-counter-1;
+}
+
+.html-content >>> ol ol li::before {
+  content: counter(nested-counter-1, decimal) ". " !important;
+}
+
+/* Level 2: ol ol ol */
+.html-content >>> ol ol ol {
+  counter-reset: nested-counter-2;
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ol ol ol li {
+  counter-increment: nested-counter-2;
+}
+
+.html-content >>> ol ol ol li::before {
+  content: counter(nested-counter-2, lower-alpha) ". " !important;
+}
+
+/* Level 3: ol ol ol ol */
+.html-content >>> ol ol ol ol {
+  counter-reset: nested-counter-3;
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ol ol ol ol li {
+  counter-increment: nested-counter-3;
+}
+
+.html-content >>> ol ol ol ol li::before {
+  content: counter(nested-counter-3, decimal) ") " !important;
+}
+
+/* Level 4: ol ol ol ol ol */
+.html-content >>> ol ol ol ol ol {
+  counter-reset: nested-counter-4;
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ol ol ol ol ol li {
+  counter-increment: nested-counter-4;
+}
+
+.html-content >>> ol ol ol ol ol li::before {
+  content: counter(nested-counter-4, lower-alpha) ") " !important;
+}
+
+/* Level 5: ol ol ol ol ol ol */
+.html-content >>> ol ol ol ol ol ol {
+  counter-reset: nested-counter-5;
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ol ol ol ol ol ol li {
+  counter-increment: nested-counter-5;
+}
+
+.html-content >>> ol ol ol ol ol ol li::before {
+  content: counter(nested-counter-5, lower-roman) ") " !important;
+}
+
+/* Unordered list nesting styling inside detail view */
+.html-content >>> ul {
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-bottom: 0.5rem;
+}
+
+.html-content >>> ul li {
+  position: relative;
+  list-style-type: none !important;
+  padding-left: 1.5rem !important;
+  margin-bottom: 0.25rem;
+}
+
+.html-content >>> ul li::before {
+  content: "•" !important;
+  position: absolute;
+  left: 0 !important;
+  text-align: right;
+  width: 1.2rem;
+  color: inherit;
+}
+
+.html-content >>> ul ul {
+  padding-left: 0 !important;
+  margin-top: 0.25rem;
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ul ul li::before {
+  content: "○" !important;
+}
+
+.html-content >>> ul ul ul {
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ul ul ul li::before {
+  content: "▪" !important;
+}
+
+.html-content >>> ul ul ul ul {
+  margin-left: 0.5rem !important;
+}
+
+.html-content >>> ul ul ul ul li::before {
+  content: "▫" !important;
+}
+
+/* Legacy Quill flat list styling inside detail view */
+.html-content >>> ol li.ql-indent-1 {
+  counter-reset: nested-counter-2 nested-counter-3 nested-counter-4 nested-counter-5;
+  counter-increment: nested-counter-1;
+  padding-left: 3rem !important;
+}
+.html-content >>> ol li.ql-indent-1::before {
+  content: counter(nested-counter-1, decimal) ". " !important;
+  left: 1.5rem !important;
+}
+
+.html-content >>> ol li.ql-indent-2 {
+  counter-reset: nested-counter-3 nested-counter-4 nested-counter-5;
+  counter-increment: nested-counter-2;
+  padding-left: 4.5rem !important;
+}
+.html-content >>> ol li.ql-indent-2::before {
+  content: counter(nested-counter-2, lower-alpha) ". " !important;
+  left: 3rem !important;
+}
+
+.html-content >>> ol li.ql-indent-3 {
+  counter-reset: nested-counter-4 nested-counter-5;
+  counter-increment: nested-counter-3;
+  padding-left: 6rem !important;
+}
+.html-content >>> ol li.ql-indent-3::before {
+  content: counter(nested-counter-3, decimal) ") " !important;
+  left: 4.5rem !important;
+}
+
+.html-content >>> ol li.ql-indent-4 {
+  counter-reset: nested-counter-5;
+  counter-increment: nested-counter-4;
+  padding-left: 7.5rem !important;
+}
+.html-content >>> ol li.ql-indent-4::before {
+  content: counter(nested-counter-4, lower-alpha) ") " !important;
+  left: 6rem !important;
+}
+
+.html-content >>> ol li.ql-indent-5 {
+  counter-increment: nested-counter-5;
+  padding-left: 9rem !important;
+}
+.html-content >>> ol li.ql-indent-5::before {
+  content: counter(nested-counter-5, lower-roman) ") " !important;
+  left: 7.5rem !important;
+}
+
+.html-content >>> ul li.ql-indent-1 {
+  padding-left: 3rem !important;
+}
+.html-content >>> ul li.ql-indent-1::before {
+  content: "○" !important;
+  left: 1.5rem !important;
+}
+.html-content >>> ul li.ql-indent-2 {
+  padding-left: 4.5rem !important;
+}
+.html-content >>> ul li.ql-indent-2::before {
+  content: "▪" !important;
+  left: 3rem !important;
+}
+.html-content >>> ul li.ql-indent-3 {
+  padding-left: 6rem !important;
+}
+.html-content >>> ul li.ql-indent-3::before {
+  content: "▫" !important;
+  left: 4.5rem !important;
+}
 </style>

@@ -10,6 +10,10 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "@tiptap/extension-underline": "^3.27.1",
+    "@tiptap/pm": "^3.27.1",
+    "@tiptap/starter-kit": "^3.27.1",
+    "@tiptap/vue-3": "^3.27.1",
     "@vueup/vue-quill": "^1.2.0",
     "apexcharts": "^5.7.0",
     "axios": "^1.6.2",

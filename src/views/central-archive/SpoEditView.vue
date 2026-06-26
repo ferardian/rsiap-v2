@@ -125,10 +125,12 @@
             <div class="card-body p-4">
               <h5 class="fw-bold mb-4 border-bottom pb-2">Konten Dokumen</h5>
               
-              <div v-for="section in sections" :key="section.id" class="mb-4 relative">
+              <div v-for="section in sections" :key="section.key" class="mb-4 relative">
                 <label class="form-label fw-bold text-primary">{{ section.label }}</label>
-                <!-- Editor Container -->
-                <div :id="section.id" class="quill-editor-container"></div>
+                <RichTextEditor 
+                  v-model="quillContent[section.key]" 
+                  :placeholder="`Ketik ${section.label.toLowerCase()} di sini...`"
+                />
               </div>
 
             </div>
@@ -147,14 +149,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import spoService from '@/services/spoService'
 import Swal from 'sweetalert2'
-
-// Load Quill css
-import 'quill/dist/quill.snow.css'
+import RichTextEditor from '@/components/ui/RichTextEditor.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -176,9 +176,6 @@ const state = reactive({
   unit_terkait: []
 })
 
-// Editors Reference
-const quillEditors = {}
-let Quill = null
 const quillContent = reactive({
   pengertian: '',
   tujuan: '',
@@ -187,25 +184,17 @@ const quillContent = reactive({
 })
 
 const sections = [
-  { id: 'pengertian-editor', label: 'Pengertian', key: 'pengertian' },
-  { id: 'tujuan-editor', label: 'Tujuan', key: 'tujuan' },
-  { id: 'kebijakan-editor', label: 'Kebijakan', key: 'kebijakan' },
-  { id: 'prosedur-editor', label: 'Prosedur', key: 'prosedur' }
+  { label: 'Pengertian', key: 'pengertian' },
+  { label: 'Tujuan', key: 'tujuan' },
+  { label: 'Kebijakan', key: 'kebijakan' },
+  { label: 'Prosedur', key: 'prosedur' }
 ]
 
 // Unit Selectors
 const freeTextUnitTerkait = ref('')
 
-// Load Dependencies and Initialize View
 onMounted(async () => {
-    // Dynamically import quill
-    const QuillModule = await import('quill')
-    Quill = QuillModule.default
-
-    // Fetch units first to have them ready for mapping
     await fetchUnits()
-    
-    // Fetch SPO detail
     await fetchSpoDetail()
 })
 
@@ -256,10 +245,7 @@ const fetchSpoDetail = async () => {
         quillContent.kebijakan = unescapeHtml(data.kebijakan)
         quillContent.prosedur = unescapeHtml(data.prosedur)
 
-        // Ensure DOM is rendered by turning off loading BEFORE init
         isLoading.value = false
-        await nextTick()
-        initEditors()
 
     } catch(err) {
         console.error(err)
@@ -269,42 +255,7 @@ const fetchSpoDetail = async () => {
     }
 }
 
-const initEditors = () => {
-    sections.forEach(section => {
-        const container = document.querySelector(`#${section.id}`)
-        if (!container) {
-            console.warn(`Container for ${section.id} not found, skipping...`)
-            return
-        }
-
-        // Avoid double initialization
-        if (quillEditors[section.key]) return
-
-        const quill = new Quill(`#${section.id}`, {
-            theme: 'snow',
-            placeholder: `Ketik ${section.label.toLowerCase()} di sini...`,
-            modules: {
-                toolbar: [
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['bold', 'italic', 'underline'],
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['clean']
-                ]
-            }
-        })
-        
-        // Set initial content using dangerouslyPasteHTML for better parsing
-        if (quillContent[section.key]) {
-            quill.clipboard.dangerouslyPasteHTML(quillContent[section.key])
-        }
-        
-        quill.on('text-change', () => {
-             quillContent[section.key] = quill.root.innerHTML
-        })
-        
-        quillEditors[section.key] = quill
-    })
-}
+// Editors are handled automatically by RichTextEditor component
 
 
 
@@ -439,22 +390,7 @@ const submitSpo = async () => {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
-.quill-editor-container {
-    background-color: #fff;
-    border-radius: 0 0 8px 8px;
-    min-height: 180px;
-}
-:deep(.ql-toolbar) {
-    border-radius: 8px 8px 0 0;
-    border-color: #e2e8f0 !important;
-    background-color: #f8fafc;
-}
-:deep(.ql-container) {
-    border-color: #e2e8f0 !important;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-    font-size: 0.95rem;
-}
+
 
 .bg-soft-primary {
     background-color: #e0e7ff;

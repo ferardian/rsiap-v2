@@ -103,14 +103,17 @@
               </div>
             </div>
             <div class="card-body p-4">
-              <div v-for="section in sections" :key="section.id" class="mb-4">
+              <div v-for="section in sections" :key="section.key" class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <label class="form-label-custom m-0 text-primary">{{ section.label }}</label>
                   <button v-if="hasResult" class="btn btn-regenerate" @click="regenerateSection(section.key)">
                     <i class="fas fa-sync-alt me-1"></i> Perbaiki Bagian Ini
                   </button>
                 </div>
-                <div :id="section.id" class="quill-editor-v2"></div>
+                <RichTextEditor 
+                  v-model="quillContent[section.key]" 
+                  :placeholder="`Ketik ${section.label.toLowerCase()} di sini...`"
+                />
               </div>
             </div>
             <div class="card-footer bg-white p-4 border-top-0 text-end">
@@ -131,7 +134,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import spoService from '@/services/spoService'
 import Swal from 'sweetalert2'
-import 'quill/dist/quill.snow.css'
+import RichTextEditor from '@/components/ui/RichTextEditor.vue'
 
 const router = useRouter()
 const isGenerating = ref(false)
@@ -148,8 +151,6 @@ const state = reactive({
   regulasi: ''
 })
 
-const quillEditors = {}
-let Quill = null
 const quillContent = reactive({
   pengertian: '',
   tujuan: '',
@@ -158,33 +159,13 @@ const quillContent = reactive({
 })
 
 const sections = [
-  { id: 'ai-pengertian', label: 'Pengertian', key: 'pengertian' },
-  { id: 'ai-tujuan', label: 'Tujuan', key: 'tujuan' },
-  { id: 'ai-kebijakan', label: 'Kebijakan', key: 'kebijakan' },
-  { id: 'ai-prosedur', label: 'Prosedur', key: 'prosedur' }
+  { label: 'Pengertian', key: 'pengertian' },
+  { label: 'Tujuan', key: 'tujuan' },
+  { label: 'Kebijakan', key: 'kebijakan' },
+  { label: 'Prosedur', key: 'prosedur' }
 ]
 
 onMounted(async () => {
-    const QuillModule = await import('quill')
-    Quill = QuillModule.default
-
-    sections.forEach(section => {
-        const quill = new Quill(`#${section.id}`, {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['bold', 'italic'],
-                    ['clean']
-                ]
-            }
-        })
-        quill.on('text-change', () => {
-            quillContent[section.key] = quill.root.innerHTML
-        })
-        quillEditors[section.key] = quill
-    })
-
     fetchUnits()
 })
 
@@ -215,7 +196,6 @@ const generateAiContent = async () => {
         // Fill editors
         sections.forEach(section => {
             if (data[section.key]) {
-                quillEditors[section.key].root.innerHTML = data[section.key]
                 quillContent[section.key] = data[section.key]
             }
         })
@@ -352,13 +332,7 @@ const submitSpo = async () => {
 }
 .btn-ai-generate:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.quill-editor-v2 {
-  min-height: 120px;
-  background: white;
-  border-radius: 0 0 12px 12px;
-}
-:deep(.ql-toolbar) { border-radius: 12px 12px 0 0; border-color: #f1f5f9 !important; background: #f8fafc; }
-:deep(.ql-container) { border-color: #f1f5f9 !important; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+
 
 .btn-indigo { background: #2563eb; color: white; }
 .btn-indigo:hover { background: #1d4ed8; color: white; }

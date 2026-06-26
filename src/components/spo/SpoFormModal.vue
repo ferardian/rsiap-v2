@@ -122,52 +122,36 @@
                 <!-- Pengertian -->
                 <div class="mb-4">
                   <label class="form-label fw-semibold">Pengertian</label>
-                  <QuillEditor 
-                    v-model:content="formData.pengertian"
-                    contentType="html"
-                    theme="snow"
-                    :toolbar="toolbarOptions"
+                  <RichTextEditor 
+                    v-model="formData.pengertian"
                     placeholder="Tulis pengertian di sini..."
-                    class="quill-custom"
                   />
                 </div>
 
                 <!-- Tujuan -->
                 <div class="mb-4">
                   <label class="form-label fw-semibold">Tujuan</label>
-                  <QuillEditor 
-                    v-model:content="formData.tujuan"
-                    contentType="html"
-                    theme="snow"
-                    :toolbar="toolbarOptions"
+                  <RichTextEditor 
+                    v-model="formData.tujuan"
                     placeholder="Tulis tujuan di sini..."
-                    class="quill-custom"
                   />
                 </div>
 
                 <!-- Kebijakan -->
                 <div class="mb-4">
                   <label class="form-label fw-semibold">Kebijakan</label>
-                  <QuillEditor 
-                    v-model:content="formData.kebijakan"
-                    contentType="html"
-                    theme="snow"
-                    :toolbar="toolbarOptions"
+                  <RichTextEditor 
+                    v-model="formData.kebijakan"
                     placeholder="Tulis kebijakan di sini..."
-                    class="quill-custom"
                   />
                 </div>
 
                 <!-- Prosedur -->
                 <div class="mb-4">
                   <label class="form-label fw-semibold">Prosedur</label>
-                  <QuillEditor 
-                    v-model:content="formData.prosedur"
-                    contentType="html"
-                    theme="snow"
-                    :toolbar="toolbarOptions"
+                  <RichTextEditor 
+                    v-model="formData.prosedur"
                     placeholder="Tulis prosedur di sini..."
-                    class="quill-custom"
                   />
                 </div>
               </div>
@@ -202,8 +186,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import RichTextEditor from '@/components/ui/RichTextEditor.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -228,13 +211,7 @@ const formData = reactive({
   prosedur: ''
 })
 
-const toolbarOptions = [
-  [{ 'header': [1, 2, 3, false] }],
-  ['bold', 'italic', 'underline'],
-  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-  [{ 'align': [] }],
-  ['clean']
-]
+
 
 const isFormValid = computed(() => {
   return formData.judul && 
@@ -344,18 +321,7 @@ const closeModal = () => {
   margin-bottom: 0.5rem;
 }
 
-.quill-custom {
-  background: white;
-}
 
-.quill-custom >>> .ql-container {
-  min-height: 150px;
-  font-size: 14px;
-}
-
-.quill-custom >>> .ql-editor {
-  min-height: 150px;
-}
 
 .v-select-custom >>> .vs__dropdown-toggle {
   border-color: #dee2e6;

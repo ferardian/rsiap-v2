@@ -72,25 +72,25 @@
                 <!-- Pengertian -->
                 <tr class="align-middle">
                   <td class="border p-3 text-center fw-bold">Pengertian</td>
-                  <td colspan="2" class="border p-3" v-html="unescapeHtml(spoData?.pengertian)"></td>
+                  <td colspan="2" class="border p-3 html-content" v-html="unescapeHtml(spoData?.pengertian)"></td>
                 </tr>
 
                 <!-- Tujuan -->
                 <tr class="align-middle">
                   <td class="border p-3 text-center fw-bold">Tujuan</td>
-                  <td colspan="2" class="border p-3" v-html="unescapeHtml(spoData?.tujuan)"></td>
+                  <td colspan="2" class="border p-3 html-content" v-html="unescapeHtml(spoData?.tujuan)"></td>
                 </tr>
 
                 <!-- Kebijakan -->
                 <tr class="align-middle">
                   <td class="border p-3 text-center fw-bold">Kebijakan</td>
-                  <td colspan="2" class="border p-3" v-html="unescapeHtml(spoData?.kebijakan)"></td>
+                  <td colspan="2" class="border p-3 html-content" v-html="unescapeHtml(spoData?.kebijakan)"></td>
                 </tr>
 
                 <!-- Prosedur -->
                 <tr class="align-middle">
                   <td class="border p-3 text-center fw-bold">Prosedur</td>
-                  <td colspan="2" class="border p-3" v-html="unescapeHtml(spoData?.prosedur)"></td>
+                  <td colspan="2" class="border p-3 html-content" v-html="unescapeHtml(spoData?.prosedur)"></td>
                 </tr>
 
                 <!-- Unit Terkait -->
@@ -191,6 +191,192 @@ const printDocument = () => {
             text-align: justify;
             line-height: 1.8;
           }
+
+          /* Styling for nested ordered lists inside printed window (Tiptap) */
+          .html-content ol {
+            counter-reset: nested-counter-0;
+            list-style-type: none !important;
+            padding-left: 0 !important;
+            margin-bottom: 0.5rem;
+          }
+          .html-content ol li {
+            position: relative;
+            list-style-type: none !important;
+            counter-increment: nested-counter-0;
+            padding-left: 1.5rem !important;
+            margin-bottom: 0.25rem;
+          }
+          .html-content ol li::before {
+            content: counter(nested-counter-0, upper-alpha) ". " !important;
+            position: absolute;
+            left: 0 !important;
+            text-align: right;
+            width: 1.2rem;
+            color: inherit;
+          }
+          .html-content ol ol {
+            counter-reset: nested-counter-1;
+            padding-left: 0 !important;
+            margin-top: 0.25rem;
+            margin-left: 0.5rem !important;
+          }
+          .html-content ol ol li {
+            counter-increment: nested-counter-1;
+          }
+          .html-content ol ol li::before {
+            content: counter(nested-counter-1, decimal) ". " !important;
+          }
+          .html-content ol ol ol {
+            counter-reset: nested-counter-2;
+            margin-left: 0.5rem !important;
+          }
+          .html-content ol ol ol li {
+            counter-increment: nested-counter-2;
+          }
+          .html-content ol ol ol li::before {
+            content: counter(nested-counter-2, lower-alpha) ". " !important;
+          }
+          .html-content ol ol ol ol {
+            counter-reset: nested-counter-3;
+            margin-left: 0.5rem !important;
+          }
+          .html-content ol ol ol ol li {
+            counter-increment: nested-counter-3;
+          }
+          .html-content ol ol ol ol li::before {
+            content: counter(nested-counter-3, decimal) ") " !important;
+          }
+          .html-content ol ol ol ol ol {
+            counter-reset: nested-counter-4;
+            margin-left: 0.5rem !important;
+          }
+          .html-content ol ol ol ol ol li {
+            counter-increment: nested-counter-4;
+          }
+          .html-content ol ol ol ol ol li::before {
+            content: counter(nested-counter-4, lower-alpha) ") " !important;
+          }
+          .html-content ol ol ol ol ol ol {
+            counter-reset: nested-counter-5;
+            margin-left: 0.5rem !important;
+          }
+          .html-content ol ol ol ol ol ol li {
+            counter-increment: nested-counter-5;
+          }
+          .html-content ol ol ol ol ol ol li::before {
+            content: counter(nested-counter-5, lower-roman) ") " !important;
+          }
+
+          /* Styling for flat list elements inside printed window (Legacy Quill) */
+          .html-content ol li.ql-indent-1 {
+            counter-reset: nested-counter-2 nested-counter-3 nested-counter-4 nested-counter-5;
+            counter-increment: nested-counter-1;
+            padding-left: 3rem !important;
+          }
+          .html-content ol li.ql-indent-1::before {
+            content: counter(nested-counter-1, decimal) ". " !important;
+            left: 1.5rem !important;
+          }
+          .html-content ol li.ql-indent-2 {
+            counter-reset: nested-counter-3 nested-counter-4 nested-counter-5;
+            counter-increment: nested-counter-2;
+            padding-left: 4.5rem !important;
+          }
+          .html-content ol li.ql-indent-2::before {
+            content: counter(nested-counter-2, lower-alpha) ". " !important;
+            left: 3rem !important;
+          }
+          .html-content ol li.ql-indent-3 {
+            counter-reset: nested-counter-4 nested-counter-5;
+            counter-increment: nested-counter-3;
+            padding-left: 6rem !important;
+          }
+          .html-content ol li.ql-indent-3::before {
+            content: counter(nested-counter-3, decimal) ") " !important;
+            left: 4.5rem !important;
+          }
+          .html-content ol li.ql-indent-4 {
+            counter-reset: nested-counter-5;
+            counter-increment: nested-counter-4;
+            padding-left: 7.5rem !important;
+          }
+          .html-content ol li.ql-indent-4::before {
+            content: counter(nested-counter-4, lower-alpha) ") " !important;
+            left: 6rem !important;
+          }
+          .html-content ol li.ql-indent-5 {
+            counter-increment: nested-counter-5;
+            padding-left: 9rem !important;
+          }
+          .html-content ol li.ql-indent-5::before {
+            content: counter(nested-counter-5, lower-roman) ") " !important;
+            left: 7.5rem !important;
+          }
+
+          /* Styling for nested unordered lists inside printed window */
+          .html-content ul {
+            list-style-type: none !important;
+            padding-left: 0 !important;
+            margin-bottom: 0.5rem;
+          }
+          .html-content ul li {
+            position: relative;
+            list-style-type: none !important;
+            padding-left: 1.5rem !important;
+            margin-bottom: 0.25rem;
+          }
+          .html-content ul li::before {
+            content: "•" !important;
+            position: absolute;
+            left: 0 !important;
+            text-align: right;
+            width: 1.2rem;
+            color: inherit;
+          }
+          .html-content ul ul {
+            padding-left: 0 !important;
+            margin-top: 0.25rem;
+            margin-left: 0.5rem !important;
+          }
+          .html-content ul ul li::before {
+            content: "○" !important;
+          }
+          .html-content ul ul ul {
+            margin-left: 0.5rem !important;
+          }
+          .html-content ul ul ul li::before {
+            content: "▪" !important;
+          }
+          .html-content ul ul ul ul {
+            margin-left: 0.5rem !important;
+          }
+          .html-content ul ul ul ul li::before {
+            content: "▫" !important;
+          }
+
+          /* Flat unordered lists inside printed window (Legacy Quill) */
+          .html-content ul li.ql-indent-1 {
+            padding-left: 3rem !important;
+          }
+          .html-content ul li.ql-indent-1::before {
+            content: "○" !important;
+            left: 1.5rem !important;
+          }
+          .html-content ul li.ql-indent-2 {
+            padding-left: 4.5rem !important;
+          }
+          .html-content ul li.ql-indent-2::before {
+            content: "▪" !important;
+            left: 3rem !important;
+          }
+          .html-content ul li.ql-indent-3 {
+            padding-left: 6rem !important;
+          }
+          .html-content ul li.ql-indent-3::before {
+            content: "▫" !important;
+            left: 4.5rem !important;
+          }
+
           @media print {
             .no-print { display: none; }
             body { padding: 0; }
@@ -274,12 +460,6 @@ const closeModal = () => {
 
 /* Content styling */
 .detail-spo >>> p {
-  margin-bottom: 0.5rem;
-}
-
-.detail-spo >>> ol,
-.detail-spo >>> ul {
-  margin-left: 20px;
   margin-bottom: 0.5rem;
 }
 
