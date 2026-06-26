@@ -134,9 +134,9 @@
               </div>
 
             </div>
-            <div class="card-footer bg-white border-top-0 p-4 text-end">
-               <button class="btn btn-light px-4 me-2" @click="$router.back()">Batal</button>
-               <button class="btn btn-primary px-4 fw-bold shadow-sm" @click="submitSpo" :disabled="isSubmitting">
+            <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-end gap-2">
+               <button class="btn btn-cancel px-4" @click="$router.back()">Batal</button>
+               <button class="btn btn-primary px-4 fw-bold shadow-sm" style="width: auto !important;" @click="submitSpo" :disabled="isSubmitting">
                  <i class="fas fa-save me-2" :class="{'fa-spin fa-spinner': isSubmitting}"></i> Simpan Perubahan
                </button>
             </div>
@@ -423,5 +423,19 @@ const submitSpo = async () => {
 .v-select-custom :deep(.vs__dropdown-menu) {
   font-size: 0.85rem;
   z-index: 1060;
+}
+
+.btn-cancel {
+  width: auto !important;
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+.btn-cancel:hover {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
 }
 </style>

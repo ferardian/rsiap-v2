@@ -116,11 +116,11 @@
                 />
               </div>
             </div>
-            <div class="card-footer bg-white p-4 border-top-0 text-end">
-              <button class="btn btn-light px-4 me-2 rounded-12" @click="$router.back()">Batal</button>
-              <button class="btn btn-indigo px-4 py-2 rounded-12 fw-bold shadow-sm" @click="submitSpo" :disabled="isSubmitting || !hasResult">
-                <i class="fas fa-save me-2"></i> Simpan SPO Ke Database
-              </button>
+            <div class="card-footer bg-white p-4 border-top-0 d-flex justify-content-end gap-2">
+               <button class="btn btn-cancel px-4 rounded-12" @click="$router.back()">Batal</button>
+               <button class="btn btn-indigo px-4 py-2 rounded-12 fw-bold shadow-sm" style="width: auto !important;" @click="submitSpo" :disabled="isSubmitting || !hasResult">
+                 <i class="fas fa-save me-2"></i> Simpan SPO Ke Database
+               </button>
             </div>
           </div>
         </div>
@@ -360,4 +360,18 @@ const submitSpo = async () => {
 .text-badge-ai { color: #2563eb; }
 
 .v-select-premium :deep(.vs__dropdown-toggle) { border-radius: 12px; border: 1px solid #e2e8f0; padding: 6px; }
+
+.btn-cancel {
+  width: auto !important;
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+.btn-cancel:hover {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
+}
 </style>
