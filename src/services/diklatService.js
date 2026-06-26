@@ -65,6 +65,29 @@ export const diklatService = {
    */
   deleteDiklat(id) {
     return api.delete(`/diklat/destroy/${id}`)
+  },
+
+  /**
+   * Get all employee external certificate submissions
+   */
+  getPengajuanList(params = {}) {
+    return api.get('/diklat/pengajuan/list', { params })
+  },
+
+  /**
+   * Approve an external certificate submission
+   */
+  approvePengajuan(id) {
+    return api.post(`/diklat/pengajuan/approve/${id}`)
+  },
+
+  /**
+   * Reject an external certificate submission
+   */
+  rejectPengajuan(id, catatanReject) {
+    return api.post(`/diklat/pengajuan/reject/${id}`, {
+      catatan_reject: catatanReject
+    })
   }
 }
 

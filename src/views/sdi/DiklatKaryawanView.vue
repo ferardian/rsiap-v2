@@ -1,17 +1,37 @@
 <template>
   <div class="karyawan-container py-4">
     <!-- Header Page -->
-    <div class="page-header mb-4">
+    <div class="page-header mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
       <div class="header-info">
         <h2 class="section-title text-dark-blue fw-bold font-sans">
           <i class="fas fa-graduation-cap text-primary me-2"></i>Diklat Karyawan
         </h2>
         <p class="text-muted small m-0">Kelola data pelatihan, workshop, seminar, dan sertifikasi karyawan rumah sakit.</p>
       </div>
+      <!-- Page-level Tab Pills -->
+      <div class="nav nav-pills bg-light p-1 rounded-3 border" style="background-color: #f1f5f9 !important;">
+        <button 
+          :class="['nav-link font-sans fw-bold px-4 py-2 transition-all d-flex align-items-center gap-2 border-0', activePageTab === 'kelola' ? 'active bg-primary text-white rounded-2 shadow-sm' : 'text-secondary bg-transparent']"
+          @click="activePageTab = 'kelola'"
+        >
+          <i class="fas fa-user-graduate"></i>
+          <span>Kelola Diklat</span>
+        </button>
+        <button 
+          :class="['nav-link font-sans fw-bold px-4 py-2 transition-all d-flex align-items-center gap-2 border-0 position-relative', activePageTab === 'pengajuan' ? 'active bg-primary text-white rounded-2 shadow-sm' : 'text-secondary bg-transparent']"
+          @click="activePageTab = 'pengajuan'"
+        >
+          <i class="fas fa-file-signature"></i>
+          <span>Pengajuan Sertifikat</span>
+          <span v-if="pendingPengajuanCount > 0" class="badge rounded-pill bg-danger ms-1" style="font-size: 0.72rem; padding: 0.25em 0.5em;">
+            {{ pendingPengajuanCount }}
+          </span>
+        </button>
+      </div>
     </div>
 
-    <!-- Main Workspace -->
-    <div class="row g-3 align-items-start">
+    <!-- Main Workspace (Kelola Diklat) -->
+    <div v-show="activePageTab === 'kelola'" class="row g-3 align-items-start">
       <!-- Left Panel: Searchable Employee List (Master) -->
       <div class="col-md-4 left-sticky-panel">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden animate__animated animate__fadeInLeft">
@@ -105,16 +125,17 @@
             </div>
           </div>
 
-          <!-- Diklat History Card -->
+          <!-- Diklat History Workspace Card -->
           <div class="card shadow-sm border-0 rounded-4 overflow-hidden animate__animated animate__fadeIn flex-grow-1">
-            <div class="card-header-history py-3 px-4 d-flex align-items-center justify-content-between">
-              <h5 class="m-0 fw-bold text-white font-sans">
-                <i class="fas fa-history me-2 opacity-75"></i>Riwayat Diklat & Pelatihan
-              </h5>
+            <div class="card-header-history py-2 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <h6 class="fw-bold m-0 text-white font-sans">
+                <i class="fas fa-history me-2 opacity-75"></i>Riwayat Diklat Karyawan
+              </h6>
               
+              <!-- Action Button for Tab Riwayat -->
               <button 
                 v-if="selectedEmployee" 
-                class="btn-add-outline font-sans px-3 rounded-3 d-inline-flex align-items-center gap-2"
+                class="btn-add-outline font-sans px-3 rounded-3 d-inline-flex align-items-center gap-2 py-1.5"
                 @click="openAddModal"
               >
                 <i class="fas fa-plus"></i>
@@ -123,136 +144,264 @@
             </div>
 
             <div class="card-body p-0 position-relative h-100">
-              <!-- Loader State -->
-              <div v-if="loadingDiklat" class="p-5 text-center">
-                <div class="spinner-border text-primary mb-3" role="status">
-                  <span class="visually-hidden">Loading...</span>
+              <!-- === RIWAYAT DIKLAT === -->
+              <div>
+                <!-- Loader State -->
+                <div v-if="loadingDiklat" class="p-5 text-center">
+                  <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="text-muted font-sans small">Memuat riwayat diklat...</p>
                 </div>
-                <p class="text-muted font-sans small">Memuat riwayat diklat...</p>
-              </div>
 
-              <!-- Empty State: No Employee Selected -->
-              <div v-else-if="!selectedEmployee" class="p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
-                <div class="mb-3 text-muted-light"><i class="fal fa-users fa-4x"></i></div>
-                <h5 class="fw-bold">Pilih Karyawan</h5>
-                <p class="small text-muted-dark">Silakan pilih salah satu karyawan di daftar sebelah kiri untuk mengelola data diklat.</p>
-              </div>
+                <!-- Empty State: No Employee Selected -->
+                <div v-else-if="!selectedEmployee" class="p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
+                  <div class="mb-3 text-muted-light"><i class="fal fa-users fa-4x"></i></div>
+                  <h5 class="fw-bold">Pilih Karyawan</h5>
+                  <p class="small text-muted-dark">Silakan pilih salah satu karyawan di daftar sebelah kiri untuk mengelola data diklat.</p>
+                </div>
 
-              <!-- Empty State: No Diklat History -->
-              <div v-else-if="diklatList.length === 0" class="p-5 text-center text-muted animate__animated animate__fadeIn">
-                <div class="mb-3 text-muted-light"><i class="fal fa-award fa-4x"></i></div>
-                <h5 class="fw-bold">Belum Ada Riwayat Diklat</h5>
-                <p class="small text-muted-dark mb-4">Karyawan ini belum terdaftar mengikuti kegiatan diklat apa pun.</p>
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-4" @click="openAddModal">
-                  <i class="fas fa-plus me-1"></i> Tambah Sekarang
-                </button>
-              </div>
+                <!-- Empty State: No Diklat History -->
+                <div v-else-if="diklatList.length === 0" class="p-5 text-center text-muted animate__animated animate__fadeIn">
+                  <div class="mb-3 text-muted-light"><i class="fal fa-award fa-4x"></i></div>
+                  <h5 class="fw-bold">Belum Ada Riwayat Diklat</h5>
+                  <p class="small text-muted-dark mb-4">Karyawan ini belum terdaftar mengikuti kegiatan diklat apa pun.</p>
+                  <button class="btn btn-outline-primary btn-sm rounded-pill px-4" @click="openAddModal">
+                    <i class="fas fa-plus me-1"></i> Tambah Sekarang
+                  </button>
+                </div>
 
-              <!-- Table of Diklat records -->
-              <div v-else class="table-responsive">
-                <table class="table data-table mb-0 align-middle">
-                  <thead>
-                    <tr>
-                      <th class="ps-4" style="width: 5%">No</th>
-                      <th style="width: 35%">Kegiatan / Pelatihan</th>
-                      <th style="width: 15%">Kategori & Tempat</th>
-                      <th style="width: 15%">Waktu & Durasi</th>
-                      <th style="width: 15%">Peran & Poin</th>
-                      <th class="text-center" style="width: 15%">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr 
-                      v-for="(item, idx) in diklatList" 
-                      :key="item.id" 
-                      class="diklat-row animate__animated animate__fadeIn"
-                      style="--animate-duration: 0.3s;"
-                    >
-                      <td class="ps-4 text-muted small fw-bold font-mono">{{ idx + 1 }}</td>
-                      <td>
-                        <div class="d-flex flex-column">
-                          <span class="fw-bold text-dark font-sans leading-snug" style="font-size: 0.88rem;">
-                            {{ item.kegiatan?.nama_kegiatan || 'Kegiatan Tidak Diketahui' }}
-                          </span>
-                          <span class="text-muted extra-small mt-0.5" v-if="item.kegiatan?.penyelenggara">
-                            Penyelenggara: {{ item.kegiatan.penyelenggara }}
-                          </span>
-                          <span class="text-muted font-mono extra-small" v-if="item.kegiatan?.nomor">
-                            No: {{ item.kegiatan.nomor }}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex flex-column align-items-start">
-                          <span :class="['badge rounded-pill extra-small px-2 py-0.5 mb-1', item.kegiatan?.kategori === 'Internal' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning-dark']">
-                            {{ item.kegiatan?.kategori || '-' }}
-                          </span>
-                          <span class="text-muted small text-truncate" style="max-width: 140px;" :title="item.kegiatan?.tempat">
-                            <i class="fas fa-map-marker-alt text-muted-light me-1"></i>{{ item.kegiatan?.tempat || '-' }}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex flex-column small">
-                          <span class="fw-medium">{{ formatDateRange(item.kegiatan?.tgl_mulai, item.kegiatan?.tgl_akhir) }}</span>
-                          <span class="text-muted extra-small mt-0.5" v-if="item.kegiatan?.jpl">
-                            <i class="fas fa-clock text-muted-light me-1"></i>{{ item.kegiatan.jpl }} JPL
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex flex-column align-items-start gap-1">
-                          <span :class="['badge px-2 py-1 text-uppercase extra-small fw-bold', getRoleColorClass(item.peserta)]">
-                            {{ item.peserta }}
-                          </span>
-                          <span class="badge bg-light text-secondary border extra-small" v-if="item.kegiatan?.skp">
-                            {{ item.kegiatan.skp }} SKP
-                          </span>
-                        </div>
-                      </td>
-                      <td class="text-center pe-4">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                          <!-- Tombol Cetak Sertifikat — hanya untuk diklat Internal -->
-                          <button
-                            v-if="item.kegiatan?.kategori === 'Internal'"
-                            class="btn btn-sm btn-action text-success bg-success-subtle border-0"
-                            @click="printSertifikat(item)"
-                            title="Cetak Sertifikat Internal"
-                          >
-                            <i class="fas fa-print"></i>
-                          </button>
+                <!-- Table of Diklat records -->
+                <div v-else class="table-responsive">
+                  <table class="table data-table mb-0 align-middle">
+                    <thead>
+                      <tr>
+                        <th class="ps-4" style="width: 5%">No</th>
+                        <th style="width: 35%">Kegiatan / Pelatihan</th>
+                        <th style="width: 15%">Kategori & Tempat</th>
+                        <th style="width: 15%">Waktu & Durasi</th>
+                        <th style="width: 15%">Peran & Poin</th>
+                        <th class="text-center" style="width: 15%">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr 
+                        v-for="(item, idx) in diklatList" 
+                        :key="item.id" 
+                        class="diklat-row animate__animated animate__fadeIn"
+                        style="--animate-duration: 0.3s;"
+                      >
+                        <td class="ps-4 text-muted small fw-bold font-mono">{{ idx + 1 }}</td>
+                        <td>
+                          <div class="d-flex flex-column">
+                            <span class="fw-bold text-dark font-sans leading-snug" style="font-size: 0.88rem;">
+                              {{ item.kegiatan?.nama_kegiatan || 'Kegiatan Tidak Diketahui' }}
+                            </span>
+                            <span class="text-muted extra-small mt-0.5" v-if="item.kegiatan?.penyelenggara">
+                              Penyelenggara: {{ item.kegiatan.penyelenggara }}
+                            </span>
+                            <span class="text-muted font-mono extra-small" v-if="item.kegiatan?.nomor">
+                              No: {{ item.kegiatan.nomor }}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="d-flex flex-column align-items-start">
+                            <span :class="['badge rounded-pill extra-small px-2 py-0.5 mb-1', item.kegiatan?.kategori === 'Internal' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning-dark']">
+                              {{ item.kegiatan?.kategori || '-' }}
+                            </span>
+                            <span class="text-muted small text-truncate" style="max-width: 140px;" :title="item.kegiatan?.tempat">
+                              <i class="fas fa-map-marker-alt text-muted-light me-1"></i>{{ item.kegiatan?.tempat || '-' }}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="d-flex flex-column small">
+                            <span class="fw-medium">{{ formatDateRange(item.kegiatan?.tgl_mulai, item.kegiatan?.tgl_akhir) }}</span>
+                            <span class="text-muted extra-small mt-0.5" v-if="item.kegiatan?.jpl">
+                              <i class="fas fa-clock text-muted-light me-1"></i>{{ item.kegiatan.jpl }} JPL
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="d-flex flex-column align-items-start gap-1">
+                            <span :class="['badge px-2 py-1 text-uppercase extra-small fw-bold', getRoleColorClass(item.peserta)]">
+                              {{ item.peserta }}
+                            </span>
+                            <span class="badge bg-light text-secondary border extra-small" v-if="item.kegiatan?.skp">
+                              {{ item.kegiatan.skp }} SKP
+                            </span>
+                          </div>
+                        </td>
+                        <td class="text-center pe-4">
+                          <div class="d-flex align-items-center justify-content-center gap-2">
+                            <!-- Tombol Cetak Sertifikat — hanya untuk diklat Internal -->
+                            <button
+                              v-if="item.kegiatan?.kategori === 'Internal'"
+                              class="btn btn-sm btn-action text-success bg-success-subtle border-0"
+                              @click="printSertifikat(item)"
+                              title="Cetak Sertifikat Internal"
+                            >
+                              <i class="fas fa-print"></i>
+                            </button>
 
-                          <button 
-                            v-if="item.berkas" 
-                            class="btn btn-sm btn-action text-info bg-info-subtle border-0"
-                            @click="previewCertificate(item)"
-                            title="Pratinjau Sertifikat"
-                          >
-                            <i class="fas fa-file-pdf"></i>
-                          </button>
-                          
-                          <button 
-                            class="btn btn-sm btn-action text-warning bg-warning-subtle border-0"
-                            @click="openEditModal(item)"
-                            title="Edit Diklat"
-                          >
-                            <i class="fas fa-edit"></i>
-                          </button>
-                          
-                          <button 
-                            class="btn btn-sm btn-action text-danger bg-danger-subtle border-0"
-                            @click="deleteDiklatRecord(item)"
-                            title="Hapus Diklat"
-                          >
-                            <i class="fas fa-trash-alt"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                            <button 
+                              v-if="item.berkas" 
+                              class="btn btn-sm btn-action text-info bg-info-subtle border-0"
+                              @click="previewCertificate(item)"
+                              title="Pratinjau Sertifikat"
+                            >
+                              <i class="fas fa-file-pdf"></i>
+                            </button>
+                            
+                            <button 
+                              class="btn btn-sm btn-action text-warning bg-warning-subtle border-0"
+                              @click="openEditModal(item)"
+                              title="Edit Diklat"
+                            >
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            
+                            <button 
+                              class="btn btn-sm btn-action text-danger bg-danger-subtle border-0"
+                              @click="deleteDiklatRecord(item)"
+                              title="Hapus Diklat"
+                            >
+                              <i class="fas fa-trash-alt"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pengajuan Sertifikat Mandiri (Full Width Workspace) -->
+    <div v-show="activePageTab === 'pengajuan'" class="animate__animated animate__fadeIn">
+      <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header-history py-3 px-4 d-flex align-items-center justify-content-between">
+          <h5 class="fw-bold m-0 text-white font-sans">
+            <i class="fas fa-file-signature me-2"></i>Daftar Pengajuan Sertifikat Mandiri Karyawan
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <!-- Loader State -->
+          <div v-if="loadingPengajuan" class="p-5 text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted font-sans small">Memuat daftar pengajuan...</p>
+          </div>
+
+          <!-- Empty State: No submissions -->
+          <div v-else-if="pengajuanList.length === 0" class="p-5 text-center text-muted animate__animated animate__fadeIn">
+            <div class="mb-3 text-muted-light"><i class="fal fa-file-invoice fa-4x"></i></div>
+            <h5 class="fw-bold font-sans">Tidak Ada Pengajuan</h5>
+            <p class="small text-muted mb-0">Belum ada pengajuan sertifikat eksternal mandiri dari karyawan saat ini.</p>
+          </div>
+
+          <!-- Table of submissions -->
+          <div v-else class="table-responsive">
+            <table class="table data-table mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th class="ps-4" style="width: 5%">No</th>
+                  <th style="width: 25%">Karyawan</th>
+                  <th style="width: 30%">Kegiatan / Pelatihan</th>
+                  <th style="width: 15%">Waktu & Penyelenggara</th>
+                  <th style="width: 10%">Status</th>
+                  <th class="text-center" style="width: 15%">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  v-for="(item, idx) in pengajuanList" 
+                  :key="item.id" 
+                  class="diklat-row animate__animated animate__fadeIn"
+                  style="--animate-duration: 0.3s;"
+                >
+                  <td class="ps-4 text-muted small fw-bold font-mono">{{ idx + 1 }}</td>
+                  <td>
+                    <div class="d-flex flex-column align-items-start text-start">
+                      <span class="fw-bold text-dark font-sans leading-none" style="font-size: 0.85rem;">{{ item.pegawai?.nama || 'Unknown' }}</span>
+                      <span class="text-muted font-mono extra-small mt-1">NIK: {{ item.pegawai?.nik || '-' }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column align-items-start text-start">
+                      <span class="fw-semibold text-dark font-sans leading-snug" style="font-size: 0.85rem;">{{ item.nama_kegiatan }}</span>
+                      <span class="text-muted extra-small mt-0.5"><i class="fas fa-map-marker-alt me-1 text-muted-light"></i>{{ item.tempat }}</span>
+                      <span class="badge bg-light text-secondary border extra-small mt-1">{{ item.peserta }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column align-items-start text-start small">
+                      <span class="fw-medium">{{ formatDateRange(item.tgl_mulai, item.tgl_akhir) }}</span>
+                      <span class="text-muted extra-small mt-1" v-if="item.penyelenggara">{{ item.penyelenggara }}</span>
+                      <span class="text-muted extra-small" v-if="item.jpl || item.skp">
+                        <span v-if="item.jpl">{{ item.jpl }} JPL</span>
+                        <span v-if="item.jpl && item.skp"> • </span>
+                        <span v-if="item.skp">{{ item.skp }} SKP</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column align-items-start text-start">
+                      <span :class="['badge rounded-pill extra-small px-2.5 py-1 fw-bold text-uppercase', 
+                        item.status === 'pending' ? 'bg-warning text-warning-dark' : 
+                        item.status === 'approved' ? 'bg-success-subtle text-success border border-success-subtle' : 
+                        'bg-danger-subtle text-danger border border-danger-subtle']"
+                      >
+                        {{ item.status }}
+                      </span>
+                      <span class="extra-small text-muted mt-1 font-mono" v-if="item.status === 'approved' && item.approved_at">
+                        Oleh: {{ item.approved_by?.nama || 'Admin' }}
+                      </span>
+                      <span class="extra-small text-muted mt-1 font-mono" v-if="item.status === 'rejected' && item.rejected_at" :title="item.catatan_reject">
+                        Ket: {{ item.catatan_reject }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="text-center pe-4">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                      <!-- Preview Sertifikat -->
+                      <button 
+                        v-if="item.berkas" 
+                        class="btn btn-sm btn-action text-info bg-info-subtle border-0"
+                        @click="previewPengajuanDoc(item)"
+                        title="Pratinjau Berkas"
+                      >
+                        <i class="fas fa-file-pdf"></i>
+                      </button>
+                      
+                      <!-- Action Buttons if Pending -->
+                      <template v-if="item.status === 'pending'">
+                        <button 
+                          class="btn btn-sm btn-action text-success bg-success-subtle border-0"
+                          @click="handleApprovePengajuan(item)"
+                          title="Setujui Pengajuan"
+                        >
+                          <i class="fas fa-check"></i>
+                        </button>
+                        <button 
+                          class="btn btn-sm btn-action text-danger bg-danger-subtle border-0"
+                          @click="handleRejectPengajuan(item)"
+                          title="Tolak Pengajuan"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </template>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -578,7 +727,7 @@
           </div>
           <div class="d-flex align-items-center gap-2 flex-shrink-0">
             <a 
-              :href="getDocUrl(activePreviewDoc.file)" 
+              :href="getDocUrl(activePreviewDoc)" 
               target="_blank" 
               class="btn btn-sm btn-outline-secondary font-sans d-flex align-items-center gap-2 px-3 border-slate shadow-none"
             >
@@ -601,7 +750,7 @@
           <!-- PDF Frame (Desktop Only) -->
           <iframe 
             v-if="activePreviewDoc.file.toLowerCase().endsWith('.pdf') && !isMobile" 
-            :src="getDocUrl(activePreviewDoc.file)" 
+            :src="getDocUrl(activePreviewDoc)" 
             width="100%" 
             height="100%" 
             style="border: none; border-radius: 8px; background-color: #fff;"
@@ -624,7 +773,7 @@
               Browser ponsel membatasi render dokumen PDF secara langsung. Ketuk tombol di bawah untuk membukanya di pembaca PDF bawaan handphone Anda.
             </p>
             <a 
-              :href="getDocUrl(activePreviewDoc.file)" 
+              :href="getDocUrl(activePreviewDoc)" 
               target="_blank" 
               class="btn btn-danger w-100 py-2.5 rounded-3 fw-bold border-0 text-white shadow-sm"
               style="background-color: #ef4444;"
@@ -636,7 +785,7 @@
           <!-- Image Element -->
           <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center p-2">
             <img 
-              :src="getDocUrl(activePreviewDoc.file)" 
+              :src="getDocUrl(activePreviewDoc)" 
               class="img-fluid rounded-3 shadow max-w-100 max-h-100" 
               style="object-fit: contain; max-height: calc(80vh - 80px);"
               alt="Preview Sertifikat"
@@ -792,6 +941,12 @@ const selectedEmployee = ref(null)
 const diklatList = ref([])
 const loadingDiklat = ref(false)
 
+// Page-level Tab & Pengajuan State
+const activePageTab = ref('kelola')
+const pengajuanList = ref([])
+const loadingPengajuan = ref(false)
+const pendingPengajuanCount = computed(() => pengajuanList.value.filter(p => p.status === 'pending').length)
+
 // Kegiatan (Activity) Search Autocomplete
 const kegQuery = ref('')
 const kegResults = ref([])
@@ -802,6 +957,91 @@ const showFormSidebar = ref(false)
 const isEditMode = ref(false)
 const submitting = ref(false)
 const selectedDiklatItem = ref(null)
+
+// Load All Pengajuan (Sertifikat Eksternal Mandiri Karyawan)
+const loadPengajuan = async () => {
+  loadingPengajuan.value = true
+  try {
+    const response = await diklatService.getPengajuanList()
+    pengajuanList.value = response.data?.data || []
+  } catch (error) {
+    console.error('Failed to load pengajuan list:', error)
+    toast.error('Gagal mengambil daftar pengajuan masuk')
+  } finally {
+    loadingPengajuan.value = false
+  }
+}
+
+const handleApprovePengajuan = async (item) => {
+  const result = await Swal.fire({
+    title: 'Setujui Pengajuan?',
+    html: `Apakah Anda yakin ingin menyetujui pengajuan sertifikat eksternal <strong>"${item.nama_kegiatan}"</strong> oleh <strong>${item.pegawai?.nama}</strong>?<br><br><small class="text-muted">Data ini akan otomatis tercatat di riwayat diklat utama dan kegiatan eksternal.</small>`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, Setujui!',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#64748b',
+    backdrop: `rgba(15, 23, 42, 0.35)`
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await diklatService.approvePengajuan(item.id)
+      toast.success('Pengajuan sertifikat berhasil disetujui')
+      loadPengajuan()
+      if (selectedEmployee.value && selectedEmployee.value.id === item.id_peg) {
+        loadEmployeeDiklat(selectedEmployee.value.nik)
+      }
+    } catch (error) {
+      console.error('Failed to approve pengajuan:', error)
+      toast.error(error.response?.data?.message || 'Gagal menyetujui pengajuan')
+    }
+  }
+}
+
+const handleRejectPengajuan = async (item) => {
+  const result = await Swal.fire({
+    title: 'Tolak Pengajuan?',
+    html: `Tolak pengajuan sertifikat eksternal <strong>"${item.nama_kegiatan}"</strong> oleh <strong>${item.pegawai?.nama}</strong>?`,
+    icon: 'warning',
+    input: 'textarea',
+    inputPlaceholder: 'Tulis alasan penolakan di sini...',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Alasan penolakan wajib diisi!'
+      }
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Tolak Pengajuan',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#64748b',
+    backdrop: `rgba(15, 23, 42, 0.35)`
+  })
+
+  if (result.isConfirmed && result.value) {
+    try {
+      await diklatService.rejectPengajuan(item.id, result.value)
+      toast.success('Pengajuan sertifikat berhasil ditolak')
+      loadPengajuan()
+    } catch (error) {
+      console.error('Failed to reject pengajuan:', error)
+      toast.error(error.response?.data?.message || 'Gagal menolak pengajuan')
+    }
+  }
+}
+
+const previewPengajuanDoc = (item) => {
+  if (!item.berkas) return
+  activePreviewDoc.value = {
+    nama: item.nama_kegiatan || 'Sertifikat Eksternal',
+    file: item.berkas,
+    isPengajuan: true,
+    id: item.id
+  }
+  showPreviewModal.value = true
+}
 
 const editorKey = ref(0)
 watch(showFormSidebar, (newVal) => {
@@ -961,6 +1201,13 @@ const form = reactive({
 onMounted(() => {
   detectMobile()
   loadInitialEmployees()
+  loadPengajuan()
+})
+
+watch(activePageTab, (newTab) => {
+  if (newTab === 'pengajuan') {
+    loadPengajuan()
+  }
 })
 
 // === LOAD INITIAL EMPLOYEES ===
@@ -1284,8 +1531,14 @@ const closePreviewModal = () => {
   activePreviewDoc.value = null
 }
 
-const getDocUrl = (fileName) => {
-  return `${config.public.API_V2_URL}/diklat/download/${fileName}`
+const getDocUrl = (doc) => {
+  if (doc && typeof doc === 'object') {
+    if (doc.isPengajuan) {
+      return `${config.public.API_V2_URL}/diklat/pengajuan/download/${doc.id}`
+    }
+    return `${config.public.API_V2_URL}/diklat/download/${doc.file}`
+  }
+  return `${config.public.API_V2_URL}/diklat/download/${doc}`
 }
 
 // === CETAK SERTIFIKAT INTERNAL (PDF Generator + Preview Modal) ===
