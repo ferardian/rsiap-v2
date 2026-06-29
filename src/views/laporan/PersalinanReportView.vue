@@ -1535,6 +1535,9 @@ onMounted(() => {
   margin-top: 6px;
   z-index: 1060;
   background: white !important;
+  width: auto !important;
+  min-width: 100% !important;
+  max-width: 400px !important;
 }
 
 .custom-v-select :deep(.vs__dropdown-option) {
@@ -1542,6 +1545,9 @@ onMounted(() => {
   padding: 8px 12px;
   font-size: 0.85rem;
   color: #475569 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .custom-v-select :deep(.vs__dropdown-option--highlight) {
