@@ -13,7 +13,12 @@
       </div>
     </div>
 
-    <div class="mood-slider-wrapper" @mouseenter="pauseScroll" @mouseleave="resumeScroll">
+    <div 
+      class="mood-slider-wrapper" 
+      :class="{ 'allow-scroll': !shouldAnimateRow1 && !shouldAnimateRow2 }"
+      @mouseenter="pauseScroll" 
+      @mouseleave="resumeScroll"
+    >
       <!-- Row 1 -->
       <div 
         v-if="moodsRow1.length > 0"
@@ -266,6 +271,21 @@ onMounted(() => {
   overflow: hidden;
   position: relative;
   mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.mood-slider-wrapper.allow-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mood-slider-wrapper.allow-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mood-slider-wrapper.allow-scroll .mood-slider-track {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 .mood-slider-track {
