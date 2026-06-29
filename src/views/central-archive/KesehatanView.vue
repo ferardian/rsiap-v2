@@ -282,8 +282,8 @@
               <th style="min-width: 200px;">NIK / Nama</th>
               <th style="min-width: 150px;">Profesi</th>
               <th style="min-width: 150px;">Unit</th>
+              <th style="min-width: 200px;">STR / SIP</th>
               <th style="min-width: 200px;">Pendidikan / Prodi</th>
-              <th style="min-width: 130px;">Tanggal Lulus</th>
               <th style="min-width: 100px;">Bukti</th>
               <th width="100" class="text-center">Aksi</th>
             </tr>
@@ -306,10 +306,20 @@
                 </div>
               </td>
               <td>
+                <div class="d-flex flex-column gap-1">
+                  <div v-if="staf.nomor_str" class="mini-badge bg-blue-light text-blue" title="Nomor STR">
+                    <i class="fas fa-id-card me-2"></i> {{ staf.nomor_str }}
+                  </div>
+                  <div v-if="staf.nomor_sip" class="mini-badge bg-orange-light text-orange" title="Nomor SIP">
+                    <i class="fas fa-file-medical me-2"></i> {{ staf.nomor_sip }}
+                  </div>
+                  <div v-if="!staf.nomor_str && !staf.nomor_sip" class="text-muted italic smaller">Belum ada data STR/SIP</div>
+                </div>
+              </td>
+              <td>
                 <div class="text-dark">{{ staf.pendidikan }}</div>
                 <div class="text-muted fs-xs">{{ staf.prodi || '-' }}</div>
               </td>
-              <td>{{ formatDate(staf.tanggal_lulus) }}</td>
               <td>
                 <a v-if="staf.bukti_kelulusan" :href="getBuktiKelulusanUrl(staf.bukti_kelulusan)" target="_blank" class="badge bg-success text-white text-decoration-none">
                   <i class="fas fa-check-circle me-1"></i> Lihat
@@ -2037,5 +2047,21 @@ const displayedPages = computed(() => {
   background: #dcfce7 !important;
   color: #166534 !important;
   border: 1px solid #bbf7d0 !important;
+}
+
+.bg-blue-light { background-color: #eff6ff; }
+.text-blue { color: #3b82f6; }
+.bg-orange-light { background-color: #fff7ed; }
+.text-orange { color: #f97316; }
+
+/* Mini Badge */
+.mini-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  gap: 6px;
 }
 </style>

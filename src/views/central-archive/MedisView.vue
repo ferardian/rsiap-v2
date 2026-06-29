@@ -257,10 +257,10 @@
                 <td>
                   <div class="d-flex flex-column gap-1">
                     <div v-if="item.nomor_str" class="mini-badge bg-blue-light text-blue" title="Nomor STR">
-                      <i class="fas fa-id-card mr-1"></i> {{ item.nomor_str }}
+                      <i class="fas fa-id-card me-2"></i> {{ item.nomor_str }}
                     </div>
                     <div v-if="item.nomor_sip" class="mini-badge bg-orange-light text-orange" title="Nomor SIP">
-                      <i class="fas fa-file-medical mr-1"></i> {{ item.nomor_sip }}
+                      <i class="fas fa-file-medical me-2"></i> {{ item.nomor_sip }}
                     </div>
                     <div v-if="!item.nomor_str && !item.nomor_sip" class="text-muted italic smaller">Belum ada data STR/SIP</div>
                   </div>
@@ -1196,6 +1196,7 @@ const displayedPages = computed(() => {
   border-radius: 100px;
   font-size: 0.7rem;
   font-weight: 600;
+  gap: 6px;
 }
 
 /* Status Badge */
