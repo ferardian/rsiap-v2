@@ -75,6 +75,7 @@
               label="png_jawab"
               placeholder="Semua Cara Bayar"
               class="custom-v-select"
+              append-to-body
               @update:modelValue="loadData(1)"
             />
           </div>
@@ -89,6 +90,7 @@
               label="nm_dokter"
               placeholder="Semua Dokter"
               class="custom-v-select"
+              append-to-body
               @update:modelValue="loadData(1)"
             />
           </div>
@@ -101,6 +103,7 @@
               :options="['SC (Sectio Caesarea)', 'Curetage (Kuret)', 'Lainnya']" 
               placeholder="Semua Tindakan"
               class="custom-v-select"
+              append-to-body
               @update:modelValue="loadData(1)"
             />
           </div>
