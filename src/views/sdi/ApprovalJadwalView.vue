@@ -452,7 +452,7 @@ const fetchData = async () => {
         filter.value.year, 
         filter.value.department, 
         filter.value.search, 
-        props.allowAllDepartments ? 'admin' : null
+        props.allowAllDepartments ? 'admin' : 'approval'
       ),
       // Only fetch shifts once ideally, but ok for now
       jadwalPegawaiService.getShifts()
