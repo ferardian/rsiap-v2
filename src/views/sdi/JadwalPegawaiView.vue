@@ -18,6 +18,14 @@
             placeholder="Pilih Tahun"
             :disabled="loading"
           />
+          <SearchableSelect 
+            v-if="departmentOptions.length > 0"
+            v-model="filter.department" 
+            :options="departmentOptions"
+            placeholder="Pilih Unit"
+            class="dept-select"
+            :disabled="loading"
+          />
           <input 
             v-model="filter.search" 
             type="text" 
@@ -1244,7 +1252,8 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 
   /* Wrappers: Just full width, no padding/border logic here */
   .filter-group .month-select,
-  .filter-group .year-select {
+  .filter-group .year-select,
+  .filter-group .dept-select {
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
@@ -1253,7 +1262,8 @@ watch([() => filter.value.month, () => filter.value.year, () => filter.value.dep
 
   /* Inner Triggers: Apply the padding/sizing here to match inputs */
   .filter-group .month-select :deep(.select-trigger),
-  .filter-group .year-select :deep(.select-trigger) {
+  .filter-group .year-select :deep(.select-trigger),
+  .filter-group .dept-select :deep(.select-trigger) {
     padding: 0.75rem !important;
     font-size: 1rem !important;
     height: auto !important;
