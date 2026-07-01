@@ -369,11 +369,11 @@ const fetchData = async () => {
     year: filter.value.year, 
     department: filter.value.department, 
     search: filter.value.search,
-    mode: props.allowAllDepartments ? 'admin' : 'default'
+    mode: props.allowAllDepartments ? 'readonly-admin' : 'default'
   })
 
   try {
-    const fetchMode = props.allowAllDepartments ? 'admin' : null
+    const fetchMode = props.allowAllDepartments ? 'readonly-admin' : null
     const [schedRes, shiftRes] = await Promise.all([
       jadwalPegawaiService.getSchedule(
         filter.value.month, 

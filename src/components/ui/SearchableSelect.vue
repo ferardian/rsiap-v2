@@ -11,36 +11,42 @@
       <i class="fas fa-chevron-down arrow-icon"></i>
     </div>
 
-    <!-- Dropdown Menu -->
-    <div v-if="isOpen" class="select-dropdown">
-      <!-- Search Box -->
-      <div class="search-box">
-        <input 
-          ref="searchInput"
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="Cari..." 
-          class="dropdown-search-input"
-          @click.stop
-        >
-      </div>
+    <!-- Dropdown Menu (teleported to body to escape overflow:hidden parents) -->
+    <Teleport to="body">
+      <div 
+        v-if="isOpen" 
+        class="searchable-select-dropdown-portal"
+        :style="dropdownStyle"
+      >
+        <!-- Search Box -->
+        <div class="search-box">
+          <input 
+            ref="searchInput"
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Cari..." 
+            class="dropdown-search-input"
+            @click.stop
+          >
+        </div>
 
-      <!-- Options List -->
-      <ul class="options-list">
-        <li 
-          v-for="option in filteredOptions" 
-          :key="option[valueKey]" 
-          class="option-item"
-          :class="{ 'is-selected': option[valueKey] === modelValue }"
-          @click="selectOption(option)"
-        >
-          {{ option[labelKey] }}
-        </li>
-        <li v-if="filteredOptions.length === 0" class="no-results">
-          Tidak ada data
-        </li>
-      </ul>
-    </div>
+        <!-- Options List -->
+        <ul class="options-list">
+          <li 
+            v-for="option in filteredOptions" 
+            :key="option[valueKey]" 
+            class="option-item"
+            :class="{ 'is-selected': option[valueKey] === modelValue }"
+            @click="selectOption(option)"
+          >
+            {{ option[labelKey] }}
+          </li>
+          <li v-if="filteredOptions.length === 0" class="no-results">
+            Tidak ada data
+          </li>
+        </ul>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -81,6 +87,34 @@ const isOpen = ref(false)
 const searchQuery = ref(null)
 const containerRef = ref(null)
 const searchInput = ref(null)
+const dropdownStyle = ref({})
+
+function updateDropdownPosition() {
+  if (!containerRef.value) return
+  const rect = containerRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const dropdownMaxHeight = 300
+
+  if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
+    // Open upward
+    dropdownStyle.value = {
+      position: 'fixed',
+      bottom: `${window.innerHeight - rect.top + 4}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`,
+      zIndex: 9999,
+    }
+  } else {
+    // Open downward
+    dropdownStyle.value = {
+      position: 'fixed',
+      top: `${rect.bottom + 4}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`,
+      zIndex: 9999,
+    }
+  }
+}
 
 const selectedLabel = computed(() => {
   const selected = props.options.find(opt => opt[props.valueKey] === props.modelValue)
@@ -100,6 +134,7 @@ function toggleDropdown() {
   isOpen.value = !isOpen.value
   if (isOpen.value) {
     searchQuery.value = ''
+    updateDropdownPosition()
     nextTick(() => {
       searchInput.value?.focus()
     })
@@ -114,6 +149,9 @@ function selectOption(option) {
 
 function handleClickOutside(event) {
   if (containerRef.value && !containerRef.value.contains(event.target)) {
+    // Also allow clicks on the teleported dropdown portal
+    const portal = document.querySelector('.searchable-select-dropdown-portal')
+    if (portal && portal.contains(event.target)) return
     isOpen.value = false
   }
 }
@@ -267,5 +305,69 @@ onUnmounted(() => {
   .select-trigger {
     padding: 0.75rem;
   }
+}
+</style>
+
+<!-- Global (non-scoped) styles for the teleported dropdown portal -->
+<style>
+.searchable-select-dropdown-portal {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.searchable-select-dropdown-portal .search-box {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.searchable-select-dropdown-portal .dropdown-search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.searchable-select-dropdown-portal .dropdown-search-input:focus {
+  border-color: #3b82f6;
+}
+
+.searchable-select-dropdown-portal .options-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.searchable-select-dropdown-portal .option-item {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.searchable-select-dropdown-portal .option-item:hover {
+  background-color: #f1f5f9;
+}
+
+.searchable-select-dropdown-portal .option-item.is-selected {
+  background-color: #eff6ff;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.searchable-select-dropdown-portal .no-results {
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
 }
 </style>
