@@ -105,6 +105,7 @@ const currentPageTitle = computed(() => {
     '/admin/role': 'Admin > Manajemen Role',
     '/admin/user': 'Admin > Manajemen User',
     '/admin/role-menu': 'Admin > Manajemen Role-Menu',
+    '/admin/face-master': 'Admin > Manajemen Face Master',
     '/satusehat/mapping-radiology': 'SatuSehat > Mapping Radiologi'
   }
   

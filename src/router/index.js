@@ -122,6 +122,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/admin/face-master',
+    name: 'FaceMasterManagement',
+    component: () => import('../views/admin/FaceMasterManagementView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/mobile-app/slider',
     name: 'SliderManagement',
     component: () => import('../views/admin/SliderManagementView.vue'),
