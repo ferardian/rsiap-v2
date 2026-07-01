@@ -106,7 +106,7 @@
               <td class="stats-cell">{{ countLibur(emp) }}</td>
               <td class="stats-cell">{{ countShiftByType(emp, 'Cuti') }}</td>
               <td class="stats-cell">{{ calculateTotalHours(emp) }} Jam</td>
-              <td class="stats-cell font-bold">173 Jam</td>
+              <td class="stats-cell font-bold">{{ calculateWajib(emp) }} Jam</td>
               <td class="stats-cell font-bold" :class="getOvertimeClass(emp)">{{ calculateOvertime(emp) }} Jam</td>
             </tr>
           </tbody>
@@ -372,40 +372,50 @@ const countLibur = (emp) => {
   return count
 }
 
-const SHIFT_HOURS = {
-  'pagi': 7,
-  'siang': 7,
-  'malam': 10,
-  // Add other codes if known, else default
+const getShiftDuration = (shift) => {
+  if (!shift || shift === '-' || shift.toLowerCase().includes('libur') || shift.toLowerCase().includes('cuti')) {
+    return 0
+  }
+  const lower = shift.toLowerCase()
+  
+  if (lower === 'pagi1' || lower === 'pagi2' || lower === 'pagi9' || lower === 'midle pagi4') {
+    return 6
+  }
+  if (lower === 'midle pagi2') {
+    return 5
+  }
+  if (lower === 'midle pagi5') {
+    return 12
+  }
+  if (lower === 'siang' || lower === 'siang9' || lower === 'midle siang1') {
+    return 6
+  }
+  if (lower.includes('malam')) {
+    return 10
+  }
+  if (lower.includes('pagi') || lower.includes('siang') || lower.includes('midle')) {
+    return 7
+  }
+  return 7
 }
 
 const calculateTotalHours = (emp) => {
   let hours = 0
   for (let d = 1; d <= daysInMonth.value; d++) {
     const shift = getShift(emp, d)
-    if (shift) {
-      const lower = shift.toLowerCase()
-      // Check specific map key first
-      let passed = false
-      for (const [key, h] of Object.entries(SHIFT_HOURS)) {
-        if (lower.includes(key)) {
-          hours += h
-          passed = true
-          break
-        }
-      }
-      
-      if (!passed && !lower.includes('cuti') && shift !== '-') {
-        hours += 7 
-      }
-    }
+    hours += getShiftDuration(shift)
   }
   return hours
 }
 
+const calculateWajib = (emp) => {
+  const cuti = countShiftByType(emp, 'Cuti')
+  return 173 - (cuti * 7)
+}
+
 const calculateOvertime = (emp) => {
   const total = calculateTotalHours(emp)
-  const obligation = 173
+  const obligation = calculateWajib(emp)
   return total - obligation
 }
 
