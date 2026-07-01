@@ -678,7 +678,7 @@ const fetchData = async () => {
   
   try {
     const [schedRes, shiftRes] = await Promise.all([
-      jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search),
+      jadwalPegawaiService.getSchedule(filter.value.month, filter.value.year, filter.value.department, filter.value.search, 'edit'),
       jadwalPegawaiService.getShifts()
     ])
     
