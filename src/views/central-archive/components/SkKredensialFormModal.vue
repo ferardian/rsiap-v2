@@ -563,10 +563,6 @@ const submitForm = async () => {
     return
   }
 
-  if (!skFile.value) {
-    toast.warning('File SK wajib diupload')
-    return
-  }
   if (!formData.value.id_kredensial) {
     toast.warning('Jenjang Kredensial wajib dipilih')
     return
@@ -591,7 +587,9 @@ const submitForm = async () => {
     payload.append('nik', targetPegawai.value.nik)
     
     // Files
-    payload.append('file', skFile.value)
+    if (skFile.value) {
+      payload.append('file', skFile.value)
+    }
     if (buktiFile.value) {
       payload.append('bukti_kredensial_file', buktiFile.value)
     }
