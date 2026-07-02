@@ -156,16 +156,15 @@
           <!-- Upload Berkas (Berlaku untuk Kedua Tab) -->
           <div class="form-row mt-4 pt-3 border-top" v-if="!isLinking || selectedSkToLink">
             <div class="form-group col-sm-6">
-              <label>Upload SK (PDF) <span v-if="!isLinking">*</span></label>
+              <label>Upload SPK RKK (PDF) <span class="text-muted" style="font-weight: normal; font-size: 0.8rem;">(Opsional)</span></label>
               <input 
                 type="file" 
                 ref="skFileInput"
                 class="form-control file-input" 
                 accept="application/pdf"
-                :required="!isLinking"
                 @change="handleSkFileChange"
               >
-              <small class="text-muted mt-1 d-block" v-if="isLinking">Opsional: Unggah file untuk memperbarui/melengkapi berkas SK</small>
+              <small class="text-muted mt-1 d-block" v-if="isLinking">Opsional: Unggah file untuk memperbarui/melengkapi berkas SPK RKK</small>
             </div>
             <div class="form-group col-sm-6">
               <label>Upload Bukti Kredensial (Opsional)</label>
