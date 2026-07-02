@@ -143,7 +143,7 @@
               </div>
               <div class="form-group col-sm-6">
                 <label>Tanggal Terbit SK <span>*</span></label>
-                <input type="date" v-model="formData.tgl_terbit" class="form-control" :max="maxDate" required>
+                <input type="date" v-model="formData.tgl_terbit" class="form-control" required>
               </div>
             </div>
 

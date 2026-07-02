@@ -39,7 +39,7 @@
           <div v-if="!isEdit" class="form-row">
             <div class="form-group col-sm-6">
               <label>Tanggal Terbit <span>*</span></label>
-              <input type="date" v-model="formData.tgl_terbit" class="form-control" required :max="maxDate">
+              <input type="date" v-model="formData.tgl_terbit" class="form-control" required>
               <small class="text-muted mt-1 d-block">Penomoran akan otomatis digenerate.</small>
             </div>
           </div>
