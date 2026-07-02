@@ -258,9 +258,7 @@
                      </span>
                   </div>
                   <div v-else class="text-center">
-                    <button class="btn-quick-upload" @click="openUploadKredensialModal(berkas)" title="Upload Bukti Kredensial">
-                      <i class="fas fa-upload me-1"></i> Upload
-                    </button>
+                    <span class="text-muted italic small">Belum Ada</span>
                   </div>
                 </td>
               </template>
