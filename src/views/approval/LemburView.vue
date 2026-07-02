@@ -607,6 +607,12 @@ const canApprove = (item) => {
   if (item.status === 'PENGAJUAN') {
     // Unit manager phase: allowed if they are admin/SDI or if they belong to same department
     if (!isDeptLocked.value) return true
+    
+    // Exception: Allow DM5 coordinator to approve Eni Rusmawati's overtime
+    if (authStore.userDepartment === 'DM5' && item.pegawai?.nik === '2.401.0502') {
+      return true
+    }
+    
     return authStore.userDepartment === item.pegawai?.departemen
   }
   if (item.status === 'ACC1') {
