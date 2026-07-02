@@ -156,7 +156,7 @@
           <!-- Upload Berkas (Berlaku untuk Kedua Tab) -->
           <div class="form-row mt-4 pt-3 border-top" v-if="!isLinking || selectedSkToLink">
             <div class="form-group col-sm-6">
-              <label>Upload SPK RKK (PDF) <span class="text-muted" style="font-weight: normal; font-size: 0.8rem;">(Opsional)</span></label>
+              <label>Upload SPK RKK (PDF) (Opsional)</label>
               <input 
                 type="file" 
                 ref="skFileInput"
