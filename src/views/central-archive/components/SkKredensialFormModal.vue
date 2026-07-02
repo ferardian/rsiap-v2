@@ -131,40 +131,41 @@
 
           <!-- TERBITKAN BARU MODE -->
           <template v-else>
-
-          <!-- SK Basic Details -->
-          <div class="form-row mt-3">
-            <div class="form-group col-sm-6">
-              <label>Jenis SK <span>*</span></label>
-              <select v-model="formData.jenis" class="form-control" required>
-                <option value="">Pilih Jenis SK</option>
-                <option value="A">A (SK Dokumen/Kebijakan/Pedoman/SPO)</option>
-                <option value="B">B (SK Pengangkatan Jabatan)</option>
-              </select>
+            <!-- SK Basic Details -->
+            <div class="form-row mt-3">
+              <div class="form-group col-sm-6">
+                <label>Jenis SK <span>*</span></label>
+                <select v-model="formData.jenis" class="form-control" required>
+                  <option value="">Pilih Jenis SK</option>
+                  <option value="A">A (SK Dokumen/Kebijakan/Pedoman/SPO)</option>
+                  <option value="B">B (SK Pengangkatan Jabatan)</option>
+                </select>
+              </div>
+              <div class="form-group col-sm-6">
+                <label>Tanggal Terbit SK <span>*</span></label>
+                <input type="date" v-model="formData.tgl_terbit" class="form-control" :max="maxDate" required>
+              </div>
             </div>
-            <div class="form-group col-sm-6">
-              <label>Tanggal Terbit SK <span>*</span></label>
-              <input type="date" v-model="formData.tgl_terbit" class="form-control" :max="maxDate" required>
+
+            <div class="form-group mt-2">
+              <label>Perihal / Judul SK <span>*</span></label>
+              <input type="text" v-model="formData.judul" class="form-control" placeholder="Contoh: SK RKK Perawat Klinik II" required>
             </div>
-          </div>
+          </template>
 
-          <div class="form-group mt-2">
-            <label>Perihal / Judul SK <span>*</span></label>
-            <input type="text" v-model="formData.judul" class="form-control" placeholder="Contoh: SK RKK Perawat Klinik II" required>
-          </div>
-
-          <!-- Upload Berkas -->
-          <div class="form-row mt-4 pt-3 border-top">
+          <!-- Upload Berkas (Berlaku untuk Kedua Tab) -->
+          <div class="form-row mt-4 pt-3 border-top" v-if="!isLinking || selectedSkToLink">
             <div class="form-group col-sm-6">
-              <label>Upload SK (PDF) <span>*</span></label>
+              <label>Upload SK (PDF) <span v-if="!isLinking">*</span></label>
               <input 
                 type="file" 
                 ref="skFileInput"
                 class="form-control file-input" 
                 accept="application/pdf"
-                required
+                :required="!isLinking"
                 @change="handleSkFileChange"
               >
+              <small class="text-muted mt-1 d-block" v-if="isLinking">Opsional: Unggah file untuk memperbarui/melengkapi berkas SK</small>
             </div>
             <div class="form-group col-sm-6">
               <label>Upload Bukti Kredensial (Opsional)</label>
@@ -178,7 +179,6 @@
               <small class="text-muted mt-1 d-block">Lembar asesmen / logbook</small>
             </div>
           </div>
-          </template>
 
         </form>
       </div>
@@ -505,21 +505,51 @@ const submitForm = async () => {
     
     loading.value = true
     try {
+      // If files are provided, update the linked SK first
+      if (skFile.value || buktiFile.value) {
+        const skId = btoa(`${selectedSkToLink.value.nomor}.${selectedSkToLink.value.jenis}.${selectedSkToLink.value.tgl_terbit.split(' ')[0]}`)
+        
+        const skPayload = new FormData()
+        skPayload.append('jenis', selectedSkToLink.value.jenis)
+        skPayload.append('judul', selectedSkToLink.value.judul || selectedSkToLink.value.perihal)
+        
+        const pj = selectedSkToLink.value.pj || selectedSkToLink.value.penanggung_jawab?.nik || props.data.pj || props.data.penanggung_jawab?.nik
+        skPayload.append('pj', pj)
+        
+        if (selectedSkToLink.value.nik) {
+          skPayload.append('nik', selectedSkToLink.value.nik)
+        } else if (targetPegawai.value?.nik) {
+          skPayload.append('nik', targetPegawai.value.nik)
+        }
+        
+        skPayload.append('tgl_terbit', selectedSkToLink.value.tgl_terbit.split(' ')[0])
+        skPayload.append('id_kredensial', formData.value.id_kredensial)
+        
+        if (skFile.value) {
+          skPayload.append('file', skFile.value)
+        }
+        if (buktiFile.value) {
+          skPayload.append('bukti_kredensial_file', buktiFile.value)
+        }
+        
+        await skService.updateSk(skId, skPayload, true)
+      }
+
       const identifier = btoa(`${props.data.nomor}.${props.data.tgl_terbit.split(' ')[0]}`)
       
       let service = komiteKeperawatanService
       if (props.sumberKomite === 'medis') service = komiteMedisService
       else if (props.sumberKomite === 'kesehatan') service = komiteKesehatanService
-
-        await service.update(identifier, {
-          nomor: props.data.nomor,
-          tgl_terbit: props.data.tgl_terbit.split(' ')[0],
-          pj: props.data.pj || props.data.penanggung_jawab?.nik,
-          perihal: props.data.perihal,
-          status: String(props.data.status || '1'),
-          id_sk: selectedSkToLink.value.nomor,
-          id_kredensial: formData.value.id_kredensial
-        })
+ 
+      await service.update(identifier, {
+        nomor: props.data.nomor,
+        tgl_terbit: props.data.tgl_terbit.split(' ')[0],
+        pj: props.data.pj || props.data.penanggung_jawab?.nik,
+        perihal: props.data.perihal,
+        status: String(props.data.status || '1'),
+        id_sk: selectedSkToLink.value.nomor,
+        id_kredensial: formData.value.id_kredensial
+      })
 
       toast.success('Berhasil menautkan SK')
       emit('saved')
