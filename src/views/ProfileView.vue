@@ -7,9 +7,9 @@
         <aside class="profile-sidebar">
           <div class="sidebar-card">
             <div class="avatar-section">
-              <div class="profile-avatar" :class="profileData.jk === 'P' ? 'avatar-pink' : 'avatar-blue'">
+              <div class="profile-avatar" :class="isFemale(profileData.jk) ? 'avatar-pink' : 'avatar-blue'">
                 <img v-if="profileData.photo" :src="getPhotoUrl(profileData.photo)" :alt="profileData.nama" class="avatar-img">
-                <i v-else class="fas" :class="profileData.jk === 'P' ? 'fa-female' : 'fa-male'"></i>
+                <i v-else class="fas" :class="isFemale(profileData.jk) ? 'fa-female' : 'fa-male'"></i>
               </div>
               <h2 class="user-name">{{ profileData.nama || 'User' }}</h2>
               <p class="user-role">{{ profileData.jbtn || '-' }}</p>
@@ -542,7 +542,15 @@ const getPhotoUrl = (photo) => {
   return `${config.public.PHOTO_URL}${photo}`
 }
 
-const formatGender = (jk) => jk === 'P' ? 'Perempuan' : 'Laki-laki'
+const isFemale = (jk) => {
+  if (!jk) return false
+  return jk === 'P' || jk === 'Perempuan' || jk === 'Wanita'
+}
+
+const formatGender = (jk) => {
+  if (!jk) return '-'
+  return isFemale(jk) ? 'Perempuan' : 'Laki-laki'
+}
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
   return new Date(dateStr).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
