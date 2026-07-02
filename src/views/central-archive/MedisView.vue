@@ -56,6 +56,30 @@
       </div>
     </div>
 
+    <!-- Info Workflow Banner -->
+    <div v-if="activeTab !== 'staf'" class="workflow-info-banner mb-4" :class="activeTab === 'standar' ? 'banner-standar' : 'banner-kredensial'">
+      <div class="banner-icon-wrapper">
+        <i :class="activeTab === 'standar' ? 'fas fa-lightbulb' : 'fas fa-route'"></i>
+      </div>
+      <div class="banner-text">
+        <template v-if="activeTab === 'standar'">
+          <div class="banner-title">💡 Petunjuk Pengarsipan Komite Medis</div>
+          <ol class="banner-list">
+            <li>Gunakan menu ini untuk mencatat surat undangan rapat atau kegiatan reguler komite.</li>
+            <li>Khusus untuk surat <strong>Undangan Kredensial (SPK RKK)</strong>, perihal wajib mengandung kata <strong>"Kredensial"</strong> dan harus memilih <strong>Target Pegawai</strong> agar pengajuan otomatis terhubung ke Tab Kredensial.</li>
+          </ol>
+        </template>
+        <template v-else-if="activeTab === 'kredensial'">
+          <div class="banner-title">📢 Alur Penerbitan SPK RKK (Kredensial)</div>
+          <ol class="banner-list">
+            <li><strong>Inisiasi:</strong> Buat Surat Undangan baru bertema "Kredensial" di Tab 1 (wajib pilih Target Pegawai).</li>
+            <li><strong>Persetujuan:</strong> Tunggu persetujuan nomor surat oleh sekretariat di menu <strong>Persetujuan Nomor Surat</strong>.</li>
+            <li><strong>Penerbitan SK:</strong> Setelah status disetujui, klik menu aksi <i class="fas fa-ellipsis-v mx-1"></i> &rarr; pilih <strong>"Terbitkan / Update SK"</strong> pada baris surat di tab ini.</li>
+          </ol>
+        </template>
+      </div>
+    </div>
+
     <!-- Action Bar -->
     <div class="action-bar-modern">
       <div class="action-bar-row">
@@ -89,10 +113,10 @@
         </div>
 
         <!-- Add Button Right -->
-        <div class="action-buttons" v-if="activeTab !== 'staf'">
-          <button class="btn-primary" :class="{ 'btn-purple': activeTab === 'kredensial' }" @click="openCreateModal">
+        <div class="action-buttons" v-if="activeTab === 'standar'">
+          <button class="btn-primary" @click="openCreateModal">
             <i class="fas fa-plus"></i>
-            <span>{{ activeTab === 'kredensial' ? 'Buat Pengajuan' : 'Tambah Berkas' }}</span>
+            <span>Tambah Berkas</span>
           </button>
         </div>
       </div>
@@ -192,7 +216,7 @@
                     <div class="fw-medium text-purple-dark mb-1" style="line-height: 1.2;">{{ item.sk.judul }}</div>
                     <div class="d-flex flex-wrap gap-1">
                       <span class="badge" style="background:#f5f3ff; color:#7c3aed; font-weight:500; font-size:10px; border:1px solid #ddd6fe;">
-                        <i class="fas fa-file-signature me-1"></i> {{ item.sk.prefix ? item.sk.nomor + '/' + item.sk.prefix : item.sk.nomor }}
+                        <i class="fas fa-file-signature me-1"></i> {{ formatNomorSk(item.sk) }}
                       </span>
                       <span v-if="item.sk.kredensial" class="badge" style="background:#fff7ed; color:#c2410c; font-weight:600; font-size:10px; border:1px solid #ffedd5;">
                         <i class="fas fa-medal me-1"></i> {{ item.sk.kredensial.label }}
@@ -677,6 +701,17 @@ const formatNomorSurat = (berkas, forceKredensial = false) => {
   }
 }
 
+const formatNomorSk = (sk) => {
+  if (!sk) return '-'
+  try {
+    const tglPattern = sk.tgl_terbit ? format(new Date(sk.tgl_terbit.replace(' ', 'T').split('.')[0]), 'ddMMyy') : ''
+    const no = String(sk.nomor).padStart(3, '0')
+    return `${no}/${sk.jenis || 'B'}/${sk.prefix || 'SK-RSIA'}/${tglPattern}`
+  } catch (e) {
+    return `${sk.nomor}/${sk.jenis || 'B'}/${sk.prefix || 'SK-RSIA'}`
+  }
+}
+
 const getInitials = (name) => {
   if (!name) return '?'
   const cleaned = name.replace(/^(dr\.|drg\.|dr\.\s|drg\.\s)/i, '')
@@ -775,6 +810,79 @@ const displayedPages = computed(() => {
   min-height: 100vh;
   background-color: #f8fafc;
   padding: 1.5rem;
+}
+
+.workflow-info-banner {
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.banner-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
+}
+
+.banner-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.banner-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.banner-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.banner-list li {
+  margin-bottom: 0.25rem;
+}
+
+.banner-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Standar/General Theme (Green/Teal) */
+.banner-standar {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #a7f3d0;
+}
+.banner-standar .banner-icon-wrapper {
+  background: #d1fae5;
+  color: #059669;
+}
+.banner-standar .banner-text {
+  color: #065f46;
+}
+
+/* Kredensial Theme (Indigo/Purple) */
+.banner-kredensial {
+  background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+  border: 1px solid #c7d2fe;
+}
+.banner-kredensial .banner-icon-wrapper {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+.banner-kredensial .banner-text {
+  color: #3730a3;
 }
 
 /* Hero Header */

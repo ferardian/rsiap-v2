@@ -110,7 +110,7 @@
                     @click="selectSk(sk)"
                   >
                     <div class="fw-bold fs-sm">{{ sk.judul || sk.perihal }}</div>
-                    <div class="text-muted small">No: {{ sk.prefix ? sk.nomor + '/' + sk.prefix : sk.nomor }} &bull; {{ sk.tgl_terbit }}</div>
+                    <div class="text-muted small">No: {{ formatNomorSk(sk) }} &bull; {{ sk.tgl_terbit }}</div>
                   </div>
                 </div>
                 <div v-if="showSkList && searchSkList.length === 0 && searchSkQuery.length >= 3 && !searchingSk" class="search-results-dropdown p-3 text-center text-muted" style="position:absolute; z-index:10; width:100%; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">
@@ -124,7 +124,7 @@
                <div class="pj-avatar bg-blue-light text-blue" style="background:#dbeafe; color:#2563eb;"><i class="fas fa-file-signature"></i></div>
                <div class="pj-details">
                  <span class="pj-nama">{{ selectedSkToLink.judul || selectedSkToLink.perihal }}</span>
-                 <span class="pj-nik">No: {{ selectedSkToLink.prefix ? selectedSkToLink.nomor + '/' + selectedSkToLink.prefix : selectedSkToLink.nomor }}</span>
+                 <span class="pj-nik">No: {{ formatNomorSk(selectedSkToLink) }}</span>
                </div>
             </div>
           </div>
@@ -198,6 +198,7 @@
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import { format } from 'date-fns'
 import { pegawaiService } from '@/services/pegawaiService'
 import { skService } from '@/services/skService'
 import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
@@ -474,6 +475,17 @@ const handleBuktiFileChange = (e) => {
     return
   }
   buktiFile.value = file
+}
+
+const formatNomorSk = (sk) => {
+  if (!sk) return '-'
+  try {
+    const tglPattern = sk.tgl_terbit ? format(new Date(sk.tgl_terbit.replace(' ', 'T').split('.')[0]), 'ddMMyy') : ''
+    const no = String(sk.nomor).padStart(3, '0')
+    return `${no}/${sk.jenis || 'B'}/${sk.prefix || 'SK-RSIA'}/${tglPattern}`
+  } catch (e) {
+    return `${sk.nomor}/${sk.jenis || 'B'}/${sk.prefix || 'SK-RSIA'}`
+  }
 }
 
 const getInitials = (name) => {

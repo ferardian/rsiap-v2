@@ -1592,6 +1592,49 @@ const buildChartDataForIndicator = (ind, indRealisasi, daysInMonth, yearMonth, i
         ? Math.max(100, ...dailyData.map(d => Math.max(d.num || 0, d.denum || 0)))
         : Math.max(target * 1.2, ...scoresSeries.filter(s => s !== null).map(Number), 10)
 
+    const discreteMarkers = []
+    dailyData.forEach((dayData, idx) => {
+        if (dayData.score !== null) {
+            if (needsDen) {
+                // Series indices: 0 = Denominator, 1 = Numerator, 2 = Capaian (%)
+                discreteMarkers.push({
+                    seriesIndex: 0,
+                    dataPointIndex: idx,
+                    fillColor: '#10b981',
+                    strokeColor: '#fff',
+                    size: 5,
+                    shape: 'circle'
+                })
+                discreteMarkers.push({
+                    seriesIndex: 1,
+                    dataPointIndex: idx,
+                    fillColor: '#3b82f6',
+                    strokeColor: '#fff',
+                    size: 5,
+                    shape: 'circle'
+                })
+                discreteMarkers.push({
+                    seriesIndex: 2,
+                    dataPointIndex: idx,
+                    fillColor: '#6366f1',
+                    strokeColor: '#fff',
+                    size: 7,
+                    shape: 'circle'
+                })
+            } else {
+                // Series index: 0 = Capaian
+                discreteMarkers.push({
+                    seriesIndex: 0,
+                    dataPointIndex: idx,
+                    fillColor: '#3b82f6',
+                    strokeColor: '#fff',
+                    size: 7,
+                    shape: 'circle'
+                })
+            }
+        }
+    })
+
     const chartOptions = {
         chart: {
             id: `chart-${ind.id_inmut}`,
@@ -1602,12 +1645,14 @@ const buildChartDataForIndicator = (ind, indRealisasi, daysInMonth, yearMonth, i
         },
         stroke: {
             curve: 'smooth',
-            width: needsDen ? [2, 2, 4] : [4]
+            width: needsDen ? [2, 2, 4] : [4],
+            connectNulls: true
         },
         markers: {
             size: needsDen ? [3, 3, 5] : [5],
             strokeWidth: 0,
-            hover: { size: 6 }
+            hover: { size: 6 },
+            discrete: discreteMarkers
         },
         colors: needsDen ? ['#10b981', '#3b82f6', '#6366f1'] : ['#3b82f6'],
         xaxis: {
