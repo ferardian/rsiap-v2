@@ -76,7 +76,12 @@
           <ol class="banner-list">
             <li><strong>Inisiasi:</strong> Buat Surat Undangan baru bertema "Kredensial" di Tab 1 (wajib pilih Target Pegawai).</li>
             <li><strong>Persetujuan:</strong> Tunggu persetujuan nomor surat oleh sekretariat di menu <strong>Persetujuan Nomor Surat</strong>.</li>
-            <li><strong>Penerbitan SK:</strong> Setelah status disetujui, klik menu aksi <i class="fas fa-ellipsis-v mx-1"></i> &rarr; pilih <strong>"Terbitkan / Update SK"</strong> pada baris surat di tab ini.</li>
+            <li><strong>Penerbitan SK:</strong> Setelah status disetujui, klik menu aksi <i class="fas fa-ellipsis-v mx-1"></i> &rarr; pilih <strong>"Terbitkan / Update SK"</strong> pada baris surat di tab ini:
+              <ul class="banner-sub-list mt-1">
+                <li><strong>Opsi A (Generate Baru):</strong> Jika SK belum dibuat, pilih tab <em>Terbitkan Baru</em> untuk men-generate nomor SK baru (upload file opsional di awal). File PDF SK/Bukti Kredensial bisa dilengkapi belakangan setelah ditandatangani Direktur.</li>
+                <li><strong>Opsi B (Tautkan SK):</strong> Jika nomor SK sudah dibuat di menu Arsip SK, pilih tab <em>Tautkan SK Tersedia</em> lalu pilih nomor SK-nya. Anda juga bisa mengunggah berkas PDF SPK RKK di sini secara opsional.</li>
+              </ul>
+            </li>
           </ol>
         </template>
       </div>
@@ -1064,6 +1069,18 @@ const displayedPages = computed(() => {
 
 .banner-list li:last-child {
   margin-bottom: 0;
+}
+
+.banner-sub-list {
+  margin: 0;
+  padding-left: 1rem;
+  list-style-type: disc;
+}
+
+.banner-sub-list li {
+  margin-bottom: 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 /* Standar/General Theme (Green/Teal) */
