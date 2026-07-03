@@ -62,6 +62,15 @@
                 </select>
               </div>
 
+              <!-- Basis Ranap (Admission/Discharge) -->
+              <div v-if="filters.status_lanjut === 'Ranap' || filters.status_lanjut === 'all'" class="filter-unit service-unit">
+                <span class="unit-label">Basis Ranap</span>
+                <select v-model="filters.tgl_ranap" @change="fetchData" class="mini-select">
+                  <option value="keluar">Tgl Keluar (Discharge)</option>
+                  <option value="masuk">Tgl Masuk (Admission)</option>
+                </select>
+              </div>
+
               <!-- Unit/Poli -->
               <div class="filter-unit poli-unit">
                 <span class="unit-label">Poliklinik / Unit</span>
@@ -750,6 +759,7 @@ const filters = ref({
   tgl_akhir: new Date().toISOString().substr(0, 10),
   tahun: currentYear,
   status_lanjut: 'all',
+  tgl_ranap: 'keluar',
   kd_poli: 'all',
   kd_dokter: 'all'
 })
