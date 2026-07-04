@@ -9,6 +9,9 @@
           <p class="page-subtitle">Verifikasi pengajuan lembur yang telah disetujui koordinator untuk disahkan oleh SDI.</p>
         </div>
         <div class="header-actions">
+          <button @click="exportToExcel" class="btn-header btn-export-excel mr-2">
+            <i class="fas fa-file-excel mr-2"></i> Ekspor Excel
+          </button>
           <button @click="openSplModal" class="btn-header">
             <i class="fas fa-file-signature mr-2"></i> Kelola SPL
           </button>
@@ -442,6 +445,7 @@ import { pegawaiService } from '../../services/pegawaiService'
 import { showToast } from '../../utils/notification'
 import config from '../../config/api'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 
 const authStore = useAuthStore()
 
@@ -1105,6 +1109,66 @@ const createNewSplFromOvertime = (item) => {
   splModal.value.activeTab = 'create'
 }
 
+const exportToExcel = () => {
+  if (filteredLemburList.value.length === 0) {
+    showToast('Tidak ada data untuk diekspor', 'warning')
+    return
+  }
+
+  const formattedData = filteredLemburList.value.map((item, idx) => {
+    const rawApprovedDuration = item.durasi_acc === '00:00:00' || !item.durasi_acc || item.durasi_acc === '-' 
+      ? item.durasi_pengajuan 
+      : item.durasi_acc
+
+    return {
+      'No': idx + 1,
+      'Nama Pegawai': item.pegawai?.nama || 'Unknown',
+      'NIK': item.pegawai?.nik || '-',
+      'Unit Kerja': item.pegawai?.dep?.nama || '-',
+      'Jam Masuk': item.jam_datang ? formatDateTime(item.jam_datang) : '-',
+      'Jam Pulang': item.jam_pulang ? formatDateTime(item.jam_pulang) : '-',
+      'Durasi Pengajuan (Menit)': parseToMinutes(item.durasi_pengajuan),
+      'Durasi Disetujui (Menit)': parseToMinutes(rawApprovedDuration),
+      'Kegiatan': item.kegiatan || '-',
+      'No. SPL': item.no_spl || 'Tanpa SPL',
+      'Status': item.status || '-'
+    }
+  })
+
+  const ws = XLSX.utils.json_to_sheet(formattedData)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Lembur')
+
+  // Auto-fit column widths
+  const maxProps = [
+    { wch: 6 },   // No
+    { wch: 35 },  // Nama Pegawai
+    { wch: 15 },  // NIK
+    { wch: 25 },  // Unit Kerja
+    { wch: 20 },  // Jam Masuk
+    { wch: 20 },  // Jam Pulang
+    { wch: 25 },  // Durasi Pengajuan (Menit)
+    { wch: 25 },  // Durasi Disetujui (Menit)
+    { wch: 45 },  // Kegiatan
+    { wch: 30 },  // No. SPL
+    { wch: 15 }   // Status
+  ]
+  ws['!cols'] = maxProps
+
+  const monthName = months[filter.value.month - 1]
+  const tabNameMap = {
+    'pending_mgr': 'Menunggu_Koordinator',
+    'pending_sdi': 'Menunggu_SDI',
+    'approved': 'Disetujui',
+    'rejected': 'Ditolak'
+  }
+  const tabLabel = tabNameMap[activeTab.value] || activeTab.value
+  const filename = `Laporan_Verifikasi_Lembur_${tabLabel}_${monthName}_${filter.value.year}.xlsx`
+
+  XLSX.writeFile(wb, filename)
+  showToast('Laporan lembur berhasil diekspor ke Excel', 'success')
+}
+
 const closeSplModal = () => {
   splModal.value.show = false
   fetchData()
@@ -1638,6 +1702,7 @@ select.filter-input {
 .header-actions {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
 }
 
 .btn-header {
@@ -1659,6 +1724,16 @@ select.filter-input {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.btn-export-excel {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+}
+
+.btn-export-excel:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
 }
 
 .btn-header i {
