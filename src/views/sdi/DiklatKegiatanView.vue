@@ -409,36 +409,68 @@
               </div>
 
               <div class="form-group mb-0">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="form-label extra-small mb-0">Materi Pelatihan (Ringkasan)</label>
-                  <div class="d-flex gap-1">
-                    <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 extra-small" @click="insertRow" title="Tambah Baris Bawah">
-                      + Baris
-                    </button>
-                    <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 extra-small" @click="deleteRow" title="Hapus Baris">
-                      - Baris
-                    </button>
-                    <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 extra-small" @click="insertColumn" title="Tambah Kolom Kanan">
-                      + Kolom
-                    </button>
-                    <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 extra-small" @click="deleteColumn" title="Hapus Kolom">
-                      - Kolom
-                    </button>
-                    <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 extra-small text-danger" @click="deleteTable" title="Hapus Tabel">
-                      Hapus Tabel
-                    </button>
-                  </div>
+                <label class="form-label extra-small mb-1 d-block">
+                  <i class="fas fa-align-left me-1 text-muted"></i>Materi Pelatihan (Ringkasan)
+                  <span class="text-muted ms-1" style="font-weight:400;">(mendukung tabel, paste dari Word)</span>
+                </label>
+                <!-- TipTap Toolbar -->
+                <div class="tiptap-toolbar d-flex flex-wrap align-items-center gap-1 p-2 border border-bottom-0 rounded-top-2 bg-light">
+                  <!-- Text Formatting -->
+                  <button type="button" class="tiptap-btn" :class="{ active: tiptapEditor?.isActive('bold') }" @click="tiptapEditor?.chain().focus().toggleBold().run()" title="Bold">
+                    <i class="fas fa-bold"></i>
+                  </button>
+                  <button type="button" class="tiptap-btn" :class="{ active: tiptapEditor?.isActive('italic') }" @click="tiptapEditor?.chain().focus().toggleItalic().run()" title="Italic">
+                    <i class="fas fa-italic"></i>
+                  </button>
+                  <button type="button" class="tiptap-btn" :class="{ active: tiptapEditor?.isActive('underline') }" @click="tiptapEditor?.chain().focus().toggleUnderline().run()" title="Underline">
+                    <i class="fas fa-underline"></i>
+                  </button>
+                  <div class="tiptap-divider"></div>
+                  <!-- Lists -->
+                  <button type="button" class="tiptap-btn" :class="{ active: tiptapEditor?.isActive('bulletList') }" @click="tiptapEditor?.chain().focus().toggleBulletList().run()" title="Bullet List">
+                    <i class="fas fa-list-ul"></i>
+                  </button>
+                  <button type="button" class="tiptap-btn" :class="{ active: tiptapEditor?.isActive('orderedList') }" @click="tiptapEditor?.chain().focus().toggleOrderedList().run()" title="Ordered List">
+                    <i class="fas fa-list-ol"></i>
+                  </button>
+                  <div class="tiptap-divider"></div>
+                  <!-- Heading -->
+                  <button type="button" class="tiptap-btn" :class="{ active: tiptapEditor?.isActive('heading', { level: 2 }) }" @click="tiptapEditor?.chain().focus().toggleHeading({ level: 2 }).run()" title="Heading">
+                    <i class="fas fa-heading"></i>
+                  </button>
+                  <div class="tiptap-divider"></div>
+                  <!-- Table Controls -->
+                  <button type="button" class="tiptap-btn tiptap-btn-table" @click="tiptapInsertTable" title="Sisipkan Tabel">
+                    <i class="fas fa-table"></i><span class="ms-1">Tabel</span>
+                  </button>
+                  <button type="button" class="tiptap-btn" @click="tiptapEditor?.chain().focus().addColumnBefore().run()" title="Tambah Kolom Kiri">
+                    <i class="fas fa-columns"></i>+
+                  </button>
+                  <button type="button" class="tiptap-btn" @click="tiptapEditor?.chain().focus().addRowAfter().run()" title="Tambah Baris Bawah">
+                    <i class="fas fa-grip-lines"></i>+
+                  </button>
+                  <button type="button" class="tiptap-btn text-danger" @click="tiptapEditor?.chain().focus().deleteColumn().run()" title="Hapus Kolom">
+                    <i class="fas fa-columns"></i>-
+                  </button>
+                  <button type="button" class="tiptap-btn text-danger" @click="tiptapEditor?.chain().focus().deleteRow().run()" title="Hapus Baris">
+                    <i class="fas fa-grip-lines"></i>-
+                  </button>
+                  <button type="button" class="tiptap-btn text-danger" @click="tiptapEditor?.chain().focus().deleteTable().run()" title="Hapus Tabel">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                  <div class="tiptap-divider"></div>
+                  <!-- Clear Formatting -->
+                  <button type="button" class="tiptap-btn text-muted" @click="tiptapEditor?.chain().focus().clearNodes().unsetAllMarks().run()" title="Hapus Format">
+                    <i class="fas fa-remove-format"></i>
+                  </button>
                 </div>
-                <QuillEditor
-                  :key="editorKey"
-                  theme="snow"
-                  content-type="html"
-                  v-model:content="form.materi"
-                  :options="editorOptions"
-                  @ready="onEditorReady"
-                  style="height: 150px; background-color: white;"
-                  placeholder="Contoh: Jadwal, waktu, materi, dan pemateri..."
-                />
+                <!-- TipTap Editor Content Area -->
+                <div class="tiptap-editor-wrapper border rounded-bottom-2">
+                  <editor-content :editor="tiptapEditor" class="tiptap-content" />
+                </div>
+                <p class="extra-small text-muted mt-1 mb-0">
+                  <i class="fas fa-info-circle me-1"></i>Mendukung paste tabel langsung dari Word/Excel
+                </p>
               </div>
             </div>
 
@@ -457,21 +489,22 @@
 
             <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
             <!-- Required only in Create Kegiatan mode or Add Participant mode -->
-            <div v-if="!isEditMode && formMode !== 'edit_kegiatan'" class="form-group mb-3 position-relative">
+            <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3 position-relative">
               <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
-              <div class="search-box position-relative">
-                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="z-index: 5;"></i>
+              <div class="search-box d-flex align-items-center border rounded-2 bg-white px-3 gap-2" style="height: 38px;">
+                <i class="fas fa-search text-muted flex-shrink-0" style="font-size: 0.85rem;"></i>
                 <input 
                   type="text" 
                   v-model="empQuery" 
                   @input="searchEmployees"
                   placeholder="Ketik NIK atau nama pegawai..."
-                  class="form-control ps-5"
+                  class="border-0 flex-grow-1 bg-transparent"
+                  style="outline: none; font-size: 0.9rem; min-width: 0;"
                   :disabled="form.nik !== null"
                   required
                 />
-                <button type="button" v-if="form.nik" @click="clearEmployeeSelection" class="btn-clear position-absolute top-50 end-0 translate-middle-y me-3 border-0 bg-transparent">
-                  <i class="fas fa-times text-danger"></i>
+                <button type="button" v-if="form.nik" @click="clearEmployeeSelection" class="border-0 bg-transparent p-0 flex-shrink-0">
+                  <i class="fas fa-times text-danger" style="font-size: 0.85rem;"></i>
                 </button>
               </div>
 
@@ -501,14 +534,14 @@
             </div>
 
             <!-- In edit mode, we just show employee info read-only -->
-            <div v-else-if="formMode !== 'edit_kegiatan'" class="form-info-box animate__animated animate__fadeIn">
+            <div v-else-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-info-box animate__animated animate__fadeIn">
               <label class="form-label small text-muted"><i class="fas fa-user me-1 text-primary"></i>Pegawai</label>
               <div class="fw-bold text-dark mt-1">{{ selectedParticipantItem?.pegawai?.nama }}</div>
               <div class="small text-muted font-mono mt-1">NIK: {{ selectedParticipantItem?.pegawai?.nik }}</div>
             </div>
 
             <!-- Peran / Peserta Role -->
-            <div v-if="formMode !== 'edit_kegiatan'" class="form-group mb-3">
+            <div v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3">
               <label class="form-label"><i class="fas fa-user-tag me-1"></i>Peran Pegawai <span class="text-danger">*</span></label>
               <select v-model="form.peserta" class="form-select" required>
                 <option value="Peserta">Peserta</option>
@@ -517,10 +550,10 @@
               </select>
             </div>
 
-            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan'" />
+            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" />
 
-            <!-- File Upload / Bukti sertifikat -->
-            <div v-if="formMode !== 'edit_kegiatan'" class="form-group mb-4">
+            <!-- File Upload / Bukti sertifikat (HANYA untuk Eksternal) -->
+            <div v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan' && selectedKegiatan?.kategori === 'Eksternal'" class="form-group mb-4">
               <label class="form-label"><i class="fas fa-file-upload me-1"></i>Berkas Sertifikat / Bukti</label>
               
               <!-- Drag and drop zone -->
@@ -846,8 +879,10 @@ import { generateSertifikatDiklat, downloadPdfFromBlob, printPdfFromBlob } from 
 import config from '@/config/api'
 import logoRsiaAsset from '@/assets/logo-rsia.png'
 import logoLarsiAsset from '@/assets/logo-larsi.png'
-import { QuillEditor } from '@vueup/vue-quill'
-import 'quill/dist/quill.snow.css'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { StarterKit } from '@tiptap/starter-kit'
+import { Underline } from '@tiptap/extension-underline'
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 
 const toast = useToast()
 
@@ -914,136 +949,45 @@ const selectedKegiatanToEdit = ref(null)
 // Mode: 'create_kegiatan' | 'add_participant' | 'edit' | 'edit_kegiatan'
 const formMode = ref('add_participant')
 
-const editorKey = ref(0)
-watch(showFormSidebar, (newVal) => {
-  if (newVal) {
-    editorKey.value++
+// === TIPTAP EDITOR SETUP ===
+const tiptapEditor = useEditor({
+  content: '',
+  extensions: [
+    StarterKit,
+    Underline,
+    Table.configure({
+      resizable: true,
+      HTMLAttributes: { class: 'tiptap-table' }
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+  ],
+  onUpdate({ editor }) {
+    form.materi = editor.getHTML()
+  },
+  editorProps: {
+    attributes: {
+      class: 'tiptap-input',
+      placeholder: 'Ketik materi, atau paste tabel dari Word/Excel...'
+    }
   }
 })
 
-let activeQuill = null
-const onEditorReady = (quillInstance) => {
-  activeQuill = quillInstance
-  if (form.materi) {
-    quillInstance.clipboard.dangerouslyPasteHTML(form.materi)
-  }
-}
-
-const insertRow = () => {
-  if (activeQuill) {
-    const tableModule = activeQuill.getModule('table')
-    if (tableModule) {
-      tableModule.insertRowBelow()
-    }
-  }
-}
-const deleteRow = () => {
-  if (activeQuill) {
-    const tableModule = activeQuill.getModule('table')
-    if (tableModule) {
-      tableModule.deleteRow()
-    }
-  }
-}
-const insertColumn = () => {
-  if (activeQuill) {
-    const tableModule = activeQuill.getModule('table')
-    if (tableModule) {
-      tableModule.insertColumnRight()
-    }
-  }
-}
-const deleteColumn = () => {
-  if (activeQuill) {
-    const tableModule = activeQuill.getModule('table')
-    if (tableModule) {
-      tableModule.deleteColumn()
-    }
-  }
-}
-const deleteTable = () => {
-  if (activeQuill) {
-    const tableModule = activeQuill.getModule('table')
-    if (tableModule) {
-      tableModule.deleteTable()
-    }
-  }
-}
-
-const cleanHtmlTable = (htmlStr) => {
-  if (!htmlStr || htmlStr.trim() === '') return ''
-
-  try {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(htmlStr, 'text/html')
-    const tables = doc.querySelectorAll('table')
-    if (tables.length === 0) return htmlStr
-
-    tables.forEach(table => {
-      // 1. Ensure <tbody> exists
-      let tbody = table.querySelector('tbody')
-      if (!tbody) {
-        tbody = doc.createElement('tbody')
-        const children = Array.from(table.childNodes)
-        children.forEach(child => {
-          if (child.nodeName === 'TR') {
-            tbody.appendChild(child)
-          }
-        })
-        table.appendChild(tbody)
+// Sync form.materi into editor when sidebar opens or form is reset
+watch(showFormSidebar, (isOpen) => {
+  if (isOpen) {
+    // Brief delay to ensure editor is mounted
+    setTimeout(() => {
+      if (tiptapEditor.value) {
+        tiptapEditor.value.commands.setContent(form.materi || '')
       }
-
-      // 2. Add data-row to td/th cells and clean cell attributes
-      const rows = table.querySelectorAll('tr')
-      rows.forEach((row) => {
-        const rowId = 'row-' + Math.random().toString(36).slice(2, 6)
-        const cells = row.querySelectorAll('td, th')
-        cells.forEach(cell => {
-          cell.setAttribute('data-row', rowId)
-          cell.classList.add('ql-table-cell')
-          
-          const allowedAttributes = ['colspan', 'rowspan', 'data-row', 'class']
-          const attribs = Array.from(cell.attributes)
-          attribs.forEach(attr => {
-            if (!allowedAttributes.includes(attr.name.toLowerCase())) {
-              cell.removeAttribute(attr.name)
-            }
-          })
-        })
-      })
-
-      // 3. Strip attributes from table, tbody, and tr to avoid MS Word conflicts
-      const cleanElementAttribs = (el, allowed) => {
-        const attribs = Array.from(el.attributes)
-        attribs.forEach(attr => {
-          if (!allowed.includes(attr.name.toLowerCase())) {
-            el.removeAttribute(attr.name)
-          }
-        })
-      }
-      cleanElementAttribs(table, [])
-      cleanElementAttribs(tbody, [])
-      rows.forEach(r => cleanElementAttribs(r, []))
-    })
-
-    return doc.body.innerHTML
-  } catch (e) {
-    console.warn('Error cleaning HTML table:', e)
-    return htmlStr
+    }, 80)
   }
-}
+})
 
-const editorOptions = {
-  modules: {
-    toolbar: [
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link'],
-      ['table'],
-      ['clean']
-    ],
-    table: true
-  }
+const tiptapInsertTable = () => {
+  tiptapEditor.value?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
 }
 
 // File Upload Drag & Drop State
@@ -1240,6 +1184,11 @@ const resetForm = () => {
   if (fileInputRef.value) {
     fileInputRef.value.value = ''
   }
+
+  // Clear TipTap editor
+  setTimeout(() => {
+    tiptapEditor.value?.commands.setContent('')
+  }, 50)
 }
 
 const openAddKegiatanModal = () => {
@@ -1283,13 +1232,18 @@ const openEditModal = (item) => {
     form.skp = selectedKegiatan.value.skp || ''
     form.penyelenggara = selectedKegiatan.value.penyelenggara || ''
     form.nomor = selectedKegiatan.value.nomor || ''
-    form.materi = cleanHtmlTable(selectedKegiatan.value.materi || '')
+    form.materi = selectedKegiatan.value.materi || ''
     form.ttd1_id = selectedKegiatan.value.ttd1_id || null
     form.ttd2_id = selectedKegiatan.value.ttd2_id || null
   }
   
   showFormSidebar.value = true
+  // Sync TipTap editor
+  setTimeout(() => {
+    tiptapEditor.value?.commands.setContent(form.materi || '')
+  }, 100)
 }
+
 
 const openEditKegiatanModal = (keg) => {
   resetForm()
@@ -1308,11 +1262,15 @@ const openEditKegiatanModal = (keg) => {
   form.skp = keg.skp || ''
   form.penyelenggara = keg.penyelenggara || ''
   form.nomor = keg.nomor || ''
-  form.materi = cleanHtmlTable(keg.materi || '')
+  form.materi = keg.materi || ''
   form.ttd1_id = keg.ttd1_id || null
   form.ttd2_id = keg.ttd2_id || null
   
   showFormSidebar.value = true
+  // Sync editor
+  setTimeout(() => {
+    tiptapEditor.value?.commands.setContent(form.materi || '')
+  }, 100)
 }
 
 const closeSidebar = () => {
@@ -2481,14 +2439,157 @@ const formatBytes = (bytes, decimals = 2) => {
   text-align: left;
 }
 
-.sidebar-body :deep(.ql-editor table th) {
-  background-color: #f8fafc !important;
-  font-weight: bold !important;
+/* ==============================
+   TIPTAP EDITOR STYLES
+   ============================== */
+
+/* Toolbar */
+.tiptap-toolbar {
+  background-color: #f8fafc;
+  border-color: #e2e8f0 !important;
+  user-select: none;
 }
 
-.sidebar-body :deep(.ql-editor .ql-table-block) {
+.tiptap-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  background: white;
+  color: #475569;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+.tiptap-btn:hover {
+  background: #e2e8f0;
+  color: #1e3a5f;
+}
+.tiptap-btn.active {
+  background: #1e3a5f;
+  color: white;
+  border-color: #1e3a5f;
+}
+.tiptap-btn.text-danger:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+.tiptap-btn-table {
+  padding: 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.tiptap-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #e2e8f0;
+  margin: 0 2px;
+}
+
+/* Editor Content Area */
+.tiptap-editor-wrapper {
+  border-color: #e2e8f0 !important;
+  background-color: white;
+  min-height: 180px;
+}
+
+.tiptap-content {
+  min-height: 180px;
+}
+
+.tiptap-content :deep(.ProseMirror) {
+  padding: 12px 14px;
+  min-height: 180px;
+  outline: none;
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.tiptap-content :deep(.ProseMirror p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}
+
+/* TipTap Table Styles */
+.tiptap-content :deep(.ProseMirror table),
+.materi-html-container :deep(table),
+.rich-text-content table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 8px 0 !important;
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.tiptap-content :deep(.ProseMirror table td),
+.tiptap-content :deep(.ProseMirror table th),
+.materi-html-container :deep(table td),
+.materi-html-container :deep(table th),
+.rich-text-content table td,
+.rich-text-content table th {
   border: 1px solid #cbd5e1 !important;
   padding: 6px 10px !important;
-  background-color: #ffffff;
+  vertical-align: top;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.tiptap-content :deep(.ProseMirror table th),
+.materi-html-container :deep(table th),
+.rich-text-content table th {
+  background-color: #f0f4ff !important;
+  font-weight: 600 !important;
+  color: #1e3a5f;
+  text-align: left;
+}
+
+.tiptap-content :deep(.ProseMirror table tr:nth-child(even) td) {
+  background-color: #f8fafc;
+}
+
+/* Selected cell highlight */
+.tiptap-content :deep(.ProseMirror .selectedCell::after) {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 58, 95, 0.08);
+  pointer-events: none;
+}
+
+/* Column resize handle */
+.tiptap-content :deep(.ProseMirror .column-resize-handle) {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #6366f1;
+  cursor: col-resize;
+}
+
+/* Text formatting inside TipTap */
+.tiptap-content :deep(.ProseMirror h2) {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 8px 0 4px;
+  color: #1e293b;
+}
+.tiptap-content :deep(.ProseMirror ul),
+.tiptap-content :deep(.ProseMirror ol) {
+  padding-left: 1.5rem;
+  margin: 4px 0;
+}
+.tiptap-content :deep(.ProseMirror p) {
+  margin: 4px 0;
 }
 </style>
