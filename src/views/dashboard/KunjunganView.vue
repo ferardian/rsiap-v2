@@ -506,6 +506,7 @@
                 <select v-if="detailModal.category === 'Perina'" v-model="detailModal.filterType" class="modal-select-mini">
                   <option value="all">Semua Jenis</option>
                   <option value="BBL">BBL</option>
+                  <option value="BBL Perawatan">BBL Perawatan</option>
                   <option value="Perawatan">Perawatan</option>
                 </select>
                 <select v-model="detailModal.filterDoctor" class="modal-select-mini">
@@ -586,7 +587,10 @@
                       <span v-else class="badge-rawat-bersama">Rawat Bersama</span>
                     </td>
                     <td v-if="detailModal.category === 'Perina'">
-                      <span :class="['badge', p.asal_pasien === 'BBL' ? 'badge-bbl' : 'badge-perawatan']">
+                      <span :class="[
+                        'badge',
+                        p.asal_pasien === 'BBL' ? 'badge-bbl' : (p.asal_pasien === 'BBL Perawatan' ? 'badge-bbl-perawatan' : 'badge-perawatan')
+                      ]">
                         {{ p.asal_pasien }}
                       </span>
                     </td>
@@ -1970,6 +1974,12 @@ onUnmounted(() => {
   background: #fef3c7;
   color: #d97706;
   border: 1px solid #fde68a;
+}
+
+.badge-bbl-perawatan {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
 }
 
 .badge-rawat-bersama {
