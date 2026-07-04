@@ -384,7 +384,7 @@
                 <input type="text" v-model="form.nomor" class="form-control form-control-sm" placeholder="Contoh: 123/SK-DIR/VI/2026" />
               </div>
 
-              <div class="form-group mb-2">
+              <div v-if="form.kategori === 'Internal'" class="form-group mb-2">
                 <label class="form-label extra-small">Tanda Tangan 1 (Direktur)</label>
                 <v-select
                   v-model="form.ttd1_id"
@@ -396,7 +396,7 @@
                 />
               </div>
 
-              <div class="form-group mb-2">
+              <div v-if="form.kategori === 'Internal'" class="form-group mb-2">
                 <label class="form-label extra-small">Tanda Tangan 2 (Ketua Panitia)</label>
                 <v-select
                   v-model="form.ttd2_id"
@@ -408,7 +408,7 @@
                 />
               </div>
 
-              <div class="form-group mb-0">
+              <div v-if="form.kategori === 'Internal'" class="form-group mb-0">
                 <label class="form-label extra-small mb-1 d-block">
                   <i class="fas fa-align-left me-1 text-muted"></i>Materi Pelatihan (Ringkasan)
                   <span class="text-muted ms-1" style="font-weight:400;">(mendukung tabel, paste dari Word)</span>
