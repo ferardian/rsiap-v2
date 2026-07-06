@@ -154,10 +154,13 @@
               <span :class="getStatusClass(item.status, true)">{{ getShortStatus(item.status) }}</span>
             </div>
             <div class="p-sub mt-1">
-              <span class="text-primary fw-bold">{{ formatTimeOnly(item.jam_datang) }}</span>
+              <span class="text-primary fw-bold">{{ formatDateOnly(item.jam_datang) }}</span>
+              <span class="mx-1">•</span>
+              <span class="text-dark fw-semibold">{{ formatTimeOnly(item.jam_datang) }}</span>
               <span class="mx-1">•</span>
               <span>{{ item.shift }}</span>
-              <span class="mx-1">•</span>
+            </div>
+            <div class="p-sub mt-0.5">
               <span class="text-truncate">{{ item.nama_departemen }}</span>
             </div>
           </div>
@@ -287,6 +290,11 @@ const formatDateTime = (date) => {
 const formatTimeOnly = (date) => {
   if (!date) return '-';
   return dayjs(date).format('HH:mm');
+};
+
+const formatDateOnly = (date) => {
+  if (!date) return '-';
+  return dayjs(date).format('DD MMM YYYY');
 };
 
 const getShortStatus = (status) => {
