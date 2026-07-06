@@ -213,6 +213,7 @@ const bookingJamMulai = ref('')
 const laporanForm = reactive({
     no_rawat: '',
     kode_paket: '',
+    original_kode_paket: '', // Tracks original kode_paket before edit to detect package change
     tgl_operasi: '',
     tgl_selesai: '',
     kategori: '-',
@@ -461,6 +462,9 @@ const openModal = async (item) => {
 
     // 4. Set Patient Info for display
     pasienInfo.value = item.reg_periksa?.pasien
+
+    // 5. Track original kode_paket so backend can delete old record if it changes
+    laporanForm.original_kode_paket = laporanForm.kode_paket
     
     showModal.value = true
 }
