@@ -139,6 +139,8 @@
           <h4 class="class-title">
             {{ group.kelas }}
             <span class="class-total-badge">{{ getClassTotal(group) }} Bed</span>
+            <span class="class-total-badge status-available">Kosong: {{ getClassEmpty(group) }}</span>
+            <span class="class-total-badge status-occupied">Isi: {{ getClassFilled(group) }}</span>
           </h4>
           
           <div class="availability-cards">
@@ -580,6 +582,16 @@ const getCategoryTotal = (groups) => {
 const getClassTotal = (group) => {
   if (!group || !group.beds) return 0
   return group.beds.reduce((sum, bed) => sum + bed.kapasitas, 0)
+}
+
+const getClassEmpty = (group) => {
+  if (!group || !group.beds) return 0
+  return group.beds.reduce((sum, bed) => sum + (bed.tersedia || 0), 0)
+}
+
+const getClassFilled = (group) => {
+  if (!group || !group.beds) return 0
+  return group.beds.reduce((sum, bed) => sum + (bed.terisi || 0), 0)
 }
 
 // Lifecycle
@@ -1028,6 +1040,18 @@ const stopAutoScroll = () => {
   border-radius: 9999px; /* Pill shape */
   font-weight: 500;
   border: 1px solid #e2e8f0;
+}
+
+.class-total-badge.status-available {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.class-total-badge.status-occupied {
+  background: #fff1f2;
+  color: #e11d48;
+  border-color: #fecdd3;
 }
 
 .class-title::before {
