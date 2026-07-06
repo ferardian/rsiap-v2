@@ -34,73 +34,75 @@
 
         <!-- Table -->
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="bg-light text-secondary">
+          <table class="table table-hover align-middle compact-table">
+            <thead>
               <tr>
-                <th class="fw-bold py-3" style="width: 180px;">No. Rawat/RM</th>
-                <th class="fw-bold py-3">Pasien</th>
-                <th class="fw-bold py-3">Tindakan Operasi</th>
-                <th class="fw-bold py-3">Tanggal Op</th>
-                <th class="fw-bold py-3">Selesai Op</th>
-                <th class="fw-bold py-3">Durasi</th>
-                <th class="fw-bold py-3">Pembiayaan</th>
-                <th class="fw-bold py-3 text-center" style="width: 150px;">Aksi</th>
+                <th style="width: 170px;">No. Rawat / RM</th>
+                <th>Pasien</th>
+                <th>Tindakan Operasi</th>
+                <th style="width: 110px;">Tgl Mulai</th>
+                <th style="width: 110px;">Tgl Selesai</th>
+                <th style="width: 110px;">Durasi</th>
+                <th>Pembiayaan</th>
+                <th class="text-center" style="width: 110px;">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
                 <td colspan="8" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status"></div>
+                  <div class="text-muted mt-2 small">Memuat data...</div>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="8" class="text-center py-5 text-muted">Belum ada data tindakan operasi</td>
+                <td colspan="8" class="text-center py-5">
+                  <i class="fas fa-file-medical fa-2x text-muted mb-2 d-block opacity-40"></i>
+                  <span class="text-muted small">Belum ada data tindakan operasi</span>
+                </td>
               </tr>
               <tr v-else v-for="item in items" :key="item.no_rawat + '_' + item.tgl_operasi + '_' + item.kode_paket">
                 <td>
-                  <div class="fw-bold text-dark">{{ item.no_rawat }}</div>
-                  <small class="text-muted">{{ item.reg_periksa?.no_rkm_medis || '-' }}</small>
+                  <div class="row-no-rawat">{{ item.no_rawat }}</div>
+                  <div class="row-sub">{{ item.reg_periksa?.no_rkm_medis || '-' }}</div>
                 </td>
                 <td>
-                  <div class="fw-bold">{{ item.reg_periksa?.pasien?.nm_pasien || '-' }}</div>
+                  <div class="row-name">{{ item.reg_periksa?.pasien?.nm_pasien || '-' }}</div>
                 </td>
                 <td>
-                  <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
+                  <span class="tindakan-badge">
                     {{ item.detail_paket?.nm_perawatan || item.kode_paket }}
                   </span>
                 </td>
                 <td>
-                  <div class="small fw-bold">{{ formatDate(item.tgl_operasi) }}</div>
-                  <div class="text-muted" style="font-size: 0.75rem;">{{ formatTime(item.tgl_operasi) }}</div>
+                  <div class="row-date">{{ formatDate(item.tgl_operasi) }}</div>
+                  <div class="row-time">{{ formatTime(item.tgl_operasi) }}</div>
                 </td>
                 <td>
-                  <div v-if="item.tgl_selesai && item.tgl_selesai !== '-'">
-                    <div class="small fw-bold">{{ formatDate(item.tgl_selesai) }}</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">{{ formatTime(item.tgl_selesai) }}</div>
-                  </div>
+                  <template v-if="item.tgl_selesai && item.tgl_selesai !== '-'">
+                    <div class="row-date">{{ formatDate(item.tgl_selesai) }}</div>
+                    <div class="row-time">{{ formatTime(item.tgl_selesai) }}</div>
+                  </template>
                   <span v-else class="text-muted">-</span>
                 </td>
                 <td>
-                  <span class="badge bg-soft-success text-success">{{ item.durasi || '-' }}</span>
+                  <span class="durasi-badge">{{ item.durasi || '-' }}</span>
                 </td>
                 <td>
-                  <div class="fw-bold small text-dark">{{ item.reg_periksa?.cara_bayar?.png_jawab || '-' }}</div>
-                  <div v-if="item.reg_periksa?.sep?.klsrawat" class="mt-1">
-                    <span class="badge bg-soft-info text-info px-2 py-1 rounded-pill" style="font-size: 0.725rem; font-weight: 600;">
-                      <i class="fas fa-procedures me-1"></i> Kelas {{ item.reg_periksa.sep.klsrawat }}
-                    </span>
-                  </div>
+                  <div class="row-penjamin">{{ item.reg_periksa?.cara_bayar?.png_jawab || '-' }}</div>
+                  <span v-if="item.reg_periksa?.sep?.klsrawat" class="kelas-badge">
+                    <i class="fas fa-bed me-1"></i>Kelas {{ item.reg_periksa.sep.klsrawat }}
+                  </span>
                 </td>
                 <td>
-                  <div class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-outline-info" @click="onDetail(item)" title="Detail Laporan">
-                      <i class="fas fa-file-alt"></i> Detail
+                  <div class="action-btns">
+                    <button class="action-btn detail" @click="onDetail(item)" title="Detail Laporan">
+                      <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning" @click="onEdit(item)" title="Edit Laporan">
-                      <i class="fas fa-edit"></i> Edit
+                    <button class="action-btn edit" @click="onEdit(item)" title="Edit Laporan">
+                      <i class="fas fa-pencil-alt"></i>
                     </button>
-                    <button v-if="canDelete" class="btn btn-sm btn-outline-danger" @click="onDelete(item)" title="Hapus Laporan">
-                      <i class="fas fa-trash"></i> Hapus
+                    <button v-if="canDelete" class="action-btn delete" @click="onDelete(item)" title="Hapus">
+                      <i class="fas fa-trash-alt"></i>
                     </button>
                   </div>
                 </td>
@@ -522,15 +524,14 @@ watch(() => [filters.start, filters.end], () => {
 
 .card {
   border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
 }
 
 .header-icon-bg {
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  min-height: 56px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -538,7 +539,7 @@ watch(() => [filters.start, filters.end], () => {
   background: #eff6ff;
   color: #3b82f6;
   border: 1px solid #bfdbfe;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .filter-date {
@@ -546,6 +547,7 @@ watch(() => [filters.start, filters.end], () => {
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-weight: 500;
+  font-size: 0.8rem;
   color: #334155;
   transition: all 0.2s ease;
   border-radius: 8px;
@@ -553,7 +555,7 @@ watch(() => [filters.start, filters.end], () => {
 
 .filter-date:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
 .modern-input-group {
@@ -565,39 +567,172 @@ watch(() => [filters.start, filters.end], () => {
 
 .modern-input-group:focus-within {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
 }
 
-/* Badge Styling */
-.bg-soft-primary {
-  background-color: #eff6ff;
-}
-
-.bg-soft-success {
-  background-color: #f0fdf4;
-}
-
-.bg-soft-info {
-  background-color: #ecfeff;
-}
-
-/* Table Style */
-.table thead th {
-  background-color: #f8fafc;
-  font-size: 0.75rem;
+/* ---- Compact Table ---- */
+.compact-table thead th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #475569;
-  font-weight: 800;
-  padding: 1rem 0.75rem;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  font-weight: 700;
+  padding: 0.6rem 0.75rem;
   border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
 }
 
-.table tbody td {
-  padding: 1rem 0.75rem;
+.compact-table tbody tr {
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-/* Modern Pagination Premium */
+.compact-table tbody tr:hover {
+  background-color: #f8fbff;
+}
+
+.compact-table tbody td {
+  padding: 0.55rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* Row typography */
+.row-no-rawat {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e40af;
+  letter-spacing: 0.2px;
+}
+
+.row-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.row-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.row-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.row-time {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.row-penjamin {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Badges */
+.tindakan-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #bfdbfe;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.durasi-badge {
+  display: inline-block;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #bbf7d0;
+}
+
+.kelas-badge {
+  display: inline-block;
+  background: #ecfeff;
+  color: #0891b2;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #a5f3fc;
+  margin-top: 3px;
+}
+
+/* Action buttons */
+.action-btns {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;
+  background: white;
+}
+
+.action-btn.detail {
+  color: #0ea5e9;
+  border-color: #bae6fd;
+}
+.action-btn.detail:hover {
+  background: #0ea5e9;
+  color: white;
+  border-color: #0ea5e9;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3);
+}
+
+.action-btn.edit {
+  color: #f59e0b;
+  border-color: #fde68a;
+}
+.action-btn.edit:hover {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+}
+
+.action-btn.delete {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+.action-btn.delete:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Modern Pagination */
 .pagination-premium {
   list-style: none;
   padding: 0;
@@ -609,67 +744,49 @@ watch(() => [filters.start, filters.end], () => {
   background: white;
   border: 1px solid #e2e8f0;
   color: #64748b;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   cursor: pointer;
+  font-size: 0.8rem;
 }
 
 .pag-btn:hover:not(:disabled) {
-  background: #f8fafc;
+  background: #eff6ff;
   color: #3b82f6;
-  border-color: #3b82f6;
+  border-color: #bfdbfe;
   transform: translateY(-1px);
 }
 
 .pag-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .curr-page-indicator {
   background: #f1f5f9;
-  padding: 0 1.25rem;
-  height: 36px;
+  padding: 0 1rem;
+  height: 32px;
   display: flex;
   align-items: center;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #334155;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  .tindakan-operasi-container {
-    padding: 0.75rem !important;
-  }
-
-  .page-header {
-    padding: 1.25rem 1rem !important;
-    border-radius: 16px !important;
-  }
-
-  .page-title {
-    font-size: 1.25rem !important;
-  }
-
-  .page-subtitle {
-    font-size: 0.8rem !important;
-  }
-
+  .tindakan-operasi-container { padding: 0.75rem !important; }
+  .page-title { font-size: 1.1rem !important; }
   .date-filters {
     width: 100% !important;
     flex-direction: column !important;
     gap: 0.5rem !important;
-  }
-
-  .date-filters input {
-    width: 100% !important;
   }
 }
 </style>

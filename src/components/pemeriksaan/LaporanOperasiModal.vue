@@ -210,11 +210,13 @@
 
               </form>
            </div>
-           <div class="modal-footer bg-light">
-              <button type="button" class="btn btn-secondary" @click="$emit('close')">{{ readonly ? 'Tutup' : 'Batal' }}</button>
-              <button v-if="!readonly" type="button" class="btn btn-primary" @click="$emit('submit')" :disabled="loading">
-                 <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
-                 <i v-else class="fas fa-save me-2"></i>
+           <div class="modal-footer-compact">
+              <button type="button" class="btn-modal-cancel" @click="$emit('close')">
+                <i class="fas fa-times me-1"></i>{{ readonly ? 'Tutup' : 'Batal' }}
+              </button>
+              <button v-if="!readonly" type="button" class="btn-modal-save" @click="$emit('submit')" :disabled="loading">
+                 <span v-if="loading" class="spinner-border spinner-border-sm me-1" style="width:14px;height:14px;"></span>
+                 <i v-else class="fas fa-save me-1"></i>
                  Simpan Laporan
               </button>
            </div>
@@ -253,3 +255,61 @@ const formatDate = (date) => {
   })
 }
 </script>
+
+<style scoped>
+/* Compact modal footer */
+.modal-footer-compact {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 12px 12px;
+}
+
+.btn-modal-cancel {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.35rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-modal-cancel:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.btn-modal-save {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.38rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+}
+.btn-modal-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+.btn-modal-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+</style>
