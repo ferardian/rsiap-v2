@@ -404,6 +404,8 @@
     <LaporanOperasiModal 
         :show="showLaporanModal"
         :form="laporanForm"
+        :pasien="selectedPasien"
+        :paket-list="paketList"
         :dokter-list="dokterList"
         :pegawai-list="listPegawai"
         :loading="isSavingLaporan"
@@ -471,6 +473,8 @@ const filters = reactive({
 // Laporan Operasi State
 const showLaporanModal = ref(false)
 const listPegawai = ref([])
+const paketList = ref([])
+const selectedPasien = ref(null)
 const isSavingLaporan = ref(false)
 const laporanForm = reactive({
   no_rawat: '',
@@ -566,6 +570,15 @@ const fetchPegawai = async () => {
     } catch (e) { console.error(e) }
 }
 
+const fetchPaket = async () => {
+    try {
+        const response = await operasiService.getPaket()
+        if (response.data && response.data.success) {
+            paketList.value = response.data.data || []
+        }
+    } catch (e) { console.error(e) }
+}
+
 const handleScroll = (e) => {
   const { scrollTop, scrollHeight, clientHeight } = e.target
   
@@ -586,6 +599,8 @@ const formatDate = (dateString) => {
 }
 
 const openLaporanModal = async (item) => {
+  selectedPasien.value = item.reg_periksa?.pasien
+
   // Initialize form
   Object.keys(laporanForm).forEach(key => laporanForm[key] = '')
   
@@ -620,10 +635,23 @@ const openLaporanModal = async (item) => {
       }
   } catch (e) { console.error('Error fetch laporan', e) }
   
+  // Ensure the currently selected packet is in paketList to resolve the label name instead of showing code
+  const p = item.paket_operasi || item.detail_paket
+  if (p && p.kode_paket) {
+      const exists = paketList.value.some(x => x.kode_paket === p.kode_paket)
+      if (!exists) {
+          paketList.value.unshift({
+              kode_paket: p.kode_paket,
+              nm_perawatan: p.nm_perawatan
+          })
+      }
+  }
+  
   showLaporanModal.value = true
   
   // Ensure master data is loaded
   if (listPegawai.value.length === 0) fetchPegawai()
+  if (paketList.value.length === 0) fetchPaket()
 }
 
 const submitLaporan = async () => {
