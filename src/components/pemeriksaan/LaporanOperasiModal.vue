@@ -184,7 +184,7 @@
                     </div>
                  </div>
 
-                 <!-- Section: Klinis & Laporan -->
+                 <!-- Section: Klinis + Laporan -->
                  <div class="form-section">
                     <div class="section-header section-teal">
                        <i class="fas fa-notes-medical"></i>
@@ -304,7 +304,7 @@ const formatDate = (date) => {
 </script>
 
 <style scoped>
-/* ===== Modal Backdrop & Shell ===== */
+/* ===== Modal Backdrop + Shell ===== */
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
