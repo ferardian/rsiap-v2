@@ -84,7 +84,12 @@
                   <span class="badge bg-soft-success text-success">{{ item.durasi || '-' }}</span>
                 </td>
                 <td>
-                  <span class="small text-muted fw-bold">{{ item.reg_periksa?.cara_bayar?.png_jawab || '-' }}</span>
+                  <div class="fw-bold small text-dark">{{ item.reg_periksa?.cara_bayar?.png_jawab || '-' }}</div>
+                  <div v-if="item.reg_periksa?.sep?.klsrawat" class="mt-1">
+                    <span class="badge bg-soft-info text-info px-2 py-1 rounded-pill" style="font-size: 0.725rem; font-weight: 600;">
+                      <i class="fas fa-procedures me-1"></i> Kelas {{ item.reg_periksa.sep.klsrawat }}
+                    </span>
+                  </div>
                 </td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -566,6 +571,10 @@ watch(() => [filters.start, filters.end], () => {
 
 .bg-soft-success {
   background-color: #f0fdf4;
+}
+
+.bg-soft-info {
+  background-color: #ecfeff;
 }
 
 /* Table Style */
