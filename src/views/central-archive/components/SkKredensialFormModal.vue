@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3 class="modal-title">
           <i class="fas fa-file-signature text-purple"></i>
-          Terbitkan SK Kredensial
+          Pengajuan SK Kredensial
         </h3>
         <button class="btn-close-icon" @click="$emit('close')">
           <i class="fas fa-times"></i>
@@ -15,7 +15,7 @@
         <div class="warning-box mb-4" v-if="!isLinking">
           <div class="warning-icon"><i class="fas fa-info-circle"></i></div>
           <div class="warning-text">
-            Menerbitkan SK akan menyelesaikan proses kredensial dan menautkan SK ini ke dokumen undangan komite terkait.
+            Mengajukan SK akan memulai proses persetujuan dan menautkan SK ini ke dokumen undangan komite terkait.
           </div>
         </div>
         <div class="warning-box mb-4" style="background:#eff6ff; border-color:#bfdbfe;" v-else>
@@ -33,7 +33,7 @@
               :class="{ 'active': !isLinking }" 
               @click="isLinking = false"
             >
-              Terbitkan Baru
+              Pengajuan Baru
             </button>
             <button 
               type="button"
@@ -187,7 +187,7 @@
         <button type="submit" form="skKredensialForm" class="btn-submit" :disabled="loading || !targetPegawai">
           <i class="fas fa-save" v-if="!loading"></i>
           <span class="spinner-border spinner-border-sm" v-else></span>
-          {{ loading ? 'Memproses...' : (isLinking ? 'Tautkan SK' : 'Terbitkan SK') }}
+          {{ loading ? 'Memproses...' : (isLinking ? 'Tautkan SK' : 'Simpan Pengajuan') }}
         </button>
       </div>
     </div>
@@ -574,6 +574,7 @@ const submitForm = async () => {
     payload.append('tgl_terbit', formData.value.tgl_terbit)
     payload.append('judul', formData.value.judul)
     payload.append('id_kredensial', formData.value.id_kredensial)
+    payload.append('status_approval', 'pengajuan')
     
     // Tautkan kembali ke komite pemanggil
     payload.append('sumber_komite', props.sumberKomite)
@@ -598,7 +599,7 @@ const submitForm = async () => {
     // Oh, createSk uses api.post('/berkas/sk', data). Axios handles FormData automatically and sets multipart/form-data.
     await skService.createSk(payload)
     
-    toast.success('SK Kredensial berhasil diterbitkan')
+    toast.success('Pengajuan SK Kredensial berhasil disimpan')
     emit('saved')
     emit('close')
   } catch (error) {
