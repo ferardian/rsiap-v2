@@ -579,6 +579,8 @@ const submitForm = async () => {
     // Tautkan kembali ke komite pemanggil
     payload.append('sumber_komite', props.sumberKomite)
     payload.append('nomor_komite', props.data.nomor)
+    // Kirim tgl_terbit surat komite agar backend bisa filter composite key yang tepat
+    payload.append('tgl_terbit_komite', props.data.tgl_terbit?.split(' ')[0] || '')
     
     // Ambil penanggung jawab dari data komite
     payload.append('pj', props.data.pj || props.data.penanggung_jawab?.nik)

@@ -214,7 +214,8 @@
                   </div>
                 </td>
                 <td>
-                  <template v-if="berkas.sk">
+                  <!-- SK sudah disetujui: tampilkan info normal -->
+                  <template v-if="berkas.sk && berkas.sk.status_approval === 'disetujui'">
                     <div class="fw-medium text-purple-dark mb-1" style="line-height: 1.2;">{{ berkas.sk.judul }}</div>
                     <div class="d-flex flex-wrap gap-1">
                       <span class="badge" style="background:#f5f3ff; color:#7c3aed; font-weight:500; font-size:10px; border:1px solid #ddd6fe;">
@@ -228,11 +229,32 @@
                       </span>
                     </div>
                   </template>
+                  <!-- SK masih menunggu persetujuan Diklat -->
+                  <template v-else-if="berkas.sk && berkas.sk.status_approval === 'pengajuan'">
+                    <div class="fw-medium mb-1" style="font-size:12px; color:#92400e;">{{ berkas.sk.judul }}</div>
+                    <div class="d-flex flex-wrap gap-1">
+                      <span class="badge" style="background:#fffbeb; color:#92400e; font-weight:600; font-size:10px; border:1px solid #fde68a;">
+                        <i class="fas fa-clock me-1"></i> Menunggu Persetujuan Diklat
+                      </span>
+                      <span class="badge" style="background:#f1f5f9; color:#64748b; font-weight:500; font-size:10px; border:1px solid #e2e8f0;">
+                        <i class="fas fa-hashtag me-1"></i> No: {{ formatNomorSk(berkas.sk) }}
+                      </span>
+                    </div>
+                  </template>
+                  <!-- SK ditolak -->
+                  <template v-else-if="berkas.sk && berkas.sk.status_approval === 'ditolak'">
+                    <div class="fw-medium mb-1" style="font-size:12px; color:#991b1b;">{{ berkas.sk.judul }}</div>
+                    <span class="badge" style="background:#fef2f2; color:#991b1b; font-weight:600; font-size:10px; border:1px solid #fecaca;">
+                      <i class="fas fa-times-circle me-1"></i> Pengajuan SK Ditolak
+                    </span>
+                  </template>
+                  <!-- Sudah disetujui undangan tapi belum ada SK -->
                   <template v-else-if="berkas.status_approval === 'disetujui'">
                     <span class="badge" style="background:#fef2f2; color:#ef4444; font-weight:500; font-size:10px; border:1px solid #fecaca;">
                       <i class="fas fa-exclamation-circle me-1"></i> SK Belum Ditautkan
                     </span>
                   </template>
+                  <!-- Undangan masih menunggu persetujuan -->
                   <template v-else>
                     <span class="text-muted italic small">Menunggu Persetujuan</span>
                   </template>
@@ -269,7 +291,8 @@
                     <i class="fas fa-eye"></i>
                   </button>
 
-                  <template v-if="activeTab === 'kredensial' && berkas.status_approval === 'disetujui'">
+                  <!-- Tombol Lihat Berkas: hanya tampil jika SK sudah disetujui oleh Diklat -->
+                  <template v-if="activeTab === 'kredensial' && berkas.sk?.status_approval === 'disetujui'">
                     <button v-if="berkas.sk?.berkas" class="btn-action btn-file" @click="openFile(berkas.sk.berkas)" title="Lihat Berkas">
                       <i class="fas fa-file-pdf"></i>
                     </button>
