@@ -668,6 +668,12 @@ const routes = [
     component: () => import('@/views/laporan/RujukanRL310View.vue'),
   },
   {
+    path: '/laporan/carabayar-rl3-19',
+    name: 'laporan-carabayar-rl319',
+    component: () => import('@/views/laporan/CaraBayarRL319View.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/laporan/morbiditas-ralan',
     name: 'laporan-morbiditas-ralan',
     component: () => import('@/views/laporan/MorbiditasRalanView.vue'),
