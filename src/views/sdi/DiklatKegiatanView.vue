@@ -488,8 +488,8 @@
             </div>
 
             <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
-            <!-- Required only in Create Kegiatan mode (Eksternal only) or Add Participant mode -->
-            <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && (formMode !== 'create_kegiatan' || form.kategori === 'Eksternal')" class="form-group mb-3 position-relative">
+            <!-- Required only in Create Kegiatan mode or Add Participant mode -->
+            <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3 position-relative">
               <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
               <div class="search-box d-flex align-items-center border rounded-2 bg-white px-3 gap-2" style="height: 38px;">
                 <i class="fas fa-search text-muted flex-shrink-0" style="font-size: 0.85rem;"></i>
@@ -541,7 +541,7 @@
             </div>
 
             <!-- Peran / Peserta Role -->
-            <div v-if="formMode !== 'edit_kegiatan' && (formMode !== 'create_kegiatan' || form.kategori === 'Eksternal')" class="form-group mb-3">
+            <div v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3">
               <label class="form-label"><i class="fas fa-user-tag me-1"></i>Peran Pegawai <span class="text-danger">*</span></label>
               <select v-model="form.peserta" class="form-select" required>
                 <option value="Peserta">Peserta</option>
@@ -550,7 +550,7 @@
               </select>
             </div>
 
-            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan' && (formMode !== 'create_kegiatan' || form.kategori === 'Eksternal')" />
+            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" />
 
             <!-- File Upload / Bukti sertifikat (HANYA untuk Eksternal) -->
             <div v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan' && selectedKegiatan?.kategori === 'Eksternal'" class="form-group mb-4">
@@ -1290,11 +1290,7 @@ const isFormValid = computed(() => {
     return form.nik && form.peserta
   }
   if (formMode.value === 'create_kegiatan') {
-    const baseValid = form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai
-    if (form.kategori === 'Eksternal') {
-      return baseValid && form.nik && form.peserta
-    }
-    return baseValid
+    return form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai
   }
   return false
 })
