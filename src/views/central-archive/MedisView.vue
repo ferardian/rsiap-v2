@@ -161,11 +161,12 @@
             <!-- Data Staf -->
             <tr>
               <th width="5%">No</th>
-              <th width="25%">Nama Pegawai</th>
-              <th width="20%">Jabatan / Profesi</th>
-              <th width="25%">STR / SIP</th>
-              <th width="15%">Pendidikan</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="23%">Nama Pegawai</th>
+              <th width="18%">Jabatan / Profesi</th>
+              <th width="22%">STR / SIP</th>
+              <th width="13%">Pendidikan</th>
+              <th width="8%" class="text-center">Bukti</th>
+              <th width="11%" class="text-center">Aksi</th>
             </tr>
           </thead>
 
@@ -318,6 +319,13 @@
                   <div class="text-dark small">{{ item.pendidikan || '-' }}</div>
                   <div class="text-muted smaller">{{ item.prodi || '-' }}</div>
                 </td>
+                <!-- Kolom Bukti Kelulusan -->
+                <td class="text-center">
+                  <a v-if="item.bukti_kelulusan" :href="getBuktiKelulusanUrl(item.bukti_kelulusan)" target="_blank" class="badge bg-success text-white text-decoration-none">
+                    <i class="fas fa-check-circle me-1"></i> Lihat
+                  </a>
+                  <span v-else class="text-muted">-</span>
+                </td>
               </template>
 
               <!-- Actions -->
@@ -335,6 +343,13 @@
                        <i class="fas fa-file-excel"></i>
                     </button>
                   </template>
+                  <!-- Tombol Upload Bukti Kelulusan: hanya tampil di tab staf -->
+                  <template v-if="activeTab === 'staf'">
+                    <button class="btn-action btn-upload" @click="openUploadBuktiModal(item)" title="Upload Bukti Kelulusan">
+                      <i class="fas fa-upload"></i>
+                    </button>
+                  </template>
+                  <!-- Dropdown menu: tampil di tab selain staf -->
                   <div class="dropdown-more" v-if="activeTab !== 'staf'">
                     <button class="btn-action btn-more" @click="toggleMenu(index)" title="Lainnya">
                       <i class="fas fa-ellipsis-v"></i>
@@ -353,12 +368,10 @@
                       </button>
                     </div>
                   </div>
-                  <div v-else class="dropdown-more">
-                    <!-- Specific Actions for Staf if needed -->
-                  </div>
                 </div>
               </td>
             </tr>
+
           </tbody>
         </table>
 
@@ -440,6 +453,50 @@
        @saved="handleSaved"
     />
 
+    <!-- Modal Upload Bukti Kelulusan (Staf Medis) -->
+    <div v-if="showUploadBuktiModal" class="modal-overlay" @click="closeUploadBuktiModal">
+      <div class="modal-content modal-sm" @click.stop>
+        <div class="modal-header modern-header">
+          <div class="header-content">
+            <div class="header-icon bg-primary-light">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div>
+              <h3 class="mb-0">Upload Bukti Kelulusan</h3>
+              <p class="header-subtitle fs-xs mb-0">{{ selectedStaf?.nama }}</p>
+            </div>
+          </div>
+          <button class="btn-close-icon" @click="closeUploadBuktiModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          <div
+            class="upload-dropzone"
+            @dragover.prevent
+            @drop.prevent="handleDrop"
+            @click="$refs.fileInputBukti.click()"
+          >
+            <input type="file" ref="fileInputBukti" hidden @change="handleFileChange" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="upload-icon-circle mb-3">
+              <i class="fas fa-file-upload"></i>
+            </div>
+            <p v-if="!buktiFile" class="fw-bold text-dark mb-1">Klik atau seret file ke sini</p>
+            <p v-else class="text-success fw-bold mb-1">{{ buktiFile.name }}</p>
+            <p class="text-muted fs-xs">Format: PDF, JPG, PNG (Maks 10MB)</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeUploadBuktiModal" :disabled="uploadingBukti">Batal</button>
+          <button class="btn-save" @click="submitUploadBukti" :disabled="!buktiFile || uploadingBukti">
+            <span v-if="uploadingBukti" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="fas fa-check me-2" v-else></i>
+            {{ uploadingBukti ? 'Mengunggah...' : 'Simpan Perubahan' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <SkBuktiKredensialUploadModal
       :show="showUploadKredensialModal"
       :sk="selectedBerkas"
@@ -520,8 +577,12 @@ const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
 const showSkKredensialModal = ref(false)
 const showUploadKredensialModal = ref(false)
+const showUploadBuktiModal = ref(false)   // Modal upload bukti kelulusan staf
 const isEditMode = ref(false)
 const selectedBerkas = ref(null)
+const selectedStaf = ref(null)            // Staf yang sedang dipilih untuk upload
+const buktiFile = ref(null)              // File yang akan diupload
+const uploadingBukti = ref(false)        // Status loading upload
 const deleting = ref(false)
 
 // Page dynamic content
@@ -786,6 +847,69 @@ const openSkKredensialModal = (item) => {
 const openUploadKredensialModal = (item) => {
   selectedBerkas.value = item
   showUploadKredensialModal.value = true
+}
+
+// === Fungsi Upload Bukti Kelulusan Staf Medis ===
+
+const getBuktiKelulusanUrl = (filename) => {
+  const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
+  const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
+  return `${baseUrl}/webapps/rsia_kualifikasi/${filename}`
+}
+
+const openUploadBuktiModal = (staf) => {
+  selectedStaf.value = staf
+  buktiFile.value = null
+  showUploadBuktiModal.value = true
+}
+
+const closeUploadBuktiModal = () => {
+  if (uploadingBukti.value) return
+  showUploadBuktiModal.value = false
+  selectedStaf.value = null
+  buktiFile.value = null
+}
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0]
+  if (file) validateAndSetFile(file)
+}
+
+const handleDrop = (e) => {
+  const file = e.dataTransfer.files[0]
+  if (file) validateAndSetFile(file)
+}
+
+const validateAndSetFile = (file) => {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (!allowedTypes.includes(file.type)) {
+    toast.error('Format berkas tidak didukung. Gunakan PDF/JPG/PNG')
+    return
+  }
+  if (file.size > maxSize) {
+    toast.error('Ukuran berkas terlalu besar. Maksimal 10MB')
+    return
+  }
+  buktiFile.value = file
+}
+
+const submitUploadBukti = async () => {
+  if (!buktiFile.value || !selectedStaf.value) return
+  uploadingBukti.value = true
+  const formData = new FormData()
+  formData.append('file', buktiFile.value)
+  try {
+    await pegawaiService.uploadBuktiKelulusan(selectedStaf.value.nik, formData)
+    toast.success('Bukti Kelulusan berhasil diupload')
+    closeUploadBuktiModal()
+    loadData()
+  } catch (error) {
+    console.error('Error uploading bukti kelulusan:', error)
+    toast.error('Gagal mengupload file')
+  } finally {
+    uploadingBukti.value = false
+  }
 }
 
 const confirmDelete = (item) => {
