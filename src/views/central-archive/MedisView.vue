@@ -434,7 +434,7 @@
         </div>
         <div class="modal-body text-center mt-3">
           <h3 class="mb-2">Hapus {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}?</h3>
-          <div v-if="selectedBerkas?.sk" class="alert alert-warning border-0 rounded-3 py-2 px-3 mb-3 text-start" style="background: #fffbeb; border: 1px solid #fef3c7 !important;">
+          <div v-if="selectedBerkas?.sk && activeTab === 'standar'" class="alert alert-warning border-0 rounded-3 py-2 px-3 mb-3 text-start" style="background: #fffbeb; border: 1px solid #fef3c7 !important;">
             <p class="fs-xs mb-0 text-warning-dark fw-600" style="color: #92400e;">
               <i class="fas fa-exclamation-triangle me-1"></i> <strong>Perhatian:</strong> Berkas ini sudah memiliki SK yang terbit. Menghapus berkas ini <strong>TIDAK</strong> akan menghapus SK-nya, namun tautan akan terputus.
             </p>
@@ -766,6 +766,10 @@ const openUploadKredensialModal = (item) => {
 }
 
 const confirmDelete = (item) => {
+  if (activeTab.value === 'kredensial' && !item.sk) {
+    toast.warning('Belum ada SK yang terbit untuk pengajuan ini. Jika ingin menghapus surat undangan, silakan melalui tab Komite Medis.')
+    return
+  }
   selectedBerkas.value = item
   showDeleteModal.value = true
 }
@@ -775,8 +779,14 @@ const executeDelete = async () => {
   
   deleting.value = true
   try {
-    const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
-    await komiteMedisService.delete(identifier)
+    if (activeTab.value === 'standar') {
+      const tglOnly = selectedBerkas.value.tgl_terbit.split(' ')[0]
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${tglOnly}`)
+      await komiteMedisService.delete(identifier)
+    } else {
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+      await skService.deleteSk(identifier)
+    }
     
     toast.success('Data berhasil dihapus')
     showDeleteModal.value = false

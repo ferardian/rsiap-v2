@@ -489,7 +489,7 @@
 
             <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
             <!-- Required only in Create Kegiatan mode or Add Participant mode -->
-            <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3 position-relative">
+            <div v-if="!isEditMode && formMode !== 'edit_kegiatan'" class="form-group mb-3 position-relative">
               <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
               <div class="search-box d-flex align-items-center border rounded-2 bg-white px-3 gap-2" style="height: 38px;">
                 <i class="fas fa-search text-muted flex-shrink-0" style="font-size: 0.85rem;"></i>
@@ -534,14 +534,14 @@
             </div>
 
             <!-- In edit mode, we just show employee info read-only -->
-            <div v-else-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-info-box animate__animated animate__fadeIn">
+            <div v-else-if="formMode !== 'edit_kegiatan'" class="form-info-box animate__animated animate__fadeIn">
               <label class="form-label small text-muted"><i class="fas fa-user me-1 text-primary"></i>Pegawai</label>
               <div class="fw-bold text-dark mt-1">{{ selectedParticipantItem?.pegawai?.nama }}</div>
               <div class="small text-muted font-mono mt-1">NIK: {{ selectedParticipantItem?.pegawai?.nik }}</div>
             </div>
 
             <!-- Peran / Peserta Role -->
-            <div v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3">
+            <div v-if="formMode !== 'edit_kegiatan'" class="form-group mb-3">
               <label class="form-label"><i class="fas fa-user-tag me-1"></i>Peran Pegawai <span class="text-danger">*</span></label>
               <select v-model="form.peserta" class="form-select" required>
                 <option value="Peserta">Peserta</option>
@@ -550,7 +550,7 @@
               </select>
             </div>
 
-            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" />
+            <hr class="my-4 text-muted-light" v-if="formMode !== 'edit_kegiatan'" />
 
             <!-- File Upload / Bukti sertifikat (HANYA untuk Eksternal) -->
             <div v-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan' && selectedKegiatan?.kategori === 'Eksternal'" class="form-group mb-4">

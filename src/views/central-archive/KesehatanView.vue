@@ -587,7 +587,7 @@
         </div>
         <div class="modal-body text-center p-4">
           <h3 class="fw-bold text-dark mb-3">Hapus {{ activeTab === 'kredensial' ? 'Pengajuan' : 'Berkas' }}?</h3>
-          <div v-if="selectedBerkas?.sk" class="alert alert-warning border-0 rounded-3 py-2 px-3 mb-3 text-start" style="background: #fffbeb; border: 1px solid #fef3c7 !important;">
+          <div v-if="selectedBerkas?.sk && activeTab === 'standar'" class="alert alert-warning border-0 rounded-3 py-2 px-3 mb-3 text-start" style="background: #fffbeb; border: 1px solid #fef3c7 !important;">
             <p class="fs-xs mb-0 text-warning-dark fw-600" style="color: #92400e;">
               <i class="fas fa-exclamation-triangle me-1"></i> <strong>Perhatian:</strong> Berkas ini sudah memiliki SK yang terbit. Menghapus berkas ini <strong>TIDAK</strong> akan menghapus SK-nya, namun tautan akan terputus.
             </p>
@@ -973,6 +973,10 @@ const openUploadKredensialModal = (berkas) => {
 }
 
 const confirmDelete = (berkas) => {
+  if (activeTab.value === 'kredensial' && !berkas.sk) {
+    toast.warning('Belum ada SK yang terbit untuk pengajuan ini. Jika ingin menghapus surat undangan, silakan melalui tab Komite Kesehatan.')
+    return
+  }
   selectedBerkas.value = berkas
   showDeleteModal.value = true
 }
@@ -982,8 +986,14 @@ const executeDelete = async () => {
   
   deleting.value = true
   try {
-    const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
-    await komiteKesehatanService.delete(identifier)
+    if (activeTab.value === 'standar') {
+      const tglOnly = selectedBerkas.value.tgl_terbit.split(' ')[0]
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${tglOnly}`)
+      await komiteKesehatanService.delete(identifier)
+    } else {
+      const identifier = btoa(`${selectedBerkas.value.nomor}.${selectedBerkas.value.jenis}.${selectedBerkas.value.tgl_terbit.split(' ')[0]}`)
+      await skService.deleteSk(identifier)
+    }
     
     toast.success('Data berhasil dihapus')
     showDeleteModal.value = false
