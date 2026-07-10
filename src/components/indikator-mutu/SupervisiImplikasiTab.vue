@@ -566,7 +566,7 @@ const toast = useToast()
 const authStore = useAuthStore()
 const staffList = ref([])
 const committeeMembers = ref([])
-const ketuaPmkp = ref({ nik: '1.205.0818', nama: 'dr. Aci Dwi Lestari' })
+const ketuaPmkp = ref({ nik: '1.211.0918', nama: 'dr. Annisa Permatasuhdan Anggaresti' })
 
 const loadImage = (src) => {
   return new Promise((resolve) => {
@@ -834,11 +834,11 @@ const fetchCommitteeMembers = async () => {
   try {
     const response = await committeeService.getAllMembers()
     if (response.data.success) {
-      // Find PMKP Ketua
+      // Find MUTU Ketua
       const pmkpKetua = response.data.data.find(member => {
         const komiteNama = member.komite?.nama?.toUpperCase() || ''
         const jabatanNama = member.jabatan?.nama?.toUpperCase() || ''
-        return komiteNama.includes('PMKP') && jabatanNama === 'KETUA'
+        return komiteNama.includes('MUTU') && jabatanNama === 'KETUA'
       })
       if (pmkpKetua) {
         ketuaPmkp.value = {
@@ -1134,8 +1134,8 @@ const exportToPDF = async (item) => {
     const supervisorMrQR = await generateQRCode(supervisorMrQRText)
     const respondentQR = await generateQRCode(respondentQRText)
 
-    const ketuaPmkpName = ketuaPmkp.value.nama || 'dr. Aci Dwi Lestari'
-    const ketuaPmkpQRText = `Ditandatangani secara elektronik oleh:\nNama: ${ketuaPmkpName}\nJabatan: Ketua Komite PMKP\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
+    const ketuaPmkpName = ketuaPmkp.value.nama || 'dr. Annisa Permatasuhdan Anggaresti'
+    const ketuaPmkpQRText = `Ditandatangani secara elektronik oleh:\nNama: ${ketuaPmkpName}\nJabatan: Ketua Komite Mutu\nTanggal: ${formatDate(detailItem.tgl_supervisi)}`
     const ketuaPmkpQR = await generateQRCode(ketuaPmkpQRText)
 
     // --- 1. INDIKATOR MUTU ---
@@ -1396,12 +1396,12 @@ const exportToPDF = async (item) => {
     const centerKoorX = 15 + 30
     const centerKetuaX = 195 - 30
     
-    // Right: Date, Mengetahui, Ketua Komite PMKP
+    // Right: Date, Mengetahui, Ketua Komite Mutu
     doc.setFont('Helvetica', 'normal')
     doc.setFontSize(8)
     doc.text(dateText, centerKetuaX, currentY + 4, { align: 'center' })
     doc.text('Mengetahui,', centerKetuaX, currentY + 9, { align: 'center' })
-    doc.text('Ketua Komite PMKP,', centerKetuaX, currentY + 14, { align: 'center' })
+    doc.text('Ketua Komite Mutu,', centerKetuaX, currentY + 14, { align: 'center' })
     if (ketuaPmkpQR) {
       doc.addImage(ketuaPmkpQR, 'PNG', centerKetuaX - 9, currentY + 17, 18, 18)
     }
