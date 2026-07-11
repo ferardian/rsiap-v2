@@ -278,6 +278,9 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="chart-title">
             <i class="fas fa-table text-primary me-2"></i>Data Rincian Aktivitas Tiket
+            <span class="text-primary fw-bold ms-1" style="font-size: 0.95rem;">
+              ({{ filters.period === 'monthly' ? getSelectedMonthName() + ' ' + filters.year : 'Tahun ' + filters.year }})
+            </span>
             <small class="text-muted ms-2" style="font-size: 0.75rem; font-weight: normal;">* Klik angka untuk melihat rincian tiket</small>
           </h5>
           <span class="badge bg-soft-primary px-3 py-2 text-primary font-weight-bold">
@@ -290,8 +293,16 @@
             <thead>
               <tr class="bg-light text-secondary">
                 <th class="sticky-col">{{ filters.period === 'monthly' ? 'Info / Hari' : 'Info / Bulan' }}</th>
-                <th v-for="col in dashboardData.trend" :key="col.label" class="fw-bold">
-                  {{ col.label }}
+                <th 
+                  v-for="col in dashboardData.trend" 
+                  :key="col.label" 
+                  :class="{ 'sunday-col-header text-danger': isSunday(col.label) }"
+                  class="fw-bold align-top"
+                >
+                  <div style="font-size: 0.9rem;">{{ col.label }}</div>
+                  <div class="day-name" :class="{ 'text-danger-light': isSunday(col.label) }">
+                    {{ getDayName(col.label) }}
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -692,6 +703,23 @@ const getMonthValFromName = (name) => {
     'Juli': 7, 'Agustus': 8, 'September': 9, 'Oktober': 10, 'November': 11, 'Desember': 12
   }
   return months[name] || new Date().getMonth() + 1
+}
+
+const getDayName = (dayLabel) => {
+  if (filters.period !== 'monthly') return ''
+  const dayNum = parseInt(dayLabel)
+  if (isNaN(dayNum)) return ''
+  const date = new Date(filters.year, filters.month - 1, dayNum)
+  const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+  return days[date.getDay()]
+}
+
+const isSunday = (dayLabel) => {
+  if (filters.period !== 'monthly') return false
+  const dayNum = parseInt(dayLabel)
+  if (isNaN(dayNum)) return false
+  const date = new Date(filters.year, filters.month - 1, dayNum)
+  return date.getDay() === 0
 }
 
 // 1. Line/Area Chart Options & Series (Monthly / Daily Trend)
@@ -1166,6 +1194,23 @@ onMounted(() => {
   box-shadow: 3px 0 6px rgba(0,0,0,0.06);
   min-width: 140px;
   max-width: 140px;
+}
+
+.sunday-col-header {
+  color: #ef4444 !important;
+  background-color: #fee2e2 !important;
+}
+
+.day-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 1px;
+  text-transform: uppercase;
+}
+
+.day-name.text-danger-light {
+  color: #f87171 !important;
 }
 
 /* Clickable Badge details */
