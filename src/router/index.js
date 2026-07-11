@@ -490,6 +490,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/helpdesk/dashboard',
+    name: 'DashboardHelpdesk',
+    component: () => import('../views/helpdesk/DashboardView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/bpjs/antrol',
     name: 'BpjsAntrol',
     component: () => import('../views/bpjs/AntrolView.vue'),

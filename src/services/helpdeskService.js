@@ -17,6 +17,9 @@ const helpdeskService = {
 
     // Update detail tiket resmi (teknisi, solusi, status, dll)
     updateTicket: (id, payload) => api.put(`/helpdesk/tiket/${id}/update`, payload),
+
+    // Ambil data statistik dashboard helpdesk
+    getDashboardData: () => api.get('/helpdesk/tiket/dashboard-data'),
 };
 
 export default helpdeskService;

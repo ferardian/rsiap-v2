@@ -5,7 +5,10 @@
         <h1 class="page-title">🎧 Smart Helpdesk System</h1>
         <p class="page-subtitle">Manajemen bantuan IT dan fasilitas terintegrasi</p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions d-flex flex-wrap align-items-center gap-3">
+        <router-link to="/helpdesk/dashboard" class="btn btn-outline-premium">
+          <i class="fas fa-chart-line me-2"></i> Dashboard Analisis
+        </router-link>
         <!-- Tab Switcher -->
         <div class="premium-tabs-container">
           <button 
@@ -491,6 +494,28 @@ onMounted(() => {
 <style scoped>
 .helpdesk-container {
   padding: 1.5rem;
+}
+
+.btn-outline-premium {
+  border: 1.5px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  border-radius: 12px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-outline-premium:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
 }
 
 .page-title {
