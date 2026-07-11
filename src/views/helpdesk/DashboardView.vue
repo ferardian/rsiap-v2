@@ -397,9 +397,9 @@
                 <div 
                   v-for="ticket in recentTickets" 
                   :key="ticket.id" 
-                  class="recent-item d-flex justify-content-between align-items-center gap-3 p-3"
+                  class="recent-item d-flex justify-content-between align-items-start gap-3 p-3"
                 >
-                  <div class="d-flex align-items-center gap-3 flex-grow-1" style="min-width: 0;">
+                  <div class="d-flex align-items-start gap-3 flex-grow-1" style="min-width: 0;">
                     <div class="ticket-status-indicator" :class="ticket.status.toLowerCase()">
                       <i :class="getStatusIcon(ticket.status)"></i>
                     </div>
@@ -1374,11 +1374,8 @@ onMounted(() => {
   color: #475569;
   font-weight: 550;
   margin-bottom: 0.25rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .ticket-meta {
