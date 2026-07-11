@@ -593,7 +593,7 @@ const summary = computed(() => {
 
 // KPI Calculations
 const respondedCount = computed(() => {
-  return summary.value.total_tickets - summary.value.open
+  return summary.value.total_tickets
 })
 
 const respondedPercent = computed(() => {
