@@ -331,7 +331,7 @@
       <div class="row g-4">
         <!-- List: Top Technicians (Workload / Completion Rank) -->
         <div class="col-lg-5">
-          <div class="data-card glass-card h-100">
+          <div class="data-card glass-card">
             <div class="card-header border-0 bg-transparent">
               <h5 class="chart-title"><i class="fas fa-user-shield text-info me-2"></i>Peringkat Penyelesaian Teknisi</h5>
             </div>
@@ -370,7 +370,7 @@
 
         <!-- List: Recent Tickets Activity -->
         <div class="col-lg-7">
-          <div class="data-card glass-card h-100">
+          <div class="data-card glass-card">
             <div class="card-header border-0 bg-transparent">
               <h5 class="chart-title"><i class="fas fa-history text-indigo me-2"></i>Tiket Terbaru Masuk</h5>
             </div>
@@ -791,6 +791,7 @@ onMounted(() => {
   border-radius: 20px;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  overflow: hidden;
 }
 
 .chart-title {
