@@ -273,10 +273,13 @@
         </div>
       </div>
 
-      <!-- Dataset Table below the Chart (Horizontal Layout) -->
+      <!-- Dataset Table below the Chart (Horizontal Layout with Clickable Lookups) -->
       <div v-if="dashboardData.trend && dashboardData.trend.length > 0" class="chart-card glass-card p-4 mb-4 animate__animated animate__fadeIn">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="chart-title"><i class="fas fa-table text-primary me-2"></i>Data Rincian Aktivitas Tiket</h5>
+          <h5 class="chart-title">
+            <i class="fas fa-table text-primary me-2"></i>Data Rincian Aktivitas Tiket
+            <small class="text-muted ms-2" style="font-size: 0.75rem; font-weight: normal;">* Klik angka untuk melihat rincian tiket</small>
+          </h5>
           <span class="badge bg-soft-primary px-3 py-2 text-primary font-weight-bold">
             Total: {{ summary.total_tickets }} Tiket
           </span>
@@ -297,7 +300,11 @@
               <tr>
                 <td class="sticky-col fw-bold">Total Tiket</td>
                 <td v-for="col in dashboardData.trend" :key="col.label">
-                  <span class="badge" :class="col.count > 0 ? 'bg-primary text-white' : 'bg-light text-muted'">
+                  <span 
+                    class="badge clickable-badge" 
+                    :class="col.count > 0 ? 'bg-primary text-white pointer-hover' : 'bg-light text-muted'"
+                    @click="col.count > 0 ? openLookupModal(col, 'total') : null"
+                  >
                     {{ col.count }}
                   </span>
                 </td>
@@ -306,7 +313,11 @@
               <tr>
                 <td class="sticky-col fw-bold">Direspon / Total</td>
                 <td v-for="col in dashboardData.trend" :key="col.label">
-                  <span v-if="col.count > 0" class="badge bg-soft-info text-info">
+                  <span 
+                    v-if="col.count > 0" 
+                    class="badge bg-soft-info text-info clickable-badge pointer-hover"
+                    @click="openLookupModal(col, 'responded')"
+                  >
                     {{ col.responded }} / {{ col.count }}
                   </span>
                   <span v-else class="text-muted">-</span>
@@ -316,7 +327,11 @@
               <tr>
                 <td class="sticky-col fw-bold">Selesai / Total</td>
                 <td v-for="col in dashboardData.trend" :key="col.label">
-                  <span v-if="col.count > 0" class="badge bg-soft-success text-success">
+                  <span 
+                    v-if="col.count > 0" 
+                    class="badge bg-soft-success text-success clickable-badge pointer-hover"
+                    @click="openLookupModal(col, 'selesai')"
+                  >
                     {{ col.selesai }} / {{ col.count }}
                   </span>
                   <span v-else class="text-muted">-</span>
@@ -413,6 +428,96 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Lookup Detail Tiket (Attractive modern grid list) -->
+    <div class="modal fade" id="lookupTicketsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content premium-modal glass-card">
+          <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center bg-light p-4">
+            <div>
+              <h5 class="modal-title fw-bold text-primary"><i class="fas fa-search me-2"></i>Rincian Laporan Tiket</h5>
+              <p class="text-secondary small mb-0 fw-semibold mt-1">{{ lookupTitle }}</p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4 pt-4">
+            <!-- Loading State -->
+            <div v-if="lookupLoading" class="text-center py-5">
+              <div class="spinner-border text-primary mb-3"></div>
+              <p class="text-muted fw-bold">Sedang mengambil rincian tiket...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="lookupTickets.length === 0" class="text-center py-5 text-muted">
+              <i class="fas fa-ticket-alt fa-3x mb-3 text-light"></i>
+              <p class="fw-bold">Tidak ada data tiket untuk rincian ini.</p>
+            </div>
+
+            <!-- Table list of tickets -->
+            <div v-else class="table-responsive premium-table-modal">
+              <table class="table align-middle">
+                <thead>
+                  <tr class="table-light-header">
+                    <th style="width: 140px;">No. Tiket</th>
+                    <th style="width: 120px;">Waktu</th>
+                    <th>Pelapor</th>
+                    <th>Keluhan / Masalah</th>
+                    <th style="width: 110px;">Prioritas</th>
+                    <th style="width: 110px;">Status</th>
+                    <th>Teknisi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="ticket in lookupTickets" :key="ticket.id" class="ticket-modal-row">
+                    <td>
+                      <span class="badge-tiket">{{ ticket.no_tiket }}</span>
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark">{{ formatDate(ticket.tanggal) }}</div>
+                      <small class="text-muted">{{ formatTime(ticket.tanggal) }}</small>
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark" style="font-size: 0.85rem;">{{ ticket.pelapor?.nama || 'Non-Pegawai' }}</div>
+                      <small class="text-muted" style="font-size: 0.75rem;">{{ ticket.departemen?.nama || '-' }}</small>
+                    </td>
+                    <td class="complaint-modal-cell">
+                      <div class="complaint-text" :title="ticket.keluhan">{{ ticket.keluhan }}</div>
+                      <div v-if="ticket.solusi" class="solusi-text mt-2 p-2 bg-soft-success rounded-3 border-start border-success border-3">
+                        <span class="fw-bold text-success" style="font-size: 0.75rem;"><i class="fas fa-check-circle me-1"></i>Solusi:</span>
+                        <div class="text-dark mt-1" style="font-size: 0.80rem;">{{ ticket.solusi }}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="prio-badge" :class="ticket.prioritas.toLowerCase()">
+                        {{ ticket.prioritas }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-pill" :class="ticket.status.toLowerCase()">
+                        <i v-if="ticket.status === 'Open'" class="fas fa-envelope-open-text me-1"></i>
+                        <i v-if="ticket.status === 'Proses'" class="fas fa-spinner fa-spin me-1"></i>
+                        <i v-if="ticket.status === 'Selesai'" class="fas fa-check-double me-1"></i>
+                        <i v-if="ticket.status === 'Batal'" class="fas fa-times-circle me-1"></i>
+                        {{ ticket.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <span v-if="ticket.teknisi" class="badge bg-soft-info text-info p-2 rounded-3 text-start" style="font-size: 0.75rem; white-space: normal;">
+                        <i class="fas fa-user-tie me-1"></i>{{ ticket.teknisi.nama }}
+                      </span>
+                      <span v-else class="text-muted">-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0 p-4">
+            <button type="button" class="btn btn-light-premium px-4 fw-bold" data-bs-dismiss="modal">Tutup</button>
           </div>
         </div>
       </div>
@@ -530,6 +635,63 @@ const formatDuration = (minutes) => {
   const hrs = Math.floor(minutes / 60)
   const mins = Math.round(minutes % 60)
   return mins > 0 ? `${hrs} Jam ${mins} Menit` : `${hrs} Jam`
+}
+
+// Lookup Ticket details state
+const lookupTitle = ref('')
+const lookupTickets = ref([])
+const lookupLoading = ref(false)
+
+const openLookupModal = async (col, type) => {
+  let typeLabel = ''
+  if (type === 'total') typeLabel = 'Total Tiket Masuk'
+  else if (type === 'responded') typeLabel = 'Tiket Mulai Direspon'
+  else if (type === 'selesai') typeLabel = 'Tiket Selesai Dikerjakan'
+
+  let dateLabel = ''
+  if (filters.period === 'monthly') {
+    dateLabel = `Tanggal ${col.label} ${getSelectedMonthName()} ${filters.year}`
+  } else {
+    dateLabel = `Bulan ${col.label} ${filters.year}`
+  }
+
+  lookupTitle.value = `${typeLabel} (${dateLabel})`
+  lookupTickets.value = []
+  lookupLoading.value = true
+
+  // Open bootstrap modal
+  const modal = new bootstrap.Modal(document.getElementById('lookupTicketsModal'))
+  modal.show()
+
+  try {
+    const params = {
+      limit: 100, // Load up to 100 tickets directly for easy review
+      type: type,
+      year: filters.year,
+      month: filters.period === 'monthly' ? filters.month : getMonthValFromName(col.label),
+      day: filters.period === 'monthly' ? col.label : null
+    }
+
+    const response = await helpdeskService.getActiveTickets(params)
+    if (response.data.success) {
+      lookupTickets.value = response.data.data.data
+    }
+  } catch (error) {
+    toast.error('Gagal mengambil data rincian tiket')
+  } finally {
+    lookupLoading.value = false
+  }
+}
+
+// Helper to convert Month name abbreviation to number
+const getMonthValFromName = (name) => {
+  const months = {
+    'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'Mei': 5, 'Jun': 6,
+    'Jul': 7, 'Agu': 8, 'Sep': 9, 'Okt': 10, 'Nov': 11, 'Des': 12,
+    'Januari': 1, 'Februari': 2, 'Maret': 3, 'April': 4, 'Mei': 5, 'Juni': 6,
+    'Juli': 7, 'Agustus': 8, 'September': 9, 'Oktober': 10, 'November': 11, 'Desember': 12
+  }
+  return months[name] || new Date().getMonth() + 1
 }
 
 // 1. Line/Area Chart Options & Series (Monthly / Daily Trend)
@@ -1006,6 +1168,106 @@ onMounted(() => {
   max-width: 140px;
 }
 
+/* Clickable Badge details */
+.clickable-badge {
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.clickable-badge.pointer-hover {
+  cursor: pointer;
+}
+
+.clickable-badge.pointer-hover:hover {
+  transform: scale(1.1) translateY(-1px);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.clickable-badge.bg-soft-info:hover {
+  box-shadow: 0 4px 6px rgba(8, 145, 178, 0.25);
+  background-color: #cffafe !important;
+}
+
+.clickable-badge.bg-soft-success:hover {
+  box-shadow: 0 4px 6px rgba(4, 120, 87, 0.25);
+  background-color: #d1fae5 !important;
+}
+
+/* Modal Ticket List Style */
+.premium-modal {
+  border-radius: 20px;
+  border: none;
+}
+
+.table-light-header th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem 0.75rem !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.ticket-modal-row {
+  transition: background-color 0.2s;
+}
+
+.ticket-modal-row:hover {
+  background-color: #faf5ff;
+}
+
+.complaint-modal-cell {
+  max-width: 380px;
+}
+
+.complaint-text {
+  font-size: 0.85rem;
+  color: #1e293b;
+  line-height: 1.5;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.badge-tiket {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.prio-badge {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.prio-badge.low { background: #e2e8f0; color: #475569; }
+.prio-badge.medium { background: #dbeafe; color: #1d4ed8; }
+.prio-badge.high { background: #fee2e2; color: #b91c1c; }
+
+.status-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.status-pill.open { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.status-pill.proses { background: #fefce8; color: #a16207; border: 1px solid #fef9c3; }
+.status-pill.selesai { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; }
+.status-pill.batal { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+
 /* Top Tech list styling */
 .tech-list {
   padding-top: 1rem;
@@ -1028,10 +1290,6 @@ onMounted(() => {
   font-size: 0.85rem;
   flex-shrink: 0;
 }
-
-.tech-rank.rank-1 { background: #fef3c7; color: #d97706; }
-.tech-rank.rank-2 { background: #e2e8f0; color: #475569; }
-.tech-rank.rank-3 { background: #ffedd5; color: #ea580c; }
 
 .tech-name {
   font-weight: 700;
@@ -1169,5 +1427,15 @@ onMounted(() => {
 .bg-soft-success {
   background: #ecfdf5;
   color: #047857;
+}
+
+.btn-light-premium {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+.btn-light-premium:hover {
+  background: #e2e8f0;
 }
 </style>
