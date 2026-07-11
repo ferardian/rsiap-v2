@@ -333,7 +333,7 @@
         <div class="col-lg-5">
           <div class="data-card glass-card">
             <div class="card-header border-0 bg-transparent">
-              <h5 class="chart-title"><i class="fas fa-user-shield text-info me-2"></i>Kinerja Teknisi</h5>
+              <h5 class="chart-title"><i class="fas fa-users text-info me-2"></i>Detail Kontribusi Tim</h5>
             </div>
             <div class="card-body p-4 pt-2">
               <div v-if="topTechnicians.length === 0" class="text-center py-5 text-muted">
@@ -345,8 +345,8 @@
                   :key="tech.nik_teknisi"
                   class="tech-item d-flex align-items-center gap-3"
                 >
-                  <div class="tech-rank" :class="'rank-' + (idx + 1)">
-                    {{ idx + 1 }}
+                  <div class="tech-rank">
+                    <i class="fas fa-user text-secondary" style="font-size: 0.85rem;"></i>
                   </div>
                   <div class="flex-grow-1">
                     <div class="d-flex justify-content-between align-items-center mb-1">
