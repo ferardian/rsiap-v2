@@ -333,7 +333,7 @@
         <div class="col-lg-5">
           <div class="data-card glass-card">
             <div class="card-header border-0 bg-transparent">
-              <h5 class="chart-title"><i class="fas fa-user-shield text-info me-2"></i>Peringkat Penyelesaian Teknisi</h5>
+              <h5 class="chart-title"><i class="fas fa-user-shield text-info me-2"></i>Kinerja Teknisi</h5>
             </div>
             <div class="card-body p-4 pt-2">
               <div v-if="topTechnicians.length === 0" class="text-center py-5 text-muted">
