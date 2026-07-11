@@ -19,7 +19,7 @@ const helpdeskService = {
     updateTicket: (id, payload) => api.put(`/helpdesk/tiket/${id}/update`, payload),
 
     // Ambil data statistik dashboard helpdesk
-    getDashboardData: () => api.get('/helpdesk/tiket/dashboard-data'),
+    getDashboardData: (params) => api.get('/helpdesk/tiket/dashboard-data', { params }),
 };
 
 export default helpdeskService;

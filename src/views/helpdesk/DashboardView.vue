@@ -17,18 +17,68 @@
       </div>
     </div>
 
-    <!-- Loading Skeleton/Spinner -->
+    <!-- Period Filters Section -->
+    <div class="filter-bar glass-card p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <span class="filter-label"><i class="fas fa-filter text-primary me-1"></i> Periode Analisis:</span>
+        <div class="btn-group premium-btn-group" role="group">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-period" 
+            :class="filters.period === 'monthly' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="setPeriod('monthly')"
+          >
+            Bulanan
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-sm btn-period" 
+            :class="filters.period === 'yearly' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="setPeriod('yearly')"
+          >
+            Tahunan
+          </button>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <!-- Month Selector (only when Bulanan is active) -->
+        <select 
+          v-if="filters.period === 'monthly'" 
+          v-model="filters.month" 
+          class="form-select form-select-sm premium-select" 
+          @change="loadDashboardData"
+        >
+          <option v-for="m in monthsList" :key="m.value" :value="m.value">
+            {{ m.label }}
+          </option>
+        </select>
+
+        <!-- Year Selector -->
+        <select 
+          v-model="filters.year" 
+          class="form-select form-select-sm premium-select" 
+          @change="loadDashboardData"
+        >
+          <option v-for="y in yearsList" :key="y" :value="y">
+            {{ y }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
     <div v-if="loading && !dashboardData" class="d-flex justify-content-center align-items-center py-5 min-vh-50">
       <div class="text-center">
         <div class="spinner-border text-primary spinner-lg mb-3"></div>
-        <p class="text-muted fw-bold">Memuat data analisis helpdesk...</p>
+        <p class="text-muted fw-bold">Memuat analisis dashboard...</p>
       </div>
     </div>
 
     <div v-else-if="dashboardData" class="dashboard-content">
+      
       <!-- Stats Cards Grid -->
       <div class="row g-3 mb-4">
-        <!-- Card: Total Tickets -->
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card total">
             <div class="card-icon">
@@ -41,7 +91,6 @@
           </div>
         </div>
 
-        <!-- Card: Open -->
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card open">
             <div class="card-icon">
@@ -54,7 +103,6 @@
           </div>
         </div>
 
-        <!-- Card: Proses -->
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card proses">
             <div class="card-icon">
@@ -67,7 +115,6 @@
           </div>
         </div>
 
-        <!-- Card: Selesai -->
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card selesai">
             <div class="card-icon">
@@ -80,7 +127,6 @@
           </div>
         </div>
 
-        <!-- Card: Batal -->
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card batal">
             <div class="card-icon">
@@ -93,7 +139,6 @@
           </div>
         </div>
 
-        <!-- Card: Waiting Logs (WhatsApp) -->
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card waiting">
             <div class="card-icon">
@@ -107,33 +152,139 @@
         </div>
       </div>
 
-      <!-- Charts Row -->
+      <!-- SLA & Completion Rates Row -->
+      <div class="row g-3 mb-4 animate__animated animate__fadeIn">
+        <!-- SLA: Response Time -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="kpi-card response-time">
+            <div class="kpi-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-title">Avg. Waktu Respon</span>
+              <h4 class="kpi-value">{{ formatDuration(summary.avg_response_time) }}</h4>
+              <p class="kpi-desc">Durasi laporan masuk s.d mulai proses</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLA: Completion Time -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="kpi-card completion-time">
+            <div class="kpi-icon">
+              <i class="fas fa-hourglass-end"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-title">Avg. Waktu Selesai</span>
+              <h4 class="kpi-value">{{ formatDuration(summary.avg_resolution_time) }}</h4>
+              <p class="kpi-desc">Durasi pengerjaan s.d selesai</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI: Response Rate -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="kpi-card response-rate">
+            <div class="kpi-icon">
+              <i class="fas fa-reply-all"></i>
+            </div>
+            <div class="kpi-details w-100">
+              <span class="kpi-title">Tiket Direspon</span>
+              <h4 class="kpi-value">{{ respondedCount }} <span class="kpi-total">/ {{ summary.total_tickets }} Tiket</span></h4>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="progress flex-grow-1" style="height: 6px;">
+                  <div class="progress-bar bg-primary" :style="{ width: respondedPercent + '%' }"></div>
+                </div>
+                <span class="kpi-percent">{{ respondedPercent }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI: Completion Rate -->
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="kpi-card completion-rate">
+            <div class="kpi-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="kpi-details w-100">
+              <span class="kpi-title">Tiket Selesai</span>
+              <h4 class="kpi-value">{{ summary.selesai }} <span class="kpi-total">/ {{ summary.total_tickets }} Tiket</span></h4>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="progress flex-grow-1" style="height: 6px;">
+                  <div class="progress-bar bg-success" :style="{ width: resolvedPercent + '%' }"></div>
+                </div>
+                <span class="kpi-percent">{{ resolvedPercent }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts & Tables Row -->
       <div class="row g-4 mb-4">
-        <!-- Chart: Monthly Volume (Area Chart) -->
+        <!-- Chart & Dataset Table: Trend (Daily details for monthly, Monthly trend for yearly) -->
         <div class="col-lg-8">
           <div class="chart-card glass-card">
             <div class="card-header border-0 bg-transparent d-flex justify-content-between align-items-center">
-              <h5 class="chart-title"><i class="fas fa-chart-area text-primary me-2"></i>Tren Volume Tiket Bulanan</h5>
-              <span class="badge bg-light text-dark">Tahun Ini</span>
+              <h5 class="chart-title">
+                <i class="fas fa-chart-area text-primary me-2"></i>
+                {{ filters.period === 'monthly' ? 'Detail Jumlah Tiket Harian' : 'Tren Volume Tiket Bulanan' }}
+              </h5>
+              <span class="badge bg-soft-primary px-3 py-2 text-primary font-weight-bold">
+                {{ filters.period === 'monthly' ? getSelectedMonthName() + ' ' + filters.year : 'Tahun ' + filters.year }}
+              </span>
             </div>
             <div class="card-body p-4">
               <div v-if="trendChartSeries[0].data.length === 0" class="text-center py-5 text-muted">
-                Tidak ada data bulanan untuk ditampilkan.
+                Tidak ada data tiket untuk periode ini.
               </div>
-              <VueApexCharts 
-                v-else
-                type="area" 
-                height="320" 
-                :options="trendChartOptions" 
-                :series="trendChartSeries"
-              />
+              <div v-else class="row g-4">
+                <!-- Area Chart -->
+                <div class="col-12 col-md-8">
+                  <VueApexCharts 
+                    type="area" 
+                    height="320" 
+                    :options="trendChartOptions" 
+                    :series="trendChartSeries"
+                  />
+                </div>
+                
+                <!-- Dataset Table -->
+                <div class="col-12 col-md-4 border-start ps-md-4">
+                  <div class="table-title mb-2 fw-bold text-secondary d-flex justify-content-between" style="font-size: 0.85rem;">
+                    <span><i class="fas fa-table me-1 text-primary"></i> Data Rincian</span>
+                    <span class="text-muted">Total: {{ summary.total_tickets }}</span>
+                  </div>
+                  <div class="trend-table-wrapper">
+                    <table class="table table-hover table-striped mb-0 table-sm compact-trend-table" style="font-size: 0.85rem;">
+                      <thead class="sticky-top bg-light text-secondary fw-bold" style="z-index: 10;">
+                        <tr>
+                          <th>{{ filters.period === 'monthly' ? 'Tanggal' : 'Bulan' }}</th>
+                          <th class="text-center">Tiket</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="row in dashboardData.trend" :key="row.label">
+                          <td class="fw-bold text-secondary">{{ row.label }}</td>
+                          <td class="text-center">
+                            <span class="badge" :class="row.count > 0 ? 'bg-soft-primary text-primary' : 'bg-light text-muted'" style="font-size: 0.8rem;">
+                              {{ row.count }}
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Chart: Categories Distribution (Donut Chart) -->
         <div class="col-lg-4">
-          <div class="chart-card glass-card">
+          <div class="chart-card glass-card h-100">
             <div class="card-header border-0 bg-transparent">
               <h5 class="chart-title"><i class="fas fa-chart-pie text-success me-2"></i>Distribusi Kategori Kendala</h5>
             </div>
@@ -256,6 +407,49 @@ const toast = useToast()
 const loading = ref(false)
 const dashboardData = ref(null)
 
+const currentYear = new Date().getFullYear()
+const currentMonth = new Date().getMonth() + 1 // 1-12
+
+// Filters reactive state
+const filters = reactive({
+  period: 'monthly',
+  year: currentYear,
+  month: currentMonth
+})
+
+const yearsList = computed(() => {
+  const years = []
+  for (let y = currentYear; y >= currentYear - 3; y--) {
+    years.push(y)
+  }
+  return years
+})
+
+const monthsList = [
+  { value: 1, label: 'Januari' },
+  { value: 2, label: 'Februari' },
+  { value: 3, label: 'Maret' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'Mei' },
+  { value: 6, label: 'Juni' },
+  { value: 7, label: 'Juli' },
+  { value: 8, label: 'Agustus' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'Oktober' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'Desember' }
+]
+
+const getSelectedMonthName = () => {
+  const match = monthsList.find(m => m.value === filters.month)
+  return match ? match.label : ''
+}
+
+const setPeriod = (p) => {
+  filters.period = p
+  loadDashboardData()
+}
+
 const summary = computed(() => {
   return dashboardData.value?.summary || {
     total_tickets: 0,
@@ -263,8 +457,25 @@ const summary = computed(() => {
     proses: 0,
     selesai: 0,
     batal: 0,
-    waiting_logs: 0
+    waiting_logs: 0,
+    avg_response_time: 0,
+    avg_resolution_time: 0
   }
+})
+
+// KPI Calculations
+const respondedCount = computed(() => {
+  return summary.value.total_tickets - summary.value.open
+})
+
+const respondedPercent = computed(() => {
+  if (summary.value.total_tickets <= 0) return 0
+  return Math.round((respondedCount.value / summary.value.total_tickets) * 100)
+})
+
+const resolvedPercent = computed(() => {
+  if (summary.value.total_tickets <= 0) return 0
+  return Math.round((summary.value.selesai / summary.value.total_tickets) * 100)
 })
 
 const recentTickets = computed(() => {
@@ -289,9 +500,18 @@ const getTechBarClass = (index) => {
   return classes[index] || 'bg-primary'
 }
 
-// 1. Line/Area Chart Options & Series (Monthly Trend)
+// Format duration from minutes to user-friendly text
+const formatDuration = (minutes) => {
+  if (!minutes || minutes <= 0) return '0 Menit'
+  if (minutes < 60) return `${minutes} Menit`
+  const hrs = Math.floor(minutes / 60)
+  const mins = Math.round(minutes % 60)
+  return mins > 0 ? `${hrs} Jam ${mins} Menit` : `${hrs} Jam`
+}
+
+// 1. Line/Area Chart Options & Series (Monthly / Daily Trend)
 const trendChartSeries = computed(() => {
-  const data = dashboardData.value?.monthly_trend || []
+  const data = dashboardData.value?.trend || []
   return [{
     name: 'Jumlah Tiket',
     data: data.map(item => item.count)
@@ -299,7 +519,7 @@ const trendChartSeries = computed(() => {
 })
 
 const trendChartOptions = computed(() => {
-  const data = dashboardData.value?.monthly_trend || []
+  const data = dashboardData.value?.trend || []
   return {
     chart: {
       fontFamily: 'Plus Jakarta Sans, Inter, sans-serif',
@@ -322,16 +542,24 @@ const trendChartOptions = computed(() => {
       }
     },
     xaxis: {
-      categories: data.map(item => item.month),
+      categories: data.map(item => item.label),
       labels: {
         style: { colors: '#94a3b8', fontWeight: 500 }
       },
       axisBorder: { show: false },
-      axisTicks: { show: false }
+      axisTicks: { show: false },
+      title: {
+        text: filters.period === 'monthly' ? 'Tanggal' : 'Bulan',
+        style: { color: '#94a3b8', fontWeight: 600 }
+      }
     },
     yaxis: {
       labels: {
         style: { colors: '#94a3b8', fontWeight: 500 }
+      },
+      title: {
+        text: 'Jumlah Tiket',
+        style: { color: '#94a3b8', fontWeight: 600 }
       }
     },
     grid: {
@@ -401,7 +629,12 @@ const categoryChartOptions = computed(() => {
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    const response = await helpdeskService.getDashboardData()
+    const params = {
+      period: filters.period,
+      year: filters.year,
+      month: filters.period === 'monthly' ? filters.month : null
+    }
+    const response = await helpdeskService.getDashboardData(params)
     if (response.data.success) {
       dashboardData.value = response.data.data
     }
@@ -457,6 +690,41 @@ onMounted(() => {
   font-size: 0.95rem;
 }
 
+/* Filter Bar styles */
+.filter-bar {
+  border-radius: 16px;
+  background: white;
+}
+
+.filter-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.premium-btn-group {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-period {
+  padding: 0.4rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+}
+
+.btn-period:hover {
+  background: #e2e8f0;
+  color: #1e3a8a;
+}
+
+.btn-period.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
 /* Button Styling */
 .btn-outline-premium {
   border: 1.5px solid #e2e8f0;
@@ -507,6 +775,11 @@ onMounted(() => {
   font-size: 1.05rem;
   color: #1e293b;
   margin: 0;
+}
+
+.bg-soft-primary {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
 /* Stat Cards */
@@ -561,13 +834,136 @@ onMounted(() => {
 .stat-card.total .card-icon { background: #eff6ff; color: #3b82f6; }
 .stat-card.open .card-icon { background: #f0f9ff; color: #0284c7; }
 .stat-card.proses .card-icon { background: #fefce8; color: #ca8a04; }
-.stat-card.selesahi .card-icon, .stat-card.selesai .card-icon { background: #f0fdf4; color: #22c55e; }
+.stat-card.selesai .card-icon { background: #f0fdf4; color: #22c55e; }
 .stat-card.batal .card-icon { background: #f8fafc; color: #64748b; }
 .stat-card.waiting .card-icon { background: #fdf2f8; color: #db2777; }
 
 /* Micro spinning settings */
 .fa-spin-slow {
   animation: fa-spin 4s infinite linear;
+}
+
+/* KPI Card Styles */
+.kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  transition: all 0.25s ease;
+  min-height: 105px;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.kpi-card.response-time { border-left: 5px solid #3b82f6; }
+.kpi-card.completion-time { border-left: 5px solid #8b5cf6; }
+.kpi-card.response-rate { border-left: 5px solid #06b6d4; }
+.kpi-card.completion-rate { border-left: 5px solid #10b981; }
+
+.kpi-card.response-time .kpi-icon { background: #eff6ff; color: #3b82f6; }
+.kpi-card.completion-time .kpi-icon { background: #f5f3ff; color: #8b5cf6; }
+.kpi-card.response-rate .kpi-icon { background: #ecfeff; color: #0891b2; }
+.kpi-card.completion-rate .kpi-icon { background: #ecfdf5; color: #047857; }
+
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.kpi-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-title {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.kpi-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.kpi-total {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.kpi-percent {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.kpi-desc {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* Trend Table Styles */
+.trend-table-wrapper {
+  max-height: 270px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+/* Scrollbar Customization */
+.trend-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.trend-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.trend-table-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+.trend-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.compact-trend-table thead th {
+  background: #f8fafc;
+  font-size: 0.75rem;
+  color: #64748b;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.compact-trend-table tbody td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 /* Top Tech list styling */
@@ -718,4 +1114,10 @@ onMounted(() => {
 .status-pill-small.proses { background: #fefce8; color: #a16207; }
 .status-pill-small.selesai { background: #f0fdf4; color: #166534; }
 .status-pill-small.batal { background: #fef2f2; color: #991b1b; }
+
+.premium-select {
+  min-width: 140px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
 </style>
