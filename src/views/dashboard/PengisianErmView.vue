@@ -943,7 +943,7 @@ const openDetailModal = async (key) => {
       tgl_jenis: filters.tgl_jenis,
       status_ranap: filters.status_ranap,
       keyword: filters.keyword,
-      per_page: 500 // Fetch a larger set for full detail view
+      per_page: 'all' // Fetch all records for full detail view
     })
     if (res.data.success) {
       modalAllPatientsData.value = res.data.data.data || []
