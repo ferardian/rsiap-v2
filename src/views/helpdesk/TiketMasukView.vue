@@ -1,9 +1,10 @@
 <template>
-  <div class="helpdesk-container">
+  <div class="helpdesk-container animate__animated animate__fadeIn">
+    <!-- Page Header Section -->
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
       <div class="header-text">
         <h1 class="page-title">🎧 Smart Helpdesk System</h1>
-        <p class="page-subtitle">Manajemen bantuan IT dan fasilitas terintegrasi</p>
+        <p class="page-subtitle">Manajemen bantuan IT dan fasilitas terintegrasi rumah sakit</p>
       </div>
       <div class="header-actions d-flex flex-wrap align-items-center gap-3">
         <router-link to="/helpdesk/dashboard" class="btn btn-outline-premium">
@@ -28,56 +29,78 @@
 
     <!-- Active Tab Content -->
     <div class="content-wrapper">
-      <!-- 1. TAB: LAPORAN MASUK (WA TEMP LOG) -->
+      <!-- 1. TAB: LAPORAN MASUK (MESSA LOGS) -->
       <div v-if="activeTab === 'logs'" class="animate__animated animate__fadeIn">
         <div class="card border-0 shadow-sm glass-card mb-4 mt-3">
           <div class="card-body p-4">
             <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
-               <h5 class="m-0 fw-bold"><i class="fab fa-whatsapp text-success me-2"></i>Laporan Masuk WhatsApp</h5>
+               <h5 class="m-0 fw-bold text-dark">
+                 <i class="fas fa-mobile-alt text-primary me-2"></i>Laporan Masuk MESSA (Employee App)
+               </h5>
                <div class="search-filter-box d-flex gap-2">
-                 <input v-model="logFilters.keyword" type="text" class="form-control premium-input" placeholder="Cari laporan..." @input="handleLogSearch">
+                 <input 
+                   v-model="logFilters.keyword" 
+                   type="text" 
+                   class="form-control premium-input" 
+                   placeholder="Cari laporan..." 
+                   @input="handleLogSearch"
+                 >
                  <select v-model="logFilters.status" class="form-select premium-select" @change="fetchLogs">
-                   <option value="WAITING">Waiting</option>
-                   <option value="PROCESSED">Processed</option>
+                   <option value="WAITING">Waiting (Antrean)</option>
+                   <option value="PROCESSED">Processed (Tiket)</option>
                    <option value="EXPIRED">Expired</option>
                  </select>
                </div>
             </div>
 
             <div class="table-responsive premium-table">
-              <table class="table align-middle">
+              <table class="table align-middle table-hover">
                 <thead>
-                  <tr>
-                    <th>Waktu</th>
-                    <th>Pelapor</th>
-                    <th>Isi Laporan</th>
-                    <th class="text-center">Aksi</th>
+                  <tr class="table-light-header">
+                    <th style="width: 120px;">Waktu Lapor</th>
+                    <th style="width: 250px;">Pelapor & Dep</th>
+                    <th>Isi Laporan Masalah</th>
+                    <th class="text-center" style="width: 180px;">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="logLoading">
-                    <td colspan="4" class="text-center py-5"><div class="spinner-border text-primary spinner-sm"></div></td>
+                    <td colspan="4" class="text-center py-5">
+                      <div class="spinner-border text-primary spinner-sm mb-2"></div>
+                      <div class="text-muted small">Memuat antrean laporan MESSA...</div>
+                    </td>
                   </tr>
                   <tr v-else-if="logs.length === 0">
-                    <td colspan="4" class="text-center py-5 text-muted">Tidak ada laporan masuk.</td>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                      <i class="fas fa-inbox fa-2x mb-2 text-light"></i>
+                      <div>Tidak ada laporan masuk dari aplikasi MESSA.</div>
+                    </td>
                   </tr>
                   <tr v-for="log in logs" :key="log.id" class="log-row">
                     <td>
-                      <div class="fw-bold">{{ formatDate(log.created_at) }}</div>
-                      <small class="text-muted">{{ formatTime(log.created_at) }}</small>
+                      <div class="fw-bold text-dark">{{ formatDate(log.created_at) }}</div>
+                      <small class="text-secondary">{{ formatTime(log.created_at) }}</small>
                     </td>
                     <td>
-                      <div class="fw-bold text-indigo">{{ log.pegawai?.nama || 'Non-Pegawai' }}</div>
-                      <small class="text-muted">{{ log.departemen?.nama || '-' }}</small>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="user-avatar-initials">
+                          {{ getInitials(log.pegawai?.nama) }}
+                        </div>
+                        <div>
+                          <div class="fw-bold text-indigo" style="font-size: 0.85rem;">{{ log.pegawai?.nama || 'Non-Pegawai' }}</div>
+                          <span class="badge bg-soft-info text-info mt-1" style="font-size: 0.7rem;">{{ log.departemen?.nama || '-' }}</span>
+                        </div>
+                      </div>
                     </td>
                     <td class="report-cell">
-                      <div class="report-text">{{ log.isi_laporan }}</div>
+                      <div class="report-text" :title="log.isi_laporan">{{ log.isi_laporan }}</div>
                     </td>
                     <td class="text-center">
-                      <button v-if="log.status === 'WAITING'" class="btn btn-premium-sm" @click="openTicketModal(log)">
+                      <button v-if="log.status === 'WAITING'" class="btn btn-premium-sm w-100" @click="openTicketModal(log)">
                         <i class="fas fa-ticket-alt me-1"></i> Terbitkan Tiket
                       </button>
-                      <span v-else class="status-indicator" :class="log.status.toLowerCase()">
+                      <span v-else class="status-indicator-badge" :class="log.status.toLowerCase()">
+                        <i class="fas" :class="log.status === 'PROCESSED' ? 'fa-check-circle' : 'fa-times-circle'"></i>
                         {{ log.status }}
                       </span>
                     </td>
@@ -93,32 +116,51 @@
       <div v-if="activeTab === 'tickets'" class="animate__animated animate__fadeIn">
         <div class="card border-0 shadow-sm glass-card mb-4 mt-3">
           <div class="card-body p-4">
-             <!-- Simplified for now -->
              <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="m-0 fw-bold"><i class="fas fa-list-check text-primary me-2"></i>Daftar Tiket Aktif</h5>
+                <h5 class="m-0 fw-bold text-dark">
+                  <i class="fas fa-list-check text-primary me-2"></i>Daftar Tiket Aktif
+                </h5>
              </div>
+             
              <div class="table-responsive premium-table">
-                <table class="table align-middle">
+                <table class="table align-middle table-hover">
                   <thead>
-                    <tr>
-                      <th>No. Tiket</th>
-                      <th>Tanggal</th>
+                    <tr class="table-light-header">
+                      <th style="width: 140px;">No. Tiket</th>
+                      <th style="width: 120px;">Tanggal</th>
                       <th>Pelapor</th>
-                      <th>Keluhan</th>
-                      <th>Prioritas</th>
-                      <th>Status</th>
-                      <th class="text-center">Aksi</th>
+                      <th>Detail Keluhan</th>
+                      <th style="width: 110px;">Prioritas</th>
+                      <th style="width: 130px;">Status</th>
+                      <th class="text-center" style="width: 100px;">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
+                    <tr v-if="ticketLoading">
+                      <td colspan="7" class="text-center py-5">
+                        <div class="spinner-border text-primary spinner-sm mb-2"></div>
+                        <div class="text-muted small">Memuat daftar tiket aktif...</div>
+                      </td>
+                    </tr>
+                    <tr v-else-if="activeTickets.length === 0">
+                      <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-folder-open fa-2x mb-2 text-light"></i>
+                        <div>Belum ada tiket aktif yang terdaftar.</div>
+                      </td>
+                    </tr>
                     <tr v-for="ticket in activeTickets" :key="ticket.id">
                       <td><span class="badge-tiket">{{ ticket.no_tiket }}</span></td>
                       <td>
-                        <div class="fw-bold">{{ formatDate(ticket.tanggal) }}</div>
+                        <div class="fw-bold text-dark">{{ formatDate(ticket.tanggal) }}</div>
                         <small class="text-muted">{{ formatTime(ticket.tanggal) }}</small>
                       </td>
-                      <td>{{ ticket.pelapor?.nama }}</td>
-                      <td>{{ ticket.keluhan }}</td>
+                      <td>
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">{{ ticket.pelapor?.nama || 'Non-Pegawai' }}</div>
+                        <small class="text-muted" style="font-size: 0.75rem;">{{ ticket.departemen?.nama || '-' }}</small>
+                      </td>
+                      <td class="report-cell">
+                        <div class="report-text" :title="ticket.keluhan">{{ ticket.keluhan }}</div>
+                      </td>
                       <td>
                         <span class="prio-badge" :class="ticket.prioritas.toLowerCase()">
                           {{ ticket.prioritas }}
@@ -142,9 +184,6 @@
                         </button>
                       </td>
                     </tr>
-                    <tr v-if="activeTickets.length === 0">
-                      <td colspan="7" class="text-center py-5 text-muted">Belum ada tiket aktif.</td>
-                    </tr>
                   </tbody>
                 </table>
              </div>
@@ -156,21 +195,22 @@
     <!-- Modal Terbitkan Tiket -->
     <div class="modal fade" id="createTicketModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content premium-modal">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-bold">Konfirmasi Penerbitan Tiket</h5>
+        <div class="modal-content premium-modal glass-card shadow-lg">
+          <div class="modal-header border-0 pb-0 p-4">
+            <h5 class="modal-title fw-bold text-primary"><i class="fas fa-ticket-alt me-2"></i>Terbitkan Tiket Kerja</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body pt-4">
-            <div class="selected-log-preview mb-4">
-               <div class="small-label">Pelapor</div>
-               <div class="fw-bold mb-2">{{ selectedLog?.pegawai?.nama }} ({{ selectedLog?.kd_dep }})</div>
-               <div class="small-label">Isi Laporan</div>
-               <div class="log-text-box">{{ selectedLog?.isi_laporan }}</div>
+          <div class="modal-body p-4 pt-3">
+            <div class="selected-log-preview mb-4 bg-light p-3 rounded-3 border-start border-primary border-4">
+               <div class="small-label fw-bold text-primary mb-1">Pelapor Laporan MESSA</div>
+               <div class="fw-bold text-dark mb-3">{{ selectedLog?.pegawai?.nama }} ({{ selectedLog?.departemen?.nama || selectedLog?.kd_dep }})</div>
+               <div class="small-label fw-bold text-secondary mb-1">Isi Laporan Kendala</div>
+               <div class="log-text-box bg-white text-dark small" style="max-height: 120px; overflow-y: auto;">{{ selectedLog?.isi_laporan }}</div>
             </div>
+            
             <div class="form-group mb-4">
-              <label class="form-label fw-bold">Tentukan Prioritas</label>
-              <div class="prio-selector mb-3">
+              <label class="form-label fw-bold text-dark mb-2">Tentukan Tingkat Prioritas</label>
+              <div class="prio-selector mb-4">
                 <div 
                   v-for="p in priorities" 
                   :key="p.id" 
@@ -178,33 +218,35 @@
                   :class="{ active: ticketFormData.prioritas === p.id, [p.id.toLowerCase()]: true }"
                   @click="ticketFormData.prioritas = p.id"
                 >
-                  <i :class="p.icon"></i>
-                  <span>{{ p.label }}</span>
+                  <i :class="p.icon" style="font-size: 1.1rem;"></i>
+                  <span class="fw-bold" style="font-size: 0.8rem;">{{ p.label }}</span>
                 </div>
               </div>
 
-              <label class="form-label fw-bold">Tugaskan Teknisi (Opsional)</label>
+              <label class="form-label fw-bold text-dark mb-2">Tugaskan Teknisi (Opsional)</label>
               <v-select
                 v-model="ticketFormData.nik_teknisi"
                 :options="technicians"
                 :reduce="t => t.nik"
                 label="nama"
-                placeholder="Pilih teknisi untuk langsung proses..."
+                placeholder="Pilih teknisi IT penanggung jawab..."
                 class="premium-v-select"
               >
                 <template #no-options="{ search, searching }">
                   <template v-if="searching">
                     Tidak ditemukan teknisi dengan nama "<em>{{ search }}</em>".
                   </template>
-                  <em v-else>Ketik untuk mencari teknisi...</em>
+                  <em v-else>Ketik nama teknisi untuk mencari...</em>
                 </template>
               </v-select>
-              <small class="text-muted fst-italic">*Jika teknisi dipilih, status otomatis menjadi <strong>PROSES</strong> (Response Time tercatat).</small>
+              <small class="text-muted mt-2 d-block fst-italic" style="font-size: 0.75rem;">
+                *Jika teknisi langsung dipilih, status tiket otomatis akan menjadi <strong>PROSES</strong> dan waktu respon tercatat.
+              </small>
             </div>
           </div>
-          <div class="modal-footer border-0 pt-0">
-            <button type="button" class="btn btn-light-premium" data-bs-dismiss="modal">Batal</button>
-            <button type="button" class="btn btn-premium-action" @click="submitTicket" :disabled="submitting">
+          <div class="modal-footer border-0 pt-0 p-4">
+            <button type="button" class="btn btn-light-premium px-4" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-premium-action px-4" @click="submitTicket" :disabled="submitting">
               <i class="fas fa-check-circle me-1" v-if="!submitting"></i>
               <span v-else class="spinner-border spinner-border-sm me-1"></span>
               Terbitkan Tiket Sekarang
@@ -217,27 +259,29 @@
     <!-- Modal Kelola Tiket -->
     <div class="modal fade" id="manageTicketModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content premium-modal">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-bold">Manajemen Detail Tiket</h5>
+        <div class="modal-content premium-modal glass-card shadow-lg">
+          <div class="modal-header border-0 pb-0 p-4">
+            <h5 class="modal-title fw-bold text-primary"><i class="fas fa-edit me-2"></i>Kelola Tiket Kerja</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body pt-4">
+          <div class="modal-body p-4 pt-3">
             <div class="row g-4">
               <!-- Info Tiket -->
               <div class="col-md-5">
-                <div class="ticket-info-summary">
+                <div class="ticket-info-summary bg-light p-3 rounded-3 h-100">
                   <div class="info-item mb-3">
-                    <label class="small-label">Nomor Tiket</label>
-                    <div class="fw-bold text-primary">{{ selectedTicket?.no_tiket }}</div>
+                    <label class="small-label fw-bold text-primary">Nomor Tiket</label>
+                    <div class="fw-bold text-dark font-monospace" style="font-size: 1rem;">{{ selectedTicket?.no_tiket }}</div>
                   </div>
                   <div class="info-item mb-3">
-                    <label class="small-label">Pelapor</label>
-                    <div class="fw-bold">{{ selectedTicket?.pelapor?.nama }}</div>
+                    <label class="small-label fw-bold text-secondary">Nama Pelapor</label>
+                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ selectedTicket?.pelapor?.nama }}</div>
                   </div>
-                  <div class="info-item mb-3">
-                    <label class="small-label">Keluhan</label>
-                    <div class="log-text-box small">{{ selectedTicket?.keluhan }}</div>
+                  <div class="info-item mb-2">
+                    <label class="small-label fw-bold text-secondary">Isi Keluhan</label>
+                    <div class="log-text-box bg-white small text-dark" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">
+                      {{ selectedTicket?.keluhan }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -245,59 +289,59 @@
               <!-- Form Update -->
               <div class="col-md-7 border-start ps-4">
                 <div class="form-group mb-3">
-                  <label class="form-label fw-bold">Status Tiket</label>
+                  <label class="form-label fw-bold text-dark">Status Pekerjaan</label>
                   <select v-model="manageTicketData.status" class="form-select premium-select">
-                    <option value="Open">Open</option>
-                    <option value="Proses">Proses</option>
-                    <option value="Selesai">Selesai</option>
-                    <option value="Batal">Batal</option>
+                    <option value="Open">Open (Baru)</option>
+                    <option value="Proses">Proses (Dikerjakan)</option>
+                    <option value="Selesai">Selesai (Solved)</option>
+                    <option value="Batal">Batal (Closed/Cancelled)</option>
                   </select>
                 </div>
 
-                <div v-if="manageTicketData.status === 'Selesai'" class="form-group mb-3">
-                  <label class="form-label fw-bold">Waktu Selesai</label>
+                <div v-if="manageTicketData.status === 'Selesai'" class="form-group mb-3 animate__animated animate__fadeIn">
+                  <label class="form-label fw-bold text-dark">Waktu Penyelesaian</label>
                   <input 
                     type="datetime-local" 
                     v-model="manageTicketData.jam_selesai" 
                     class="form-control premium-input"
                   >
-                  <small class="text-muted mt-1 d-block">Kosongkan untuk menggunakan waktu saat ini</small>
+                  <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Kosongkan untuk otomatis menggunakan waktu sistem saat ini</small>
                 </div>
 
                 <div class="form-group mb-3">
-                  <label class="form-label fw-bold">Teknisi Penanggung Jawab</label>
+                  <label class="form-label fw-bold text-dark">Teknisi Penanggung Jawab</label>
                   <v-select
                     v-model="manageTicketData.nik_teknisi"
                     :options="technicians"
                     :reduce="t => t.nik"
                     label="nama"
-                    placeholder="Cari & Pilih Teknisi..."
+                    placeholder="Tunjuk teknisi IT..."
                     class="premium-v-select"
                   >
                     <template #no-options="{ search, searching }">
                       <template v-if="searching">
                         Tidak ditemukan teknisi dengan nama "<em>{{ search }}</em>".
                       </template>
-                      <em v-else>Ketik untuk mencari teknisi...</em>
+                      <em v-else>Ketik nama teknisi untuk mencari...</em>
                     </template>
                   </v-select>
                 </div>
 
-                <div class="form-group mb-4">
-                  <label class="form-label fw-bold">Solusi / Keterangan</label>
+                <div class="form-group mb-2">
+                  <label class="form-label fw-bold text-dark">Solusi / Langkah Perbaikan</label>
                   <textarea 
                     v-model="manageTicketData.solusi" 
                     class="form-control premium-input" 
                     rows="4" 
-                    placeholder="Tuliskan solusi atau langkah perbaikan..."
+                    placeholder="Tuliskan solusi pemecahan masalah atau keterangan perbaikan secara lengkap..."
                   ></textarea>
                 </div>
               </div>
             </div>
           </div>
-          <div class="modal-footer border-0 pt-0">
-            <button type="button" class="btn btn-light-premium" data-bs-dismiss="modal">Batal</button>
-            <button type="button" class="btn btn-premium-action" @click="submitTicketUpdate" :disabled="updating">
+          <div class="modal-footer border-0 pt-0 p-4">
+            <button type="button" class="btn btn-light-premium px-4" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-premium-action px-4" @click="submitTicketUpdate" :disabled="updating">
               <i class="fas fa-save me-1" v-if="!updating"></i>
               <span v-else class="spinner-border spinner-border-sm me-1"></span>
               Simpan Perubahan
@@ -328,7 +372,7 @@ const technicians = ref([])
 const selectedTicket = ref(null)
 
 const tabs = [
-  { id: 'logs', label: 'Laporan Masuk', icon: 'fab fa-whatsapp' },
+  { id: 'logs', label: 'Laporan MESSA', icon: 'fas fa-mobile-alt' },
   { id: 'tickets', label: 'Manajemen Tiket', icon: 'fas fa-ticket-alt' }
 ]
 
@@ -358,13 +402,22 @@ const priorities = [
   { id: 'High', label: 'High', icon: 'fas fa-arrow-up-long' }
 ]
 
+const getInitials = (name) => {
+  if (!name) return '?'
+  const words = name.split(' ')
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
+}
+
 const fetchLogs = async () => {
   logLoading.value = true
   try {
     const response = await helpdeskService.getTempLogs(logFilters)
     logs.value = response.data.data.data
   } catch (error) {
-    toast.error('Gagal memuat laporan')
+    toast.error('Gagal memuat laporan antrean MESSA')
   } finally {
     logLoading.value = false
   }
@@ -376,7 +429,7 @@ const fetchActiveTickets = async () => {
     const response = await helpdeskService.getActiveTickets()
     activeTickets.value = response.data.data.data
   } catch (error) {
-    toast.error('Gagal memuat tiket')
+    toast.error('Gagal memuat tiket helpdesk aktif')
   } finally {
     ticketLoading.value = false
   }
@@ -384,10 +437,10 @@ const fetchActiveTickets = async () => {
 
 const fetchTechnicians = async () => {
   try {
-    const response = await pegawaiService.getKaryawanList({ dep_id: 'IT' }) // Default focus IT
+    const response = await pegawaiService.getKaryawanList({ dep_id: 'IT' }) // Focus IT
     technicians.value = response.data.data
   } catch (error) {
-    console.error('Gagal memuat teknisi', error)
+    console.error('Gagal memuat teknisi IT', error)
   }
 }
 
@@ -420,7 +473,7 @@ const submitTicket = async () => {
       Swal.fire({
         icon: 'success',
         title: 'Tiket Berhasil Terbit',
-        text: 'Laporan telah divalidasi dan diubah menjadi tiket kerja.',
+        text: 'Laporan MESSA berhasil divalidasi dan diubah menjadi tiket kerja.',
         timer: 2000,
         showConfirmButton: false
       })
@@ -494,6 +547,8 @@ onMounted(() => {
 <style scoped>
 .helpdesk-container {
   padding: 1.5rem;
+  background: #f8fafc;
+  min-height: 100vh;
 }
 
 .btn-outline-premium {
@@ -520,12 +575,15 @@ onMounted(() => {
 
 .page-title {
   font-weight: 800;
-  letter-spacing: -0.025em;
+  font-size: 1.85rem;
+  letter-spacing: -0.03em;
   color: #0f172a;
+  margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
   color: #64748b;
+  font-size: 0.95rem;
 }
 
 /* Premium Tabs */
@@ -566,33 +624,36 @@ onMounted(() => {
 
 /* Glass Card */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
+  background: white;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  overflow: hidden;
 }
 
 .premium-input, .premium-select {
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   padding: 0.6rem 1rem;
   font-size: 0.9rem;
 }
 
-.premium-input:focus {
+.premium-input:focus, .premium-select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Table Style */
-.premium-table thead th {
-  background: #f8fafc;
+.table-light-header th {
+  background: #f8fafc !important;
   border: none;
   font-size: 0.75rem;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #64748b;
+  font-weight: 700;
   letter-spacing: 0.05em;
   padding: 1.25rem 1rem;
+  border-bottom: 2px solid #e2e8f0 !important;
 }
 
 .premium-table tbody td {
@@ -600,72 +661,95 @@ onMounted(() => {
   border-bottom: 1px solid #f1f5f9;
 }
 
+.log-row {
+  transition: background-color 0.2s;
+}
+
 .log-row:hover {
-  background: #f8fafc;
+  background: #fdfaf7;
 }
 
 .text-indigo { color: #2563eb; }
 
 .report-cell {
-  max-width: 400px;
+  max-width: 450px;
 }
 
 .report-text {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #334155;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.6;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* Avatar Badge */
+.user-avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0369a1;
+  font-weight: 800;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #bae6fd;
 }
 
 .btn-premium-sm {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
   font-size: 0.8rem;
   transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.15);
 }
 
 .btn-premium-sm:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
 }
 
 .btn-kelola-sm {
   background: white;
   color: #2563eb;
-  border: 1px solid #e2e8f0;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.8rem;
   transition: all 0.2s;
 }
 
 .btn-kelola-sm:hover {
-  background: #f8fafc;
+  background: #eff6ff;
   border-color: #2563eb;
+  color: #1d4ed8;
 }
 
-.status-indicator {
+.status-indicator-badge {
   font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
+  font-weight: 800;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.status-indicator.processed { background: #dcfce7; color: #166534; }
-.status-indicator.expired { background: #fee2e2; color: #991b1b; }
+.status-indicator-badge.processed { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; }
+.status-indicator-badge.expired { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
 
 /* Modal Premium */
 .premium-modal {
-  border-radius: 24px;
+  border-radius: 20px;
   border: none;
   overflow: hidden;
 }
@@ -674,7 +758,7 @@ onMounted(() => {
   font-size: 0.75rem;
   text-transform: uppercase;
   color: #94a3b8;
-  font-weight: 700;
+  font-weight: 750;
   margin-bottom: 0.25rem;
 }
 
@@ -682,14 +766,15 @@ onMounted(() => {
   background: #f8fafc;
   padding: 1rem;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  font-size: 0.9rem;
-  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  color: #334155;
+  line-height: 1.5;
 }
 
 .log-text-box.small {
   padding: 0.75rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .prio-selector {
@@ -702,61 +787,66 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: 0.4rem;
+  padding: 0.75rem;
   border-radius: 12px;
-  border: 2px solid #f1f5f9;
+  border: 2px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.2s;
   color: #64748b;
 }
-
-.prio-item i { font-size: 1.25rem; }
 
 .prio-item.low:hover, .prio-item.low.active { border-color: #10b981; background: #ecfdf5; color: #047857; }
 .prio-item.medium:hover, .prio-item.medium.active { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
 .prio-item.high:hover, .prio-item.high.active { border-color: #ef4444; background: #fef2f2; color: #b91c1c; }
 
 .btn-premium-action {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.7rem 1.5rem;
   border-radius: 12px;
   font-weight: 700;
   transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
 }
 
 .btn-premium-action:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35);
 }
 
 .btn-light-premium {
   background: #f1f5f9;
-  color: #64748b;
-  border: none;
-  padding: 0.75rem 1.5rem;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 0.7rem 1.5rem;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.btn-light-premium:hover {
+  background: #e2e8f0;
 }
 
 /* Active Ticket Extras */
 .badge-tiket {
   background: #dbeafe;
   color: #1e40af;
-  padding: 0.25rem 0.5rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 6px;
   font-family: monospace;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 0.8rem;
 }
 
 .prio-badge {
   font-size: 0.7rem;
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 9999px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
+  display: inline-block;
 }
 
 .prio-badge.low { background: #d1fae5; color: #065f46; }
@@ -765,13 +855,12 @@ onMounted(() => {
 
 .status-pill {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 9999px;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
 }
 
 .status-pill.open { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
@@ -783,7 +872,7 @@ onMounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 0.75rem;
+  margin-right: 0.5rem;
   display: inline-block;
 }
 
@@ -795,15 +884,15 @@ onMounted(() => {
 /* Premium V-Select */
 .premium-v-select :deep(.vs__dropdown-toggle) {
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  padding: 3px 0;
+  border: 1px solid #cbd5e1;
+  padding: 5px 0;
   background: white;
 }
 
 .premium-v-select :deep(.vs__selected) {
   font-size: 0.9rem;
-  color: #0f172a;
-  font-weight: 500;
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .premium-v-select :deep(.vs__search::placeholder) {
@@ -814,7 +903,7 @@ onMounted(() => {
 .premium-v-select :deep(.vs__dropdown-menu) {
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e2e8f0;
   padding: 8px;
 }
 
@@ -828,5 +917,15 @@ onMounted(() => {
 .premium-v-select :deep(.vs__dropdown-option--highlight) {
   background: #eff6ff;
   color: #2563eb;
+}
+
+.bg-soft-info {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.bg-soft-success {
+  background: #dcfce7;
+  color: #15803d;
 }
 </style>

@@ -142,10 +142,10 @@
         <div class="col-6 col-md-4 col-lg-2">
           <div class="stat-card waiting">
             <div class="card-icon">
-              <i class="fab fa-whatsapp"></i>
+              <i class="fas fa-mobile-alt"></i>
             </div>
             <div class="card-info">
-              <span class="card-label">Waiting WA</span>
+              <span class="card-label">Waiting MESSA</span>
               <h3 class="card-value">{{ summary.waiting_logs }}</h3>
             </div>
           </div>
