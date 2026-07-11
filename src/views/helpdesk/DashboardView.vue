@@ -221,9 +221,8 @@
         </div>
       </div>
 
-      <!-- Charts & Tables Row -->
+      <!-- Trend Chart Section (Full Width) -->
       <div class="row g-4 mb-4">
-        <!-- Chart & Dataset Table: Trend (Daily details for monthly, Monthly trend for yearly) -->
         <div class="col-lg-8">
           <div class="chart-card glass-card">
             <div class="card-header border-0 bg-transparent d-flex justify-content-between align-items-center">
@@ -239,44 +238,14 @@
               <div v-if="trendChartSeries[0].data.length === 0" class="text-center py-5 text-muted">
                 Tidak ada data tiket untuk periode ini.
               </div>
-              <div v-else class="row g-4">
-                <!-- Area Chart -->
-                <div class="col-12 col-md-8">
-                  <VueApexCharts 
-                    type="area" 
-                    height="320" 
-                    :options="trendChartOptions" 
-                    :series="trendChartSeries"
-                  />
-                </div>
-                
-                <!-- Dataset Table -->
-                <div class="col-12 col-md-4 border-start ps-md-4">
-                  <div class="table-title mb-2 fw-bold text-secondary d-flex justify-content-between" style="font-size: 0.85rem;">
-                    <span><i class="fas fa-table me-1 text-primary"></i> Data Rincian</span>
-                    <span class="text-muted">Total: {{ summary.total_tickets }}</span>
-                  </div>
-                  <div class="trend-table-wrapper">
-                    <table class="table table-hover table-striped mb-0 table-sm compact-trend-table" style="font-size: 0.85rem;">
-                      <thead class="sticky-top bg-light text-secondary fw-bold" style="z-index: 10;">
-                        <tr>
-                          <th>{{ filters.period === 'monthly' ? 'Tanggal' : 'Bulan' }}</th>
-                          <th class="text-center">Tiket</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="row in dashboardData.trend" :key="row.label">
-                          <td class="fw-bold text-secondary">{{ row.label }}</td>
-                          <td class="text-center">
-                            <span class="badge" :class="row.count > 0 ? 'bg-soft-primary text-primary' : 'bg-light text-muted'" style="font-size: 0.8rem;">
-                              {{ row.count }}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              <div v-else>
+                <!-- Full-Width Area Chart -->
+                <VueApexCharts 
+                  type="area" 
+                  height="340" 
+                  :options="trendChartOptions" 
+                  :series="trendChartSeries"
+                />
               </div>
             </div>
           </div>
@@ -301,6 +270,60 @@
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Dataset Table below the Chart (Horizontal Layout) -->
+      <div v-if="dashboardData.trend && dashboardData.trend.length > 0" class="chart-card glass-card p-4 mb-4 animate__animated animate__fadeIn">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="chart-title"><i class="fas fa-table text-primary me-2"></i>Data Rincian Aktivitas Tiket</h5>
+          <span class="badge bg-soft-primary px-3 py-2 text-primary font-weight-bold">
+            Total: {{ summary.total_tickets }} Tiket
+          </span>
+        </div>
+        
+        <div class="horizontal-table-wrapper">
+          <table class="table horizontal-table">
+            <thead>
+              <tr class="bg-light text-secondary">
+                <th class="sticky-col">{{ filters.period === 'monthly' ? 'Info / Hari' : 'Info / Bulan' }}</th>
+                <th v-for="col in dashboardData.trend" :key="col.label" class="fw-bold">
+                  {{ col.label }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Row 1: Total Tiket -->
+              <tr>
+                <td class="sticky-col fw-bold">Total Tiket</td>
+                <td v-for="col in dashboardData.trend" :key="col.label">
+                  <span class="badge" :class="col.count > 0 ? 'bg-primary text-white' : 'bg-light text-muted'">
+                    {{ col.count }}
+                  </span>
+                </td>
+              </tr>
+              <!-- Row 2: Tiket Direspon -->
+              <tr>
+                <td class="sticky-col fw-bold">Direspon / Total</td>
+                <td v-for="col in dashboardData.trend" :key="col.label">
+                  <span v-if="col.count > 0" class="badge bg-soft-info text-info">
+                    {{ col.responded }} / {{ col.count }}
+                  </span>
+                  <span v-else class="text-muted">-</span>
+                </td>
+              </tr>
+              <!-- Row 3: Tiket Selesai -->
+              <tr>
+                <td class="sticky-col fw-bold">Selesai / Total</td>
+                <td v-for="col in dashboardData.trend" :key="col.label">
+                  <span v-if="col.count > 0" class="badge bg-soft-success text-success">
+                    {{ col.selesai }} / {{ col.count }}
+                  </span>
+                  <span v-else class="text-muted">-</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -925,45 +948,61 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Trend Table Styles */
-.trend-table-wrapper {
-  max-height: 270px;
-  overflow-y: auto;
+/* Trend Table Styles (Horizontal Scrollable Layout) */
+.horizontal-table-wrapper {
+  overflow-x: auto;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
+  background: white;
 }
 
 /* Scrollbar Customization */
-.trend-table-wrapper::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.horizontal-table-wrapper::-webkit-scrollbar {
+  height: 8px;
 }
 
-.trend-table-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
+.horizontal-table-wrapper::-webkit-scrollbar-track {
+  background: #f8fafc;
   border-radius: 8px;
 }
 
-.trend-table-wrapper::-webkit-scrollbar-thumb {
+.horizontal-table-wrapper::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 8px;
 }
 
-.trend-table-wrapper::-webkit-scrollbar-thumb:hover {
+.horizontal-table-wrapper::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-.compact-trend-table thead th {
-  background: #f8fafc;
-  font-size: 0.75rem;
-  color: #64748b;
-  padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
+.horizontal-table {
+  margin-bottom: 0;
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1200px; /* Ensure wide space to represent up to 31 columns */
 }
 
-.compact-trend-table tbody td {
-  padding: 0.5rem;
-  border-bottom: 1px solid #f1f5f9;
+.horizontal-table th, .horizontal-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+/* Sticky First Column for labels */
+.horizontal-table th.sticky-col,
+.horizontal-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  background: #f8fafc;
+  font-weight: 750;
+  text-align: left;
+  color: #475569;
+  z-index: 5;
+  box-shadow: 3px 0 6px rgba(0,0,0,0.06);
+  min-width: 140px;
+  max-width: 140px;
 }
 
 /* Top Tech list styling */
@@ -1119,5 +1158,15 @@ onMounted(() => {
   min-width: 140px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
+}
+
+.bg-soft-info {
+  background: #ecfeff;
+  color: #0891b2;
+}
+
+.bg-soft-success {
+  background: #ecfdf5;
+  color: #047857;
 }
 </style>
