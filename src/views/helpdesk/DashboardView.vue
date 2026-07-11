@@ -397,13 +397,13 @@
                 <div 
                   v-for="ticket in recentTickets" 
                   :key="ticket.id" 
-                  class="recent-item d-flex flex-wrap justify-content-between align-items-center gap-3 p-3"
+                  class="recent-item d-flex justify-content-between align-items-center gap-3 p-3"
                 >
-                  <div class="d-flex align-items-center gap-3">
+                  <div class="d-flex align-items-center gap-3 flex-grow-1" style="min-width: 0;">
                     <div class="ticket-status-indicator" :class="ticket.status.toLowerCase()">
                       <i :class="getStatusIcon(ticket.status)"></i>
                     </div>
-                    <div>
+                    <div class="flex-grow-1" style="min-width: 0;">
                       <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="ticket-no">{{ ticket.no_tiket }}</span>
                         <span class="prio-pill" :class="ticket.prioritas.toLowerCase()">
@@ -411,14 +411,14 @@
                         </span>
                       </div>
                       <div class="ticket-complaint">{{ ticket.keluhan }}</div>
-                      <div class="ticket-meta">
+                      <div class="ticket-meta text-truncate">
                         <span><i class="fas fa-user me-1"></i>{{ ticket.pelapor?.nama || 'Non-Pegawai' }}</span>
                         <span class="mx-2">•</span>
                         <span><i class="fas fa-building me-1"></i>{{ ticket.departemen?.nama || '-' }}</span>
                       </div>
                     </div>
                   </div>
-                  <div class="text-end">
+                  <div class="text-end flex-shrink-0">
                     <div class="ticket-date">{{ formatDate(ticket.tanggal) }}</div>
                     <div class="ticket-time">{{ formatTime(ticket.tanggal) }}</div>
                     <span class="status-pill-small mt-2" :class="ticket.status.toLowerCase()">
