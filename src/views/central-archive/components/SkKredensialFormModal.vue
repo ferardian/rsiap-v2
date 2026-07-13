@@ -288,10 +288,26 @@ const maxDate = computed(() => {
 })
 
 const profesiCategories = computed(() => {
-  if (props.sumberKomite === 'keperawatan') return ['Staf Keperawatan', 'Staf Kebidanan']
-  if (props.sumberKomite === 'medis') return ['Staf Medis']
-  if (props.sumberKomite === 'kesehatan') return ['Staf Klinis Lainnya']
-  return []
+  const categories = []
+  if (props.sumberKomite === 'keperawatan') categories.push('Staf Keperawatan', 'Staf Kebidanan')
+  else if (props.sumberKomite === 'medis') categories.push('Staf Medis')
+  else if (props.sumberKomite === 'kesehatan') categories.push('Staf Klinis Lainnya')
+  
+  if (targetPegawai.value) {
+    const jbtn = (targetPegawai.value.jbtn || '').toUpperCase()
+    const eduField = (targetPegawai.value.pendidikan || '').toUpperCase()
+    
+    if (jbtn.includes('BIDAN') || eduField.includes('BIDAN')) {
+      if (!categories.includes('Staf Kebidanan')) categories.push('Staf Kebidanan')
+    }
+    if (jbtn.includes('PERAWAT') || jbtn.includes('NURSE') || eduField.includes('KEPERAWATAN') || eduField.includes('NERS')) {
+      if (!categories.includes('Staf Keperawatan')) categories.push('Staf Keperawatan')
+    }
+    if (jbtn.includes('DOKTER') || jbtn.includes('DR.') || eduField.includes('KEDOKTERAN')) {
+      if (!categories.includes('Staf Medis')) categories.push('Staf Medis')
+    }
+  }
+  return categories
 })
 
 watch(() => props.show, (showing) => {
@@ -389,33 +405,40 @@ const autoSuggestKredensial = () => {
   }
   
   let jenjang = ''
-
   let detectedCategory = ''
 
-  if (props.sumberKomite === 'keperawatan') {
-    if (jbtn.includes('BIDAN') || eduField.includes('BIDAN')) {
-      detectedCategory = 'Staf Kebidanan'
-      jenjang = eduField.includes('D4') || eduField.includes('S1') ? 'D4/S1+Profesi' : 'D3'
-    } else {
-      detectedCategory = 'Staf Keperawatan'
-      jenjang = eduField.includes('NERS') || eduField.includes('S1') || eduField.includes('NS') || name.includes('.NS') ? 'NERS' : 'D3'
-    }
-  } else if (props.sumberKomite === 'medis') {
+  // Deteksi kategori profesi secara presisi berdasarkan profil pegawai terlebih dahulu
+  if (jbtn.includes('BIDAN') || eduField.includes('BIDAN')) {
+    detectedCategory = 'Staf Kebidanan'
+    jenjang = eduField.includes('D4') || eduField.includes('S1') ? 'D4/S1+Profesi' : 'D3'
+  } else if (jbtn.includes('PERAWAT') || jbtn.includes('NURSE') || eduField.includes('KEPERAWATAN') || eduField.includes('NERS') || name.includes('.NS')) {
+    detectedCategory = 'Staf Keperawatan'
+    jenjang = eduField.includes('NERS') || eduField.includes('S1') || eduField.includes('NS') || name.includes('.NS') ? 'NERS' : 'D3'
+  } else if (jbtn.includes('DOKTER') || jbtn.includes('DR.') || eduField.includes('KEDOKTERAN')) {
     detectedCategory = 'Staf Medis'
     if (eduField.includes('SPESIALIS')) {
       jenjang = 'Dokter Spesialis'
     } else {
       jenjang = 'Dokter Umum'
     }
-  } else if (props.sumberKomite === 'kesehatan') {
-    detectedCategory = 'Staf Klinis Lainnya'
-    if (eduField.includes('APOTEKER') || name.includes('APT.')) jenjang = 'Apoteker'
-    else if (eduField.includes('FARMASI') || jbtn.includes('TTK') || name.includes('AMD.FARM')) jenjang = 'TTK'
-    else if (eduField.includes('LABORAT') || eduField.includes('ATLM') || eduField.includes('ANALIS') || name.includes('AMD.AK')) jenjang = 'ATLM'
-    else if (eduField.includes('GIZI') || name.includes('AMD.GZ') || name.includes('S.GZ')) jenjang = 'Gizi'
-    else if (eduField.includes('RADIOLOGI') || name.includes('AMD.RAD')) jenjang = 'Radiologi'
-    else if (eduField.includes('REKAM MEDIS') || name.includes('AMD.RM')) jenjang = 'Rekam Medis'
-    else if (eduField.includes('ANESTESI') || name.includes('AMD.AN')) jenjang = 'Penata Anestesi'
+  } else {
+    // Fallback ke deteksi default berdasarkan komite
+    if (props.sumberKomite === 'keperawatan') {
+      detectedCategory = 'Staf Keperawatan'
+      jenjang = eduField.includes('NERS') || eduField.includes('S1') || eduField.includes('NS') || name.includes('.NS') ? 'NERS' : 'D3'
+    } else if (props.sumberKomite === 'medis') {
+      detectedCategory = 'Staf Medis'
+      jenjang = eduField.includes('SPESIALIS') ? 'Dokter Spesialis' : 'Dokter Umum'
+    } else if (props.sumberKomite === 'kesehatan') {
+      detectedCategory = 'Staf Klinis Lainnya'
+      if (eduField.includes('APOTEKER') || name.includes('APT.')) jenjang = 'Apoteker'
+      else if (eduField.includes('FARMASI') || jbtn.includes('TTK') || name.includes('AMD.FARM')) jenjang = 'TTK'
+      else if (eduField.includes('LABORAT') || eduField.includes('ATLM') || eduField.includes('ANALIS') || name.includes('AMD.AK')) jenjang = 'ATLM'
+      else if (eduField.includes('GIZI') || name.includes('AMD.GZ') || name.includes('S.GZ')) jenjang = 'Gizi'
+      else if (eduField.includes('RADIOLOGI') || name.includes('AMD.RAD')) jenjang = 'Radiologi'
+      else if (eduField.includes('REKAM MEDIS') || name.includes('AMD.RM')) jenjang = 'Rekam Medis'
+      else if (eduField.includes('ANESTESI') || name.includes('AMD.AN')) jenjang = 'Penata Anestesi'
+    }
   }
 
   if (jenjang) {
