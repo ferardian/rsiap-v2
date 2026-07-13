@@ -129,7 +129,7 @@
             <i class="fas fa-list text-primary me-2"></i>Daftar Pengkinian Data Pegawai
           </h5>
           
-          <div class="d-flex flex-wrap gap-2">
+          <div class="d-flex flex-wrap gap-2 align-items-center">
             <!-- Year Filter -->
             <select v-model="filters.year" class="form-select premium-select" @change="handleFilterChange">
               <option v-for="y in yearOptions" :key="y" :value="y">Tahun: {{ y }}</option>
@@ -611,8 +611,13 @@ onMounted(() => {
   background-color: white;
 }
 
+.premium-select {
+  width: auto;
+  min-width: 160px;
+}
+
 .premium-input {
-  width: 220px;
+  width: 200px;
 }
 
 .premium-input:focus, .premium-select:focus {
