@@ -108,6 +108,44 @@
                 </tbody>
               </table>
             </div>
+            
+            <!-- Pagination untuk Laporan MESSA -->
+            <div v-if="logPagination.total > 0" class="pagination-container mt-3">
+              <div class="pagination-info">
+                Menampilkan {{ ((logPagination.current_page - 1) * logPagination.per_page) + 1 }} - 
+                {{ Math.min(logPagination.current_page * logPagination.per_page, logPagination.total) }} 
+                dari {{ logPagination.total }} data
+              </div>
+              <div class="pagination-controls">
+                <button 
+                  class="btn-page" 
+                  :disabled="logPagination.current_page === 1"
+                  @click="changeLogPage(logPagination.current_page - 1)"
+                >
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="page-numbers">
+                  <button 
+                    v-for="page in displayedLogPages" 
+                    :key="page"
+                    class="btn-page-number"
+                    :class="{ active: page === logPagination.current_page }"
+                    @click="changeLogPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                </div>
+
+                <button 
+                  class="btn-page" 
+                  :disabled="logPagination.current_page === logPagination.last_page"
+                  @click="changeLogPage(logPagination.current_page + 1)"
+                >
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -116,10 +154,26 @@
       <div v-if="activeTab === 'tickets'" class="animate__animated animate__fadeIn">
         <div class="card border-0 shadow-sm glass-card mb-4 mt-3">
           <div class="card-body p-4">
-             <div class="d-flex justify-content-between align-items-center mb-4">
+             <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
                 <h5 class="m-0 fw-bold text-dark">
                   <i class="fas fa-list-check text-primary me-2"></i>Daftar Tiket Aktif
                 </h5>
+                <div class="search-filter-box d-flex gap-2">
+                  <input 
+                    v-model="ticketFilters.keyword" 
+                    type="text" 
+                    class="form-control premium-input" 
+                    placeholder="Cari tiket..." 
+                    @input="handleTicketSearch"
+                  >
+                  <select v-model="ticketFilters.status" class="form-select premium-select" @change="fetchActiveTickets">
+                    <option value="all">Semua Status</option>
+                    <option value="Open">Open (Baru)</option>
+                    <option value="Proses">Proses (Dikerjakan)</option>
+                    <option value="Selesai">Selesai (Solved)</option>
+                    <option value="Batal">Batal (Closed/Cancelled)</option>
+                  </select>
+                </div>
              </div>
              
              <div class="table-responsive premium-table">
@@ -186,6 +240,44 @@
                     </tr>
                   </tbody>
                 </table>
+             </div>
+             
+             <!-- Pagination untuk Manajemen Tiket -->
+             <div v-if="ticketPagination.total > 0" class="pagination-container mt-3">
+               <div class="pagination-info">
+                 Menampilkan {{ ((ticketPagination.current_page - 1) * ticketPagination.per_page) + 1 }} - 
+                 {{ Math.min(ticketPagination.current_page * ticketPagination.per_page, ticketPagination.total) }} 
+                 dari {{ ticketPagination.total }} data
+               </div>
+               <div class="pagination-controls">
+                 <button 
+                   class="btn-page" 
+                   :disabled="ticketPagination.current_page === 1"
+                   @click="changeTicketPage(ticketPagination.current_page - 1)"
+                 >
+                   <i class="fas fa-chevron-left"></i>
+                 </button>
+                 
+                 <div class="page-numbers">
+                   <button 
+                     v-for="page in displayedTicketPages" 
+                     :key="page"
+                     class="btn-page-number"
+                     :class="{ active: page === ticketPagination.current_page }"
+                     @click="changeTicketPage(page)"
+                   >
+                     {{ page }}
+                   </button>
+                 </div>
+
+                 <button 
+                   class="btn-page" 
+                   :disabled="ticketPagination.current_page === ticketPagination.last_page"
+                   @click="changeTicketPage(ticketPagination.current_page + 1)"
+                 >
+                   <i class="fas fa-chevron-right"></i>
+                 </button>
+               </div>
              </div>
           </div>
         </div>
@@ -383,6 +475,27 @@ const logFilters = reactive({
   limit: 10
 })
 
+const logPagination = ref({
+  current_page: 1,
+  per_page: 10,
+  total: 0,
+  last_page: 1
+})
+
+const ticketFilters = reactive({
+  keyword: '',
+  status: 'all',
+  page: 1,
+  limit: 10
+})
+
+const ticketPagination = ref({
+  current_page: 1,
+  per_page: 10,
+  total: 0,
+  last_page: 1
+})
+
 const selectedLog = ref(null)
 const ticketFormData = reactive({
   prioritas: 'Medium',
@@ -416,6 +529,13 @@ const fetchLogs = async () => {
   try {
     const response = await helpdeskService.getTempLogs(logFilters)
     logs.value = response.data.data.data
+    const meta = response.data.data
+    logPagination.value = {
+      current_page: meta.current_page || 1,
+      per_page: meta.per_page || 10,
+      total: meta.total || 0,
+      last_page: meta.last_page || 1
+    }
   } catch (error) {
     toast.error('Gagal memuat laporan antrean MESSA')
   } finally {
@@ -423,17 +543,81 @@ const fetchLogs = async () => {
   }
 }
 
+const changeLogPage = (page) => {
+  if (page >= 1 && page <= logPagination.value.last_page) {
+    logFilters.page = page
+    fetchLogs()
+  }
+}
+
+const displayedLogPages = computed(() => {
+  const current = logPagination.value.current_page
+  const last = logPagination.value.last_page
+  const delta = 2
+  const left = current - delta
+  const right = current + delta + 1
+  const pages = []
+  
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || (i >= left && i < right)) {
+      pages.push(i)
+    }
+  }
+  return pages
+})
+
 const fetchActiveTickets = async () => {
   ticketLoading.value = true
   try {
-    const response = await helpdeskService.getActiveTickets()
+    const params = {
+      page: ticketFilters.page,
+      limit: ticketFilters.limit
+    }
+    if (ticketFilters.status !== 'all') {
+      params.status = ticketFilters.status
+    }
+    if (ticketFilters.keyword.trim() !== '') {
+      params.keyword = ticketFilters.keyword.trim()
+    }
+
+    const response = await helpdeskService.getActiveTickets(params)
     activeTickets.value = response.data.data.data
+    const meta = response.data.data
+    ticketPagination.value = {
+      current_page: meta.current_page || 1,
+      per_page: meta.per_page || 10,
+      total: meta.total || 0,
+      last_page: meta.last_page || 1
+    }
   } catch (error) {
     toast.error('Gagal memuat tiket helpdesk aktif')
   } finally {
     ticketLoading.value = false
   }
 }
+
+const changeTicketPage = (page) => {
+  if (page >= 1 && page <= ticketPagination.value.last_page) {
+    ticketFilters.page = page
+    fetchActiveTickets()
+  }
+}
+
+const displayedTicketPages = computed(() => {
+  const current = ticketPagination.value.current_page
+  const last = ticketPagination.value.last_page
+  const delta = 2
+  const left = current - delta
+  const right = current + delta + 1
+  const pages = []
+  
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || (i >= left && i < right)) {
+      pages.push(i)
+    }
+  }
+  return pages
+})
 
 const fetchTechnicians = async () => {
   try {
@@ -449,6 +633,14 @@ const handleLogSearch = () => {
   handleLogSearch.timer = setTimeout(() => {
     logFilters.page = 1
     fetchLogs()
+  }, 500)
+}
+
+const handleTicketSearch = () => {
+  clearTimeout(handleTicketSearch.timer)
+  handleTicketSearch.timer = setTimeout(() => {
+    ticketFilters.page = 1
+    fetchActiveTickets()
   }, 500)
 }
 
@@ -957,5 +1149,75 @@ onMounted(() => {
 .bg-soft-success {
   background: #dcfce7;
   color: #15803d;
+}
+
+/* Pagination styles for helpdesk */
+.pagination-container {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 20px 20px;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-page {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-page-number {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-page-number.active {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-page-number:hover:not(.active) {
+  background: #f1f5f9;
+  color: #1e293b;
 }
 </style>
