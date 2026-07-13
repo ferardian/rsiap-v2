@@ -252,7 +252,7 @@ const handleSearchSk = (showDropdown = true) => {
     }
     searchingSk.value = true
     try {
-      const res = await skService.searchSk(searchSkQuery.value, 15)
+      const res = await skService.searchSk(searchSkQuery.value, 50)
       searchSkList.value = res.data?.data || []
       if (shouldShowList.value) {
         showSkList.value = true
