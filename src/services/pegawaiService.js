@@ -224,5 +224,12 @@ export const pegawaiService = {
      */
     getKredensial(nik) {
         return api.get(`/sdi/pegawai/kredensial/${nik}`)
+    },
+
+    /**
+     * Get monitoring data for employee data updates (pengkinian data)
+     */
+    getMonitoringPengkinian(params = {}) {
+        return api.get('/sdi/pegawai/monitoring-pengkinian', { params })
     }
 }

@@ -368,6 +368,9 @@
 
     <!-- Komite Tab -->
     <CommitteeTab v-else-if="activeTab === 'komite'" />
+
+    <!-- Pengkinian Data Tab -->
+    <PengkinianDataTab v-else-if="activeTab === 'pengkinian-data'" />
     <!-- Context Menu -->
     <Transition name="fade">
       <div 
@@ -413,6 +416,7 @@ import StatistikTab from './components/StatistikTab.vue'
 import PegawaiFormModal from './components/PegawaiFormModal.vue'
 import PegawaiDetailModal from './components/PegawaiDetailModal.vue' // Added
 import CommitteeTab from './components/CommitteeTab.vue'
+import PengkinianDataTab from './components/PengkinianDataTab.vue'
 import { useToast } from 'vue-toastification'
 import * as XLSX from 'xlsx'
 
@@ -429,7 +433,8 @@ const tabs = [
   { id: 'data-karyawan', label: 'Data Karyawan', icon: 'fas fa-users' },
   { id: 'staf-klinis', label: 'Staf Klinis', icon: 'fas fa-user-md' },
   { id: 'komite', label: 'Komite', icon: 'fas fa-users-cog' },
-  { id: 'statistik', label: 'Statistik', icon: 'fas fa-chart-pie' }
+  { id: 'statistik', label: 'Statistik', icon: 'fas fa-chart-pie' },
+  { id: 'pengkinian-data', label: 'Pengkinian Data', icon: 'fas fa-user-check' }
 ]
 const activeTab = ref(route.query.tab || 'data-karyawan')
 const loading = ref(false)
