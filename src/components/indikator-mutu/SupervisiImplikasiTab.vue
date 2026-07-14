@@ -826,12 +826,16 @@ const fetchData = async () => {
 const fetchUnits = async () => {
   try {
     const response = await api.getUnits()
-    // Khusus tab ini: tampilkan FARMASI saja (exclude FARMASI RAWAT INAP & RAWAT JALAN)
-    // karena unit DPM1 "FARMASI" sudah merepresentasikan keduanya
-    const excluded = ['FARMASI RAWAT INAP', 'FARMASI RAWAT JALAN']
-    units.value = response.data.data.filter(
-      u => !excluded.includes(u.nama_ruang?.toUpperCase?.())
-    )
+    // Khusus tab ini: gabungkan FARMASI RAWAT INAP & RAWAT JALAN menjadi "FARMASI"
+    // Rename FARMASI RAWAT INAP → FARMASI (pakai dep_id-nya), exclude FARMASI RAWAT JALAN
+    units.value = response.data.data
+      .filter(u => u.nama_ruang?.toUpperCase() !== 'FARMASI RAWAT JALAN')
+      .map(u => {
+        if (u.nama_ruang?.toUpperCase() === 'FARMASI RAWAT INAP') {
+          return { ...u, nama_ruang: 'FARMASI' }
+        }
+        return u
+      })
   } catch (error) {
     console.error('Error fetch units:', error)
   }
