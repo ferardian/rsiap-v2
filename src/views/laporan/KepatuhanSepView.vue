@@ -399,9 +399,20 @@ import { useToast } from 'vue-toastification'
 import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import logoSquare from '@/assets/logo.png'
+import logoLarsi from '@/assets/logo-larsi.png'
 
 const toast = useToast()
 const loading = ref(false)
+
+const loadImage = (src) => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = src
+  })
+}
 
 // Dropdown lists
 const poliklinikList = ref([])
@@ -663,6 +674,31 @@ const formatTimeOnly = (dateStr) => {
   return new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 }
 
+const formatDateTime = (dateStr) => {
+  if (!dateStr || dateStr === '0000-00-00 00:00:00') return '-'
+  
+  // Hand-parse YYYY-MM-DD HH:mm:ss to prevent browser timezone shift issues
+  const parts = dateStr.split(' ')
+  if (parts.length < 2) return dateStr
+  
+  const dateParts = parts[0].split('-')
+  const timeParts = parts[1].split(':')
+  if (dateParts.length < 3 || timeParts.length < 2) return dateStr
+  
+  const year = dateParts[0]
+  const monthIdx = parseInt(dateParts[1], 10) - 1
+  const day = dateParts[2]
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+  const monthName = months[monthIdx] || dateParts[1]
+  
+  const hours = timeParts[0]
+  const minutes = timeParts[1]
+  const seconds = timeParts[2] ? timeParts[2].substring(0, 2) : '00'
+  
+  return `${day} ${monthName} ${year} ${hours}:${minutes}:${seconds}`
+}
+
 const formatDateShort = (dateStr) => {
   if (!dateStr) return ''
   const dateObj = new Date(dateStr)
@@ -752,19 +788,61 @@ const exportToPDF = async () => {
       return
     }
 
-    const doc = new jsPDF('l', 'mm', 'a4')
-    const pageWidth = doc.internal.pageSize.width || 297
-    const pageHeight = doc.internal.pageSize.height || 210
+    const doc = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = doc.internal.pageSize.width || 210
+    const pageHeight = doc.internal.pageSize.height || 297
 
-    // Header Title
-    doc.setFont("helvetica", "bold")
-    doc.setFontSize(16)
-    doc.text("LAPORAN KEPATUHAN PENERBITAN SEP RAWAT JALAN", 14, 15)
+    // Header Kop
+    const logoImg = await loadImage(logoSquare)
+    if (logoImg) {
+      doc.addImage(logoImg, 'PNG', 10, 8, 15, 15)
+    }
+
+    const larsiImg = await loadImage(logoLarsi)
+    if (larsiImg) {
+      const larsiHeight = 12
+      const larsiWidth = larsiHeight * (larsiImg.naturalWidth / larsiImg.naturalHeight)
+      doc.addImage(larsiImg, 'PNG', 200 - larsiWidth, 9, larsiWidth, larsiHeight)
+    }
+
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(11)
+    doc.text('RSIA AISYIYAH PEKAJANGAN PEKALONGAN', 28, 12)
     
-    doc.setFontSize(10)
-    doc.setFont("helvetica", "normal")
-    doc.text(`Periode: ${formatDateOnly(filters.start_date)} s.d ${formatDateOnly(filters.end_date)}`, 14, 21)
-    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 26)
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(7.5)
+    doc.setTextColor(100, 116, 139)
+    doc.text('Jl. Raya Pekajangan No. 612, Pekajangan, Kec. Kedungwuni, Pekalongan, Jawa Tengah 51151', 28, 17)
+    doc.text('Telp: (0285) 785909 | Email: rsiapeka@yahoo.co.id', 28, 21)
+    
+    doc.setDrawColor(80, 80, 80)
+    doc.setLineWidth(0.3)
+    doc.line(10, 26, 200, 26) // Line separator
+
+    // Title Section below KOP
+    doc.setTextColor(0, 0, 0)
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(11)
+    doc.text('LAPORAN KEPATUHAN PENERBITAN SEP RAWAT JALAN', 105, 33, { align: 'center' })
+    
+    // Subtitle / Filters info
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(50)
+    doc.text(`Periode: ${formatDateOnly(filters.start_date)} s.d ${formatDateOnly(filters.end_date)}`, 10, 40)
+    
+    let poliText = 'Semua Poliklinik'
+    if (filters.kd_poli) {
+      const selectedPoli = poliklinikList.value.find(p => p.kd_poli === filters.kd_poli)
+      if (selectedPoli) poliText = selectedPoli.nm_poli
+    }
+    let dokterText = 'Semua Dokter'
+    if (filters.kd_dokter) {
+      const selectedDokter = dokterList.value.find(d => d.kd_dokter === filters.kd_dokter)
+      if (selectedDokter) dokterText = selectedDokter.nm_dokter
+    }
+    doc.text(`Poliklinik: ${poliText} | Dokter: ${dokterText}`, 10, 44)
+    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 10, 48)
 
     const tableRows = exportData.map((item, index) => [
       index + 1,
@@ -773,44 +851,83 @@ const exportToPDF = async () => {
       item.nm_poli,
       item.nm_dokter,
       `${item.hari_kerja}\n${item.jam_mulai.substring(0, 5)}-${item.jam_selesai.substring(0, 5)}`,
-      item.tglpulang,
+      formatDateTime(item.tglpulang),
       formatSelisih(item.selisih_menit),
       item.is_patuh ? 'Sesuai' : 'Tidak Sesuai'
     ])
 
     autoTable(doc, {
-      startY: 32,
+      startY: 53,
       head: [['No', 'No. SEP', 'Pasien (RM)', 'Poliklinik', 'Dokter', 'Jadwal Dokter', 'Jam Cetak SEP', 'Selisih', 'Status']],
       body: tableRows,
-      theme: 'striped',
-      headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
-      styles: { fontSize: 8.5, cellPadding: 3, font: 'helvetica' },
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+      styles: { fontSize: 7, cellPadding: 2, font: 'helvetica' },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center' },
-        1: { cellWidth: 42 },
-        2: { cellWidth: 45 },
-        3: { cellWidth: 35 },
-        4: { cellWidth: 45 },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 35 },
-        7: { cellWidth: 20, halign: 'center' },
-        8: { cellWidth: 25, halign: 'center' }
+        0: { cellWidth: 7, halign: 'center' },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 27 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 26 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 25 },
+        7: { cellWidth: 17, halign: 'center' },
+        8: { cellWidth: 23, halign: 'center' }
       },
-      margin: { left: 14, right: 14 }
+      margin: { left: 10, right: 10 },
+      didParseCell: (data) => {
+        // Highlight Status column
+        if (data.column.index === 8 && data.cell.section === 'body') {
+          if (data.cell.text[0] === 'Sesuai') {
+            data.cell.styles.textColor = [22, 101, 52] // Dark Green
+            data.cell.styles.fontStyle = 'bold'
+          } else {
+            data.cell.styles.textColor = [185, 28, 28] // Dark Red
+            data.cell.styles.fontStyle = 'bold'
+          }
+        }
+        // Highlight Selisih column
+        if (data.column.index === 7 && data.cell.section === 'body') {
+          if (data.cell.text[0] === 'Tepat Waktu') {
+            data.cell.styles.textColor = [22, 101, 52]
+            data.cell.styles.fontStyle = 'bold'
+          } else if (data.cell.text[0].startsWith('+')) {
+            const item = exportData[data.row.index]
+            if (item && item.is_patuh) {
+              data.cell.styles.textColor = [37, 99, 235] // blue
+            } else {
+              data.cell.styles.textColor = [185, 28, 28] // red
+            }
+          } else {
+            data.cell.styles.textColor = [185, 28, 28] // red
+          }
+        }
+      }
     })
 
     const totalPages = doc.internal.getNumberOfPages()
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i)
+      
+      // Draw a subtle line separator above footer
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.3)
+      doc.line(10, pageHeight - 15, 200, pageHeight - 15)
+
+      // Footer Text
       doc.setFont("helvetica", "normal")
-      doc.setFontSize(8)
+      doc.setFontSize(7.5)
       doc.setTextColor(148, 163, 184)
-      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
+      doc.text("Laporan Kepatuhan Penerbitan SEP - RSIA Aisyiyah Pekajangan", 10, pageHeight - 10)
+      doc.text(`Halaman ${i} dari ${totalPages}`, 200, pageHeight - 10, { align: 'right' })
     }
 
-    doc.save(`Laporan_Kepatuhan_SEP_${filters.start_date}_s.d_${filters.end_date}.pdf`)
-    toast.success('PDF berhasil di-download')
+    const pdfBlob = doc.output('blob')
+    const blobUrl = URL.createObjectURL(pdfBlob)
+    window.open(blobUrl, '_blank')
+    toast.success('PDF berhasil didownload')
   } catch (error) {
+    console.error(error)
     toast.error('Gagal mengekspor berkas PDF')
   }
 }
