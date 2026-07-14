@@ -869,8 +869,8 @@ const exportToPDF = async () => {
         7: { cellWidth: 17, halign: 'center' },
         8: { cellWidth: 23, halign: 'center' }
       },
-      // margin.top = kopH + 2 agar di halaman 2+ tabel mulai di bawah kop
-      margin: { top: kopH + 2, left: 10, right: 10, bottom: footerH + 2 },
+      // margin.bottom: footerH (tinggi footer) + 12 (ruang teks info halaman + gap)
+      margin: { top: kopH + 2, left: 10, right: 10, bottom: footerH + 12 },
       didParseCell: (data) => {
         // Highlight Status column
         if (data.column.index === 8 && data.cell.section === 'body') {
