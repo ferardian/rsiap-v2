@@ -949,7 +949,8 @@ const exportToPDF = async () => {
         1: { cellWidth: 30, halign: 'center' },
         2: { cellWidth: 30, halign: 'center' },
       },
-      margin: { left: 10, right: 10, bottom: footerH + 12 },
+      // margin.top penting agar jika overflow ke halaman baru tidak tertutup kop header
+      margin: { top: kopH + 2, left: 10, right: 10, bottom: footerH + 12 },
       didParseCell: (data) => {
         if (data.cell.section === 'body') {
           // Baris Sesuai → hijau
