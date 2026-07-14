@@ -901,6 +901,71 @@ const exportToPDF = async () => {
       }
     })
 
+    // ── RINGKASAN / KESIMPULAN ─────────────────────────────────────────────
+    // Hitung statistik dari data
+    const totalData      = exportData.length
+    const totalSesuai    = exportData.filter(d => d.is_patuh).length
+    const totalTidak     = totalData - totalSesuai
+    const pctSesuai      = totalData > 0 ? ((totalSesuai / totalData) * 100).toFixed(1) : '0.0'
+    const pctTidak       = totalData > 0 ? ((totalTidak  / totalData) * 100).toFixed(1) : '0.0'
+    const selisihValues  = exportData
+      .filter(d => d.selisih_menit !== null && d.selisih_menit !== undefined)
+      .map(d => Number(d.selisih_menit))
+    const rataSelisih    = selisihValues.length > 0
+      ? Math.round(selisihValues.reduce((a, b) => a + b, 0) / selisihValues.length)
+      : 0
+    const rataSelisihTxt = rataSelisih === 0 ? 'Tepat Waktu'
+      : rataSelisih > 0 ? `+${rataSelisih} mnt (terlambat)`
+      : `${rataSelisih} mnt (lebih awal)`
+
+    // Posisi Y setelah tabel utama selesai
+    const summaryStartY = (doc.lastAutoTable?.finalY ?? (kopH + 32)) + 10
+
+    // Judul ringkasan
+    doc.setPage(doc.internal.getNumberOfPages())
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(9)
+    doc.setTextColor(30, 30, 30)
+    doc.text('RINGKASAN KEPATUHAN', 10, summaryStartY)
+    doc.setDrawColor(37, 99, 235)
+    doc.setLineWidth(0.5)
+    doc.line(10, summaryStartY + 1.5, 75, summaryStartY + 1.5)
+
+    // Tabel ringkasan menggunakan autoTable mini
+    autoTable(doc, {
+      startY: summaryStartY + 5,
+      head: [['Keterangan', 'Jumlah', 'Persentase']],
+      body: [
+        ['Total SEP Rawat Jalan', totalData.toString(), '100%'],
+        ['Sesuai (Patuh)', totalSesuai.toString(), `${pctSesuai}%`],
+        ['Tidak Sesuai (Tidak Patuh)', totalTidak.toString(), `${pctTidak}%`],
+        ['Rata-rata Selisih Waktu', rataSelisihTxt, ''],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+      styles: { fontSize: 8, cellPadding: 2.5, font: 'helvetica' },
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 30, halign: 'center' },
+      },
+      margin: { left: 10, right: 10, bottom: footerH + 12 },
+      didParseCell: (data) => {
+        if (data.cell.section === 'body') {
+          // Baris Sesuai → hijau
+          if (data.row.index === 1) {
+            data.cell.styles.textColor = [22, 101, 52]
+            data.cell.styles.fontStyle = 'bold'
+          }
+          // Baris Tidak Sesuai → merah
+          if (data.row.index === 2) {
+            data.cell.styles.textColor = [185, 28, 28]
+            data.cell.styles.fontStyle = 'bold'
+          }
+        }
+      }
+    })
+
     // Tambahkan kop header & footer ke setiap halaman
     const totalPages = doc.internal.getNumberOfPages()
     for (let i = 1; i <= totalPages; i++) {
