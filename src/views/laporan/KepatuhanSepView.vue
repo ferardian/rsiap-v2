@@ -911,16 +911,18 @@ const exportToPDF = async () => {
         doc.addImage(kopHeaderImg, 'PNG', 0, 0, pageWidth, kopH)
       }
 
-      // Footer gambar di setiap halaman - full width, proporsional
+      // Nomor halaman - ditulis SEBELUM gambar footer agar tidak tertutup
+      // Posisi: di atas gambar footer dengan sedikit margin
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7.5)
+      doc.setTextColor(100, 100, 100)
+      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth - 10, footerY - 3, { align: 'right' })
+      doc.text('Laporan Kepatuhan Penerbitan SEP - RSIA Aisyiyah Pekajangan', 10, footerY - 3)
+
+      // Footer gambar di setiap halaman - full width, proporsional (digambar terakhir agar tidak cover konten)
       if (kopFooterImg) {
         doc.addImage(kopFooterImg, 'PNG', 0, footerY, pageWidth, footerH)
       }
-
-      // Nomor halaman di tengah area footer
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.setTextColor(255, 255, 255)
-      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, footerY + (footerH / 2) + 1, { align: 'center' })
     }
 
     const pdfBlob = doc.output('blob')
