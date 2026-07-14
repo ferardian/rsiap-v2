@@ -416,9 +416,22 @@
             <button class="btn btn-secondary px-4 fw-bold shadow-sm" style="border-radius: 8px;" @click="closeModal" :disabled="saving">
               Batal
             </button>
+            <!-- Tombol Simpan Sebagai Baru: hanya muncul saat mode Edit -->
+            <button
+              v-if="isEditMode"
+              class="btn btn-success px-4 fw-bold shadow-sm d-flex align-items-center gap-2"
+              style="border-radius: 8px;"
+              @click="saveAsNew"
+              :disabled="saving"
+              title="Simpan sebagai data baru (data lama tetap)"
+            >
+              <span v-if="saving" class="spinner-border spinner-border-sm" role="status"></span>
+              <i v-else class="fas fa-copy"></i>
+              Simpan Sebagai Baru
+            </button>
             <button class="btn btn-primary px-4 fw-bold shadow-sm" style="border-radius: 8px;" @click="saveSupervisi" :disabled="saving">
               <span v-if="saving" class="spinner-border spinner-border-sm me-1" role="status"></span>
-              Simpan Data
+              {{ isEditMode ? 'Simpan Perubahan' : 'Simpan Data' }}
             </button>
           </div>
         </div>
@@ -1010,8 +1023,67 @@ const saveSupervisi = async () => {
       fetchData()
     }
   } catch (error) {
-    console.error('Error save:', error)
+    console.error('Error save supervisi:', error)
     toast.error('Gagal menyimpan data supervisi')
+  } finally {
+    saving.value = false
+  }
+}
+
+// Simpan sebagai data BARU dari form edit (data lama tetap aman)
+const saveAsNew = async () => {
+  if (!form.dep_id) {
+    toast.warning('Silakan pilih unit kerja')
+    return
+  }
+  if (!form.nama_responden || !form.nama_responden.trim()) {
+    toast.warning('Nama responden tidak boleh kosong')
+    return
+  }
+
+  const confirm = await Swal.fire({
+    title: 'Simpan Sebagai Data Baru?',
+    html: `Data lama akan <b>tetap tersimpan</b>.<br>Data baru akan dibuat dengan isian form saat ini.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#16a34a',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: '<i class="fas fa-copy me-1"></i> Ya, Simpan Baru',
+    cancelButtonText: 'Batal'
+  })
+
+  if (!confirm.isConfirmed) return
+
+  saving.value = true
+  try {
+    const payload = {
+      dep_id: form.dep_id,
+      nama_responden: form.nama_responden,
+      bulan: form.bulan,
+      tgl_supervisi: form.tgl_supervisi,
+      status: form.status,
+      rekomendasi: form.rekomendasi,
+      nik_supervisor: form.nik_supervisor,
+      nik_supervisor_mutu: form.nik_supervisor_mutu,
+      nik_supervisor_kp: form.nik_supervisor_kp,
+      nik_supervisor_mr: form.nik_supervisor_mr,
+      rekomendasi_mutu: form.rekomendasi_mutu,
+      rekomendasi_kp: form.rekomendasi_kp,
+      rekomendasi_mr: form.rekomendasi_mr,
+      details: form.details
+    }
+    // Selalu POST (create), bukan PUT
+    const response = await api.createSupervisiImplikasi(payload)
+    if (response.data.success) {
+      toast.success('Data baru berhasil disimpan! Data lama tetap ada.')
+      closeModal()
+      fetchData()
+    } else {
+      toast.error(response.data.message || 'Gagal menyimpan data baru')
+    }
+  } catch (error) {
+    console.error('Error saveAsNew:', error)
+    toast.error('Gagal menyimpan data baru')
   } finally {
     saving.value = false
   }
