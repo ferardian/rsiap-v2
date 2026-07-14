@@ -399,20 +399,15 @@ import { useToast } from 'vue-toastification'
 import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import apiConfig from '@/config/api'
+import pdfHeader from '@/assets/pdf-header.png'
+import pdfFooter from '@/assets/pdf-footer.png'
 
 const toast = useToast()
 const loading = ref(false)
 
-// Derivasi base URL backend (potong /api/v2 dari akhir API_V2_URL)
-const backendBaseUrl = apiConfig.public.API_V2_URL.replace(/\/api\/v2$/, '')
-const kopHeaderUrl = `${backendBaseUrl}/assets/images/kop-surat/header.png`
-const kopFooterUrl = `${backendBaseUrl}/assets/images/kop-surat/footer.png`
-
 const loadImage = (src) => {
   return new Promise((resolve) => {
     const img = new Image()
-    img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
     img.onerror = () => resolve(null)
     img.src = src
@@ -797,9 +792,9 @@ const exportToPDF = async () => {
     const pageWidth = doc.internal.pageSize.width || 210
     const pageHeight = doc.internal.pageSize.height || 297
 
-    // Load gambar kop surat dari backend server
-    const kopHeaderImg = await loadImage(kopHeaderUrl)
-    const kopFooterImg = await loadImage(kopFooterUrl)
+    // Load gambar kop surat dari assets FE
+    const kopHeaderImg = await loadImage(pdfHeader)
+    const kopFooterImg = await loadImage(pdfFooter)
 
     // Header Kop - gambar full width di atas (tinggi ~28mm)
     if (kopHeaderImg) {
