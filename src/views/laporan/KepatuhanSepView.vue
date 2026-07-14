@@ -399,15 +399,20 @@ import { useToast } from 'vue-toastification'
 import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import logoSquare from '@/assets/logo.png'
-import logoLarsi from '@/assets/logo-larsi.png'
+import apiConfig from '@/config/api'
 
 const toast = useToast()
 const loading = ref(false)
 
+// Derivasi base URL backend (potong /api/v2 dari akhir API_V2_URL)
+const backendBaseUrl = apiConfig.public.API_V2_URL.replace(/\/api\/v2$/, '')
+const kopHeaderUrl = `${backendBaseUrl}/assets/images/kop-surat/header.png`
+const kopFooterUrl = `${backendBaseUrl}/assets/images/kop-surat/footer.png`
+
 const loadImage = (src) => {
   return new Promise((resolve) => {
     const img = new Image()
+    img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
     img.onerror = () => resolve(null)
     img.src = src
@@ -792,44 +797,38 @@ const exportToPDF = async () => {
     const pageWidth = doc.internal.pageSize.width || 210
     const pageHeight = doc.internal.pageSize.height || 297
 
-    // Header Kop
-    const logoImg = await loadImage(logoSquare)
-    if (logoImg) {
-      doc.addImage(logoImg, 'PNG', 10, 8, 15, 15)
+    // Load gambar kop surat dari backend server
+    const kopHeaderImg = await loadImage(kopHeaderUrl)
+    const kopFooterImg = await loadImage(kopFooterUrl)
+
+    // Header Kop - gambar full width di atas (tinggi ~28mm)
+    if (kopHeaderImg) {
+      const kopH = 28
+      const kopW = kopH * (kopHeaderImg.naturalWidth / kopHeaderImg.naturalHeight)
+      doc.addImage(kopHeaderImg, 'PNG', 0, 0, pageWidth, kopH)
     }
 
-    const larsiImg = await loadImage(logoLarsi)
-    if (larsiImg) {
-      const larsiHeight = 12
-      const larsiWidth = larsiHeight * (larsiImg.naturalWidth / larsiImg.naturalHeight)
-      doc.addImage(larsiImg, 'PNG', 200 - larsiWidth, 9, larsiWidth, larsiHeight)
-    }
+    // Garis bawah header
+    doc.setDrawColor(30, 80, 160)
+    doc.setLineWidth(0.5)
+    doc.line(0, 28, pageWidth, 28)
 
-    doc.setFont('Helvetica', 'bold')
-    doc.setFontSize(11)
-    doc.text('RSIA AISYIYAH PEKAJANGAN PEKALONGAN', 28, 12)
-    
-    doc.setFont('Helvetica', 'normal')
-    doc.setFontSize(7.5)
-    doc.setTextColor(100, 116, 139)
-    doc.text('Jl. Raya Pekajangan No. 612, Pekajangan, Kec. Kedungwuni, Pekalongan, Jawa Tengah 51151', 28, 17)
-    doc.text('Telp: (0285) 785909 | Email: rsiapeka@yahoo.co.id', 28, 21)
-    
-    doc.setDrawColor(80, 80, 80)
-    doc.setLineWidth(0.3)
-    doc.line(10, 26, 200, 26) // Line separator
-
-    // Title Section below KOP
+    // Title Section
     doc.setTextColor(0, 0, 0)
     doc.setFont('Helvetica', 'bold')
     doc.setFontSize(11)
-    doc.text('LAPORAN KEPATUHAN PENERBITAN SEP RAWAT JALAN', 105, 33, { align: 'center' })
-    
+    doc.text('LAPORAN KEPATUHAN PENERBITAN SEP RAWAT JALAN', 105, 37, { align: 'center' })
+
+    // Garis bawah judul
+    doc.setDrawColor(200, 200, 200)
+    doc.setLineWidth(0.3)
+    doc.line(10, 40, 200, 40)
+
     // Subtitle / Filters info
     doc.setFont('Helvetica', 'normal')
     doc.setFontSize(8)
     doc.setTextColor(50)
-    doc.text(`Periode: ${formatDateOnly(filters.start_date)} s.d ${formatDateOnly(filters.end_date)}`, 10, 40)
+    doc.text(`Periode: ${formatDateOnly(filters.start_date)} s.d ${formatDateOnly(filters.end_date)}`, 10, 46)
     
     let poliText = 'Semua Poliklinik'
     if (filters.kd_poli) {
@@ -841,8 +840,8 @@ const exportToPDF = async () => {
       const selectedDokter = dokterList.value.find(d => d.kd_dokter === filters.kd_dokter)
       if (selectedDokter) dokterText = selectedDokter.nm_dokter
     }
-    doc.text(`Poliklinik: ${poliText} | Dokter: ${dokterText}`, 10, 44)
-    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 10, 48)
+    doc.text(`Poliklinik: ${poliText} | Dokter: ${dokterText}`, 10, 51)
+    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 10, 56)
 
     const tableRows = exportData.map((item, index) => [
       index + 1,
@@ -856,8 +855,12 @@ const exportToPDF = async () => {
       item.is_patuh ? 'Sesuai' : 'Tidak Sesuai'
     ])
 
+    // Tinggi footer gambar ~14mm, sisakan ruang di bawah tabel
+    const footerHeight = 14
+    const footerY = pageHeight - footerHeight
+
     autoTable(doc, {
-      startY: 53,
+      startY: 60,
       head: [['No', 'No. SEP', 'Pasien (RM)', 'Poliklinik', 'Dokter', 'Jadwal Dokter', 'Jam Cetak SEP', 'Selisih', 'Status']],
       body: tableRows,
       theme: 'grid',
@@ -874,15 +877,15 @@ const exportToPDF = async () => {
         7: { cellWidth: 17, halign: 'center' },
         8: { cellWidth: 23, halign: 'center' }
       },
-      margin: { left: 10, right: 10 },
+      margin: { left: 10, right: 10, bottom: footerHeight + 2 },
       didParseCell: (data) => {
         // Highlight Status column
         if (data.column.index === 8 && data.cell.section === 'body') {
           if (data.cell.text[0] === 'Sesuai') {
-            data.cell.styles.textColor = [22, 101, 52] // Dark Green
+            data.cell.styles.textColor = [22, 101, 52]
             data.cell.styles.fontStyle = 'bold'
           } else {
-            data.cell.styles.textColor = [185, 28, 28] // Dark Red
+            data.cell.styles.textColor = [185, 28, 28]
             data.cell.styles.fontStyle = 'bold'
           }
         }
@@ -894,38 +897,47 @@ const exportToPDF = async () => {
           } else if (data.cell.text[0].startsWith('+')) {
             const item = exportData[data.row.index]
             if (item && item.is_patuh) {
-              data.cell.styles.textColor = [37, 99, 235] // blue
+              data.cell.styles.textColor = [37, 99, 235]
             } else {
-              data.cell.styles.textColor = [185, 28, 28] // red
+              data.cell.styles.textColor = [185, 28, 28]
             }
           } else {
-            data.cell.styles.textColor = [185, 28, 28] // red
+            data.cell.styles.textColor = [185, 28, 28]
           }
         }
       }
     })
 
+    // Tambahkan kop header & footer ke setiap halaman
     const totalPages = doc.internal.getNumberOfPages()
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i)
-      
-      // Draw a subtle line separator above footer
-      doc.setDrawColor(226, 232, 240)
-      doc.setLineWidth(0.3)
-      doc.line(10, pageHeight - 15, 200, pageHeight - 15)
 
-      // Footer Text
+      // Kop header di setiap halaman (kecuali halaman 1 yang sudah ada)
+      if (i > 1 && kopHeaderImg) {
+        doc.addImage(kopHeaderImg, 'PNG', 0, 0, pageWidth, 28)
+        doc.setDrawColor(30, 80, 160)
+        doc.setLineWidth(0.5)
+        doc.line(0, 28, pageWidth, 28)
+      }
+
+      // Footer gambar di setiap halaman
+      if (kopFooterImg) {
+        const fW = footerHeight * (kopFooterImg.naturalWidth / kopFooterImg.naturalHeight)
+        doc.addImage(kopFooterImg, 'PNG', 0, footerY, pageWidth, footerHeight)
+      }
+
+      // Nomor halaman di atas gambar footer
       doc.setFont("helvetica", "normal")
-      doc.setFontSize(7.5)
-      doc.setTextColor(148, 163, 184)
-      doc.text("Laporan Kepatuhan Penerbitan SEP - RSIA Aisyiyah Pekajangan", 10, pageHeight - 10)
-      doc.text(`Halaman ${i} dari ${totalPages}`, 200, pageHeight - 10, { align: 'right' })
+      doc.setFontSize(7)
+      doc.setTextColor(255, 255, 255)
+      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, footerY + 9, { align: 'center' })
     }
 
     const pdfBlob = doc.output('blob')
     const blobUrl = URL.createObjectURL(pdfBlob)
     window.open(blobUrl, '_blank')
-    toast.success('PDF berhasil didownload')
+    toast.success('PDF berhasil dibuka di tab baru')
   } catch (error) {
     console.error(error)
     toast.error('Gagal mengekspor berkas PDF')
