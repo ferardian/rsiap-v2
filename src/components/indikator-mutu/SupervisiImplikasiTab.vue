@@ -826,7 +826,12 @@ const fetchData = async () => {
 const fetchUnits = async () => {
   try {
     const response = await api.getUnits()
-    units.value = response.data.data
+    // Khusus tab ini: tampilkan FARMASI saja (exclude FARMASI RAWAT INAP & RAWAT JALAN)
+    // karena unit DPM1 "FARMASI" sudah merepresentasikan keduanya
+    const excluded = ['FARMASI RAWAT INAP', 'FARMASI RAWAT JALAN']
+    units.value = response.data.data.filter(
+      u => !excluded.includes(u.nama_ruang?.toUpperCase?.())
+    )
   } catch (error) {
     console.error('Error fetch units:', error)
   }
