@@ -725,6 +725,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/kepatuhan-penerbitan-sep',
+    name: 'KepatuhanPenerbitanSep',
+    component: () => import('@/views/laporan/KepatuhanSepView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ppra/tim',
     name: 'TimPpra',
     component: () => import('../views/ppra/TimPpraView.vue'),
