@@ -796,35 +796,29 @@ const exportToPDF = async () => {
     const kopHeaderImg = await loadImage(pdfHeader)
     const kopFooterImg = await loadImage(pdfFooter)
 
-    // Header Kop - gambar full width di atas (tinggi ~28mm)
+    // Header Kop halaman 1 - gambar full width (tinggi proporsional ~28mm)
+    const kopH = 28
     if (kopHeaderImg) {
-      const kopH = 28
-      const kopW = kopH * (kopHeaderImg.naturalWidth / kopHeaderImg.naturalHeight)
       doc.addImage(kopHeaderImg, 'PNG', 0, 0, pageWidth, kopH)
     }
-
-    // Garis bawah header
-    doc.setDrawColor(30, 80, 160)
-    doc.setLineWidth(0.5)
-    doc.line(0, 28, pageWidth, 28)
 
     // Title Section
     doc.setTextColor(0, 0, 0)
     doc.setFont('Helvetica', 'bold')
     doc.setFontSize(11)
-    doc.text('LAPORAN KEPATUHAN PENERBITAN SEP RAWAT JALAN', 105, 37, { align: 'center' })
+    doc.text('LAPORAN KEPATUHAN PENERBITAN SEP RAWAT JALAN', 105, kopH + 9, { align: 'center' })
 
     // Garis bawah judul
     doc.setDrawColor(200, 200, 200)
     doc.setLineWidth(0.3)
-    doc.line(10, 40, 200, 40)
+    doc.line(10, kopH + 12, 200, kopH + 12)
 
     // Subtitle / Filters info
     doc.setFont('Helvetica', 'normal')
     doc.setFontSize(8)
     doc.setTextColor(50)
-    doc.text(`Periode: ${formatDateOnly(filters.start_date)} s.d ${formatDateOnly(filters.end_date)}`, 10, 46)
-    
+    doc.text(`Periode: ${formatDateOnly(filters.start_date)} s.d ${formatDateOnly(filters.end_date)}`, 10, kopH + 18)
+
     let poliText = 'Semua Poliklinik'
     if (filters.kd_poli) {
       const selectedPoli = poliklinikList.value.find(p => p.kd_poli === filters.kd_poli)
@@ -835,8 +829,8 @@ const exportToPDF = async () => {
       const selectedDokter = dokterList.value.find(d => d.kd_dokter === filters.kd_dokter)
       if (selectedDokter) dokterText = selectedDokter.nm_dokter
     }
-    doc.text(`Poliklinik: ${poliText} | Dokter: ${dokterText}`, 10, 51)
-    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 10, 56)
+    doc.text(`Poliklinik: ${poliText} | Dokter: ${dokterText}`, 10, kopH + 23)
+    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 10, kopH + 28)
 
     const tableRows = exportData.map((item, index) => [
       index + 1,
@@ -850,12 +844,15 @@ const exportToPDF = async () => {
       item.is_patuh ? 'Sesuai' : 'Tidak Sesuai'
     ])
 
-    // Tinggi footer gambar ~14mm, sisakan ruang di bawah tabel
-    const footerHeight = 14
-    const footerY = pageHeight - footerHeight
+    // Hitung tinggi footer proporsional dari aspect ratio gambar
+    const footerImgRatio = kopFooterImg
+      ? (kopFooterImg.naturalHeight / kopFooterImg.naturalWidth)
+      : 0.06
+    const footerH = Math.round(pageWidth * footerImgRatio)  // ~13mm untuk A4
+    const footerY = pageHeight - footerH
 
     autoTable(doc, {
-      startY: 60,
+      startY: kopH + 32,
       head: [['No', 'No. SEP', 'Pasien (RM)', 'Poliklinik', 'Dokter', 'Jadwal Dokter', 'Jam Cetak SEP', 'Selisih', 'Status']],
       body: tableRows,
       theme: 'grid',
@@ -872,7 +869,8 @@ const exportToPDF = async () => {
         7: { cellWidth: 17, halign: 'center' },
         8: { cellWidth: 23, halign: 'center' }
       },
-      margin: { left: 10, right: 10, bottom: footerHeight + 2 },
+      // margin.top = kopH + 2 agar di halaman 2+ tabel mulai di bawah kop
+      margin: { top: kopH + 2, left: 10, right: 10, bottom: footerH + 2 },
       didParseCell: (data) => {
         // Highlight Status column
         if (data.column.index === 8 && data.cell.section === 'body') {
@@ -908,25 +906,21 @@ const exportToPDF = async () => {
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i)
 
-      // Kop header di setiap halaman (kecuali halaman 1 yang sudah ada)
+      // Kop header di setiap halaman (kecuali halaman 1 yang sudah digambar)
       if (i > 1 && kopHeaderImg) {
-        doc.addImage(kopHeaderImg, 'PNG', 0, 0, pageWidth, 28)
-        doc.setDrawColor(30, 80, 160)
-        doc.setLineWidth(0.5)
-        doc.line(0, 28, pageWidth, 28)
+        doc.addImage(kopHeaderImg, 'PNG', 0, 0, pageWidth, kopH)
       }
 
-      // Footer gambar di setiap halaman
+      // Footer gambar di setiap halaman - full width, proporsional
       if (kopFooterImg) {
-        const fW = footerHeight * (kopFooterImg.naturalWidth / kopFooterImg.naturalHeight)
-        doc.addImage(kopFooterImg, 'PNG', 0, footerY, pageWidth, footerHeight)
+        doc.addImage(kopFooterImg, 'PNG', 0, footerY, pageWidth, footerH)
       }
 
-      // Nomor halaman di atas gambar footer
-      doc.setFont("helvetica", "normal")
+      // Nomor halaman di tengah area footer
+      doc.setFont('helvetica', 'normal')
       doc.setFontSize(7)
       doc.setTextColor(255, 255, 255)
-      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, footerY + 9, { align: 'center' })
+      doc.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, footerY + (footerH / 2) + 1, { align: 'center' })
     }
 
     const pdfBlob = doc.output('blob')
