@@ -1,10 +1,15 @@
 <template>
   <div>
-    <div class="row mb-4">
-      <div class="col-md-6">
-         <!-- Left side content if any -->
+    <div class="row mb-4 g-2">
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+             <i class="fas fa-search text-muted"></i>
+          </span>
+          <input type="text" class="form-control border-start-0 ps-0" v-model="filters.keyword" placeholder="Cari Nama Indikator..." @input="debounceFetch">
+        </div>
       </div>
-      <div class="col-md-6 d-flex justify-content-end align-items-center gap-2 filter-container">
+      <div class="col-md-8 d-flex justify-content-end align-items-center gap-2 filter-container">
         <div class="input-group date-filter" style="max-width: 250px;">
           <span class="input-group-text bg-white border-end-0">
              <i class="fas fa-calendar-alt text-muted"></i>
@@ -63,8 +68,18 @@ const totalPages = ref(1)
 
 const filters = reactive({
     bulan: new Date().toISOString().slice(0, 7), // YYYY-MM
-    unit: null
+    unit: null,
+    keyword: ''
 })
+
+let timeout = null
+const debounceFetch = () => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+        page.value = 1
+        fetchData()
+    }, 500)
+}
 
 const fetchUnits = async () => {
     try {
@@ -82,7 +97,8 @@ const fetchData = async () => {
             page: page.value,
             limit: limit.value,
             bulan: filters.bulan,
-            dep_id: filters.unit
+            dep_id: filters.unit,
+            keyword: filters.keyword
         }
         const response = await api.getMonitoring(params)
         const data = response.data.data
