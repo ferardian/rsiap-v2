@@ -71,13 +71,20 @@
     <!-- Filters -->
 
     <div class="row mb-4 g-2">
-      <div class="col-md-4">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0">
-             <i class="fas fa-search text-muted"></i>
-          </span>
-          <input type="text" class="form-control border-start-0 ps-0" v-model="filters.keyword" placeholder="Cari Nama Indikator..." @input="debounceFetch">
-        </div>
+      <div class="col-md-4 text-start">
+        <v-select 
+            :options="masterUtamaList" 
+            label="nama_inmut" 
+            v-model="filters.keyword"
+            :reduce="item => item.nama_inmut"
+            placeholder="Pilih Indikator Mutu"
+            class="style-chooser"
+            @update:modelValue="fetchData"
+        >
+             <template #no-options="{ search, searching, loading }">
+                Tidak ada indikator ditemukan
+            </template>
+        </v-select>
       </div>
       <div class="col-md-8 d-flex justify-content-end align-items-center gap-2 filter-container">
         <div class="input-group date-filter" style="max-width: 250px;">
@@ -431,6 +438,7 @@ const toast = useToast()
 const items = ref([])
 const units = ref([])
 const indicators = ref([]) // For select dropdown
+const masterUtamaList = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const total = ref(0)
@@ -544,6 +552,15 @@ const checkCommittee = async () => {
         } catch (error) {
             console.error('Error checking committee:', error)
         }
+    }
+}
+
+const fetchMasterUtama = async () => {
+    try {
+        const response = await api.getUtama({ limit: 1000, status: '1' })
+        masterUtamaList.value = response.data.data.data || []
+    } catch (error) {
+        console.error('Error fetching master utama:', error)
     }
 }
 
@@ -872,6 +889,7 @@ watch(() => filters.bulan, () => {
 
 onMounted(async () => {
     fetchUnits()
+    fetchMasterUtama()
     fetchData()
     checkCommittee()
     
