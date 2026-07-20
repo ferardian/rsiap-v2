@@ -617,7 +617,7 @@
               <!-- Summary Card Total Insiden & Textual Sebaran -->
               <div class="col-md-4">
                 <div class="d-flex flex-column gap-3 h-100">
-                  <div class="ikp-summary-card py-4">
+                  <div class="ikp-summary-card py-4 hover-clickable" style="cursor: pointer;" @click="openIkpLookupModal('total', 'Seluruh Insiden Keselamatan Pasien')">
                     <div class="ikp-card-title">Total Kejadian</div>
                     <div class="ikp-card-value text-danger">{{ kategorisData[3].data.total_insiden }}</div>
                     <div class="ikp-card-desc">Laporan Insiden Keselamatan Pasien (IKP)</div>
@@ -626,7 +626,7 @@
                   <div class="ikp-detail-card flex-grow-1">
                     <h6 class="ikp-card-header-title mb-2"><i class="fas fa-list-ol me-2 text-primary"></i>Detail Sebaran Jenis</h6>
                     <div class="jenis-grid" style="grid-template-columns: 1fr; gap: 0.5rem;">
-                      <div v-for="j in kategorisData[3].data.jenis_overview" :key="j.alias" class="jenis-item" style="padding: 0.4rem 0.6rem;">
+                      <div v-for="j in kategorisData[3].data.jenis_overview" :key="j.alias" class="jenis-item hover-clickable" style="padding: 0.4rem 0.6rem; cursor: pointer;" @click="openIkpLookupModal('jenis', `Detail Sebaran ${j.alias} (${j.nama_jenis_insiden})`, { alias: j.alias })">
                         <div class="jenis-alias-badge" :class="j.alias.toLowerCase()" style="min-width: 42px; font-size: 0.7rem; padding: 2px 6px;">{{ j.alias }}</div>
                         <div class="flex-grow-1 d-flex justify-content-between align-items-center">
                           <span class="jenis-name fw-medium text-slate-700" style="font-size: 0.75rem;">{{ j.nama_jenis_insiden }}</span>
@@ -643,7 +643,7 @@
                 <div class="ikp-detail-card h-100">
                   <h6 class="ikp-card-header-title mb-3"><i class="fas fa-shield-virus me-2 text-success"></i>Grading Risiko (Risk Matrix)</h6>
                   <div class="grading-list d-flex flex-column gap-2">
-                    <div v-for="g in kategorisData[3].data.grading_overview" :key="g.grading_risiko" class="grading-item d-flex align-items-center p-2 rounded border-start border-4 bg-light shadow-sm" :style="{ borderLeftColor: getGradingHexColor(g.grading_risiko) }">
+                    <div v-for="g in kategorisData[3].data.grading_overview" :key="g.grading_risiko" class="grading-item d-flex align-items-center p-2 rounded border-start border-4 bg-light shadow-sm hover-clickable" style="cursor: pointer;" :style="{ borderLeftColor: getGradingHexColor(g.grading_risiko) }" @click="openIkpLookupModal('grading', `Grading ${g.grading_risiko}`, { color: g.grading_risiko })">
                       <span class="grading-label fw-bold text-slate-700 ms-2">{{ g.grading_risiko }}</span>
                       <span class="grading-value ms-auto badge fw-bold" :style="{ backgroundColor: getGradingHexColor(g.grading_risiko), color: g.grading_risiko === 'Kuning' ? '#000' : '#fff' }">{{ g.total }} Insiden</span>
                     </div>
@@ -656,7 +656,7 @@
                 <div class="ikp-detail-card h-100">
                   <h6 class="ikp-card-header-title mb-3"><i class="fas fa-hospital-user me-2 text-warning"></i>Unit dengan Insiden Terbanyak</h6>
                   <div class="unit-list d-flex flex-column gap-2">
-                    <div v-for="(u, idx) in kategorisData[3].data.top_units" :key="u.nama_unit" class="unit-item d-flex align-items-center p-2 bg-light rounded border border-light shadow-sm">
+                    <div v-for="(u, idx) in kategorisData[3].data.top_units" :key="u.nama_unit" class="unit-item d-flex align-items-center p-2 bg-light rounded border border-light shadow-sm hover-clickable" style="cursor: pointer;" @click="openIkpLookupModal('unit', `Unit ${u.nama_unit}`, { unit_name: u.nama_unit })">
                       <span class="unit-rank badge bg-secondary text-white me-2">{{ idx + 1 }}</span>
                       <span class="unit-name text-slate-700 fw-medium">{{ u.nama_unit }}</span>
                       <span class="unit-value ms-auto badge bg-light text-dark border fw-bold">{{ u.jumlah }} Insiden</span>
@@ -731,6 +731,162 @@
       </div>
     </template>
 
+    <!-- IKP Lookup List & Detail Modals -->
+    <Teleport to="body">
+      <!-- IKP Lookup List Modal -->
+      <div 
+        v-if="ikpLookupModalOpen" 
+        class="fixed-backdrop"
+        style="position: fixed; inset: 0; z-index: 1050; background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 1rem;"
+        @click.self="closeIkpLookupModal"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl border border-light w-100 flex-column d-flex overflow-hidden" style="max-height: 85vh; max-width: 920px;">
+          <!-- Header -->
+          <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between bg-white">
+            <div class="d-flex align-items-center gap-2">
+              <h6 class="mb-0 fw-bold text-slate-800">{{ ikpLookupTitle }}</h6>
+              <span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1 fw-bold small">
+                {{ ikpLookupData.length }} Data
+              </span>
+            </div>
+            <button class="btn-close text-muted" @click="closeIkpLookupModal"></button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-4 overflow-y-auto flex-grow-1">
+            <div v-if="ikpLookupLoading" class="text-center py-5">
+              <div class="spinner-border text-danger mb-2" role="status"></div>
+              <div class="text-muted small">Memuat data insiden...</div>
+            </div>
+
+            <div v-else-if="!ikpLookupData.length" class="text-center py-5 text-muted">
+              <i class="fas fa-inbox fa-3x mb-3 text-slate-300"></i>
+              <div>Tidak ada data insiden untuk kategori ini.</div>
+            </div>
+
+            <div v-else class="table-responsive rounded-3 border">
+              <table class="table table-hover align-middle mb-0 text-sm">
+                <thead class="bg-light text-muted uppercase small font-bold">
+                  <tr>
+                    <th style="width: 16%;">Tanggal</th>
+                    <th style="width: 30%;">Insiden</th>
+                    <th style="width: 22%;">Pasien</th>
+                    <th style="width: 15%;">Unit</th>
+                    <th style="width: 12%;">Grading</th>
+                    <th class="text-end" style="width: 10%;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="inc in ikpLookupData" :key="inc.id">
+                    <td class="text-nowrap small text-muted">
+                      <i class="far fa-calendar me-1 text-slate-400"></i>
+                      {{ formatDate(inc.tanggal_insiden) }}
+                    </td>
+                    <td class="fw-bold text-slate-800 text-wrap">
+                      {{ inc.insiden }}
+                    </td>
+                    <td class="text-wrap">
+                      <div class="fw-bold text-slate-800">{{ inc.nm_pasien || '-' }}</div>
+                      <small v-if="inc.pasien_id" class="text-muted font-monospace">RM: {{ inc.pasien_id }}</small>
+                    </td>
+                    <td class="small text-muted">
+                      <i class="fas fa-hospital me-1 text-slate-400"></i>
+                      {{ inc.nama_unit || '-' }}
+                    </td>
+                    <td>
+                      <span 
+                        v-if="inc.grading_risiko" 
+                        class="badge rounded-pill px-2.5 py-1 text-uppercase font-bold"
+                        :style="{ backgroundColor: getGradingHexColor(inc.grading_risiko), color: inc.grading_risiko === 'Kuning' ? '#000' : '#fff' }"
+                      >
+                        {{ inc.grading_risiko }}
+                      </span>
+                      <span v-else class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 small">
+                        Belum
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold" style="font-size: 0.75rem;" @click="openIkpDetailModal(inc)">
+                        Detail <i class="fas fa-chevron-right ms-1"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IKP Detail Modal -->
+      <div 
+        v-if="ikpDetailModalOpen" 
+        class="fixed-backdrop"
+        style="position: fixed; inset: 0; z-index: 1060; background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 1rem;"
+        @click.self="closeIkpDetailModal"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl border border-light w-100 flex-column d-flex overflow-hidden" style="max-height: 85vh; max-width: 650px;">
+          <!-- Header -->
+          <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between bg-white">
+            <h6 class="mb-0 fw-bold text-slate-800"><i class="fas fa-file-alt me-2 text-danger"></i>Rangkuman Detail Insiden</h6>
+            <button class="btn-close text-muted" @click="closeIkpDetailModal"></button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-4 overflow-y-auto flex-grow-1" v-if="selectedIkpIncident">
+            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+              <span class="badge bg-danger-subtle text-danger fw-bold">ID: {{ selectedIkpIncident.id }}</span>
+              <span class="badge bg-light text-dark border font-semibold text-capitalize">
+                Dampak: {{ selectedIkpIncident.dampak_insiden || '-' }}
+              </span>
+            </div>
+
+            <div class="bg-light rounded-3 p-3 mb-3 border">
+              <div class="row mb-2">
+                <div class="col-4 text-muted small fw-bold text-uppercase">Nama Insiden</div>
+                <div class="col-8 fw-bold text-slate-800">{{ selectedIkpIncident.insiden }}</div>
+              </div>
+              <div class="row mb-2 border-top pt-2">
+                <div class="col-4 text-muted small fw-bold text-uppercase">Waktu Kejadian</div>
+                <div class="col-8 text-slate-700">
+                  {{ formatDate(selectedIkpIncident.tanggal_insiden) }} pukul {{ selectedIkpIncident.waktu_insiden }}
+                </div>
+              </div>
+              <div class="row mb-2 border-top pt-2">
+                <div class="col-4 text-muted small fw-bold text-uppercase">Pasien</div>
+                <div class="col-8 text-slate-700">
+                  <span class="fw-bold text-slate-800">{{ selectedIkpIncident.nm_pasien || '-' }}</span>
+                  <span v-if="selectedIkpIncident.pasien_id" class="text-muted small ms-1 font-monospace">(RM: {{ selectedIkpIncident.pasien_id }})</span>
+                </div>
+              </div>
+              <div class="row border-top pt-2">
+                <div class="col-4 text-muted small fw-bold text-uppercase">Unit / Tempat</div>
+                <div class="col-8 text-slate-700">
+                  {{ selectedIkpIncident.tempat_kejadian || '-' }} (Unit: {{ selectedIkpIncident.nama_unit || '-' }})
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-muted small fw-bold text-uppercase d-block mb-1">Kronologi Kejadian</label>
+              <div class="p-3 bg-light rounded-3 border text-slate-700 small" style="white-space: pre-line;">
+                {{ selectedIkpIncident.kronologi || '-' }}
+              </div>
+            </div>
+
+            <div v-if="selectedIkpIncident.tindakan_content" class="mb-2">
+              <label class="text-muted small fw-bold text-uppercase d-block mb-1">Tindakan Penanganan</label>
+              <div class="p-3 bg-light rounded-3 border text-slate-700 small" v-html="selectedIkpIncident.tindakan_content"></div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-4 py-3 border-top bg-light text-end">
+            <button class="btn btn-secondary px-4 fw-bold text-sm" @click="closeIkpDetailModal">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1350,6 +1506,52 @@ const getMonthIconClass = (item, m) => {
   } else {
     return 'fas fa-lock'
   }
+}
+
+// IKP Lookup State & Methods
+const ikpLookupModalOpen = ref(false)
+const ikpDetailModalOpen = ref(false)
+const ikpLookupTitle = ref('')
+const ikpLookupLoading = ref(false)
+const ikpLookupData = ref([])
+const selectedIkpIncident = ref(null)
+
+const openIkpLookupModal = async (type, title, extraParams = {}) => {
+  ikpLookupTitle.value = title
+  ikpLookupModalOpen.value = true
+  ikpLookupLoading.value = true
+  ikpLookupData.value = []
+  
+  try {
+    const params = {
+      type,
+      tahun: filters.tahun,
+      ...extraParams
+    }
+    const res = await api.getIkpLookup(params)
+    if (res.data && res.data.success) {
+      ikpLookupData.value = res.data.data || []
+    }
+  } catch (err) {
+    console.error('Error loading IKP lookup:', err)
+    toast.error('Gagal memuat data detail insiden')
+  } finally {
+    ikpLookupLoading.value = false
+  }
+}
+
+const closeIkpLookupModal = () => {
+  ikpLookupModalOpen.value = false
+}
+
+const openIkpDetailModal = (item) => {
+  selectedIkpIncident.value = item
+  ikpDetailModalOpen.value = true
+}
+
+const closeIkpDetailModal = () => {
+  ikpDetailModalOpen.value = false
+  selectedIkpIncident.value = null
 }
 
 onMounted(() => {
@@ -2164,5 +2366,14 @@ onMounted(() => {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   outline: none;
+}
+
+.hover-clickable {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  background-color: #ffffff !important;
 }
 </style>
