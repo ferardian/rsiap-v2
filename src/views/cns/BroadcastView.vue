@@ -257,6 +257,63 @@
                 </div>
               </div>
 
+              <!-- Channel Selector (Opsi Pengiriman) -->
+              <div class="mb-3 p-3 rounded-xl border bg-slate-50">
+                <label class="form-label-custom mb-2 d-flex align-items-center gap-2">
+                  <i class="fas fa-paper-plane text-primary"></i>
+                  <span>Saluran / Channel Broadcast:</span>
+                </label>
+                <div class="channel-selector-grid">
+                  <div 
+                    class="channel-option-card" 
+                    :class="{ active: isChannelSelected('both') }"
+                    @click="setChannel('both')"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="channel-icon bg-amber-subtle text-amber-600">
+                        <i class="fas fa-bolt"></i>
+                      </div>
+                      <div>
+                        <div class="fw-bold text-sm text-slate-800">Dual Blast (WA + FCM)</div>
+                        <div class="text-xs text-slate-500">Kirim ke WhatsApp & Push Notif HP</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div 
+                    class="channel-option-card" 
+                    :class="{ active: isChannelSelected('wa') }"
+                    @click="setChannel('wa')"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="channel-icon bg-emerald-subtle text-emerald">
+                        <i class="fab fa-whatsapp"></i>
+                      </div>
+                      <div>
+                        <div class="fw-bold text-sm text-slate-800">WhatsApp Saja</div>
+                        <div class="text-xs text-slate-500">Kirim via WAHA Gateway</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div 
+                    class="channel-option-card" 
+                    :class="{ active: isChannelSelected('fcm') }"
+                    @click="setChannel('fcm')"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="channel-icon bg-blue-subtle text-primary">
+                        <i class="fas fa-bell"></i>
+                      </div>
+                      <div>
+                        <div class="fw-bold text-sm text-slate-800">Push Notif (FCM) Saja</div>
+                        <div class="text-xs text-slate-500">Kirim ke App Mobile Pegawai</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Submit Button -->
               <div class="d-flex justify-content-end">
                 <button 
@@ -265,35 +322,85 @@
                   @click="confirmSendBroadcast"
                 >
                   <i class="fas" :class="sendingNotif ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-                  <span>{{ sendingNotif ? 'Mengirim Broadcast...' : `Kirim Broadcast WA (${targetCount} Pegawai)` }}</span>
+                  <span>{{ sendingNotif ? 'Mengirim Broadcast...' : `Kirim Broadcast (${targetCount} Pegawai)` }}</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Section: Live WA Preview -->
+        <!-- Right Section: Live Preview (WA & FCM) -->
         <div class="right-section">
           <div class="preview-card-wrap">
-            <div class="preview-header">
-              <i class="fab fa-whatsapp"></i>
-              <span>Simulasi Preview Pesan WA</span>
+            <!-- Preview Tab Switcher -->
+            <div class="preview-tabs-bar">
+              <button 
+                class="tab-btn" 
+                :class="{ active: activePreviewTab === 'wa' }"
+                @click="activePreviewTab = 'wa'"
+              >
+                <i class="fab fa-whatsapp me-1 text-emerald"></i> WhatsApp
+              </button>
+              <button 
+                class="tab-btn" 
+                :class="{ active: activePreviewTab === 'fcm' }"
+                @click="activePreviewTab = 'fcm'"
+              >
+                <i class="fas fa-bell me-1 text-primary"></i> Push Notif (FCM)
+              </button>
             </div>
-            <div class="preview-bubble-bg">
-              <div class="preview-bubble">
-                <div class="preview-header-bar">
-                  <i class="fas fa-bullhorn text-danger me-1"></i> RSIA AISYIYAH PEKAJANGAN
-                </div>
-                <div class="preview-text" v-html="messagePreviewHtml"></div>
-                <div class="preview-timestamp">
-                  {{ currentTimeFormatted }} <i class="fas fa-check-double text-primary ms-1"></i>
+
+            <!-- WhatsApp Preview Bubble -->
+            <template v-if="activePreviewTab === 'wa'">
+              <div class="preview-header">
+                <i class="fab fa-whatsapp me-2"></i>
+                <span>Simulasi Preview Pesan WA</span>
+              </div>
+              <div class="preview-bubble-bg">
+                <div class="preview-bubble">
+                  <div class="preview-header-bar">
+                    <i class="fas fa-bullhorn text-danger me-1"></i> RSIA AISYIYAH PEKAJANGAN
+                  </div>
+                  <div class="preview-text" v-html="messagePreviewHtml"></div>
+                  <div class="preview-timestamp">
+                    {{ currentTimeFormatted }} <i class="fas fa-check-double text-primary ms-1"></i>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="preview-info-box">
-              <i class="fas fa-info-circle text-primary me-2"></i>
-              <span>Variabel <b>{nama}</b>, <b>{nik}</b>, dll. akan otomatis digantikan sesuai data tiap pegawai saat terkirim.</span>
-            </div>
+              <div class="preview-info-box">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                <span>Variabel <b>{nama}</b>, <b>{nik}</b>, dll. akan otomatis digantikan sesuai data tiap pegawai saat terkirim.</span>
+              </div>
+            </template>
+
+            <!-- FCM Push Notification Preview -->
+            <template v-else>
+              <div class="preview-header bg-slate-800 text-white">
+                <i class="fas fa-mobile-alt me-2 text-info"></i>
+                <span>Simulasi Push Notif HP (FCM)</span>
+              </div>
+              <div class="fcm-preview-bg">
+                <div class="fcm-notification-card">
+                  <div class="fcm-card-header">
+                    <div class="fcm-app-badge">
+                      <div class="fcm-app-icon">
+                        <i class="fas fa-hospital"></i>
+                      </div>
+                      <span class="fcm-app-name">RSIA Mobile</span>
+                    </div>
+                    <span class="fcm-time">Sekarang</span>
+                  </div>
+                  <div class="fcm-card-body">
+                    <div class="fcm-title">{{ form.judul || '📢 Pengumuman Pegawai' }}</div>
+                    <div class="fcm-text">{{ fcmPreviewText }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="preview-info-box">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                <span>Teks di tray notifikasi HP dibatasi ~140 karakter. Pesan pengumuman lengkap akan terbuka di aplikasi saat notifikasi di-tap.</span>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -312,6 +419,7 @@ const toast = useToast()
 // State
 const loadingPegawai = ref(false)
 const sendingNotif = ref(false)
+const activePreviewTab = ref('wa') // 'wa' | 'fcm'
 const pegawaiList = ref([])
 const departemenList = ref([])
 const searchKeyword = ref('')
@@ -330,7 +438,44 @@ Mohon untuk dapat mencermati informasi tersebut. Terima kasih atas perhatian dan
 *RSIA AISYIYAH PEKAJANGAN*`,
   target_type: 'semua', // semua | departemen | terpilih
   departemen: '',
-  selectedNiks: []
+  selectedNiks: [],
+  channels: ['wa', 'fcm'] // wa, fcm
+})
+
+// Channel Helper Methods
+const isChannelSelected = (type) => {
+  if (type === 'both') return form.channels.includes('wa') && form.channels.includes('fcm')
+  if (type === 'wa') return form.channels.includes('wa') && !form.channels.includes('fcm')
+  if (type === 'fcm') return form.channels.includes('fcm') && !form.channels.includes('wa')
+  return false
+}
+
+const setChannel = (type) => {
+  if (type === 'both') {
+    form.channels = ['wa', 'fcm']
+    activePreviewTab.value = 'wa'
+  } else if (type === 'wa') {
+    form.channels = ['wa']
+    activePreviewTab.value = 'wa'
+  } else if (type === 'fcm') {
+    form.channels = ['fcm']
+    activePreviewTab.value = 'fcm'
+  }
+}
+
+// Computeds
+const fcmPreviewText = computed(() => {
+  if (!form.pesan) return ''
+  let text = form.pesan
+    .replace(/\{nama\}/g, 'Ahmad Fulan, S.Kep')
+    .replace(/\{nik\}/g, '1.233.0726')
+    .replace(/\{jbtn\}/g, 'Staf Pelaksana')
+    .replace(/\{departemen\}/g, 'SDI & Hukormas')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/~([^~]+)~/g, '$1')
+
+  return text.length > 140 ? text.substring(0, 140) + '...' : text
 })
 
 // Templates Preset
@@ -549,7 +694,8 @@ const executeSendBroadcast = async () => {
       pesan: form.pesan,
       target_type: form.target_type,
       departemen: form.target_type === 'departemen' ? (form.departemen || '') : '',
-      niks: form.target_type === 'terpilih' ? form.selectedNiks : []
+      niks: form.target_type === 'terpilih' ? form.selectedNiks : [],
+      channels: form.channels
     }
 
     const res = await cnsDokterOffService.kirimNotifikasiBroadcast(payload)
@@ -828,6 +974,141 @@ onMounted(() => {
 
 .preview-header i {
   font-size: 1.2rem;
+}
+
+/* Channel Selector */
+.channel-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.channel-option-card {
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.channel-option-card:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+.channel-option-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.channel-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.bg-amber-subtle { background: #fef3c7; }
+.text-amber-600 { color: #d97706; }
+
+/* Preview Tabs */
+.preview-tabs-bar {
+  display: flex;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 4px;
+  gap: 4px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tab-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* FCM Push Notification Mockup */
+.fcm-preview-bg {
+  padding: 24px 18px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fcm-notification-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fcm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.fcm-app-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fcm-app-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fcm-app-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.fcm-time {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.fcm-title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.fcm-text {
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .preview-bubble-bg {
