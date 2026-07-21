@@ -103,12 +103,12 @@
                   </div>
                   <div class="d-flex align-items-center gap-2">
                     <button class="btn-action-select btn-select-all" @click="selectAllPegawai">
-                      <i class="fas fa-check-circle me-1.5"></i>
+                      <i class="fas fa-check-circle me-1.5" style="margin-right: 6px;"></i>
                       <span>Pilih Semua</span>
-                      <span class="count-badge ms-1.5">({{ filteredPegawaiList.length }})</span>
+                      <span class="count-badge ms-1.5" style="margin-left: 6px;">({{ filteredPegawaiList.length }})</span>
                     </button>
                     <button class="btn-action-select btn-deselect-all" @click="deselectAllPegawai">
-                      <i class="fas fa-minus-circle me-1.5"></i>
+                      <i class="fas fa-minus-circle me-1.5" style="margin-right: 6px;"></i>
                       <span>Batal Semua</span>
                     </button>
                   </div>
@@ -157,13 +157,13 @@
                           </label>
                         </td>
                         <td>
-                          <div class="d-flex align-items-center gap-2.5">
+                          <div class="d-flex align-items-center gap-3">
                             <div class="avatar-circle">
                               {{ p.nama ? p.nama.charAt(0).toUpperCase() : 'P' }}
                             </div>
-                            <div>
+                            <div class="d-flex flex-column" style="gap: 3px;">
                               <div class="fw-bold text-slate-800 line-clamp-1">{{ p.nama }}</div>
-                              <span class="nik-badge">NIK: {{ p.nik }}</span>
+                              <div><span class="nik-badge">NIK: {{ p.nik }}</span></div>
                             </div>
                           </div>
                         </td>
@@ -914,6 +914,7 @@ onMounted(() => {
 .btn-action-select {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   border-radius: 9999px;
   font-size: 0.8rem;
@@ -945,9 +946,11 @@ onMounted(() => {
   background: #2563eb;
   color: #ffffff;
   font-size: 0.72rem;
-  padding: 1px 6px;
+  padding: 2px 7px;
+  margin-left: 6px;
   border-radius: 9999px;
   transition: all 0.2s ease;
+  display: inline-block;
 }
 
 .btn-deselect-all {
@@ -1052,17 +1055,18 @@ onMounted(() => {
 
 /* Avatar Circle & Badges */
 .avatar-circle {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
   color: #1d4ed8;
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-right: 6px;
 }
 
 .nik-badge {
@@ -1070,9 +1074,11 @@ onMounted(() => {
   font-size: 0.7rem;
   color: #64748b;
   background: #f1f5f9;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
+  display: inline-block;
+  margin-top: 2px;
 }
 
 .phone-badge {
