@@ -117,7 +117,7 @@
                 </div>
 
                 <!-- Scrollable Table -->
-                <div class="table-responsive rounded-lg border bg-white overflow-hidden" style="max-height: 540px; overflow-y: auto;">
+                <div class="pegawai-table-scroll-container rounded-lg border bg-white">
                   <table class="table table-hover align-middle mb-0 text-sm">
                     <thead class="table-header-slate sticky-top">
                       <tr>
@@ -971,6 +971,29 @@ onMounted(() => {
   padding: 2px;
 }
 .btn-clear-search:hover { color: #2563eb; }
+
+/* Pegawai Scrollable Table Container */
+.pegawai-table-scroll-container {
+  max-height: 480px;
+  overflow-y: auto !important;
+  overflow-x: auto;
+  position: relative;
+}
+
+.pegawai-table-scroll-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.pegawai-table-scroll-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.pegawai-table-scroll-container::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+.pegawai-table-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
 
 /* Table Header & Rows */
 .table-header-slate th {
