@@ -178,7 +178,6 @@
                 <select v-model="selectedTemplate" class="form-select-sm-custom" @change="applyTemplate">
                   <option value="">-- Pilih Template Pesan --</option>
                   <option value="pengumuman">📢 Pengumuman Resmi</option>
-                  <option value="apel">🌅 Pengumuman Apel Pagi</option>
                   <option value="rapat">👥 Undangan Rapat / Pertemuan</option>
                   <option value="inmut">📊 Pengingat Laporan Inmut</option>
                   <option value="custom">✏️ Pesan Kosong / Custom</option>
@@ -314,19 +313,6 @@ Disampaikan pengumuman resmi dari Manajemen RSIA Aisyiyah Pekajangan.
 Demikian pengumuman ini disampaikan untuk menjadi perhatian bersama. Terima kasih 🙏😊
 
 *RSIA AISYIYAH PEKAJANGAN*`
-  },
-  apel: {
-    judul: 'UNDANGAN APEL PAGI',
-    pesan: `Assalamualaikum Wr. Wb.
-Selamat pagi Bapak/Ibu *{nama}* ({jbtn})
-
-Diberitahukan kepada seluruh karyawan unit *{departemen}* untuk dapat mengikuti **Apel Pagi Pegawai** pada:
-
-🗓 Hari/Tgl : Senin mendatang
-⏰ Jam : 07.00 WIB
-📍 Lokasi : Halaman Utama RSIA
-
-Mohon hadir tepat waktu. Terima kasih 🙏😊`
   },
   rapat: {
     judul: 'UNDANGAN PERTEMUAN / RAPAT',
