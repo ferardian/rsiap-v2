@@ -375,8 +375,8 @@
 
             <!-- FCM Push Notification Preview -->
             <template v-else>
-              <div class="preview-header bg-slate-800 text-white">
-                <i class="fas fa-mobile-alt me-2 text-info"></i>
+              <div class="preview-header">
+                <i class="fas fa-mobile-alt me-2 text-white"></i>
                 <span>Simulasi Push Notif HP (FCM)</span>
               </div>
               <div class="fcm-preview-bg">
@@ -1076,7 +1076,9 @@ onMounted(() => {
 /* FCM Push Notification Mockup */
 .fcm-preview-bg {
   padding: 24px 18px;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 16px 16px;
   min-height: 260px;
   display: flex;
   align-items: center;
@@ -1085,12 +1087,13 @@ onMounted(() => {
 
 .fcm-notification-card {
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 16px;
   padding: 14px 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.9);
 }
 
 .fcm-card-header {
