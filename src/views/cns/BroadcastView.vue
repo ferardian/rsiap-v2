@@ -87,76 +87,106 @@
               </div>
 
               <!-- Table / List of Selected Pegawai (If target_type == terpilih) -->
-              <div v-if="form.target_type === 'terpilih'" class="pegawai-table-wrapper border rounded-3 p-3 bg-light">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                  <div class="search-box flex-grow-1" style="max-width: 320px;">
+              <div v-if="form.target_type === 'terpilih'" class="pegawai-selection-card rounded-xl p-3 border mb-3">
+                <div class="selection-control-header d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                  <div class="search-box-custom flex-grow-1" style="max-width: 340px;">
                     <i class="fas fa-search search-icon"></i>
                     <input 
                       type="text" 
                       v-model="searchKeyword" 
                       placeholder="Cari NIK / Nama / Jabatan..." 
-                      class="search-input"
+                      class="search-input-pill"
                     >
+                    <button v-if="searchKeyword" class="btn-clear-search" @click="searchKeyword = ''">
+                      <i class="fas fa-times"></i>
+                    </button>
                   </div>
                   <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-outline-primary fw-semibold" @click="selectAllPegawai">
-                      <i class="fas fa-check-double me-1"></i> Pilih Semua ({{ filteredPegawaiList.length }})
+                    <button class="btn-action-select btn-select-all" @click="selectAllPegawai">
+                      <i class="fas fa-check-circle me-1.5"></i>
+                      <span>Pilih Semua</span>
+                      <span class="count-badge ms-1.5">({{ filteredPegawaiList.length }})</span>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary fw-semibold" @click="deselectAllPegawai">
-                      <i class="fas fa-times me-1"></i> Batal Semua
+                    <button class="btn-action-select btn-deselect-all" @click="deselectAllPegawai">
+                      <i class="fas fa-minus-circle me-1.5"></i>
+                      <span>Batal Semua</span>
                     </button>
                   </div>
                 </div>
 
                 <!-- Scrollable Table -->
-                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                <div class="table-responsive rounded-lg border bg-white overflow-hidden" style="max-height: 320px; overflow-y: auto;">
                   <table class="table table-hover align-middle mb-0 text-sm">
-                    <thead class="table-light sticky-top">
+                    <thead class="table-header-slate sticky-top">
                       <tr>
-                        <th style="width: 40px;">#</th>
+                        <th style="width: 44px;" class="text-center">#</th>
                         <th>Pegawai</th>
                         <th>Departemen</th>
                         <th>Jabatan</th>
-                        <th>No. WA</th>
+                        <th class="text-end">No. WA</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-if="loadingPegawai">
-                        <td colspan="5" class="text-center py-4 text-muted">
+                        <td colspan="5" class="text-center py-5 text-muted">
                           <div class="spinner-border spinner-border-sm text-primary me-2"></div>
                           Memuat daftar pegawai...
                         </td>
                       </tr>
                       <tr v-else-if="!filteredPegawaiList.length">
-                        <td colspan="5" class="text-center py-4 text-muted">
+                        <td colspan="5" class="text-center py-5 text-muted">
+                          <i class="fas fa-user-slash fa-2x mb-2 d-block text-slate-300"></i>
                           Pegawai tidak ditemukan.
                         </td>
                       </tr>
                       <tr 
                         v-for="p in filteredPegawaiList" 
                         :key="p.nik"
-                        class="cursor-pointer"
-                        :class="{ 'table-active': form.selectedNiks.includes(p.nik) }"
+                        class="pegawai-row cursor-pointer"
+                        :class="{ 'row-selected': form.selectedNiks.includes(p.nik) }"
                         @click="togglePegawaiSelection(p.nik)"
                       >
+                        <td class="text-center" @click.stop>
+                          <label class="custom-checkbox">
+                            <input 
+                              type="checkbox" 
+                              :value="p.nik" 
+                              v-model="form.selectedNiks" 
+                            >
+                            <span class="checkmark-box"></span>
+                          </label>
+                        </td>
                         <td>
-                          <input 
-                            type="checkbox" 
-                            :value="p.nik" 
-                            v-model="form.selectedNiks" 
-                            @click.stop
+                          <div class="d-flex align-items-center gap-2.5">
+                            <div class="avatar-circle">
+                              {{ p.nama ? p.nama.charAt(0).toUpperCase() : 'P' }}
+                            </div>
+                            <div>
+                              <div class="fw-bold text-slate-800 line-clamp-1">{{ p.nama }}</div>
+                              <span class="nik-badge">NIK: {{ p.nik }}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="text-slate-700 fw-medium">{{ p.nama_departemen || '-' }}</span>
+                        </td>
+                        <td>
+                          <span class="text-slate-600">{{ p.jbtn || '-' }}</span>
+                        </td>
+                        <td class="text-end">
+                          <span 
+                            v-if="isValidPhone(p.no_telp)" 
+                            class="phone-badge phone-badge-valid"
                           >
-                        </td>
-                        <td>
-                          <div class="fw-bold text-slate-800">{{ p.nama }}</div>
-                          <small class="text-muted font-monospace">NIK: {{ p.nik }}</small>
-                        </td>
-                        <td>{{ p.nama_departemen || '-' }}</td>
-                        <td>{{ p.jbtn || '-' }}</td>
-                        <td>
-                          <span :class="isValidPhone(p.no_telp) ? 'text-success font-monospace' : 'text-danger small'">
-                            <i :class="isValidPhone(p.no_telp) ? 'fas fa-check-circle me-1' : 'fas fa-exclamation-triangle me-1'"></i>
-                            {{ p.no_telp || 'Belum Ada' }}
+                            <i class="fab fa-whatsapp me-1"></i>
+                            {{ p.no_telp }}
+                          </span>
+                          <span 
+                            v-else 
+                            class="phone-badge phone-badge-invalid"
+                          >
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            {{ p.no_telp || '0' }}
                           </span>
                         </td>
                       </tr>
@@ -872,6 +902,197 @@ onMounted(() => {
   font-size: 0.78rem;
   color: #475569;
   line-height: 1.5;
+}
+
+/* Pegawai Selection Card & Table */
+.pegawai-selection-card {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Action Buttons for Selection */
+.btn-action-select {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-select-all {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.btn-select-all:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transform: translateY(-1px);
+}
+.btn-select-all:hover .count-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.count-badge {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.btn-deselect-all {
+  background: #ffffff;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+.btn-deselect-all:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+/* Search input pill */
+.search-box-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-input-pill {
+  width: 100%;
+  padding: 7px 32px 7px 36px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.search-input-pill:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.btn-clear-search {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 2px;
+}
+.btn-clear-search:hover { color: #2563eb; }
+
+/* Table Header & Rows */
+.table-header-slate th {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
+}
+
+.pegawai-row {
+  transition: all 0.15s ease;
+}
+.pegawai-row:hover {
+  background-color: #f8fafc !important;
+}
+.pegawai-row.row-selected {
+  background-color: #eff6ff !important;
+  border-left: 3px solid #2563eb;
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  margin: 0;
+}
+.custom-checkbox input {
+  display: none;
+}
+.checkmark-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+.custom-checkbox input:checked ~ .checkmark-box {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+.custom-checkbox input:checked ~ .checkmark-box::after {
+  content: '✓';
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Avatar Circle & Badges */
+.avatar-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nik-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.phone-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+.phone-badge-valid {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.phone-badge-invalid {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 /* Responsive */
