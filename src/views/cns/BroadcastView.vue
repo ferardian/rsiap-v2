@@ -812,6 +812,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .card-body-custom {
@@ -821,8 +823,8 @@ onMounted(() => {
 /* Target Selection Grid */
 .target-type-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
 }
 
 .target-type-card {
@@ -1414,7 +1416,7 @@ onMounted(() => {
   border: 1px solid #fecaca;
 }
 
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 1024px) {
   .main-grid {
     grid-template-columns: 1fr;
@@ -1426,10 +1428,80 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .broadcast-wrapper {
-    padding: 16px;
+    padding: 12px 10px;
+    overflow-x: hidden;
   }
+
+  .card-header-custom {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .card-header-custom > div {
+    max-width: 100%;
+  }
+
+  .card-body-custom {
+    padding: 14px 12px;
+  }
+
   .target-type-grid {
     grid-template-columns: 1fr;
+  }
+
+  .channel-selector-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-select-sm-custom {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .btn-send-broadcast {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .preview-tabs-bar {
+    padding: 3px;
+  }
+
+  .tab-btn {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  .fcm-preview-bg {
+    padding: 16px 12px;
+  }
+
+  .fcm-notification-card {
+    padding: 12px;
+  }
+
+  .preview-info-box {
+    padding: 10px 12px;
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .target-type-card {
+    padding: 10px 12px;
+  }
+
+  .target-name {
+    font-size: 0.82rem;
+  }
+
+  .target-desc {
+    font-size: 0.7rem;
+  }
+
+  .btn-tag {
+    font-size: 0.72rem;
+    padding: 2px 6px;
   }
 }
 </style>
