@@ -1,15 +1,17 @@
 <template>
   <div class="broadcast-wrapper">
     <div class="broadcast-container">
-      <!-- Hero Header -->
-      <div class="hero-header">
-        <div class="hero-content">
-          <div class="hero-icon">
+      <!-- Standard Page Header -->
+      <div class="page-header mb-4">
+        <div class="d-flex align-items-center">
+          <div class="header-icon-bg me-3">
             <i class="fas fa-bullhorn"></i>
           </div>
           <div>
-            <h1 class="hero-title">Broadcast Pengumuman Karyawan</h1>
-            <p class="hero-subtitle">Kirim notifikasi atau pengumuman WhatsApp massal dinamis ke pegawai RSIA Aisyiyah Pekajangan</p>
+            <h3 class="page-title mb-0">Broadcast Pengumuman Karyawan</h3>
+            <p class="page-subtitle mb-0 small text-muted">
+              Kirim notifikasi atau pengumuman WhatsApp massal dinamis ke pegawai RSIA Aisyiyah Pekajangan
+            </p>
           </div>
         </div>
       </div>
@@ -115,7 +117,7 @@
                 </div>
 
                 <!-- Scrollable Table -->
-                <div class="table-responsive rounded-lg border bg-white overflow-hidden" style="max-height: 320px; overflow-y: auto;">
+                <div class="table-responsive rounded-lg border bg-white overflow-hidden" style="max-height: 540px; overflow-y: auto;">
                   <table class="table table-hover align-middle mb-0 text-sm">
                     <thead class="table-header-slate sticky-top">
                       <tr>
@@ -569,77 +571,49 @@ onMounted(() => {
 <style scoped>
 .broadcast-wrapper {
   min-height: 100vh;
-  padding: 24px;
+  padding: 16px 24px;
   background: #f8fafc;
   color: #1e293b;
 }
 
 .broadcast-container {
-  max-width: 1440px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
 }
 
-/* Hero Header */
-.hero-header {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
-  border-radius: 16px;
-  padding: 28px 32px;
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
-}
-
-.hero-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 350px;
-  height: 350px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 50%;
-}
-
-.hero-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.hero-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border-radius: 14px;
+/* Page Header */
+.header-icon-bg {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
-  color: white;
   flex-shrink: 0;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  font-size: 1.35rem;
 }
 
-.hero-title {
-  color: white;
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin: 0;
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.hero-subtitle {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
-  margin: 4px 0 0;
+.page-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
 /* Main Grid Layout */
 .main-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 360px;
   gap: 24px;
   align-items: start;
 }
