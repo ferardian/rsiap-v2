@@ -37,6 +37,11 @@ const cnsDokterOffService = {
     // === Kontrol ===
     getKontrolList: (params) => api.get('/cns/kontrol', { params }),
     kirimNotifikasiKontrol: (payload) => api.post('/cns/kontrol/kirim-notifikasi', payload),
+
+    // === Broadcast Karyawan ===
+    getBroadcastPegawai: (params) => api.get('/cns/broadcast/pegawai', { params }),
+    getBroadcastDepartemen: () => api.get('/cns/broadcast/departemen'),
+    kirimNotifikasiBroadcast: (payload) => api.post('/cns/broadcast/kirim-notifikasi', payload),
 };
 
 export default cnsDokterOffService;

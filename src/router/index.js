@@ -804,6 +804,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/cns/broadcast',
+    name: 'CnsBroadcast',
+    component: () => import('../views/cns/BroadcastView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/central-archive/internal',
     name: 'CentralArchiveInternal',
     component: () => import('../views/central-archive/InternalView.vue'),

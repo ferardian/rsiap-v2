@@ -1,0 +1,909 @@
+<template>
+  <div class="broadcast-wrapper">
+    <div class="broadcast-container">
+      <!-- Hero Header -->
+      <div class="hero-header">
+        <div class="hero-content">
+          <div class="hero-icon">
+            <i class="fas fa-bullhorn"></i>
+          </div>
+          <div>
+            <h1 class="hero-title">Broadcast Pengumuman Karyawan</h1>
+            <p class="hero-subtitle">Kirim notifikasi atau pengumuman WhatsApp massal dinamis ke pegawai RSIA Aisyiyah Pekajangan</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Layout Grid -->
+      <div class="main-grid">
+        <!-- Form & Target Selection Area -->
+        <div class="left-section">
+          <!-- Card 1: Target Penerima -->
+          <div class="card-custom mb-4">
+            <div class="card-header-custom">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-users-cog text-primary"></i>
+                <span class="fw-bold">1. Pilih Target Penerima</span>
+              </div>
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fw-bold small">
+                {{ targetCount }} Pegawai Terpilih
+              </span>
+            </div>
+            <div class="card-body-custom">
+              <!-- Target Type Selector Cards -->
+              <div class="target-type-grid mb-3">
+                <div 
+                  class="target-type-card" 
+                  :class="{ active: form.target_type === 'semua' }"
+                  @click="setTargetType('semua')"
+                >
+                  <div class="target-icon bg-blue-subtle text-primary">
+                    <i class="fas fa-users"></i>
+                  </div>
+                  <div class="target-info">
+                    <div class="target-name">Semua Pegawai</div>
+                    <div class="target-desc">Seluruh pegawai aktif RSIA</div>
+                  </div>
+                </div>
+
+                <div 
+                  class="target-type-card" 
+                  :class="{ active: form.target_type === 'departemen' }"
+                  @click="setTargetType('departemen')"
+                >
+                  <div class="target-icon bg-emerald-subtle text-emerald">
+                    <i class="fas fa-building"></i>
+                  </div>
+                  <div class="target-info">
+                    <div class="target-name">Per Departemen</div>
+                    <div class="target-desc">Filter per unit/departemen</div>
+                  </div>
+                </div>
+
+                <div 
+                  class="target-type-card" 
+                  :class="{ active: form.target_type === 'terpilih' }"
+                  @click="setTargetType('terpilih')"
+                >
+                  <div class="target-icon bg-purple-subtle text-purple">
+                    <i class="fas fa-user-check"></i>
+                  </div>
+                  <div class="target-info">
+                    <div class="target-name">Pilih Manual</div>
+                    <div class="target-desc">Pilih pegawai tertentu</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Department Filter Dropdown (If target_type == departemen) -->
+              <div v-if="form.target_type === 'departemen'" class="departemen-select-wrapper mb-3">
+                <label class="form-label-custom">Pilih Departemen / Unit Work</label>
+                <select v-model="form.departemen" class="form-select-custom" @change="fetchPegawai">
+                  <option value="">-- Semua Departemen --</option>
+                  <option v-for="dept in departemenList" :key="dept.dep_id" :value="dept.dep_id">
+                    {{ dept.nama }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Table / List of Selected Pegawai (If target_type == terpilih) -->
+              <div v-if="form.target_type === 'terpilih'" class="pegawai-table-wrapper border rounded-3 p-3 bg-light">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                  <div class="search-box flex-grow-1" style="max-width: 320px;">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                      type="text" 
+                      v-model="searchKeyword" 
+                      placeholder="Cari NIK / Nama / Jabatan..." 
+                      class="search-input"
+                    >
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-primary fw-semibold" @click="selectAllPegawai">
+                      <i class="fas fa-check-double me-1"></i> Pilih Semua ({{ filteredPegawaiList.length }})
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary fw-semibold" @click="deselectAllPegawai">
+                      <i class="fas fa-times me-1"></i> Batal Semua
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Scrollable Table -->
+                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                  <table class="table table-hover align-middle mb-0 text-sm">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Pegawai</th>
+                        <th>Departemen</th>
+                        <th>Jabatan</th>
+                        <th>No. WA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-if="loadingPegawai">
+                        <td colspan="5" class="text-center py-4 text-muted">
+                          <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                          Memuat daftar pegawai...
+                        </td>
+                      </tr>
+                      <tr v-else-if="!filteredPegawaiList.length">
+                        <td colspan="5" class="text-center py-4 text-muted">
+                          Pegawai tidak ditemukan.
+                        </td>
+                      </tr>
+                      <tr 
+                        v-for="p in filteredPegawaiList" 
+                        :key="p.nik"
+                        class="cursor-pointer"
+                        :class="{ 'table-active': form.selectedNiks.includes(p.nik) }"
+                        @click="togglePegawaiSelection(p.nik)"
+                      >
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            :value="p.nik" 
+                            v-model="form.selectedNiks" 
+                            @click.stop
+                          >
+                        </td>
+                        <td>
+                          <div class="fw-bold text-slate-800">{{ p.nama }}</div>
+                          <small class="text-muted font-monospace">NIK: {{ p.nik }}</small>
+                        </td>
+                        <td>{{ p.nama_departemen || '-' }}</td>
+                        <td>{{ p.jbtn || '-' }}</td>
+                        <td>
+                          <span :class="isValidPhone(p.no_telp) ? 'text-success font-monospace' : 'text-danger small'">
+                            <i :class="isValidPhone(p.no_telp) ? 'fas fa-check-circle me-1' : 'fas fa-exclamation-triangle me-1'"></i>
+                            {{ p.no_telp || 'Belum Ada' }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Pesan Dinamis & Template -->
+          <div class="card-custom">
+            <div class="card-header-custom">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-edit text-primary"></i>
+                <span class="fw-bold">2. Tulis Pesan Broadcast</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <select v-model="selectedTemplate" class="form-select-sm-custom" @change="applyTemplate">
+                  <option value="">-- Pilih Template Pesan --</option>
+                  <option value="pengumuman">📢 Pengumuman Resmi</option>
+                  <option value="apel">🌅 Pengumuman Apel Pagi</option>
+                  <option value="rapat">👥 Undangan Rapat / Pertemuan</option>
+                  <option value="inmut">📊 Pengingat Laporan Inmut</option>
+                  <option value="custom">✏️ Pesan Kosong / Custom</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body-custom">
+              <!-- Judul / Subjek Pesan -->
+              <div class="mb-3">
+                <label class="form-label-custom">Judul Pengumuman (Opsional)</label>
+                <input 
+                  type="text" 
+                  v-model="form.judul" 
+                  placeholder="Contoh: PENGUMUMAN Wajib Apel Hari Senin" 
+                  class="form-control-custom"
+                >
+              </div>
+
+              <!-- Variable Insert Buttons -->
+              <div class="mb-2">
+                <label class="form-label-custom d-flex justify-content-between align-items-center mb-1">
+                  <span>Isi Pesan WhatsApp</span>
+                  <small class="text-muted">Klik tag untuk menyisipkan variabel dinamis:</small>
+                </label>
+                <div class="d-flex flex-wrap gap-1.5 mb-2">
+                  <button type="button" class="btn-tag" @click="insertTag('{nama}')">+ {nama}</button>
+                  <button type="button" class="btn-tag" @click="insertTag('{nik}')">+ {nik}</button>
+                  <button type="button" class="btn-tag" @click="insertTag('{jbtn}')">+ {jbtn}</button>
+                  <button type="button" class="btn-tag" @click="insertTag('{departemen}')">+ {departemen}</button>
+                </div>
+              </div>
+
+              <!-- Message Textarea -->
+              <div class="mb-3">
+                <textarea 
+                  ref="messageTextarea" 
+                  v-model="form.pesan" 
+                  rows="9" 
+                  placeholder="Tulis pesan pengumuman di sini..." 
+                  class="form-textarea-custom"
+                ></textarea>
+                <div class="d-flex justify-content-between align-items-center mt-1 text-muted small">
+                  <span>Gunakan <b>*teks tebal*</b>, <i>_teks miring_</i>, atau ~teks dicoret~</span>
+                  <span>{{ form.pesan.length }} Karakter</span>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="d-flex justify-content-end">
+                <button 
+                  class="btn-send-broadcast"
+                  :disabled="sendingNotif || !form.pesan.trim() || targetCount === 0"
+                  @click="confirmSendBroadcast"
+                >
+                  <i class="fas" :class="sendingNotif ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                  <span>{{ sendingNotif ? 'Mengirim Broadcast...' : `Kirim Broadcast WA (${targetCount} Pegawai)` }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Section: Live WA Preview -->
+        <div class="right-section">
+          <div class="preview-card-wrap">
+            <div class="preview-header">
+              <i class="fab fa-whatsapp"></i>
+              <span>Simulasi Preview Pesan WA</span>
+            </div>
+            <div class="preview-bubble-bg">
+              <div class="preview-bubble">
+                <div class="preview-header-bar">
+                  <i class="fas fa-bullhorn text-danger me-1"></i> RSIA AISYIYAH PEKAJANGAN
+                </div>
+                <div class="preview-text" v-html="messagePreviewHtml"></div>
+                <div class="preview-timestamp">
+                  {{ currentTimeFormatted }} <i class="fas fa-check-double text-primary ms-1"></i>
+                </div>
+              </div>
+            </div>
+            <div class="preview-info-box">
+              <i class="fas fa-info-circle text-primary me-2"></i>
+              <span>Variabel <b>{nama}</b>, <b>{nik}</b>, dll. akan otomatis digantikan sesuai data tiap pegawai saat terkirim.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue'
+import cnsDokterOffService from '@/services/cnsDokterOffService'
+import { useToast } from 'vue-toastification'
+import Swal from 'sweetalert2'
+
+const toast = useToast()
+
+// State
+const loadingPegawai = ref(false)
+const sendingNotif = ref(false)
+const pegawaiList = ref([])
+const departemenList = ref([])
+const searchKeyword = ref('')
+const selectedTemplate = ref('')
+const messageTextarea = ref(null)
+
+const form = reactive({
+  judul: 'PENGUMUMAN PEGAWAI',
+  pesan: `Assalamualaikum Wr. Wb.
+Yth. Bapak/Ibu *{nama}* ({jbtn} - {departemen})
+
+Menginformasikan pengumuman penting bagi seluruh karyawan RSIA Aisyiyah Pekajangan.
+
+Mohon untuk dapat mencermati informasi tersebut. Terima kasih atas perhatian dan kerjasamanya. 🙏😊
+
+*RSIA AISYIYAH PEKAJANGAN*`,
+  target_type: 'semua', // semua | departemen | terpilih
+  departemen: '',
+  selectedNiks: []
+})
+
+// Templates Preset
+const templates = {
+  pengumuman: {
+    judul: 'PENGUMUMAN RESMI',
+    pesan: `Assalamualaikum Wr. Wb.
+Yth. Bapak/Ibu *{nama}* ({jbtn} - {departemen})
+
+Disampaikan pengumuman resmi dari Manajemen RSIA Aisyiyah Pekajangan.
+
+Demikian pengumuman ini disampaikan untuk menjadi perhatian bersama. Terima kasih 🙏😊
+
+*RSIA AISYIYAH PEKAJANGAN*`
+  },
+  apel: {
+    judul: 'UNDANGAN APEL PAGI',
+    pesan: `Assalamualaikum Wr. Wb.
+Selamat pagi Bapak/Ibu *{nama}* ({jbtn})
+
+Diberitahukan kepada seluruh karyawan unit *{departemen}* untuk dapat mengikuti **Apel Pagi Pegawai** pada:
+
+🗓 Hari/Tgl : Senin mendatang
+⏰ Jam : 07.00 WIB
+📍 Lokasi : Halaman Utama RSIA
+
+Mohon hadir tepat waktu. Terima kasih 🙏😊`
+  },
+  rapat: {
+    judul: 'UNDANGAN PERTEMUAN / RAPAT',
+    pesan: `Yth. Bapak/Ibu *{nama}*
+NIK: {nik} ({jbtn})
+
+Mengundang kehadiran Bapak/Ibu pada acara Rapat Koordinasi Internal Unit *{departemen}*.
+
+Mohon konfirmasi kehadiran. Terima kasih.`
+  },
+  inmut: {
+    judul: 'PENGINGAT LAPORAN INDIKATOR MUTU',
+    pesan: `PENGINGAT LAPORAN MUTU 📊
+Kepada Yth. PIC Mutu Unit *{departemen}* (Bpk/Ibu *{nama}*)
+
+Mengingatkan untuk segera menginputkan laporan pengisian Indikator Mutu periode bulan ini sebelum batas waktu penutupan.
+
+Terima kasih atas dedikasinya. 🙏`
+  },
+  custom: {
+    judul: '',
+    pesan: ''
+  }
+}
+
+// Computed Properties
+const filteredPegawaiList = computed(() => {
+  if (!searchKeyword.value) return pegawaiList.value
+  const kw = searchKeyword.value.toLowerCase()
+  return pegawaiList.value.filter(p => {
+    return (p.nama || '').toLowerCase().includes(kw) ||
+           (p.nik || '').toLowerCase().includes(kw) ||
+           (p.jbtn || '').toLowerCase().includes(kw) ||
+           (p.nama_departemen || '').toLowerCase().includes(kw)
+  })
+})
+
+const targetCount = computed(() => {
+  if (form.target_type === 'semua') return pegawaiList.value.length
+  if (form.target_type === 'departemen') {
+    if (!form.departemen) return pegawaiList.value.length
+    return pegawaiList.value.filter(p => p.departemen === form.departemen).length
+  }
+  return form.selectedNiks.length
+})
+
+const currentTimeFormatted = computed(() => {
+  return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+})
+
+const messagePreviewHtml = computed(() => {
+  let text = form.pesan || ''
+  
+  if (form.judul) {
+    text = `📢 *${form.judul}*\n\n` + text
+  }
+
+  // Replace placeholders with sample dummy employee data
+  text = text.replace(/{nama}/g, 'Ahmad Fulan, S.Kep')
+             .replace(/{nik}/g, '1.233.0726')
+             .replace(/{jbtn}/g, 'Staf Pelaksana')
+             .replace(/{departemen}/g, 'SDI & Hukormas')
+
+  // Convert markdown-style WA formatting to HTML
+  text = text.replace(/\*(.*?)\*/g, '<b>$1</b>')
+             .replace(/_(.*?)_/g, '<i>$1</i>')
+             .replace(/~(.*?)~/g, '<del>$1</del>')
+             .replace(/\n/g, '<br>')
+
+  return text
+})
+
+// Methods
+const isValidPhone = (phone) => {
+  if (!phone) return false
+  return /^\+?\d{10,15}$/.test(phone.replace(/[\s-]/g, ''))
+}
+
+const setTargetType = (type) => {
+  form.target_type = type
+  if (type === 'semua') {
+    form.selectedNiks = pegawaiList.value.map(p => p.nik)
+  } else if (type === 'terpilih') {
+    if (form.selectedNiks.length === 0) {
+      form.selectedNiks = pegawaiList.value.map(p => p.nik)
+    }
+  }
+}
+
+const togglePegawaiSelection = (nik) => {
+  const idx = form.selectedNiks.indexOf(nik)
+  if (idx > -1) {
+    form.selectedNiks.splice(idx, 1)
+  } else {
+    form.selectedNiks.push(nik)
+  }
+}
+
+const selectAllPegawai = () => {
+  form.selectedNiks = filteredPegawaiList.value.map(p => p.nik)
+}
+
+const deselectAllPegawai = () => {
+  form.selectedNiks = []
+}
+
+const insertTag = (tag) => {
+  if (!messageTextarea.value) {
+    form.pesan += tag
+    return
+  }
+  const el = messageTextarea.value
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  const text = form.pesan
+  form.pesan = text.substring(0, start) + tag + text.substring(end)
+  
+  setTimeout(() => {
+    el.focus()
+    el.setSelectionRange(start + tag.length, start + tag.length)
+  }, 0)
+}
+
+const applyTemplate = () => {
+  if (!selectedTemplate.value || !templates[selectedTemplate.value]) return
+  const tpl = templates[selectedTemplate.value]
+  form.judul = tpl.judul
+  form.pesan = tpl.pesan
+}
+
+const fetchPegawai = async () => {
+  loadingPegawai.value = true
+  try {
+    const params = {}
+    if (form.target_type === 'departemen' && form.departemen) {
+      params.departemen = form.departemen
+    }
+    const res = await cnsDokterOffService.getBroadcastPegawai(params)
+    pegawaiList.value = res.data?.response || []
+    
+    if (form.target_type === 'semua') {
+      form.selectedNiks = pegawaiList.value.map(p => p.nik)
+    }
+  } catch (err) {
+    console.error(err)
+    toast.error('Gagal memuat daftar pegawai')
+  } finally {
+    loadingPegawai.value = false
+  }
+}
+
+const fetchDepartemen = async () => {
+  try {
+    const res = await cnsDokterOffService.getBroadcastDepartemen()
+    departemenList.value = res.data?.response || []
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const confirmSendBroadcast = async () => {
+  let targetPegawai = []
+  if (form.target_type === 'semua') {
+    targetPegawai = pegawaiList.value
+  } else if (form.target_type === 'departemen') {
+    targetPegawai = form.departemen 
+      ? pegawaiList.value.filter(p => p.departemen === form.departemen)
+      : pegawaiList.value
+  } else {
+    targetPegawai = pegawaiList.value.filter(p => form.selectedNiks.includes(p.nik))
+  }
+
+  const validCount = targetPegawai.filter(p => isValidPhone(p.no_telp)).length
+  const invalidCount = targetPegawai.length - validCount
+
+  let htmlMsg = `Anda akan mengirim notifikasi WhatsApp broadcast ke <b>${validCount}</b> pegawai.`
+  if (invalidCount > 0) {
+    htmlMsg += `<br><br><span class="text-amber-600"><i class="fas fa-exclamation-triangle"></i> <b>${invalidCount}</b> pegawai tidak memiliki nomor WhatsApp valid dan akan dilewati.</span>`
+  }
+
+  const result = await Swal.fire({
+    title: 'Kirim Broadcast WhatsApp?',
+    html: htmlMsg,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: '<i class="fas fa-paper-plane"></i> Ya, Kirim Broadcast Sekarang',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#64748b'
+  })
+
+  if (result.isConfirmed) {
+    executeSendBroadcast()
+  }
+}
+
+const executeSendBroadcast = async () => {
+  sendingNotif.value = true
+  try {
+    const payload = {
+      judul: form.judul,
+      pesan: form.pesan,
+      target_type: form.target_type,
+      departemen: form.departemen,
+      niks: form.selectedNiks
+    }
+
+    const res = await cnsDokterOffService.kirimNotifikasiBroadcast(payload)
+    toast.success(res.data?.metadata?.message || 'Broadcast berhasil dijadwalkan')
+  } catch (err) {
+    console.error(err)
+    toast.error('Gagal mengirim broadcast WhatsApp')
+  } finally {
+    sendingNotif.value = false
+  }
+}
+
+onMounted(() => {
+  fetchDepartemen()
+  fetchPegawai()
+})
+</script>
+
+<style scoped>
+.broadcast-wrapper {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.broadcast-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Hero Header */
+.hero-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
+}
+
+.hero-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 350px;
+  height: 350px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.hero-title {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  margin: 4px 0 0;
+}
+
+/* Main Grid Layout */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Cards Base */
+.card-custom {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.card-header-custom {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-body-custom {
+  padding: 24px;
+}
+
+/* Target Selection Grid */
+.target-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.target-type-card {
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #ffffff;
+}
+
+.target-type-card:hover {
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+}
+
+.target-type-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+.target-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.bg-blue-subtle { background: #dbeafe; color: #1d4ed8; }
+.bg-emerald-subtle { background: #d1fae5; color: #047857; }
+.bg-purple-subtle { background: #f3e8ff; color: #6b21a8; }
+
+.target-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.target-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Form inputs */
+.form-label-custom {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-control-custom, .form-select-custom, .form-textarea-custom {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.form-control-custom:focus, .form-select-custom:focus, .form-textarea-custom:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-select-sm-custom {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  outline: none;
+}
+
+/* Tag buttons */
+.btn-tag {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tag:hover {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Search Box */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: #2563eb;
+}
+
+/* Submit Button */
+.btn-send-broadcast {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-send-broadcast:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-send-broadcast:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Right Section: WhatsApp Preview */
+.preview-card-wrap {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  overflow: hidden;
+  position: sticky;
+  top: 24px;
+}
+
+.preview-header {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-header i {
+  font-size: 1.2rem;
+}
+
+.preview-bubble-bg {
+  padding: 20px;
+  background: #efeae2;
+  background-image: radial-gradient(#d1d7db 1px, transparent 1px);
+  background-size: 12px 12px;
+  min-height: 260px;
+}
+
+.preview-bubble {
+  background: #ffffff;
+  border-radius: 12px 12px 12px 0;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  position: relative;
+}
+
+.preview-header-bar {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.preview-text {
+  font-size: 0.83rem;
+  line-height: 1.6;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.preview-timestamp {
+  text-align: right;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.preview-info-box {
+  padding: 14px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+  .preview-card-wrap {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .broadcast-wrapper {
+    padding: 16px;
+  }
+  .target-type-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
