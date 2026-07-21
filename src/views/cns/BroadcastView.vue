@@ -545,11 +545,11 @@ const executeSendBroadcast = async () => {
   sendingNotif.value = true
   try {
     const payload = {
-      judul: form.judul,
+      judul: form.judul || '',
       pesan: form.pesan,
       target_type: form.target_type,
-      departemen: form.departemen,
-      niks: form.selectedNiks
+      departemen: form.target_type === 'departemen' ? (form.departemen || '') : '',
+      niks: form.target_type === 'terpilih' ? form.selectedNiks : []
     }
 
     const res = await cnsDokterOffService.kirimNotifikasiBroadcast(payload)
