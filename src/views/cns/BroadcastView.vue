@@ -463,9 +463,25 @@ const setChannel = (type) => {
   }
 }
 
+// Greeting/opening line patterns to strip from FCM notification body
+const FCM_SKIP_PATTERNS = [
+  /^assalamualaikum/i,
+  /^wa\.?alaikumsalam/i,
+  /^yth\./i,
+  /^kepada yth/i,
+  /^dear\b/i,
+  /^dengan hormat/i,
+  /^salam/i,
+  /^bapak\/ibu/i,
+  /^bapak\b/i,
+  /^ibu\b/i,
+  /^\s*$/,
+]
+
 // Computeds
 const fcmPreviewText = computed(() => {
   if (!form.pesan) return ''
+
   let text = form.pesan
     .replace(/\{nama\}/g, 'Ahmad Fulan, S.Kep')
     .replace(/\{nik\}/g, '1.233.0726')
@@ -475,7 +491,23 @@ const fcmPreviewText = computed(() => {
     .replace(/_([^_]+)_/g, '$1')
     .replace(/~([^~]+)~/g, '$1')
 
-  return text.length > 140 ? text.substring(0, 140) + '...' : text
+  // Skip greeting/salutation lines and find the first substantive line
+  const lines = text.split('\n')
+  const substantiveLines = []
+  let foundContent = false
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!foundContent && FCM_SKIP_PATTERNS.some(p => p.test(trimmed))) continue
+    if (trimmed === '') {
+      if (foundContent) substantiveLines.push('')
+      continue
+    }
+    foundContent = true
+    substantiveLines.push(trimmed)
+  }
+
+  const core = substantiveLines.join(' ').trim()
+  return core.length > 140 ? core.substring(0, 140) + '...' : core
 })
 
 // Templates Preset
