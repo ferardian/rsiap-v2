@@ -386,7 +386,7 @@
                       <div class="fcm-app-icon">
                         <i class="fas fa-hospital"></i>
                       </div>
-                      <span class="fcm-app-name">RSIA Mobile</span>
+                      <span class="fcm-app-name">MESSA</span>
                     </div>
                     <span class="fcm-time">Sekarang</span>
                   </div>
