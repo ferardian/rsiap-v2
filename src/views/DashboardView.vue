@@ -164,6 +164,188 @@
         </div>
       </section>
 
+      <!-- Bed Availability (Cinema Seat Selection Layout) -->
+      <section class="bed-cinema-section mb-4">
+        <div class="card border-0 shadow-sm panel-card">
+          <div class="panel-header pt-4 px-4 pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <h5 class="m-0 fw-bold text-dark">
+                <i class="fas fa-bed text-primary me-2"></i>Ketersediaan Tempat Tidur (Denah Bioskop)
+              </h5>
+              <p class="text-muted small m-0 mt-1">Peta ranjang dinamis. Klik ranjang untuk melihat rincian tarif dan kamar.</p>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" @click="fetchBedCinemaData" :disabled="loadingBeds">
+                <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loadingBeds }"></i>Refresh Peta
+              </button>
+            </div>
+          </div>
+          
+          <div class="card-body px-4 pb-4">
+            <!-- Wards Category Tabs -->
+            <div class="cinema-tabs-wrapper mb-4">
+              <div class="cinema-tabs">
+                <button 
+                  v-for="cat in categories" 
+                  :key="cat"
+                  class="cinema-tab-btn"
+                  :class="{ active: activeBedTab === cat }"
+                  @click="activeBedTab = cat"
+                >
+                  <span class="cat-name">{{ cat }}</span>
+                  <span class="badge ms-2" :class="getTabBadgeClass(cat)">
+                    {{ getCategoryEmptyCount(cat) }}/{{ getCategoryTotalCount(cat) }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Main Layout Container -->
+            <div class="row g-4">
+              <!-- Cinema Map (Left Column) -->
+              <div class="col-xl-8 col-lg-7">
+                <div class="cinema-room-container p-4 rounded-4 position-relative">
+                  <!-- Movie Screen Metaphor (Nursing Station) -->
+                  <div class="nursing-station-screen mb-5 text-center">
+                    <div class="screen-border mb-2"></div>
+                    <small class="screen-label text-muted fw-bold tracking-wider">NURSING STATION / KORIDOR UTAMA</small>
+                  </div>
+
+                  <!-- Seat Rows (Beds grouped by Class) -->
+                  <div class="cinema-grid d-flex flex-column gap-4">
+                    <div 
+                      v-for="group in cinemaBedsGrouped" 
+                      :key="group.kelas" 
+                      class="cinema-class-row d-flex flex-column flex-sm-row gap-3 align-items-sm-center border-bottom pb-3"
+                    >
+                      <div class="class-label-side fw-bold text-dark text-uppercase small" style="min-width: 100px;">
+                        {{ group.kelas }}
+                      </div>
+                      <div class="seats-row d-flex flex-wrap gap-2 flex-grow-1">
+                        <div 
+                          v-for="bed in group.beds" 
+                          :key="bed.kd_kamar"
+                          class="cinema-seat-wrapper"
+                          @click="selectBed(bed)"
+                        >
+                          <div 
+                            class="cinema-seat d-flex flex-column align-items-center justify-content-center p-2 rounded-3 text-center border cursor-pointer"
+                            :class="[
+                              bed.status.toLowerCase(),
+                              getClassSlug(bed.kelas),
+                              { 'selected': selectedBedForDetail?.kd_kamar === bed.kd_kamar }
+                            ]"
+                          >
+                            <i class="fas fa-bed seat-icon mb-1"></i>
+                            <span class="seat-label fw-bold" style="font-size: 0.68rem;">{{ getBedLabel(bed) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div v-if="cinemaBedsGrouped.length === 0" class="text-center py-5 text-muted">
+                      <i class="fas fa-bed fa-2x mb-2"></i>
+                      <p class="m-0">Tidak ada tempat tidur pada kategori bangsal ini.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Detail Side Panel (Right Column) -->
+              <div class="col-xl-4 col-lg-5">
+                <div class="bed-detail-panel h-100 p-4 rounded-4 border">
+                  <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>Rincian Ranjang
+                  </h6>
+                  
+                  <div v-if="selectedBedForDetail" class="detail-content animate-fade-in">
+                    <div class="mb-4 text-center">
+                      <div 
+                        class="detail-status-badge mb-2 d-inline-block py-1 px-3 rounded-pill fw-bold small"
+                        :class="selectedBedForDetail.status.toLowerCase()"
+                      >
+                        {{ selectedBedForDetail.status === 'KOSONG' ? 'TERSEDIA' : selectedBedForDetail.status }}
+                      </div>
+                      <h5 class="fw-bold text-dark m-0">{{ selectedBedForDetail.bangsal?.nm_bangsal }}</h5>
+                      <p class="text-muted small m-0 mt-1">ID Kamar: {{ selectedBedForDetail.kd_kamar }}</p>
+                    </div>
+
+                    <table class="table table-sm table-borderless detail-table">
+                      <tbody>
+                        <tr class="border-bottom">
+                          <td class="text-muted py-2 small">Kelas</td>
+                          <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kelas }}</td>
+                        </tr>
+                        <tr class="border-bottom">
+                          <td class="text-muted py-2 small">Tarif Ranjang</td>
+                          <td class="fw-bold text-success text-end py-2 small">Rp {{ formatNumber(selectedBedForDetail.trf_kamar) }} / hari</td>
+                        </tr>
+                        <tr class="border-bottom">
+                          <td class="text-muted py-2 small">Kode Kamar</td>
+                          <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kd_kamar }}</td>
+                        </tr>
+                        <tr class="border-bottom">
+                          <td class="text-muted py-2 small">Kode Bangsal</td>
+                          <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kd_bangsal }}</td>
+                        </tr>
+                        <tr v-if="selectedBedForDetail.status === 'DIBOOKING'">
+                          <td class="text-muted py-2 small">Keterangan</td>
+                          <td class="fw-bold text-warning text-end py-2 small">Booking / Pasien Indent</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Placeholder when no bed selected -->
+                  <div v-else class="detail-placeholder d-flex flex-column align-items-center justify-content-center h-100 text-center py-5">
+                    <i class="fas fa-mouse-pointer fa-2x text-muted mb-3 animate-bounce"></i>
+                    <p class="text-muted small m-0">Sorot atau klik salah satu ranjang untuk melihat rincian.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Legends Section -->
+            <div class="cinema-legend mt-4 pt-3 border-top d-flex flex-wrap gap-4 justify-content-center">
+              <div class="legend-item d-flex align-items-center gap-2">
+                <span class="legend-seat-box kosong"></span>
+                <span class="legend-text text-muted small">Tersedia (Kosong)</span>
+              </div>
+              <div class="legend-item d-flex align-items-center gap-2">
+                <span class="legend-seat-box isi"></span>
+                <span class="legend-text text-muted small">Terisi</span>
+              </div>
+              <div class="legend-item d-flex align-items-center gap-2">
+                <span class="legend-seat-box dibooking"></span>
+                <span class="legend-text text-muted small">Booking (Indent)</span>
+              </div>
+              <div class="legend-separator border-start ps-3 d-flex gap-3 flex-wrap">
+                <div class="legend-item d-flex align-items-center gap-2">
+                  <span class="legend-class-color vip"></span>
+                  <span class="legend-text text-muted small">VIP</span>
+                </div>
+                <div class="legend-item d-flex align-items-center gap-2">
+                  <span class="legend-class-color kelas-utama"></span>
+                  <span class="legend-text text-muted small">Utama</span>
+                </div>
+                <div class="legend-item d-flex align-items-center gap-2">
+                  <span class="legend-class-color kelas-1"></span>
+                  <span class="legend-text text-muted small">Kelas 1</span>
+                </div>
+                <div class="legend-item d-flex align-items-center gap-2">
+                  <span class="legend-class-color kelas-2"></span>
+                  <span class="legend-text text-muted small">Kelas 2</span>
+                </div>
+                <div class="legend-item d-flex align-items-center gap-2">
+                  <span class="legend-class-color kelas-3"></span>
+                  <span class="legend-text text-muted small">Kelas 3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 
         Combined Mood & Sentiment Section 
         Side-by-side layout for high-level metrics and individual updates
@@ -490,10 +672,151 @@ import departemenService from '../services/departemenService'
 import dashboardService from '../services/dashboardService'
 import { pegawaiService } from '../services/pegawaiService'
 import MoodSlider from '../components/MoodSlider.vue'
+import api from '../services/api'
 
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// Bed Availability (Cinema Layout)
+const allBeds = ref([])
+const activeBedTab = ref('ANAK')
+const selectedBedForDetail = ref(null)
+const loadingBeds = ref(false)
+
+const categories = ['ANAK', 'KANDUNGAN', 'ICU/PICU/NICU', 'PERINATOLOGI', 'HCU', 'ISOLASI', 'KAMAR BERSALIN']
+
+const getBedCategory = (bed) => {
+  const nmBangsal = (bed.bangsal?.nm_bangsal || bed.kd_bangsal || '').toUpperCase()
+  
+  if (nmBangsal.includes('ICU') || nmBangsal.includes('NICU') || nmBangsal.includes('PICU')) {
+    return 'ICU/PICU/NICU'
+  }
+  if (nmBangsal.includes('HCU')) {
+    return 'HCU'
+  }
+  if (nmBangsal.includes('BAYI') || nmBangsal.includes('PERINATOLOGI') || nmBangsal.includes('PERINA')) {
+    return 'PERINATOLOGI'
+  }
+  if (nmBangsal.includes('WALIDAH') || nmBangsal.includes('BAROROH') || nmBangsal.includes('KHADIJAH') || nmBangsal.includes('KANDUNGAN')) {
+    return 'KANDUNGAN'
+  }
+  if (nmBangsal.includes('HALIMATUS') || nmBangsal.includes('CHAMAMAH') || nmBangsal.includes('FATIMAH') || nmBangsal.includes('AISYAH') || nmBangsal.includes('ANAK')) {
+    return 'ANAK'
+  }
+  if (nmBangsal.includes('VK') || nmBangsal.includes('BERSALIN')) {
+    return 'KAMAR BERSALIN'
+  }
+  if (nmBangsal.includes('ISOLASI')) {
+    return 'ISOLASI'
+  }
+  return 'LAIN-LAIN'
+}
+
+const getBedLabel = (bed) => {
+  const nm = bed.bangsal?.nm_bangsal || ''
+  const parts = nm.split(' ')
+  const lastPart = parts[parts.length - 1]
+  if (lastPart && (/\d/.test(lastPart) || lastPart.length <= 4)) {
+    return lastPart
+  }
+  return bed.kd_kamar
+}
+
+const getClassSlug = (kelas) => {
+  if (!kelas) return 'other'
+  return kelas.replace(/\s+/g, '-').toLowerCase()
+}
+
+const formatNumber = (num) => {
+  if (!num) return '0'
+  return new Intl.NumberFormat('id-ID').format(num)
+}
+
+const getCategoryBeds = (cat) => {
+  return allBeds.value.filter(bed => getBedCategory(bed) === cat)
+}
+
+const getCategoryTotalCount = (cat) => {
+  return getCategoryBeds(cat).length
+}
+
+const getCategoryEmptyCount = (cat) => {
+  return getCategoryBeds(cat).filter(bed => bed.status === 'KOSONG').length
+}
+
+const getTabBadgeClass = (cat) => {
+  const empty = getCategoryEmptyCount(cat)
+  if (empty === 0) return 'bg-danger text-white'
+  if (empty < 5) return 'bg-warning text-dark'
+  return 'bg-success text-white'
+}
+
+const cinemaBedsGrouped = computed(() => {
+  const filtered = getCategoryBeds(activeBedTab.value)
+  const grouped = {}
+  
+  filtered.forEach(bed => {
+    const kelas = bed.kelas || 'Lainnya'
+    if (!grouped[kelas]) {
+      grouped[kelas] = []
+    }
+    grouped[kelas].push(bed)
+  })
+  
+  const sortWeights = {
+    'Kelas VIP': 5,
+    'Kelas Utama': 10,
+    'Kelas 1': 20,
+    'Kelas 2': 30,
+    'Kelas 3': 40,
+    'Lainnya': 100
+  }
+  
+  const getWeight = (className) => {
+    return sortWeights[className] || 90
+  }
+  
+  return Object.keys(grouped).map(cls => ({
+    kelas: cls,
+    beds: grouped[cls].sort((a, b) => getBedLabel(a).localeCompare(getBedLabel(b), undefined, { numeric: true })),
+    weight: getWeight(cls)
+  })).sort((a, b) => a.weight - b.weight)
+})
+
+const fetchBedCinemaData = async () => {
+  loadingBeds.value = true
+  try {
+    const response = await api.get('/kamar/master?limit=1000')
+    allBeds.value = response.data.data || []
+    
+    const catBeds = getCategoryBeds(activeBedTab.value)
+    if (catBeds.length > 0 && !selectedBedForDetail.value) {
+      selectedBedForDetail.value = catBeds[0]
+    }
+  } catch (error) {
+    console.error('Failed to fetch bed cinema data', error)
+  } finally {
+    loadingBeds.value = false
+  }
+}
+
+const selectBed = (bed) => {
+  selectedBedForDetail.value = bed
+}
+
+const hoverBed = (bed) => {
+  // Option for interactive hover feedback
+}
+
+watch(activeBedTab, (newTab) => {
+  const catBeds = getCategoryBeds(newTab)
+  if (catBeds.length > 0) {
+    selectedBedForDetail.value = catBeds[0]
+  } else {
+    selectedBedForDetail.value = null
+  }
+})
 
 // Reactive data
 const departmentName = ref(authStore.user?.data?.detail?.departemen || 'Unknown')
@@ -808,6 +1131,8 @@ const startAutoReload = () => {
         await handlePeriodChange()
         // Reload code blue schedule
         await fetchCodeBlueSchedule()
+        // Reload bed availability data
+        await fetchBedCinemaData()
       } finally {
         // Show reload indicator for at least 500ms for better UX
         setTimeout(() => {
@@ -839,10 +1164,11 @@ onMounted(() => {
   authStore.refreshUserData()
   updateDateTime()
   timeInterval.value = setInterval(updateDateTime, 1000)
-  fetchDashboardStats() // Initial load (defaults to today in backend if no params, or we can explicit pass today)
+  fetchDashboardStats() // Initial load
   fetchCodeBlueSchedule() // Load code blue schedule
   fetchDepartmentName() // Fetch real department name
   fetchReviews() // Fetch Google Reviews
+  fetchBedCinemaData() // Fetch bed cinema map data
   startAutoReload() // Start auto reload
 })
 
@@ -856,6 +1182,270 @@ onUnmounted(() => {
 
 
 <style scoped>
+/* Bed Cinema Section */
+.bed-cinema-section {
+  width: 100%;
+}
+
+.cinema-tabs-wrapper {
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cinema-tabs-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.cinema-tabs-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.cinema-tabs-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.cinema-tabs {
+  display: flex;
+  gap: 10px;
+  min-width: max-content;
+}
+
+.cinema-tab-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 8px 16px;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.cinema-tab-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.cinema-tab-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.cinema-room-container {
+  background: #fafafb;
+  border: 1px solid #f1f5f9;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.01);
+  min-height: 400px;
+}
+
+/* Movie Screen */
+.nursing-station-screen {
+  position: relative;
+  width: 100%;
+}
+
+.screen-border {
+  height: 6px;
+  width: 80%;
+  margin: 0 auto;
+  border-radius: 50% / 0 0 100% 100%;
+  background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.45);
+}
+
+.screen-label {
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+/* Cinema seats layout */
+.seats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cinema-seat-wrapper {
+  perspective: 1000px;
+}
+
+.cinema-seat {
+  width: 60px;
+  height: 52px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.cinema-seat:hover {
+  transform: scale(1.08) translateY(-2px);
+  z-index: 10;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cinema-seat.selected {
+  border-color: #1e293b !important;
+  box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.25) !important;
+}
+
+.seat-icon {
+  font-size: 1.15rem;
+  opacity: 0.75;
+}
+
+.seat-label {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: -0.01em;
+  margin-top: 1px;
+}
+
+/* Status: KOSONG (Available) color variations depending on class */
+.cinema-seat.kosong.kelas-vip {
+  background: #faf5ff;
+  border-color: #d8b4fe;
+  color: #7c3aed;
+}
+.cinema-seat.kosong.kelas-vip:hover {
+  background: #f3e8ff;
+}
+
+.cinema-seat.kosong.kelas-utama {
+  background: #ecfeff;
+  border-color: #67e8f9;
+  color: #0891b2;
+}
+.cinema-seat.kosong.kelas-utama:hover {
+  background: #cffafe;
+}
+
+.cinema-seat.kosong.kelas-1 {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+.cinema-seat.kosong.kelas-1:hover {
+  background: #dbeafe;
+}
+
+.cinema-seat.kosong.kelas-2 {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #16a34a;
+}
+.cinema-seat.kosong.kelas-2:hover {
+  background: #dcfce7;
+}
+
+.cinema-seat.kosong.kelas-3 {
+  background: #f0fdfa;
+  border-color: #5eead4;
+  color: #0d9488;
+}
+.cinema-seat.kosong.kelas-3:hover {
+  background: #ccfbf1;
+}
+
+/* Status: ISI (Occupied) */
+.cinema-seat.isi {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+  opacity: 0.7;
+}
+.cinema-seat.isi .seat-icon {
+  opacity: 0.45;
+}
+.cinema-seat.isi:hover {
+  opacity: 0.95;
+  background: #e2e8f0;
+}
+
+/* Status: DIBOOKING */
+.cinema-seat.dibooking {
+  background: #fffbeb;
+  border-color: #fde047;
+  border-style: dashed;
+  color: #d97706;
+}
+.cinema-seat.dibooking:hover {
+  background: #fef3c7;
+}
+
+/* Detail Side Panel */
+.bed-detail-panel {
+  background: #ffffff;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.detail-status-badge {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.detail-status-badge.kosong {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.detail-status-badge.isi {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.detail-status-badge.dibooking {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Legends */
+.legend-seat-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #cbd5e1;
+}
+
+.legend-seat-box.kosong {
+  background: #ffffff;
+}
+
+.legend-seat-box.isi {
+  background: #f1f5f9;
+}
+
+.legend-seat-box.dibooking {
+  background: #fffbeb;
+  border-style: dashed;
+}
+
+.legend-class-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legend-class-color.vip { background: #7c3aed; }
+.legend-class-color.kelas-utama { background: #0891b2; }
+.legend-class-color.kelas-1 { background: #2563eb; }
+.legend-class-color.kelas-2 { background: #16a34a; }
+.legend-class-color.kelas-3 { background: #0d9488; }
+
 /* Dashboard layout */
 .dashboard-page {
   width: 100%;
