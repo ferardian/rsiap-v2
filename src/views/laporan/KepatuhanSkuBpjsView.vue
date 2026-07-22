@@ -1031,6 +1031,10 @@ onMounted(() => {
   border: 1px solid rgba(226, 232, 240, 0.8) !important;
 }
 
+.kpi-body {
+  min-height: 142px;
+}
+
 .kpi-card:hover {
   transform: translateY(-3px);
 }
