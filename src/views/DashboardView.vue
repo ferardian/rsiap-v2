@@ -172,7 +172,7 @@
               <h5 class="m-0 fw-bold text-dark">
                 <i class="fas fa-bed text-primary me-2"></i>Ketersediaan Tempat Tidur
               </h5>
-              <p class="text-muted small m-0 mt-1">Peta ketersediaan tempat tidur rawat inap secara real-time. Klik ranjang untuk melihat detail kelas dan tarif.</p>
+              <p class="text-muted small m-0 mt-1">Peta ketersediaan tempat tidur rawat inap secara real-time. Klik tempat tidur untuk melihat detail kelas dan tarif.</p>
             </div>
             <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-secondary" @click="fetchBedCinemaData" :disabled="loadingBeds">
@@ -255,7 +255,7 @@
               <div class="col-xl-4 col-lg-5">
                 <div class="bed-detail-panel h-100 p-4 rounded-4 border">
                   <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
-                    <i class="fas fa-info-circle me-2 text-primary"></i>Rincian Ranjang
+                    <i class="fas fa-info-circle me-2 text-primary"></i>Rincian Tempat Tidur
                   </h6>
                   
                   <div v-if="selectedBedForDetail" class="detail-content animate-fade-in">
@@ -277,7 +277,7 @@
                           <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kelas }}</td>
                         </tr>
                         <tr class="border-bottom">
-                          <td class="text-muted py-2 small">Tarif Ranjang</td>
+                          <td class="text-muted py-2 small">Tarif Tempat Tidur</td>
                           <td class="fw-bold text-success text-end py-2 small">Rp {{ formatNumber(selectedBedForDetail.trf_kamar) }} / hari</td>
                         </tr>
                         <tr class="border-bottom">
@@ -299,7 +299,7 @@
                   <!-- Placeholder when no bed selected -->
                   <div v-else class="detail-placeholder d-flex flex-column align-items-center justify-content-center h-100 text-center py-5">
                     <i class="fas fa-mouse-pointer fa-2x text-muted mb-3 animate-bounce"></i>
-                    <p class="text-muted small m-0">Sorot atau klik salah satu ranjang untuk melihat rincian.</p>
+                    <p class="text-muted small m-0">Sorot atau klik salah satu tempat tidur untuk melihat rincian.</p>
                   </div>
                 </div>
               </div>
