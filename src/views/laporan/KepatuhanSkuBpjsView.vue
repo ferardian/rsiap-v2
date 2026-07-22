@@ -72,6 +72,7 @@
               <option value="patuh">Terbit SKU</option>
               <option value="tidak_patuh">Belum Terbit SKU</option>
               <option value="rujukan">Rujukan / Rujuk Balik</option>
+              <option value="belum_pulang">Belum Pulang (Ranap)</option>
             </select>
 
             <!-- Search -->
@@ -123,7 +124,7 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Wajib SKU</span>
               <h2 class="kpi-value fw-black text-warning m-0">{{ stats?.overall?.total_eligible || 0 }}</h2>
-              <small class="text-muted">Kunjungan butuh kontrol</small>
+              <small class="text-muted">Excl. {{ stats?.overall?.ranap_belum_pulang || 0 }} Ranap Aktif</small>
             </div>
           </div>
         </div>
@@ -364,6 +365,11 @@
                   <span :class="['badge-pelayanan', item.jnspelayanan === '1' ? 'ranap' : 'ralan']">
                     {{ item.jnspelayanan === '1' ? 'Rawat Inap' : 'Rawat Jalan' }}
                   </span>
+                  <div v-if="item.jnspelayanan === '1'" class="mt-1">
+                    <span :class="['badge', item.status_compliance === 'BELUM_PULANG' ? 'bg-warning text-dark' : 'bg-success']" style="font-size: 0.65rem; padding: 2px 6px;">
+                      {{ item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Sudah Pulang' }}
+                    </span>
+                  </div>
                 </td>
                 <td class="small">{{ item.nm_poli }}</td>
                 <td class="small fw-semibold text-secondary">{{ item.nm_dokter }}</td>
@@ -375,6 +381,9 @@
                   <div v-else-if="item.status_compliance === 'RUJUKAN'">
                     <div class="fw-bold text-info"><i class="fas fa-external-link-alt text-info me-1"></i>{{ item.no_rujukan }}</div>
                     <span class="text-muted small">{{ item.nm_ppkDirujuk }}</span>
+                  </div>
+                  <div v-else-if="item.status_compliance === 'BELUM_PULANG'" class="text-warning small fw-semibold">
+                    <i class="fas fa-bed me-1"></i>Masih Dirawat
                   </div>
                   <div v-else class="text-danger small fw-semibold">
                     <i class="fas fa-exclamation-circle me-1"></i>Belum Terbit SKU
@@ -467,7 +476,7 @@ const dokterList = ref([])
 
 // Stats & Details State
 const stats = ref({
-  overall: { total_sep: 0, total_eligible: 0, patuh: 0, tidak_patuh: 0, rujukan: 0 },
+  overall: { total_sep: 0, total_eligible: 0, patuh: 0, tidak_patuh: 0, rujukan: 0, ranap_belum_pulang: 0 },
   daily_trend: [],
   poliklinik: [],
   dokter: []
@@ -514,7 +523,8 @@ const compliancePercentage = computed(() => {
 const donutChartSeries = computed(() => [
   Number(stats.value?.overall?.patuh || 0),
   Number(stats.value?.overall?.tidak_patuh || 0),
-  Number(stats.value?.overall?.rujukan || 0)
+  Number(stats.value?.overall?.rujukan || 0),
+  Number(stats.value?.overall?.ranap_belum_pulang || 0)
 ])
 
 const donutChartOptions = computed(() => ({
@@ -522,8 +532,8 @@ const donutChartOptions = computed(() => ({
     type: 'donut',
     fontFamily: 'Outfit, sans-serif'
   },
-  labels: ['Terbit SKU', 'Belum Terbit SKU', 'Rujukan / Rujuk Balik'],
-  colors: ['#10b981', '#ef4444', '#3b82f6'],
+  labels: ['Terbit SKU', 'Belum Terbit SKU', 'Rujukan / Rujuk Balik', 'Belum Pulang (Ranap)'],
+  colors: ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'],
   legend: {
     position: 'bottom',
     fontSize: '12px',
@@ -723,18 +733,21 @@ const formatDateShort = (dateStr) => {
 const getComplianceBadgeClass = (status) => {
   if (status === 'PATUH') return 'success'
   if (status === 'RUJUKAN') return 'info'
+  if (status === 'BELUM_PULANG') return 'warning'
   return 'danger'
 }
 
 const getComplianceBadgeIcon = (status) => {
   if (status === 'PATUH') return 'fas fa-check-circle me-1'
   if (status === 'RUJUKAN') return 'fas fa-external-link-alt me-1'
+  if (status === 'BELUM_PULANG') return 'fas fa-bed me-1'
   return 'fas fa-times-circle me-1'
 }
 
 const getComplianceBadgeLabel = (status) => {
   if (status === 'PATUH') return 'Terbit SKU'
   if (status === 'RUJUKAN') return 'Rujukan'
+  if (status === 'BELUM_PULANG') return 'Belum Pulang'
   return 'Belum Terbit'
 }
 
@@ -776,10 +789,10 @@ const exportToExcel = async () => {
       'No. SKU / Rujukan': item.no_surat || item.no_rujukan || '-',
       'Detail SKU / Rencana Kontrol / Rujukan': item.status_compliance === 'PATUH' 
         ? `Rencana: ${item.tgl_rencana}` 
-        : (item.status_compliance === 'RUJUKAN' ? item.nm_ppkDirujuk : 'Belum Terbit SKU'),
+        : (item.status_compliance === 'RUJUKAN' ? item.nm_ppkDirujuk : (item.status_compliance === 'BELUM_PULANG' ? 'Masih Dirawat' : 'Belum Terbit SKU')),
       'Status Kepatuhan': item.status_compliance === 'PATUH' 
         ? 'Terbit SKU (Patuh)' 
-        : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : 'Belum Terbit (Tidak Patuh)')
+        : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit (Tidak Patuh)'))
     }))
 
     const ws = XLSX.utils.json_to_sheet(wsData)
@@ -848,8 +861,8 @@ const exportToPDF = async () => {
       item.nm_dokter,
       item.status_compliance === 'PATUH' 
         ? `${item.no_surat} (${formatDateOnly(item.tgl_rencana)})` 
-        : (item.status_compliance === 'RUJUKAN' ? `Rujukan: ${item.nm_ppkDirujuk}` : 'Belum Terbit SKU'),
-      item.status_compliance === 'PATUH' ? 'Terbit' : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : 'Belum Terbit')
+        : (item.status_compliance === 'RUJUKAN' ? `Rujukan: ${item.nm_ppkDirujuk}` : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit SKU')),
+      item.status_compliance === 'PATUH' ? 'Terbit' : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit'))
     ])
 
     autoTable(doc, {
@@ -1082,6 +1095,10 @@ onMounted(() => {
 .compliance-badge.danger {
   background-color: #fee2e2;
   color: #991b1b;
+}
+.compliance-badge.warning {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 /* Pagination */
