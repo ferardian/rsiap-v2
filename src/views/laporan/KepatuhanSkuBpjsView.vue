@@ -97,10 +97,10 @@
     </div>
 
     <!-- Overview Stats Block -->
-    <div class="row g-4 mb-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-4">
       <!-- Total SEP BPJS -->
-      <div class="col-xl-2 col-md-4 col-sm-6">
-        <div class="kpi-card shadow-sm border-0 h-100">
+      <div class="col">
+        <div class="kpi-card kpi-primary shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-primary-light">
               <i class="fas fa-file-medical text-primary"></i>
@@ -108,15 +108,15 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Total SEP BPJS</span>
               <h2 class="kpi-value fw-black text-dark m-0">{{ stats?.overall?.total_sep || 0 }}</h2>
-              <small class="text-muted">Semua kunjungan BPJS</small>
+              <small class="text-muted">Total seluruh kunjungan BPJS</small>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Wajib SKU (Total Eligible) -->
-      <div class="col-xl-2 col-md-4 col-sm-6">
-        <div class="kpi-card shadow-sm border-0 h-100">
+      <div class="col">
+        <div class="kpi-card kpi-warning shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-warning-light">
               <i class="fas fa-clipboard-list text-warning"></i>
@@ -124,15 +124,19 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Wajib SKU</span>
               <h2 class="kpi-value fw-black text-warning m-0">{{ stats?.overall?.total_eligible || 0 }}</h2>
-              <small class="text-muted">Excl. {{ stats?.overall?.ranap_belum_pulang || 0 }} Ranap Aktif</small>
+              <div class="mt-1">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-1 px-2" style="font-size: 0.7rem; font-weight: 600;">
+                  <i class="fas fa-info-circle me-1"></i>Excl. {{ stats?.overall?.ranap_belum_pulang || 0 }} Ranap Aktif
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Patuh / Terbit SKU -->
-      <div class="col-xl-2 col-md-4 col-sm-6">
-        <div class="kpi-card shadow-sm border-0 h-100">
+      <div class="col">
+        <div class="kpi-card kpi-success shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-success-light">
               <i class="fas fa-check-circle text-success"></i>
@@ -140,15 +144,15 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Terbit SKU (Patuh)</span>
               <h2 class="kpi-value fw-black text-success m-0">{{ stats?.overall?.patuh || 0 }}</h2>
-              <small class="text-muted">SKU diterbitkan</small>
+              <small class="text-muted">SKU diterbitkan tepat waktu</small>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Tidak Patuh / Belum Terbit SKU -->
-      <div class="col-xl-2 col-md-4 col-sm-6">
-        <div class="kpi-card shadow-sm border-0 h-100">
+      <div class="col">
+        <div class="kpi-card kpi-danger shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-danger-light">
               <i class="fas fa-times-circle text-danger"></i>
@@ -156,15 +160,15 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Belum Terbit SKU</span>
               <h2 class="kpi-value fw-black text-danger m-0">{{ stats?.overall?.tidak_patuh || 0 }}</h2>
-              <small class="text-muted">Belum ada surat kontrol</small>
+              <small class="text-muted">Belum ada surat kontrol ulang</small>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Rujukan / Rujuk Balik -->
-      <div class="col-xl-2 col-md-4 col-sm-6">
-        <div class="kpi-card shadow-sm border-0 h-100">
+      <div class="col">
+        <div class="kpi-card kpi-info shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-info-light">
               <i class="fas fa-external-link-alt text-info"></i>
@@ -172,15 +176,15 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Rujuk Keluar/Balik</span>
               <h2 class="kpi-value fw-black text-info m-0">{{ stats?.overall?.rujukan || 0 }}</h2>
-              <small class="text-muted">Tidak butuh SKU lokal</small>
+              <small class="text-muted">Tidak membutuhkan SKU rumah sakit</small>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Persentase Kepatuhan -->
-      <div class="col-xl-2 col-md-4 col-sm-6">
-        <div class="kpi-card shadow-sm border-0 h-100">
+      <div class="col">
+        <div class="kpi-card kpi-teal shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-teal-light">
               <i class="fas fa-percent text-teal"></i>
@@ -188,11 +192,11 @@
             <div class="kpi-info w-100">
               <span class="kpi-title text-muted fw-bold">Tingkat Kepatuhan</span>
               <h2 class="kpi-value fw-black text-teal m-0">{{ compliancePercentage }}%</h2>
-              <div class="progress mt-2" style="height: 6px;">
+              <div class="progress mt-2" style="height: 8px; border-radius: 4px; background-color: #f1f5f9;">
                 <div 
-                  class="progress-bar bg-teal" 
+                  class="progress-bar bg-teal progress-bar-striped progress-bar-animated" 
                   role="progressbar" 
-                  :style="{ width: compliancePercentage + '%' }"
+                  :style="{ width: compliancePercentage + '%', boxShadow: '0 0 8px rgba(13, 148, 136, 0.4)' }"
                 ></div>
               </div>
             </div>
@@ -1014,21 +1018,38 @@ onMounted(() => {
 .kpi-card {
   background: #ffffff;
   border-radius: 16px;
-  transition: all 0.2s ease;
-}
-.kpi-card:hover {
-  transform: translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
 }
 
+.kpi-card:hover {
+  transform: translateY(-3px);
+}
+
+.kpi-primary { border-left: 5px solid #3b82f6 !important; }
+.kpi-warning { border-left: 5px solid #f59e0b !important; }
+.kpi-success { border-left: 5px solid #10b981 !important; }
+.kpi-danger { border-left: 5px solid #ef4444 !important; }
+.kpi-info { border-left: 5px solid #3b82f6 !important; }
+.kpi-teal { border-left: 5px solid #0d9488 !important; }
+
+.kpi-primary:hover { box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1) !important; }
+.kpi-warning:hover { box-shadow: 0 12px 24px rgba(245, 158, 11, 0.1) !important; }
+.kpi-success:hover { box-shadow: 0 12px 24px rgba(16, 185, 129, 0.1) !important; }
+.kpi-danger:hover { box-shadow: 0 12px 24px rgba(239, 68, 68, 0.1) !important; }
+.kpi-info:hover { box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1) !important; }
+.kpi-teal:hover { box-shadow: 0 12px 24px rgba(13, 148, 136, 0.1) !important; }
+
 .kpi-icon-wrapper {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
 .bg-primary-light { background-color: #eff6ff; }
@@ -1041,15 +1062,19 @@ onMounted(() => {
 .bg-teal { background-color: #0d9488; }
 
 .kpi-title {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: #64748b !important;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .kpi-value {
-  font-size: 1.8rem;
+  font-size: 2.1rem;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 /* Rankings list */
