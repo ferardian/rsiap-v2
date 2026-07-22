@@ -170,7 +170,7 @@
           <div class="panel-header pt-4 px-4 pb-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
               <h5 class="m-0 fw-bold text-dark">
-                <i class="fas fa-bed text-primary me-2"></i>Ketersediaan Tempat Tidur (Denah Bioskop)
+                <i class="fas fa-bed text-primary me-2"></i>Ketersediaan Tempat Tidur
               </h5>
               <p class="text-muted small m-0 mt-1">Peta ranjang dinamis. Klik ranjang untuk melihat rincian tarif dan kamar.</p>
             </div>
