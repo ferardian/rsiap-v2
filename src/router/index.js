@@ -731,6 +731,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/kepatuhan-sku-bpjs',
+    name: 'KepatuhanSkuBpjs',
+    component: () => import('@/views/laporan/KepatuhanSkuBpjsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ppra/tim',
     name: 'TimPpra',
     component: () => import('../views/ppra/TimPpraView.vue'),
