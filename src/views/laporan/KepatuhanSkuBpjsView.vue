@@ -209,7 +209,7 @@
     <div class="mb-4 px-2">
       <small class="text-muted fst-italic">
         <i class="fas fa-info-circle me-1 text-danger"></i>
-        *Catatan: Khusus Rawat Jalan, <strong>Belum Terbit SKU</strong> dihitung dari data SEP yang tidak memiliki lanjutan rujukan keluar/balik. Sedangkan untuk Rawat Inap, murni karena SKU belum/tidak diterbitkan.
+        *Catatan: Khusus Rawat Jalan, <strong>Belum Terbit SKU</strong> dihitung dari data SEP yang tidak memiliki lanjutan rujukan keluar/balik. Sedangkan untuk Rawat Inap, karena SKU belum/tidak diterbitkan.
       </small>
     </div>
 
