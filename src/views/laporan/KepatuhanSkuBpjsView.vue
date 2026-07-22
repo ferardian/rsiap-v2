@@ -160,12 +160,7 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Belum Terbit SKU</span>
               <h2 class="kpi-value fw-black text-danger m-0">{{ stats?.overall?.tidak_patuh || 0 }}</h2>
-              <small class="text-muted d-block">Belum ada surat kontrol ulang</small>
-              <div class="mt-1">
-                <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1 px-2" style="font-size: 0.7rem; font-weight: 600; white-space: normal; text-align: left; display: inline-block; line-height: 1.35;">
-                  <i class="fas fa-info-circle me-1"></i>Berdasarkan SEP yang tidak ada lanjutan rujuk balik / rujuk keluar
-                </span>
-              </div>
+              <small class="text-muted">Belum ada surat kontrol ulang</small>
             </div>
           </div>
         </div>
@@ -208,6 +203,14 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Footnote Info -->
+    <div class="mb-4 px-2">
+      <small class="text-muted fst-italic">
+        <i class="fas fa-info-circle me-1 text-danger"></i>
+        *Catatan: Jumlah pasien pada <strong>Belum Terbit SKU</strong> dihitung berdasarkan data SEP yang tidak memiliki lanjutan rujukan keluar atau rujukan balik.
+      </small>
     </div>
 
     <!-- Charts Visualization row -->
@@ -1032,7 +1035,7 @@ onMounted(() => {
 }
 
 .kpi-body {
-  min-height: 142px;
+  min-height: 112px;
 }
 
 .kpi-card:hover {
