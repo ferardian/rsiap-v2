@@ -363,7 +363,10 @@
                 </td>
                 <td>
                   <div class="fw-bold text-indigo" style="font-size: 0.85rem;">{{ item.nama_pasien }}</div>
-                  <small class="text-muted">{{ item.nomr }}</small>
+                  <div class="small text-muted">{{ item.nomr }}</div>
+                  <div v-if="item.nmdiagnosaawal" class="mt-1 text-secondary" style="font-size: 0.72rem; line-height: 1.35;">
+                    <i class="fas fa-stethoscope text-muted me-1"></i>{{ item.nmdiagnosaawal }}
+                  </div>
                 </td>
                 <td>
                   <span :class="['badge-pelayanan', item.jnspelayanan === '1' ? 'ranap' : 'ralan']">
@@ -786,6 +789,7 @@ const exportToExcel = async () => {
       'No. Rawat': item.no_rawat,
       'No. RM': item.nomr,
       'Nama Pasien': item.nama_pasien,
+      'Diagnosa SEP': item.nmdiagnosaawal || '-',
       'Jenis Pelayanan': item.jnspelayanan === '1' ? 'Rawat Inap' : 'Rawat Jalan',
       'Poliklinik': item.nm_poli,
       'Dokter': item.nm_dokter,
@@ -859,7 +863,7 @@ const exportToPDF = async () => {
     const tableData = exportData.map((item, index) => [
       index + 1,
       item.no_sep,
-      item.nama_pasien,
+      item.nama_pasien + (item.nmdiagnosaawal ? `\n(Diag: ${item.nmdiagnosaawal})` : ''),
       item.jnspelayanan === '1' ? 'Inap' : 'Jalan',
       item.nm_poli,
       item.nm_dokter,
