@@ -577,7 +577,7 @@ const loadFilterOptions = async () => {
       poliklinikService.getAllPoliklinik(),
       dokterService.getDokter(1, 100)
     ])
-    poliklinikList.value = poliklinikRes.data || []
+    poliklinikList.value = poliklinikRes.data.data || poliklinikRes.data || []
     dokterList.value = dokterRes.data.data || dokterRes.data || []
   } catch (error) {
     console.error('Failed to load filter dropdowns', error)
