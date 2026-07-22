@@ -172,7 +172,7 @@
               <h5 class="m-0 fw-bold text-dark">
                 <i class="fas fa-bed text-primary me-2"></i>Ketersediaan Tempat Tidur
               </h5>
-              <p class="text-muted small m-0 mt-1">Peta ranjang dinamis. Klik ranjang untuk melihat rincian tarif dan kamar.</p>
+              <p class="text-muted small m-0 mt-1">Peta ketersediaan tempat tidur rawat inap secara real-time. Klik ranjang untuk melihat detail kelas dan tarif.</p>
             </div>
             <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-secondary" @click="fetchBedCinemaData" :disabled="loadingBeds">
