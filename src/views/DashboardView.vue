@@ -717,10 +717,14 @@ const getBedLabel = (bed) => {
   const nm = bed.bangsal?.nm_bangsal || ''
   const parts = nm.split(' ')
   const lastPart = parts[parts.length - 1]
-  if (lastPart && (/\d/.test(lastPart) || lastPart.length <= 4)) {
+  
+  if (lastPart && lastPart !== '-' && !lastPart.includes('KAMAR') && !lastPart.includes('BANGSAL') && (/\d/.test(lastPart) || lastPart.length <= 4)) {
     return lastPart
   }
-  return bed.kd_kamar
+  
+  const kd = bed.kd_kamar || ''
+  const cleanKd = kd.replace(/^[A-Za-z]+(?:\.|\-)?/, '')
+  return cleanKd || kd
 }
 
 const getClassSlug = (kelas) => {
@@ -1280,36 +1284,44 @@ onUnmounted(() => {
 }
 
 .cinema-seat {
-  width: 60px;
-  height: 52px;
-  border-radius: 8px;
+  width: 45px;
+  height: 38px;
+  border-radius: 6px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   transition: all 0.2s ease;
   user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px !important;
 }
 
 .cinema-seat:hover {
-  transform: scale(1.08) translateY(-2px);
+  transform: scale(1.12) translateY(-1px);
   z-index: 10;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .cinema-seat.selected {
   border-color: #1e293b !important;
-  box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.25) !important;
+  box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.2) !important;
 }
 
 .seat-icon {
-  font-size: 1.15rem;
+  font-size: 0.85rem;
   opacity: 0.75;
+  margin: 0 !important;
 }
 
 .seat-label {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.55rem;
   letter-spacing: -0.01em;
-  margin-top: 1px;
+  margin: -1px 0 0 0 !important;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* Status: KOSONG (Available) color variations depending on class */
