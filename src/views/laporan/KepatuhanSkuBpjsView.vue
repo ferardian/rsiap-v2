@@ -168,7 +168,7 @@
 
       <!-- Rujukan / Rujuk Balik -->
       <div class="col">
-        <div class="kpi-card kpi-info shadow-sm border-0 h-100">
+        <div class="kpi-card kpi-sky shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
             <div class="kpi-icon-wrapper bg-info-light">
               <i class="fas fa-external-link-alt text-info"></i>
@@ -1030,14 +1030,14 @@ onMounted(() => {
 .kpi-warning { border-left: 5px solid #f59e0b !important; }
 .kpi-success { border-left: 5px solid #10b981 !important; }
 .kpi-danger { border-left: 5px solid #ef4444 !important; }
-.kpi-info { border-left: 5px solid #3b82f6 !important; }
+.kpi-sky { border-left: 5px solid #0ea5e9 !important; }
 .kpi-teal { border-left: 5px solid #0d9488 !important; }
 
 .kpi-primary:hover { box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1) !important; }
 .kpi-warning:hover { box-shadow: 0 12px 24px rgba(245, 158, 11, 0.1) !important; }
 .kpi-success:hover { box-shadow: 0 12px 24px rgba(16, 185, 129, 0.1) !important; }
 .kpi-danger:hover { box-shadow: 0 12px 24px rgba(239, 68, 68, 0.1) !important; }
-.kpi-info:hover { box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1) !important; }
+.kpi-sky:hover { box-shadow: 0 12px 24px rgba(14, 165, 233, 0.1) !important; }
 .kpi-teal:hover { box-shadow: 0 12px 24px rgba(13, 148, 136, 0.1) !important; }
 
 .kpi-icon-wrapper {
