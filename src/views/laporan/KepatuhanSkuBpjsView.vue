@@ -956,6 +956,19 @@ onMounted(() => {
   color: #334155;
   outline: none;
   transition: all 0.2s ease;
+  height: 34px;
+}
+
+.premium-input-date {
+  width: 130px !important;
+}
+
+.premium-select-filter {
+  width: 155px !important;
+}
+
+.premium-input-search {
+  width: 185px !important;
 }
 
 .premium-input-date:focus, .premium-select-filter:focus, .premium-input-search:focus {
@@ -964,13 +977,17 @@ onMounted(() => {
 }
 
 .btn-export-excel, .btn-export-pdf {
-  padding: 6px 12px;
+  height: 34px;
+  padding: 0 12px;
   font-size: 0.8rem;
   font-weight: 700;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-export-excel {
