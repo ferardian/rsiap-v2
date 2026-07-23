@@ -259,199 +259,276 @@
               <h5 class="m-0 fw-bold text-dark">
                 <i class="fas fa-bed text-primary me-2"></i>Ketersediaan Tempat Tidur
               </h5>
-              <p class="text-muted small m-0 mt-1">Peta ketersediaan tempat tidur rawat inap secara real-time. Klik tempat tidur untuk melihat detail kelas dan tarif.</p>
+              <p class="text-muted small m-0 mt-1">Ringkasan ketersediaan kamar rawat inap per unit & kelas secara real-time.</p>
             </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" @click="fetchBedCinemaData" :disabled="loadingBeds">
-                <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loadingBeds }"></i>Refresh Peta
+            <div class="d-flex gap-2 align-items-center">
+              <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border">
+                <button 
+                  class="btn rounded-pill px-3 py-1 fw-bold"
+                  :class="viewMode === 'compact' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
+                  @click="viewMode = 'compact'"
+                >
+                  <i class="fas fa-th-large me-1"></i>Ringkasan Pendaftaran
+                </button>
+                <button 
+                  class="btn rounded-pill px-3 py-1 fw-bold"
+                  :class="viewMode === 'cinema' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
+                  @click="viewMode = 'cinema'"
+                >
+                  <i class="fas fa-map-marked-alt me-1"></i>Denah Visual
+                </button>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary rounded-circle p-2 ms-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" @click="fetchBedCinemaData" :disabled="loadingBeds" title="Refresh Data">
+                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loadingBeds }"></i>
               </button>
             </div>
           </div>
           
           <div class="card-body px-4 pb-4">
-            <!-- Wards Category Tabs -->
-            <div class="cinema-tabs-wrapper mb-4">
-              <div class="cinema-tabs">
-                <button 
-                  v-for="cat in categories" 
-                  :key="cat"
-                  class="cinema-tab-btn"
-                  :class="{ active: activeBedTab === cat }"
-                  @click="activeBedTab = cat"
-                >
-                  <span class="cat-name">{{ cat }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Selected Category Summary Stats -->
-            <div class="active-category-summary mb-3 p-3 rounded-3 bg-light border d-flex flex-wrap align-items-center justify-content-between gap-3">
-              <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-hospital-user text-primary fs-5"></i>
-                <div>
-                  <h6 class="m-0 fw-bold text-dark">Kategori {{ activeBedTab }}</h6>
-                  <small class="text-muted">Kapasitas aktif untuk unit terpilih</small>
-                </div>
-              </div>
-              <div class="d-flex gap-4 flex-wrap">
-                <div class="summary-stat-item">
-                  <span class="text-muted small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TOTAL KAPASITAS</span>
-                  <span class="fw-bold text-dark fs-5">{{ getCategoryTotalCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
-                </div>
-                <div class="summary-stat-item border-start ps-3">
-                  <span class="text-success small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TERSEDIA (KOSONG)</span>
-                  <span class="fw-bold text-success fs-5">{{ getCategoryEmptyCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
-                </div>
-                <div class="summary-stat-item border-start ps-3">
-                  <span class="text-secondary small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TERISI</span>
-                  <span class="fw-bold text-secondary fs-5">{{ getCategoryOccupiedCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
-                </div>
-                <div v-if="getCategoryBookedCount(activeBedTab) > 0" class="summary-stat-item border-start ps-3">
-                  <span class="text-warning small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">BOOKING / INDENT</span>
-                  <span class="fw-bold text-warning fs-5">{{ getCategoryBookedCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Main Layout Container -->
-            <div class="row g-4">
-              <!-- Cinema Map (Left Column) -->
-              <div class="col-xl-8 col-lg-7">
-                <div class="cinema-room-container p-3 rounded-4 position-relative">
-                  <!-- Movie Screen Metaphor (Nursing Station) -->
-                  <div class="nursing-station-screen mb-3 text-center">
-                    <div class="screen-border mb-2"></div>
-                    <small class="screen-label text-muted fw-bold tracking-wider">NURSING STATION / KORIDOR UTAMA</small>
-                  </div>
-
-                  <!-- Seat Rows (Beds grouped by Class) -->
-                  <div class="cinema-grid d-flex flex-column gap-2">
-                    <div 
-                      v-for="group in cinemaBedsGrouped" 
-                      :key="group.kelas" 
-                      class="cinema-class-row d-flex flex-column flex-sm-row gap-2 align-items-sm-center border-bottom pb-2"
-                    >
-                      <div class="class-label-side fw-bold text-dark text-uppercase small" style="min-width: 100px;">
-                        {{ group.kelas }}
-                      </div>
-                      <div class="seats-row d-flex flex-wrap gap-1 flex-grow-1">
+            <!-- Mode 1: Compact Registration Matrix View (Default for Pendaftaran) -->
+            <div v-if="viewMode === 'compact'" class="compact-matrix-view">
+              <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+                <div v-for="item in allCategoriesMatrix" :key="item.category" class="col">
+                  <div class="card h-100 border rounded-3 shadow-2hover category-matrix-card">
+                    <!-- Card Header -->
+                    <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
+                      <h6 class="m-0 fw-bold text-dark d-flex align-items-center">
+                        <i class="fas fa-hospital-symbol text-primary me-2"></i>{{ item.category }}
+                      </h6>
+                      <span 
+                        class="badge py-1 px-2 fw-bold"
+                        :class="item.emptyCount > 0 ? 'bg-success text-white' : 'bg-secondary text-white'"
+                      >
+                        {{ item.emptyCount }} Kosong / {{ item.totalCount }} Bed
+                      </span>
+                    </div>
+                    
+                    <!-- Card Body: Class List -->
+                    <div class="card-body p-2">
+                      <div v-if="item.classes.length > 0" class="d-flex flex-column gap-1">
                         <div 
-                          v-for="bed in group.beds" 
-                          :key="bed.kd_kamar"
-                          class="cinema-seat-wrapper"
-                          @click="selectBed(bed)"
+                          v-for="cls in item.classes" 
+                          :key="cls.name"
+                          class="p-2 rounded d-flex justify-content-between align-items-center class-matrix-row"
+                          :class="cls.empty > 0 ? 'bg-light-success border-start border-3 border-success' : 'bg-light border-start border-3 border-secondary-subtle'"
                         >
-                          <div 
-                            class="cinema-seat d-flex flex-column align-items-center justify-content-center p-2 rounded-3 text-center border cursor-pointer"
-                            :class="[
-                              bed.status.toLowerCase(),
-                              getClassSlug(bed.kelas),
-                              { 'selected': selectedBedForDetail?.kd_kamar === bed.kd_kamar }
-                            ]"
-                          >
-                            <i class="fas fa-bed seat-icon mb-1"></i>
-                            <span class="seat-label fw-bold" style="font-size: 0.68rem;">{{ getBedLabel(bed) }}</span>
+                          <span class="small fw-bold text-dark">{{ cls.name }}</span>
+                          <div class="d-flex align-items-center gap-2">
+                            <span v-if="cls.empty > 0" class="badge bg-success fw-extrabold px-2 py-1" style="font-size: 0.78rem;">
+                              {{ cls.empty }} Kosong
+                            </span>
+                            <span v-else class="badge bg-secondary text-white fw-bold px-2 py-1" style="font-size: 0.72rem;">
+                              Penuh
+                            </span>
+                            <span class="text-muted small" style="font-size: 0.72rem;">({{ cls.occupied }}/{{ cls.total }})</span>
                           </div>
                         </div>
                       </div>
+                      <div v-else class="text-center py-3 text-muted small">
+                        Tidak ada unit aktif
+                      </div>
                     </div>
                     
-                    <div v-if="cinemaBedsGrouped.length === 0" class="text-center py-5 text-muted">
-                      <i class="fas fa-bed fa-2x mb-2"></i>
-                      <p class="m-0">Tidak ada tempat tidur pada kategori bangsal ini.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Detail Side Panel (Right Column) -->
-              <div class="col-xl-4 col-lg-5">
-                <div class="bed-detail-panel h-100 p-4 rounded-4 border">
-                  <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
-                    <i class="fas fa-info-circle me-2 text-primary"></i>Rincian Tempat Tidur
-                  </h6>
-                  
-                  <div v-if="selectedBedForDetail" class="detail-content animate-fade-in">
-                    <div class="mb-4 text-center">
-                      <div 
-                        class="detail-status-badge mb-2 d-inline-block py-1 px-3 rounded-pill fw-bold small"
-                        :class="selectedBedForDetail.status.toLowerCase()"
+                    <!-- Card Footer -->
+                    <div class="card-footer bg-white border-top-0 py-2 px-3 text-end">
+                      <button 
+                        class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-bold" 
+                        @click="switchToDenah(item.category)"
                       >
-                        {{ selectedBedForDetail.status === 'KOSONG' ? 'TERSEDIA' : selectedBedForDetail.status }}
-                      </div>
-                      <h5 class="fw-bold text-dark m-0">{{ selectedBedForDetail.bangsal?.nm_bangsal }}</h5>
-                      <p class="text-muted small m-0 mt-1">ID Kamar: {{ selectedBedForDetail.kd_kamar }}</p>
+                        Lihat Denah <i class="fas fa-arrow-right ms-1"></i>
+                      </button>
                     </div>
-
-                    <table class="table table-sm table-borderless detail-table">
-                      <tbody>
-                        <tr class="border-bottom">
-                          <td class="text-muted py-2 small">Kelas</td>
-                          <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kelas }}</td>
-                        </tr>
-                        <tr class="border-bottom">
-                          <td class="text-muted py-2 small">Tarif Tempat Tidur</td>
-                          <td class="fw-bold text-success text-end py-2 small">Rp {{ formatNumber(selectedBedForDetail.trf_kamar) }} / hari</td>
-                        </tr>
-                        <tr class="border-bottom">
-                          <td class="text-muted py-2 small">Kode Kamar</td>
-                          <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kd_kamar }}</td>
-                        </tr>
-                        <tr class="border-bottom">
-                          <td class="text-muted py-2 small">Kode Bangsal</td>
-                          <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kd_bangsal }}</td>
-                        </tr>
-                        <tr v-if="selectedBedForDetail.status === 'DIBOOKING'">
-                          <td class="text-muted py-2 small">Keterangan</td>
-                          <td class="fw-bold text-warning text-end py-2 small">Booking / Pasien Indent</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <!-- Placeholder when no bed selected -->
-                  <div v-else class="detail-placeholder d-flex flex-column align-items-center justify-content-center h-100 text-center py-5">
-                    <i class="fas fa-mouse-pointer fa-2x text-muted mb-3 animate-bounce"></i>
-                    <p class="text-muted small m-0">Sorot atau klik salah satu tempat tidur untuk melihat rincian.</p>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <!-- Legends Section -->
-            <div class="cinema-legend mt-4 pt-3 border-top d-flex flex-wrap gap-4 justify-content-center">
-              <div class="legend-item d-flex align-items-center gap-2">
-                <span class="legend-seat-box kosong"></span>
-                <span class="legend-text text-muted small">Tersedia (Kosong)</span>
+
+            <!-- Mode 2: Cinema Visual View -->
+            <div v-else class="cinema-view-container">
+              <!-- Wards Category Tabs -->
+              <div class="cinema-tabs-wrapper mb-4">
+                <div class="cinema-tabs">
+                  <button 
+                    v-for="cat in categories" 
+                    :key="cat"
+                    class="cinema-tab-btn"
+                    :class="{ active: activeBedTab === cat }"
+                    @click="activeBedTab = cat"
+                  >
+                    <span class="cat-name">{{ cat }}</span>
+                  </button>
+                </div>
               </div>
-              <div class="legend-item d-flex align-items-center gap-2">
-                <span class="legend-seat-box isi"></span>
-                <span class="legend-text text-muted small">Terisi</span>
+
+              <!-- Selected Category Summary Stats -->
+              <div class="active-category-summary mb-3 p-3 rounded-3 bg-light border d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="fas fa-hospital-user text-primary fs-5"></i>
+                  <div>
+                    <h6 class="m-0 fw-bold text-dark">Kategori {{ activeBedTab }}</h6>
+                    <small class="text-muted">Kapasitas aktif untuk unit terpilih</small>
+                  </div>
+                </div>
+                <div class="d-flex gap-4 flex-wrap">
+                  <div class="summary-stat-item">
+                    <span class="text-muted small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TOTAL KAPASITAS</span>
+                    <span class="fw-bold text-dark fs-5">{{ getCategoryTotalCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                  </div>
+                  <div class="summary-stat-item border-start ps-3">
+                    <span class="text-success small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TERSEDIA (KOSONG)</span>
+                    <span class="fw-bold text-success fs-5">{{ getCategoryEmptyCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                  </div>
+                  <div class="summary-stat-item border-start ps-3">
+                    <span class="text-secondary small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TERISI</span>
+                    <span class="fw-bold text-secondary fs-5">{{ getCategoryOccupiedCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                  </div>
+                  <div v-if="getCategoryBookedCount(activeBedTab) > 0" class="summary-stat-item border-start ps-3">
+                    <span class="text-warning small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">BOOKING / INDENT</span>
+                    <span class="fw-bold text-warning fs-5">{{ getCategoryBookedCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                  </div>
+                </div>
               </div>
-              <div class="legend-item d-flex align-items-center gap-2">
-                <span class="legend-seat-box dibooking"></span>
-                <span class="legend-text text-muted small">Booking (Indent)</span>
+
+              <!-- Main Layout Container -->
+              <div class="row g-4">
+                <!-- Cinema Map (Left Column) -->
+                <div class="col-xl-8 col-lg-7">
+                  <div class="cinema-room-container p-3 rounded-4 position-relative">
+                    <!-- Movie Screen Metaphor (Nursing Station) -->
+                    <div class="nursing-station-screen mb-3 text-center">
+                      <div class="screen-border mb-2"></div>
+                      <small class="screen-label text-muted fw-bold tracking-wider">NURSING STATION / KORIDOR UTAMA</small>
+                    </div>
+
+                    <!-- Seat Rows (Beds grouped by Class) -->
+                    <div class="cinema-grid d-flex flex-column gap-2">
+                      <div 
+                        v-for="group in cinemaBedsGrouped" 
+                        :key="group.kelas" 
+                        class="cinema-class-row d-flex flex-column flex-sm-row gap-2 align-items-sm-center border-bottom pb-2"
+                      >
+                        <div class="class-label-side fw-bold text-dark text-uppercase small" style="min-width: 100px;">
+                          {{ group.kelas }}
+                        </div>
+                        <div class="seats-row d-flex flex-wrap gap-1 flex-grow-1">
+                          <div 
+                            v-for="bed in group.beds" 
+                            :key="bed.kd_kamar"
+                            class="cinema-seat-wrapper"
+                            @click="selectBed(bed)"
+                          >
+                            <div 
+                              class="cinema-seat d-flex flex-column align-items-center justify-content-center p-2 rounded-3 text-center border cursor-pointer"
+                              :class="[
+                                bed.status.toLowerCase(),
+                                getClassSlug(bed.kelas),
+                                { 'selected': selectedBedForDetail?.kd_kamar === bed.kd_kamar }
+                              ]"
+                            >
+                              <i class="fas fa-bed seat-icon mb-1"></i>
+                              <span class="seat-label fw-bold" style="font-size: 0.68rem;">{{ getBedLabel(bed) }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div v-if="cinemaBedsGrouped.length === 0" class="text-center py-5 text-muted">
+                        <i class="fas fa-bed fa-2x mb-2"></i>
+                        <p class="m-0">Tidak ada tempat tidur pada kategori bangsal ini.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Detail Side Panel (Right Column) -->
+                <div class="col-xl-4 col-lg-5">
+                  <div class="bed-detail-panel h-100 p-4 rounded-4 border">
+                    <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
+                      <i class="fas fa-info-circle me-2 text-primary"></i>Rincian Tempat Tidur
+                    </h6>
+                    
+                    <div v-if="selectedBedForDetail" class="detail-content animate-fade-in">
+                      <div class="mb-4 text-center">
+                        <div 
+                          class="detail-status-badge mb-2 d-inline-block py-1 px-3 rounded-pill fw-bold small"
+                          :class="selectedBedForDetail.status.toLowerCase()"
+                        >
+                          {{ selectedBedForDetail.status === 'KOSONG' ? 'TERSEDIA' : selectedBedForDetail.status }}
+                        </div>
+                        <h5 class="fw-bold text-dark m-0">{{ selectedBedForDetail.bangsal?.nm_bangsal }}</h5>
+                        <p class="text-muted small m-0 mt-1">ID Kamar: {{ selectedBedForDetail.kd_kamar }}</p>
+                      </div>
+
+                      <table class="table table-sm table-borderless detail-table">
+                        <tbody>
+                          <tr class="border-bottom">
+                            <td class="text-muted py-2 small">Kelas</td>
+                            <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kelas }}</td>
+                          </tr>
+                          <tr class="border-bottom">
+                            <td class="text-muted py-2 small">Tarif Tempat Tidur</td>
+                            <td class="fw-bold text-success text-end py-2 small">Rp {{ formatNumber(selectedBedForDetail.trf_kamar) }} / hari</td>
+                          </tr>
+                          <tr class="border-bottom">
+                            <td class="text-muted py-2 small">Kode Kamar</td>
+                            <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kd_kamar }}</td>
+                          </tr>
+                          <tr class="border-bottom">
+                            <td class="text-muted py-2 small">Kode Bangsal</td>
+                            <td class="fw-bold text-dark text-end py-2 small">{{ selectedBedForDetail.kd_bangsal }}</td>
+                          </tr>
+                          <tr v-if="selectedBedForDetail.status === 'DIBOOKING'">
+                            <td class="text-muted py-2 small">Keterangan</td>
+                            <td class="fw-bold text-warning text-end py-2 small">Booking / Pasien Indent</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Placeholder when no bed selected -->
+                    <div v-else class="detail-placeholder d-flex flex-column align-items-center justify-content-center h-100 text-center py-5">
+                      <i class="fas fa-mouse-pointer fa-2x text-muted mb-3 animate-bounce"></i>
+                      <p class="text-muted small m-0">Sorot atau klik salah satu tempat tidur untuk melihat rincian.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="legend-separator border-start ps-3 d-flex gap-3 flex-wrap">
+              
+              <!-- Legends Section -->
+              <div class="cinema-legend mt-4 pt-3 border-top d-flex flex-wrap gap-4 justify-content-center">
                 <div class="legend-item d-flex align-items-center gap-2">
-                  <span class="legend-class-color vip"></span>
-                  <span class="legend-text text-muted small">VIP</span>
+                  <span class="legend-seat-box kosong"></span>
+                  <span class="legend-text text-muted small">Tersedia (Kosong)</span>
                 </div>
                 <div class="legend-item d-flex align-items-center gap-2">
-                  <span class="legend-class-color kelas-utama"></span>
-                  <span class="legend-text text-muted small">Utama</span>
+                  <span class="legend-seat-box isi"></span>
+                  <span class="legend-text text-muted small">Terisi</span>
                 </div>
                 <div class="legend-item d-flex align-items-center gap-2">
-                  <span class="legend-class-color kelas-1"></span>
-                  <span class="legend-text text-muted small">Kelas 1</span>
+                  <span class="legend-seat-box dibooking"></span>
+                  <span class="legend-text text-muted small">Booking (Indent)</span>
                 </div>
-                <div class="legend-item d-flex align-items-center gap-2">
-                  <span class="legend-class-color kelas-2"></span>
-                  <span class="legend-text text-muted small">Kelas 2</span>
-                </div>
-                <div class="legend-item d-flex align-items-center gap-2">
-                  <span class="legend-class-color kelas-3"></span>
-                  <span class="legend-text text-muted small">Kelas 3</span>
+                <div class="legend-separator border-start ps-3 d-flex gap-3 flex-wrap">
+                  <div class="legend-item d-flex align-items-center gap-2">
+                    <span class="legend-class-color vip"></span>
+                    <span class="legend-text text-muted small">VIP</span>
+                  </div>
+                  <div class="legend-item d-flex align-items-center gap-2">
+                    <span class="legend-class-color kelas-utama"></span>
+                    <span class="legend-text text-muted small">Utama</span>
+                  </div>
+                  <div class="legend-item d-flex align-items-center gap-2">
+                    <span class="legend-class-color kelas-1"></span>
+                    <span class="legend-text text-muted small">Kelas 1</span>
+                  </div>
+                  <div class="legend-item d-flex align-items-center gap-2">
+                    <span class="legend-class-color kelas-2"></span>
+                    <span class="legend-text text-muted small">Kelas 2</span>
+                  </div>
+                  <div class="legend-item d-flex align-items-center gap-2">
+                    <span class="legend-class-color kelas-3"></span>
+                    <span class="legend-text text-muted small">Kelas 3</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -704,11 +781,12 @@ import api from '../services/api'
 const router = useRouter()
 const authStore = useAuthStore()
 
-// Bed Availability (Cinema Layout)
+// Bed Availability (Cinema Layout & Compact Pendaftaran Matrix)
 const allBeds = ref([])
 const activeBedTab = ref('ANAK')
 const selectedBedForDetail = ref(null)
 const loadingBeds = ref(false)
+const viewMode = ref('compact') // Default view mode: 'compact' (Ringkasan Pendaftaran) or 'cinema' (Denah Visual)
 
 const categories = ['ANAK', 'KANDUNGAN', 'ICU/PICU/NICU', 'PERINATOLOGI', 'HCU', 'ISOLASI', 'KAMAR BERSALIN']
 
@@ -822,7 +900,59 @@ const cinemaBedsGrouped = computed(() => {
     kelas: cls,
     beds: grouped[cls].sort((a, b) => getBedLabel(a).localeCompare(getBedLabel(b), undefined, { numeric: true })),
     weight: getWeight(cls)
-  })).sort((a, b) => a.weight - b.weight)
+})
+
+const switchToDenah = (categoryName) => {
+  activeBedTab.value = categoryName
+  viewMode.value = 'cinema'
+}
+
+const allCategoriesMatrix = computed(() => {
+  return categories.map(cat => {
+    const beds = getCategoryBeds(cat)
+    const emptyCount = beds.filter(b => b.status === 'KOSONG').length
+    const occupiedCount = beds.filter(b => b.status === 'ISI').length
+    const totalCount = beds.length
+
+    const grouped = {}
+    beds.forEach(bed => {
+      const cls = bed.kelas || 'Lainnya'
+      if (!grouped[cls]) {
+        grouped[cls] = { empty: 0, occupied: 0, total: 0 }
+      }
+      grouped[cls].total++
+      if (bed.status === 'KOSONG') {
+        grouped[cls].empty++
+      } else {
+        grouped[cls].occupied++
+      }
+    })
+
+    const sortWeights = {
+      'Kelas VIP': 5,
+      'Kelas Utama': 10,
+      'Kelas 1': 20,
+      'Kelas 2': 30,
+      'Kelas 3': 40,
+      'Lainnya': 100
+    }
+
+    const classes = Object.keys(grouped).map(clsName => ({
+      name: clsName,
+      empty: grouped[clsName].empty,
+      occupied: grouped[clsName].occupied,
+      total: grouped[clsName].total,
+      weight: sortWeights[clsName] || 90
+    })).sort((a, b) => a.weight - b.weight)
+
+    return {
+      category: cat,
+      emptyCount,
+      occupiedCount,
+      totalCount,
+      classes
+    }
+  })
 })
 
 const fetchBedCinemaData = async () => {
@@ -1223,9 +1353,30 @@ onUnmounted(() => {
 
 
 <style scoped>
-/* Bed Cinema Section */
+/* Bed Cinema & Compact Matrix Section */
 .bed-cinema-section {
   width: 100%;
+}
+
+.bg-light-success {
+  background-color: #f0fdf4 !important;
+}
+
+.category-matrix-card {
+  transition: all 0.2s ease;
+}
+
+.category-matrix-card:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
+  transform: translateY(-2px);
+}
+
+.class-matrix-row {
+  transition: all 0.15s ease;
+}
+
+.class-matrix-row:hover {
+  filter: brightness(0.98);
 }
 
 .cinema-tabs-wrapper {
