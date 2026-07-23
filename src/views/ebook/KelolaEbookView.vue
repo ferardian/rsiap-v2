@@ -285,25 +285,25 @@
           <form @submit.prevent="saveEbook" class="d-flex flex-column" style="max-height: 80vh;">
             <div class="modal-body p-4 bg-white overflow-y-auto" style="flex: 1;">
               <div class="row g-3">
-                <!-- Tipe Dokumen (Mode Pill Switcher Light Putih) -->
+                <!-- Tipe Dokumen (Mode Pill Switcher High Contrast) -->
                 <div class="col-md-6">
                   <label class="form-label small fw-bold text-dark">Tipe Dokumen <span class="text-danger">*</span></label>
-                  <div class="p-1 bg-light rounded-pill border d-flex align-items-center gap-1" style="height: 42px;">
+                  <div class="p-1 rounded-pill border d-flex align-items-center gap-1" style="height: 44px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
                     <button 
                       type="button" 
                       class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
-                      :class="form.jenis === 'ebook' ? 'bg-white text-primary shadow-2sm' : 'text-secondary bg-transparent'" 
+                      :class="form.jenis === 'ebook' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'" 
                       @click="form.jenis = 'ebook'"
                     >
-                      <i class="fas fa-book text-primary"></i> E-Book
+                      <i class="fas fa-book" :class="form.jenis === 'ebook' ? 'text-white' : 'text-primary'"></i> E-Book
                     </button>
                     <button 
                       type="button" 
                       class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
-                      :class="form.jenis === 'jurnal' ? 'bg-white text-purple shadow-2sm' : 'text-secondary bg-transparent'" 
+                      :class="form.jenis === 'jurnal' ? 'btn-purple text-white shadow-sm' : 'text-secondary bg-transparent'" 
                       @click="form.jenis = 'jurnal'"
                     >
-                      <i class="fas fa-file-alt text-purple"></i> Jurnal Ilmiah
+                      <i class="fas fa-file-alt" :class="form.jenis === 'jurnal' ? 'text-white' : 'text-purple'"></i> Jurnal Ilmiah
                     </button>
                   </div>
                 </div>
