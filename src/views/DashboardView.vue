@@ -262,18 +262,18 @@
               <p class="text-muted small m-0 mt-1">Ringkasan ketersediaan kamar rawat inap per unit & kelas secara real-time.</p>
             </div>
             <div class="d-flex gap-2 align-items-center">
-              <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border">
+              <div class="btn-group p-1 bg-light rounded-pill border">
                 <button 
-                  class="btn rounded-pill px-3 py-1 fw-bold text-nowrap"
-                  style="font-size: 0.78rem; line-height: 1.25;"
+                  class="btn rounded-pill px-3 py-1.5 fw-bold text-nowrap"
+                  style="font-size: 0.85rem; line-height: 1.3;"
                   :class="viewMode === 'compact' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
                   @click="viewMode = 'compact'"
                 >
-                  <i class="fas fa-th-large me-1"></i>Ringkasan
+                  <i class="fas fa-th-large me-1"></i>Ringkasan Pendaftaran
                 </button>
                 <button 
-                  class="btn rounded-pill px-3 py-1 fw-bold text-nowrap"
-                  style="font-size: 0.78rem; line-height: 1.25;"
+                  class="btn rounded-pill px-3 py-1.5 fw-bold text-nowrap"
+                  style="font-size: 0.85rem; line-height: 1.3;"
                   :class="viewMode === 'cinema' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
                   @click="viewMode = 'cinema'"
                 >
