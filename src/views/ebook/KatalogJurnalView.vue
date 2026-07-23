@@ -92,23 +92,25 @@
         </div>
 
         <!-- View Mode Toggle -->
-        <div class="col-6 col-md-12 col-lg-2 d-flex justify-content-end">
-          <div class="btn-group p-1 bg-light rounded-pill border w-100" style="height: 42px;">
+        <div class="col-6 col-sm-auto col-lg-2 ms-auto d-flex justify-content-end">
+          <div class="btn-group p-1 bg-light rounded-pill border" style="height: 42px;">
             <button 
-              class="btn btn-sm rounded-pill flex-fill fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0"
+              class="btn btn-sm rounded-pill px-3 fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0 text-nowrap"
               :class="viewMode === 'grid' ? 'btn-purple text-white shadow-2sm' : 'text-secondary bg-transparent'"
               @click="viewMode = 'grid'"
+              title="Tampilan Cards"
             >
               <i class="fas fa-th-large"></i>
-              <span>Cards</span>
+              <span class="d-none d-sm-inline">Cards</span>
             </button>
             <button 
-              class="btn btn-sm rounded-pill flex-fill fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0"
+              class="btn btn-sm rounded-pill px-3 fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0 text-nowrap"
               :class="viewMode === 'list' ? 'btn-purple text-white shadow-2sm' : 'text-secondary bg-transparent'"
               @click="viewMode = 'list'"
+              title="Tampilan Tabel"
             >
               <i class="fas fa-list"></i>
-              <span>Tabel</span>
+              <span class="d-none d-sm-inline">Tabel</span>
             </button>
           </div>
         </div>
