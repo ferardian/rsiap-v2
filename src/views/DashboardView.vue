@@ -296,7 +296,7 @@
                     <div class="card-accent-bar" :class="getCategorySlug(item.category)"></div>
 
                     <!-- Card Header -->
-                    <div class="card-header bg-white border-0 pt-3 px-3 pb-2 d-flex justify-content-between align-items-center">
+                    <div class="card-header border-0 pt-3 px-3 pb-2 d-flex justify-content-between align-items-center" style="background: #ffffff !important; background-image: none !important;">
                       <div class="d-flex align-items-center gap-2">
                         <div class="cat-icon-avatar" :class="getCategorySlug(item.category)">
                           <i :class="getCategoryIcon(item.category)"></i>
@@ -1758,7 +1758,8 @@ onUnmounted(() => {
 }
 
 .category-matrix-card-modern .card-header {
-  background-color: #ffffff !important;
+  background: #ffffff !important;
+  background-image: none !important;
 }
 
 .category-matrix-card-modern:hover {
