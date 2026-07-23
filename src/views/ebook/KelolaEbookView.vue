@@ -808,7 +808,8 @@ const deleteCategory = async (cat) => {
 const getFileUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http://') || path.startsWith('https://')) return path
-  const baseUrl = config.public.BASE_URL.replace(/\/api\/v2\/?$/, '')
+  const apiV2Url = config?.public?.API_V2_URL || config?.public?.API_BASE_URL || ''
+  const baseUrl = apiV2Url.replace(/\/api\/v2\/?$/, '')
   return `${baseUrl}/storage/${path}`
 }
 
