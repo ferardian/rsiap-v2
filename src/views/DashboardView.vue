@@ -204,24 +204,24 @@
             <div class="row g-4">
               <!-- Cinema Map (Left Column) -->
               <div class="col-xl-8 col-lg-7">
-                <div class="cinema-room-container p-4 rounded-4 position-relative">
+                <div class="cinema-room-container p-3 rounded-4 position-relative">
                   <!-- Movie Screen Metaphor (Nursing Station) -->
-                  <div class="nursing-station-screen mb-5 text-center">
+                  <div class="nursing-station-screen mb-3 text-center">
                     <div class="screen-border mb-2"></div>
                     <small class="screen-label text-muted fw-bold tracking-wider">NURSING STATION / KORIDOR UTAMA</small>
                   </div>
 
                   <!-- Seat Rows (Beds grouped by Class) -->
-                  <div class="cinema-grid d-flex flex-column gap-4">
+                  <div class="cinema-grid d-flex flex-column gap-2">
                     <div 
                       v-for="group in cinemaBedsGrouped" 
                       :key="group.kelas" 
-                      class="cinema-class-row d-flex flex-column flex-sm-row gap-3 align-items-sm-center border-bottom pb-3"
+                      class="cinema-class-row d-flex flex-column flex-sm-row gap-2 align-items-sm-center border-bottom pb-2"
                     >
                       <div class="class-label-side fw-bold text-dark text-uppercase small" style="min-width: 100px;">
                         {{ group.kelas }}
                       </div>
-                      <div class="seats-row d-flex flex-wrap gap-2 flex-grow-1">
+                      <div class="seats-row d-flex flex-wrap gap-1 flex-grow-1">
                         <div 
                           v-for="bed in group.beds" 
                           :key="bed.kd_kamar"
@@ -1248,7 +1248,7 @@ onUnmounted(() => {
   background: #fafafb;
   border: 1px solid #f1f5f9;
   box-shadow: inset 0 2px 8px rgba(0,0,0,0.01);
-  min-height: 400px;
+  min-height: unset;
 }
 
 /* Movie Screen */
@@ -1276,7 +1276,7 @@ onUnmounted(() => {
 .seats-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
 .cinema-seat-wrapper {
