@@ -269,7 +269,7 @@
                   :class="viewMode === 'compact' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
                   @click="viewMode = 'compact'"
                 >
-                  <i class="fas fa-th-large me-1"></i>Ringkasan Pendaftaran
+                  <i class="fas fa-th-large me-1"></i>Ringkasan Kamar
                 </button>
                 <button 
                   class="btn rounded-pill px-3 py-1.5 fw-bold text-nowrap"
@@ -365,12 +365,14 @@
                     </div>
 
                     <!-- Card Footer -->
-                    <div class="card-footer bg-white border-0 py-2.5 px-3 text-center border-top border-light">
+                    <div class="card-footer bg-white border-0 p-3 pt-2 text-center">
                       <button 
-                        class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-bold btn-hover-arrow" 
+                        class="btn btn-sm btn-light-primary w-100 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-1.5 py-2 btn-denah-action" 
                         @click="switchToDenah(item.category)"
                       >
-                        Lihat Denah Visual <i class="fas fa-chevron-right ms-1 arrow-icon"></i>
+                        <i class="fas fa-map-marked-alt text-primary icon-map"></i>
+                        <span>Lihat Denah Visual</span>
+                        <i class="fas fa-arrow-right text-primary arrow-icon"></i>
                       </button>
                     </div>
                   </div>
@@ -1493,12 +1495,35 @@ onUnmounted(() => {
 .class-dot.kelas-3 { background-color: #0d9488; }
 .class-dot.other { background-color: #94a3b8; }
 
-/* Button hover arrow effect */
-.btn-hover-arrow .arrow-icon {
-  transition: transform 0.2s ease;
+/* Modern Action Button in Card Footer */
+.btn-light-primary {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+  font-size: 0.8rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-light-primary .icon-map,
+.btn-light-primary .arrow-icon {
+  transition: all 0.2s ease;
   display: inline-block;
 }
-.btn-hover-arrow:hover .arrow-icon {
+
+.btn-light-primary:hover {
+  background-color: #2563eb;
+  color: #ffffff !important;
+  border-color: #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-light-primary:hover .icon-map,
+.btn-light-primary:hover .arrow-icon {
+  color: #ffffff !important;
+}
+
+.btn-light-primary:hover .arrow-icon {
   transform: translateX(4px);
 }
 
