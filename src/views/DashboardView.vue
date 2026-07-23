@@ -829,51 +829,51 @@
             <button type="button" class="btn-close" @click="showClassLookupModal = false"></button>
           </div>
 
-          <!-- Modal Controls (Filter Tabs & Search Bar - Perfect Alignment) -->
-          <div class="modal-body bg-light border-bottom py-2.5 px-4">
+          <!-- Modal Controls (Filter Tabs & Search Bar - Pill Design) -->
+          <div class="modal-body bg-light border-bottom py-3 px-4">
             <div class="row g-2.5 align-items-center">
               <!-- Filter Tabs Container -->
               <div class="col-md-7">
-                <div class="d-flex align-items-center bg-white p-1 rounded-3 border shadow-2sm w-100" style="height: 40px; border-color: #cbd5e1 !important;">
+                <div class="p-1 rounded-pill border d-flex align-items-center gap-1 w-100 shadow-2sm" style="height: 42px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
                   <button 
-                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-2 transition-all"
-                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
-                    style="font-size: 0.78rem;"
+                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-3 border-0 transition-all"
+                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
+                    style="font-size: 0.8rem;"
                     @click="lookupFilterStatus = 'ALL'"
                   >
                     Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-2 transition-all"
-                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-2sm' : 'text-success border-0 bg-transparent'"
-                    style="font-size: 0.78rem;"
+                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-3 border-0 transition-all"
+                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm' : 'text-success bg-transparent'"
+                    style="font-size: 0.8rem;"
                     @click="lookupFilterStatus = 'KOSONG'"
                   >
-                    <span class="me-1">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
+                    <span class="me-1.5">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-2 transition-all"
-                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-2sm' : 'text-danger border-0 bg-transparent'"
-                    style="font-size: 0.78rem;"
+                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-3 border-0 transition-all"
+                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm' : 'text-danger bg-transparent'"
+                    style="font-size: 0.8rem;"
                     @click="lookupFilterStatus = 'ISI'"
                   >
-                    <span class="me-1">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
+                    <span class="me-1.5">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
                   </button>
                 </div>
               </div>
 
-              <!-- Search Bar Container (Identical 40px Height) -->
+              <!-- Search Bar Container (Rounded Pill Design) -->
               <div class="col-md-5">
-                <div class="input-group bg-white rounded-3 border shadow-2sm overflow-hidden" style="height: 40px; border-color: #cbd5e1 !important;">
-                  <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2"><i class="fas fa-search"></i></span>
+                <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 42px; border-color: #cbd5e1 !important;">
+                  <span class="input-group-text bg-white border-0 text-muted ps-3.5 pe-2"><i class="fas fa-search"></i></span>
                   <input 
                     v-model="lookupSearchQuery" 
                     type="text" 
                     class="form-control border-0 shadow-none h-100 ps-0 text-dark" 
-                    style="font-size: 0.8rem;"
+                    style="font-size: 0.82rem;"
                     placeholder="Cari no. bed / nama pasien / RM..."
                   />
-                  <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-2" @click="lookupSearchQuery = ''">
+                  <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-3" @click="lookupSearchQuery = ''">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -941,9 +941,9 @@
                   </div>
                 </div>
 
-                <!-- Patient Details Block (Inside Card) -->
-                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3.5 pb-3 pt-0">
-                  <div class="p-2.5 px-3 rounded-3 bg-light border overflow-hidden">
+                <!-- Patient Details Block (Inside Card with Padding Space) -->
+                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3.5 pb-3.5 pt-1">
+                  <div class="p-3 rounded-3 bg-light border overflow-hidden shadow-2sm">
                     <div class="row g-2.5 align-items-center">
                       <!-- Patient Avatar & Name -->
                       <div class="col-md-5 overflow-hidden">
@@ -990,10 +990,10 @@
                   </div>
                 </div>
 
-                <!-- Empty bed info -->
-                <div v-else-if="bed.status === 'KOSONG'" class="px-3.5 pb-3 pt-0">
-                  <div class="p-2 px-3 rounded-2 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle" style="font-size: 0.75rem;">
-                    <i class="fas fa-check-circle"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
+                <!-- Empty bed info (with Padding Space) -->
+                <div v-else-if="bed.status === 'KOSONG'" class="px-3.5 pb-3.5 pt-1">
+                  <div class="p-3 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.78rem; font-weight: 500;">
+                    <i class="fas fa-check-circle fs-6"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
                   </div>
                 </div>
               </div>
