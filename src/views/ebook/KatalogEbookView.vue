@@ -1,135 +1,135 @@
 <template>
   <div class="katalog-ebook-page p-3 p-md-4">
-    <!-- Header Hero Banner -->
-    <div class="hero-banner rounded-4 p-4 p-md-5 mb-4 position-relative overflow-hidden shadow-sm">
-      <div class="position-relative z-1 max-w-700">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="badge bg-white text-primary px-3 py-1.5 rounded-pill fw-bold shadow-sm" style="font-size: 0.75rem;">
+    <!-- Page Header -->
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.72rem;">
             <i class="fas fa-book-reader me-1"></i> E-Library RSIA
           </span>
-          <span class="badge bg-white-20 text-white px-3 py-1.5 rounded-pill fw-medium" style="font-size: 0.75rem;">
-            SDI & Educations
-          </span>
         </div>
-        <h2 class="fw-bold text-white mb-2 display-6">Katalog E-Book & Buku Digital</h2>
-        <p class="text-white-80 m-0 fs-6">
-          Akses panduan klinis, modul pelatihan, buku referensi medis, dan dokumen resmi RSIA secara digital.
+        <h4 class="page-title m-0 fw-bold text-dark">Katalog E-Book & Buku Digital</h4>
+        <p class="page-subtitle text-muted m-0 mt-1" style="font-size: 0.85rem;">
+          Jelajahi panduan klinis, modul pelatihan, dan buku referensi kesehatan digital RSIA.
         </p>
+      </div>
 
-        <!-- Search Bar Inside Banner -->
-        <div class="mt-4">
-          <div class="input-group input-group-lg bg-white rounded-pill p-1 shadow-lg border-0">
-            <span class="input-group-text bg-transparent border-0 text-muted ps-3.5">
-              <i class="fas fa-search fs-5 text-primary"></i>
+      <!-- Quick Summary Badges -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="px-3 py-2 bg-white rounded-3 border shadow-2sm d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+            <i class="fas fa-book fs-6"></i>
+          </div>
+          <div>
+            <div class="fw-bold text-dark leading-tight">{{ pagination.total || 0 }}</div>
+            <small class="text-muted" style="font-size: 0.7rem;">Total E-Book</small>
+          </div>
+        </div>
+
+        <div class="px-3 py-2 bg-white rounded-3 border shadow-2sm d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+            <i class="fas fa-layer-group fs-6"></i>
+          </div>
+          <div>
+            <div class="fw-bold text-dark leading-tight">{{ categories.length || 0 }}</div>
+            <small class="text-muted" style="font-size: 0.7rem;">Kategori</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Control Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+      <div class="row g-2.5 align-items-center">
+        <!-- Search Input -->
+        <div class="col-12 col-md-5 col-lg-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-muted rounded-start-pill ps-3.5" style="border-color: #cbd5e1; height: 42px;">
+              <i class="fas fa-search text-primary"></i>
             </span>
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="form-control bg-transparent border-0 shadow-none text-dark fs-6 ps-1" 
-              placeholder="Cari judul e-book, penulis, penerbit, atau kata kunci..."
+              class="form-control border-start-0 ps-0 shadow-none rounded-end-pill" 
+              style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;"
+              placeholder="Cari judul e-book, penulis, penerbit..."
               @keyup.enter="loadEbooks(1)"
             />
-            <button 
-              v-if="searchQuery" 
-              class="btn btn-link text-muted border-0 me-1" 
-              @click="searchQuery = ''; loadEbooks(1)"
-            >
+            <button v-if="searchQuery" class="btn btn-white border border-start-0 text-muted rounded-end-pill pe-3" style="border-color: #cbd5e1 !important; height: 42px;" @click="searchQuery = ''; loadEbooks(1)">
               <i class="fas fa-times"></i>
             </button>
-            <button 
-              class="btn btn-primary rounded-pill px-4 fw-bold d-flex align-items-center gap-2"
-              @click="loadEbooks(1)"
-            >
-              <span>Cari</span>
-              <i class="fas fa-arrow-right"></i>
-            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Banner Background Decorative Shapes -->
-      <div class="banner-decor-circle-1"></div>
-      <div class="banner-decor-circle-2"></div>
-    </div>
-
-    <!-- Filter & Control Toolbar -->
-    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <!-- Category Filter Pills (Horizontal Scrollable) -->
-        <div class="d-flex align-items-center gap-1.5 overflow-x-auto pb-1 max-w-100 scrollbar-hidden">
-          <button 
-            type="button" 
-            class="btn btn-sm rounded-pill fw-bold text-nowrap transition-all px-3 py-1.5"
-            :class="selectedKategori === '' ? 'btn-primary text-white shadow-2sm' : 'btn-light text-secondary border'"
-            @click="setKategori('')"
+        <!-- Category Dropdown -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <select 
+            v-model="selectedKategori" 
+            class="form-select rounded-pill border shadow-none bg-white px-3.5" 
+            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+            @change="loadEbooks(1)"
           >
-            Semua Kategori
-          </button>
-          <button 
-            v-for="cat in categories" 
-            :key="cat.id"
-            type="button" 
-            class="btn btn-sm rounded-pill fw-bold text-nowrap transition-all px-3 py-1.5"
-            :class="selectedKategori === String(cat.id) ? 'btn-primary text-white shadow-2sm' : 'btn-light text-secondary border'"
-            @click="setKategori(String(cat.id))"
-          >
-            <i :class="cat.icon || 'fas fa-bookmark'" class="me-1 opacity-75"></i>
-            {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
-          </button>
+            <option value="">Semua Kategori</option>
+            <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">
+              {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
+            </option>
+          </select>
         </div>
 
-        <!-- Right Side View Switcher & Sorting -->
-        <div class="d-flex align-items-center gap-2 ms-auto">
-          <!-- Sort Dropdown -->
-          <div class="dropdown">
-            <select v-model="sortBy" class="form-select form-select-sm rounded-pill border shadow-none bg-light px-3 py-1.5" style="font-size: 0.82rem;" @change="loadEbooks(1)">
-              <option value="terbaru">Terbaru</option>
-              <option value="terpopuler">Terpopuler (Views)</option>
-              <option value="judul_asc">Judul (A-Z)</option>
-              <option value="tahun_desc">Tahun Terbit</option>
-            </select>
-          </div>
+        <!-- Sort Select -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <select 
+            v-model="sortBy" 
+            class="form-select rounded-pill border shadow-none bg-white px-3" 
+            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+            @change="loadEbooks(1)"
+          >
+            <option value="terbaru">Terbaru</option>
+            <option value="terpopuler">Terpopuler</option>
+            <option value="judul_asc">Judul (A-Z)</option>
+            <option value="tahun_desc">Tahun Terbit</option>
+          </select>
+        </div>
 
-          <!-- Grid / List Switcher -->
-          <div class="btn-group p-1 bg-light rounded-pill border">
+        <!-- View Mode Toggle -->
+        <div class="col-6 col-md-12 col-lg-2 d-flex justify-content-end">
+          <div class="btn-group p-1 bg-light rounded-pill border w-100" style="height: 42px;">
             <button 
-              class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
-              style="width: 32px; height: 32px;"
-              :class="viewMode === 'grid' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              class="btn btn-sm rounded-pill flex-fill fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0"
+              :class="viewMode === 'grid' ? 'btn-primary text-white shadow-2sm' : 'text-secondary bg-transparent'"
               @click="viewMode = 'grid'"
-              title="Tampilan Grid"
             >
-              <i class="fas fa-th-large" style="font-size: 0.85rem;"></i>
+              <i class="fas fa-th-large"></i>
+              <span>Grid</span>
             </button>
             <button 
-              class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
-              style="width: 32px; height: 32px;"
-              :class="viewMode === 'list' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              class="btn btn-sm rounded-pill flex-fill fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0"
+              :class="viewMode === 'list' ? 'btn-primary text-white shadow-2sm' : 'text-secondary bg-transparent'"
               @click="viewMode = 'list'"
-              title="Tampilan Daftar"
             >
-              <i class="fas fa-list" style="font-size: 0.85rem;"></i>
+              <i class="fas fa-list"></i>
+              <span>Tabel</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- E-Book Grid / List Content -->
+    <!-- E-Book Content -->
     <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+      <div class="spinner-border text-primary mb-2" role="status" style="width: 2rem; height: 2rem;">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <p class="text-muted small">Memuat katalog e-book...</p>
+      <p class="text-muted small m-0">Memuat katalog e-book...</p>
     </div>
 
     <div v-else-if="ebookList && ebookList.length > 0">
       <!-- Mode Grid -->
-      <div v-if="viewMode === 'grid'" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      <div v-if="viewMode === 'grid'" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3.5">
         <div v-for="item in ebookList" :key="item.id" class="col">
-          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden ebook-card position-relative transition-all">
+          <div class="card h-100 border rounded-4 overflow-hidden ebook-card bg-white transition-all shadow-2sm">
             <!-- Cover Container -->
-            <div class="ebook-cover-wrapper position-relative bg-light overflow-hidden d-flex align-items-center justify-content-center">
+            <div class="ebook-cover-box bg-light border-bottom position-relative overflow-hidden d-flex align-items-center justify-content-center">
               <img 
                 v-if="item.cover" 
                 :src="getFileUrl(item.cover)" 
@@ -137,65 +137,57 @@
                 class="ebook-cover-img"
                 @error="onImageError"
               />
-              <div v-else class="text-center p-4 text-primary opacity-75">
-                <i class="fas fa-book fa-4x mb-2"></i>
-                <div class="small fw-bold text-uppercase opacity-50">{{ item.kategori?.nama_kategori || 'E-Book' }}</div>
+              <div v-else class="text-center p-3 text-primary opacity-60">
+                <i class="fas fa-book fa-3x mb-1"></i>
+                <div class="small fw-bold text-uppercase" style="font-size: 0.68rem;">{{ item.kategori?.nama_kategori || 'E-Book' }}</div>
               </div>
 
-              <!-- Top Left Category Badge -->
-              <span class="position-absolute top-0 start-0 m-2.5 badge bg-dark-50 backdrop-blur text-white px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+              <!-- Badges -->
+              <span class="position-absolute top-0 start-0 m-2 badge bg-primary text-white px-2.5 py-1 rounded-pill fw-bold shadow-2sm" style="font-size: 0.68rem;">
                 {{ item.kategori?.nama_kategori || 'Umum' }}
               </span>
 
-              <!-- Top Right Views Counter -->
-              <span class="position-absolute top-0 end-0 m-2.5 badge bg-white-80 backdrop-blur text-dark border px-2 py-1 rounded-pill fw-bold shadow-2sm" style="font-size: 0.7rem;">
+              <span class="position-absolute top-0 end-0 m-2 badge bg-white text-dark border px-2 py-1 rounded-pill fw-bold shadow-2sm" style="font-size: 0.68rem;">
                 <i class="fas fa-eye text-primary me-1"></i> {{ item.views_count || 0 }}
               </span>
-
-              <!-- Hover Overlay Button -->
-              <div class="ebook-cover-overlay d-flex align-items-center justify-content-center gap-2 p-3">
-                <button 
-                  class="btn btn-light rounded-circle shadow-lg d-flex align-items-center justify-content-center"
-                  style="width: 44px; height: 44px;"
-                  @click="openPdfViewer(item)"
-                  title="Baca / Pratinjau PDF"
-                >
-                  <i class="fas fa-eye text-primary fs-5"></i>
-                </button>
-                <a 
-                  v-if="item.file_pdf" 
-                  :href="getFileUrl(item.file_pdf)" 
-                  target="_blank" 
-                  download 
-                  class="btn btn-light rounded-circle shadow-lg d-flex align-items-center justify-content-center text-success"
-                  style="width: 44px; height: 44px;"
-                  title="Unduh PDF"
-                >
-                  <i class="fas fa-download fs-5"></i>
-                </a>
-              </div>
             </div>
 
             <!-- Card Body Info -->
-            <div class="card-body p-3.5 d-flex flex-column justify-content-between">
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
               <div>
-                <h6 class="fw-bold text-dark mb-1 text-clamp-2 line-height-sm" :title="item.judul" style="font-size: 0.95rem;">
+                <h6 class="fw-bold text-dark mb-1 text-clamp-2" :title="item.judul" style="font-size: 0.88rem; line-height: 1.35;">
                   {{ item.judul }}
                 </h6>
-                <p class="text-muted small mb-2 text-truncate" style="font-size: 0.78rem;">
+                <p class="text-muted small mb-2 text-truncate" style="font-size: 0.76rem;">
                   <i class="fas fa-user-edit me-1 text-secondary opacity-50"></i>
                   {{ item.penulis || 'Penulis Tidak Disebutkan' }}
                 </p>
               </div>
 
-              <!-- Meta Footer Info -->
-              <div class="pt-2 border-top d-flex align-items-center justify-content-between text-muted" style="font-size: 0.73rem;">
-                <span>
-                  <i class="fas fa-building me-1"></i> {{ item.penerbit || '-' }}
-                </span>
-                <span class="fw-bold text-dark">
-                  <i class="fas fa-calendar-alt me-1 text-primary"></i> {{ item.tahun_terbit || '-' }}
-                </span>
+              <div class="pt-2.5 border-top d-flex align-items-center justify-content-between">
+                <small class="text-muted text-truncate me-1" style="font-size: 0.72rem;">
+                  <i class="fas fa-building me-1 opacity-50"></i>{{ item.penerbit || '-' }}
+                </small>
+                
+                <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                  <button 
+                    class="btn-action-btn btn-action-pdf rounded-circle border-0 d-flex align-items-center justify-content-center transition-all"
+                    @click="openPdfViewer(item)"
+                    title="Baca / Pratinjau PDF"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                  <a 
+                    v-if="item.file_pdf"
+                    :href="getFileUrl(item.file_pdf)"
+                    target="_blank"
+                    download
+                    class="btn-action-btn btn-action-edit rounded-circle border-0 d-flex align-items-center justify-content-center transition-all"
+                    title="Unduh PDF"
+                  >
+                    <i class="fas fa-download"></i>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -209,12 +201,12 @@
             <thead class="bg-light text-secondary border-bottom">
               <tr style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
                 <th class="ps-4 py-3" style="width: 50px;">No</th>
-                <th class="py-3" style="width: 60px;">Cover</th>
+                <th class="py-3" style="width: 50px;">Cover</th>
                 <th class="py-3">Judul & Penulis</th>
                 <th class="py-3">Kategori</th>
                 <th class="py-3">Penerbit & Tahun</th>
                 <th class="py-3 text-center">Dibaca</th>
-                <th class="py-3 text-center" style="width: 120px;">Aksi</th>
+                <th class="py-3 text-center" style="width: 110px;">Aksi</th>
               </tr>
             </thead>
             <tbody style="font-size: 0.85rem;">
@@ -223,7 +215,7 @@
                   {{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}
                 </td>
                 <td>
-                  <div class="rounded-2 bg-light overflow-hidden d-flex align-items-center justify-content-center border" style="width: 40px; height: 52px;">
+                  <div class="rounded-2 bg-light overflow-hidden d-flex align-items-center justify-content-center border" style="width: 36px; height: 46px;">
                     <img v-if="item.cover" :src="getFileUrl(item.cover)" class="w-100 h-100 object-fit-cover" />
                     <i v-else class="fas fa-book text-primary opacity-75"></i>
                   </div>
@@ -312,15 +304,14 @@
     <!-- Empty State -->
     <div v-else class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
       <i class="fas fa-book-open fa-3x text-muted opacity-50 mb-3"></i>
-      <h5 class="fw-bold text-dark mb-1">E-Book Tidak Ditemukan</h5>
-      <p class="text-muted small m-0">Tidak ada dokumen e-book yang cocok dengan filter atau kata kunci pencarian Anda.</p>
+      <h6 class="fw-bold text-dark mb-1">E-Book Tidak Ditemukan</h6>
+      <p class="text-muted small m-0">Tidak ada e-book yang cocok dengan filter atau pencarian Anda.</p>
     </div>
 
     <!-- Modal Interactive PDF Reader -->
-    <div v-if="showPdfModal" class="modal fade show d-block backdrop-blur-bg" tabindex="-1" style="background: rgba(0, 0, 0, 0.65); z-index: 1065;">
-      <div class="modal-dialog modal-xl modal-dialog-centered h-90vh my-auto">
+    <div v-if="showPdfModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.65); z-index: 1065;">
+      <div class="modal-dialog modal-xl modal-dialog-centered" style="height: 88vh;">
         <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden h-100 d-flex flex-column">
-          <!-- Modal Header -->
           <div class="modal-header bg-white border-bottom py-2.5 px-4 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2.5 overflow-hidden me-3">
               <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill fw-bold text-nowrap" style="font-size: 0.72rem;">
@@ -345,7 +336,6 @@
             </div>
           </div>
 
-          <!-- Modal Body PDF Frame -->
           <div class="modal-body p-0 flex-grow-1 bg-dark position-relative">
             <iframe 
               v-if="activeItem?.file_pdf" 
@@ -369,7 +359,6 @@ import { ref, onMounted } from 'vue'
 import { ebookService } from '@/services/ebookService'
 import config from '@/config/api'
 
-// Reactive States
 const loading = ref(false)
 const ebookList = ref([])
 const categories = ref([])
@@ -378,7 +367,6 @@ const searchQuery = ref('')
 const sortBy = ref('terbaru')
 const viewMode = ref('grid')
 
-// Pagination
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -386,11 +374,9 @@ const pagination = ref({
   total: 0
 })
 
-// Modal PDF Reader
 const showPdfModal = ref(false)
 const activeItem = ref(null)
 
-// Methods
 const loadCategories = async () => {
   try {
     const res = await ebookService.getCategories()
@@ -408,7 +394,7 @@ const loadEbooks = async (page = 1) => {
     const params = {
       page,
       per_page: pagination.value.per_page,
-      jenis: 'ebook', // Strictly filter for E-Book
+      jenis: 'ebook',
       kategori_id: selectedKategori.value || undefined,
       search: searchQuery.value || undefined,
       sort: sortBy.value
@@ -427,15 +413,9 @@ const loadEbooks = async (page = 1) => {
   }
 }
 
-const setKategori = (catId) => {
-  selectedKategori.value = catId
-  loadEbooks(1)
-}
-
 const openPdfViewer = async (item) => {
   activeItem.value = item
   showPdfModal.value = true
-  // Increment view counter on server
   try {
     await ebookService.incrementView(item.id)
     item.views_count = (item.views_count || 0) + 1
@@ -447,19 +427,15 @@ const openPdfViewer = async (item) => {
 const getFileUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http://') || path.startsWith('https://')) return path
-
   const apiV2Url = config?.public?.API_V2_URL || config?.public?.API_BASE_URL || ''
-
   if (path.startsWith('ebook/pdf/')) {
     const filename = path.replace('ebook/pdf/', '')
     return `${apiV2Url}/sdi/ebook/file/${filename}`
   }
-
   if (path.startsWith('ebook/cover/')) {
     const filename = path.replace('ebook/cover/', '')
     return `${apiV2Url}/sdi/ebook/cover/${filename}`
   }
-
   const baseUrl = apiV2Url.replace(/\/api\/v2\/?$/, '')
   return `${baseUrl}/storage/${path}`
 }
@@ -475,62 +451,39 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hero-banner {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #0284c7 100%);
+.page-header {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
 }
 
-.max-w-700 { max-width: 700px; }
-.max-w-100 { max-width: 100%; }
-
-.banner-decor-circle-1 {
+.page-header::before {
+  content: '';
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-}
-
-.banner-decor-circle-2 {
-  position: absolute;
-  bottom: -60px;
-  right: 120px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  pointer-events: none;
-}
-
-.bg-white-20 { background: rgba(255, 255, 255, 0.2); }
-.bg-white-80 { background: rgba(255, 255, 255, 0.85); }
-.bg-dark-50 { background: rgba(15, 23, 42, 0.65); }
-
-.backdrop-blur {
-  backdrop-filter: blur(8px);
-}
-
-.scrollbar-hidden::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hidden {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 1rem 0 0 1rem;
 }
 
 .ebook-card {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-color: #edf2f7 !important;
 }
 
 .ebook-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08) !important;
+  border-color: #bfdbfe !important;
 }
 
-.ebook-cover-wrapper {
-  height: 220px;
+.ebook-cover-box {
+  height: 180px;
   width: 100%;
 }
 
@@ -538,27 +491,11 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 }
 
 .ebook-card:hover .ebook-cover-img {
-  transform: scale(1.05);
-}
-
-.ebook-cover-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.ebook-card:hover .ebook-cover-overlay {
-  opacity: 1;
+  transform: scale(1.04);
 }
 
 .text-clamp-2 {
@@ -568,19 +505,12 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.line-height-sm {
-  line-height: 1.3;
-}
-
-.h-90vh {
-  height: 88vh;
-}
-
 .btn-action-btn {
   width: 32px;
   height: 32px;
   font-size: 0.82rem;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .btn-action-btn:hover {

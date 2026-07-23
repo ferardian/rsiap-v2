@@ -1,193 +1,195 @@
 <template>
   <div class="katalog-jurnal-page p-3 p-md-4">
-    <!-- Header Hero Banner (Purple Scientific Theme) -->
-    <div class="hero-banner-jurnal rounded-4 p-4 p-md-5 mb-4 position-relative overflow-hidden shadow-sm">
-      <div class="position-relative z-1 max-w-700">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="badge bg-white text-purple px-3 py-1.5 rounded-pill fw-bold shadow-sm" style="font-size: 0.75rem;">
+    <!-- Page Header (Clean White Theme with Purple Accent) -->
+    <div class="page-header page-header-purple d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-purple-subtle text-purple border border-purple-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.72rem;">
             <i class="fas fa-microscope me-1"></i> Scientific Publication
           </span>
-          <span class="badge bg-white-20 text-white px-3 py-1.5 rounded-pill fw-medium" style="font-size: 0.75rem;">
-            Jurnal Medis & Riset RSIA
-          </span>
         </div>
-        <h2 class="fw-bold text-white mb-2 display-6">Katalog Jurnal & Artikel Ilmiah</h2>
-        <p class="text-white-80 m-0 fs-6">
-          Kumpulan artikel ilmiah, riset kesehatan, studi kasus klinis, dan jurnal akreditasi medis RSIA.
+        <h4 class="page-title m-0 fw-bold text-dark">Katalog Jurnal & Artikel Ilmiah</h4>
+        <p class="page-subtitle text-muted m-0 mt-1" style="font-size: 0.85rem;">
+          Kumpulan artikel ilmiah, riset kesehatan, dan publikasi jurnal akreditasi medis RSIA.
         </p>
+      </div>
 
-        <!-- Search Bar Inside Banner -->
-        <div class="mt-4">
-          <div class="input-group input-group-lg bg-white rounded-pill p-1 shadow-lg border-0">
-            <span class="input-group-text bg-transparent border-0 text-muted ps-3.5">
-              <i class="fas fa-search fs-5 text-purple"></i>
+      <!-- Quick Summary Badges -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="px-3 py-2 bg-white rounded-3 border shadow-2sm d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-purple-subtle text-purple d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+            <i class="fas fa-file-alt fs-6"></i>
+          </div>
+          <div>
+            <div class="fw-bold text-dark leading-tight">{{ pagination.total || 0 }}</div>
+            <small class="text-muted" style="font-size: 0.7rem;">Total Artikel</small>
+          </div>
+        </div>
+
+        <div class="px-3 py-2 bg-white rounded-3 border shadow-2sm d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+            <i class="fas fa-layer-group fs-6"></i>
+          </div>
+          <div>
+            <div class="fw-bold text-dark leading-tight">{{ categories.length || 0 }}</div>
+            <small class="text-muted" style="font-size: 0.7rem;">Bidang Jurnal</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Control Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+      <div class="row g-2.5 align-items-center">
+        <!-- Search Input -->
+        <div class="col-12 col-md-5 col-lg-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-muted rounded-start-pill ps-3.5" style="border-color: #cbd5e1; height: 42px;">
+              <i class="fas fa-search text-purple"></i>
             </span>
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="form-control bg-transparent border-0 shadow-none text-dark fs-6 ps-1" 
-              placeholder="Cari judul jurnal, abstrak, penulis, ISSN, atau nomor edisi..."
+              class="form-control border-start-0 ps-0 shadow-none rounded-end-pill" 
+              style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;"
+              placeholder="Cari judul artikel, penulis, ISSN, atau edisi..."
               @keyup.enter="loadJurnals(1)"
             />
-            <button 
-              v-if="searchQuery" 
-              class="btn btn-link text-muted border-0 me-1" 
-              @click="searchQuery = ''; loadJurnals(1)"
-            >
+            <button v-if="searchQuery" class="btn btn-white border border-start-0 text-muted rounded-end-pill pe-3" style="border-color: #cbd5e1 !important; height: 42px;" @click="searchQuery = ''; loadJurnals(1)">
               <i class="fas fa-times"></i>
             </button>
-            <button 
-              class="btn btn-purple rounded-pill px-4 fw-bold text-white d-flex align-items-center gap-2"
-              @click="loadJurnals(1)"
-            >
-              <span>Cari Jurnal</span>
-              <i class="fas fa-arrow-right"></i>
-            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Banner Background Decorative Shapes -->
-      <div class="banner-decor-circle-1"></div>
-      <div class="banner-decor-circle-2"></div>
-    </div>
-
-    <!-- Filter & Control Toolbar -->
-    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <!-- Category Filter Pills -->
-        <div class="d-flex align-items-center gap-1.5 overflow-x-auto pb-1 max-w-100 scrollbar-hidden">
-          <button 
-            type="button" 
-            class="btn btn-sm rounded-pill fw-bold text-nowrap transition-all px-3 py-1.5"
-            :class="selectedKategori === '' ? 'btn-purple text-white shadow-2sm' : 'btn-light text-secondary border'"
-            @click="setKategori('')"
+        <!-- Category Dropdown -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <select 
+            v-model="selectedKategori" 
+            class="form-select rounded-pill border shadow-none bg-white px-3.5" 
+            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+            @change="loadJurnals(1)"
           >
-            Semua Bidang Jurnal
-          </button>
-          <button 
-            v-for="cat in categories" 
-            :key="cat.id"
-            type="button" 
-            class="btn btn-sm rounded-pill fw-bold text-nowrap transition-all px-3 py-1.5"
-            :class="selectedKategori === String(cat.id) ? 'btn-purple text-white shadow-2sm' : 'btn-light text-secondary border'"
-            @click="setKategori(String(cat.id))"
-          >
-            <i :class="cat.icon || 'fas fa-file-alt'" class="me-1 opacity-75"></i>
-            {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
-          </button>
+            <option value="">Semua Bidang Jurnal</option>
+            <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">
+              {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
+            </option>
+          </select>
         </div>
 
-        <!-- Right Side View Switcher & Sorting -->
-        <div class="d-flex align-items-center gap-2 ms-auto">
-          <!-- Sort Dropdown -->
-          <div class="dropdown">
-            <select v-model="sortBy" class="form-select form-select-sm rounded-pill border shadow-none bg-light px-3 py-1.5" style="font-size: 0.82rem;" @change="loadJurnals(1)">
-              <option value="terbaru">Terbaru</option>
-              <option value="terpopuler">Terpopuler (Views)</option>
-              <option value="judul_asc">Judul (A-Z)</option>
-              <option value="tahun_desc">Tahun Terbit</option>
-            </select>
-          </div>
+        <!-- Sort Select -->
+        <div class="col-6 col-md-3 col-lg-2">
+          <select 
+            v-model="sortBy" 
+            class="form-select rounded-pill border shadow-none bg-white px-3" 
+            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+            @change="loadJurnals(1)"
+          >
+            <option value="terbaru">Terbaru</option>
+            <option value="terpopuler">Terpopuler</option>
+            <option value="judul_asc">Judul (A-Z)</option>
+            <option value="tahun_desc">Tahun Terbit</option>
+          </select>
+        </div>
 
-          <!-- Grid / List Switcher -->
-          <div class="btn-group p-1 bg-light rounded-pill border">
+        <!-- View Mode Toggle -->
+        <div class="col-6 col-md-12 col-lg-2 d-flex justify-content-end">
+          <div class="btn-group p-1 bg-light rounded-pill border w-100" style="height: 42px;">
             <button 
-              class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
-              style="width: 32px; height: 32px;"
-              :class="viewMode === 'grid' ? 'btn-purple text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              class="btn btn-sm rounded-pill flex-fill fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0"
+              :class="viewMode === 'grid' ? 'btn-purple text-white shadow-2sm' : 'text-secondary bg-transparent'"
               @click="viewMode = 'grid'"
-              title="Tampilan Cards"
             >
-              <i class="fas fa-th-large" style="font-size: 0.85rem;"></i>
+              <i class="fas fa-th-large"></i>
+              <span>Cards</span>
             </button>
             <button 
-              class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
-              style="width: 32px; height: 32px;"
-              :class="viewMode === 'list' ? 'btn-purple text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              class="btn btn-sm rounded-pill flex-fill fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0"
+              :class="viewMode === 'list' ? 'btn-purple text-white shadow-2sm' : 'text-secondary bg-transparent'"
               @click="viewMode = 'list'"
-              title="Tampilan Tabel"
             >
-              <i class="fas fa-list" style="font-size: 0.85rem;"></i>
+              <i class="fas fa-list"></i>
+              <span>Tabel</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Jurnal Grid / List Content -->
+    <!-- Jurnal Content -->
     <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-purple mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+      <div class="spinner-border text-purple mb-2" role="status" style="width: 2rem; height: 2rem;">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <p class="text-muted small">Memuat katalog jurnal...</p>
+      <p class="text-muted small m-0">Memuat katalog jurnal...</p>
     </div>
 
     <div v-else-if="jurnalList && jurnalList.length > 0">
       <!-- Mode Grid -->
-      <div v-if="viewMode === 'grid'" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      <div v-if="viewMode === 'grid'" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3.5">
         <div v-for="item in jurnalList" :key="item.id" class="col">
-          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden jurnal-card position-relative transition-all bg-white">
-            <!-- Top Accent Line -->
+          <div class="card h-100 border rounded-4 overflow-hidden jurnal-card bg-white transition-all shadow-2sm">
+            <!-- Purple Top Accent Line -->
             <div class="jurnal-top-bar"></div>
 
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div class="card-body p-3.5 d-flex flex-column justify-content-between">
               <div>
-                <!-- Category & Views Header -->
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                  <span class="badge bg-purple-subtle text-purple border border-purple-subtle px-3 py-1 rounded-pill fw-bold" style="font-size: 0.72rem;">
-                    <i class="fas fa-file-alt me-1"></i> {{ item.kategori?.nama_kategori || 'Jurnal' }}
+                <!-- Header Category & View Count -->
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2.5">
+                  <span class="badge bg-purple-subtle text-purple border border-purple-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.72rem;">
+                    {{ item.kategori?.nama_kategori || 'Jurnal' }}
                   </span>
-                  <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill fw-bold" style="font-size: 0.72rem;">
+                  <span class="badge bg-light text-dark border px-2 py-1 rounded-pill fw-bold" style="font-size: 0.7rem;">
                     <i class="fas fa-eye text-purple me-1"></i> {{ item.views_count || 0 }} Dibaca
                   </span>
                 </div>
 
-                <!-- Title & Authors -->
-                <h6 class="fw-bold text-dark mb-2 text-clamp-2 line-height-sm" :title="item.judul" style="font-size: 1rem;">
+                <!-- Article Title -->
+                <h6 class="fw-bold text-dark mb-1.5 text-clamp-2" :title="item.judul" style="font-size: 0.92rem; line-height: 1.35;">
                   {{ item.judul }}
                 </h6>
 
-                <div class="text-muted small mb-3 text-truncate" style="font-size: 0.8rem;">
-                  <i class="fas fa-user-friends me-1 text-purple opacity-75"></i>
-                  <strong>Penulis:</strong> {{ item.penulis || 'Tim Peneliti RSIA' }}
-                </div>
+                <!-- Author Info -->
+                <p class="text-muted small mb-2.5 text-truncate" style="font-size: 0.78rem;">
+                  <i class="fas fa-user-edit me-1 text-purple opacity-60"></i>
+                  {{ item.penulis || 'Penulis Tidak Disebutkan' }}
+                </p>
 
-                <!-- Publication Metadata Pills -->
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                  <span v-if="item.isbn_issn" class="badge bg-light text-secondary border font-monospace px-2.5 py-1 rounded-2" style="font-size: 0.7rem;">
+                <!-- ISSN & Year Meta Badges -->
+                <div class="d-flex flex-wrap gap-1.5 mb-3">
+                  <span v-if="item.isbn_issn" class="badge bg-light text-secondary border font-monospace px-2 py-0.5 rounded" style="font-size: 0.68rem;">
                     ISSN: {{ item.isbn_issn }}
                   </span>
-                  <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-2" style="font-size: 0.7rem;">
-                    <i class="fas fa-calendar-alt me-1 text-secondary"></i> {{ item.tahun_terbit || '-' }}
-                  </span>
-                  <span v-if="item.penerbit" class="badge bg-light text-secondary border px-2.5 py-1 rounded-2" style="font-size: 0.7rem;">
-                    <i class="fas fa-building me-1 text-secondary"></i> {{ item.penerbit }}
+                  <span class="badge bg-light text-secondary border px-2 py-0.5 rounded" style="font-size: 0.68rem;">
+                    <i class="fas fa-calendar-alt me-1 opacity-50"></i>{{ item.tahun_terbit || '-' }}
                   </span>
                 </div>
               </div>
 
-              <!-- Action Footer Buttons -->
-              <div class="pt-3 border-top d-flex align-items-center gap-2">
-                <button 
-                  class="btn btn-purple text-white btn-sm rounded-pill flex-fill fw-bold py-2 d-flex align-items-center justify-content-center gap-1.5 shadow-2sm"
-                  @click="openPdfViewer(item)"
-                >
-                  <i class="fas fa-file-pdf"></i>
-                  <span>Baca Jurnal</span>
-                </button>
+              <!-- Footer Buttons -->
+              <div class="pt-2.5 border-top d-flex align-items-center justify-content-between">
+                <small class="text-muted text-truncate me-2" style="font-size: 0.72rem;">
+                  <i class="fas fa-building me-1 opacity-50"></i>{{ item.penerbit || '-' }}
+                </small>
 
-                <a 
-                  v-if="item.file_pdf"
-                  :href="getFileUrl(item.file_pdf)"
-                  target="_blank"
-                  download
-                  class="btn btn-light-purple btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-purple shadow-2sm"
-                  style="width: 36px; height: 36px;"
-                  title="Unduh Berkas PDF"
-                >
-                  <i class="fas fa-download" style="font-size: 0.85rem;"></i>
-                </a>
+                <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                  <button 
+                    class="btn-action-btn btn-action-purple rounded-circle border-0 d-flex align-items-center justify-content-center transition-all"
+                    @click="openPdfViewer(item)"
+                    title="Baca / Pratinjau Jurnal"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                  <a 
+                    v-if="item.file_pdf"
+                    :href="getFileUrl(item.file_pdf)"
+                    target="_blank"
+                    download
+                    class="btn-action-btn btn-action-edit rounded-circle border-0 d-flex align-items-center justify-content-center transition-all"
+                    title="Unduh Berkas PDF"
+                  >
+                    <i class="fas fa-download"></i>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -205,7 +207,7 @@
                 <th class="py-3">Bidang Jurnal</th>
                 <th class="py-3">ISSN & Penerbit</th>
                 <th class="py-3 text-center">Dibaca</th>
-                <th class="py-3 text-center" style="width: 140px;">Aksi</th>
+                <th class="py-3 text-center" style="width: 110px;">Aksi</th>
               </tr>
             </thead>
             <tbody style="font-size: 0.85rem;">
@@ -298,15 +300,14 @@
     <!-- Empty State -->
     <div v-else class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
       <i class="fas fa-microscope fa-3x text-muted opacity-50 mb-3"></i>
-      <h5 class="fw-bold text-dark mb-1">Artikel Jurnal Tidak Ditemukan</h5>
+      <h6 class="fw-bold text-dark mb-1">Artikel Jurnal Tidak Ditemukan</h6>
       <p class="text-muted small m-0">Tidak ada jurnal ilmiah yang cocok dengan filter atau kata kunci pencarian Anda.</p>
     </div>
 
     <!-- Modal Interactive PDF Reader -->
-    <div v-if="showPdfModal" class="modal fade show d-block backdrop-blur-bg" tabindex="-1" style="background: rgba(0, 0, 0, 0.65); z-index: 1065;">
-      <div class="modal-dialog modal-xl modal-dialog-centered h-90vh my-auto">
+    <div v-if="showPdfModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.65); z-index: 1065;">
+      <div class="modal-dialog modal-xl modal-dialog-centered" style="height: 88vh;">
         <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden h-100 d-flex flex-column">
-          <!-- Modal Header -->
           <div class="modal-header bg-white border-bottom py-2.5 px-4 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2.5 overflow-hidden me-3">
               <span class="badge bg-purple-subtle text-purple border border-purple-subtle px-2.5 py-1 rounded-pill fw-bold text-nowrap" style="font-size: 0.72rem;">
@@ -331,7 +332,6 @@
             </div>
           </div>
 
-          <!-- Modal Body PDF Frame -->
           <div class="modal-body p-0 flex-grow-1 bg-dark position-relative">
             <iframe 
               v-if="activeItem?.file_pdf" 
@@ -355,7 +355,6 @@ import { ref, onMounted } from 'vue'
 import { ebookService } from '@/services/ebookService'
 import config from '@/config/api'
 
-// Reactive States
 const loading = ref(false)
 const jurnalList = ref([])
 const categories = ref([])
@@ -364,7 +363,6 @@ const searchQuery = ref('')
 const sortBy = ref('terbaru')
 const viewMode = ref('grid')
 
-// Pagination
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -372,11 +370,9 @@ const pagination = ref({
   total: 0
 })
 
-// Modal PDF Reader
 const showPdfModal = ref(false)
 const activeItem = ref(null)
 
-// Methods
 const loadCategories = async () => {
   try {
     const res = await ebookService.getCategories()
@@ -394,7 +390,7 @@ const loadJurnals = async (page = 1) => {
     const params = {
       page,
       per_page: pagination.value.per_page,
-      jenis: 'jurnal', // Strictly filter for Jurnal
+      jenis: 'jurnal',
       kategori_id: selectedKategori.value || undefined,
       search: searchQuery.value || undefined,
       sort: sortBy.value
@@ -413,15 +409,9 @@ const loadJurnals = async (page = 1) => {
   }
 }
 
-const setKategori = (catId) => {
-  selectedKategori.value = catId
-  loadJurnals(1)
-}
-
 const openPdfViewer = async (item) => {
   activeItem.value = item
   showPdfModal.value = true
-  // Increment view counter on server
   try {
     await ebookService.incrementView(item.id)
     item.views_count = (item.views_count || 0) + 1
@@ -433,19 +423,15 @@ const openPdfViewer = async (item) => {
 const getFileUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http://') || path.startsWith('https://')) return path
-
   const apiV2Url = config?.public?.API_V2_URL || config?.public?.API_BASE_URL || ''
-
   if (path.startsWith('ebook/pdf/')) {
     const filename = path.replace('ebook/pdf/', '')
     return `${apiV2Url}/sdi/ebook/file/${filename}`
   }
-
   if (path.startsWith('ebook/cover/')) {
     const filename = path.replace('ebook/cover/', '')
     return `${apiV2Url}/sdi/ebook/cover/${filename}`
   }
-
   const baseUrl = apiV2Url.replace(/\/api\/v2\/?$/, '')
   return `${baseUrl}/storage/${path}`
 }
@@ -457,63 +443,40 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.hero-banner-jurnal {
-  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #9333ea 100%);
+.page-header {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
 }
 
-.max-w-700 { max-width: 700px; }
-.max-w-100 { max-width: 100%; }
+.page-header-purple::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #7c3aed 0%, #4c1d95 100%);
+  border-radius: 1rem 0 0 1rem;
+}
 
 .text-purple { color: #7c3aed !important; }
-.bg-purple { background-color: #7c3aed !important; }
-.btn-purple { background-color: #7c3aed !important; border-color: #7c3aed !important; }
+.btn-purple { background-color: #7c3aed !important; border-color: #7c3aed !important; color: #ffffff !important; }
 .btn-purple:hover { background-color: #6d28d9 !important; border-color: #6d28d9 !important; }
-.btn-light-purple { background-color: #f5f3ff !important; }
-.btn-light-purple:hover { background-color: #7c3aed !important; color: #ffffff !important; }
-
 .bg-purple-subtle { background-color: #f5f3ff !important; }
 .border-purple-subtle { border-color: #ddd6fe !important; }
 
-.banner-decor-circle-1 {
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-}
-
-.banner-decor-circle-2 {
-  position: absolute;
-  bottom: -60px;
-  right: 120px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  pointer-events: none;
-}
-
-.bg-white-20 { background: rgba(255, 255, 255, 0.2); }
-
-.scrollbar-hidden::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hidden {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
 .jurnal-card {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid #edf2f7 !important;
+  border-color: #edf2f7 !important;
 }
 
 .jurnal-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px -8px rgba(124, 58, 237, 0.15) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(124, 58, 237, 0.12) !important;
   border-color: #ddd6fe !important;
 }
 
@@ -530,19 +493,12 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.line-height-sm {
-  line-height: 1.35;
-}
-
-.h-90vh {
-  height: 88vh;
-}
-
 .btn-action-btn {
   width: 32px;
   height: 32px;
   font-size: 0.82rem;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .btn-action-btn:hover {
