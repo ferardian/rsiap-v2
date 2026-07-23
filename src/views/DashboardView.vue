@@ -896,7 +896,7 @@
                 :class="bed.status === 'KOSONG' ? 'is-available-card' : 'is-occupied-card'"
               >
                 <!-- Bed Header Info (Spacious & Clean Spacing) -->
-                <div class="p-3 px-3.5 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
                   <div class="d-flex align-items-center gap-3">
                     <div 
                       class="bed-number-pill rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm"
@@ -942,7 +942,7 @@
                 </div>
 
                 <!-- Patient Details Block (Inside Card with Padding Space) -->
-                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3.5 pb-3.5 pt-1">
+                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3 pb-3 pt-0">
                   <div class="p-3 rounded-3 bg-light border overflow-hidden shadow-2sm">
                     <div class="row g-2.5 align-items-center">
                       <!-- Patient Avatar & Name -->
@@ -991,7 +991,7 @@
                 </div>
 
                 <!-- Empty bed info (with Padding Space) -->
-                <div v-else-if="bed.status === 'KOSONG'" class="px-3.5 pb-3.5 pt-1">
+                <div v-else-if="bed.status === 'KOSONG'" class="px-3 pb-3 pt-0">
                   <div class="p-3 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.78rem; font-weight: 500;">
                     <i class="fas fa-check-circle fs-6"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
                   </div>
