@@ -411,15 +411,29 @@
 
           <div class="modal-body p-4 bg-white" style="max-height: 65vh; overflow-y: auto;">
             <!-- Form Tambah Kategori -->
-            <form class="p-3 rounded-3 bg-light border mb-4" @submit.prevent="saveCategory">
-              <h6 class="fw-bold text-dark mb-2.5 small text-uppercase">Tambah Kategori Baru</h6>
-              <div class="row g-2">
+            <form class="rounded-4 bg-light border mb-4" style="padding: 1.25rem !important;" @submit.prevent="saveCategory">
+              <label class="fw-bold text-dark mb-2 small text-uppercase d-block" style="letter-spacing: 0.04em;">Tambah Kategori Baru</label>
+              <div class="row g-2 align-items-center">
                 <div class="col-8">
-                  <input v-model="newCategoryName" type="text" class="form-control form-control-sm rounded-2 shadow-none" placeholder="Nama Kategori (contoh: Farmasi)" required />
+                  <input 
+                    v-model="newCategoryName" 
+                    type="text" 
+                    class="form-control rounded-3 border shadow-none bg-white" 
+                    placeholder="Nama Kategori (contoh: Farmasi)" 
+                    style="height: 38px; font-size: 0.85rem;"
+                    required 
+                  />
                 </div>
                 <div class="col-4">
-                  <button type="submit" class="btn btn-sm btn-primary w-100 rounded-2 fw-bold" :disabled="submittingCategory">
-                    <i class="fas fa-plus me-1"></i> Tambah
+                  <button 
+                    type="submit" 
+                    class="btn btn-primary w-100 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-1.5" 
+                    style="height: 38px; font-size: 0.85rem;"
+                    :disabled="submittingCategory"
+                  >
+                    <i v-if="submittingCategory" class="fas fa-spinner fa-spin"></i>
+                    <i v-else class="fas fa-plus"></i>
+                    Tambah
                   </button>
                 </div>
               </div>
