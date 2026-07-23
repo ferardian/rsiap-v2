@@ -164,6 +164,93 @@
         </div>
       </section>
 
+      <!-- 
+        Combined Mood & Sentiment Section 
+        Side-by-side layout for high-level metrics and individual updates
+      -->
+      <section class="mood-analytics-combined-section">
+        <div class="mood-analytics-wrapper">
+          <!-- Summary Side -->
+          <div class="mood-summary-side">
+            <div class="quick-stat-card mood-card analytic-mood-card">
+              <div class="card-glass-overlay"></div>
+              
+              <div class="stat-header-main">
+                <div class="mood-icon-bg">
+                  <i class="fas fa-heart"></i>
+                </div>
+                <div class="mood-badge-premium" v-if="dashboardStats.mood?.total > 0">
+                  {{ dashboardStats.mood?.baik_pct }}%
+                </div>
+              </div>
+
+              <div class="stat-content-premium">
+                <h3 class="sentiment-value">{{ dashboardStats.mood?.baik || 0 }}</h3>
+                <p class="sentiment-label">Pegawai Bersemangat</p>
+                
+                <div class="sentiment-progress-container">
+                  <!-- Progress Bar for Bersemangat (Baik) -->
+                  <div class="progress-segment-label">
+                    <span>Bersemangat</span>
+                    <span>{{ dashboardStats.mood?.baik_pct }}%</span>
+                  </div>
+                  <div class="premium-progress-bar">
+                    <div class="progress-fill positive" :style="{ width: (dashboardStats.mood?.baik_pct || 0) + '%' }"></div>
+                  </div>
+
+                  <!-- Progress Bar for Oke -->
+                  <div class="progress-segment-label">
+                    <span>Oke</span>
+                    <span>{{ dashboardStats.mood?.oke_pct }}%</span>
+                  </div>
+                  <div class="premium-progress-bar">
+                    <div class="progress-fill neutral" :style="{ width: (dashboardStats.mood?.oke_pct || 0) + '%' }"></div>
+                  </div>
+
+                  <!-- Progress Bar for Perlu Support -->
+                  <div class="progress-segment-label">
+                    <span>Perlu Support</span>
+                    <span>{{ dashboardStats.mood?.perlu_support_pct || 0 }}%</span>
+                  </div>
+                  <div class="premium-progress-bar">
+                    <div class="progress-fill negative" :style="{ width: (dashboardStats.mood?.perlu_support_pct || 0) + '%' }"></div>
+                  </div>
+                </div>
+
+                <div class="mood-indicators-premium">
+                  <div class="indicator-chip energy" title="Energi rata-rata">
+                    <div class="chip-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="chip-text">
+                      <span class="chip-val">{{ dashboardStats.mood?.avg_energi || 0 }}</span>
+                      <span class="chip-lbl">Energy</span>
+                    </div>
+                  </div>
+                  <div class="indicator-chip focus" title="Fokus rata-rata">
+                    <div class="chip-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="chip-text">
+                      <span class="chip-val">{{ dashboardStats.mood?.avg_fokus || 0 }}</span>
+                      <span class="chip-lbl">Focus</span>
+                    </div>
+                  </div>
+                  <div class="indicator-chip stress" title="Stress rata-rata">
+                    <div class="chip-icon"><i class="fas fa-brain"></i></div>
+                    <div class="chip-text">
+                      <span class="chip-val">{{ dashboardStats.mood?.avg_stres || 0 }}</span>
+                      <span class="chip-lbl">Stress</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slider Side -->
+          <div class="mood-slider-side">
+            <MoodSlider />
+          </div>
+        </div>
+      </section>
+
       <!-- Bed Availability (Cinema Seat Selection Layout) -->
       <section class="bed-cinema-section mb-4">
         <div class="card border-0 shadow-sm panel-card">
@@ -368,93 +455,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 
-        Combined Mood & Sentiment Section 
-        Side-by-side layout for high-level metrics and individual updates
-      -->
-      <section class="mood-analytics-combined-section">
-        <div class="mood-analytics-wrapper">
-          <!-- Summary Side -->
-          <div class="mood-summary-side">
-            <div class="quick-stat-card mood-card analytic-mood-card">
-              <div class="card-glass-overlay"></div>
-              
-              <div class="stat-header-main">
-                <div class="mood-icon-bg">
-                  <i class="fas fa-heart"></i>
-                </div>
-                <div class="mood-badge-premium" v-if="dashboardStats.mood?.total > 0">
-                  {{ dashboardStats.mood?.baik_pct }}%
-                </div>
-              </div>
-
-              <div class="stat-content-premium">
-                <h3 class="sentiment-value">{{ dashboardStats.mood?.baik || 0 }}</h3>
-                <p class="sentiment-label">Pegawai Bersemangat</p>
-                
-                <div class="sentiment-progress-container">
-                  <!-- Progress Bar for Bersemangat (Baik) -->
-                  <div class="progress-segment-label">
-                    <span>Bersemangat</span>
-                    <span>{{ dashboardStats.mood?.baik_pct }}%</span>
-                  </div>
-                  <div class="premium-progress-bar">
-                    <div class="progress-fill positive" :style="{ width: (dashboardStats.mood?.baik_pct || 0) + '%' }"></div>
-                  </div>
-
-                  <!-- Progress Bar for Oke -->
-                  <div class="progress-segment-label">
-                    <span>Oke</span>
-                    <span>{{ dashboardStats.mood?.oke_pct }}%</span>
-                  </div>
-                  <div class="premium-progress-bar">
-                    <div class="progress-fill neutral" :style="{ width: (dashboardStats.mood?.oke_pct || 0) + '%' }"></div>
-                  </div>
-
-                  <!-- Progress Bar for Perlu Support -->
-                  <div class="progress-segment-label">
-                    <span>Perlu Support</span>
-                    <span>{{ dashboardStats.mood?.perlu_support_pct || 0 }}%</span>
-                  </div>
-                  <div class="premium-progress-bar">
-                    <div class="progress-fill negative" :style="{ width: (dashboardStats.mood?.perlu_support_pct || 0) + '%' }"></div>
-                  </div>
-                </div>
-
-                <div class="mood-indicators-premium">
-                  <div class="indicator-chip energy" title="Energi rata-rata">
-                    <div class="chip-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="chip-text">
-                      <span class="chip-val">{{ dashboardStats.mood?.avg_energi || 0 }}</span>
-                      <span class="chip-lbl">Energy</span>
-                    </div>
-                  </div>
-                  <div class="indicator-chip focus" title="Fokus rata-rata">
-                    <div class="chip-icon"><i class="fas fa-bullseye"></i></div>
-                    <div class="chip-text">
-                      <span class="chip-val">{{ dashboardStats.mood?.avg_fokus || 0 }}</span>
-                      <span class="chip-lbl">Focus</span>
-                    </div>
-                  </div>
-                  <div class="indicator-chip stress" title="Stress rata-rata">
-                    <div class="chip-icon"><i class="fas fa-brain"></i></div>
-                    <div class="chip-text">
-                      <span class="chip-val">{{ dashboardStats.mood?.avg_stres || 0 }}</span>
-                      <span class="chip-lbl">Stress</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Slider Side -->
-          <div class="mood-slider-side">
-            <MoodSlider />
           </div>
         </div>
       </section>
