@@ -77,35 +77,43 @@
     <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
       <div class="row g-2.5 align-items-center">
         <!-- Jenis Filter Pills -->
-        <div class="col-md-4">
-          <div class="btn-group p-1 bg-light rounded-3 border w-100">
+        <div class="col-md-5 col-lg-4">
+          <div class="p-1 rounded-pill border d-flex align-items-center gap-1 w-100" style="height: 42px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
             <button 
-              class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap py-1.5" 
-              :class="selectedJenis === '' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              type="button" 
+              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0" 
+              :class="selectedJenis === '' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
               @click="setJenis('')"
             >
               Semua
             </button>
             <button 
-              class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap py-1.5" 
-              :class="selectedJenis === 'ebook' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              type="button" 
+              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0" 
+              :class="selectedJenis === 'ebook' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
               @click="setJenis('ebook')"
             >
-              📘 E-Book
+              <i class="fas fa-book" :class="selectedJenis === 'ebook' ? 'text-white' : 'text-primary'"></i> E-Book
             </button>
             <button 
-              class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap py-1.5" 
-              :class="selectedJenis === 'jurnal' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
+              type="button" 
+              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0" 
+              :class="selectedJenis === 'jurnal' ? 'btn-purple text-white shadow-sm' : 'text-secondary bg-transparent'"
               @click="setJenis('jurnal')"
             >
-              📜 Jurnal
+              <i class="fas fa-file-alt" :class="selectedJenis === 'jurnal' ? 'text-white' : 'text-purple'"></i> Jurnal
             </button>
           </div>
         </div>
 
         <!-- Category Dropdown -->
         <div class="col-md-3">
-          <select v-model="selectedKategori" class="form-select form-select-sm rounded-3 border shadow-none" @change="loadEbooks(1)">
+          <select 
+            v-model="selectedKategori" 
+            class="form-select rounded-pill border shadow-none bg-white px-3.5" 
+            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+            @change="loadEbooks(1)"
+          >
             <option value="">Semua Kategori</option>
             <option v-for="cat in categories" :key="cat.id" :value="cat.id">
               {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
@@ -114,17 +122,20 @@
         </div>
 
         <!-- Search Input -->
-        <div class="col-md-5">
-          <div class="input-group input-group-sm">
-            <span class="input-group-text bg-white border-end-0 text-muted rounded-start-3"><i class="fas fa-search"></i></span>
+        <div class="col-md-4 col-lg-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-muted rounded-start-pill ps-3.5" style="border-color: #cbd5e1; height: 42px;">
+              <i class="fas fa-search"></i>
+            </span>
             <input 
               v-model="searchQuery" 
               type="text" 
-              class="form-control border-start-0 ps-0 shadow-none rounded-end-3" 
+              class="form-control border-start-0 ps-0 shadow-none rounded-end-pill" 
+              style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;"
               placeholder="Cari judul, penulis, penerbit, ISBN/ISSN..."
               @keyup.enter="loadEbooks(1)"
             />
-            <button v-if="searchQuery" class="btn btn-outline-secondary border-start-0" @click="searchQuery = ''; loadEbooks(1)">
+            <button v-if="searchQuery" class="btn btn-white border border-start-0 text-muted rounded-end-pill pe-3" style="border-color: #cbd5e1 !important; height: 42px;" @click="searchQuery = ''; loadEbooks(1)">
               <i class="fas fa-times"></i>
             </button>
           </div>
