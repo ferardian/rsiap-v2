@@ -252,34 +252,36 @@
       </div>
 
       <!-- Pagination Footer -->
-      <div v-if="pagination.total > 0" class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div v-if="pagination.total > 0" class="card-footer bg-white border-top py-2.5 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div class="small text-muted">
           Menampilkan <span class="fw-bold text-dark">{{ (pagination.current_page - 1) * pagination.per_page + 1 }}</span> - <span class="fw-bold text-dark">{{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}</span> dari <span class="fw-bold text-dark">{{ pagination.total }}</span> dokumen
         </div>
 
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-1.5">
           <button 
-            class="btn btn-sm btn-light border rounded-pill px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5 text-secondary shadow-2sm" 
+            class="btn btn-sm btn-light border rounded-circle p-0 d-flex align-items-center justify-content-center text-secondary shadow-2sm" 
+            style="width: 32px; height: 32px;"
             :disabled="pagination.current_page === 1" 
+            title="Halaman Sebelumnya"
             @click="loadEbooks(pagination.current_page - 1)"
           >
-            <i class="fas fa-chevron-left" style="font-size: 0.72rem;"></i>
-            <span>Sebelumnya</span>
+            <i class="fas fa-chevron-left" style="font-size: 0.75rem;"></i>
           </button>
 
-          <div class="px-3 py-1 bg-light rounded-pill border small fw-bold text-dark text-nowrap d-inline-flex align-items-center gap-1">
+          <div class="px-3 py-1 bg-light rounded-pill border small fw-bold text-dark text-nowrap d-inline-flex align-items-center gap-1" style="height: 32px;">
             <span class="text-primary">{{ pagination.current_page }}</span>
             <span class="text-muted opacity-50">/</span>
             <span>{{ pagination.last_page }}</span>
           </div>
 
           <button 
-            class="btn btn-sm btn-light border rounded-pill px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5 text-secondary shadow-2sm" 
+            class="btn btn-sm btn-light border rounded-circle p-0 d-flex align-items-center justify-content-center text-secondary shadow-2sm" 
+            style="width: 32px; height: 32px;"
             :disabled="pagination.current_page === pagination.last_page" 
+            title="Halaman Selanjutnya"
             @click="loadEbooks(pagination.current_page + 1)"
           >
-            <span>Selanjutnya</span>
-            <i class="fas fa-chevron-right" style="font-size: 0.72rem;"></i>
+            <i class="fas fa-chevron-right" style="font-size: 0.75rem;"></i>
           </button>
         </div>
       </div>
