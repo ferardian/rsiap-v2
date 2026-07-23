@@ -123,7 +123,7 @@
       <p class="text-muted small">Memuat katalog jurnal...</p>
     </div>
 
-    <div v-else-if="jurnalList.length > 0">
+    <div v-else-if="jurnalList && jurnalList.length > 0">
       <!-- Mode Grid -->
       <div v-if="viewMode === 'grid'" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         <div v-for="item in jurnalList" :key="item.id" class="col">
@@ -401,12 +401,9 @@ const loadJurnals = async (page = 1) => {
     }
     const res = await ebookService.getEbooks(params)
     if (res.data.success) {
-      jurnalList.value = res.data.data.data
-      pagination.value = {
-        current_page: res.data.data.current_page,
-        last_page: res.data.data.last_page,
-        per_page: res.data.data.per_page,
-        total: res.data.data.total
+      jurnalList.value = res.data.data || []
+      if (res.data.pagination) {
+        pagination.value = res.data.pagination
       }
     }
   } catch (err) {
