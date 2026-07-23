@@ -829,51 +829,51 @@
             <button type="button" class="btn-close" @click="showClassLookupModal = false"></button>
           </div>
 
-          <!-- Modal Controls (Filter Tabs & Search Bar) -->
-          <div class="modal-body bg-light border-bottom py-3 px-4">
-            <div class="row g-2 align-items-center">
-              <!-- Segmented Control Filter Tabs -->
+          <!-- Modal Controls (Filter Tabs & Search Bar - Perfect Alignment) -->
+          <div class="modal-body bg-light border-bottom py-2.5 px-4">
+            <div class="row g-2.5 align-items-center">
+              <!-- Filter Tabs Container -->
               <div class="col-md-7">
-                <div class="btn-group p-1 bg-white rounded-3 border shadow-sm w-100">
+                <div class="d-flex align-items-center bg-white p-1 rounded-3 border shadow-2sm w-100" style="height: 40px; border-color: #cbd5e1 !important;">
                   <button 
-                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap py-1.5"
-                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
+                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-2 transition-all"
+                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-2sm' : 'text-secondary border-0 bg-transparent'"
                     style="font-size: 0.78rem;"
                     @click="lookupFilterStatus = 'ALL'"
                   >
                     Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap py-1.5"
-                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm' : 'btn-light text-success border-0'"
+                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-2 transition-all"
+                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-2sm' : 'text-success border-0 bg-transparent'"
                     style="font-size: 0.78rem;"
                     @click="lookupFilterStatus = 'KOSONG'"
                   >
-                    🟢 Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
+                    <span class="me-1">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap py-1.5"
-                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm' : 'btn-light text-danger border-0'"
+                    class="btn btn-sm rounded-2 flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-2 transition-all"
+                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-2sm' : 'text-danger border-0 bg-transparent'"
                     style="font-size: 0.78rem;"
                     @click="lookupFilterStatus = 'ISI'"
                   >
-                    🔴 Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
+                    <span class="me-1">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
                   </button>
                 </div>
               </div>
 
-              <!-- Search Bar -->
+              <!-- Search Bar Container (Identical 40px Height) -->
               <div class="col-md-5">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                <div class="input-group bg-white rounded-3 border shadow-2sm overflow-hidden" style="height: 40px; border-color: #cbd5e1 !important;">
+                  <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2"><i class="fas fa-search"></i></span>
                   <input 
                     v-model="lookupSearchQuery" 
                     type="text" 
-                    class="form-control border-start-0 ps-0 shadow-none" 
+                    class="form-control border-0 shadow-none h-100 ps-0 text-dark" 
                     style="font-size: 0.8rem;"
                     placeholder="Cari no. bed / nama pasien / RM..."
                   />
-                  <button v-if="lookupSearchQuery" class="btn btn-outline-secondary border-start-0" @click="lookupSearchQuery = ''">
+                  <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-2" @click="lookupSearchQuery = ''">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
