@@ -793,7 +793,7 @@ const selectedBedForDetail = ref(null)
 const loadingBeds = ref(false)
 const viewMode = ref('compact') // Default view mode: 'compact' (Ringkasan Pendaftaran) or 'cinema' (Denah Visual)
 
-const categories = ['ANAK', 'KANDUNGAN', 'ICU/PICU/NICU', 'PERINATOLOGI', 'HCU', 'ISOLASI', 'KAMAR BERSALIN']
+const categories = ['ANAK', 'KANDUNGAN', 'ICU/PICU/NICU', 'PERINATOLOGI', 'ISOLASI', 'KAMAR BERSALIN']
 
 const getBedCategory = (bed) => {
   const nmBangsal = (bed.bangsal?.nm_bangsal || bed.kd_bangsal || '').toUpperCase()
