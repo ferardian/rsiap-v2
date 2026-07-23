@@ -188,18 +188,41 @@
                 <button 
                   v-for="cat in categories" 
                   :key="cat"
-                  class="cinema-tab-btn d-flex align-items-center"
+                  class="cinema-tab-btn"
                   :class="{ active: activeBedTab === cat }"
                   @click="activeBedTab = cat"
                 >
                   <span class="cat-name">{{ cat }}</span>
-                  <span class="badge bg-success ms-2 px-2 py-1" style="font-size: 0.7rem; font-weight: 800;">
-                    K: {{ getCategoryEmptyCount(cat) }}
-                  </span>
-                  <span class="badge bg-secondary ms-1 px-2 py-1" style="font-size: 0.7rem; font-weight: 800;">
-                    I: {{ getCategoryOccupiedCount(cat) }}
-                  </span>
                 </button>
+              </div>
+            </div>
+
+            <!-- Selected Category Summary Stats -->
+            <div class="active-category-summary mb-3 p-3 rounded-3 bg-light border d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-hospital-user text-primary fs-5"></i>
+                <div>
+                  <h6 class="m-0 fw-bold text-dark">Kategori {{ activeBedTab }}</h6>
+                  <small class="text-muted">Kapasitas aktif untuk unit terpilih</small>
+                </div>
+              </div>
+              <div class="d-flex gap-4 flex-wrap">
+                <div class="summary-stat-item">
+                  <span class="text-muted small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TOTAL KAPASITAS</span>
+                  <span class="fw-bold text-dark fs-5">{{ getCategoryTotalCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                </div>
+                <div class="summary-stat-item border-start ps-3">
+                  <span class="text-success small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TERSEDIA (KOSONG)</span>
+                  <span class="fw-bold text-success fs-5">{{ getCategoryEmptyCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                </div>
+                <div class="summary-stat-item border-start ps-3">
+                  <span class="text-secondary small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">TERISI</span>
+                  <span class="fw-bold text-secondary fs-5">{{ getCategoryOccupiedCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                </div>
+                <div v-if="getCategoryBookedCount(activeBedTab) > 0" class="summary-stat-item border-start ps-3">
+                  <span class="text-warning small d-block" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">BOOKING / INDENT</span>
+                  <span class="fw-bold text-warning fs-5">{{ getCategoryBookedCount(activeBedTab) }} <span class="text-muted" style="font-size: 0.75rem; font-weight: normal;">Bed</span></span>
+                </div>
               </div>
             </div>
 
