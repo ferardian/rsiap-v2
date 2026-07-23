@@ -824,7 +824,19 @@ const deleteCategory = async (cat) => {
 const getFileUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http://') || path.startsWith('https://')) return path
+
   const apiV2Url = config?.public?.API_V2_URL || config?.public?.API_BASE_URL || ''
+
+  if (path.startsWith('ebook/pdf/')) {
+    const filename = path.replace('ebook/pdf/', '')
+    return `${apiV2Url}/sdi/ebook/file/${filename}`
+  }
+
+  if (path.startsWith('ebook/cover/')) {
+    const filename = path.replace('ebook/cover/', '')
+    return `${apiV2Url}/sdi/ebook/cover/${filename}`
+  }
+
   const baseUrl = apiV2Url.replace(/\/api\/v2\/?$/, '')
   return `${baseUrl}/storage/${path}`
 }
