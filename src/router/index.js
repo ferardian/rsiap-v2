@@ -263,6 +263,20 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/e-book/katalog',
+    alias: '/sdi/e-book/katalog',
+    name: 'KatalogEbook',
+    component: () => import('../views/ebook/KatalogEbookView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/e-book/jurnal',
+    alias: '/sdi/e-book/jurnal',
+    name: 'KatalogJurnal',
+    component: () => import('../views/ebook/KatalogJurnalView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/diklat/dashboard',
     name: 'DiklatDashboard',
     component: () => import('../views/sdi/DiklatDashboardView.vue'),

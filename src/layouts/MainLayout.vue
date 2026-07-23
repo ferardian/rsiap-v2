@@ -102,6 +102,8 @@ const currentPageTitle = computed(() => {
     '/diklat/karyawan': 'SDI > Diklat Karyawan',
     '/diklat/kegiatan': 'SDI > Diklat Kegiatan',
     '/e-book/kelola': 'SDI > Kelola E-Book & Jurnal',
+    '/e-book/katalog': 'E-Book > Katalog E-Book',
+    '/e-book/jurnal': 'E-Book > Katalog Jurnal Ilmiah',
     '/admin/menu': 'Admin > Manajemen Menu',
     '/admin/role': 'Admin > Manajemen Role',
     '/admin/user': 'Admin > Manajemen User',
