@@ -367,7 +367,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ebookService } from '@/services/ebookService'
-import config from '@/config'
+import config from '@/config/api'
 
 // Reactive States
 const loading = ref(false)
