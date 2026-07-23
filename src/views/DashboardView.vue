@@ -336,8 +336,10 @@
                         <div 
                           v-for="cls in item.classes" 
                           :key="cls.name"
-                          class="modern-class-row p-2 px-2.5 rounded-3 d-flex justify-content-between align-items-center"
+                          class="modern-class-row p-2 px-2.5 rounded-3 d-flex justify-content-between align-items-center cursor-pointer"
                           :class="{ 'is-available': cls.empty > 0, 'is-full': cls.empty === 0 }"
+                          @click="openClassLookupModal(item.category, cls.name)"
+                          title="Klik untuk rincian nomor kamar & data pasien"
                         >
                           <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
                             <span class="class-dot" :class="getClassColorDot(cls.name)"></span>
@@ -798,6 +800,211 @@
       v-if="showUserManagementModal"
       @close="showUserManagementModal = false"
     />
+
+    <!-- Room & Patient Class Lookup Modal -->
+    <div 
+      v-if="showClassLookupModal" 
+      class="modal fade show d-block" 
+      tabindex="-1" 
+      style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 1060;"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <!-- Modal Header -->
+          <div class="modal-header bg-primary text-white p-3 px-4 position-relative border-0">
+            <div class="d-flex align-items-center gap-3">
+              <div class="cat-icon-avatar bg-white text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                <i :class="getCategoryIcon(lookupCategory)"></i>
+              </div>
+              <div>
+                <h5 class="modal-title fw-extrabold m-0 text-white">
+                  Rincian Kamar: {{ lookupCategory }} — {{ lookupClass }}
+                </h5>
+                <small class="text-white-50">Daftar nomor kamar & data pasien rawat inap yang sedang dirawat</small>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" @click="showClassLookupModal = false"></button>
+          </div>
+
+          <!-- Modal Sub-Header (Stats & Search) -->
+          <div class="modal-body bg-light border-bottom py-3 px-4">
+            <div class="row g-3 align-items-center">
+              <!-- Filter Tabs -->
+              <div class="col-md-7">
+                <div class="btn-group btn-group-sm p-1 bg-white rounded-pill border shadow-2sm w-100">
+                  <button 
+                    class="btn rounded-pill fw-bold"
+                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white' : 'btn-light text-secondary border-0'"
+                    @click="lookupFilterStatus = 'ALL'"
+                  >
+                    Semua Bed ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
+                  </button>
+                  <button 
+                    class="btn rounded-pill fw-bold text-success"
+                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white' : 'btn-light border-0'"
+                    @click="lookupFilterStatus = 'KOSONG'"
+                  >
+                    🟢 Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
+                  </button>
+                  <button 
+                    class="btn rounded-pill fw-bold text-danger"
+                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white' : 'btn-light border-0'"
+                    @click="lookupFilterStatus = 'ISI'"
+                  >
+                    🔴 Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
+                  </button>
+                </div>
+              </div>
+
+              <!-- Search Bar -->
+              <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                  <input 
+                    v-model="lookupSearchQuery" 
+                    type="text" 
+                    class="form-control border-start-0 ps-0" 
+                    placeholder="Cari no. bed / nama pasien / RM..."
+                  />
+                  <button v-if="lookupSearchQuery" class="btn btn-outline-secondary border-start-0" @click="lookupSearchQuery = ''">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Body List -->
+          <div class="modal-body p-4 bg-white" style="max-height: 60vh; overflow-y: auto;">
+            <div v-if="loadingActivePatients" class="text-center py-4 text-muted">
+              <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
+              <p class="m-0 small">Memuat data pasien rawat inap...</p>
+            </div>
+
+            <div v-else-if="modalBedsList.length > 0" class="d-flex flex-column gap-3">
+              <div 
+                v-for="bed in modalBedsList" 
+                :key="bed.kd_kamar" 
+                class="card border rounded-3 shadow-2sm p-3 bed-lookup-item position-relative"
+                :class="bed.status === 'KOSONG' ? 'border-success-subtle bg-success-subtle-light' : 'border-slate-200 bg-white'"
+              >
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                  <!-- Left: Bed Number & Code -->
+                  <div class="d-flex align-items-center gap-3">
+                    <div 
+                      class="bed-badge-icon rounded-3 d-flex flex-column align-items-center justify-content-center p-2 text-center"
+                      :class="bed.status === 'KOSONG' ? 'bg-success text-white' : 'bg-secondary text-white'"
+                      style="min-width: 60px; height: 56px;"
+                    >
+                      <i class="fas fa-bed mb-1"></i>
+                      <span class="fw-bold" style="font-size: 0.8rem;">{{ getBedLabel(bed) }}</span>
+                    </div>
+                    
+                    <div>
+                      <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                        {{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}
+                        <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.7rem;">Kode: {{ bed.kd_kamar }}</span>
+                      </h6>
+                      <small class="text-muted">Kelas {{ bed.kelas }}</small>
+                    </div>
+                  </div>
+
+                  <!-- Right: Status Pill -->
+                  <div>
+                    <span 
+                      v-if="bed.status === 'KOSONG'" 
+                      class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-bold"
+                      style="font-size: 0.78rem;"
+                    >
+                      <i class="fas fa-check-circle me-1"></i> TERSEDIA (KOSONG)
+                    </span>
+                    <span 
+                      v-else-if="bed.status === 'DIBOOKING'" 
+                      class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1.5 rounded-pill fw-bold"
+                      style="font-size: 0.78rem;"
+                    >
+                      <i class="fas fa-clock me-1"></i> BOOKING / INDENT
+                    </span>
+                    <span 
+                      v-else 
+                      class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 rounded-pill fw-bold"
+                      style="font-size: 0.78rem;"
+                    >
+                      <i class="fas fa-user-check me-1"></i> TERISI (SEDANG DIRAWAT)
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Patient Information Panel (If Bed is Occupied) -->
+                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="mt-3 pt-2 border-top">
+                  <div class="p-2.5 rounded-3 bg-light border">
+                    <div class="row g-2 align-items-center">
+                      <!-- Patient Name & RM -->
+                      <div class="col-md-5">
+                        <div class="d-flex align-items-center gap-2">
+                          <i class="fas fa-user-circle text-primary fs-4"></i>
+                          <div>
+                            <div class="fw-bold text-dark" style="font-size: 0.88rem;">
+                              {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
+                            </div>
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">
+                              No. RM: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong> 
+                              | No. Rawat: {{ activePatientsMap[bed.kd_kamar].no_rawat }}
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Doctor DPJP -->
+                      <div class="col-md-4">
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">DOKTER DPJP</small>
+                        <span class="fw-semibold text-dark small">
+                          <i class="fas fa-user-md text-info me-1"></i>
+                          {{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}
+                        </span>
+                      </div>
+
+                      <!-- Penjamin / Admission Date -->
+                      <div class="col-md-3 text-md-end">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1 fw-bold" style="font-size: 0.72rem;">
+                          {{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}
+                        </span>
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">
+                          Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Fallback if Occupied but patient details not fetched yet -->
+                <div v-else-if="bed.status !== 'KOSONG'" class="mt-2 pt-2 border-top text-muted small">
+                  <i class="fas fa-info-circle me-1 text-secondary"></i>
+                  Terisi pasien rawat inap aktif.
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty Search State -->
+            <div v-else class="text-center py-5 text-muted">
+              <i class="fas fa-search-minus fa-3x mb-3 text-secondary opacity-50"></i>
+              <h6 class="fw-bold text-dark">Kamar Tidak Ditemukan</h6>
+              <p class="small m-0">Tidak ada data kamar yang cocok dengan kriteria pencarian atau filter Anda.</p>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer bg-light px-4 py-2.5 d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              Total <strong>{{ modalBedsList.length }}</strong> kamar ditampilkan.
+            </small>
+            <button class="btn btn-secondary btn-sm px-4 rounded-pill fw-bold" @click="showClassLookupModal = false">
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -824,6 +1031,15 @@ const activeBedTab = ref('ANAK')
 const selectedBedForDetail = ref(null)
 const loadingBeds = ref(false)
 const viewMode = ref('compact') // Default view mode: 'compact' (Ringkasan Pendaftaran) or 'cinema' (Denah Visual)
+
+// Class Room & Patient Lookup Modal
+const activePatients = ref([])
+const loadingActivePatients = ref(false)
+const showClassLookupModal = ref(false)
+const lookupCategory = ref('')
+const lookupClass = ref('')
+const lookupSearchQuery = ref('')
+const lookupFilterStatus = ref('ALL') // 'ALL', 'KOSONG', 'ISI'
 
 const categories = ['ANAK', 'KANDUNGAN', 'ICU/PICU/NICU', 'PERINATOLOGI', 'ISOLASI', 'KAMAR BERSALIN']
 
@@ -1017,6 +1233,72 @@ const allCategoriesMatrix = computed(() => {
       classes
     }
   })
+})
+
+const fetchActivePatients = async () => {
+  try {
+    loadingActivePatients.value = true
+    const response = await api.get('/rawat-inap', {
+      params: {
+        status: 'belum_pulang',
+        per_page: 500
+      }
+    })
+    if (response.data && response.data.data) {
+      const list = response.data.data.data || response.data.data || []
+      activePatients.value = list
+    }
+  } catch (err) {
+    console.error('Error fetching active patients:', err)
+  } finally {
+    loadingActivePatients.value = false
+  }
+}
+
+const activePatientsMap = computed(() => {
+  const map = {}
+  activePatients.value.forEach(item => {
+    if (item.kd_kamar) {
+      map[item.kd_kamar] = item
+    }
+  })
+  return map
+})
+
+const openClassLookupModal = async (categoryName, className) => {
+  lookupCategory.value = categoryName
+  lookupClass.value = className
+  lookupSearchQuery.value = ''
+  lookupFilterStatus.value = 'ALL'
+  showClassLookupModal.value = true
+  
+  if (activePatients.value.length === 0) {
+    await fetchActivePatients()
+  }
+}
+
+const modalBedsList = computed(() => {
+  if (!lookupCategory.value || !lookupClass.value) return []
+  
+  const beds = getCategoryBeds(lookupCategory.value).filter(b => b.kelas === lookupClass.value)
+  
+  return beds.filter(bed => {
+    if (lookupFilterStatus.value === 'KOSONG' && bed.status !== 'KOSONG') return false
+    if (lookupFilterStatus.value === 'ISI' && bed.status === 'KOSONG') return false
+    
+    if (lookupSearchQuery.value.trim()) {
+      const q = lookupSearchQuery.value.toLowerCase()
+      const bedLabel = getBedLabel(bed).toLowerCase()
+      const kdKamar = (bed.kd_kamar || '').toLowerCase()
+      const patient = activePatientsMap.value[bed.kd_kamar]
+      const patientName = (patient?.reg_periksa?.pasien?.nm_pasien || '').toLowerCase()
+      const noRm = (patient?.reg_periksa?.pasien?.no_rkm_medis || '').toLowerCase()
+      
+      return bedLabel.includes(q) || kdKamar.includes(q) || patientName.includes(q) || noRm.includes(q)
+    }
+    
+    return true
+  }).sort((a, b) => getBedLabel(a).localeCompare(getBedLabel(b), undefined, { numeric: true }))
 })
 
 const fetchBedCinemaData = async () => {
@@ -1420,6 +1702,10 @@ onUnmounted(() => {
 /* Bed Cinema & Compact Matrix Section */
 .bed-cinema-section {
   width: 100%;
+}
+
+.bg-success-subtle-light {
+  background-color: #f0fdf4 !important;
 }
 
 /* Modern Category Matrix Cards */
