@@ -40,10 +40,11 @@
 
     <!-- Filter & Control Card -->
     <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
-      <div class="row g-2.5 align-items-center">
-        <!-- Search Input -->
-        <div class="col-12 col-md-5 col-lg-5">
-          <div class="input-group">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2.5">
+        <!-- Left Side: Search & Category -->
+        <div class="d-flex flex-wrap align-items-center gap-2.5 flex-grow-1" style="max-width: 680px;">
+          <!-- Search Input -->
+          <div class="input-group flex-grow-1" style="min-width: 220px; max-width: 360px;">
             <span class="input-group-text bg-white border-end-0 text-muted rounded-start-pill ps-3.5" style="border-color: #cbd5e1; height: 42px;">
               <i class="fas fa-search text-primary"></i>
             </span>
@@ -59,40 +60,41 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
+
+          <!-- Category Dropdown -->
+          <div class="flex-grow-1" style="min-width: 180px; max-width: 260px;">
+            <select 
+              v-model="selectedKategori" 
+              class="form-select rounded-pill border shadow-none bg-white px-3.5" 
+              style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+              @change="loadEbooks(1)"
+            >
+              <option value="">Semua Kategori</option>
+              <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">
+                {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
+              </option>
+            </select>
+          </div>
         </div>
 
-        <!-- Category Dropdown -->
-        <div class="col-12 col-md-4 col-lg-3">
-          <select 
-            v-model="selectedKategori" 
-            class="form-select rounded-pill border shadow-none bg-white px-3.5" 
-            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
-            @change="loadEbooks(1)"
-          >
-            <option value="">Semua Kategori</option>
-            <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">
-              {{ cat.nama_kategori }} ({{ cat.ebooks_count || 0 }})
-            </option>
-          </select>
-        </div>
+        <!-- Right Side: Sort & View Mode Switcher -->
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <!-- Sort Select -->
+          <div style="min-width: 130px;">
+            <select 
+              v-model="sortBy" 
+              class="form-select rounded-pill border shadow-none bg-white px-3" 
+              style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
+              @change="loadEbooks(1)"
+            >
+              <option value="terbaru">Terbaru</option>
+              <option value="terpopuler">Terpopuler</option>
+              <option value="judul_asc">Judul (A-Z)</option>
+              <option value="tahun_desc">Tahun Terbit</option>
+            </select>
+          </div>
 
-        <!-- Sort Select -->
-        <div class="col-6 col-md-3 col-lg-2">
-          <select 
-            v-model="sortBy" 
-            class="form-select rounded-pill border shadow-none bg-white px-3" 
-            style="height: 42px; border-color: #cbd5e1; font-size: 0.85rem;" 
-            @change="loadEbooks(1)"
-          >
-            <option value="terbaru">Terbaru</option>
-            <option value="terpopuler">Terpopuler</option>
-            <option value="judul_asc">Judul (A-Z)</option>
-            <option value="tahun_desc">Tahun Terbit</option>
-          </select>
-        </div>
-
-        <!-- View Mode Toggle -->
-        <div class="col-6 col-sm-auto col-lg-2 ms-auto d-flex justify-content-end">
+          <!-- View Mode Toggle -->
           <div class="btn-group p-1 bg-light rounded-pill border" style="height: 42px;">
             <button 
               class="btn btn-sm rounded-pill px-3 fw-bold d-flex align-items-center justify-content-center gap-1.5 transition-all border-0 text-nowrap"
