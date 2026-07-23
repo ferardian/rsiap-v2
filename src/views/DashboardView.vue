@@ -808,7 +808,7 @@
       tabindex="-1" 
       style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1060;"
     >
-      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" style="max-width: 960px;">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
           <!-- Modal Header (Clean White Header) -->
           <div class="modal-header bg-white p-3 px-4 position-relative border-bottom">
@@ -947,19 +947,19 @@
 
                 <!-- Patient Details Block (Inside Card) -->
                 <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3 pb-3">
-                  <div class="p-3 rounded-3 bg-light border">
+                  <div class="p-3 rounded-3 bg-light border overflow-hidden">
                     <div class="row g-3 align-items-center">
                       <!-- Patient Avatar & Name -->
-                      <div class="col-md-5">
-                        <div class="d-flex align-items-center gap-2.5">
+                      <div class="col-md-5 overflow-hidden">
+                        <div class="d-flex align-items-center gap-2.5 overflow-hidden">
                           <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm" style="width: 40px; height: 40px; flex-shrink: 0; font-size: 1.1rem;">
                             <i class="fas fa-user"></i>
                           </div>
-                          <div class="overflow-hidden">
-                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">
+                          <div class="overflow-hidden me-1">
+                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.88rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
                               {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
                             </div>
-                            <small class="text-muted d-block text-truncate" style="font-size: 0.73rem;">
+                            <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">
                               RM: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong> 
                               <span class="mx-1">•</span> 
                               No. Rawat: {{ activePatientsMap[bed.kd_kamar].no_rawat }}
@@ -969,20 +969,24 @@
                       </div>
 
                       <!-- Doctor DPJP -->
-                      <div class="col-md-4 border-start ps-md-3">
+                      <div class="col-md-4 border-start ps-md-3 overflow-hidden">
                         <small class="text-muted text-uppercase d-block fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">DOKTER DPJP</small>
-                        <div class="fw-semibold text-dark small text-truncate mt-0.5">
+                        <div class="fw-semibold text-dark small text-truncate mt-0.5" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter">
                           <i class="fas fa-user-md text-info me-1"></i>
                           {{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}
                         </div>
                       </div>
 
                       <!-- Penjamin & Masuk -->
-                      <div class="col-md-3 border-start ps-md-3 text-md-end">
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1 fw-bold rounded" style="font-size: 0.7rem;">
+                      <div class="col-md-3 border-start ps-md-3 text-md-end overflow-hidden">
+                        <span 
+                          class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1 fw-bold rounded text-truncate d-inline-block" 
+                          style="font-size: 0.7rem; max-width: 100%;"
+                          :title="activePatientsMap[bed.kd_kamar].png_jawab"
+                        >
                           {{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}
                         </span>
-                        <small class="text-muted d-block" style="font-size: 0.72rem;">
+                        <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">
                           Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}
                         </small>
                       </div>
@@ -1008,11 +1012,19 @@
           </div>
 
           <!-- Modal Footer -->
-          <div class="modal-footer bg-light border-top py-2.5 px-4 d-flex justify-content-between align-items-center">
-            <small class="text-muted" style="font-size: 0.78rem;">
-              Menampilkan <strong>{{ modalBedsList.length }}</strong> tempat tidur.
-            </small>
-            <button class="btn btn-outline-secondary btn-sm px-4 rounded-pill fw-bold" style="font-size: 0.8rem;" @click="showClassLookupModal = false">
+          <div class="modal-footer bg-light border-top py-2.5 px-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-bed text-primary opacity-75"></i>
+              <small class="text-muted fw-medium" style="font-size: 0.8rem;">
+                Menampilkan <strong class="text-dark">{{ modalBedsList.length }}</strong> tempat tidur.
+              </small>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-white border px-4 py-1.5 rounded-pill fw-bold text-dark shadow-2sm" 
+              style="font-size: 0.8rem; background-color: #ffffff; border-color: #cbd5e1 !important;" 
+              @click="showClassLookupModal = false"
+            >
               Tutup
             </button>
           </div>
