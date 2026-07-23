@@ -228,15 +228,27 @@
 
               <!-- Actions -->
               <td class="text-center">
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-light text-primary border-0 rounded-2" @click="previewPdf(item)" title="Pratinjau PDF">
+                <div class="d-flex align-items-center justify-content-center gap-1.5">
+                  <button 
+                    class="btn-action-btn btn-action-pdf rounded-circle border-0 d-flex align-items-center justify-content-center transition-all" 
+                    @click="previewPdf(item)" 
+                    title="Pratinjau PDF"
+                  >
                     <i class="fas fa-file-pdf"></i>
                   </button>
-                  <button class="btn btn-light text-info border-0 rounded-2" @click="openFormModal(item)" title="Edit Data">
+                  <button 
+                    class="btn-action-btn btn-action-edit rounded-circle border-0 d-flex align-items-center justify-content-center transition-all" 
+                    @click="openFormModal(item)" 
+                    title="Edit Data"
+                  >
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button class="btn btn-light text-danger border-0 rounded-2" @click="confirmDelete(item)" title="Hapus">
-                    <i class="fas fa-trash"></i>
+                  <button 
+                    class="btn-action-btn btn-action-delete rounded-circle border-0 d-flex align-items-center justify-content-center transition-all" 
+                    @click="confirmDelete(item)" 
+                    title="Hapus Dokumen"
+                  >
+                    <i class="fas fa-trash-alt"></i>
                   </button>
                 </div>
               </td>
@@ -949,5 +961,51 @@ onMounted(() => {
 
 .shadow-2xl {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Action Buttons Styling */
+.btn-action-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 0.82rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.btn-action-btn:hover {
+  transform: translateY(-2px) scale(1.08);
+}
+
+.btn-action-pdf {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+
+.btn-action-pdf:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.28) !important;
+}
+
+.btn-action-edit {
+  background-color: #e0f2fe !important;
+  color: #0284c7 !important;
+}
+
+.btn-action-edit:hover {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.28) !important;
+}
+
+.btn-action-delete {
+  background-color: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+.btn-action-delete:hover {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.28) !important;
 }
 </style>
