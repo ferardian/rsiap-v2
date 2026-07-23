@@ -188,13 +188,16 @@
                 <button 
                   v-for="cat in categories" 
                   :key="cat"
-                  class="cinema-tab-btn"
+                  class="cinema-tab-btn d-flex align-items-center"
                   :class="{ active: activeBedTab === cat }"
                   @click="activeBedTab = cat"
                 >
                   <span class="cat-name">{{ cat }}</span>
-                  <span class="badge ms-2" :class="getTabBadgeClass(cat)">
-                    {{ getCategoryEmptyCount(cat) }}/{{ getCategoryTotalCount(cat) }}
+                  <span class="badge bg-success ms-2 px-2 py-1" style="font-size: 0.7rem; font-weight: 800;">
+                    K: {{ getCategoryEmptyCount(cat) }}
+                  </span>
+                  <span class="badge bg-secondary ms-1 px-2 py-1" style="font-size: 0.7rem; font-weight: 800;">
+                    I: {{ getCategoryOccupiedCount(cat) }}
                   </span>
                 </button>
               </div>
@@ -752,6 +755,14 @@ const getCategoryEmptyCount = (cat) => {
   return getCategoryBeds(cat).filter(bed => bed.status === 'KOSONG').length
 }
 
+const getCategoryOccupiedCount = (cat) => {
+  return getCategoryBeds(cat).filter(bed => bed.status === 'ISI').length
+}
+
+const getCategoryBookedCount = (cat) => {
+  return getCategoryBeds(cat).filter(bed => bed.status === 'DIBOOKING').length
+}
+
 const getTabBadgeClass = (cat) => {
   const empty = getCategoryEmptyCount(cat)
   if (empty === 0) return 'bg-danger text-white'
@@ -1245,6 +1256,16 @@ onUnmounted(() => {
   border-color: #2563eb;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.cinema-tab-btn.active .badge.bg-success {
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+}
+
+.cinema-tab-btn.active .badge.bg-secondary {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
 }
 
 .cinema-room-container {
