@@ -287,38 +287,67 @@
           </div>
           
           <div class="card-body px-4 pb-4">
-            <!-- Mode 1: Compact Registration Matrix View (Default for Pendaftaran) -->
+            <!-- Mode 1: Compact Registration Matrix View (Modern Design) -->
             <div v-if="viewMode === 'compact'" class="compact-matrix-view">
               <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
                 <div v-for="item in allCategoriesMatrix" :key="item.category" class="col">
-                  <div class="card h-100 border rounded-3 shadow-2hover category-matrix-card">
+                  <div class="card h-100 border-0 shadow-sm rounded-4 category-matrix-card-modern position-relative overflow-hidden">
+                    <!-- Top Accent Bar -->
+                    <div class="card-accent-bar" :class="getCategorySlug(item.category)"></div>
+
                     <!-- Card Header -->
-                    <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
-                      <h6 class="m-0 fw-bold text-dark d-flex align-items-center">
-                        <i class="fas fa-hospital-symbol text-primary me-2"></i>{{ item.category }}
-                      </h6>
-                      <span 
-                        class="badge py-1 px-2 fw-bold"
-                        :class="item.emptyCount > 0 ? 'bg-success text-white' : 'bg-secondary text-white'"
-                      >
-                        {{ item.emptyCount }} Kosong / {{ item.totalCount }} Bed
-                      </span>
+                    <div class="card-header bg-white border-0 pt-3 px-3 pb-2 d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="cat-icon-avatar" :class="getCategorySlug(item.category)">
+                          <i :class="getCategoryIcon(item.category)"></i>
+                        </div>
+                        <div>
+                          <h6 class="m-0 fw-bold text-dark tracking-tight">{{ item.category }}</h6>
+                          <small class="text-muted" style="font-size: 0.72rem;">{{ item.totalCount }} Total Bed</small>
+                        </div>
+                      </div>
+                      
+                      <div class="text-end">
+                        <span 
+                          class="badge py-1 px-2.5 rounded-pill fw-bold"
+                          :class="item.emptyCount > 0 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle'"
+                          style="font-size: 0.75rem;"
+                        >
+                          <i class="fas fa-check-circle me-1" v-if="item.emptyCount > 0"></i>
+                          {{ item.emptyCount }} Kosong
+                        </span>
+                      </div>
                     </div>
-                    
+
+                    <!-- Occupancy Mini Progress Bar -->
+                    <div class="px-3 mb-2">
+                      <div class="progress rounded-pill" style="height: 5px; background-color: #f1f5f9;">
+                        <div 
+                          class="progress-bar bg-success rounded-pill" 
+                          :style="{ width: (item.totalCount > 0 ? (item.emptyCount / item.totalCount * 100) : 0) + '%' }"
+                          title="Persentase Kosong"
+                        ></div>
+                      </div>
+                    </div>
+
                     <!-- Card Body: Class List -->
-                    <div class="card-body p-2">
-                      <div v-if="item.classes.length > 0" class="d-flex flex-column gap-1">
+                    <div class="card-body p-3 pt-1">
+                      <div v-if="item.classes.length > 0" class="d-flex flex-column gap-1.5">
                         <div 
                           v-for="cls in item.classes" 
                           :key="cls.name"
-                          class="p-2 rounded d-flex justify-content-between align-items-center class-matrix-row"
-                          :class="cls.empty > 0 ? 'bg-light-success border-start border-3 border-success' : 'bg-light border-start border-3 border-secondary-subtle'"
+                          class="modern-class-row p-2 px-2.5 rounded-3 d-flex justify-content-between align-items-center"
+                          :class="{ 'is-available': cls.empty > 0, 'is-full': cls.empty === 0 }"
                         >
-                          <span class="small fw-bold text-dark me-2 text-truncate">{{ cls.name }}</span>
+                          <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
+                            <span class="class-dot" :class="getClassColorDot(cls.name)"></span>
+                            <span class="small fw-bold text-dark text-truncate">{{ cls.name }}</span>
+                          </div>
+                          
                           <div class="d-flex align-items-center justify-content-end gap-2 ms-auto">
                             <span 
-                              class="badge fw-bold py-1 text-center" 
-                              style="min-width: 78px; font-size: 0.74rem;"
+                              class="badge fw-bold py-1 text-center rounded-2" 
+                              style="min-width: 76px; font-size: 0.74rem;"
                               :class="cls.empty > 0 ? 'bg-success text-white' : 'bg-secondary text-white-50'"
                             >
                               {{ cls.empty > 0 ? `${cls.empty} Kosong` : 'Penuh' }}
@@ -329,18 +358,19 @@
                           </div>
                         </div>
                       </div>
-                      <div v-else class="text-center py-3 text-muted small">
-                        Tidak ada unit aktif
+                      <div v-else class="text-center py-4 text-muted small">
+                        <i class="fas fa-inbox fa-2x mb-2 text-muted opacity-50"></i>
+                        <p class="m-0">Tidak ada unit aktif</p>
                       </div>
                     </div>
-                    
+
                     <!-- Card Footer -->
-                    <div class="card-footer bg-white border-top-0 py-2 px-3 text-end">
+                    <div class="card-footer bg-white border-0 py-2.5 px-3 text-center border-top border-light">
                       <button 
-                        class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-bold" 
+                        class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-bold btn-hover-arrow" 
                         @click="switchToDenah(item.category)"
                       >
-                        Lihat Denah <i class="fas fa-arrow-right ms-1"></i>
+                        Lihat Denah Visual <i class="fas fa-chevron-right ms-1 arrow-icon"></i>
                       </button>
                     </div>
                   </div>
@@ -794,6 +824,32 @@ const loadingBeds = ref(false)
 const viewMode = ref('compact') // Default view mode: 'compact' (Ringkasan Pendaftaran) or 'cinema' (Denah Visual)
 
 const categories = ['ANAK', 'KANDUNGAN', 'ICU/PICU/NICU', 'PERINATOLOGI', 'ISOLASI', 'KAMAR BERSALIN']
+
+const getCategoryIcon = (cat) => {
+  switch (cat) {
+    case 'ANAK': return 'fas fa-baby'
+    case 'KANDUNGAN': return 'fas fa-female'
+    case 'ICU/PICU/NICU': return 'fas fa-heartbeat'
+    case 'PERINATOLOGI': return 'fas fa-baby-carriage'
+    case 'ISOLASI': return 'fas fa-shield-virus'
+    case 'KAMAR BERSALIN': return 'fas fa-bed'
+    default: return 'fas fa-hospital'
+  }
+}
+
+const getCategorySlug = (cat) => {
+  return cat.toLowerCase().replace(/[^a-z0-9]/g, '-')
+}
+
+const getClassColorDot = (clsName) => {
+  if (!clsName) return 'other'
+  if (clsName.includes('VIP')) return 'vip'
+  if (clsName.includes('Utama')) return 'utama'
+  if (clsName.includes('1')) return 'kelas-1'
+  if (clsName.includes('2')) return 'kelas-2'
+  if (clsName.includes('3')) return 'kelas-3'
+  return 'other'
+}
 
 const getBedCategory = (bed) => {
   const nmBangsal = (bed.bangsal?.nm_bangsal || bed.kd_bangsal || '').toUpperCase()
@@ -1364,25 +1420,86 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.bg-light-success {
-  background-color: #f0fdf4 !important;
+/* Modern Category Matrix Cards */
+.category-matrix-card-modern {
+  background: #ffffff;
+  border: 1px solid #edf2f7 !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.category-matrix-card {
-  transition: all 0.2s ease;
+.category-matrix-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04) !important;
 }
 
-.category-matrix-card:hover {
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
-  transform: translateY(-2px);
+/* Card Top Accent Bar */
+.card-accent-bar {
+  height: 4px;
+  width: 100%;
 }
+.card-accent-bar.anak { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.card-accent-bar.kandungan { background: linear-gradient(90deg, #ec4899, #f472b6); }
+.card-accent-bar.icu-picu-nicu { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.card-accent-bar.perinatologi { background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
+.card-accent-bar.isolasi { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.card-accent-bar.kamar-bersalin { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
 
-.class-matrix-row {
+/* Category Icon Avatars */
+.cat-icon-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+.cat-icon-avatar.anak { background: #eff6ff; color: #2563eb; }
+.cat-icon-avatar.kandungan { background: #fdf2f8; color: #db2777; }
+.cat-icon-avatar.icu-picu-nicu { background: #eef2ff; color: #4f46e5; }
+.cat-icon-avatar.perinatologi { background: #f0fdfa; color: #0d9488; }
+.cat-icon-avatar.isolasi { background: #fffbeb; color: #d97706; }
+.cat-icon-avatar.kamar-bersalin { background: #f5f3ff; color: #7c3aed; }
+
+/* Modern Class Row */
+.modern-class-row {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
   transition: all 0.15s ease;
 }
 
-.class-matrix-row:hover {
-  filter: brightness(0.98);
+.modern-class-row.is-available {
+  background: #f0fdf4;
+  border-color: #dcfce7;
+}
+
+.modern-class-row:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* Class Dot Colors */
+.class-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.class-dot.vip { background-color: #a855f7; }
+.class-dot.utama { background-color: #06b6d4; }
+.class-dot.kelas-1 { background-color: #3b82f6; }
+.class-dot.kelas-2 { background-color: #10b981; }
+.class-dot.kelas-3 { background-color: #0d9488; }
+.class-dot.other { background-color: #94a3b8; }
+
+/* Button hover arrow effect */
+.btn-hover-arrow .arrow-icon {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+.btn-hover-arrow:hover .arrow-icon {
+  transform: translateX(4px);
 }
 
 .cinema-tabs-wrapper {
