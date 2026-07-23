@@ -264,14 +264,16 @@
             <div class="d-flex gap-2 align-items-center">
               <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border">
                 <button 
-                  class="btn rounded-pill px-3 py-1 fw-bold"
+                  class="btn rounded-pill px-3 py-1 fw-bold text-nowrap"
+                  style="font-size: 0.78rem; line-height: 1.25;"
                   :class="viewMode === 'compact' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
                   @click="viewMode = 'compact'"
                 >
-                  <i class="fas fa-th-large me-1"></i>Ringkasan Pendaftaran
+                  <i class="fas fa-th-large me-1"></i>Ringkasan
                 </button>
                 <button 
-                  class="btn rounded-pill px-3 py-1 fw-bold"
+                  class="btn rounded-pill px-3 py-1 fw-bold text-nowrap"
+                  style="font-size: 0.78rem; line-height: 1.25;"
                   :class="viewMode === 'cinema' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
                   @click="viewMode = 'cinema'"
                 >
@@ -312,15 +314,18 @@
                           class="p-2 rounded d-flex justify-content-between align-items-center class-matrix-row"
                           :class="cls.empty > 0 ? 'bg-light-success border-start border-3 border-success' : 'bg-light border-start border-3 border-secondary-subtle'"
                         >
-                          <span class="small fw-bold text-dark">{{ cls.name }}</span>
-                          <div class="d-flex align-items-center gap-2">
-                            <span v-if="cls.empty > 0" class="badge bg-success fw-extrabold px-2 py-1" style="font-size: 0.78rem;">
-                              {{ cls.empty }} Kosong
+                          <span class="small fw-bold text-dark me-2 text-truncate">{{ cls.name }}</span>
+                          <div class="d-flex align-items-center justify-content-end gap-2 ms-auto">
+                            <span 
+                              class="badge fw-bold py-1 text-center" 
+                              style="min-width: 78px; font-size: 0.74rem;"
+                              :class="cls.empty > 0 ? 'bg-success text-white' : 'bg-secondary text-white-50'"
+                            >
+                              {{ cls.empty > 0 ? `${cls.empty} Kosong` : 'Penuh' }}
                             </span>
-                            <span v-else class="badge bg-secondary text-white fw-bold px-2 py-1" style="font-size: 0.72rem;">
-                              Penuh
+                            <span class="text-muted small text-end fw-medium" style="min-width: 44px; font-size: 0.72rem; font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+                              ({{ cls.occupied }}/{{ cls.total }})
                             </span>
-                            <span class="text-muted small" style="font-size: 0.72rem;">({{ cls.occupied }}/{{ cls.total }})</span>
                           </div>
                         </div>
                       </div>
