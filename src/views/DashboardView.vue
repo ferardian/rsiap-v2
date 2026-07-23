@@ -892,30 +892,26 @@
               <div 
                 v-for="bed in modalBedsList" 
                 :key="bed.kd_kamar" 
-                class="card border rounded-3 shadow-sm overflow-hidden position-relative bed-item-card"
-                :class="bed.status === 'KOSONG' ? 'border-success-subtle' : 'border-danger-subtle'"
+                class="card border rounded-3 shadow-2sm overflow-hidden position-relative bed-item-card"
+                :class="bed.status === 'KOSONG' ? 'is-available-card' : 'is-occupied-card'"
               >
-                <!-- Left Accent Border Color Bar -->
-                <div class="bed-item-accent-bar" :class="bed.status === 'KOSONG' ? 'bg-success' : 'bg-danger'"></div>
-
-                <!-- Bed Header Info -->
-                <div class="p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <!-- Bed Header Info (Spacious & Clean Spacing) -->
+                <div class="p-3 px-3.5 d-flex flex-wrap align-items-center justify-content-between gap-3">
                   <div class="d-flex align-items-center gap-3">
                     <div 
-                      class="bed-number-pill rounded-3 d-flex flex-column align-items-center justify-content-center p-2 text-center"
+                      class="bed-number-pill rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm"
                       :class="bed.status === 'KOSONG' ? 'bg-success text-white' : 'bg-danger text-white'"
-                      style="min-width: 54px; height: 52px; flex-shrink: 0;"
+                      style="min-width: 50px; height: 42px; flex-shrink: 0; margin-right: 12px !important;"
                     >
-                      <i class="fas fa-bed mb-1" style="font-size: 0.9rem;"></i>
-                      <span class="fw-bold" style="font-size: 0.8rem; line-height: 1;">{{ getBedLabel(bed) }}</span>
+                      <span class="fw-bold fs-6" style="line-height: 1;">{{ getBedLabel(bed) }}</span>
                     </div>
                     
                     <div>
-                      <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <h6 class="m-0 fw-bold text-dark" style="font-size: 0.95rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
-                        <span class="badge bg-light text-secondary border fw-medium px-2 py-1" style="font-size: 0.72rem;">Kode Kamar: {{ bed.kd_kamar }}</span>
+                      <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h6 class="m-0 fw-bold text-dark" style="font-size: 0.92rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
+                        <span class="badge bg-light text-secondary border fw-medium px-2 py-0.5" style="font-size: 0.7rem;">Kode: {{ bed.kd_kamar }}</span>
                       </div>
-                      <small class="text-muted" style="font-size: 0.75rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
+                      <small class="text-muted" style="font-size: 0.74rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
                     </div>
                   </div>
 
@@ -924,21 +920,21 @@
                     <span 
                       v-if="bed.status === 'KOSONG'" 
                       class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.75rem;"
+                      style="font-size: 0.73rem;"
                     >
-                      <i class="fas fa-check-circle me-1"></i> TERSEDIA (KOSONG)
+                      <i class="fas fa-check-circle me-1"></i> TERSEDIA
                     </span>
                     <span 
                       v-else-if="bed.status === 'DIBOOKING'" 
                       class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.75rem;"
+                      style="font-size: 0.73rem;"
                     >
-                      <i class="fas fa-clock me-1"></i> BOOKING / INDENT
+                      <i class="fas fa-clock me-1"></i> BOOKING
                     </span>
                     <span 
                       v-else 
                       class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.75rem;"
+                      style="font-size: 0.73rem;"
                     >
                       <i class="fas fa-user-check me-1"></i> TERISI (SEDANG DIRAWAT)
                     </span>
@@ -946,20 +942,20 @@
                 </div>
 
                 <!-- Patient Details Block (Inside Card) -->
-                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3 pb-3">
-                  <div class="p-3 rounded-3 bg-light border overflow-hidden">
-                    <div class="row g-3 align-items-center">
+                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3.5 pb-3 pt-0">
+                  <div class="p-2.5 px-3 rounded-3 bg-light border overflow-hidden">
+                    <div class="row g-2.5 align-items-center">
                       <!-- Patient Avatar & Name -->
                       <div class="col-md-5 overflow-hidden">
                         <div class="d-flex align-items-center gap-2.5 overflow-hidden">
-                          <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm" style="width: 40px; height: 40px; flex-shrink: 0; font-size: 1.1rem;">
+                          <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm me-1" style="width: 36px; height: 36px; flex-shrink: 0; font-size: 0.95rem;">
                             <i class="fas fa-user"></i>
                           </div>
-                          <div class="overflow-hidden me-1">
-                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.88rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
+                          <div class="overflow-hidden">
+                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
                               {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
                             </div>
-                            <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">
+                            <small class="text-muted d-block text-truncate" style="font-size: 0.7rem;">
                               RM: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong> 
                               <span class="mx-1">•</span> 
                               No. Rawat: {{ activePatientsMap[bed.kd_kamar].no_rawat }}
@@ -970,8 +966,8 @@
 
                       <!-- Doctor DPJP -->
                       <div class="col-md-4 border-start ps-md-3 overflow-hidden">
-                        <small class="text-muted text-uppercase d-block fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">DOKTER DPJP</small>
-                        <div class="fw-semibold text-dark small text-truncate mt-0.5" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter">
+                        <small class="text-muted text-uppercase d-block fw-bold" style="font-size: 0.62rem; letter-spacing: 0.04em;">DOKTER DPJP</small>
+                        <div class="fw-semibold text-dark text-truncate mt-0.5" style="font-size: 0.8rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter">
                           <i class="fas fa-user-md text-info me-1"></i>
                           {{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}
                         </div>
@@ -980,13 +976,13 @@
                       <!-- Penjamin & Masuk -->
                       <div class="col-md-3 border-start ps-md-3 text-md-end overflow-hidden">
                         <span 
-                          class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1 fw-bold rounded text-truncate d-inline-block" 
-                          style="font-size: 0.7rem; max-width: 100%;"
+                          class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-0.5 fw-bold rounded text-truncate d-inline-block" 
+                          style="font-size: 0.68rem; max-width: 100%;"
                           :title="activePatientsMap[bed.kd_kamar].png_jawab"
                         >
                           {{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}
                         </span>
-                        <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">
+                        <small class="text-muted d-block text-truncate" style="font-size: 0.7rem;">
                           Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}
                         </small>
                       </div>
@@ -995,9 +991,9 @@
                 </div>
 
                 <!-- Empty bed info -->
-                <div v-else-if="bed.status === 'KOSONG'" class="px-3 pb-3">
-                  <div class="p-2.5 rounded-2 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle" style="font-size: 0.78rem;">
-                    <i class="fas fa-check-circle fs-6"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
+                <div v-else-if="bed.status === 'KOSONG'" class="px-3.5 pb-3 pt-0">
+                  <div class="p-2 px-3 rounded-2 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle" style="font-size: 0.75rem;">
+                    <i class="fas fa-check-circle"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
                   </div>
                 </div>
               </div>
@@ -1736,16 +1732,17 @@ onUnmounted(() => {
 
 /* Bed Item Card Styling */
 .bed-item-card {
-  transition: all 0.2s ease;
-  padding-left: 4px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff;
 }
 
-.bed-item-accent-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
+.bed-item-card.is-available-card {
+  border-left: 5px solid #10b981 !important;
+}
+
+.bed-item-card.is-occupied-card {
+  border-left: 5px solid #ef4444 !important;
 }
 
 .bed-item-card:hover {
