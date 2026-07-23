@@ -256,6 +256,13 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/e-book/kelola',
+    alias: '/sdi/e-book/kelola',
+    name: 'KelolaEbook',
+    component: () => import('../views/ebook/KelolaEbookView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/diklat/dashboard',
     name: 'DiklatDashboard',
     component: () => import('../views/sdi/DiklatDashboardView.vue'),
