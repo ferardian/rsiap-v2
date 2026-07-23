@@ -571,11 +571,14 @@ const exportToExcel = async () => {
       const wsData = []
       wsData.push([
         'No', 'NIP', 'Nama Lengkap', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 
-        'No KTP / NIK', 'No Telp', 'Jml. Keluarga', 'Departemen', 'Jabatan', 'Alamat', 
+        'No KTP / NIK', 'No BPJS Kesehatan', 'No BPJS Ketenagakerjaan', 'No Telp', 'Jml. Keluarga', 'Departemen', 'Jabatan', 'Alamat', 
         'Pendidikan', 'Tanggal Masuk', 'Tanggal Keluar', 'Masa Kerja', 'Status'
       ])
 
       dataToExport.forEach((emp, index) => {
+        const bpjsKes = emp.no_bpjs || emp.nomor_kartu?.no_bpjs || emp.nomorKartu?.no_bpjs || '-'
+        const bpjsTk = emp.no_bpjstk || emp.nomor_kartu?.no_bpjstk || emp.nomorKartu?.no_bpjstk || '-'
+
         wsData.push([
           index + 1,
           emp.nip || '-',
@@ -584,6 +587,8 @@ const exportToExcel = async () => {
           emp.tmp_lahir || '-',
           emp.tgl_lahir ? formatDate(emp.tgl_lahir) : '-',
           emp.no_ktp || '-',
+          bpjsKes,
+          bpjsTk,
           emp.no_telp || '-',
           emp.jml_keluarga || 0,
           emp.departemen || '-',
@@ -602,8 +607,8 @@ const exportToExcel = async () => {
       // Auto-size columns slightly
       const wscols = [
         {wch: 5}, {wch: 15}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 15},
-        {wch: 20}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 40}, 
-        {wch: 15}, {wch: 15}, {wch: 20}
+        {wch: 20}, {wch: 20}, {wch: 22}, {wch: 15}, {wch: 15}, {wch: 20}, 
+        {wch: 20}, {wch: 40}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 15}
       ]
       ws['!cols'] = wscols
       
