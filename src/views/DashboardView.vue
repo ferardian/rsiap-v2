@@ -900,6 +900,7 @@ const cinemaBedsGrouped = computed(() => {
     kelas: cls,
     beds: grouped[cls].sort((a, b) => getBedLabel(a).localeCompare(getBedLabel(b), undefined, { numeric: true })),
     weight: getWeight(cls)
+  })).sort((a, b) => a.weight - b.weight)
 })
 
 const switchToDenah = (categoryName) => {
