@@ -696,7 +696,10 @@ const getBedCategory = (bed) => {
     return 'HCU'
   }
   if (nmBangsal.includes('BAYI') || nmBangsal.includes('PERINATOLOGI') || nmBangsal.includes('PERINA')) {
-    return 'PERINATOLOGI'
+    if (nmBangsal.includes('BAYI SEHAT')) {
+      return 'PERINATOLOGI'
+    }
+    return 'EXCLUDED'
   }
   if (nmBangsal.includes('WALIDAH') || nmBangsal.includes('BAROROH') || nmBangsal.includes('KHADIJAH') || nmBangsal.includes('KANDUNGAN')) {
     return 'KANDUNGAN'
