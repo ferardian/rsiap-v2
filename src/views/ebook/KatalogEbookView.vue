@@ -383,7 +383,7 @@ const activeItem = ref(null)
 
 const loadCategories = async () => {
   try {
-    const res = await ebookService.getCategories()
+    const res = await ebookService.getCategories({ jenis: 'ebook' })
     if (res.data.success) {
       categories.value = res.data.data
     }

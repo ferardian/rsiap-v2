@@ -47,8 +47,8 @@ export const ebookService = {
   },
 
   // Get categories
-  getCategories() {
-    return api.get('/sdi/ebook/categories')
+  getCategories(params = {}) {
+    return api.get('/sdi/ebook/categories', { params })
   },
 
   // Create category
