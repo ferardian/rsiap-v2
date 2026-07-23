@@ -1757,6 +1757,10 @@ onUnmounted(() => {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.category-matrix-card-modern .card-header {
+  background-color: #ffffff !important;
+}
+
 .category-matrix-card-modern:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04) !important;
