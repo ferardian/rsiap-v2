@@ -77,11 +77,12 @@
     <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
       <div class="row g-2.5 align-items-center">
         <!-- Jenis Filter Pills -->
-        <div class="col-md-5 col-lg-4">
+        <!-- Jenis Filter Pills -->
+        <div class="col-12 col-md-5 col-lg-4">
           <div class="p-1 rounded-pill border d-flex align-items-center gap-1 w-100" style="height: 42px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
             <button 
               type="button" 
-              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0" 
+              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0 text-nowrap px-2" 
               :class="selectedJenis === '' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
               @click="setJenis('')"
             >
@@ -89,7 +90,7 @@
             </button>
             <button 
               type="button" 
-              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0" 
+              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0 text-nowrap px-2" 
               :class="selectedJenis === 'ebook' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
               @click="setJenis('ebook')"
             >
@@ -97,7 +98,7 @@
             </button>
             <button 
               type="button" 
-              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0" 
+              class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0 text-nowrap px-2" 
               :class="selectedJenis === 'jurnal' ? 'btn-purple text-white shadow-sm' : 'text-secondary bg-transparent'"
               @click="setJenis('jurnal')"
             >
@@ -107,7 +108,7 @@
         </div>
 
         <!-- Category Dropdown -->
-        <div class="col-md-3">
+        <div class="col-12 col-md-3">
           <select 
             v-model="selectedKategori" 
             class="form-select rounded-pill border shadow-none bg-white px-3.5" 
@@ -122,7 +123,7 @@
         </div>
 
         <!-- Search Input -->
-        <div class="col-md-4 col-lg-5">
+        <div class="col-12 col-md-4 col-lg-5">
           <div class="input-group">
             <span class="input-group-text bg-white border-end-0 text-muted rounded-start-pill ps-3.5" style="border-color: #cbd5e1; height: 42px;">
               <i class="fas fa-search"></i>
@@ -161,8 +162,9 @@
               <th class="py-3">Tahun / Penerbit</th>
               <th class="py-3 text-center">Pembaca</th>
               <th class="py-3 text-center">Status</th>
-              <th class="pe-4 py-3 text-end" style="width: 140px;">Aksi</th>
+              <th class="py-3 text-center" style="width: 140px;">Aksi</th>
             </tr>
+          </thead>
           </thead>
           <tbody style="font-size: 0.85rem;">
             <tr v-for="(item, index) in ebookList" :key="item.id" class="transition-all">
@@ -226,7 +228,7 @@
               </td>
 
               <!-- Actions -->
-              <td class="pe-4 text-end">
+              <td class="text-center">
                 <div class="btn-group btn-group-sm">
                   <button class="btn btn-light text-primary border-0 rounded-2" @click="previewPdf(item)" title="Pratinjau PDF">
                     <i class="fas fa-file-pdf"></i>
