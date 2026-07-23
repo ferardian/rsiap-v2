@@ -165,7 +165,6 @@
               <th class="py-3 text-center" style="width: 140px;">Aksi</th>
             </tr>
           </thead>
-          </thead>
           <tbody style="font-size: 0.85rem;">
             <tr v-for="(item, index) in ebookList" :key="item.id" class="transition-all">
               <!-- No -->
