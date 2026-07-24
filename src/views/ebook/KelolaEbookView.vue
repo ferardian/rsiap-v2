@@ -420,7 +420,7 @@
               <div class="form-section">
                 <div class="section-header section-teal">
                   <i class="fas fa-folder-open"></i>
-                  <span>Berkas Berkas &amp; Abstrak</span>
+                  <span>Berkas Dokumen &amp; Abstrak</span>
                 </div>
                 <div class="section-body">
                   <div class="row g-3">
