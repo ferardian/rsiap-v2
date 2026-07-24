@@ -453,7 +453,7 @@ const formatDate = (date) => {
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   margin-bottom: 0.85rem;
-  overflow: hidden;
+  position: relative;
 }
 
 .section-header {
@@ -465,6 +465,8 @@ const formatDate = (date) => {
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
+  border-top-left-radius: 11px;
+  border-top-right-radius: 11px;
 }
 
 .section-header i {
@@ -541,6 +543,12 @@ const formatDate = (date) => {
 }
 
 /* Override v-select to match field-input style */
+:deep(.vselect-custom) {
+  position: relative;
+}
+:deep(.vselect-custom.vs--open) {
+  z-index: 500;
+}
 :deep(.vselect-custom .vs__dropdown-toggle) {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -565,6 +573,14 @@ const formatDate = (date) => {
 :deep(.vselect-custom .vs__clear),
 :deep(.vselect-custom .vs__open-indicator) {
   fill: #94a3b8;
+}
+:deep(.vselect-custom .vs__dropdown-menu) {
+  z-index: 1050 !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff !important;
+  max-height: 220px;
 }
 
 /* ===== Info Strip (compact row) ===== */
