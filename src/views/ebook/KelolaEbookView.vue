@@ -301,137 +301,170 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- MODAL FORM TAMBAH / EDIT E-BOOK & JURNAL (CLEAN LIGHT PILL LAYOUT) -->
+    <!-- MODAL FORM TAMBAH / EDIT E-BOOK & JURNAL -->
     <!-- ========================================== -->
-    <div v-if="showFormModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 1050;">
-      <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 820px;">
-        <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden">
-          <!-- Compact Clean Header -->
-          <div class="modal-header bg-white border-bottom p-3.5 px-4 d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-              <div class="cat-icon-avatar bg-primary-subtle text-primary rounded-circle p-2.5 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; font-size: 1.15rem;">
+    <div v-if="showFormModal" class="modal-backdrop-custom" @click.self="showFormModal = false">
+      <div class="modal-dialog-custom modal-lg">
+        <div class="modal-shell">
+
+          <!-- Header -->
+          <div class="modal-header-custom">
+            <div class="modal-header-left">
+              <div class="modal-header-icon">
                 <i :class="isEditMode ? 'fas fa-edit' : 'fas fa-book-reader'"></i>
               </div>
               <div>
-                <h5 class="modal-title fw-bold text-dark m-0" style="font-size: 1.1rem;">
+                <div class="modal-header-title">
                   {{ isEditMode ? 'Edit Dokumen E-Book / Jurnal' : 'Tambah Dokumen Baru' }}
-                </h5>
-                <small class="text-muted">Lengkapi metadata dan berkas PDF dokumen digital</small>
+                </div>
+                <div class="modal-header-sub">Lengkapi metadata dan berkas PDF dokumen digital</div>
               </div>
             </div>
-            <button type="button" class="btn-close" @click="showFormModal = false"></button>
+            <button type="button" class="modal-close-btn" @click="showFormModal = false">
+              <i class="fas fa-times"></i>
+            </button>
           </div>
 
-          <form @submit.prevent="saveEbook" class="d-flex flex-column" style="max-height: 80vh;">
-            <div class="modal-body p-4 bg-white overflow-y-auto" style="flex: 1;">
-              <div class="row g-3">
-                <!-- Tipe Dokumen (Mode Pill Switcher High Contrast) -->
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-dark">Tipe Dokumen <span class="text-danger">*</span></label>
-                  <div class="p-1 rounded-pill border d-flex align-items-center gap-1" style="height: 44px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
-                    <button 
-                      type="button" 
-                      class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
-                      :class="form.jenis === 'ebook' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'" 
-                      @click="form.jenis = 'ebook'"
-                    >
-                      <i class="fas fa-book" :class="form.jenis === 'ebook' ? 'text-white' : 'text-primary'"></i> E-Book
-                    </button>
-                    <button 
-                      type="button" 
-                      class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
-                      :class="form.jenis === 'jurnal' ? 'btn-purple text-white shadow-sm' : 'text-secondary bg-transparent'" 
-                      @click="form.jenis = 'jurnal'"
-                    >
-                      <i class="fas fa-file-alt" :class="form.jenis === 'jurnal' ? 'text-white' : 'text-purple'"></i> Jurnal Ilmiah
-                    </button>
-                  </div>
-                </div>
+          <!-- Body -->
+          <div class="modal-body-custom">
+            <form @submit.prevent="saveEbook">
 
-                <!-- Kategori Dokumen -->
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-dark">Kategori Dokumen</label>
-                  <select v-model="form.kategori_id" class="form-select rounded-3 border shadow-none bg-white" style="height: 42px;">
-                    <option :value="null">-- Pilih Kategori --</option>
-                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.nama_kategori }}</option>
-                  </select>
+              <!-- Section 1: Informasi Utama & Kategori -->
+              <div class="form-section">
+                <div class="section-header section-blue">
+                  <i class="fas fa-info-circle"></i>
+                  <span>Informasi Utama &amp; Kategori</span>
                 </div>
+                <div class="section-body">
+                  <div class="row g-3">
+                    <!-- Tipe Dokumen -->
+                    <div class="col-md-6">
+                      <label class="field-label">Tipe Dokumen <span class="required">*</span></label>
+                      <div class="p-1 rounded-pill border d-flex align-items-center gap-1" style="height: 36px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
+                        <button 
+                          type="button" 
+                          class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
+                          :class="form.jenis === 'ebook' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'" 
+                          @click="form.jenis = 'ebook'"
+                        >
+                          <i class="fas fa-book" :class="form.jenis === 'ebook' ? 'text-white' : 'text-primary'"></i> E-Book
+                        </button>
+                        <button 
+                          type="button" 
+                          class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
+                          :class="form.jenis === 'jurnal' ? 'btn-purple text-white shadow-sm' : 'text-secondary bg-transparent'" 
+                          @click="form.jenis = 'jurnal'"
+                        >
+                          <i class="fas fa-file-alt" :class="form.jenis === 'jurnal' ? 'text-white' : 'text-purple'"></i> Jurnal Ilmiah
+                        </button>
+                      </div>
+                    </div>
 
-                <!-- Judul Dokumen -->
-                <div class="col-12">
-                  <label class="form-label small fw-bold text-dark">Judul Dokumen <span class="text-danger">*</span></label>
-                  <input v-model="form.judul" type="text" class="form-control rounded-3 border shadow-none" placeholder="Masukkan judul lengkap e-book atau jurnal..." required />
-                </div>
+                    <!-- Kategori Dokumen -->
+                    <div class="col-md-6">
+                      <label class="field-label">Kategori Dokumen</label>
+                      <select v-model="form.kategori_id" class="field-input">
+                        <option :value="null">-- Pilih Kategori --</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.nama_kategori }}</option>
+                      </select>
+                    </div>
 
-                <!-- Penulis & Penerbit -->
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-dark">Penulis / Peneliti <span class="text-danger">*</span></label>
-                  <input v-model="form.penulis" type="text" class="form-control rounded-3 border shadow-none" placeholder="Nama pengarang / tim peneliti..." required />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-dark">Penerbit / Vol. Jurnal</label>
-                  <input v-model="form.penerbit" type="text" class="form-control rounded-3 border shadow-none" placeholder="Penerbit / Vol. 1 No. 2..." />
-                </div>
-
-                <!-- Tahun Terbit, ISBN/ISSN, Status Publikasi -->
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-dark">Tahun Terbit</label>
-                  <input v-model="form.tahun_terbit" type="number" class="form-control rounded-3 border shadow-none" placeholder="2026" min="1900" max="2099" />
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-dark">ISBN / ISSN / DOI</label>
-                  <input v-model="form.isbn_issn" type="text" class="form-control rounded-3 border shadow-none" placeholder="ISBN/ISSN..." />
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-dark">Status Publikasi</label>
-                  <select v-model="form.status" class="form-select rounded-3 border shadow-none">
-                    <option value="publish">🟢 Publish</option>
-                    <option value="draft">🟡 Draft</option>
-                    <option value="archived">⚪ Archived</option>
-                  </select>
-                </div>
-
-                <!-- Berkas File PDF & Gambar Sampul -->
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-dark">Berkas File PDF <span v-if="!isEditMode" class="text-danger">*</span></label>
-                  <input ref="pdfInput" type="file" accept="application/pdf" class="form-control rounded-3 shadow-none" :required="!isEditMode" @change="handlePdfChange" />
-                  <small class="text-muted d-block mt-1">Format PDF, maksimal 50 MB.</small>
-                  <div v-if="isEditMode && selectedEbook?.file_pdf && !selectedPdfFile" class="mt-1 small text-primary">
-                    <i class="fas fa-paperclip me-1"></i> Terpasang: {{ getFileName(selectedEbook.file_pdf) }}
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label small fw-bold text-dark">Gambar Sampul / Cover (Opsional)</label>
-                  <div class="d-flex gap-2 align-items-center">
-                    <input ref="coverInput" type="file" accept="image/*" class="form-control rounded-3 shadow-none flex-fill" @change="handleCoverChange" />
-                    <div v-if="coverPreview" class="cover-mini-thumb rounded-2 border overflow-hidden flex-shrink-0" style="width: 36px; height: 46px;">
-                      <img :src="coverPreview" class="w-100 h-100 object-fit-cover" />
+                    <!-- Judul Dokumen -->
+                    <div class="col-12">
+                      <label class="field-label">Judul Dokumen <span class="required">*</span></label>
+                      <input v-model="form.judul" type="text" class="field-input" placeholder="Masukkan judul lengkap e-book atau jurnal..." required />
                     </div>
                   </div>
-                  <small class="text-muted d-block mt-1">Format JPG/PNG/WebP, maksimal 5 MB.</small>
-                </div>
-
-                <!-- Ringkasan / Abstrak -->
-                <div class="col-12">
-                  <label class="form-label small fw-bold text-dark">Ringkasan / Abstrak</label>
-                  <textarea v-model="form.deskripsi" class="form-control rounded-3 border shadow-none" rows="2.5" placeholder="Tuliskan ringkasan singkat atau abstrak dokumen..."></textarea>
                 </div>
               </div>
-            </div>
 
-            <!-- Footer Button Bar (Strictly Right Aligned & Neat) -->
-            <div class="ebook-modal-footer">
-              <button type="button" class="btn btn-light text-secondary border rounded-pill px-4 py-2 fw-bold" style="font-size: 0.85rem;" @click="showFormModal = false">
-                Batal
-              </button>
-              <button type="submit" class="btn btn-primary rounded-pill px-4.5 py-2 fw-bold d-flex align-items-center gap-2 shadow-2sm" style="font-size: 0.85rem;" :disabled="submitting">
-                <i v-if="submitting" class="fas fa-spinner fa-spin"></i>
-                <i v-else :class="isEditMode ? 'fas fa-save' : 'fas fa-cloud-upload-alt'"></i>
-                {{ isEditMode ? 'Simpan Perubahan' : 'Unggah Dokumen' }}
-              </button>
-            </div>
-          </form>
+              <!-- Section 2: Penulis, Penerbit & Publikasi -->
+              <div class="form-section">
+                <div class="section-header section-indigo">
+                  <i class="fas fa-user-edit"></i>
+                  <span>Penulis &amp; Detail Publikasi</span>
+                </div>
+                <div class="section-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="field-label">Penulis / Peneliti <span class="required">*</span></label>
+                      <input v-model="form.penulis" type="text" class="field-input" placeholder="Nama pengarang / tim peneliti..." required />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="field-label">Penerbit / Vol. Jurnal</label>
+                      <input v-model="form.penerbit" type="text" class="field-input" placeholder="Penerbit / Vol. 1 No. 2..." />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="field-label">Tahun Terbit</label>
+                      <input v-model="form.tahun_terbit" type="number" class="field-input" placeholder="2026" min="1900" max="2099" />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="field-label">ISBN / ISSN / DOI</label>
+                      <input v-model="form.isbn_issn" type="text" class="field-input" placeholder="ISBN/ISSN..." />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="field-label">Status Publikasi</label>
+                      <select v-model="form.status" class="field-input">
+                        <option value="publish">🟢 Publish</option>
+                        <option value="draft">🟡 Draft</option>
+                        <option value="archived">⚪ Archived</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 3: Berkas File & Sampul -->
+              <div class="form-section">
+                <div class="section-header section-teal">
+                  <i class="fas fa-folder-open"></i>
+                  <span>Berkas Berkas &amp; Abstrak</span>
+                </div>
+                <div class="section-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="field-label">Berkas File PDF <span v-if="!isEditMode" class="required">*</span></label>
+                      <input ref="pdfInput" type="file" accept="application/pdf" class="field-input" style="height: 38px; padding-top: 4px;" :required="!isEditMode" @change="handlePdfChange" />
+                      <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Format PDF, maksimal 50 MB.</small>
+                      <div v-if="isEditMode && selectedEbook?.file_pdf && !selectedPdfFile" class="mt-1 small text-primary">
+                        <i class="fas fa-paperclip me-1"></i> Terpasang: {{ getFileName(selectedEbook.file_pdf) }}
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="field-label">Gambar Sampul / Cover (Opsional)</label>
+                      <div class="d-flex gap-2 align-items-center">
+                        <input ref="coverInput" type="file" accept="image/*" class="field-input flex-fill" style="height: 38px; padding-top: 4px;" @change="handleCoverChange" />
+                        <div v-if="coverPreview" class="cover-mini-thumb rounded-2 border overflow-hidden flex-shrink-0" style="width: 36px; height: 46px;">
+                          <img :src="coverPreview" class="w-100 h-100 object-fit-cover" />
+                        </div>
+                      </div>
+                      <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Format JPG/PNG/WebP, maksimal 5 MB.</small>
+                    </div>
+
+                    <div class="col-12">
+                      <label class="field-label">Ringkasan / Abstrak</label>
+                      <textarea v-model="form.deskripsi" class="field-input field-textarea" rows="3" placeholder="Tuliskan ringkasan singkat atau abstrak dokumen..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </form>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer-compact">
+            <button type="button" class="btn-modal-cancel" @click="showFormModal = false">
+              <i class="fas fa-times me-1"></i>Batal
+            </button>
+            <button type="button" class="btn-modal-save" @click="saveEbook" :disabled="submitting">
+              <span v-if="submitting" class="spinner-border spinner-border-sm me-1" style="width:14px;height:14px;"></span>
+              <i v-else :class="isEditMode ? 'fas fa-save me-1' : 'fas fa-cloud-upload-alt me-1'"></i>
+              {{ isEditMode ? 'Simpan Perubahan' : 'Unggah Dokumen' }}
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1007,5 +1040,252 @@ onMounted(() => {
   background-color: #e11d48 !important;
   color: #ffffff !important;
   box-shadow: 0 4px 10px rgba(225, 29, 72, 0.28) !important;
+}
+
+/* ===== Modal Backdrop + Shell (Laporan Operasi Design System) ===== */
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-dialog-custom {
+  width: 100%;
+  max-width: 820px;
+}
+
+.modal-shell {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+/* ===== Header ===== */
+.modal-header-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  flex-shrink: 0;
+}
+
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-header-icon {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.modal-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.modal-header-sub {
+  font-size: 0.78rem;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+.modal-close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.18s;
+}
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Body ===== */
+.modal-body-custom {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+  background: #f8fafc;
+}
+
+/* ===== Form Sections ===== */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  margin-bottom: 0.85rem;
+  position: relative;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-top-left-radius: 11px;
+  border-top-right-radius: 11px;
+}
+
+.section-header i {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.section-blue {
+  background: linear-gradient(90deg, #eff6ff, #dbeafe);
+  color: #1e40af;
+  border-bottom: 1px solid #bfdbfe;
+}
+
+.section-indigo {
+  background: linear-gradient(90deg, #eef2ff, #e0e7ff);
+  color: #3730a3;
+  border-bottom: 1px solid #c7d2fe;
+}
+
+.section-teal {
+  background: linear-gradient(90deg, #f0fdfa, #ccfbf1);
+  color: #0f766e;
+  border-bottom: 1px solid #99f6e4;
+}
+
+.section-body {
+  padding: 0.9rem 1rem;
+}
+
+/* ===== Field Inputs ===== */
+.field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  font-size: 0.82rem;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.38rem 0.7rem;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  outline: none;
+  height: 36px;
+}
+
+.field-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.field-input:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.field-textarea {
+  height: auto !important;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ===== Modal Footer ===== */
+.modal-footer-compact {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.btn-modal-cancel {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.38rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.btn-modal-cancel:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.btn-modal-save {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+.btn-modal-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+.btn-modal-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>
