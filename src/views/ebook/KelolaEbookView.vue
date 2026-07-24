@@ -340,20 +340,22 @@
                     <!-- Tipe Dokumen -->
                     <div class="col-md-6">
                       <label class="field-label">Tipe Dokumen <span class="required">*</span></label>
-                      <div class="p-1 rounded-pill border d-flex align-items-center gap-1" style="height: 36px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
+                      <div class="p-1 rounded-pill border d-flex align-items-center gap-1" style="height: 38px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
                         <button 
                           type="button" 
-                          class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
+                          class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0 text-nowrap" 
                           :class="form.jenis === 'ebook' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'" 
                           @click="form.jenis = 'ebook'"
+                          style="font-size: 0.78rem; white-space: nowrap; padding: 0 10px;"
                         >
                           <i class="fas fa-book" :class="form.jenis === 'ebook' ? 'text-white' : 'text-primary'"></i> E-Book
                         </button>
                         <button 
                           type="button" 
-                          class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-2 border-0" 
+                          class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all d-flex align-items-center justify-content-center gap-1.5 border-0 text-nowrap" 
                           :class="form.jenis === 'jurnal' ? 'btn-purple text-white shadow-sm' : 'text-secondary bg-transparent'" 
                           @click="form.jenis = 'jurnal'"
+                          style="font-size: 0.78rem; white-space: nowrap; padding: 0 10px;"
                         >
                           <i class="fas fa-file-alt" :class="form.jenis === 'jurnal' ? 'text-white' : 'text-purple'"></i> Jurnal Ilmiah
                         </button>
