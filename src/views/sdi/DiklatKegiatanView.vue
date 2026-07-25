@@ -1529,9 +1529,12 @@ const submitForm = async () => {
 
 // === DELETE PARTICIPANT ===
 const deleteParticipantRecord = async (item) => {
+  const isExt = item.is_eksternal == 1 || item.is_eksternal === true
+  const nameToDisplay = isExt ? (item.nama_peserta || 'Peserta Eksternal') : (item.pegawai?.nama || 'Peserta')
+
   const result = await Swal.fire({
     title: 'Hapus Peserta?',
-    html: `Apakah Anda yakin ingin mengeluarkan <strong>${item.pegawai?.nama}</strong> dari kegiatan <strong>${selectedKegiatan.value?.nama_kegiatan}</strong>?`,
+    html: `Apakah Anda yakin ingin mengeluarkan <strong>${nameToDisplay}</strong> dari kegiatan <strong>${selectedKegiatan.value?.nama_kegiatan}</strong>?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#ef4444',
@@ -1632,15 +1635,24 @@ const bulkDownloadCertificates = async () => {
     Swal.getHtmlContainer().innerHTML = `Sedang memproses dokumen: <b>${i + 1}</b> dari <b>${participants.value.length}</b>...`
     
     try {
-      const cleanNama = item.pegawai?.nama ? item.pegawai.nama.replace(/[^a-zA-Z0-9]/g, '_') : 'karyawan'
-      const nik = item.pegawai?.nik || 'unknown'
+      const isExt = item.is_eksternal == 1 || item.is_eksternal === true
+      const rawNama = isExt ? (item.nama_peserta || 'peserta_eksternal') : (item.pegawai?.nama || 'karyawan')
+      const cleanNama = rawNama.replace(/[^a-zA-Z0-9]/g, '_')
+      const nik = isExt ? 'EKSTERNAL' : (item.pegawai?.nik || 'unknown')
 
       if (selectedKegiatan.value.kategori === 'Internal') {
         // Generate internal PDF blob
         item.kegiatan = selectedKegiatan.value
+        const pegawaiObj = isExt ? {
+          nama: item.nama_peserta,
+          nik: 'Non-Pegawai',
+          jbtn: item.instansi_peserta,
+          departemen: 'Eksternal / Outsourcing'
+        } : item.pegawai
+
         const genResult = await generateSertifikatDiklat(
           item,
-          item.pegawai,
+          pegawaiObj,
           {
             direkturNama: item.kegiatan?.ttd1_pegawai?.nama || item.kegiatan?.ttd1 || undefined,
             ketuaPanitia: item.kegiatan?.ttd2_pegawai?.nama || item.kegiatan?.ttd2 || undefined,
@@ -1666,7 +1678,7 @@ const bulkDownloadCertificates = async () => {
         }
       }
     } catch (err) {
-      console.error(`Failed to process certificate for NIK: ${item.pegawai?.nik}`, err)
+      console.error(`Failed to process certificate for participant:`, err)
       failCount++
     }
   }
