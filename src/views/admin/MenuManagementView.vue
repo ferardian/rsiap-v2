@@ -513,9 +513,21 @@
               <div class="row g-4">
                 <!-- Column 1: Roles Selection -->
                 <div class="col-12 col-md-6 d-flex flex-column" style="min-height: 380px;">
-                  <label class="form-label-custom mb-2">
-                    <i class="fas fa-users me-1"></i> Pilih Role Target
-                  </label>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label-custom mb-0">
+                      <i class="fas fa-users me-1"></i> Pilih Role Target
+                    </label>
+                    <button
+                      v-if="availableRolesToAssign.length > 0"
+                      type="button"
+                      class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-primary"
+                      @click="toggleSelectAllRoles"
+                      style="font-size: 0.78rem;"
+                    >
+                      <i class="fas me-1" :class="isAllRolesSelected ? 'fa-check-square text-primary' : 'fa-square text-muted'"></i>
+                      {{ isAllRolesSelected ? 'Batalkan Semua' : 'Pilih Semua (' + availableRolesToAssign.length + ')' }}
+                    </button>
+                  </div>
                   
                   <!-- Role Search -->
                   <div class="input-group modern-input mb-3" style="max-height: 42px;">
@@ -568,9 +580,20 @@
                 <!-- Column 2: Permissions Configuration -->
                 <div class="col-12 col-md-6">
                   <div class="card border-0 bg-light-gray p-4 h-100 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
-                    <label class="form-label-custom mb-3">
-                      <i class="fas fa-cog me-1"></i> Hak Akses Default
-                    </label>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <label class="form-label-custom mb-0">
+                        <i class="fas fa-cog me-1"></i> Hak Akses Default
+                      </label>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-link p-0 text-decoration-none fw-semibold text-muted"
+                        @click="toggleAllDefaultPermissions"
+                        style="font-size: 0.78rem;"
+                      >
+                        <i class="fas me-1" :class="isAllPermissionsActive ? 'fa-toggle-on text-success' : 'fa-toggle-off'"></i>
+                        {{ isAllPermissionsActive ? 'Matikan Semua' : 'Aktifkan Semua' }}
+                      </button>
+                    </div>
 
                     <div class="permission-toggles-grid">
                       <div class="permission-toggle-item">
@@ -784,11 +807,11 @@ const bulkSearchQuery = ref('')
 const bulkAssigning = ref(false)
 const bulkPermissions = ref({
   can_view: true,
-  can_create: false,
-  can_update: false,
-  can_delete: false,
-  can_export: false,
-  can_import: false
+  can_create: true,
+  can_update: true,
+  can_delete: true,
+  can_export: true,
+  can_import: true
 })
 
 const formData = ref({
@@ -1035,11 +1058,11 @@ const viewMenuPermissions = async (menu) => {
   bulkSearchQuery.value = ''
   bulkPermissions.value = {
     can_view: true,
-    can_create: false,
-    can_update: false,
-    can_delete: false,
-    can_export: false,
-    can_import: false
+    can_create: true,
+    can_update: true,
+    can_delete: true,
+    can_export: true,
+    can_import: true
   }
   await fetchMenuPermissions()
 }
@@ -1073,6 +1096,31 @@ const availableRolesToAssign = computed(() => {
   
   return filtered
 })
+
+const isAllRolesSelected = computed(() => {
+  if (availableRolesToAssign.value.length === 0) return false
+  return availableRolesToAssign.value.every(r => selectedBulkRoles.value.includes(r.id_role))
+})
+
+const toggleSelectAllRoles = () => {
+  const availableIds = availableRolesToAssign.value.map(r => r.id_role)
+  if (isAllRolesSelected.value) {
+    selectedBulkRoles.value = selectedBulkRoles.value.filter(id => !availableIds.includes(id))
+  } else {
+    selectedBulkRoles.value = Array.from(new Set([...selectedBulkRoles.value, ...availableIds]))
+  }
+}
+
+const isAllPermissionsActive = computed(() => {
+  return Object.values(bulkPermissions.value).every(val => val === true)
+})
+
+const toggleAllDefaultPermissions = () => {
+  const targetState = !isAllPermissionsActive.value
+  Object.keys(bulkPermissions.value).forEach(key => {
+    bulkPermissions.value[key] = targetState
+  })
+}
 
 const bulkAssignPermissions = async () => {
   if (selectedBulkRoles.value.length === 0) {
