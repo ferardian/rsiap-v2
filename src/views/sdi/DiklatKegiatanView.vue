@@ -244,7 +244,7 @@
                       <td>
                         <div class="d-flex flex-column text-start">
                           <span class="text-dark small fw-medium">{{ item.is_eksternal ? (item.instansi_peserta || 'Peserta Luar') : (item.pegawai?.jbtn || '-') }}</span>
-                          <span class="text-muted extra-small mt-0.5">{{ item.is_eksternal ? 'Instansi / Vendor Asal' : (item.pegawai?.departemen || '-') }}</span>
+                          <span class="text-muted extra-small mt-0.5">{{ item.is_eksternal ? 'Instansi / Vendor Asal' : (item.pegawai?.dep?.nama || item.pegawai?.departemen || '-') }}</span>
                         </div>
                       </td>
                       <td>
@@ -519,47 +519,80 @@
 
             <!-- IF PEGAWAI INTERNAL RS -->
             <div v-if="!form.is_eksternal">
-              <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
+              <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search with Bulk Select support) -->
               <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3 position-relative">
-                <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <label class="form-label mb-0"><i class="fas fa-users me-1 text-primary"></i>Pilih Karyawan <span class="text-danger">*</span></label>
+                  <span v-if="selectedEmployees.length > 0" class="badge bg-primary-subtle text-primary border border-primary-subtle font-mono extra-small">
+                    {{ selectedEmployees.length }} Terpilih
+                  </span>
+                </div>
+
+                <!-- Selected Employee Chips Container -->
+                <div v-if="selectedEmployees.length > 0" class="selected-employees-container border rounded-3 p-2 bg-light mb-2">
+                  <div class="d-flex align-items-center justify-content-between mb-1.5 px-1">
+                    <span class="text-muted extra-small fw-bold">Daftar Karyawan Terpilih:</span>
+                    <button type="button" @click="clearEmployeeSelection" class="btn btn-link btn-sm text-danger text-decoration-none p-0 extra-small fw-bold">
+                      <i class="fas fa-trash-alt me-1"></i>Hapus Semua
+                    </button>
+                  </div>
+                  <div class="d-flex flex-wrap gap-1.5" style="max-height: 140px; overflow-y: auto;">
+                    <span 
+                      v-for="emp in selectedEmployees" 
+                      :key="emp.nik"
+                      class="badge bg-white text-dark border shadow-xs d-inline-flex align-items-center gap-1.5 py-1 px-2 font-sans fw-normal text-start"
+                      style="font-size: 0.78rem;"
+                    >
+                      <span class="fw-bold text-dark">{{ emp.nama }}</span>
+                      <span class="text-muted extra-small font-mono">({{ emp.nik }})</span>
+                      <button type="button" @click="removeSelectedEmployee(emp.nik)" class="border-0 bg-transparent p-0 ms-1 text-danger flex-shrink-0" style="line-height: 1;">
+                        <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+                      </button>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Search Input Box -->
                 <div class="search-box d-flex align-items-center border rounded-2 bg-white px-3 gap-2" style="height: 38px;">
                   <i class="fas fa-search text-muted flex-shrink-0" style="font-size: 0.85rem;"></i>
                   <input 
                     type="text" 
                     v-model="empQuery" 
                     @input="searchEmployees"
-                    placeholder="Ketik NIK atau nama pegawai..."
+                    placeholder="Ketik NIK, nama pegawai, atau unit untuk cari..."
                     class="border-0 flex-grow-1 bg-transparent"
-                    style="outline: none; font-size: 0.9rem; min-width: 0;"
-                    :disabled="form.nik !== null"
-                    :required="!form.is_eksternal"
+                    style="outline: none; font-size: 0.88rem; min-width: 0;"
+                    :required="!form.is_eksternal && selectedEmployees.length === 0"
                   />
-                  <button type="button" v-if="form.nik" @click="clearEmployeeSelection" class="border-0 bg-transparent p-0 flex-shrink-0">
-                    <i class="fas fa-times text-danger" style="font-size: 0.85rem;"></i>
+                  <button type="button" v-if="empQuery" @click="empQuery = ''; empResults = []" class="border-0 bg-transparent p-0 flex-shrink-0">
+                    <i class="fas fa-times text-secondary" style="font-size: 0.85rem;"></i>
                   </button>
                 </div>
 
-                <!-- Autocomplete Dropdown -->
-                <div v-if="empResults.length > 0" class="search-results-dropdown shadow border rounded-3 w-100 bg-white" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto;">
+                <!-- Autocomplete Dropdown with Bulk Add Button -->
+                <div v-if="empResults.length > 0" class="search-results-dropdown shadow border rounded-3 w-100 bg-white overflow-hidden" style="position: absolute; z-index: 1050; max-height: 230px; overflow-y: auto;">
+                  <div class="p-2 bg-light border-bottom d-flex align-items-center justify-content-between">
+                    <span class="extra-small text-muted fw-bold">Ditemukan {{ empResults.length }} pegawai</span>
+                    <button type="button" @click="selectAllSearchResults" class="btn btn-xs btn-primary fw-bold py-0.5 px-2 text-white shadow-xs" style="font-size: 0.72rem;">
+                      <i class="fas fa-plus-circle me-1"></i>Pilih Semua Hasil ({{ empResults.length }})
+                    </button>
+                  </div>
                   <div 
                     v-for="emp in empResults" 
                     :key="emp.nik" 
-                    class="search-result-item p-2 border-bottom text-start"
+                    class="search-result-item p-2 border-bottom text-start d-flex align-items-center justify-content-between"
+                    :class="{ 'bg-primary-subtle': selectedEmployees.some(e => e.nik === emp.nik) }"
                     @click="selectEmployee(emp)"
                     style="cursor: pointer;"
                   >
-                    <span class="fw-semibold d-block small">{{ emp.nama }}</span>
-                    <span class="text-muted extra-small">
-                      NIK: {{ emp.nik }} • {{ emp.jbtn || '-' }} • {{ emp.departemen || '-' }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Selected Indicator -->
-                <div v-if="selectedEmpRecord" class="selected-emp-badge animate__animated animate__fadeIn">
-                  <div>
-                    <i class="fas fa-check-circle me-2 text-primary"></i>
-                    <strong>Terpilih:</strong> {{ selectedEmpRecord.nama }} <span class="font-mono text-muted-dark small ms-2">({{ selectedEmpRecord.nik }})</span>
+                    <div>
+                      <span class="fw-semibold d-block small" :class="selectedEmployees.some(e => e.nik === emp.nik) ? 'text-primary' : 'text-dark'">{{ emp.nama }}</span>
+                      <span class="text-muted extra-small">
+                        NIK: {{ emp.nik }} • {{ emp.jbtn || '-' }} • {{ emp.dpt?.nama || emp.departemen || '-' }}
+                      </span>
+                    </div>
+                    <i v-if="selectedEmployees.some(e => e.nik === emp.nik)" class="fas fa-check-circle text-primary ms-2" style="font-size: 0.9rem;"></i>
+                    <i v-else class="fas fa-plus text-muted ms-2 opacity-50" style="font-size: 0.8rem;"></i>
                   </div>
                 </div>
               </div>
@@ -986,6 +1019,7 @@ const hasRichTextMateri = computed(() => {
 const empQuery = ref('')
 const empResults = ref([])
 const selectedEmpRecord = ref(null)
+const selectedEmployees = ref([])
 
 // Sidebar Form State
 const showFormSidebar = ref(false)
@@ -1141,9 +1175,9 @@ const loadParticipants = async (kegId) => {
   }
 }
 
-// === EMPLOYEE AUTOCOMPLETE (SIDEBAR FORM) ===
+// === EMPLOYEE AUTOCOMPLETE & BULK SELECTION ===
 const searchEmployees = debounce(async () => {
-  if (empQuery.value.trim().length < 3) {
+  if (empQuery.value.trim().length < 2) {
     empResults.value = []
     return
   }
@@ -1156,13 +1190,44 @@ const searchEmployees = debounce(async () => {
 }, 300)
 
 const selectEmployee = (emp) => {
+  if (!selectedEmployees.value.some(e => e.nik === emp.nik)) {
+    selectedEmployees.value.push(emp)
+  }
   selectedEmpRecord.value = emp
   form.nik = emp.nik
-  empQuery.value = emp.nama
+  empQuery.value = ''
   empResults.value = []
 }
 
+const selectAllSearchResults = () => {
+  let added = 0
+  empResults.value.forEach(emp => {
+    if (!selectedEmployees.value.some(e => e.nik === emp.nik)) {
+      selectedEmployees.value.push(emp)
+      added++
+    }
+  })
+  if (added > 0) {
+    toast.info(`${added} karyawan berhasil ditambahkan ke daftar pilihan`)
+  }
+  empResults.value = []
+  empQuery.value = ''
+}
+
+const removeSelectedEmployee = (nik) => {
+  selectedEmployees.value = selectedEmployees.value.filter(e => e.nik !== nik)
+  if (selectedEmployees.value.length === 0) {
+    selectedEmpRecord.value = null
+    form.nik = null
+  } else {
+    const last = selectedEmployees.value[selectedEmployees.value.length - 1]
+    selectedEmpRecord.value = last
+    form.nik = last.nik
+  }
+}
+
 const clearEmployeeSelection = () => {
+  selectedEmployees.value = []
   selectedEmpRecord.value = null
   form.nik = null
   empQuery.value = ''
@@ -1241,6 +1306,7 @@ const resetForm = () => {
   empQuery.value = ''
   empResults.value = []
   selectedEmpRecord.value = null
+  selectedEmployees.value = []
   currentBerkasName.value = ''
   selectedParticipantItem.value = null
   
@@ -1359,7 +1425,7 @@ const isFormValid = computed(() => {
     if (form.is_eksternal) {
       return form.nama_peserta && form.instansi_peserta && form.peserta
     }
-    return form.nik && form.peserta
+    return selectedEmployees.value.length > 0 && form.peserta
   }
   if (formMode.value === 'create_kegiatan') {
     return form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai
@@ -1467,14 +1533,17 @@ const submitForm = async () => {
     if (form.is_eksternal) {
       formData.append('nama_peserta', form.nama_peserta)
       formData.append('instansi_peserta', form.instansi_peserta)
-    } else if (form.nik) {
-      formData.append('nik', form.nik)
+    } else {
+      selectedEmployees.value.forEach(emp => {
+        formData.append('niks[]', emp.nik)
+      })
     }
     formData.append('id_kegiatan', form.id_kegiatan)
 
     try {
-      await diklatService.storeDiklat(formData)
-      toast.success('Peserta baru berhasil ditambahkan')
+      const response = await diklatService.storeDiklat(formData)
+      const msg = response.data?.message || 'Peserta baru berhasil ditambahkan'
+      toast.success(msg)
       showFormSidebar.value = false
       loadParticipants(selectedKegiatan.value.id)
       loadKegiatanList()
