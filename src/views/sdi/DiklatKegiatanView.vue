@@ -224,22 +224,27 @@
                       <td>
                         <div class="d-flex align-items-center gap-3">
                           <div class="avatar-sm flex-shrink-0">
-                            <span class="initials">{{ getInitials(item.pegawai?.nama) }}</span>
+                            <span class="initials">{{ getInitials(item.is_eksternal ? item.nama_peserta : item.pegawai?.nama) }}</span>
                           </div>
                           <div class="d-flex flex-column text-start">
-                            <span class="fw-bold text-dark font-sans leading-snug" style="font-size: 0.88rem;">
-                              {{ item.pegawai?.nama || 'Pegawai Tidak Diketahui' }}
-                            </span>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                              <span class="fw-bold text-dark font-sans leading-snug" style="font-size: 0.88rem;">
+                                {{ item.is_eksternal ? item.nama_peserta : (item.pegawai?.nama || 'Pegawai Tidak Diketahui') }}
+                              </span>
+                              <span v-if="item.is_eksternal" class="badge bg-warning-subtle text-warning-dark border border-warning-subtle extra-small px-1.5 py-0.5" style="font-size: 0.65rem;">
+                                EKSTERNAL
+                              </span>
+                            </div>
                             <span class="text-muted font-mono extra-small mt-0.5">
-                              NIK: {{ item.pegawai?.nik || '-' }}
+                              {{ item.is_eksternal ? 'Non-Pegawai / Outsourcing' : ('NIK: ' + (item.pegawai?.nik || '-')) }}
                             </span>
                           </div>
                         </div>
                       </td>
                       <td>
                         <div class="d-flex flex-column text-start">
-                          <span class="text-dark small fw-medium">{{ item.pegawai?.jbtn || '-' }}</span>
-                          <span class="text-muted extra-small mt-0.5">{{ item.pegawai?.departemen || '-' }}</span>
+                          <span class="text-dark small fw-medium">{{ item.is_eksternal ? (item.instansi_peserta || 'Peserta Luar') : (item.pegawai?.jbtn || '-') }}</span>
+                          <span class="text-muted extra-small mt-0.5">{{ item.is_eksternal ? 'Instansi / Vendor Asal' : (item.pegawai?.departemen || '-') }}</span>
                         </div>
                       </td>
                       <td>
@@ -487,57 +492,99 @@
               </div>
             </div>
 
-            <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
-            <!-- Required only in Create Kegiatan mode or Add Participant mode -->
-            <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3 position-relative">
-              <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
-              <div class="search-box d-flex align-items-center border rounded-2 bg-white px-3 gap-2" style="height: 38px;">
-                <i class="fas fa-search text-muted flex-shrink-0" style="font-size: 0.85rem;"></i>
-                <input 
-                  type="text" 
-                  v-model="empQuery" 
-                  @input="searchEmployees"
-                  placeholder="Ketik NIK atau nama pegawai..."
-                  class="border-0 flex-grow-1 bg-transparent"
-                  style="outline: none; font-size: 0.9rem; min-width: 0;"
-                  :disabled="form.nik !== null"
-                  required
-                />
-                <button type="button" v-if="form.nik" @click="clearEmployeeSelection" class="border-0 bg-transparent p-0 flex-shrink-0">
-                  <i class="fas fa-times text-danger" style="font-size: 0.85rem;"></i>
-                </button>
-              </div>
-
-              <!-- Autocomplete Dropdown -->
-              <div v-if="empResults.length > 0" class="search-results-dropdown shadow border rounded-3 w-100 bg-white" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto;">
-                <div 
-                  v-for="emp in empResults" 
-                  :key="emp.nik" 
-                  class="search-result-item p-2 border-bottom text-start"
-                  @click="selectEmployee(emp)"
-                  style="cursor: pointer;"
+            <!-- KATEGORI PESERTA SWITCHER (Internal vs Eksternal/Outsourcing) -->
+            <div v-if="!isEditMode && formMode === 'add_participant'" class="mb-3">
+              <label class="form-label extra-small text-muted mb-1">Kategori Peserta <span class="text-danger">*</span></label>
+              <div class="p-1 rounded-pill border d-flex align-items-center gap-1 bg-light" style="height: 38px;">
+                <button 
+                  type="button" 
+                  class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all border-0 text-nowrap" 
+                  :class="!form.is_eksternal ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'" 
+                  @click="setParticipantType(false)"
+                  style="font-size: 0.78rem;"
                 >
-                  <span class="fw-semibold d-block small">{{ emp.nama }}</span>
-                  <span class="text-muted extra-small">
-                    NIK: {{ emp.nik }} • {{ emp.jbtn || '-' }} • {{ emp.departemen || '-' }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Selected Indicator -->
-              <div v-if="selectedEmpRecord" class="selected-emp-badge animate__animated animate__fadeIn">
-                <div>
-                  <i class="fas fa-check-circle me-2 text-primary"></i>
-                  <strong>Terpilih:</strong> {{ selectedEmpRecord.nama }} <span class="font-mono text-muted-dark small ms-2">({{ selectedEmpRecord.nik }})</span>
-                </div>
+                  <i class="fas fa-building me-1"></i> Pegawai RS
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-sm rounded-pill flex-fill fw-bold h-100 transition-all border-0 text-nowrap" 
+                  :class="form.is_eksternal ? 'btn-warning text-dark fw-bold shadow-sm' : 'text-secondary bg-transparent'" 
+                  @click="setParticipantType(true)"
+                  style="font-size: 0.78rem;"
+                >
+                  <i class="fas fa-globe me-1"></i> Non-Pegawai / Outsourcing
+                </button>
               </div>
             </div>
 
-            <!-- In edit mode, we just show employee info read-only -->
-            <div v-else-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-info-box animate__animated animate__fadeIn">
-              <label class="form-label small text-muted"><i class="fas fa-user me-1 text-primary"></i>Pegawai</label>
-              <div class="fw-bold text-dark mt-1">{{ selectedParticipantItem?.pegawai?.nama }}</div>
-              <div class="small text-muted font-mono mt-1">NIK: {{ selectedParticipantItem?.pegawai?.nik }}</div>
+            <!-- IF PEGAWAI INTERNAL RS -->
+            <div v-if="!form.is_eksternal">
+              <!-- SELECT EMPLOYEE / KARYAWAN (Autocomplete search) -->
+              <div v-if="!isEditMode && formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-group mb-3 position-relative">
+                <label class="form-label"><i class="fas fa-user me-1"></i>Pilih Pegawai <span class="text-danger">*</span></label>
+                <div class="search-box d-flex align-items-center border rounded-2 bg-white px-3 gap-2" style="height: 38px;">
+                  <i class="fas fa-search text-muted flex-shrink-0" style="font-size: 0.85rem;"></i>
+                  <input 
+                    type="text" 
+                    v-model="empQuery" 
+                    @input="searchEmployees"
+                    placeholder="Ketik NIK atau nama pegawai..."
+                    class="border-0 flex-grow-1 bg-transparent"
+                    style="outline: none; font-size: 0.9rem; min-width: 0;"
+                    :disabled="form.nik !== null"
+                    :required="!form.is_eksternal"
+                  />
+                  <button type="button" v-if="form.nik" @click="clearEmployeeSelection" class="border-0 bg-transparent p-0 flex-shrink-0">
+                    <i class="fas fa-times text-danger" style="font-size: 0.85rem;"></i>
+                  </button>
+                </div>
+
+                <!-- Autocomplete Dropdown -->
+                <div v-if="empResults.length > 0" class="search-results-dropdown shadow border rounded-3 w-100 bg-white" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto;">
+                  <div 
+                    v-for="emp in empResults" 
+                    :key="emp.nik" 
+                    class="search-result-item p-2 border-bottom text-start"
+                    @click="selectEmployee(emp)"
+                    style="cursor: pointer;"
+                  >
+                    <span class="fw-semibold d-block small">{{ emp.nama }}</span>
+                    <span class="text-muted extra-small">
+                      NIK: {{ emp.nik }} • {{ emp.jbtn || '-' }} • {{ emp.departemen || '-' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Selected Indicator -->
+                <div v-if="selectedEmpRecord" class="selected-emp-badge animate__animated animate__fadeIn">
+                  <div>
+                    <i class="fas fa-check-circle me-2 text-primary"></i>
+                    <strong>Terpilih:</strong> {{ selectedEmpRecord.nama }} <span class="font-mono text-muted-dark small ms-2">({{ selectedEmpRecord.nik }})</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- In edit mode, if internal employee -->
+              <div v-else-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan' && !selectedParticipantItem?.is_eksternal" class="form-info-box animate__animated animate__fadeIn">
+                <label class="form-label small text-muted"><i class="fas fa-user me-1 text-primary"></i>Pegawai</label>
+                <div class="fw-bold text-dark mt-1">{{ selectedParticipantItem?.pegawai?.nama }}</div>
+                <div class="small text-muted font-mono mt-1">NIK: {{ selectedParticipantItem?.pegawai?.nik }}</div>
+              </div>
+            </div>
+
+            <!-- IF NON-PEGAWAI / OUTSOURCING (EKSTERNAL) -->
+            <div v-else-if="formMode !== 'edit_kegiatan' && formMode !== 'create_kegiatan'" class="form-section-card animate__animated animate__fadeIn mb-3">
+              <h6 class="form-section-title"><i class="fas fa-id-card me-1"></i>Identitas Peserta Eksternal</h6>
+              
+              <div class="form-group mb-2">
+                <label class="form-label extra-small">Nama Lengkap Peserta <span class="text-danger">*</span></label>
+                <input type="text" v-model="form.nama_peserta" class="form-control form-control-sm" required placeholder="Contoh: Budi Santoso, S.Kom" />
+              </div>
+
+              <div class="form-group mb-2">
+                <label class="form-label extra-small">Instansi / Vendor Asal <span class="text-danger">*</span></label>
+                <input type="text" v-model="form.instansi_peserta" class="form-control form-control-sm" required placeholder="Contoh: PT. ISS Indonesia / STIKES Pekajangan" />
+              </div>
             </div>
 
             <!-- Peran / Peserta Role -->
@@ -1000,6 +1047,9 @@ const form = reactive({
   peserta: 'Peserta',
   id_kegiatan: null,
   nik: null,
+  is_eksternal: false,
+  nama_peserta: '',
+  instansi_peserta: '',
   nama_kegiatan: '',
   tempat: '',
   kategori: 'Internal',
@@ -1014,6 +1064,16 @@ const form = reactive({
   ttd1_id: null,
   ttd2_id: null
 })
+
+const setParticipantType = (isExt) => {
+  form.is_eksternal = isExt
+  if (isExt) {
+    clearEmployeeSelection()
+  } else {
+    form.nama_peserta = ''
+    form.instansi_peserta = ''
+  }
+}
 
 // Initialize Page
 onMounted(() => {
@@ -1161,6 +1221,9 @@ const resetForm = () => {
   form.peserta = 'Peserta'
   form.id_kegiatan = null
   form.nik = null
+  form.is_eksternal = false
+  form.nama_peserta = ''
+  form.instansi_peserta = ''
   form.nama_kegiatan = ''
   form.tempat = ''
   form.kategori = 'Internal'
@@ -1219,6 +1282,9 @@ const openEditModal = (item) => {
   // Fill pivot data
   form.peserta = item.peserta
   form.id_kegiatan = item.id_kegiatan
+  form.is_eksternal = item.is_eksternal == 1 || item.is_eksternal === true
+  form.nama_peserta = item.nama_peserta || ''
+  form.instansi_peserta = item.instansi_peserta || ''
   currentBerkasName.value = item.berkas || ''
   
   // Fill kegiatan data
@@ -1284,9 +1350,15 @@ const isFormValid = computed(() => {
     return form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai
   }
   if (isEditMode.value) {
+    if (form.is_eksternal) {
+      return form.nama_peserta && form.instansi_peserta && form.peserta
+    }
     return form.nama_kegiatan && form.tempat && form.kategori && form.tgl_mulai && form.peserta
   }
   if (formMode.value === 'add_participant') {
+    if (form.is_eksternal) {
+      return form.nama_peserta && form.instansi_peserta && form.peserta
+    }
     return form.nik && form.peserta
   }
   if (formMode.value === 'create_kegiatan') {
@@ -1363,6 +1435,11 @@ const submitForm = async () => {
     formData.append('tempat', form.tempat)
     formData.append('kategori', form.kategori)
     formData.append('tgl_mulai', form.tgl_mulai)
+    formData.append('is_eksternal', form.is_eksternal ? '1' : '0')
+    if (form.is_eksternal) {
+      formData.append('nama_peserta', form.nama_peserta || '')
+      formData.append('instansi_peserta', form.instansi_peserta || '')
+    }
     if (form.tgl_akhir) formData.append('tgl_akhir', form.tgl_akhir)
     if (form.jpl) formData.append('jpl', form.jpl)
     if (form.skp) formData.append('skp', form.skp)
@@ -1386,7 +1463,13 @@ const submitForm = async () => {
       submitting.value = false
     }
   } else if (formMode.value === 'add_participant') {
-    if (form.nik) formData.append('nik', form.nik)
+    formData.append('is_eksternal', form.is_eksternal ? '1' : '0')
+    if (form.is_eksternal) {
+      formData.append('nama_peserta', form.nama_peserta)
+      formData.append('instansi_peserta', form.instansi_peserta)
+    } else if (form.nik) {
+      formData.append('nik', form.nik)
+    }
     formData.append('id_kegiatan', form.id_kegiatan)
 
     try {
@@ -1656,10 +1739,17 @@ const printSertifikat = async (item) => {
   // Ensure kegiatan is present on the item
   item.kegiatan = selectedKegiatan.value
 
+  const pegawaiObj = item.is_eksternal ? {
+    nama: item.nama_peserta,
+    nik: 'Non-Pegawai',
+    jbtn: item.instansi_peserta,
+    departemen: 'Eksternal / Outsourcing'
+  } : item.pegawai
+
   try {
     const result = await generateSertifikatDiklat(
       item,
-      item.pegawai,
+      pegawaiObj,
       {
         direkturNama: item.kegiatan?.ttd1_pegawai?.nama || item.kegiatan?.ttd1 || undefined,
         ketuaPanitia: item.kegiatan?.ttd2_pegawai?.nama || item.kegiatan?.ttd2 || undefined,
