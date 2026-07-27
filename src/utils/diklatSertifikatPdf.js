@@ -540,27 +540,27 @@ Penerima: ${namaPegawai} (${pegawai?.nik || '-'})`
 
   // Judul Kegiatan
   doc.setFont(fontSansBold, 'bold')
-  doc.setFontSize(14)
+  doc.setFontSize(13)
   doc.setTextColor(20, 20, 60)
   const jdlLines = doc.splitTextToSize(namaKegiatan, W2 - 40)
-  doc.text(jdlLines, W2 / 2, 32, { align: 'center' })
-  const jdlEndY = 32 + (jdlLines.length - 1) * 7
+  doc.text(jdlLines, W2 / 2, 24, { align: 'center' })
+  const jdlEndY = 24 + (jdlLines.length - 1) * 6
 
   // Info tanggal & tempat
   doc.setFont(fontSansNormal, 'normal')
-  doc.setFontSize(9)
+  doc.setFontSize(8.5)
   doc.setTextColor(80, 80, 80)
-  doc.text(`${tglRange} • ${kegiatan.tempat || ''}`, W2 / 2, jdlEndY + 7, { align: 'center' })
+  doc.text(`${tglRange} • ${kegiatan.tempat || ''}`, W2 / 2, jdlEndY + 5, { align: 'center' })
 
   // Garis bawah judul
   doc.setDrawColor(0, 128, 128)
   doc.setLineWidth(0.8)
-  doc.line(20, jdlEndY + 11, W2 - 20, jdlEndY + 11)
+  doc.line(20, jdlEndY + 8, W2 - 20, jdlEndY + 8)
   doc.setDrawColor(212, 160, 23)
   doc.setLineWidth(0.35)
-  doc.line(20, jdlEndY + 13, W2 - 20, jdlEndY + 13)
+  doc.line(20, jdlEndY + 10, W2 - 20, jdlEndY + 10)
 
-  const tableStartY = jdlEndY + 20
+  const tableStartY = jdlEndY + 14
 
   // Tabel Materi
   if (materiRows.length > 0) {
@@ -575,15 +575,31 @@ Penerima: ${namaPegawai} (${pegawai?.nik || '-'})`
       tableBody.push(['', { content: 'TOTAL', styles: { fontStyle: 'bold', halign: 'right' } }, { content: totalJpl, styles: { fontStyle: 'bold', halign: 'center' } }])
     }
 
+    // Dynamic padding & fontSize agar tabel tidak pernah melimpah ke halaman 3
+    const rowCount = materiRows.length
+    let dynamicPadding = 3.5
+    let dynamicFontSize = 9.5
+
+    if (rowCount > 15) {
+      dynamicPadding = 1.4
+      dynamicFontSize = 8.0
+    } else if (rowCount > 10) {
+      dynamicPadding = 2.0
+      dynamicFontSize = 8.5
+    } else if (rowCount > 7) {
+      dynamicPadding = 2.5
+      dynamicFontSize = 9.0
+    }
+
     autoTable(doc, {
       startY: tableStartY,
-      margin: { top: 25, bottom: 20, left: 20, right: 20 },
+      margin: { top: 15, bottom: 12, left: 20, right: 20 },
       head: [['No', 'MATERI', 'JPL']],
       body: tableBody,
       styles: {
         font: fontSansNormal,
-        fontSize: 10,
-        cellPadding: 4,
+        fontSize: dynamicFontSize,
+        cellPadding: dynamicPadding,
         lineColor: [180, 180, 180],
         lineWidth: 0.3,
       },
@@ -592,7 +608,8 @@ Penerima: ${namaPegawai} (${pegawai?.nik || '-'})`
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         halign: 'center',
-        fontSize: 10,
+        fontSize: dynamicFontSize,
+        cellPadding: dynamicPadding + 0.5,
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 14 },
