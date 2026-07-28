@@ -814,223 +814,158 @@
       @close="showUserManagementModal = false"
     />
 
-    <!-- Room & Patient Class Lookup Modal (Responsive Mobile Drawer & Desktop Dialog) -->
+    <!-- Room & Patient Class Lookup Modal (Overhauled Isolated Custom Modal) -->
     <div 
       v-if="showClassLookupModal" 
-      class="modal fade show d-block" 
-      tabindex="-1" 
-      style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 1060;"
+      class="lookup-modal-backdrop"
+      @click.self="showClassLookupModal = false"
     >
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl m-0 m-sm-auto w-100 h-100 h-sm-auto" style="max-width: 960px;">
-        <div class="modal-content border-0 shadow-lg rounded-0 rounded-sm-4 overflow-hidden h-100 h-sm-auto">
-          <!-- Mobile Pull Handle Indicator (< sm) -->
-          <div class="d-flex justify-content-center pt-2.5 pb-1 bg-white d-sm-none">
-            <div style="width: 36px; height: 4px; background-color: #cbd5e1; border-radius: 2px;"></div>
-          </div>
+      <div class="lookup-modal-container">
+        <!-- Pull Handle (Mobile) -->
+        <div class="lookup-modal-pullbar"></div>
 
-          <!-- Modal Header (Clean Light Header) -->
-          <div class="modal-header bg-white p-3 px-sm-4 border-bottom align-items-start justify-content-between">
-            <div class="d-flex align-items-start gap-2.5 min-w-0 flex-grow-1">
-              <div class="cat-icon-avatar bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
-                <i :class="getCategoryIcon(lookupCategory)"></i>
-              </div>
-              <div class="min-w-0 flex-grow-1">
-                <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                  <span class="badge bg-primary text-white rounded-pill fw-bold" style="font-size: 0.65rem; padding: 3px 8px;">{{ lookupCategory }}</span>
-                  <span class="badge bg-light text-dark border rounded-pill fw-bold" style="font-size: 0.65rem; padding: 3px 8px;">{{ lookupClass }}</span>
-                </div>
-                <h5 class="modal-title fw-bold m-0 text-dark mt-1 text-wrap" style="font-size: 0.95rem; line-height: 1.35;">
-                  Informasi Kamar & Status Pasien Rawat Inap
-                </h5>
-              </div>
+        <!-- Modal Header -->
+        <div class="lookup-modal-header">
+          <div class="lookup-modal-header-info">
+            <div class="lookup-modal-icon">
+              <i :class="getCategoryIcon(lookupCategory)"></i>
             </div>
-            <button type="button" class="btn-close flex-shrink-0 ms-2" @click="showClassLookupModal = false"></button>
-          </div>
-
-          <!-- Modal Controls (Filter Segment & Search Bar) -->
-          <div class="modal-body bg-light border-bottom p-2.5 p-sm-3 flex-grow-0">
-            <div class="row g-2 align-items-center">
-              <!-- Filter Pills Segment -->
-              <div class="col-12 col-md-7">
-                <div class="d-flex align-items-center gap-1.5 w-100 overflow-x-auto pb-1 pb-md-0">
-                  <button 
-                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all flex-fill"
-                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm border-primary' : 'bg-white text-secondary border-slate-300'"
-                    style="font-size: 0.76rem;"
-                    @click="lookupFilterStatus = 'ALL'"
-                  >
-                    Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
-                  </button>
-                  <button 
-                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all flex-fill"
-                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm border-success' : 'bg-white text-success border-slate-300'"
-                    style="font-size: 0.76rem;"
-                    @click="lookupFilterStatus = 'KOSONG'"
-                  >
-                    <span class="me-1">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
-                  </button>
-                  <button 
-                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all flex-fill"
-                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm border-danger' : 'bg-white text-danger border-slate-300'"
-                    style="font-size: 0.76rem;"
-                    @click="lookupFilterStatus = 'ISI'"
-                  >
-                    <span class="me-1">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
-                  </button>
-                </div>
+            <div class="lookup-modal-title-box">
+              <div class="lookup-modal-badges">
+                <span class="badge-pill bg-primary">{{ lookupCategory }}</span>
+                <span class="badge-pill bg-outline">{{ lookupClass }}</span>
               </div>
-
-              <!-- Search Bar Input -->
-              <div class="col-12 col-md-5">
-                <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 38px; border-color: #cbd5e1 !important;">
-                  <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2"><i class="fas fa-search" style="font-size: 0.8rem;"></i></span>
-                  <input 
-                    v-model="lookupSearchQuery" 
-                    type="text" 
-                    class="form-control border-0 shadow-none h-100 ps-0 text-dark" 
-                    style="font-size: 0.78rem;"
-                    placeholder="Cari no. bed / nama pasien / RM..."
-                  />
-                  <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-2.5" @click="lookupSearchQuery = ''">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
+              <h6 class="lookup-modal-title">Informasi Kamar & Status Pasien</h6>
             </div>
           </div>
+          <button type="button" class="lookup-modal-close" @click="showClassLookupModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
 
-          <!-- Modal Body Beds List -->
-          <div class="modal-body p-2.5 p-sm-4 bg-white flex-grow-1" style="max-height: 60vh; overflow-y: auto;">
-            <div v-if="loadingActivePatients" class="text-center py-5 text-muted">
-              <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
-              <p class="m-0 small">Memuat data pasien rawat inap...</p>
-            </div>
-
-            <div v-else-if="modalBedsList.length > 0" class="d-flex flex-column gap-2.5">
-              <div 
-                v-for="bed in modalBedsList" 
-                :key="bed.kd_kamar" 
-                class="card border rounded-3 shadow-2sm overflow-hidden position-relative bed-item-card"
-                :class="bed.status === 'KOSONG' ? 'is-available-card' : 'is-occupied-card'"
-              >
-                <!-- Bed Header Row -->
-                <div class="p-2.5 p-sm-3 d-flex align-items-center justify-content-between gap-2">
-                  <div class="d-flex align-items-center gap-2.5 min-w-0 flex-grow-1">
-                    <div 
-                      class="rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm flex-shrink-0"
-                      :class="bed.status === 'KOSONG' ? 'bg-success text-white' : 'bg-danger text-white'"
-                      style="min-width: 42px; height: 36px;"
-                    >
-                      <span class="fw-bold fs-6" style="line-height: 1;">{{ getBedLabel(bed) }}</span>
-                    </div>
-                    
-                    <div class="min-w-0 flex-grow-1">
-                      <div class="d-flex align-items-center gap-1.5 flex-wrap mb-0.5">
-                        <h6 class="m-0 fw-bold text-dark text-break" style="font-size: 0.88rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
-                        <span class="badge bg-light text-secondary border fw-medium px-1.5 py-0.5" style="font-size: 0.65rem;">Kode: {{ bed.kd_kamar }}</span>
-                      </div>
-                      <small class="text-muted d-block text-truncate" style="font-size: 0.7rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
-                    </div>
-                  </div>
-
-                  <!-- Status Chip -->
-                  <div class="flex-shrink-0">
-                    <span 
-                      v-if="bed.status === 'KOSONG'" 
-                      class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.7rem;"
-                    >
-                      <i class="fas fa-check-circle me-1"></i> TERSEDIA
-                    </span>
-                    <span 
-                      v-else-if="bed.status === 'DIBOOKING'" 
-                      class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.7rem;"
-                    >
-                      <i class="fas fa-clock me-1"></i> BOOKING
-                    </span>
-                    <span 
-                      v-else 
-                      class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.7rem;"
-                    >
-                      <i class="fas fa-user-check me-1"></i> TERISI
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Occupied Patient Details Box -->
-                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-2.5 px-sm-3 pb-2.5 pt-0">
-                  <div class="p-2.5 rounded-3 bg-light border overflow-hidden shadow-2sm">
-                    <div class="d-flex flex-column gap-2">
-                      <!-- Patient Info -->
-                      <div class="d-flex align-items-start gap-2.5">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm flex-shrink-0 mt-0.5" style="width: 32px; height: 32px; font-size: 0.85rem;">
-                          <i class="fas fa-user"></i>
-                        </div>
-                        <div class="min-w-0 flex-grow-1">
-                          <div class="fw-bold text-dark text-break" style="font-size: 0.85rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
-                            {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
-                          </div>
-                          <div class="text-muted small mt-0.5 d-flex flex-wrap align-items-center gap-x-2 gap-y-0.5" style="font-size: 0.72rem;">
-                            <span>RM: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong></span>
-                            <span>•</span>
-                            <span>No. Rawat: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].no_rawat }}</strong></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- DPJP & Penjamin Info -->
-                      <div class="pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2" style="font-size: 0.75rem;">
-                        <div class="min-w-0 flex-grow-1">
-                          <span class="text-muted me-1">DPJP:</span>
-                          <strong class="text-dark text-break"><i class="fas fa-user-md text-info me-1"></i>{{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}</strong>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
-                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 fw-bold rounded">
-                            {{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}
-                          </span>
-                          <span class="text-muted extra-small">Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Empty Bed Banner -->
-                <div v-else-if="bed.status === 'KOSONG'" class="px-2.5 px-sm-3 pb-2.5 pt-0">
-                  <div class="p-2 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.74rem; font-weight: 500;">
-                    <i class="fas fa-check-circle fs-6 flex-shrink-0"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Empty Search State -->
-            <div v-else class="text-center py-5 text-muted">
-              <i class="fas fa-search-minus fa-3x mb-3 text-secondary opacity-50"></i>
-              <h6 class="fw-bold text-dark">Data Kamar Tidak Ditemukan</h6>
-              <p class="small m-0 text-muted">Tidak ada kamar yang cocok dengan kriteria filter atau pencarian Anda.</p>
-            </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="modal-footer bg-light border-top py-2.5 px-3 px-sm-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 flex-shrink-0">
-            <div class="d-flex align-items-center gap-2">
-              <i class="fas fa-bed text-primary opacity-75"></i>
-              <small class="text-muted fw-medium" style="font-size: 0.8rem;">
-                Menampilkan <strong class="text-dark">{{ modalBedsList.length }}</strong> tempat tidur.
-              </small>
-            </div>
+        <!-- Controls: Filter Segment Tabs & Search Input -->
+        <div class="lookup-modal-controls">
+          <div class="lookup-segmented-tabs">
             <button 
-              type="button" 
-              class="btn btn-sm btn-white border px-4 py-1.5 rounded-pill fw-bold text-dark shadow-2sm w-100 w-sm-auto" 
-              style="font-size: 0.8rem; background-color: #ffffff; border-color: #cbd5e1 !important;" 
-              @click="showClassLookupModal = false"
+              class="lookup-segmented-btn"
+              :class="{ active: lookupFilterStatus === 'ALL' }"
+              @click="lookupFilterStatus = 'ALL'"
             >
-              Tutup
+              Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
+            </button>
+            <button 
+              class="lookup-segmented-btn success"
+              :class="{ active: lookupFilterStatus === 'KOSONG' }"
+              @click="lookupFilterStatus = 'KOSONG'"
+            >
+              🟢 Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
+            </button>
+            <button 
+              class="lookup-segmented-btn danger"
+              :class="{ active: lookupFilterStatus === 'ISI' }"
+              @click="lookupFilterStatus = 'ISI'"
+            >
+              🔴 Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
             </button>
           </div>
+
+          <div class="lookup-search-box">
+            <i class="fas fa-search lookup-search-icon"></i>
+            <input 
+              v-model="lookupSearchQuery" 
+              type="text" 
+              class="lookup-search-input" 
+              placeholder="Cari no. bed / nama pasien / RM..."
+            />
+            <button v-if="lookupSearchQuery" class="lookup-search-clear" @click="lookupSearchQuery = ''">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Body: Bed Cards List -->
+        <div class="lookup-modal-body">
+          <div v-if="loadingActivePatients" class="text-center py-5 text-muted">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+            <p class="m-0 small">Memuat data pasien rawat inap...</p>
+          </div>
+
+          <div v-else-if="modalBedsList.length > 0" class="lookup-beds-list">
+            <div 
+              v-for="bed in modalBedsList" 
+              :key="bed.kd_kamar" 
+              class="lookup-bed-card"
+              :class="bed.status === 'KOSONG' ? 'status-available' : 'status-occupied'"
+            >
+              <!-- Bed Top Bar -->
+              <div class="lookup-bed-top">
+                <div class="lookup-bed-pill" :class="bed.status === 'KOSONG' ? 'bg-success' : 'bg-danger'">
+                  {{ getBedLabel(bed) }}
+                </div>
+                <div class="lookup-bed-main-info">
+                  <div class="lookup-bed-name-row">
+                    <span class="lookup-bed-bangsal">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</span>
+                    <span class="lookup-bed-code">Kode: {{ bed.kd_kamar }}</span>
+                  </div>
+                  <div class="lookup-bed-sub">Unit {{ lookupCategory }} — {{ bed.kelas }}</div>
+                </div>
+                <div class="lookup-bed-status">
+                  <span v-if="bed.status === 'KOSONG'" class="chip chip-success"><i class="fas fa-check-circle"></i> TERSEDIA</span>
+                  <span v-else-if="bed.status === 'DIBOOKING'" class="chip chip-warning"><i class="fas fa-clock"></i> BOOKING</span>
+                  <span v-else class="chip chip-danger"><i class="fas fa-user-check"></i> TERISI</span>
+                </div>
+              </div>
+
+              <!-- Patient Details Box -->
+              <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="lookup-patient-box">
+                <div class="lookup-patient-row-1">
+                  <div class="lookup-patient-avatar"><i class="fas fa-user"></i></div>
+                  <div class="lookup-patient-info">
+                    <div class="lookup-patient-name">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}</div>
+                    <div class="lookup-patient-meta">
+                      <span>RM: <strong>{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong></span>
+                      <span class="dot">•</span>
+                      <span>No. Rawat: <strong>{{ activePatientsMap[bed.kd_kamar].no_rawat }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="lookup-patient-row-2">
+                  <div class="lookup-dpjp">
+                    <span class="label">DPJP:</span>
+                    <strong><i class="fas fa-user-md text-info me-1"></i>{{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}</strong>
+                  </div>
+                  <div class="lookup-penjamin">
+                    <span class="chip-penjamin">{{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}</span>
+                    <span class="lookup-tgl-masuk">Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty Bed Banner -->
+              <div v-else-if="bed.status === 'KOSONG'" class="lookup-empty-box">
+                <i class="fas fa-check-circle fs-6 me-1"></i>
+                <span>Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty Search State -->
+          <div v-else class="text-center py-5 text-muted">
+            <i class="fas fa-search-minus fa-3x mb-3 text-secondary opacity-50"></i>
+            <h6 class="fw-bold text-dark">Data Kamar Tidak Ditemukan</h6>
+            <p class="small m-0 text-muted">Tidak ada kamar yang cocok dengan kriteria filter atau pencarian Anda.</p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="lookup-modal-footer">
+          <div class="lookup-footer-count">
+            <i class="fas fa-bed text-primary"></i>
+            <span>Menampilkan <strong>{{ modalBedsList.length }}</strong> tempat tidur.</span>
+          </div>
+          <button type="button" class="lookup-modal-btn-close" @click="showClassLookupModal = false">
+            Tutup
+          </button>
         </div>
       </div>
     </div>
@@ -1923,6 +1858,496 @@ onUnmounted(() => {
 .cinema-tab-btn.active .badge.bg-success {
   background-color: rgba(255, 255, 255, 0.22) !important;
   color: #ffffff !important;
+}
+
+/* Custom Lookup Room Modal (Ultra Clean & Responsive Rebuilt Layout) */
+.lookup-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+@media (max-width: 575.98px) {
+  .lookup-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
+
+.lookup-modal-container {
+  background: #ffffff;
+  width: 100%;
+  max-width: 900px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 575.98px) {
+  .lookup-modal-container {
+    max-height: 94vh;
+    height: 94vh;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+.lookup-modal-pullbar {
+  display: none;
+  width: 36px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  margin: 8px auto 0 auto;
+}
+
+@media (max-width: 575.98px) {
+  .lookup-modal-pullbar {
+    display: block;
+  }
+}
+
+.lookup-modal-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+
+.lookup-modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lookup-modal-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  background: #eff6ff;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.lookup-modal-title-box {
+  min-width: 0;
+}
+
+.lookup-modal-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.badge-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 50px;
+}
+
+.badge-pill.bg-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.badge-pill.bg-outline {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.lookup-modal-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.lookup-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.lookup-modal-controls {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lookup-segmented-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.lookup-segmented-btn {
+  padding: 8px 4px;
+  border-radius: 50px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.lookup-segmented-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+.lookup-segmented-btn.success.active {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+}
+
+.lookup-segmented-btn.danger.active {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+}
+
+.lookup-search-box {
+  position: relative;
+  width: 100%;
+}
+
+.lookup-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.lookup-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 34px 0 34px;
+  border-radius: 50px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.78rem;
+  color: #0f172a;
+  outline: none;
+}
+
+.lookup-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.lookup-modal-body {
+  padding: 14px 18px;
+  overflow-y: auto;
+  flex: 1;
+  background: #ffffff;
+}
+
+.lookup-beds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lookup-bed-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.lookup-bed-card.status-available {
+  border-left: 4px solid #10b981;
+}
+
+.lookup-bed-card.status-occupied {
+  border-left: 4px solid #ef4444;
+}
+
+.lookup-bed-top {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lookup-bed-pill {
+  width: 42px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.lookup-bed-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lookup-bed-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lookup-bed-bangsal {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.lookup-bed-code {
+  font-size: 0.65rem;
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.lookup-bed-sub {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.lookup-bed-status {
+  flex-shrink: 0;
+}
+
+.chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-success {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.chip-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.chip-warning {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.lookup-patient-box {
+  margin: 0 14px 12px 14px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lookup-patient-row-1 {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.lookup-patient-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lookup-patient-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lookup-patient-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.lookup-patient-meta {
+  font-size: 0.72rem;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.lookup-patient-meta .dot {
+  color: #cbd5e1;
+}
+
+.lookup-patient-row-2 {
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.73rem;
+}
+
+.lookup-dpjp .label {
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.lookup-penjamin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-penjamin {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.lookup-tgl-masuk {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.lookup-empty-box {
+  margin: 0 14px 12px 14px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  color: #15803d;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+  font-size: 0.74rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lookup-modal-footer {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lookup-footer-count {
+  font-size: 0.78rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lookup-modal-btn-close {
+  padding: 6px 24px;
+  border-radius: 50px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lookup-modal-btn-close:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+@media (max-width: 575.98px) {
+  .lookup-modal-footer {
+    flex-direction: column;
+  }
+  .lookup-modal-btn-close {
+    width: 100%;
+  }
 }
 
 .cinema-tab-btn.active .badge.bg-secondary {
