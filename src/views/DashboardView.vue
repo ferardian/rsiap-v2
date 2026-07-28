@@ -821,72 +821,72 @@
       tabindex="-1" 
       style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1060;"
     >
-      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" style="max-width: 960px;">
+      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable mx-2 mx-sm-auto my-2 my-sm-auto" style="max-width: 960px;">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
           <!-- Modal Header (Clean White Header) -->
-          <div class="modal-header bg-white p-3 px-4 position-relative border-bottom">
-            <div class="d-flex align-items-center gap-3">
-              <div class="cat-icon-avatar bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.25rem;">
+          <div class="modal-header bg-white p-3 px-sm-4 position-relative border-bottom align-items-start justify-content-between">
+            <div class="d-flex align-items-start gap-2.5 min-w-0 flex-grow-1">
+              <div class="cat-icon-avatar bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
                 <i :class="getCategoryIcon(lookupCategory)"></i>
               </div>
-              <div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-primary text-white rounded-pill fw-bold" style="font-size: 0.72rem; padding: 4px 10px;">{{ lookupCategory }}</span>
-                  <span class="badge bg-light text-dark border rounded-pill fw-bold" style="font-size: 0.72rem; padding: 4px 10px;">{{ lookupClass }}</span>
+              <div class="min-w-0 flex-grow-1">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                  <span class="badge bg-primary text-white rounded-pill fw-bold" style="font-size: 0.68rem; padding: 3px 8px;">{{ lookupCategory }}</span>
+                  <span class="badge bg-light text-dark border rounded-pill fw-bold" style="font-size: 0.68rem; padding: 3px 8px;">{{ lookupClass }}</span>
                 </div>
-                <h5 class="modal-title fw-bold m-0 text-dark mt-1" style="font-size: 1.1rem;">
+                <h5 class="modal-title fw-bold m-0 text-dark mt-1 text-wrap" style="font-size: 0.98rem; line-height: 1.35;">
                   Informasi Kamar & Status Pasien Rawat Inap
                 </h5>
               </div>
             </div>
-            <button type="button" class="btn-close" @click="showClassLookupModal = false"></button>
+            <button type="button" class="btn-close flex-shrink-0 ms-2" @click="showClassLookupModal = false"></button>
           </div>
 
           <!-- Modal Controls (Filter Tabs & Search Bar - Pill Design) -->
-          <div class="modal-body bg-light border-bottom py-3 px-4">
-            <div class="row g-2.5 align-items-center">
+          <div class="modal-body bg-light border-bottom p-2.5 p-sm-3">
+            <div class="row g-2 align-items-center">
               <!-- Filter Tabs Container -->
-              <div class="col-md-7">
-                <div class="p-1 rounded-pill border d-flex align-items-center gap-1 w-100 shadow-2sm" style="height: 42px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
+              <div class="col-12 col-md-7">
+                <div class="p-1 rounded-pill border d-flex align-items-center gap-1 w-100 shadow-2sm overflow-x-auto" style="min-height: 40px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
                   <button 
-                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-3 border-0 transition-all"
+                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center px-2 px-sm-3 py-1 border-0 transition-all"
                     :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
-                    style="font-size: 0.8rem;"
+                    style="font-size: 0.75rem;"
                     @click="lookupFilterStatus = 'ALL'"
                   >
                     Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-3 border-0 transition-all"
+                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center px-2 px-sm-3 py-1 border-0 transition-all"
                     :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm' : 'text-success bg-transparent'"
-                    style="font-size: 0.8rem;"
+                    style="font-size: 0.75rem;"
                     @click="lookupFilterStatus = 'KOSONG'"
                   >
-                    <span class="me-1.5">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
+                    <span class="me-1">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center h-100 px-3 border-0 transition-all"
+                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center px-2 px-sm-3 py-1 border-0 transition-all"
                     :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm' : 'text-danger bg-transparent'"
-                    style="font-size: 0.8rem;"
+                    style="font-size: 0.75rem;"
                     @click="lookupFilterStatus = 'ISI'"
                   >
-                    <span class="me-1.5">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
+                    <span class="me-1">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
                   </button>
                 </div>
               </div>
 
               <!-- Search Bar Container (Rounded Pill Design) -->
-              <div class="col-md-5">
-                <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 42px; border-color: #cbd5e1 !important;">
-                  <span class="input-group-text bg-white border-0 text-muted ps-3.5 pe-2"><i class="fas fa-search"></i></span>
+              <div class="col-12 col-md-5">
+                <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 40px; border-color: #cbd5e1 !important;">
+                  <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2"><i class="fas fa-search" style="font-size: 0.8rem;"></i></span>
                   <input 
                     v-model="lookupSearchQuery" 
                     type="text" 
                     class="form-control border-0 shadow-none h-100 ps-0 text-dark" 
-                    style="font-size: 0.82rem;"
+                    style="font-size: 0.8rem;"
                     placeholder="Cari no. bed / nama pasien / RM..."
                   />
-                  <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-3" @click="lookupSearchQuery = ''">
+                  <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-2.5" @click="lookupSearchQuery = ''">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -895,7 +895,7 @@
           </div>
 
           <!-- Modal Body List -->
-          <div class="modal-body p-4 bg-white" style="max-height: 58vh; overflow-y: auto;">
+          <div class="modal-body p-2.5 p-sm-4 bg-white" style="max-height: 58vh; overflow-y: auto;">
             <div v-if="loadingActivePatients" class="text-center py-5 text-muted">
               <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
               <p class="m-0 small">Memuat data pasien rawat inap...</p>
@@ -909,22 +909,22 @@
                 :class="bed.status === 'KOSONG' ? 'is-available-card' : 'is-occupied-card'"
               >
                 <!-- Bed Header Info (Spacious & Clean Spacing) -->
-                <div class="p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                  <div class="d-flex align-items-center gap-3">
+                <div class="p-3 d-flex flex-wrap align-items-center justify-content-between gap-2.5">
+                  <div class="d-flex align-items-center gap-2.5 min-w-0">
                     <div 
-                      class="bed-number-pill rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm"
+                      class="bed-number-pill rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm flex-shrink-0"
                       :class="bed.status === 'KOSONG' ? 'bg-success text-white' : 'bg-danger text-white'"
-                      style="min-width: 50px; height: 42px; flex-shrink: 0; margin-right: 12px !important;"
+                      style="min-width: 48px; height: 40px;"
                     >
                       <span class="fw-bold fs-6" style="line-height: 1;">{{ getBedLabel(bed) }}</span>
                     </div>
                     
-                    <div>
-                      <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                        <h6 class="m-0 fw-bold text-dark" style="font-size: 0.92rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
-                        <span class="badge bg-light text-secondary border fw-medium px-2 py-0.5" style="font-size: 0.7rem;">Kode: {{ bed.kd_kamar }}</span>
+                    <div class="min-w-0">
+                      <div class="d-flex align-items-center gap-1.5 flex-wrap mb-0.5">
+                        <h6 class="m-0 fw-bold text-dark" style="font-size: 0.9rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
+                        <span class="badge bg-light text-secondary border fw-medium px-1.5 py-0.5" style="font-size: 0.68rem;">Kode: {{ bed.kd_kamar }}</span>
                       </div>
-                      <small class="text-muted" style="font-size: 0.74rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
+                      <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
                     </div>
                   </div>
 
@@ -932,22 +932,22 @@
                   <div>
                     <span 
                       v-if="bed.status === 'KOSONG'" 
-                      class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.73rem;"
+                      class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill fw-bold"
+                      style="font-size: 0.72rem;"
                     >
                       <i class="fas fa-check-circle me-1"></i> TERSEDIA
                     </span>
                     <span 
                       v-else-if="bed.status === 'DIBOOKING'" 
-                      class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.73rem;"
+                      class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-bold"
+                      style="font-size: 0.72rem;"
                     >
                       <i class="fas fa-clock me-1"></i> BOOKING
                     </span>
                     <span 
                       v-else 
-                      class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.73rem;"
+                      class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-pill fw-bold"
+                      style="font-size: 0.72rem;"
                     >
                       <i class="fas fa-user-check me-1"></i> TERISI (SEDANG DIRAWAT)
                     </span>
@@ -955,16 +955,16 @@
                 </div>
 
                 <!-- Patient Details Block (Inside Card with Padding Space) -->
-                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-3 pb-3 pt-0">
-                  <div class="p-3 rounded-3 bg-light border overflow-hidden shadow-2sm">
-                    <div class="row g-2.5 align-items-center">
+                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-2.5 px-sm-3 pb-3 pt-0">
+                  <div class="p-2.5 p-sm-3 rounded-3 bg-light border overflow-hidden shadow-2sm">
+                    <div class="row g-2.5 align-items-start align-items-md-center">
                       <!-- Patient Avatar & Name -->
-                      <div class="col-md-5 overflow-hidden">
+                      <div class="col-12 col-md-5 overflow-hidden">
                         <div class="d-flex align-items-center gap-2.5 overflow-hidden">
-                          <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm me-1" style="width: 36px; height: 36px; flex-shrink: 0; font-size: 0.95rem;">
+                          <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm flex-shrink-0" style="width: 34px; height: 34px; font-size: 0.9rem;">
                             <i class="fas fa-user"></i>
                           </div>
-                          <div class="overflow-hidden">
+                          <div class="overflow-hidden min-w-0">
                             <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
                               {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
                             </div>
@@ -978,7 +978,7 @@
                       </div>
 
                       <!-- Doctor DPJP -->
-                      <div class="col-md-4 border-start ps-md-3 overflow-hidden">
+                      <div class="col-12 col-md-4 border-start-0 border-start-md border-top border-top-md-0 ps-0 ps-md-3 pt-2 pt-md-0 mt-1 mt-md-0 overflow-hidden">
                         <small class="text-muted text-uppercase d-block fw-bold" style="font-size: 0.62rem; letter-spacing: 0.04em;">DOKTER DPJP</small>
                         <div class="fw-semibold text-dark text-truncate mt-0.5" style="font-size: 0.8rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter">
                           <i class="fas fa-user-md text-info me-1"></i>
@@ -987,9 +987,9 @@
                       </div>
 
                       <!-- Penjamin & Masuk -->
-                      <div class="col-md-3 border-start ps-md-3 text-md-end overflow-hidden">
+                      <div class="col-12 col-md-3 border-start-0 border-start-md border-top border-top-md-0 ps-0 ps-md-3 pt-2 pt-md-0 mt-1 mt-md-0 text-start text-md-end overflow-hidden">
                         <span 
-                          class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-0.5 fw-bold rounded text-truncate d-inline-block" 
+                          class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 mb-0.5 fw-bold rounded text-truncate d-inline-block" 
                           style="font-size: 0.68rem; max-width: 100%;"
                           :title="activePatientsMap[bed.kd_kamar].png_jawab"
                         >
@@ -1004,9 +1004,9 @@
                 </div>
 
                 <!-- Empty bed info (with Padding Space) -->
-                <div v-else-if="bed.status === 'KOSONG'" class="px-3 pb-3 pt-0">
-                  <div class="p-3 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.78rem; font-weight: 500;">
-                    <i class="fas fa-check-circle fs-6"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
+                <div v-else-if="bed.status === 'KOSONG'" class="px-2.5 px-sm-3 pb-3 pt-0">
+                  <div class="p-2.5 p-sm-3 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.76rem; font-weight: 500;">
+                    <i class="fas fa-check-circle fs-6 flex-shrink-0"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
                   </div>
                 </div>
               </div>
@@ -1021,7 +1021,7 @@
           </div>
 
           <!-- Modal Footer -->
-          <div class="modal-footer bg-light border-top py-2.5 px-4 d-flex align-items-center justify-content-between">
+          <div class="modal-footer bg-light border-top py-2.5 px-3 px-sm-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2">
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-bed text-primary opacity-75"></i>
               <small class="text-muted fw-medium" style="font-size: 0.8rem;">
@@ -1030,7 +1030,7 @@
             </div>
             <button 
               type="button" 
-              class="btn btn-sm btn-white border px-4 py-1.5 rounded-pill fw-bold text-dark shadow-2sm" 
+              class="btn btn-sm btn-white border px-4 py-1.5 rounded-pill fw-bold text-dark shadow-2sm w-100 w-sm-auto" 
               style="font-size: 0.8rem; background-color: #ffffff; border-color: #cbd5e1 !important;" 
               @click="showClassLookupModal = false"
             >
