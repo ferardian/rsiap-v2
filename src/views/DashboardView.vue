@@ -842,32 +842,32 @@
             <button type="button" class="btn-close flex-shrink-0 ms-2" @click="showClassLookupModal = false"></button>
           </div>
 
-          <!-- Modal Controls (Filter Tabs & Search Bar - Pill Design) -->
+          <!-- Modal Controls (Filter Tabs & Search Bar - Clean Mobile First Design) -->
           <div class="modal-body bg-light border-bottom p-2.5 p-sm-3">
             <div class="row g-2 align-items-center">
-              <!-- Filter Tabs Container -->
+              <!-- Filter Tabs Container (Independent Pill Buttons) -->
               <div class="col-12 col-md-7">
-                <div class="p-1 rounded-pill border d-flex align-items-center gap-1 w-100 shadow-2sm overflow-x-auto" style="min-height: 40px; background-color: #e2e8f0; border-color: #cbd5e1 !important;">
+                <div class="d-flex align-items-center gap-1.5 w-100 overflow-x-auto pb-1 pb-md-0">
                   <button 
-                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center px-2 px-sm-3 py-1 border-0 transition-all"
-                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm' : 'text-secondary bg-transparent'"
-                    style="font-size: 0.75rem;"
+                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all"
+                    :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm border-primary' : 'bg-white text-secondary border-slate-300'"
+                    style="font-size: 0.78rem;"
                     @click="lookupFilterStatus = 'ALL'"
                   >
                     Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center px-2 px-sm-3 py-1 border-0 transition-all"
-                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm' : 'text-success bg-transparent'"
-                    style="font-size: 0.75rem;"
+                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all"
+                    :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm border-success' : 'bg-white text-success border-slate-300'"
+                    style="font-size: 0.78rem;"
                     @click="lookupFilterStatus = 'KOSONG'"
                   >
                     <span class="me-1">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-pill flex-fill fw-bold text-nowrap d-flex align-items-center justify-content-center px-2 px-sm-3 py-1 border-0 transition-all"
-                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm' : 'text-danger bg-transparent'"
-                    style="font-size: 0.75rem;"
+                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all"
+                    :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm border-danger' : 'bg-white text-danger border-slate-300'"
+                    style="font-size: 0.78rem;"
                     @click="lookupFilterStatus = 'ISI'"
                   >
                     <span class="me-1">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
@@ -877,7 +877,7 @@
 
               <!-- Search Bar Container (Rounded Pill Design) -->
               <div class="col-12 col-md-5">
-                <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 40px; border-color: #cbd5e1 !important;">
+                <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 38px; border-color: #cbd5e1 !important;">
                   <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2"><i class="fas fa-search" style="font-size: 0.8rem;"></i></span>
                   <input 
                     v-model="lookupSearchQuery" 
@@ -895,7 +895,7 @@
           </div>
 
           <!-- Modal Body List -->
-          <div class="modal-body p-2.5 p-sm-4 bg-white" style="max-height: 58vh; overflow-y: auto;">
+          <div class="modal-body p-2.5 p-sm-4 bg-white" style="max-height: 62vh; overflow-y: auto;">
             <div v-if="loadingActivePatients" class="text-center py-5 text-muted">
               <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
               <p class="m-0 small">Memuat data pasien rawat inap...</p>
@@ -909,19 +909,19 @@
                 :class="bed.status === 'KOSONG' ? 'is-available-card' : 'is-occupied-card'"
               >
                 <!-- Bed Header Info (Spacious & Clean Spacing) -->
-                <div class="p-3 d-flex flex-wrap align-items-center justify-content-between gap-2.5">
-                  <div class="d-flex align-items-center gap-2.5 min-w-0">
+                <div class="p-2.5 p-sm-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div class="d-flex align-items-center gap-2.5 min-w-0 flex-grow-1">
                     <div 
-                      class="bed-number-pill rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm flex-shrink-0"
+                      class="rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm flex-shrink-0"
                       :class="bed.status === 'KOSONG' ? 'bg-success text-white' : 'bg-danger text-white'"
-                      style="min-width: 48px; height: 40px;"
+                      style="min-width: 44px; height: 38px;"
                     >
                       <span class="fw-bold fs-6" style="line-height: 1;">{{ getBedLabel(bed) }}</span>
                     </div>
                     
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-grow-1">
                       <div class="d-flex align-items-center gap-1.5 flex-wrap mb-0.5">
-                        <h6 class="m-0 fw-bold text-dark" style="font-size: 0.9rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
+                        <h6 class="m-0 fw-bold text-dark text-break" style="font-size: 0.88rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
                         <span class="badge bg-light text-secondary border fw-medium px-1.5 py-0.5" style="font-size: 0.68rem;">Kode: {{ bed.kd_kamar }}</span>
                       </div>
                       <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
@@ -929,7 +929,7 @@
                   </div>
 
                   <!-- Status Chip -->
-                  <div>
+                  <div class="flex-shrink-0">
                     <span 
                       v-if="bed.status === 'KOSONG'" 
                       class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill fw-bold"
@@ -949,55 +949,44 @@
                       class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-pill fw-bold"
                       style="font-size: 0.72rem;"
                     >
-                      <i class="fas fa-user-check me-1"></i> TERISI (SEDANG DIRAWAT)
+                      <i class="fas fa-user-check me-1"></i> TERISI
                     </span>
                   </div>
                 </div>
 
-                <!-- Patient Details Block (Inside Card with Padding Space) -->
+                <!-- Patient Details Block (Clean Responsive Grid) -->
                 <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-2.5 px-sm-3 pb-3 pt-0">
                   <div class="p-2.5 p-sm-3 rounded-3 bg-light border overflow-hidden shadow-2sm">
-                    <div class="row g-2.5 align-items-start align-items-md-center">
-                      <!-- Patient Avatar & Name -->
-                      <div class="col-12 col-md-5 overflow-hidden">
-                        <div class="d-flex align-items-center gap-2.5 overflow-hidden">
-                          <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm flex-shrink-0" style="width: 34px; height: 34px; font-size: 0.9rem;">
-                            <i class="fas fa-user"></i>
+                    <div class="d-flex flex-column gap-2">
+                      <!-- Row 1: Patient Avatar & Name & RM / No Rawat -->
+                      <div class="d-flex align-items-start gap-2.5">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm flex-shrink-0 mt-0.5" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                          <i class="fas fa-user"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow-1">
+                          <div class="fw-bold text-dark text-break" style="font-size: 0.85rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
+                            {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
                           </div>
-                          <div class="overflow-hidden min-w-0">
-                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien">
-                              {{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.nm_pasien || 'Pasien Rawat Inap' }}
-                            </div>
-                            <small class="text-muted d-block text-truncate" style="font-size: 0.7rem;">
-                              RM: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong> 
-                              <span class="mx-1">•</span> 
-                              No. Rawat: {{ activePatientsMap[bed.kd_kamar].no_rawat }}
-                            </small>
+                          <div class="text-muted small mt-0.5 d-flex flex-wrap align-items-center gap-x-2 gap-y-0.5" style="font-size: 0.72rem;">
+                            <span>RM: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].reg_periksa?.pasien?.no_rkm_medis || '-' }}</strong></span>
+                            <span>•</span>
+                            <span>No. Rawat: <strong class="text-dark">{{ activePatientsMap[bed.kd_kamar].no_rawat }}</strong></span>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Doctor DPJP -->
-                      <div class="col-12 col-md-4 border-start-0 border-start-md border-top border-top-md-0 ps-0 ps-md-3 pt-2 pt-md-0 mt-1 mt-md-0 overflow-hidden">
-                        <small class="text-muted text-uppercase d-block fw-bold" style="font-size: 0.62rem; letter-spacing: 0.04em;">DOKTER DPJP</small>
-                        <div class="fw-semibold text-dark text-truncate mt-0.5" style="font-size: 0.8rem;" :title="activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter">
-                          <i class="fas fa-user-md text-info me-1"></i>
-                          {{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}
+                      <!-- Row 2: Doctor DPJP & Penjamin -->
+                      <div class="pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2" style="font-size: 0.75rem;">
+                        <div class="min-w-0 flex-grow-1">
+                          <span class="text-muted me-1">DPJP:</span>
+                          <strong class="text-dark text-break"><i class="fas fa-user-md text-info me-1"></i>{{ activePatientsMap[bed.kd_kamar].reg_periksa?.dokter?.nm_dokter || '-' }}</strong>
                         </div>
-                      </div>
-
-                      <!-- Penjamin & Masuk -->
-                      <div class="col-12 col-md-3 border-start-0 border-start-md border-top border-top-md-0 ps-0 ps-md-3 pt-2 pt-md-0 mt-1 mt-md-0 text-start text-md-end overflow-hidden">
-                        <span 
-                          class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 mb-0.5 fw-bold rounded text-truncate d-inline-block" 
-                          style="font-size: 0.68rem; max-width: 100%;"
-                          :title="activePatientsMap[bed.kd_kamar].png_jawab"
-                        >
-                          {{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}
-                        </span>
-                        <small class="text-muted d-block text-truncate" style="font-size: 0.7rem;">
-                          Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}
-                        </small>
+                        <div class="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
+                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 fw-bold rounded">
+                            {{ activePatientsMap[bed.kd_kamar].png_jawab || 'UMUM' }}
+                          </span>
+                          <span class="text-muted extra-small">Masuk: {{ activePatientsMap[bed.kd_kamar].tgl_masuk || '-' }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
