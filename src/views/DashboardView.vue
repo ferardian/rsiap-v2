@@ -254,35 +254,48 @@
       <!-- Bed Availability (Cinema Seat Selection Layout) -->
       <section class="bed-cinema-section mb-4">
         <div class="card border-0 shadow-sm panel-card">
-          <div class="panel-header pt-3 pt-sm-4 px-3 px-sm-4 pb-2 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2.5">
-            <div>
-              <h5 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <i class="fas fa-bed text-primary"></i>Ketersediaan Tempat Tidur
-              </h5>
-              <p class="text-muted small m-0 mt-1">Ringkasan ketersediaan kamar rawat inap per unit & kelas secara real-time.</p>
-            </div>
-            <div class="d-flex gap-2 align-items-center w-100 w-sm-auto justify-content-between justify-content-sm-end overflow-x-auto pb-1 pb-sm-0">
-              <div class="btn-group p-1 bg-light rounded-pill border flex-grow-1 flex-sm-grow-0" style="max-width: 100%;">
-                <button 
-                  class="btn rounded-pill px-2.5 px-sm-3 py-1.5 fw-bold text-nowrap flex-fill flex-sm-grow-0"
-                  style="font-size: 0.8rem; line-height: 1.3;"
-                  :class="viewMode === 'compact' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
-                  @click="viewMode = 'compact'"
-                >
-                  <i class="fas fa-th-large me-1"></i>Ringkasan Kamar
-                </button>
-                <button 
-                  class="btn rounded-pill px-2.5 px-sm-3 py-1.5 fw-bold text-nowrap flex-fill flex-sm-grow-0"
-                  style="font-size: 0.8rem; line-height: 1.3;"
-                  :class="viewMode === 'cinema' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0'"
-                  @click="viewMode = 'cinema'"
-                >
-                  <i class="fas fa-map-marked-alt me-1"></i>Denah Visual
+          <div class="panel-header pt-3 pt-md-4 px-3 px-md-4 pb-3 border-bottom">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+              <!-- Title & Subtitle Header -->
+              <div class="d-flex justify-content-between align-items-start w-100 w-md-auto">
+                <div>
+                  <h5 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-bed text-primary"></i>Ketersediaan Tempat Tidur
+                  </h5>
+                  <p class="text-muted small m-0 mt-1">Ringkasan ketersediaan kamar rawat inap per unit & kelas secara real-time.</p>
+                </div>
+                <!-- Refresh Button Mobile Only (< md) -->
+                <button class="btn btn-sm btn-outline-secondary rounded-circle p-2 d-md-none flex-shrink-0 ms-2" style="width: 34px; height: 34px;" @click="fetchBedCinemaData" :disabled="loadingBeds" title="Refresh Data">
+                  <i class="fas fa-sync-alt" :class="{ 'fa-spin': loadingBeds }"></i>
                 </button>
               </div>
-              <button class="btn btn-sm btn-outline-secondary rounded-circle p-2 ms-1 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;" @click="fetchBedCinemaData" :disabled="loadingBeds" title="Refresh Data">
-                <i class="fas fa-sync-alt" :class="{ 'fa-spin': loadingBeds }"></i>
-              </button>
+              
+              <!-- Tab Switcher Container -->
+              <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+                <div class="p-1 bg-light rounded-pill border d-flex align-items-center w-100 w-md-auto shadow-2sm overflow-hidden" style="max-width: 100%;">
+                  <button 
+                    class="btn rounded-pill px-2 px-sm-3 py-1.5 fw-bold flex-fill flex-md-grow-0 d-flex align-items-center justify-content-center gap-1.5 transition-all text-nowrap"
+                    style="font-size: 0.78rem; line-height: 1.3;"
+                    :class="viewMode === 'compact' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0 bg-transparent'"
+                    @click="viewMode = 'compact'"
+                  >
+                    <i class="fas fa-th-large"></i><span>Ringkasan Kamar</span>
+                  </button>
+                  <button 
+                    class="btn rounded-pill px-2 px-sm-3 py-1.5 fw-bold flex-fill flex-md-grow-0 d-flex align-items-center justify-content-center gap-1.5 transition-all text-nowrap"
+                    style="font-size: 0.78rem; line-height: 1.3;"
+                    :class="viewMode === 'cinema' ? 'btn-primary text-white shadow-sm' : 'btn-light text-secondary border-0 bg-transparent'"
+                    @click="viewMode = 'cinema'"
+                  >
+                    <i class="fas fa-map-marked-alt"></i><span>Denah Visual</span>
+                  </button>
+                </div>
+
+                <!-- Refresh Button Desktop Only (>= md) -->
+                <button class="btn btn-sm btn-outline-secondary rounded-circle p-2 d-none d-md-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;" @click="fetchBedCinemaData" :disabled="loadingBeds" title="Refresh Data">
+                  <i class="fas fa-sync-alt" :class="{ 'fa-spin': loadingBeds }"></i>
+                </button>
+              </div>
             </div>
           </div>
           
