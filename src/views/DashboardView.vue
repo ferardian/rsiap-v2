@@ -814,27 +814,32 @@
       @close="showUserManagementModal = false"
     />
 
-    <!-- Room & Patient Class Lookup Modal (Clean Light Theme) -->
+    <!-- Room & Patient Class Lookup Modal (Responsive Mobile Drawer & Desktop Dialog) -->
     <div 
       v-if="showClassLookupModal" 
       class="modal fade show d-block" 
       tabindex="-1" 
-      style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1060;"
+      style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 1060;"
     >
-      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable mx-2 mx-sm-auto my-2 my-sm-auto" style="max-width: 960px;">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-          <!-- Modal Header (Clean White Header) -->
-          <div class="modal-header bg-white p-3 px-sm-4 position-relative border-bottom align-items-start justify-content-between">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl m-0 m-sm-auto w-100 h-100 h-sm-auto" style="max-width: 960px;">
+        <div class="modal-content border-0 shadow-lg rounded-0 rounded-sm-4 overflow-hidden h-100 h-sm-auto">
+          <!-- Mobile Pull Handle Indicator (< sm) -->
+          <div class="d-flex justify-content-center pt-2.5 pb-1 bg-white d-sm-none">
+            <div style="width: 36px; height: 4px; background-color: #cbd5e1; border-radius: 2px;"></div>
+          </div>
+
+          <!-- Modal Header (Clean Light Header) -->
+          <div class="modal-header bg-white p-3 px-sm-4 border-bottom align-items-start justify-content-between">
             <div class="d-flex align-items-start gap-2.5 min-w-0 flex-grow-1">
-              <div class="cat-icon-avatar bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+              <div class="cat-icon-avatar bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
                 <i :class="getCategoryIcon(lookupCategory)"></i>
               </div>
               <div class="min-w-0 flex-grow-1">
                 <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                  <span class="badge bg-primary text-white rounded-pill fw-bold" style="font-size: 0.68rem; padding: 3px 8px;">{{ lookupCategory }}</span>
-                  <span class="badge bg-light text-dark border rounded-pill fw-bold" style="font-size: 0.68rem; padding: 3px 8px;">{{ lookupClass }}</span>
+                  <span class="badge bg-primary text-white rounded-pill fw-bold" style="font-size: 0.65rem; padding: 3px 8px;">{{ lookupCategory }}</span>
+                  <span class="badge bg-light text-dark border rounded-pill fw-bold" style="font-size: 0.65rem; padding: 3px 8px;">{{ lookupClass }}</span>
                 </div>
-                <h5 class="modal-title fw-bold m-0 text-dark mt-1 text-wrap" style="font-size: 0.98rem; line-height: 1.35;">
+                <h5 class="modal-title fw-bold m-0 text-dark mt-1 text-wrap" style="font-size: 0.95rem; line-height: 1.35;">
                   Informasi Kamar & Status Pasien Rawat Inap
                 </h5>
               </div>
@@ -842,32 +847,32 @@
             <button type="button" class="btn-close flex-shrink-0 ms-2" @click="showClassLookupModal = false"></button>
           </div>
 
-          <!-- Modal Controls (Filter Tabs & Search Bar - Clean Mobile First Design) -->
-          <div class="modal-body bg-light border-bottom p-2.5 p-sm-3">
+          <!-- Modal Controls (Filter Segment & Search Bar) -->
+          <div class="modal-body bg-light border-bottom p-2.5 p-sm-3 flex-grow-0">
             <div class="row g-2 align-items-center">
-              <!-- Filter Tabs Container (Independent Pill Buttons) -->
+              <!-- Filter Pills Segment -->
               <div class="col-12 col-md-7">
                 <div class="d-flex align-items-center gap-1.5 w-100 overflow-x-auto pb-1 pb-md-0">
                   <button 
-                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all"
+                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all flex-fill"
                     :class="lookupFilterStatus === 'ALL' ? 'btn-primary text-white shadow-sm border-primary' : 'bg-white text-secondary border-slate-300'"
-                    style="font-size: 0.78rem;"
+                    style="font-size: 0.76rem;"
                     @click="lookupFilterStatus = 'ALL'"
                   >
                     Semua ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass).length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all"
+                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all flex-fill"
                     :class="lookupFilterStatus === 'KOSONG' ? 'btn-success text-white shadow-sm border-success' : 'bg-white text-success border-slate-300'"
-                    style="font-size: 0.78rem;"
+                    style="font-size: 0.76rem;"
                     @click="lookupFilterStatus = 'KOSONG'"
                   >
                     <span class="me-1">🟢</span> Tersedia ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status === 'KOSONG').length }})
                   </button>
                   <button 
-                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all"
+                    class="btn btn-sm rounded-pill fw-bold text-nowrap px-2.5 px-sm-3 py-1.5 border transition-all flex-fill"
                     :class="lookupFilterStatus === 'ISI' ? 'btn-danger text-white shadow-sm border-danger' : 'bg-white text-danger border-slate-300'"
-                    style="font-size: 0.78rem;"
+                    style="font-size: 0.76rem;"
                     @click="lookupFilterStatus = 'ISI'"
                   >
                     <span class="me-1">🔴</span> Terisi ({{ getCategoryBeds(lookupCategory).filter(b => b.kelas === lookupClass && b.status !== 'KOSONG').length }})
@@ -875,7 +880,7 @@
                 </div>
               </div>
 
-              <!-- Search Bar Container (Rounded Pill Design) -->
+              <!-- Search Bar Input -->
               <div class="col-12 col-md-5">
                 <div class="input-group bg-white rounded-pill border shadow-2sm overflow-hidden" style="height: 38px; border-color: #cbd5e1 !important;">
                   <span class="input-group-text bg-white border-0 text-muted ps-3 pe-2"><i class="fas fa-search" style="font-size: 0.8rem;"></i></span>
@@ -883,7 +888,7 @@
                     v-model="lookupSearchQuery" 
                     type="text" 
                     class="form-control border-0 shadow-none h-100 ps-0 text-dark" 
-                    style="font-size: 0.8rem;"
+                    style="font-size: 0.78rem;"
                     placeholder="Cari no. bed / nama pasien / RM..."
                   />
                   <button v-if="lookupSearchQuery" class="btn border-0 text-muted px-2.5" @click="lookupSearchQuery = ''">
@@ -894,27 +899,27 @@
             </div>
           </div>
 
-          <!-- Modal Body List -->
-          <div class="modal-body p-2.5 p-sm-4 bg-white" style="max-height: 62vh; overflow-y: auto;">
+          <!-- Modal Body Beds List -->
+          <div class="modal-body p-2.5 p-sm-4 bg-white flex-grow-1" style="max-height: 60vh; overflow-y: auto;">
             <div v-if="loadingActivePatients" class="text-center py-5 text-muted">
               <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
               <p class="m-0 small">Memuat data pasien rawat inap...</p>
             </div>
 
-            <div v-else-if="modalBedsList.length > 0" class="d-flex flex-column gap-3">
+            <div v-else-if="modalBedsList.length > 0" class="d-flex flex-column gap-2.5">
               <div 
                 v-for="bed in modalBedsList" 
                 :key="bed.kd_kamar" 
                 class="card border rounded-3 shadow-2sm overflow-hidden position-relative bed-item-card"
                 :class="bed.status === 'KOSONG' ? 'is-available-card' : 'is-occupied-card'"
               >
-                <!-- Bed Header Info (Spacious & Clean Spacing) -->
-                <div class="p-2.5 p-sm-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <!-- Bed Header Row -->
+                <div class="p-2.5 p-sm-3 d-flex align-items-center justify-content-between gap-2">
                   <div class="d-flex align-items-center gap-2.5 min-w-0 flex-grow-1">
                     <div 
                       class="rounded-3 d-flex align-items-center justify-content-center px-2 py-1 text-center shadow-2sm flex-shrink-0"
                       :class="bed.status === 'KOSONG' ? 'bg-success text-white' : 'bg-danger text-white'"
-                      style="min-width: 44px; height: 38px;"
+                      style="min-width: 42px; height: 36px;"
                     >
                       <span class="fw-bold fs-6" style="line-height: 1;">{{ getBedLabel(bed) }}</span>
                     </div>
@@ -922,9 +927,9 @@
                     <div class="min-w-0 flex-grow-1">
                       <div class="d-flex align-items-center gap-1.5 flex-wrap mb-0.5">
                         <h6 class="m-0 fw-bold text-dark text-break" style="font-size: 0.88rem;">{{ bed.bangsal?.nm_bangsal || bed.kd_bangsal }}</h6>
-                        <span class="badge bg-light text-secondary border fw-medium px-1.5 py-0.5" style="font-size: 0.68rem;">Kode: {{ bed.kd_kamar }}</span>
+                        <span class="badge bg-light text-secondary border fw-medium px-1.5 py-0.5" style="font-size: 0.65rem;">Kode: {{ bed.kd_kamar }}</span>
                       </div>
-                      <small class="text-muted d-block text-truncate" style="font-size: 0.72rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
+                      <small class="text-muted d-block text-truncate" style="font-size: 0.7rem;">Unit {{ lookupCategory }} — {{ bed.kelas }}</small>
                     </div>
                   </div>
 
@@ -933,32 +938,32 @@
                     <span 
                       v-if="bed.status === 'KOSONG'" 
                       class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.72rem;"
+                      style="font-size: 0.7rem;"
                     >
                       <i class="fas fa-check-circle me-1"></i> TERSEDIA
                     </span>
                     <span 
                       v-else-if="bed.status === 'DIBOOKING'" 
                       class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.72rem;"
+                      style="font-size: 0.7rem;"
                     >
                       <i class="fas fa-clock me-1"></i> BOOKING
                     </span>
                     <span 
                       v-else 
                       class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-pill fw-bold"
-                      style="font-size: 0.72rem;"
+                      style="font-size: 0.7rem;"
                     >
                       <i class="fas fa-user-check me-1"></i> TERISI
                     </span>
                   </div>
                 </div>
 
-                <!-- Patient Details Block (Clean Responsive Grid) -->
-                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-2.5 px-sm-3 pb-3 pt-0">
-                  <div class="p-2.5 p-sm-3 rounded-3 bg-light border overflow-hidden shadow-2sm">
+                <!-- Occupied Patient Details Box -->
+                <div v-if="bed.status !== 'KOSONG' && activePatientsMap[bed.kd_kamar]" class="px-2.5 px-sm-3 pb-2.5 pt-0">
+                  <div class="p-2.5 rounded-3 bg-light border overflow-hidden shadow-2sm">
                     <div class="d-flex flex-column gap-2">
-                      <!-- Row 1: Patient Avatar & Name & RM / No Rawat -->
+                      <!-- Patient Info -->
                       <div class="d-flex align-items-start gap-2.5">
                         <div class="rounded-circle d-flex align-items-center justify-content-center text-primary bg-white border shadow-2sm flex-shrink-0 mt-0.5" style="width: 32px; height: 32px; font-size: 0.85rem;">
                           <i class="fas fa-user"></i>
@@ -975,7 +980,7 @@
                         </div>
                       </div>
 
-                      <!-- Row 2: Doctor DPJP & Penjamin -->
+                      <!-- DPJP & Penjamin Info -->
                       <div class="pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2" style="font-size: 0.75rem;">
                         <div class="min-w-0 flex-grow-1">
                           <span class="text-muted me-1">DPJP:</span>
@@ -992,9 +997,9 @@
                   </div>
                 </div>
 
-                <!-- Empty bed info (with Padding Space) -->
-                <div v-else-if="bed.status === 'KOSONG'" class="px-2.5 px-sm-3 pb-3 pt-0">
-                  <div class="p-2.5 p-sm-3 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.76rem; font-weight: 500;">
+                <!-- Empty Bed Banner -->
+                <div v-else-if="bed.status === 'KOSONG'" class="px-2.5 px-sm-3 pb-2.5 pt-0">
+                  <div class="p-2 rounded-3 bg-success-subtle text-success small d-flex align-items-center gap-2 border border-success-subtle shadow-2sm" style="font-size: 0.74rem; font-weight: 500;">
                     <i class="fas fa-check-circle fs-6 flex-shrink-0"></i> Tempat tidur ini kosong dan siap dikonfirmasi untuk registrasi pasien baru.
                   </div>
                 </div>
@@ -1010,7 +1015,7 @@
           </div>
 
           <!-- Modal Footer -->
-          <div class="modal-footer bg-light border-top py-2.5 px-3 px-sm-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2">
+          <div class="modal-footer bg-light border-top py-2.5 px-3 px-sm-4 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 flex-shrink-0">
             <div class="d-flex align-items-center gap-2">
               <i class="fas fa-bed text-primary opacity-75"></i>
               <small class="text-muted fw-medium" style="font-size: 0.8rem;">
