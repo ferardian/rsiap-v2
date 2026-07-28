@@ -1526,7 +1526,11 @@ const openIkpLookupModal = async (type, title, extraParams = {}) => {
     const params = {
       type,
       tahun: filters.tahun,
+      tipe: filters.tipe,
       ...extraParams
+    }
+    if (filters.tipe !== 'tahunan') {
+      params.periode = filters.periode
     }
     const res = await api.getIkpLookup(params)
     if (res.data && res.data.success) {
