@@ -512,7 +512,7 @@
                   <div class="col-7"><input type="date" v-model="adjData.task1.tgl" class="form-control premium-input-sm"></div>
                   <div class="col-5"><input type="time" step="1" v-model="adjData.task1.jam" class="form-control premium-input-sm"></div>
                 </div>
-                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(1)">Sync Task 1 ke BPJS</button>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(1)" :disabled="isTaskEmpty(adjData.task1)">Sync Task 1 ke BPJS</button>
              </div>
 
              <!-- Task 2 -->
@@ -522,7 +522,7 @@
                   <div class="col-7"><input type="date" v-model="adjData.task2.tgl" class="form-control premium-input-sm"></div>
                   <div class="col-5"><input type="time" step="1" v-model="adjData.task2.jam" class="form-control premium-input-sm"></div>
                 </div>
-                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(2)">Simpan & Sync Task 2</button>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(2)" :disabled="isTaskEmpty(adjData.task2)">Simpan & Sync Task 2</button>
              </div>
 
              <!-- Task 3 -->
@@ -532,7 +532,7 @@
                   <div class="col-7"><input type="date" v-model="adjData.task3.tgl" class="form-control premium-input-sm"></div>
                   <div class="col-5"><input type="time" step="1" v-model="adjData.task3.jam" class="form-control premium-input-sm"></div>
                 </div>
-                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(3)">Simpan & Sync Task 3</button>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(3)" :disabled="isTaskEmpty(adjData.task3)">Simpan & Sync Task 3</button>
              </div>
 
              <!-- Task 4 -->
@@ -555,7 +555,7 @@
                   <div class="col-5"><input type="time" step="1" v-model="adjData.task5.jam" class="form-control premium-input-sm"></div>
                 </div>
                 <input v-else type="datetime-local" v-model="adjData.task5_raw" class="form-control premium-input-sm">
-                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(5)">Simpan & Sync Task 5</button>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(5)" :disabled="adjData.has_resep ? isTaskEmpty(adjData.task5) : !adjData.task5_raw">Simpan & Sync Task 5</button>
              </div>
 
              <!-- Task 6 & 7 (Only if Resep) -->
@@ -566,7 +566,7 @@
                     <div class="col-7"><input type="date" v-model="adjData.task6.tgl" class="form-control premium-input-sm"></div>
                     <div class="col-5"><input type="time" step="1" v-model="adjData.task6.jam" class="form-control premium-input-sm"></div>
                   </div>
-                  <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(6)">Simpan & Sync Task 6</button>
+                  <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(6)" :disabled="isTaskEmpty(adjData.task6)">Simpan & Sync Task 6</button>
                 </div>
 
                 <div class="adj-item mb-5 pb-5">
@@ -575,7 +575,7 @@
                     <div class="col-7"><input type="date" v-model="adjData.task7.tgl" class="form-control premium-input-sm"></div>
                     <div class="col-5"><input type="time" step="1" v-model="adjData.task7.jam" class="form-control premium-input-sm"></div>
                   </div>
-                  <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(7)">Simpan & Sync Task 7</button>
+                  <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(7)" :disabled="isTaskEmpty(adjData.task7)">Simpan & Sync Task 7</button>
                 </div>
                 <div class="py-5"></div>
              </template>
@@ -945,6 +945,13 @@ const getStatusClass = (status) => {
   if (s.includes('batal') || s.includes('2')) return 'status-batal'
   if (s.includes('check') || s.includes('3')) return 'status-checkin'
   return 'status-unknown'
+}
+
+const isTaskEmpty = (taskObj) => {
+  if (!taskObj) return true
+  const jam = taskObj.jam ? String(taskObj.jam).trim() : ''
+  const tgl = taskObj.tgl ? String(taskObj.tgl).trim() : ''
+  return !tgl || !jam || jam === '00:00:00' || jam === '--:--:--' || jam === '--:--'
 }
 
 const showTaskList = async (item) => {
