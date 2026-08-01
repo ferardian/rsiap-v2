@@ -146,7 +146,17 @@
                   <div class="small text-muted">{{ item.no_rawat }}</div>
                 </td>
                 <td class="px-3 py-2">
-                  <div class="fw-semibold">{{ item.pasien?.nm_pasien }}</div>
+                  <div class="d-flex align-items-center gap-1 flex-wrap">
+                    <span class="fw-semibold">{{ item.pasien?.nm_pasien }}</span>
+                    <span 
+                      v-if="item.stts_daftar" 
+                      class="badge rounded-pill"
+                      :class="item.stts_daftar === 'Baru' ? 'bg-success text-white' : 'bg-secondary text-white'"
+                      style="font-size: 0.65rem; padding: 2px 7px;"
+                    >
+                      {{ item.stts_daftar === 'Baru' ? 'Pasien Baru' : 'Pasien Lama' }}
+                    </span>
+                  </div>
                   <div class="small text-muted">
                     {{ item.no_rkm_medis }} 
                     <span class="mx-1">•</span> 
@@ -402,11 +412,24 @@
                       <label class="detail-label text-blue-700 mb-1">Dokter Pemeriksa</label>
                       <div class="detail-value text-dark fw-bold">{{ selectedItem.dokter?.nm_dokter }}</div>
                     </div>
-                     <div class="col-md-6">
+                     <div class="col-md-4">
                       <label class="detail-label text-blue-700 mb-1">Cara Bayar</label>
-                      <div class="detail-value text-dark">{{ selectedItem.caraBayar?.png_jawab }}</div>
+                      <div class="detail-value text-dark">{{ selectedItem.caraBayar?.png_jawab || selectedItem.cara_bayar?.png_jawab }}</div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                      <label class="detail-label text-blue-700 mb-1">Jenis Pasien</label>
+                      <div>
+                        <span 
+                          v-if="selectedItem.stts_daftar"
+                          class="badge rounded-pill"
+                          :class="selectedItem.stts_daftar === 'Baru' ? 'bg-success text-white' : 'bg-secondary text-white'"
+                        >
+                          Pasien {{ selectedItem.stts_daftar }}
+                        </span>
+                        <span v-else class="text-dark">-</span>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
                       <label class="detail-label text-blue-700 mb-1">Status Periksa</label>
                       <div>
                         <span :class="['badge rounded-pill', getStatusClass(selectedItem.stts)]">
@@ -1614,6 +1637,7 @@ const formatDataForExport = (data) => {
     'No. Rawat': item.no_rawat,
     'No. RM': item.no_rkm_medis,
     'Nama Pasien': item.pasien?.nm_pasien,
+    'Jenis Pasien': item.stts_daftar ? (`Pasien ${item.stts_daftar}`) : '-',
     'JK': item.pasien?.jk,
     'Poliklinik': item.poliklinik?.nm_poli,
     'Dokter': item.dokter?.nm_dokter,
