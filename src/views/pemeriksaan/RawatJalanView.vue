@@ -146,21 +146,19 @@
                   <div class="small text-muted">{{ item.no_rawat }}</div>
                 </td>
                 <td class="px-3 py-2">
-                  <div class="d-flex align-items-center gap-1 flex-wrap">
-                    <span class="fw-semibold">{{ item.pasien?.nm_pasien }}</span>
+                  <div class="fw-semibold text-dark">{{ item.pasien?.nm_pasien }}</div>
+                  <div class="small text-muted d-flex align-items-center flex-wrap gap-1 mt-1">
+                    <span>{{ item.no_rkm_medis }}</span>
+                    <span>•</span>
+                    <span>{{ item.pasien?.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
                     <span 
                       v-if="item.stts_daftar" 
-                      class="badge rounded-pill"
+                      class="badge rounded-pill ms-1"
                       :class="item.stts_daftar === 'Baru' ? 'bg-success text-white' : 'bg-secondary text-white'"
-                      style="font-size: 0.65rem; padding: 2px 7px;"
+                      style="font-size: 0.65rem; padding: 2px 6px;"
                     >
                       {{ item.stts_daftar === 'Baru' ? 'Pasien Baru' : 'Pasien Lama' }}
                     </span>
-                  </div>
-                  <div class="small text-muted">
-                    {{ item.no_rkm_medis }} 
-                    <span class="mx-1">•</span> 
-                    {{ item.pasien?.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}
                   </div>
                 </td>
                 <td class="px-3 py-2">
