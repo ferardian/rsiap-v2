@@ -1374,16 +1374,6 @@
                     <i v-if="isSavingStatus" class="spinner-border spinner-border-sm me-1" style="width: 0.8rem; height: 0.8rem;"></i>
                     <i v-else class="fas fa-save me-1"></i> Simpan
                   </button>
-                  <button 
-                    class="btn btn-sm btn-outline-danger d-flex align-items-center py-1 px-2" 
-                    @click="deleteDataSalah(r)"
-                    :disabled="isDeletingStatus"
-                    style="font-size: 0.75rem;"
-                    title="Hapus Data Salah"
-                  >
-                    <i v-if="isDeletingStatus" class="spinner-border spinner-border-sm" style="width: 0.8rem; height: 0.8rem;"></i>
-                    <i v-else class="fas fa-trash"></i>
-                  </button>
                 </div>
               </div>
             </div>
@@ -1414,6 +1404,10 @@
 
       <div class="context-menu-item" @click="handleContextAction('edit-status-pulang')">
         <i class="fas fa-edit me-2 text-warning"></i> Status Pulang
+      </div>
+
+      <div class="context-menu-item text-danger" @click="handleContextAction('hapus-data-salah')">
+        <i class="fas fa-trash me-2"></i> Hapus Data Salah
       </div>
 
       <!-- ERM Submenu -->
@@ -1585,6 +1579,14 @@
                 <div class="item-text">
                   <div class="item-title">Status Pulang</div>
                   <div class="item-desc">Ubah status kepulangan kamar pasien</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+              <div class="action-list-item" @click="executeAction('hapus-data-salah')">
+                <div class="item-icon bg-rose-soft text-danger"><i class="fas fa-trash"></i></div>
+                <div class="item-text">
+                  <div class="item-title text-danger">Hapus Data Salah</div>
+                  <div class="item-desc">Hapus data inap kamar salah (kembalikan status)</div>
                 </div>
                 <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
               </div>
@@ -1883,6 +1885,9 @@ const handleContextAction = async (action) => {
        break
     case 'edit-status-pulang':
        openStatusPulangModal(item)
+       break
+    case 'hapus-data-salah':
+       deleteDataSalah(item)
        break
     case 'hais':
        openHaisModal(item)
@@ -2313,23 +2318,28 @@ const saveStatusPulang = async (ruangItem) => {
 }
 
 const deleteDataSalah = async (ruangItem) => {
-  if (!confirm(`Apakah Anda yakin ingin menghapus data kamar ini?\n\nKamar: ${ruangItem.kd_kamar}\nMasuk: ${ruangItem.tgl_masuk} ${ruangItem.jam_masuk}\n\n*Peringatan: Pastikan tagihan kasir/billing belum terverifikasi!`)) {
+  const noRawat = selectedStatusItem.value?.no_rawat || ruangItem.no_rawat
+  const kdKamar = ruangItem.kd_kamar || ruangItem.kamar?.kd_kamar
+
+  if (!confirm(`Apakah Anda yakin ingin menghapus data kamar ini?\n\nKamar: ${kdKamar}\nMasuk: ${ruangItem.tgl_masuk} ${ruangItem.jam_masuk}\n\n*Peringatan: Pastikan tagihan kasir/billing belum terverifikasi!`)) {
     return
   }
   
   isDeletingStatus.value = true
   try {
     const payload = {
-      no_rawat: selectedStatusItem.value.no_rawat,
-      kd_kamar: ruangItem.kd_kamar,
+      no_rawat: noRawat,
+      kd_kamar: kdKamar,
       tgl_masuk: ruangItem.tgl_masuk,
       jam_masuk: ruangItem.jam_masuk
     }
     const response = await rawatInapService.hapusDataSalah(payload)
     if (response.data && response.data.success) {
       toast.success(response.data.message || 'Data salah berhasil dihapus')
-      // Refresh the room history in modal
-      openStatusPulangModal(selectedStatusItem.value)
+      // Refresh the room history in modal if it is open
+      if (showStatusPulangModal.value && selectedStatusItem.value) {
+        openStatusPulangModal(selectedStatusItem.value)
+      }
       // Refresh the main table list
       fetchData(false)
     } else {
