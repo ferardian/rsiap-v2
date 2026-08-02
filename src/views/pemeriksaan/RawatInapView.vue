@@ -200,17 +200,12 @@
                 <td class="px-2 py-1">
                   <div v-if="item.tgl_keluar && item.tgl_keluar !== '0000-00-00'">
                     <div class="fw-semibold text-success">{{ formatDateIndo(item.tgl_keluar) }}</div>
-                    <div class="small text-muted" style="font-size: 0.75rem;">
-                      {{ item.jam_keluar }}
+                    <div class="small text-muted" style="font-size: 0.75rem;">{{ item.jam_keluar }}</div>
+                    <div v-if="item.stts_pulang && item.stts_pulang !== '-'" class="mt-1">
                       <span 
-                        v-if="item.stts_pulang && item.stts_pulang !== '-'" 
-                        class="badge ms-1 border"
+                        class="badge border"
                         style="font-size: 0.65rem;"
-                        :class="[
-                          item.stts_pulang.toLowerCase().includes('meninggal') ? 'bg-danger-subtle text-danger border-danger-subtle' : '',
-                          item.stts_pulang.toLowerCase().includes('rujuk') ? 'bg-warning-subtle text-warning border-warning-subtle' : '',
-                          !item.stts_pulang.toLowerCase().includes('meninggal') && !item.stts_pulang.toLowerCase().includes('rujuk') ? 'bg-success-subtle text-success border-success-subtle' : ''
-                        ]"
+                        :class="getStatusPulangClass(item.stts_pulang)"
                       >
                         {{ item.stts_pulang }}
                       </span>
@@ -2566,6 +2561,26 @@ const formatDateIndo = (dateStr) => {
   }
 }
 
+const getStatusPulangClass = (status) => {
+  if (!status) return 'bg-light text-dark border-light-subtle'
+  const stts = status.toLowerCase()
+  if (stts.includes('dokter') || stts.includes('sembuh') || stts.includes('membaik')) {
+    return 'bg-success-subtle text-success border-success-subtle'
+  }
+  if (stts.includes('pindah')) {
+    return 'bg-primary-subtle text-primary border-primary-subtle'
+  }
+  if (stts.includes('rujuk')) {
+    return 'bg-warning-subtle text-warning border-warning-subtle'
+  }
+  if (stts.includes('permintaan sendiri') || stts.includes('aps') || stts.includes('pulang paksa')) {
+    return 'bg-warning-subtle text-warning border-warning-subtle'
+  }
+  if (stts.includes('meninggal')) {
+    return 'bg-danger-subtle text-danger border-danger-subtle'
+  }
+  return 'bg-light text-secondary border-secondary-subtle'
+}
 
 const getLineTotal = (i) => {
   const total = parseFloat(i.total || i.total_obat || i.totalbiaya || 0)
