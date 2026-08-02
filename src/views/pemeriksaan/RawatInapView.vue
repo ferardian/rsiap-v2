@@ -1298,7 +1298,7 @@
 
     <!-- Edit Status Pulang Modal -->
     <div v-if="showStatusPulangModal" class="modal-overlay" @click.self="closeStatusPulangModal">
-      <div class="modal-content-custom" style="max-width: 600px; display: flex; flex-direction: column; max-height: 85vh;">
+      <div class="modal-content-custom" style="max-width: 600px;">
         <div class="modal-header-custom bg-warning text-white" style="flex-shrink: 0;">
           <h5 class="mb-0 text-white">
             <i class="fas fa-edit me-2"></i>
