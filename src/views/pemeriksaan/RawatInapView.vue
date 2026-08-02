@@ -1365,7 +1365,7 @@
                     <option value="Meninggal">Meninggal</option>
                     <option value="Lain-lain">Lain-lain</option>
                   </select>
-                  <button 
+                   <button 
                     class="btn btn-sm btn-action-success d-flex align-items-center py-1 px-3" 
                     @click="saveStatusPulang(r)"
                     :disabled="isSavingStatus"
@@ -1373,6 +1373,16 @@
                   >
                     <i v-if="isSavingStatus" class="spinner-border spinner-border-sm me-1" style="width: 0.8rem; height: 0.8rem;"></i>
                     <i v-else class="fas fa-save me-1"></i> Simpan
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-outline-danger d-flex align-items-center py-1 px-2" 
+                    @click="deleteDataSalah(r)"
+                    :disabled="isDeletingStatus"
+                    style="font-size: 0.75rem;"
+                    title="Hapus Data Salah"
+                  >
+                    <i v-if="isDeletingStatus" class="spinner-border spinner-border-sm" style="width: 0.8rem; height: 0.8rem;"></i>
+                    <i v-else class="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
@@ -1954,6 +1964,7 @@ const showStatusPulangModal = ref(false)
 const selectedStatusItem = ref(null)
 const loadingStatusRuang = ref(false)
 const isSavingStatus = ref(false)
+const isDeletingStatus = ref(false)
 const statusRuangList = ref([])
 
 // Booking Operasi State
@@ -2298,6 +2309,38 @@ const saveStatusPulang = async (ruangItem) => {
     toast.error('Gagal memperbarui status pulang')
   } finally {
     isSavingStatus.value = false
+  }
+}
+
+const deleteDataSalah = async (ruangItem) => {
+  if (!confirm(`Apakah Anda yakin ingin menghapus data kamar ini?\n\nKamar: ${ruangItem.kd_kamar}\nMasuk: ${ruangItem.tgl_masuk} ${ruangItem.jam_masuk}\n\n*Peringatan: Pastikan tagihan kasir/billing belum terverifikasi!`)) {
+    return
+  }
+  
+  isDeletingStatus.value = true
+  try {
+    const payload = {
+      no_rawat: selectedStatusItem.value.no_rawat,
+      kd_kamar: ruangItem.kd_kamar,
+      tgl_masuk: ruangItem.tgl_masuk,
+      jam_masuk: ruangItem.jam_masuk
+    }
+    const response = await rawatInapService.hapusDataSalah(payload)
+    if (response.data && response.data.success) {
+      toast.success(response.data.message || 'Data salah berhasil dihapus')
+      // Refresh the room history in modal
+      openStatusPulangModal(selectedStatusItem.value)
+      // Refresh the main table list
+      fetchData(false)
+    } else {
+      toast.error(response.data.message || 'Gagal menghapus data salah')
+    }
+  } catch (error) {
+    console.error('Error deleting data salah:', error)
+    const errorMsg = error.response?.data?.message || 'Gagal menghapus data salah'
+    toast.error(errorMsg)
+  } finally {
+    isDeletingStatus.value = false
   }
 }
 

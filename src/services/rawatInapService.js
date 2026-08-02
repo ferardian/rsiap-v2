@@ -60,5 +60,10 @@ export default {
     // Update Status Pulang for a specific room stay
     updateStatusPulang(data) {
         return api.post('/rawat-inap/update-status-pulang', data)
+    },
+
+    // Delete incorrect room stay (Hapus Data Salah)
+    hapusDataSalah(data) {
+        return api.post('/rawat-inap/hapus-data-salah', data)
     }
 }
