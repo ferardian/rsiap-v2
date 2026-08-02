@@ -1406,10 +1406,6 @@
         <i class="fas fa-edit me-2 text-warning"></i> Status Pulang
       </div>
 
-      <div class="context-menu-item text-danger" @click="handleContextAction('hapus-data-salah')">
-        <i class="fas fa-trash me-2"></i> Hapus Data Salah
-      </div>
-
       <!-- ERM Submenu -->
       <div class="context-menu-item has-submenu" @click.stop>
         <i class="fas fa-file-medical me-2 text-info"></i> ERM
@@ -1462,6 +1458,12 @@
       </div>
       <div class="context-menu-item" @click="handleContextAction('copy_rm')">
         <i class="fas fa-id-card me-2 text-secondary"></i> Salin No. RM
+      </div>
+      
+      <div class="border-top my-1"></div>
+
+      <div class="context-menu-item text-danger" @click="handleContextAction('hapus-data-salah')">
+        <i class="fas fa-trash me-2"></i> Hapus Data Salah
       </div>
       
       <div class="border-top my-1"></div>
