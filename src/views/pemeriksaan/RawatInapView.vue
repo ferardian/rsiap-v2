@@ -1296,6 +1296,92 @@
       @save="handleSaveSkriningGizi"
     />
 
+    <!-- Edit Status Pulang Modal -->
+    <div v-if="showStatusPulangModal" class="modal-overlay" @click.self="closeStatusPulangModal">
+      <div class="modal-content-custom" style="max-width: 600px; display: flex; flex-direction: column; max-height: 85vh;">
+        <div class="modal-header-custom bg-warning text-white" style="flex-shrink: 0;">
+          <h5 class="mb-0 text-white">
+            <i class="fas fa-edit me-2"></i>
+            Edit Status Pulang Kamar
+          </h5>
+          <button type="button" class="btn-close-custom" @click="closeStatusPulangModal">×</button>
+        </div>
+        <div class="modal-body-custom" v-if="selectedStatusItem" style="overflow-y: auto; flex-grow: 1;">
+          <div class="d-flex align-items-center mb-3 pb-2 border-bottom bg-white pt-2 sticky-top" style="z-index: 5;">
+            <div class="avatar-circle me-3" style="width: 40px; height: 40px; min-width: 40px; background: #eab308;">
+              <span class="text-white fw-bold fs-5">{{ selectedStatusItem.reg_periksa?.pasien?.nm_pasien?.charAt(0) }}</span>
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold">{{ selectedStatusItem.reg_periksa?.pasien?.nm_pasien }}</h6>
+              <p class="mb-0 text-muted small" style="font-size: 0.8rem;">
+                {{ selectedStatusItem.reg_periksa?.no_rkm_medis }} • {{ selectedStatusItem.no_rawat }}
+              </p>
+            </div>
+          </div>
+
+          <div v-if="loadingStatusRuang" class="text-center py-5">
+            <div class="spinner-border text-warning" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Memuat data kamar...</p>
+          </div>
+
+          <div v-else-if="statusRuangList.length === 0" class="text-center py-5 text-muted">
+            <i class="fas fa-bed fa-3x mb-3 opacity-50"></i>
+            <p>Tidak ada riwayat kamar ditemukan.</p>
+          </div>
+
+          <div v-else class="status-ruang-list">
+            <div v-for="(r, index) in statusRuangList" :key="index" class="card border border-light-subtle shadow-sm mb-3">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.9rem;">{{ r.kamar?.bangsal?.nm_bangsal || '-' }}</h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">Kamar: {{ r.kd_kamar }}</small>
+                  </div>
+                  <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">{{ r.lama }} Hari</span>
+                </div>
+                <div class="row g-2 text-muted mb-3" style="font-size: 0.75rem;">
+                  <div class="col-6">
+                    <strong>Masuk:</strong> {{ r.tgl_masuk }} {{ r.jam_masuk }}
+                  </div>
+                  <div class="col-6">
+                    <strong>Keluar:</strong> {{ r.tgl_keluar !== '0000-00-00' ? (r.tgl_keluar + ' ' + r.jam_keluar) : 'Belum Keluar' }}
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <label class="form-label mb-0 text-muted fw-bold" style="min-width: 90px; font-size: 0.75rem;">Status Pulang:</label>
+                  <select 
+                    class="form-select form-select-sm border-light-subtle" 
+                    v-model="r.stts_pulang"
+                    style="font-size: 0.8rem;"
+                  >
+                    <option value="-">-</option>
+                    <option value="Atas Persetujuan Dokter">Atas Persetujuan Dokter</option>
+                    <option value="Atas Permintaan Sendiri">Atas Permintaan Sendiri</option>
+                    <option value="Pindah Kamar">Pindah Kamar</option>
+                    <option value="Rujuk">Rujuk</option>
+                    <option value="Meninggal">Meninggal</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                  <button 
+                    class="btn btn-sm btn-action-success d-flex align-items-center py-1 px-3" 
+                    @click="saveStatusPulang(r)"
+                    :disabled="isSavingStatus"
+                    style="font-size: 0.75rem;"
+                  >
+                    <i v-if="isSavingStatus" class="spinner-border spinner-border-sm me-1" style="width: 0.8rem; height: 0.8rem;"></i>
+                    <i v-else class="fas fa-save me-1"></i> Simpan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Context Menu -->
     <!-- Context Menu -->
     <div 
@@ -1314,6 +1400,10 @@
       
       <div class="context-menu-item" @click="handleContextAction('billing')">
         <i class="fas fa-file-invoice-dollar me-2 text-success"></i> Billing
+      </div>
+
+      <div class="context-menu-item" @click="handleContextAction('edit-status-pulang')">
+        <i class="fas fa-edit me-2 text-warning"></i> Status Pulang
       </div>
 
       <!-- ERM Submenu -->
@@ -1479,6 +1569,16 @@
           <!-- Section: Data -->
           <div class="action-group mb-4">
             <div class="action-group-header">Data Administrasi</div>
+            <div class="action-list mb-3">
+              <div class="action-list-item" @click="executeAction('edit-status-pulang')">
+                <div class="item-icon bg-warning-soft text-warning"><i class="fas fa-edit"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Status Pulang</div>
+                  <div class="item-desc">Ubah status kepulangan kamar pasien</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+            </div>
             <div class="row g-2">
               <div class="col-6">
                 <div class="action-btn-outline" @click="executeAction('copy_rawat')">
@@ -1771,6 +1871,9 @@ const handleContextAction = async (action) => {
     case 'diet-pasien-bulk':
        openBulkDietModal()
        break
+    case 'edit-status-pulang':
+       openStatusPulangModal(item)
+       break
     case 'hais':
        openHaisModal(item)
        break
@@ -1845,6 +1948,13 @@ const isLoadingRme = ref(false)
 const isLoadingBilling = ref(false)
 const rmeError = ref(null)
 const billingError = ref(null)
+
+// Status Pulang State
+const showStatusPulangModal = ref(false)
+const selectedStatusItem = ref(null)
+const loadingStatusRuang = ref(false)
+const isSavingStatus = ref(false)
+const statusRuangList = ref([])
 
 // Booking Operasi State
 const showBookingOperasiModal = ref(false)
@@ -2134,6 +2244,61 @@ const closeModal = () => {
     serverGrandTotal.value = 0
     penunjangData.value = null
   }, 300)
+}
+
+// Edit Status Pulang Logic
+const openStatusPulangModal = async (item) => {
+  selectedStatusItem.value = item
+  showStatusPulangModal.value = true
+  loadingStatusRuang.value = true
+  statusRuangList.value = []
+  
+  try {
+    const response = await rawatInapService.getBilling(item.no_rawat)
+    if (response.data && response.data.success) {
+      statusRuangList.value = response.data.extra?.ruang || []
+    } else {
+      toast.error('Gagal memuat data kamar')
+    }
+  } catch (error) {
+    console.error('Error fetching room history:', error)
+    toast.error('Terjadi kesalahan saat memuat data kamar')
+  } finally {
+    loadingStatusRuang.value = false
+  }
+}
+
+const closeStatusPulangModal = () => {
+  showStatusPulangModal.value = false
+  setTimeout(() => {
+    selectedStatusItem.value = null
+    statusRuangList.value = []
+  }, 300)
+}
+
+const saveStatusPulang = async (ruangItem) => {
+  isSavingStatus.value = true
+  try {
+    const payload = {
+      no_rawat: selectedStatusItem.value.no_rawat,
+      tgl_masuk: ruangItem.tgl_masuk,
+      jam_masuk: ruangItem.jam_masuk,
+      stts_pulang: ruangItem.stts_pulang
+    }
+    const response = await rawatInapService.updateStatusPulang(payload)
+    if (response.data && response.data.success) {
+      toast.success('Status pulang berhasil diperbarui')
+      // Refresh the main table list to reflect the updated status
+      fetchData(false)
+    } else {
+      toast.error(response.data.message || 'Gagal memperbarui status pulang')
+    }
+  } catch (error) {
+    console.error('Error saving status pulang:', error)
+    toast.error('Gagal memperbarui status pulang')
+  } finally {
+    isSavingStatus.value = false
+  }
 }
 
 // Booking Operasi Logic

@@ -55,5 +55,10 @@ export default {
                 no_rawat: encodedNoRawat
             }
         });
+    },
+
+    // Update Status Pulang for a specific room stay
+    updateStatusPulang(data) {
+        return api.post('/rawat-inap/update-status-pulang', data)
     }
 }
