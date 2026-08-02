@@ -137,6 +137,7 @@
                 <th class="px-2 py-1" style="width: 120px">Kamar</th>
                 <th class="px-2 py-1">Pasien</th>
                 <th class="px-2 py-1" style="width: 110px">Tgl Masuk</th>
+                <th class="px-2 py-1" style="width: 110px">Tgl Pulang</th>
                 <th class="px-2 py-1 text-center" style="width: 80px">Lama</th>
                 <th class="px-2 py-1">Diagnosa Awal</th>
                 <th class="px-2 py-1">Jenis Bayar</th>
@@ -148,14 +149,14 @@
             </thead>
             <tbody>
               <tr v-if="loading && items.length === 0">
-                <td colspan="10" class="text-center py-5">
+                <td colspan="11" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="10" class="text-center py-5 text-muted">
+                <td colspan="11" class="text-center py-5 text-muted">
                   <i class="fas fa-bed fa-2x mb-2 d-block opacity-50"></i>
                   Tidak ada pasien rawat inap yang sesuai
                 </td>
@@ -195,6 +196,13 @@
                 <td class="px-2 py-1">
                   <div class="fw-semibold">{{ formatDateIndo(item.tgl_masuk) }}</div>
                   <div class="small text-muted" style="font-size: 0.75rem;">{{ item.jam_masuk }}</div>
+                </td>
+                <td class="px-2 py-1">
+                  <div v-if="item.tgl_keluar && item.tgl_keluar !== '0000-00-00'">
+                    <div class="fw-semibold text-success">{{ formatDateIndo(item.tgl_keluar) }}</div>
+                    <div class="small text-muted" style="font-size: 0.75rem;">{{ item.jam_keluar }}</div>
+                  </div>
+                  <div v-else class="text-muted small">—</div>
                 </td>
                 <td class="px-2 py-1 text-center">
                     <span class="badge bg-light text-dark border">{{ calculateLamaInap(item.reg_periksa?.tgl_registrasi) }} Hari</span>
@@ -242,7 +250,7 @@
               </tr>
               <!-- Loading Indicator for Infinite Scroll -->
               <tr v-if="loading && items.length > 0">
-                <td colspan="10" class="text-center py-2">
+                <td colspan="11" class="text-center py-2">
                   <div class="spinner-border spinner-border-sm text-secondary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
