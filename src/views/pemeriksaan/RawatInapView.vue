@@ -200,7 +200,21 @@
                 <td class="px-2 py-1">
                   <div v-if="item.tgl_keluar && item.tgl_keluar !== '0000-00-00'">
                     <div class="fw-semibold text-success">{{ formatDateIndo(item.tgl_keluar) }}</div>
-                    <div class="small text-muted" style="font-size: 0.75rem;">{{ item.jam_keluar }}</div>
+                    <div class="small text-muted" style="font-size: 0.75rem;">
+                      {{ item.jam_keluar }}
+                      <span 
+                        v-if="item.stts_pulang && item.stts_pulang !== '-'" 
+                        class="badge ms-1 border"
+                        style="font-size: 0.65rem;"
+                        :class="[
+                          item.stts_pulang.toLowerCase().includes('meninggal') ? 'bg-danger-subtle text-danger border-danger-subtle' : '',
+                          item.stts_pulang.toLowerCase().includes('rujuk') ? 'bg-warning-subtle text-warning border-warning-subtle' : '',
+                          !item.stts_pulang.toLowerCase().includes('meninggal') && !item.stts_pulang.toLowerCase().includes('rujuk') ? 'bg-success-subtle text-success border-success-subtle' : ''
+                        ]"
+                      >
+                        {{ item.stts_pulang }}
+                      </span>
+                    </div>
                   </div>
                   <div v-else class="text-muted small">—</div>
                 </td>
