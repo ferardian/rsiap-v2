@@ -703,53 +703,86 @@
     </div>
 
     <!-- Surat Keterangan Layak Terbang Modal -->
+    <!-- Surat Keterangan Layak Terbang Modal (Premium Design) -->
     <div v-if="showSuratTerbangModal" class="modal-overlay" @click.self="closeSuratTerbangModal">
-      <div class="modal-content-custom" style="max-width: 650px;">
-        <div class="modal-header-custom bg-warning text-white" style="flex-shrink: 0;">
-          <h5 class="mb-0 text-white">
-            <i class="fas fa-plane-departure me-2"></i>
-            Surat Keterangan Layak Terbang
-          </h5>
-          <button type="button" class="btn-close-custom" @click="closeSuratTerbangModal">×</button>
+      <div class="modal-content-custom border-0 shadow-2xl animate__animated animate__zoomIn animate__faster" 
+           style="max-width: 650px; border-radius: 24px; overflow: hidden; background: #fafafa; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        
+        <!-- Header: Vibrant Gradient with plane icon -->
+        <div class="d-flex align-items-center justify-content-between p-4 text-white position-relative" 
+             style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); flex-shrink: 0; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);">
+          <div class="d-flex align-items-center">
+            <div class="rounded-3 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background-color: rgba(255, 255, 255, 0.2);">
+              <i class="fas fa-plane-departure text-white fs-4"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold text-white" style="letter-spacing: 0.5px;">Surat Layak Terbang</h5>
+              <small class="text-white text-opacity-80">Penerbitan surat keterangan layak terbang</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close-custom bg-white bg-opacity-10 text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                  style="width: 32px; height: 32px; border: none; font-size: 1.5rem; line-height: 1; transition: all 0.2s;" @click="closeSuratTerbangModal">×</button>
         </div>
 
-        <div class="modal-body-custom" style="overflow-y: auto; flex-grow: 1;">
+        <div class="modal-body-custom p-4" style="overflow-y: auto; flex-grow: 1; max-height: 75vh;">
           <div v-if="isLoadingSuratTerbang" class="text-center py-5">
             <div class="spinner-border text-warning" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2 text-muted">Memuat data surat...</p>
+            <p class="mt-3 text-muted fw-medium">Menyelaraskan data...</p>
           </div>
 
           <div v-else>
-            <!-- Patient Header Summary (Sticky/Top) -->
-            <div v-if="currentSuratTerbangRegData" class="d-flex align-items-center mb-4 pb-2 border-bottom bg-white pt-2">
-              <div class="avatar-circle me-3" style="width: 40px; height: 40px; min-width: 40px; background: #eab308;">
-                <span class="text-white fw-bold fs-5">{{ currentSuratTerbangRegData.pasien?.nm_pasien?.charAt(0) }}</span>
+            <!-- Premium Patient Summary Card -->
+            <div v-if="currentSuratTerbangRegData" 
+                 class="d-flex align-items-center p-3 mb-4 border border-light shadow-sm bg-white" 
+                 style="border-radius: 16px; background: linear-gradient(to right, #ffffff, #fefaf0);">
+              <div class="avatar-circle me-3 d-flex align-items-center justify-content-center shadow-sm" 
+                   style="width: 48px; height: 48px; min-width: 48px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 50%;">
+                <span class="text-white fw-bold fs-4">{{ currentSuratTerbangRegData.pasien?.nm_pasien?.charAt(0) }}</span>
               </div>
-              <div>
-                <h6 class="mb-0 fw-bold">{{ currentSuratTerbangRegData.pasien?.nm_pasien }}</h6>
-                <p class="mb-0 text-muted small" style="font-size: 0.8rem;">
-                  {{ currentSuratTerbangRegData.no_rkm_medis }} • {{ currentSuratTerbangRegData.no_rawat }}
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center justify-content-between">
+                  <h6 class="mb-0 fw-bold text-dark" style="font-size: 1rem;">{{ currentSuratTerbangRegData.pasien?.nm_pasien }}</h6>
+                  <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning px-2.5 py-1 text-xs fw-semibold" style="font-size: 0.75rem; background-color: rgba(251, 191, 36, 0.1);">
+                    {{ currentSuratTerbangRegData.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan' }}
+                  </span>
+                </div>
+                <p class="mb-0 text-muted small mt-0.5 d-flex gap-2" style="font-size: 0.8rem;">
+                  <span><strong>RM:</strong> {{ currentSuratTerbangRegData.no_rkm_medis }}</span>
+                  <span class="text-secondary">•</span>
+                  <span><strong>Rawat:</strong> {{ currentSuratTerbangRegData.no_rawat }}</span>
                 </p>
               </div>
             </div>
 
             <!-- Form Fields -->
             <form @submit.prevent="saveSuratTerbang" class="row g-3">
-              <div class="col-12">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">No. Surat</label>
-                <div class="input-group input-group-sm">
+              
+              <!-- Section Header: Administrasi -->
+              <div class="col-12 mt-2">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
+                  <i class="fas fa-file-alt text-warning"></i>
+                  <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Detail Administrasi</span>
+                </div>
+              </div>
+
+              <div class="col-md-7">
+                <label class="form-label-custom mb-1"><i class="fas fa-barcode me-1 text-warning"></i> No. Surat</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-hashtag text-muted"></i></span>
                   <input 
                     type="text" 
-                    class="form-control" 
+                    class="form-control form-control-custom border-start-0" 
+                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7;"
                     v-model="suratTerbangForm.no_surat" 
-                    placeholder="Contoh: 0015/S-TERBANG/XII/2025"
+                    placeholder="Masukkan atau generate nomor"
                     required
                   >
                   <button 
-                    class="btn btn-outline-secondary" 
+                    class="btn btn-outline-warning d-flex align-items-center justify-content-center px-3" 
                     type="button" 
+                    style="border-radius: 12px; border: 1.5px solid #fbbf24; margin-left: 8px; transition: all 0.2s;"
                     title="Generate Nomor Baru"
                     @click="fetchNextSuratNumber"
                   >
@@ -758,102 +791,158 @@
                 </div>
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Tanggal Surat</label>
+              <div class="col-md-5">
+                <label class="form-label-custom mb-1"><i class="fas fa-calendar-alt me-1 text-warning"></i> Tanggal Surat</label>
                 <input 
                   type="date" 
-                  class="form-control form-control-sm" 
+                  class="form-control form-control-custom" 
+                  style="border: 1.5px solid #edf2f7; border-radius: 12px;"
                   v-model="suratTerbangForm.tanggalsurat"
                   required
                 >
               </div>
 
+              <!-- Section Header: Pemeriksaan Fisik (TTV) -->
+              <div class="col-12 mt-4">
+                <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom border-light">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-heartbeat text-warning"></i>
+                    <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Pemeriksaan Fisik & TTV</span>
+                  </div>
+                  <!-- Auto-fill Button -->
+                  <button 
+                    v-if="currentPemeriksaanRalan" 
+                    type="button" 
+                    class="btn btn-xs btn-outline-warning d-flex align-items-center gap-1 py-1 px-2.5 rounded-pill shadow-xs" 
+                    style="font-size: 0.75rem; border: 1px solid #fbbf24; transition: all 0.2s; font-weight: 600;"
+                    @click="autofillFromRalan"
+                  >
+                    <i class="fas fa-sync-alt"></i> Ambil dari Ralan
+                  </button>
+                </div>
+              </div>
+
               <div class="col-md-6">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Tekanan Darah (mmHg)</label>
-                <input 
-                  type="text" 
-                  class="form-control form-control-sm" 
-                  v-model="suratTerbangForm.tensi"
-                  placeholder="Contoh: 120/80 atau -"
-                  required
-                >
+                <label class="form-label-custom mb-1"><i class="fas fa-tachometer-alt me-1 text-warning"></i> Tekanan Darah</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-tint text-muted"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-custom border-start-0" 
+                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7;"
+                    v-model="suratTerbangForm.tensi"
+                    placeholder="Contoh: 120/80 atau -"
+                    required
+                  >
+                </div>
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Berat Badan (kg)</label>
-                <input 
-                  type="text" 
-                  class="form-control form-control-sm" 
-                  v-model="suratTerbangForm.berat"
-                  placeholder="Contoh: 5.6 atau -"
-                  required
-                >
+              <div class="col-md-6">
+                <label class="form-label-custom mb-1"><i class="fas fa-weight me-1 text-warning"></i> Berat Badan (kg)</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-balance-scale text-muted"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-custom border-start-0" 
+                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7;"
+                    v-model="suratTerbangForm.berat"
+                    placeholder="Contoh: 5.6 atau -"
+                    required
+                  >
+                </div>
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Tinggi Badan (cm)</label>
-                <input 
-                  type="text" 
-                  class="form-control form-control-sm" 
-                  v-model="suratTerbangForm.tinggi"
-                  placeholder="Contoh: 110 atau -"
-                  required
-                >
+              <div class="col-md-6">
+                <label class="form-label-custom mb-1"><i class="fas fa-ruler-vertical me-1 text-warning"></i> Tinggi Badan (cm)</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-child text-muted"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-custom border-start-0" 
+                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7;"
+                    v-model="suratTerbangForm.tinggi"
+                    placeholder="Contoh: 110 atau -"
+                    required
+                  >
+                </div>
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Buta Warna</label>
-                <select class="form-select form-select-sm" v-model="suratTerbangForm.butawarna" required>
-                  <option value="Tidak">Tidak</option>
-                  <option value="Ya">Ya</option>
-                  <option value="Parsial">Parsial</option>
-                </select>
+              <div class="col-md-6">
+                <label class="form-label-custom mb-1"><i class="fas fa-eye me-1 text-warning"></i> Buta Warna</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-eye-slash text-muted"></i></span>
+                  <select 
+                    class="form-select form-select-custom border-start-0" 
+                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7;"
+                    v-model="suratTerbangForm.butawarna" 
+                    required
+                  >
+                    <option value="Tidak">Tidak</option>
+                    <option value="Ya">Ya</option>
+                    <option value="Parsial">Parsial</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Section Header: Kesimpulan -->
+              <div class="col-12 mt-4">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
+                  <i class="fas fa-diagnoses text-warning"></i>
+                  <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Kesimpulan Medis</span>
+                </div>
               </div>
 
               <div class="col-12">
-                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Kesimpulan / Status Kelayakan</label>
-                <input 
-                  type="text" 
-                  class="form-control form-control-sm" 
-                  v-model="suratTerbangForm.kesimpulan"
-                  placeholder="Contoh: SEHAT DAN LAYAK TERBANG"
-                  required
-                >
+                <label class="form-label-custom mb-1"><i class="fas fa-check-double me-1 text-warning"></i> Status Kelayakan Terbang</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-certificate text-muted"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-custom border-start-0" 
+                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7; font-weight: 600;"
+                    v-model="suratTerbangForm.kesimpulan"
+                    placeholder="Contoh: SEHAT DAN LAYAK TERBANG"
+                    required
+                  >
+                </div>
               </div>
 
-              <!-- Action Footer within Modal Body -->
-              <div class="col-12 d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+              <!-- Action Footer: Beautiful Buttons with Gradients & Micro-interactions -->
+              <div class="col-12 d-flex justify-content-between align-items-center mt-5 pt-3 border-top border-light">
                 <div>
                   <button 
                     v-if="suratTerbangForm.no_surat && currentSuratTerbangRegData?.surat" 
                     type="button" 
-                    class="btn btn-sm btn-outline-danger me-2" 
+                    class="btn btn-premium-danger" 
                     @click="deleteSuratTerbang"
                     :disabled="isDeletingSuratTerbang"
                   >
                     <i v-if="isDeletingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
-                    <i v-else class="fas fa-trash me-1"></i> Hapus
+                    <i v-else class="fas fa-trash me-1"></i> Hapus Surat
                   </button>
                 </div>
+                
                 <div class="d-flex gap-2">
-                  <button type="button" class="btn btn-sm btn-secondary" @click="closeSuratTerbangModal">
+                  <button type="button" class="btn btn-premium-secondary" @click="closeSuratTerbangModal">
                     Batal
                   </button>
+                  
                   <button 
                     v-if="currentSuratTerbangRegData?.surat || suratTerbangForm.no_surat" 
                     type="button" 
-                    class="btn btn-sm btn-info text-white" 
+                    class="btn btn-premium-print" 
                     @click="printSuratTerbang"
                   >
                     <i class="fas fa-print me-1"></i> Cetak
                   </button>
+                  
                   <button 
                     type="submit" 
-                    class="btn btn-sm btn-warning text-white" 
+                    class="btn btn-premium-save" 
                     :disabled="isSavingSuratTerbang"
                   >
                     <i v-if="isSavingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
-                    <i v-else class="fas fa-save me-1"></i> Simpan
+                    <i v-else class="fas fa-save me-1"></i> Simpan Data
                   </button>
                 </div>
               </div>
@@ -1415,6 +1504,7 @@ const suratTerbangForm = ref({
 })
 
 const currentSuratTerbangRegData = ref(null)
+const currentPemeriksaanRalan = ref(null)
 
 const openSuratTerbangModal = async (item) => {
   showSuratTerbangModal.value = true
@@ -1433,12 +1523,14 @@ const openSuratTerbangModal = async (item) => {
     kesimpulan: 'SEHAT DAN LAYAK TERBANG'
   }
   currentSuratTerbangRegData.value = null
+  currentPemeriksaanRalan.value = null
 
   try {
     const response = await rawatJalanService.getSuratTerbang(item.no_rawat)
     if (response.data && response.data.success) {
       const data = response.data.data
       currentSuratTerbangRegData.value = data.reg_periksa
+      currentPemeriksaanRalan.value = data.pemeriksaan_ralan
       
       if (data.surat) {
         suratTerbangForm.value = {
@@ -1453,6 +1545,18 @@ const openSuratTerbangModal = async (item) => {
         }
       } else {
         await fetchNextSuratNumber()
+        // Auto-fill from pemeriksaan_ralan if available
+        if (data.pemeriksaan_ralan) {
+          if (data.pemeriksaan_ralan.berat && data.pemeriksaan_ralan.berat !== '-') {
+            suratTerbangForm.value.berat = data.pemeriksaan_ralan.berat
+          }
+          if (data.pemeriksaan_ralan.tinggi && data.pemeriksaan_ralan.tinggi !== '-') {
+            suratTerbangForm.value.tinggi = data.pemeriksaan_ralan.tinggi
+          }
+          if (data.pemeriksaan_ralan.tensi && data.pemeriksaan_ralan.tensi !== '-') {
+            suratTerbangForm.value.tensi = data.pemeriksaan_ralan.tensi
+          }
+        }
       }
     }
   } catch (error) {
@@ -1460,6 +1564,24 @@ const openSuratTerbangModal = async (item) => {
     toast.error('Gagal memuat data surat layak terbang')
   } finally {
     isLoadingSuratTerbang.value = false
+  }
+}
+
+const autofillFromRalan = () => {
+  if (currentPemeriksaanRalan.value) {
+    const ralan = currentPemeriksaanRalan.value
+    if (ralan.berat && ralan.berat !== '-') {
+      suratTerbangForm.value.berat = ralan.berat
+    }
+    if (ralan.tinggi && ralan.tinggi !== '-') {
+      suratTerbangForm.value.tinggi = ralan.tinggi
+    }
+    if (ralan.tensi && ralan.tensi !== '-') {
+      suratTerbangForm.value.tensi = ralan.tensi
+    }
+    toast.success('Data TTV berhasil disinkronkan dari pemeriksaan ralan')
+  } else {
+    toast.warning('Tidak ada data pemeriksaan ralan untuk rawat ini')
   }
 }
 
@@ -2979,6 +3101,94 @@ onUnmounted(() => {
   .action-sheet-container {
     max-width: 100%;
   }
+}
+
+/* Premium Buttons and Inputs for Surat Terbang */
+.btn-premium-save {
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-premium-save:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.3);
+  filter: brightness(1.05);
+}
+
+.btn-premium-print {
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(8, 145, 178, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-premium-print:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(8, 145, 178, 0.3);
+  filter: brightness(1.05);
+}
+
+.btn-premium-danger {
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-premium-danger:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+  filter: brightness(1.05);
+}
+
+.btn-premium-secondary {
+  padding: 0.6rem 1.25rem;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.btn-premium-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.form-control-custom:focus, .form-select-custom:focus {
+  border-color: #fbbf24 !important;
+  background-color: white !important;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15) !important;
+  outline: none;
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: #fbbf24 !important;
+  background-color: #fffbeb !important;
+  color: #d97706 !important;
+}
+
+.input-group:focus-within .form-control-custom {
+  border-color: #fbbf24 !important;
 }
 
 /* Print Styles for Surat Terbang */
