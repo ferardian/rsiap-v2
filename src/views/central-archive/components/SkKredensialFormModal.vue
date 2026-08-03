@@ -365,7 +365,17 @@ const loadMasterKredensial = async () => {
 const filterMasterKredensial = () => {
   let filtered = masterKredensialList.value.filter(mk => profesiCategories.value.includes(mk.kategori_profesi))
   
-  const edus = filtered.map(m => m.jenjang_pendidikan)
+  const edus = filtered.map(m => m.jenjang_pendidikan).filter(Boolean)
+
+  if (props.sumberKomite === 'kesehatan') {
+    const defaultKesehatanEdus = ['Apoteker', 'TTK', 'ATLM', 'Gizi', 'Radiologi', 'Rekam Medis', 'Penata Anestesi', 'Kesehatan Lingkungan', 'Fisioterapi', 'Elektromedis']
+    defaultKesehatanEdus.forEach(edu => {
+      if (!edus.includes(edu)) {
+        edus.push(edu)
+      }
+    })
+  }
+
   availableEducations.value = [...new Set(edus)]
 
   if (tempJenjangPendidikan.value) {
@@ -438,6 +448,9 @@ const autoSuggestKredensial = () => {
       else if (eduField.includes('RADIOLOGI') || name.includes('AMD.RAD')) jenjang = 'Radiologi'
       else if (eduField.includes('REKAM MEDIS') || name.includes('AMD.RM')) jenjang = 'Rekam Medis'
       else if (eduField.includes('ANESTESI') || name.includes('AMD.AN')) jenjang = 'Penata Anestesi'
+      else if (eduField.includes('KESEHATAN LINGKUNGAN') || eduField.includes('SANITASI') || jbtn.includes('SANITARIAN') || name.includes('AMD.KL') || name.includes('SKM')) jenjang = 'Kesehatan Lingkungan'
+      else if (eduField.includes('FISIOTERAPI') || name.includes('AMD.FT') || name.includes('S.FT')) jenjang = 'Fisioterapi'
+      else if (eduField.includes('ELEKTROMEDIK') || jbtn.includes('ELEKTROMEDIS') || name.includes('AMD.TEM')) jenjang = 'Elektromedis'
     }
   }
 
