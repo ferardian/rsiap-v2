@@ -701,6 +701,260 @@
         </div>
       </div>
     </div>
+
+    <!-- Surat Keterangan Layak Terbang Modal -->
+    <div v-if="showSuratTerbangModal" class="modal-overlay" @click.self="closeSuratTerbangModal">
+      <div class="modal-content-custom" style="max-width: 650px;">
+        <div class="modal-header-custom bg-warning text-white" style="flex-shrink: 0;">
+          <h5 class="mb-0 text-white">
+            <i class="fas fa-plane-departure me-2"></i>
+            Surat Keterangan Layak Terbang
+          </h5>
+          <button type="button" class="btn-close-custom" @click="closeSuratTerbangModal">×</button>
+        </div>
+
+        <div class="modal-body-custom" style="overflow-y: auto; flex-grow: 1;">
+          <div v-if="isLoadingSuratTerbang" class="text-center py-5">
+            <div class="spinner-border text-warning" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Memuat data surat...</p>
+          </div>
+
+          <div v-else>
+            <!-- Patient Header Summary (Sticky/Top) -->
+            <div v-if="currentSuratTerbangRegData" class="d-flex align-items-center mb-4 pb-2 border-bottom bg-white pt-2">
+              <div class="avatar-circle me-3" style="width: 40px; height: 40px; min-width: 40px; background: #eab308;">
+                <span class="text-white fw-bold fs-5">{{ currentSuratTerbangRegData.pasien?.nm_pasien?.charAt(0) }}</span>
+              </div>
+              <div>
+                <h6 class="mb-0 fw-bold">{{ currentSuratTerbangRegData.pasien?.nm_pasien }}</h6>
+                <p class="mb-0 text-muted small" style="font-size: 0.8rem;">
+                  {{ currentSuratTerbangRegData.no_rkm_medis }} • {{ currentSuratTerbangRegData.no_rawat }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Form Fields -->
+            <form @submit.prevent="saveSuratTerbang" class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">No. Surat</label>
+                <div class="input-group input-group-sm">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    v-model="suratTerbangForm.no_surat" 
+                    placeholder="Contoh: 0015/S-TERBANG/XII/2025"
+                    required
+                  >
+                  <button 
+                    class="btn btn-outline-secondary" 
+                    type="button" 
+                    title="Generate Nomor Baru"
+                    @click="fetchNextSuratNumber"
+                  >
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Tanggal Surat</label>
+                <input 
+                  type="date" 
+                  class="form-control form-control-sm" 
+                  v-model="suratTerbangForm.tanggalsurat"
+                  required
+                >
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Tekanan Darah (mmHg)</label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-sm" 
+                  v-model="suratTerbangForm.tensi"
+                  placeholder="Contoh: 120/80 atau -"
+                  required
+                >
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Berat Badan (kg)</label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-sm" 
+                  v-model="suratTerbangForm.berat"
+                  placeholder="Contoh: 5.6 atau -"
+                  required
+                >
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Tinggi Badan (cm)</label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-sm" 
+                  v-model="suratTerbangForm.tinggi"
+                  placeholder="Contoh: 110 atau -"
+                  required
+                >
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Buta Warna</label>
+                <select class="form-select form-select-sm" v-model="suratTerbangForm.butawarna" required>
+                  <option value="Tidak">Tidak</option>
+                  <option value="Ya">Ya</option>
+                  <option value="Parsial">Parsial</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-bold text-xs text-uppercase text-muted mb-1">Kesimpulan / Status Kelayakan</label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-sm" 
+                  v-model="suratTerbangForm.kesimpulan"
+                  placeholder="Contoh: SEHAT DAN LAYAK TERBANG"
+                  required
+                >
+              </div>
+
+              <!-- Action Footer within Modal Body -->
+              <div class="col-12 d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <div>
+                  <button 
+                    v-if="suratTerbangForm.no_surat && currentSuratTerbangRegData?.surat" 
+                    type="button" 
+                    class="btn btn-sm btn-outline-danger me-2" 
+                    @click="deleteSuratTerbang"
+                    :disabled="isDeletingSuratTerbang"
+                  >
+                    <i v-if="isDeletingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
+                    <i v-else class="fas fa-trash me-1"></i> Hapus
+                  </button>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-sm btn-secondary" @click="closeSuratTerbangModal">
+                    Batal
+                  </button>
+                  <button 
+                    v-if="currentSuratTerbangRegData?.surat || suratTerbangForm.no_surat" 
+                    type="button" 
+                    class="btn btn-sm btn-info text-white" 
+                    @click="printSuratTerbang"
+                  >
+                    <i class="fas fa-print me-1"></i> Cetak
+                  </button>
+                  <button 
+                    type="submit" 
+                    class="btn btn-sm btn-warning text-white" 
+                    :disabled="isSavingSuratTerbang"
+                  >
+                    <i v-if="isSavingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
+                    <i v-else class="fas fa-save me-1"></i> Simpan
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Printable Surat Keterangan Layak Terbang -->
+    <div id="print-surat-terbang" class="d-none d-print-block">
+      <div class="print-container">
+        <!-- Hospital Header Kop -->
+        <div class="d-flex align-items-center justify-content-center mb-2 border-bottom pb-2 border-3 border-dark position-relative">
+          <img :src="logoRsiaUrl" alt="Logo RSIA" class="position-absolute" style="left: 10px; width: 65px; height: 65px;">
+          <div class="text-center" style="margin-left: 70px;">
+            <h4 class="mb-0 fw-bold" style="font-size: 1.15rem; letter-spacing: 0.5px;">RSIA AISYIYAH PEKAJANGAN</h4>
+            <p class="mb-0 small" style="font-size: 0.75rem;">JL. RAYA PEKAJANGAN NO. 610 PEKALONGAN, PEKALONGAN, JAWA</p>
+            <p class="mb-0 small" style="font-size: 0.75rem;">(0285) 785909</p>
+          </div>
+        </div>
+
+        <!-- Document Title -->
+        <div class="text-center my-4">
+          <h5 class="fw-bold mb-1 text-decoration-underline" style="font-size: 1.1rem; letter-spacing: 1px;">SURAT KETERANGAN LAYAK TERBANG</h5>
+          <p class="small text-muted mb-0">Nomor: {{ suratTerbangForm.no_surat || '-' }}</p>
+        </div>
+
+        <!-- Body Intro -->
+        <div class="mb-3 leading-loose" style="font-size: 0.9rem; line-height: 1.6;">
+          Yang bertandatangan di bawah ini, <strong>{{ currentSuratTerbangRegData?.dokter?.nm_dokter }}</strong> dengan mengingat sumpah waktu menerima jabatan bahwa:
+        </div>
+
+        <!-- Patient Details Table/Grid -->
+        <div class="mb-4 ps-3" style="font-size: 0.9rem; line-height: 1.8;">
+          <div class="row mb-1">
+            <div class="col-4 text-muted">Nama</div>
+            <div class="col-8">: <strong>{{ currentSuratTerbangRegData?.pasien?.nm_pasien }}</strong></div>
+          </div>
+          <div class="row mb-1">
+            <div class="col-4 text-muted">Umur</div>
+            <div class="col-8">: {{ currentSuratTerbangRegData?.pasien?.age_formatted || '-' }}</div>
+          </div>
+          <div class="row mb-1">
+            <div class="col-4 text-muted">Jenis Kelamin</div>
+            <div class="col-8">: {{ currentSuratTerbangRegData?.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan' }}</div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4 text-muted">Alamat</div>
+            <div class="col-8">: {{ currentSuratTerbangRegData?.pasien?.alamat }}</div>
+          </div>
+          <div class="row pt-2 border-top border-light-subtle">
+            <div class="col-6">
+              <div class="row">
+                <div class="col-6 text-muted">Berat badan</div>
+                <div class="col-6">: {{ suratTerbangForm.berat }} kg</div>
+              </div>
+              <div class="row">
+                <div class="col-6 text-muted">Tekanan darah</div>
+                <div class="col-6">: {{ suratTerbangForm.tensi }} mmHg</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="row">
+                <div class="col-6 text-muted">Tinggi badan</div>
+                <div class="col-6">: {{ suratTerbangForm.tinggi }} cm</div>
+              </div>
+              <div class="row">
+                <div class="col-6 text-muted">Buta warna</div>
+                <div class="col-6">: {{ suratTerbangForm.butawarna }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statement -->
+        <div class="mb-4" style="font-size: 0.9rem; line-height: 1.6;">
+          Pada hari ini telah kami periksa dengan teliti kesehatannya dan berpendapat bahwa kesehatan saudara tersebut pada waktu diperiksa:
+        </div>
+
+        <!-- Kesimpulan (Centered & Bold) -->
+        <div class="text-center my-4 py-2 border border-2 border-dark bg-light rounded">
+          <h5 class="fw-bold mb-0 text-uppercase" style="letter-spacing: 1px; font-size: 1.15rem;">{{ suratTerbangForm.kesimpulan }}</h5>
+        </div>
+
+        <!-- Closing -->
+        <div class="mb-5" style="font-size: 0.9rem; line-height: 1.6;">
+          Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk dapat digunakan sesuai keperluan.
+        </div>
+
+        <!-- Signature Block -->
+        <div class="d-flex justify-content-end text-end mt-5" style="font-size: 0.9rem;">
+          <div style="width: 250px;">
+            <div>PEKALONGAN, {{ formatDateIndo(suratTerbangForm.tanggalsurat) }}</div>
+            <div style="height: 90px;"></div>
+            <div class="fw-bold text-decoration-underline">{{ currentSuratTerbangRegData?.dokter?.nm_dokter }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Context Menu -->
     <div 
       v-if="contextMenu.visible" 
@@ -718,6 +972,10 @@
       
       <div class="context-menu-item" @click="handleContextAction('billing')">
         <i class="fas fa-file-invoice-dollar me-2 text-success"></i> Billing
+      </div>
+
+      <div class="context-menu-item" @click="handleContextAction('surat-terbang')">
+        <i class="fas fa-plane-departure me-2 text-warning"></i> Surat Layak Terbang
       </div>
 
        <!-- ERM Submenu -->
@@ -834,6 +1092,14 @@
                 <div class="item-text">
                   <div class="item-title">Resume Medis</div>
                   <div class="item-desc">Ringkasan riwayat pelayanan pasien</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
+              </div>
+              <div class="action-list-item" @click="executeAction('surat-terbang')">
+                <div class="item-icon bg-warning-soft text-warning"><i class="fas fa-plane-departure"></i></div>
+                <div class="item-text">
+                  <div class="item-title">Surat Layak Terbang</div>
+                  <div class="item-desc">Buat/Cetak surat keterangan layak terbang</div>
                 </div>
                 <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
               </div>
@@ -1054,6 +1320,11 @@ import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
 import rawatJalanService from '@/services/rawatJalanService'
 import operasiService from '@/services/operasiService'
 import * as XLSX from 'xlsx'
+import { useToast } from 'vue-toastification'
+import logoRsiaAsset from '@/assets/logo.png'
+
+const toast = useToast()
+const logoRsiaUrl = logoRsiaAsset
 
 // Utility: Simple Debounce
 const debounce = (fn, delay) => {
@@ -1108,6 +1379,135 @@ const bookingForm = reactive({
 const showBookingSuccessModal = ref(false)
 const showBookingErrorModal = ref(false)
 const bookingMessage = ref('')
+
+// Surat Keterangan Layak Terbang State
+const showSuratTerbangModal = ref(false)
+const isLoadingSuratTerbang = ref(false)
+const isSavingSuratTerbang = ref(false)
+const isDeletingSuratTerbang = ref(false)
+
+const suratTerbangForm = ref({
+  no_surat: '',
+  no_rawat: '',
+  tanggalsurat: '',
+  berat: '',
+  tinggi: '',
+  tensi: '',
+  butawarna: 'Tidak',
+  kesimpulan: 'SEHAT DAN LAYAK TERBANG'
+})
+
+const currentSuratTerbangRegData = ref(null)
+
+const openSuratTerbangModal = async (item) => {
+  showSuratTerbangModal.value = true
+  isLoadingSuratTerbang.value = true
+  document.body.style.overflow = 'hidden'
+  
+  // Reset form
+  suratTerbangForm.value = {
+    no_surat: '',
+    no_rawat: item.no_rawat,
+    tanggalsurat: new Date().toISOString().split('T')[0],
+    berat: '',
+    tinggi: '',
+    tensi: '',
+    butawarna: 'Tidak',
+    kesimpulan: 'SEHAT DAN LAYAK TERBANG'
+  }
+  currentSuratTerbangRegData.value = null
+
+  try {
+    const response = await rawatJalanService.getSuratTerbang(item.no_rawat)
+    if (response.data && response.data.success) {
+      const data = response.data.data
+      currentSuratTerbangRegData.value = data.reg_periksa
+      
+      if (data.surat) {
+        suratTerbangForm.value = {
+          no_surat: data.surat.no_surat,
+          no_rawat: data.surat.no_rawat,
+          tanggalsurat: data.surat.tanggalsurat,
+          berat: data.surat.berat,
+          tinggi: data.surat.tinggi,
+          tensi: data.surat.tensi,
+          butawarna: data.surat.butawarna,
+          kesimpulan: data.surat.kesimpulan
+        }
+      } else {
+        await fetchNextSuratNumber()
+      }
+    }
+  } catch (error) {
+    console.error('Error loading surat terbang:', error)
+    toast.error('Gagal memuat data surat layak terbang')
+  } finally {
+    isLoadingSuratTerbang.value = false
+  }
+}
+
+const fetchNextSuratNumber = async () => {
+  try {
+    const res = await rawatJalanService.getNextSuratTerbangNumber()
+    if (res.data && res.data.success) {
+      suratTerbangForm.value.no_surat = res.data.no_surat
+    }
+  } catch (e) {
+    console.error('Error fetching next surat number:', e)
+  }
+}
+
+const closeSuratTerbangModal = () => {
+  showSuratTerbangModal.value = false
+  document.body.style.overflow = ''
+}
+
+const saveSuratTerbang = async () => {
+  isSavingSuratTerbang.value = true
+  try {
+    const response = await rawatJalanService.saveSuratTerbang(suratTerbangForm.value)
+    if (response.data && response.data.success) {
+      toast.success(response.data.message || 'Surat Layak Terbang berhasil disimpan')
+      openSuratTerbangModal({ no_rawat: suratTerbangForm.value.no_rawat })
+    } else {
+      toast.error(response.data.message || 'Gagal menyimpan surat')
+    }
+  } catch (error) {
+    console.error('Error saving surat terbang:', error)
+    toast.error('Gagal menyimpan surat layak terbang')
+  } finally {
+    isSavingSuratTerbang.value = false
+  }
+}
+
+const deleteSuratTerbang = async () => {
+  if (!suratTerbangForm.value.no_surat) return
+  if (!confirm(`Apakah Anda yakin ingin menghapus surat nomor: ${suratTerbangForm.value.no_surat}?`)) {
+    return
+  }
+
+  isDeletingSuratTerbang.value = true
+  try {
+    const response = await rawatJalanService.deleteSuratTerbang(suratTerbangForm.value.no_surat)
+    if (response.data && response.data.success) {
+      toast.success(response.data.message || 'Surat berhasil dihapus')
+      closeSuratTerbangModal()
+    } else {
+      toast.error(response.data.message || 'Gagal menghapus surat')
+    }
+  } catch (error) {
+    console.error('Error deleting surat terbang:', error)
+    toast.error('Gagal menghapus surat layak terbang')
+  } finally {
+    isDeletingSuratTerbang.value = false
+  }
+}
+
+const printSuratTerbang = () => {
+  nextTick(() => {
+    window.print()
+  })
+}
 
 // Methods
 const startDebounceInfo = debounce(() => {
@@ -1599,6 +1999,9 @@ const handleContextAction = async (action) => {
       selectedItem.value = item
       await fetchBilling()
       break
+    case 'surat-terbang':
+       openSuratTerbangModal(item)
+       break
     case 'erm-soap':
        openModal(item)
        activeTab.value = 'rme'
@@ -2558,6 +2961,50 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .action-sheet-container {
     max-width: 100%;
+  }
+}
+
+/* Print Styles for Surat Terbang */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-surat-terbang, #print-surat-terbang * {
+    visibility: visible;
+  }
+  #print-surat-terbang {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    font-family: 'Times New Roman', Times, serif;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .modal-overlay, .rawat-jalan-view, .context-menu, .action-sheet-overlay {
+    display: none !important;
+  }
+  
+  .print-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    background: white;
+    color: black;
+  }
+  
+  .text-decoration-underline {
+    text-decoration: underline !important;
+  }
+  
+  .border-bottom {
+    border-bottom: 2px solid #000 !important;
+  }
+  
+  .border-top {
+    border-top: 1px solid #ccc !important;
   }
 }
 </style>
