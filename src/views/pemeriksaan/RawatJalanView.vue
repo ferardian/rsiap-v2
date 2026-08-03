@@ -974,8 +974,17 @@
         <i class="fas fa-file-invoice-dollar me-2 text-success"></i> Billing
       </div>
 
-      <div class="context-menu-item" @click="handleContextAction('surat-terbang')">
-        <i class="fas fa-plane-departure me-2 text-warning"></i> Surat Layak Terbang
+      <!-- Surat Keterangan Submenu -->
+      <div class="context-menu-item has-submenu" @click.stop>
+        <i class="fas fa-envelope-open-text me-2 text-warning"></i> Surat Keterangan
+        <i class="fas fa-chevron-right ms-auto small text-muted" :class="{ 'fa-rotate-180': contextMenu.submenuDirection === 'left' }" style="font-size: 0.7rem;"></i>
+        
+        <div class="submenu shadow-sm" :class="{ 'submenu-left': contextMenu.submenuDirection === 'left' }">
+             <div class="context-menu-item" @click.stop="handleContextAction('surat-terbang')">
+                <i class="fas fa-plane-departure me-2 text-warning"></i> Surat Layak Terbang
+             </div>
+             <!-- Opsi surat lain dapat ditambahkan di sini di masa mendatang -->
+        </div>
       </div>
 
        <!-- ERM Submenu -->
@@ -1095,6 +1104,13 @@
                 </div>
                 <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
               </div>
+            </div>
+          </div>
+
+          <!-- Section: Surat-Surat -->
+          <div class="action-group mb-4">
+            <div class="action-group-header">Surat Keterangan</div>
+            <div class="action-list">
               <div class="action-list-item" @click="executeAction('surat-terbang')">
                 <div class="item-icon bg-warning-soft text-warning"><i class="fas fa-plane-departure"></i></div>
                 <div class="item-text">
@@ -1103,6 +1119,7 @@
                 </div>
                 <i class="fas fa-chevron-right ms-auto smallest text-muted opacity-50"></i>
               </div>
+              <!-- Opsi surat lain dapat ditambahkan di sini di masa mendatang -->
             </div>
           </div>
 
