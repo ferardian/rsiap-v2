@@ -922,7 +922,7 @@
             </button>
             
             <button 
-              v-if="currentSuratTerbangRegData?.surat || suratTerbangForm.no_surat" 
+              v-if="currentSuratTerbangRegData?.surat"
               type="button" 
               class="btn btn-premium-print" 
               @click="printSuratTerbang"
@@ -944,8 +944,8 @@
       </div>
     </div>
 
-    <!-- Printable Surat Keterangan Layak Terbang -->
-    <div id="print-surat-terbang" class="d-none d-print-block">
+    <!-- Print section removed - now uses popup window for proper PDF output -->
+    <div id="print-surat-terbang" class="d-none">
       <div class="print-container">
         <!-- Hospital Header Kop -->
         <div class="d-flex align-items-center justify-content-center mb-2 border-bottom pb-2 border-3 border-dark position-relative">
@@ -1618,9 +1618,228 @@ const deleteSuratTerbang = async () => {
 }
 
 const printSuratTerbang = () => {
-  nextTick(() => {
-    window.print()
-  })
+  const data = currentSuratTerbangRegData.value
+  const form = suratTerbangForm.value
+  if (!data || !form.no_surat) return
+
+  // Format tanggal panjang Indonesia
+  const formatTglPanjang = (dateStr) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const jenisKelamin = data.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan'
+  const umur = data.pasien?.age_formatted || '-'
+  const nama = data.pasien?.nm_pasien || '-'
+  const alamat = data.pasien?.alamat || '-'
+  const dokter = data.dokter?.nm_dokter || '-'
+  const tanggal = formatTglPanjang(form.tanggalsurat)
+
+  const html = `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Surat Keterangan Layak Terbang - ${nama}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      color: #000;
+      background: #fff;
+    }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 25mm 20mm 25mm;
+      margin: 0 auto;
+      background: #fff;
+    }
+    .kop {
+      display: flex;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #000;
+      margin-bottom: 20px;
+    }
+    .kop img {
+      width: 70px;
+      height: 70px;
+      margin-right: 16px;
+      object-fit: contain;
+    }
+    .kop-text { text-align: center; flex: 1; }
+    .kop-text h1 { font-size: 16pt; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+    .kop-text p { font-size: 9pt; margin: 0; }
+    .judul {
+      text-align: center;
+      margin: 24px 0 20px;
+    }
+    .judul h2 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .judul p { font-size: 10pt; margin-top: 4px; }
+    .intro { margin-bottom: 16px; line-height: 1.7; text-align: justify; }
+    .data-table {
+      width: 100%;
+      margin-bottom: 16px;
+      border-collapse: collapse;
+    }
+    .data-table td {
+      padding: 3px 0;
+      font-size: 11pt;
+      vertical-align: top;
+    }
+    .data-table td:first-child { width: 150px; color: #333; }
+    .data-table td:nth-child(2) { width: 10px; }
+    .ttv-table {
+      width: 100%;
+      border-top: 1px solid #ccc;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .ttv-table td {
+      padding: 4px 0;
+      font-size: 11pt;
+      width: 50%;
+      vertical-align: top;
+    }
+    .ttv-table td:nth-child(odd) { color: #333; width: 130px; }
+    .ttv-table td:nth-child(even) { }
+    .statement { margin-bottom: 16px; line-height: 1.7; text-align: justify; }
+    .kesimpulan {
+      text-align: center;
+      border: 2px solid #000;
+      padding: 14px;
+      margin: 20px 0;
+      background: #f8f8f8;
+    }
+    .kesimpulan h3 {
+      font-size: 14pt;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .closing { margin-bottom: 40px; line-height: 1.7; text-align: justify; }
+    .signature {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .signature-block {
+      text-align: center;
+      width: 220px;
+    }
+    .signature-block .ttd-space {
+      height: 80px;
+      border-bottom: 1px solid #000;
+      margin-bottom: 4px;
+    }
+    .signature-block .nama-dokter {
+      font-weight: bold;
+      text-decoration: underline;
+      font-size: 11pt;
+    }
+    @media print {
+      html, body { margin: 0; padding: 0; }
+      .page { padding: 15mm 20mm; margin: 0; width: 100%; min-height: auto; }
+      @page { size: A4; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- KOP SURAT -->
+    <div class="kop">
+      <img src="${logoRsiaUrl}" alt="Logo RSIA" />
+      <div class="kop-text">
+        <h1>RSIA AISYIYAH PEKAJANGAN</h1>
+        <p>Jl. Raya Pekajangan No. 610, Pekalongan, Jawa Tengah</p>
+        <p>Telp. (0285) 785909</p>
+      </div>
+    </div>
+
+    <!-- JUDUL -->
+    <div class="judul">
+      <h2>Surat Keterangan Layak Terbang</h2>
+      <p>Nomor: ${form.no_surat}</p>
+    </div>
+
+    <!-- PEMBUKA -->
+    <p class="intro">
+      Yang bertandatangan di bawah ini, <strong>${dokter}</strong>, dokter pada RSIA Aisyiyah Pekajangan,
+      dengan mengingat sumpah waktu menerima jabatan, menyatakan bahwa:
+    </p>
+
+    <!-- DATA PASIEN -->
+    <table class="data-table">
+      <tr><td>Nama</td><td>:</td><td><strong>${nama}</strong></td></tr>
+      <tr><td>Umur</td><td>:</td><td>${umur}</td></tr>
+      <tr><td>Jenis Kelamin</td><td>:</td><td>${jenisKelamin}</td></tr>
+      <tr><td>Alamat</td><td>:</td><td>${alamat}</td></tr>
+    </table>
+
+    <!-- DATA TTV -->
+    <table class="ttv-table">
+      <tr>
+        <td>Berat Badan</td><td>: ${form.berat} kg</td>
+        <td>Tinggi Badan</td><td>: ${form.tinggi} cm</td>
+      </tr>
+      <tr>
+        <td>Tekanan Darah</td><td>: ${form.tensi} mmHg</td>
+        <td>Buta Warna</td><td>: ${form.butawarna}</td>
+      </tr>
+    </table>
+
+    <!-- PERNYATAAN -->
+    <p class="statement">
+      Pada hari ini telah kami periksa dengan teliti kesehatannya dan berpendapat bahwa
+      keadaan kesehatan yang bersangkutan pada saat diperiksa adalah:
+    </p>
+
+    <!-- KESIMPULAN -->
+    <div class="kesimpulan">
+      <h3>${form.kesimpulan}</h3>
+    </div>
+
+    <!-- PENUTUP -->
+    <p class="closing">
+      Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk dapat
+      dipergunakan sebagaimana mestinya.
+    </p>
+
+    <!-- TTD -->
+    <div class="signature">
+      <div class="signature-block">
+        <p>Pekalongan, ${tanggal}</p>
+        <p>Dokter Pemeriksa,</p>
+        <div class="ttd-space"></div>
+        <div class="nama-dokter">${dokter}</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      window.print()
+    }
+  <\/script>
+</body>
+</html>`
+
+  const popup = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes')
+  if (popup) {
+    popup.document.write(html)
+    popup.document.close()
+  } else {
+    toast.warning('Popup diblokir browser. Izinkan popup untuk mencetak surat.')
+  }
 }
 
 // Methods
