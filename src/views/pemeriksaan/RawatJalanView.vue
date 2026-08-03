@@ -783,9 +783,9 @@
                     >
                   </div>
                   <button 
-                    class="btn btn-outline-primary d-flex align-items-center justify-content-center px-3" 
+                    class="btn btn-outline-primary d-flex align-items-center justify-content-center" 
                     type="button" 
-                    style="border-radius: 12px; border: 1.5px solid #3b82f6; transition: all 0.2s;"
+                    style="border-radius: 12px; border: 1.5px solid #3b82f6; transition: all 0.2s; width: 42px; min-width: 42px; max-width: 42px; padding: 0;"
                     title="Generate Nomor Baru"
                     @click="fetchNextSuratNumber"
                   >
