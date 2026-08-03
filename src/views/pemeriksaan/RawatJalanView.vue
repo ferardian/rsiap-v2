@@ -702,17 +702,14 @@
       </div>
     </div>
 
-    <!-- Surat Keterangan Layak Terbang Modal -->
-    <!-- Surat Keterangan Layak Terbang Modal (Premium Design) -->
-    <!-- Surat Keterangan Layak Terbang Modal (Premium Design) -->
     <!-- Surat Keterangan Layak Terbang Modal (Premium Design - Compact) -->
     <div v-if="showSuratTerbangModal" class="modal-overlay" @click.self="closeSuratTerbangModal">
       <div class="modal-content-custom border-0 shadow-2xl animate__animated animate__zoomIn animate__faster" 
-           style="max-width: 620px; border-radius: 20px; overflow: hidden; background: #fafafa; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+           style="max-width: 620px; height: auto; max-height: 85vh; border-radius: 20px; overflow: hidden; background: #fafafa; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
         
-        <!-- Header: Vibrant Blue/Indigo Gradient with plane icon (Compact) -->
+        <!-- Header: Vibrant Blue/Indigo Gradient with plane icon (Compact - Fixed) -->
         <div class="d-flex align-items-center justify-content-between py-3 px-4 text-white position-relative" 
-             style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); flex-shrink: 0; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);">
+             style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); flex-shrink: 0; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); z-index: 10;">
           <div class="d-flex align-items-center">
             <div class="rounded-3 p-1.5 me-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; background-color: rgba(255, 255, 255, 0.2);">
               <i class="fas fa-plane-departure text-white fs-5"></i>
@@ -726,7 +723,8 @@
                   style="width: 26px; height: 26px; border: none; font-size: 1.25rem; line-height: 1; transition: all 0.2s;" @click="closeSuratTerbangModal">×</button>
         </div>
 
-        <div class="modal-body-custom p-3" style="overflow-y: auto; flex-grow: 1; max-height: 75vh;">
+        <!-- Body: Scrollable Input Fields Only -->
+        <div class="modal-body-custom p-3" style="overflow-y: auto; flex-grow: 1; max-height: calc(85vh - 120px);">
           <div v-if="isLoadingSuratTerbang" class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
@@ -758,8 +756,8 @@
               </div>
             </div>
 
-            <!-- Form Fields (Grid Gap 2 for Compact Layout) -->
-            <form @submit.prevent="saveSuratTerbang" class="row g-2">
+            <!-- Form Fields (Linked to external submit button in footer via ID) -->
+            <form id="suratTerbangForm" @submit.prevent="saveSuratTerbang" class="row g-2">
               
               <!-- Section Header: Administrasi -->
               <div class="col-12 mt-1">
@@ -898,50 +896,53 @@
                   >
                 </div>
               </div>
-
-              <!-- Action Footer: Beautiful Buttons with Gradients & Micro-interactions (Compact) -->
-              <div class="col-12 d-flex justify-content-between align-items-center mt-3 pt-2.5 border-top border-light">
-                <div>
-                  <button 
-                    v-if="suratTerbangForm.no_surat && currentSuratTerbangRegData?.surat" 
-                    type="button" 
-                    class="btn btn-premium-danger" 
-                    @click="deleteSuratTerbang"
-                    :disabled="isDeletingSuratTerbang"
-                  >
-                    <i v-if="isDeletingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
-                    <i v-else class="fas fa-trash me-1"></i> Hapus
-                  </button>
-                </div>
-                
-                <div class="d-flex gap-2">
-                  <button type="button" class="btn btn-premium-secondary" @click="closeSuratTerbangModal">
-                    Batal
-                  </button>
-                  
-                  <button 
-                    v-if="currentSuratTerbangRegData?.surat || suratTerbangForm.no_surat" 
-                    type="button" 
-                    class="btn btn-premium-print" 
-                    @click="printSuratTerbang"
-                  >
-                    <i class="fas fa-print me-1"></i> Cetak
-                  </button>
-                  
-                  <button 
-                    type="submit" 
-                    class="btn btn-premium-save" 
-                    :disabled="isSavingSuratTerbang"
-                  >
-                    <i v-if="isSavingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
-                    <i v-else class="fas fa-save me-1"></i> Simpan
-                  </button>
-                </div>
-              </div>
             </form>
           </div>
         </div>
+
+        <!-- Footer: Sticky / Fixed Action Buttons (Always Visible at Bottom) -->
+        <div v-if="!isLoadingSuratTerbang" class="modal-footer-custom py-2.5 px-4 d-flex justify-content-between align-items-center border-top" 
+             style="background: #f8fafc; flex-shrink: 0; z-index: 10;">
+          <div>
+            <button 
+              v-if="suratTerbangForm.no_surat && currentSuratTerbangRegData?.surat" 
+              type="button" 
+              class="btn btn-premium-danger" 
+              @click="deleteSuratTerbang"
+              :disabled="isDeletingSuratTerbang"
+            >
+              <i v-if="isDeletingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
+              <i v-else class="fas fa-trash me-1"></i> Hapus
+            </button>
+          </div>
+          
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-premium-secondary" @click="closeSuratTerbangModal">
+              Batal
+            </button>
+            
+            <button 
+              v-if="currentSuratTerbangRegData?.surat || suratTerbangForm.no_surat" 
+              type="button" 
+              class="btn btn-premium-print" 
+              @click="printSuratTerbang"
+            >
+              <i class="fas fa-print me-1"></i> Cetak
+            </button>
+            
+            <button 
+              type="submit" 
+              form="suratTerbangForm"
+              class="btn btn-premium-save" 
+              :disabled="isSavingSuratTerbang"
+            >
+              <i v-if="isSavingSuratTerbang" class="spinner-border spinner-border-sm me-1"></i>
+              <i v-else class="fas fa-save me-1"></i> Simpan
+            </button>
+          </div>
+        </div>
       </div>
+    </div>
     </div>
 
     <!-- Printable Surat Keterangan Layak Terbang -->
