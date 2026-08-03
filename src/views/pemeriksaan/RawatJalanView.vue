@@ -735,9 +735,9 @@
           <div v-else>
             <!-- Premium Patient Summary Card: Soft Blue Gradient (Compact) -->
             <div v-if="currentSuratTerbangRegData" 
-                 class="d-flex align-items-center p-2 mb-2.5 border border-light shadow-sm bg-white" 
+                 class="d-flex align-items-center p-2 mb-3 border border-light shadow-sm bg-white" 
                  style="border-radius: 12px; background: linear-gradient(to right, #ffffff, #f0f5ff);">
-              <div class="avatar-circle me-2.5 d-flex align-items-center justify-content-center shadow-sm" 
+              <div class="avatar-circle me-3 d-flex align-items-center justify-content-center shadow-sm" 
                    style="width: 36px; height: 36px; min-width: 36px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%;">
                 <span class="text-white fw-bold fs-5">{{ currentSuratTerbangRegData.pasien?.nm_pasien?.charAt(0) }}</span>
               </div>
