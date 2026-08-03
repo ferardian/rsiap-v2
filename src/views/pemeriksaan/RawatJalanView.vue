@@ -174,11 +174,18 @@
                   {{ item.pasien?.alamat }}
                 </td>
                 <td class="px-3 py-2 text-center">
-                   <span class="badge rounded-pill mb-1 d-inline-block" :class="getBayarClass(item.cara_bayar?.png_jawab)">
-                     {{ item.cara_bayar?.png_jawab }}
-                   </span>
-                   <div v-if="item.sep" class="text-success fw-bold animate__animated animate__pulse animate__infinite" style="font-size: 10px; margin-top: -2px;">
-                     <i class="fas fa-check-circle" style="font-size: 9px;"></i> SEP TERBIT
+                   <div class="d-flex flex-column align-items-center justify-content-center gap-1">
+                     <span class="badge rounded-pill d-inline-block" :class="getBayarClass(item.cara_bayar?.png_jawab)">
+                       {{ item.cara_bayar?.png_jawab }}
+                     </span>
+                     <template v-if="isBpjs(item.cara_bayar?.png_jawab)">
+                       <span v-if="item.sep" class="badge bg-success text-white fw-semibold d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.65rem;" :title="'No. SEP: ' + (item.sep.no_sep || '-')">
+                         <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i> SEP Terbit
+                       </span>
+                       <span v-else class="badge bg-danger text-white fw-semibold d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.65rem;">
+                         <i class="fas fa-times-circle" style="font-size: 0.65rem;"></i> SEP Belum Terbit
+                       </span>
+                     </template>
                    </div>
                 </td>
                 <td class="px-3 py-2">
@@ -307,8 +314,11 @@
                       <label class="detail-label text-muted mb-1">No. Peserta (BPJS/Asuransi)</label>
                       <div class="detail-value text-success fw-medium">
                         {{ selectedItem.pasien?.no_peserta || '-' }}
-                        <span v-if="selectedItem.sep" class="badge bg-success-soft text-success border border-success-soft ms-2" style="font-size: 0.7rem;">
+                        <span v-if="selectedItem.sep" class="badge bg-success text-white ms-2" style="font-size: 0.7rem;">
                           <i class="fas fa-check-circle me-1"></i>SEP: {{ selectedItem.sep.no_sep }}
+                        </span>
+                        <span v-else-if="isBpjs(selectedItem.cara_bayar?.png_jawab)" class="badge bg-danger text-white ms-2" style="font-size: 0.7rem;">
+                          <i class="fas fa-times-circle me-1"></i>SEP Belum Terbit
                         </span>
                       </div>
                     </div>
@@ -1937,6 +1947,11 @@ const getBayarClass = (bayar) => {
   if (b.includes('karyawan')) return 'bg-secondary text-white'
 
   return 'bg-light text-dark border'
+}
+
+const isBpjs = (bayar) => {
+  if (!bayar) return false
+  return bayar.toLowerCase().includes('bpjs')
 }
 
 // Modal Logic
