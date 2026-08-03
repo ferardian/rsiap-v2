@@ -905,7 +905,7 @@
              style="background: #f8fafc; flex-shrink: 0; z-index: 10;">
           <div>
             <button 
-              v-if="suratTerbangForm.no_surat && currentSuratTerbangRegData?.surat" 
+              v-if="suratTerbangForm.no_surat && currentSuratTerbangSavedData" 
               type="button" 
               class="btn btn-premium-danger" 
               @click="deleteSuratTerbang"
@@ -922,7 +922,7 @@
             </button>
             
             <button 
-              v-if="currentSuratTerbangRegData?.surat"
+              v-if="currentSuratTerbangSavedData"
               type="button" 
               class="btn btn-premium-print" 
               @click="printSuratTerbang"
@@ -1496,6 +1496,7 @@ const suratTerbangForm = ref({
 })
 
 const currentSuratTerbangRegData = ref(null)
+const currentSuratTerbangSavedData = ref(null)  // surat yang sudah tersimpan di DB
 const currentPemeriksaanRalan = ref(null)
 
 const openSuratTerbangModal = async (item) => {
@@ -1515,6 +1516,7 @@ const openSuratTerbangModal = async (item) => {
     kesimpulan: 'SEHAT DAN LAYAK TERBANG'
   }
   currentSuratTerbangRegData.value = null
+  currentSuratTerbangSavedData.value = null
   currentPemeriksaanRalan.value = null
 
   try {
@@ -1523,6 +1525,7 @@ const openSuratTerbangModal = async (item) => {
       const data = response.data.data
       currentSuratTerbangRegData.value = data.reg_periksa
       currentPemeriksaanRalan.value = data.pemeriksaan_ralan
+      currentSuratTerbangSavedData.value = data.surat || null
       
       if (data.surat) {
         suratTerbangForm.value = {
