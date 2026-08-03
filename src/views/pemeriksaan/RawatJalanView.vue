@@ -704,13 +704,14 @@
 
     <!-- Surat Keterangan Layak Terbang Modal -->
     <!-- Surat Keterangan Layak Terbang Modal (Premium Design) -->
+    <!-- Surat Keterangan Layak Terbang Modal (Premium Design) -->
     <div v-if="showSuratTerbangModal" class="modal-overlay" @click.self="closeSuratTerbangModal">
       <div class="modal-content-custom border-0 shadow-2xl animate__animated animate__zoomIn animate__faster" 
            style="max-width: 650px; border-radius: 24px; overflow: hidden; background: #fafafa; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
         
-        <!-- Header: Vibrant Gradient with plane icon -->
+        <!-- Header: Vibrant Blue/Indigo Gradient with plane icon -->
         <div class="d-flex align-items-center justify-content-between p-4 text-white position-relative" 
-             style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); flex-shrink: 0; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);">
+             style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); flex-shrink: 0; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);">
           <div class="d-flex align-items-center">
             <div class="rounded-3 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background-color: rgba(255, 255, 255, 0.2);">
               <i class="fas fa-plane-departure text-white fs-4"></i>
@@ -726,25 +727,25 @@
 
         <div class="modal-body-custom p-4" style="overflow-y: auto; flex-grow: 1; max-height: 75vh;">
           <div v-if="isLoadingSuratTerbang" class="text-center py-5">
-            <div class="spinner-border text-warning" role="status">
+            <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
             <p class="mt-3 text-muted fw-medium">Menyelaraskan data...</p>
           </div>
 
           <div v-else>
-            <!-- Premium Patient Summary Card -->
+            <!-- Premium Patient Summary Card: Soft Blue Gradient -->
             <div v-if="currentSuratTerbangRegData" 
                  class="d-flex align-items-center p-3 mb-4 border border-light shadow-sm bg-white" 
-                 style="border-radius: 16px; background: linear-gradient(to right, #ffffff, #fefaf0);">
+                 style="border-radius: 16px; background: linear-gradient(to right, #ffffff, #f0f5ff);">
               <div class="avatar-circle me-3 d-flex align-items-center justify-content-center shadow-sm" 
-                   style="width: 48px; height: 48px; min-width: 48px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 50%;">
+                   style="width: 48px; height: 48px; min-width: 48px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%;">
                 <span class="text-white fw-bold fs-4">{{ currentSuratTerbangRegData.pasien?.nm_pasien?.charAt(0) }}</span>
               </div>
               <div class="flex-grow-1">
                 <div class="d-flex align-items-center justify-content-between">
                   <h6 class="mb-0 fw-bold text-dark" style="font-size: 1rem;">{{ currentSuratTerbangRegData.pasien?.nm_pasien }}</h6>
-                  <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning px-2.5 py-1 text-xs fw-semibold" style="font-size: 0.75rem; background-color: rgba(251, 191, 36, 0.1);">
+                  <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-2.5 py-1 text-xs fw-semibold" style="font-size: 0.75rem; background-color: rgba(59, 130, 246, 0.1);">
                     {{ currentSuratTerbangRegData.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan' }}
                   </span>
                 </div>
@@ -762,13 +763,13 @@
               <!-- Section Header: Administrasi -->
               <div class="col-12 mt-2">
                 <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
-                  <i class="fas fa-file-alt text-warning"></i>
+                  <i class="fas fa-file-alt text-primary"></i>
                   <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Detail Administrasi</span>
                 </div>
               </div>
 
               <div class="col-md-7">
-                <label class="form-label-custom mb-1"><i class="fas fa-barcode me-1 text-warning"></i> No. Surat</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-barcode me-1 text-primary"></i> No. Surat</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-hashtag text-muted"></i></span>
                   <input 
@@ -780,9 +781,9 @@
                     required
                   >
                   <button 
-                    class="btn btn-outline-warning d-flex align-items-center justify-content-center px-3" 
+                    class="btn btn-outline-primary d-flex align-items-center justify-content-center px-3" 
                     type="button" 
-                    style="border-radius: 12px; border: 1.5px solid #fbbf24; margin-left: 8px; transition: all 0.2s;"
+                    style="border-radius: 12px; border: 1.5px solid #3b82f6; margin-left: 8px; transition: all 0.2s;"
                     title="Generate Nomor Baru"
                     @click="fetchNextSuratNumber"
                   >
@@ -792,7 +793,7 @@
               </div>
 
               <div class="col-md-5">
-                <label class="form-label-custom mb-1"><i class="fas fa-calendar-alt me-1 text-warning"></i> Tanggal Surat</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-calendar-alt me-1 text-primary"></i> Tanggal Surat</label>
                 <input 
                   type="date" 
                   class="form-control form-control-custom" 
@@ -804,26 +805,14 @@
 
               <!-- Section Header: Pemeriksaan Fisik (TTV) -->
               <div class="col-12 mt-4">
-                <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom border-light">
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="fas fa-heartbeat text-warning"></i>
-                    <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Pemeriksaan Fisik & TTV</span>
-                  </div>
-                  <!-- Auto-fill Button -->
-                  <button 
-                    v-if="currentPemeriksaanRalan" 
-                    type="button" 
-                    class="btn btn-xs btn-outline-warning d-flex align-items-center gap-1 py-1 px-2.5 rounded-pill shadow-xs" 
-                    style="font-size: 0.75rem; border: 1px solid #fbbf24; transition: all 0.2s; font-weight: 600;"
-                    @click="autofillFromRalan"
-                  >
-                    <i class="fas fa-sync-alt"></i> Ambil dari Ralan
-                  </button>
+                <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
+                  <i class="fas fa-heartbeat text-primary"></i>
+                  <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Pemeriksaan Fisik & TTV</span>
                 </div>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label-custom mb-1"><i class="fas fa-tachometer-alt me-1 text-warning"></i> Tekanan Darah</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-tachometer-alt me-1 text-primary"></i> Tekanan Darah</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-tint text-muted"></i></span>
                   <input 
@@ -838,7 +827,7 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label-custom mb-1"><i class="fas fa-weight me-1 text-warning"></i> Berat Badan (kg)</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-weight me-1 text-primary"></i> Berat Badan (kg)</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-balance-scale text-muted"></i></span>
                   <input 
@@ -853,7 +842,7 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label-custom mb-1"><i class="fas fa-ruler-vertical me-1 text-warning"></i> Tinggi Badan (cm)</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-ruler-vertical me-1 text-primary"></i> Tinggi Badan (cm)</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-child text-muted"></i></span>
                   <input 
@@ -868,7 +857,7 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label-custom mb-1"><i class="fas fa-eye me-1 text-warning"></i> Buta Warna</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-eye me-1 text-primary"></i> Buta Warna</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-eye-slash text-muted"></i></span>
                   <select 
@@ -887,13 +876,13 @@
               <!-- Section Header: Kesimpulan -->
               <div class="col-12 mt-4">
                 <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
-                  <i class="fas fa-diagnoses text-warning"></i>
+                  <i class="fas fa-diagnoses text-primary"></i>
                   <span class="fw-bold text-dark text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Kesimpulan Medis</span>
                 </div>
               </div>
 
               <div class="col-12">
-                <label class="form-label-custom mb-1"><i class="fas fa-check-double me-1 text-warning"></i> Status Kelayakan Terbang</label>
+                <label class="form-label-custom mb-1"><i class="fas fa-check-double me-1 text-primary"></i> Status Kelayakan Terbang</label>
                 <div class="input-group">
                   <span class="input-group-text bg-light border-end-0 border-custom-focus" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-certificate text-muted"></i></span>
                   <input 
@@ -1567,23 +1556,6 @@ const openSuratTerbangModal = async (item) => {
   }
 }
 
-const autofillFromRalan = () => {
-  if (currentPemeriksaanRalan.value) {
-    const ralan = currentPemeriksaanRalan.value
-    if (ralan.berat && ralan.berat !== '-') {
-      suratTerbangForm.value.berat = ralan.berat
-    }
-    if (ralan.tinggi && ralan.tinggi !== '-') {
-      suratTerbangForm.value.tinggi = ralan.tinggi
-    }
-    if (ralan.tensi && ralan.tensi !== '-') {
-      suratTerbangForm.value.tensi = ralan.tensi
-    }
-    toast.success('Data TTV berhasil disinkronkan dari pemeriksaan ralan')
-  } else {
-    toast.warning('Tidak ada data pemeriksaan ralan untuk rawat ini')
-  }
-}
 
 const fetchNextSuratNumber = async () => {
   try {
@@ -3106,19 +3078,19 @@ onUnmounted(() => {
 /* Premium Buttons and Inputs for Surat Terbang */
 .btn-premium-save {
   padding: 0.6rem 1.5rem;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
   font-weight: 700;
   font-size: 0.875rem;
   border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.2);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-premium-save:hover:not(:disabled) {
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.3);
+  box-shadow: 0 6px 20px rgba(29, 78, 216, 0.3);
   filter: brightness(1.05);
 }
 
@@ -3175,20 +3147,20 @@ onUnmounted(() => {
 }
 
 .form-control-custom:focus, .form-select-custom:focus {
-  border-color: #fbbf24 !important;
+  border-color: #3b82f6 !important;
   background-color: white !important;
-  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
   outline: none;
 }
 
 .input-group:focus-within .input-group-text {
-  border-color: #fbbf24 !important;
-  background-color: #fffbeb !important;
-  color: #d97706 !important;
+  border-color: #3b82f6 !important;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
 }
 
 .input-group:focus-within .form-control-custom {
-  border-color: #fbbf24 !important;
+  border-color: #3b82f6 !important;
 }
 
 /* Print Styles for Surat Terbang */
