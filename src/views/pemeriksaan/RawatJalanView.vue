@@ -770,20 +770,22 @@
 
               <div class="col-md-7">
                 <label class="form-label-custom mb-1"><i class="fas fa-barcode me-1 text-primary"></i> No. Surat</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-light border-end-0" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-hashtag text-muted"></i></span>
-                  <input 
-                    type="text" 
-                    class="form-control form-control-custom border-start-0 border-end-0" 
-                    style="border-radius: 0; border: 1.5px solid #edf2f7;"
-                    v-model="suratTerbangForm.no_surat" 
-                    placeholder="Masukkan atau generate nomor"
-                    required
-                  >
+                <div class="d-flex align-items-stretch gap-2">
+                  <div class="input-group flex-grow-1">
+                    <span class="input-group-text bg-light border-end-0" style="border-radius: 12px 0 0 12px; border: 1.5px solid #edf2f7;"><i class="fas fa-hashtag text-muted"></i></span>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-custom border-start-0" 
+                      style="border-radius: 0 12px 12px 0; border: 1.5px solid #edf2f7;"
+                      v-model="suratTerbangForm.no_surat" 
+                      placeholder="Masukkan atau generate nomor"
+                      required
+                    >
+                  </div>
                   <button 
                     class="btn btn-outline-primary d-flex align-items-center justify-content-center px-3" 
                     type="button" 
-                    style="border-radius: 0 12px 12px 0; border: 1.5px solid #3b82f6; border-left: none; transition: all 0.2s;"
+                    style="border-radius: 12px; border: 1.5px solid #3b82f6; transition: all 0.2s;"
                     title="Generate Nomor Baru"
                     @click="fetchNextSuratNumber"
                   >
