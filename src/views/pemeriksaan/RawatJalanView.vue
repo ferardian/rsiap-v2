@@ -974,9 +974,9 @@
         <i class="fas fa-file-invoice-dollar me-2 text-success"></i> Billing
       </div>
 
-      <!-- Surat Keterangan Submenu -->
+      <!-- Surat-Surat Submenu -->
       <div class="context-menu-item has-submenu" @click.stop>
-        <i class="fas fa-envelope-open-text me-2 text-warning"></i> Surat Keterangan
+        <i class="fas fa-envelope-open-text me-2 text-warning"></i> Surat - Surat
         <i class="fas fa-chevron-right ms-auto small text-muted" :class="{ 'fa-rotate-180': contextMenu.submenuDirection === 'left' }" style="font-size: 0.7rem;"></i>
         
         <div class="submenu shadow-sm" :class="{ 'submenu-left': contextMenu.submenuDirection === 'left' }">
@@ -1109,7 +1109,7 @@
 
           <!-- Section: Surat-Surat -->
           <div class="action-group mb-4">
-            <div class="action-group-header">Surat Keterangan</div>
+            <div class="action-group-header">Surat - Surat</div>
             <div class="action-list">
               <div class="action-list-item" @click="executeAction('surat-terbang')">
                 <div class="item-icon bg-warning-soft text-warning"><i class="fas fa-plane-departure"></i></div>
