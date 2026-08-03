@@ -760,16 +760,16 @@
             <form id="suratTerbangForm" @submit.prevent="saveSuratTerbang" class="row g-2">
               
               <!-- Section Header: Administrasi -->
-              <div class="col-12 mt-1">
-                <div class="d-flex align-items-center gap-1.5 mb-1.5 pb-0.5 border-bottom border-light">
-                  <i class="fas fa-file-alt text-primary" style="font-size: 0.8rem;"></i>
+              <div class="col-12 mt-2">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
+                  <i class="fas fa-file-alt text-primary" style="font-size: 0.85rem;"></i>
                   <span class="fw-bold text-dark text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;">Detail Administrasi</span>
                 </div>
               </div>
 
               <div class="col-md-7">
                 <label class="form-label-custom mb-1"><i class="fas fa-barcode me-1 text-primary"></i> No. Surat</label>
-                <div class="d-flex align-items-stretch gap-1.5">
+                <div class="d-flex align-items-stretch gap-2">
                   <div class="input-group flex-grow-1">
                     <span class="input-group-text bg-light border-end-0" style="border-radius: 8px 0 0 8px; border: 1.5px solid #edf2f7;"><i class="fas fa-hashtag text-muted"></i></span>
                     <input 
@@ -805,9 +805,9 @@
               </div>
 
               <!-- Section Header: Pemeriksaan Fisik (TTV) -->
-              <div class="col-12 mt-2.5">
-                <div class="d-flex align-items-center gap-1.5 mb-1.5 pb-0.5 border-bottom border-light">
-                  <i class="fas fa-heartbeat text-primary" style="font-size: 0.8rem;"></i>
+              <div class="col-12 mt-3">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
+                  <i class="fas fa-heartbeat text-primary" style="font-size: 0.85rem;"></i>
                   <span class="fw-bold text-dark text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;">Pemeriksaan Fisik & TTV</span>
                 </div>
               </div>
@@ -875,9 +875,9 @@
               </div>
 
               <!-- Section Header: Kesimpulan -->
-              <div class="col-12 mt-2.5">
-                <div class="d-flex align-items-center gap-1.5 mb-1.5 pb-0.5 border-bottom border-light">
-                  <i class="fas fa-diagnoses text-primary" style="font-size: 0.8rem;"></i>
+              <div class="col-12 mt-3">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
+                  <i class="fas fa-diagnoses text-primary" style="font-size: 0.85rem;"></i>
                   <span class="fw-bold text-dark text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;">Kesimpulan Medis</span>
                 </div>
               </div>
@@ -901,7 +901,7 @@
         </div>
 
         <!-- Footer: Sticky / Fixed Action Buttons (Always Visible at Bottom) -->
-        <div v-if="!isLoadingSuratTerbang" class="modal-footer-custom py-2.5 px-4 d-flex justify-content-between align-items-center border-top" 
+        <div v-if="!isLoadingSuratTerbang" class="modal-footer-custom py-2 px-4 d-flex justify-content-between align-items-center border-top" 
              style="background: #f8fafc; flex-shrink: 0; z-index: 10;">
           <div>
             <button 
@@ -3170,25 +3170,27 @@ onUnmounted(() => {
 .modal-body-custom .form-control-custom,
 .modal-body-custom .form-select-custom,
 .modal-body-custom .input-group-text {
-  height: 34px !important;
-  padding: 0 0.50rem !important;
+  height: 38px !important;
+  padding: 0 0.6rem !important;
   border-radius: 8px !important;
-  font-size: 0.825rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.4 !important;
 }
 
 .modal-body-custom .form-label-custom {
-  font-size: 0.75rem !important;
-  margin-bottom: 2px !important;
+  font-size: 0.8rem !important;
+  margin-bottom: 4px !important;
   font-weight: 600;
   color: #475569;
+  display: block;
 }
 
-.modal-body-custom .btn-premium-save,
-.modal-body-custom .btn-premium-print,
-.modal-body-custom .btn-premium-danger,
-.modal-body-custom .btn-premium-secondary {
-  padding: 0.35rem 0.85rem !important;
-  font-size: 0.8rem !important;
+.modal-footer-custom .btn-premium-save,
+.modal-footer-custom .btn-premium-print,
+.modal-footer-custom .btn-premium-danger,
+.modal-footer-custom .btn-premium-secondary {
+  padding: 0.4rem 1rem !important;
+  font-size: 0.85rem !important;
   border-radius: 8px !important;
 }
 
