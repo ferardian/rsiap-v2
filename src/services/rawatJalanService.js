@@ -40,5 +40,29 @@ export default {
                 no_rawat: encodedNoRawat
             }
         });
+    },
+
+    // Get Surat Layak Terbang
+    getSuratTerbang(no_rawat) {
+        return api.get('/rawat-jalan/surat-terbang', {
+            params: { no_rawat }
+        });
+    },
+
+    // Save/Update Surat Layak Terbang
+    saveSuratTerbang(data) {
+        return api.post('/rawat-jalan/surat-terbang', data);
+    },
+
+    // Get Next Auto Number for Surat Terbang
+    getNextSuratTerbangNumber() {
+        return api.get('/rawat-jalan/surat-terbang/next-number');
+    },
+
+    // Delete Surat Layak Terbang
+    deleteSuratTerbang(no_surat) {
+        return api.delete('/rawat-jalan/surat-terbang', {
+            params: { no_surat }
+        });
     }
 }
