@@ -760,7 +760,7 @@
             <form id="suratTerbangForm" @submit.prevent="saveSuratTerbang" class="row g-2">
               
               <!-- Section Header: Administrasi -->
-              <div class="col-12 mt-2">
+              <div class="col-12 mt-3">
                 <div class="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom border-light">
                   <i class="fas fa-file-alt text-primary" style="font-size: 0.85rem;"></i>
                   <span class="fw-bold text-dark text-uppercase" style="letter-spacing: 0.5px; font-size: 0.75rem;">Detail Administrasi</span>
