@@ -118,6 +118,7 @@
             <thead class="bg-light sticky-top" style="z-index: 10;">
               <tr>
                 <th class="px-3 py-2" style="width: 80px">No. Reg</th>
+                <th class="px-3 py-2" style="width: 120px">Tgl Registrasi</th>
                 <th class="px-3 py-2">Pasien</th>
                 <th class="px-3 py-2">Dokter & Poliklinik</th>
                 <th class="px-3 py-2">Alamat</th>
@@ -144,6 +145,10 @@
                 <td class="px-3 py-2">
                   <div class="fw-bold text-primary">{{ item.no_reg }}</div>
                   <div class="small text-muted">{{ item.no_rawat }}</div>
+                </td>
+                <td class="px-3 py-2">
+                  <div class="fw-semibold text-dark">{{ formatDateIndo(item.tgl_registrasi) }}</div>
+                  <div class="small text-muted" style="font-size: 0.75rem;">{{ item.jam_reg }}</div>
                 </td>
                 <td class="px-3 py-2">
                   <div class="fw-semibold text-dark">{{ item.pasien?.nm_pasien }}</div>
@@ -1399,6 +1404,21 @@ const openModal = (item) => {
 const formatCurrency = (value) => {
   if (!value && value !== 0) return '-'
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
+}
+
+const formatDateIndo = (dateStr) => {
+  if (!dateStr) return '-'
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  } catch (e) {
+    return dateStr
+  }
 }
 
 const getLabResultClass = (keterangan) => {
