@@ -943,7 +943,6 @@
         </div>
       </div>
     </div>
-    </div>
 
     <!-- Printable Surat Keterangan Layak Terbang -->
     <div id="print-surat-terbang" class="d-none d-print-block">
