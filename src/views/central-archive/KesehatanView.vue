@@ -97,7 +97,7 @@
             <input 
               v-model="searchQuery" 
               type="text" 
-              :placeholder="activeTab === 'staf' ? 'Cari berdasarkan Nama atau NIK...' : 'Cari berdasarkan Perihal atau PJ...'" 
+              :placeholder="activeTab === 'staf' ? 'Cari berdasarkan Nama atau NIK...' : 'Cari berdasarkan Perihal, Nama Pegawai, atau NIK...'" 
               @input="handleSearch"
             >
             <button v-if="searchQuery" class="clear-search" @click="clearSearch">
