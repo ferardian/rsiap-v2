@@ -174,17 +174,19 @@
                   {{ item.pasien?.alamat }}
                 </td>
                 <td class="px-3 py-2 text-center">
-                   <div class="d-flex flex-column align-items-center justify-content-center gap-1">
-                     <span class="badge rounded-pill d-inline-block" :class="getBayarClass(item.cara_bayar?.png_jawab)">
+                   <div class="d-flex flex-column align-items-center justify-content-center">
+                     <span class="badge rounded-pill fw-semibold px-2 py-1" :style="getBayarStyle(item.cara_bayar?.png_jawab)">
                        {{ item.cara_bayar?.png_jawab }}
                      </span>
                      <template v-if="isBpjs(item.cara_bayar?.png_jawab)">
-                       <span v-if="item.sep" class="badge bg-success text-white fw-semibold d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.65rem;" :title="'No. SEP: ' + (item.sep.no_sep || '-')">
-                         <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i> SEP Terbit
-                       </span>
-                       <span v-else class="badge bg-danger text-white fw-semibold d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.65rem;">
-                         <i class="fas fa-times-circle" style="font-size: 0.65rem;"></i> SEP Belum Terbit
-                       </span>
+                       <div v-if="item.sep" class="d-inline-flex align-items-center gap-1 mt-1 text-success fw-bold" style="font-size: 0.68rem; letter-spacing: 0.2px;" :title="'No. SEP: ' + (item.sep.no_sep || '-')">
+                         <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i>
+                         <span>SEP Terbit</span>
+                       </div>
+                       <div v-else class="d-inline-flex align-items-center gap-1 mt-1 text-danger fw-bold" style="font-size: 0.68rem; letter-spacing: 0.2px;">
+                         <i class="fas fa-exclamation-circle" style="font-size: 0.65rem;"></i>
+                         <span>SEP Belum Terbit</span>
+                       </div>
                      </template>
                    </div>
                 </td>
@@ -1936,17 +1938,17 @@ const getStatusClass = (status) => {
   }
 }
 
-const getBayarClass = (bayar) => {
-  if (!bayar) return 'bg-light text-dark border'
+const getBayarStyle = (bayar) => {
+  if (!bayar) return { background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }
   
   const b = bayar.toLowerCase()
-  if (b.includes('bpjs')) return 'bg-success text-white'
-  if (b.includes('umum')) return 'bg-danger text-white' // or warning/info
-  if (b.includes('asuransi')) return 'bg-primary text-white'
-  if (b.includes('perusahaan')) return 'bg-info text-white'
-  if (b.includes('karyawan')) return 'bg-secondary text-white'
+  if (b.includes('bpjs')) return { background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }
+  if (b.includes('umum')) return { background: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3' }
+  if (b.includes('asuransi')) return { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }
+  if (b.includes('perusahaan')) return { background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }
+  if (b.includes('karyawan')) return { background: '#f8fafc', color: '#475569', border: '1px solid #cbd5e1' }
 
-  return 'bg-light text-dark border'
+  return { background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }
 }
 
 const isBpjs = (bayar) => {
