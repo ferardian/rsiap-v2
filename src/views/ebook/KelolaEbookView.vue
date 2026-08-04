@@ -793,7 +793,18 @@ const saveEbook = async () => {
     }
   } catch (err) {
     console.error('Error saving ebook:', err)
-    toast.error(err.response?.data?.message || 'Gagal menyimpan e-book / jurnal')
+    let msg = 'Gagal menyimpan e-book / jurnal'
+    if (err.response?.data) {
+      if (err.response.data.errors) {
+        const firstKey = Object.keys(err.response.data.errors)[0]
+        if (firstKey && err.response.data.errors[firstKey][0]) {
+          msg = err.response.data.errors[firstKey][0]
+        }
+      } else if (err.response.data.message) {
+        msg = err.response.data.message
+      }
+    }
+    toast.error(msg)
   } finally {
     submitting.value = false
   }
