@@ -78,7 +78,7 @@
                                 :filterable="true"
                                 class="vselect-custom"
                              ></v-select>
-                             <input v-else type="text" class="field-input" :value="form.kode_paket" disabled>
+                             <input v-else type="text" class="field-input" :value="getTindakanNama" disabled>
                           </div>
                           <div class="col-md-4">
                              <label class="field-label">Jenis Anestesi <span class="required">*</span></label>
@@ -273,7 +273,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps, defineEmits, computed } from 'vue'
 
 const props = defineProps({
   show: Boolean,
@@ -291,6 +291,16 @@ const props = defineProps({
 })
 
 defineEmits(['close', 'submit'])
+
+const getTindakanNama = computed(() => {
+  const kode = props.form?.kode_paket
+  if (!kode) return '-'
+  const found = props.paketList?.find(p => p.kode_paket === kode)
+  if (found && found.nm_perawatan) {
+    return found.nm_perawatan
+  }
+  return props.form?.nm_perawatan || kode
+})
 
 const formatDate = (date) => {
   if (!date) return '-'

@@ -391,7 +391,8 @@ const openModal = async (item) => {
     // Pastikan paket yang sedang dipilih ada di paketList agar v-select tampil nm_perawatan, bukan kode
     const p = item.detail_paket || item.detailPaket
     if (p && p.kode_paket) {
-        const exists = paketList.value.some(item => item.kode_paket === p.kode_paket)
+        laporanForm.nm_perawatan = p.nm_perawatan
+        const exists = paketList.value.some(pkg => pkg.kode_paket === p.kode_paket)
         if (!exists) {
             paketList.value.unshift({
                 kode_paket: p.kode_paket,
