@@ -2230,10 +2230,10 @@ const fetchAnalisaData = async () => {
         const daysInMonth = new Date(y, m, 0).getDate()
         
         // Fetch existing analisa (either filtered by id_inmut or all)
-        const analisaParams = { dep_id: filters.unit, bulan: analisaFilters.bulan }
+        const analisaParams = { dep_id: filters.unit, bulan: analisaFilters.bulan, limit: 100, per_page: 100 }
         if (isSpecialized) analisaParams.id_inmut = selectedIndicator.value.id_inmut
         const analisaRes = await api.getAnalisa(analisaParams)
-        existingAnalisa.value = analisaRes.data.data.data || []
+        existingAnalisa.value = analisaRes.data.data?.data || analisaRes.data.data || []
 
         if (isSpecialized) {
             // Fetch monthly data for a SPECIFIC indicator
@@ -2309,7 +2309,7 @@ const fetchAnalisaData = async () => {
                 const score = tDenum > 0 ? ((tNum / tDenum) * 100).toFixed(2) : 0
 
                 // Check if already analyzed
-                const analyzis = existingAnalisa.value.find(ans => ans.id_inmut === ind.id_inmut)
+                const analyzis = existingAnalisa.value.find(ans => String(ans.id_inmut) === String(ind.id_inmut))
 
                 const chartData = buildChartDataForIndicator(
                     ind,
