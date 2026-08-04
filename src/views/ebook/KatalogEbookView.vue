@@ -135,8 +135,8 @@
             <!-- Cover Container -->
             <div class="ebook-cover-box bg-light border-bottom position-relative overflow-hidden d-flex align-items-center justify-content-center">
               <img 
-                v-if="item.cover" 
-                :src="getFileUrl(item.cover)" 
+                v-if="item.cover_image || item.cover" 
+                :src="getFileUrl(item.cover_image || item.cover)" 
                 :alt="item.judul"
                 class="ebook-cover-img"
                 @error="onImageError"
@@ -220,7 +220,7 @@
                 </td>
                 <td>
                   <div class="rounded-2 bg-light overflow-hidden d-flex align-items-center justify-content-center border" style="width: 36px; height: 46px;">
-                    <img v-if="item.cover" :src="getFileUrl(item.cover)" class="w-100 h-100 object-fit-cover" />
+                    <img v-if="item.cover_image || item.cover" :src="getFileUrl(item.cover_image || item.cover)" class="w-100 h-100 object-fit-cover" />
                     <i v-else class="fas fa-book text-primary opacity-75"></i>
                   </div>
                 </td>
