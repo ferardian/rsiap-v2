@@ -201,6 +201,7 @@ import { suratInternalService } from '@/services/suratInternalService'
 import { suratEksternalService } from '@/services/suratEksternalService'
 import { skService } from '@/services/skService'
 import pksService from '@/services/pksService'
+import spoService from '@/services/spoService'
 import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
 import { komiteKesehatanService } from '@/services/komiteKesehatanService'
 import { komiteMedisService } from '@/services/komiteMedisService'
@@ -215,6 +216,7 @@ const internalStats = ref({})
 const eksternalStats = ref({})
 const pksStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const skRegulerStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
+const spoStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const kredensialStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const undanganStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const kesehatanStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
@@ -225,6 +227,7 @@ const tabs = [
   { id: 'eksternal', label: 'Eksternal', icon: 'fa-globe' },
   { id: 'pks', label: 'PKS', icon: 'fa-handshake' },
   { id: 'sk_reguler', label: 'SK Reguler', icon: 'fa-file-signature' },
+  { id: 'spo', label: 'SPO', icon: 'fa-clipboard-check' },
   { id: 'kredensial', label: 'SK Kredensial', icon: 'fa-id-badge' },
   { id: 'undangan', label: 'Komite Keperawatan', icon: 'fa-envelope-open-text' },
   { id: 'kesehatan', label: 'Komite Kesehatan', icon: 'fa-briefcase-medical' },
@@ -237,6 +240,7 @@ const activeTabLabel = computed(() => {
   if (activeTab.value === 'eksternal') return 'Surat Eksternal'
   if (activeTab.value === 'pks') return 'Perjanjian Kerja Sama (PKS)'
   if (activeTab.value === 'sk_reguler') return 'SK Biasa / Reguler'
+  if (activeTab.value === 'spo') return 'Standar Prosedur Operasional (SPO)'
   if (activeTab.value === 'undangan') return 'Komite Keperawatan'
   if (activeTab.value === 'kesehatan') return 'Komite Kesehatan'
   if (activeTab.value === 'medis') return 'Komite Medis'
@@ -248,6 +252,7 @@ const currentStats = computed(() => {
   if (activeTab.value === 'eksternal') return eksternalStats.value
   if (activeTab.value === 'pks') return pksStats.value
   if (activeTab.value === 'sk_reguler') return skRegulerStats.value
+  if (activeTab.value === 'spo') return spoStats.value
   if (activeTab.value === 'undangan') return undanganStats.value
   if (activeTab.value === 'kesehatan') return kesehatanStats.value
   if (activeTab.value === 'medis') return medisStats.value
@@ -309,6 +314,30 @@ const loadData = async () => {
       }))
 
       skRegulerStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
+    } else if (activeTab.value === 'spo') {
+      const res = await spoService.searchSpo({
+        limit: 100,
+        page: 1,
+        filters: [{ field: 'status', operator: '=', value: 'pengajuan' }]
+      })
+
+      const rawData = res.data?.data || []
+      suratList.value = rawData.map(item => ({
+        id: item.id,
+        perihal: item.judul,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.requested_by ? (item.requested_by.nama || item.requested_by.nik) : (item.unit ? item.unit.nama : item.unit_id),
+        pj: item.requested_by ? item.requested_by.nik : item.unit_id,
+        status: item.status,
+        no_surat: item.nomor,
+        _original: item
+      }))
+
+      spoStats.value = {
         total: suratList.value.length,
         pengajuan: suratList.value.length,
         disetujui: 0
@@ -455,6 +484,8 @@ const handleAction = async (surat, status) => {
       await pksService.updatePks(surat.id, { status })
     } else if (activeTab.value === 'sk_reguler') {
       await skService.updateSk(surat.id, { status_approval: status })
+    } else if (activeTab.value === 'spo') {
+      await spoService.updateSpo(surat.id, { status })
     } else if (activeTab.value === 'kredensial') {
       if (status === 'disetujui') {
         await skService.approveKredensial(surat.id)
@@ -494,6 +525,7 @@ const handleAction = async (surat, status) => {
     })
 
     loadData()
+    loadAllStats()
   } catch (error) {
     console.error(`Error ${actionLabel} surat:`, error)
     Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error')
@@ -543,11 +575,12 @@ onMounted(async () => {
 
 const loadAllStats = async () => {
   try {
-    const [intStats, ekstStats, pksRes, skAllRes, kredRes, undRes] = await Promise.all([
+    const [intStats, ekstStats, pksRes, skAllRes, spoRes, kredRes, undRes] = await Promise.all([
       suratInternalService.getStats(),
       suratEksternalService.getStats(),
       pksService.searchPks({ limit: 100, page: 1, filters: [{ field: 'status', operator: '=', value: 'pengajuan' }] }),
       skService.searchSk('', 100, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]),
+      spoService.searchSpo({ limit: 100, page: 1, filters: [{ field: 'status', operator: '=', value: 'pengajuan' }] }),
       skService.searchSk('SPK RKK', 100, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]),
       komiteKeperawatanService.search('', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }])
     ])
@@ -562,6 +595,10 @@ const loadAllStats = async () => {
     const skRegulerList = (skAllRes.data?.data || []).filter(item => !item.id_kredensial && !(item.judul || '').includes('SPK RKK'))
     skRegulerStats.value = {
       pengajuan: skRegulerList.length
+    }
+
+    spoStats.value = {
+      pengajuan: spoRes.data?.total ?? spoRes.data?.meta?.total ?? spoRes.data?.data?.length ?? 0
     }
 
     kredensialStats.value = { 
@@ -590,6 +627,7 @@ const getTabPendingCount = (tabId) => {
   if (tabId === 'eksternal') return eksternalStats.value.pengajuan || 0
   if (tabId === 'pks') return pksStats.value.pengajuan || 0
   if (tabId === 'sk_reguler') return skRegulerStats.value.pengajuan || 0
+  if (tabId === 'spo') return spoStats.value.pengajuan || 0
   if (tabId === 'kredensial') return kredensialStats.value.pengajuan || 0
   if (tabId === 'undangan') return undanganStats.value.pengajuan || 0
   if (tabId === 'kesehatan') return kesehatanStats.value.pengajuan || 0

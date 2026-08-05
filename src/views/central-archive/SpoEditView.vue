@@ -57,6 +57,16 @@
               </div>
 
               <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">Status Persetujuan <span class="text-danger">*</span></label>
+                <select v-model="state.status" class="form-select" :disabled="!isKoordinator">
+                  <option value="pengajuan">Pengajuan</option>
+                  <option value="disetujui">Disetujui</option>
+                  <option value="ditolak">Ditolak</option>
+                  <option value="batal">Batal</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
                 <label class="form-label small fw-bold text-muted">Unit Utama <span class="text-danger">*</span></label>
                 <v-select
                   v-model="state.unit"
@@ -149,7 +159,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import spoService from '@/services/spoService'
@@ -162,6 +172,11 @@ const authStore = useAuthStore()
 
 const spoId = route.params.id
 
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
+
 // State
 const isLoading = ref(true)
 const isSubmitting = ref(false)
@@ -171,6 +186,7 @@ const state = reactive({
   judul: '',
   tgl_terbit: '',
   jenis: 'umum',
+  status: 'pengajuan',
   unit: null,
   semua_unit_terkait: false,
   unit_terkait: []
@@ -219,6 +235,7 @@ const fetchSpoDetail = async () => {
         state.judul = data.judul
         state.tgl_terbit = data.tgl_terbit
         state.jenis = data.jenis || 'umum'
+        state.status = data.status || 'pengajuan'
         state.semua_unit_terkait = data.semua_unit_terkait === 1 || data.semua_unit_terkait === true
 
         // Map Unit Utama
@@ -316,6 +333,7 @@ const submitSpo = async () => {
             unit_id: state.unit.dep_id || state.unit.unit_id,
             tgl_terbit: state.tgl_terbit,
             jenis: state.jenis,
+            status: state.status,
             semua_unit_terkait: state.semua_unit_terkait,
             units: state.unit_terkait.map(u => u.dep_id || u.unit_id),
             

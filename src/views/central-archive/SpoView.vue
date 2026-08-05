@@ -46,6 +46,14 @@
             <option value="umum">Umum</option>
           </select>
 
+          <label class="small-label ml-2 mr-1 mb-0">STATUS:</label>
+          <select v-model="filters.status" class="filter-input status-select" @change="handleSearch">
+            <option value="">Semua Status</option>
+            <option value="pengajuan">Pengajuan</option>
+            <option value="disetujui">Disetujui</option>
+            <option value="ditolak">Ditolak</option>
+          </select>
+
           <button class="btn-filter ml-2" @click="handleSearch" :disabled="loading">
             <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
             Segarkan
@@ -89,15 +97,18 @@
                 <th width="150">Nomor</th>
                 <th>Judul</th>
                 <th width="180">Unit</th>
-                <th width="180">Tgl Terbit</th>
-                <th width="120">Jenis</th>
+                <th width="140">Tgl Terbit</th>
+                <th width="110">Jenis</th>
+                <th width="110">Status</th>
                 <th width="80" class="text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="item in responseList" :key="item.id" @click="viewDetail(item)">
                 <td>
-                    <span class="badge bg-light text-dark fw-bold border">{{ item.nomor || '-' }}</span>
+                    <span class="badge" :class="item.nomor ? 'bg-light text-dark fw-bold border' : 'bg-warning text-dark'">
+                      {{ item.nomor || '(Belum Terbit)' }}
+                    </span>
                 </td>
                 <td>
                   <div class="fw-bold">{{ item.judul }}</div>
@@ -111,6 +122,11 @@
                 <td>
                   <span class="badge" :class="getJenisClass(item.jenis)">
                     {{ item.jenis ? String(item.jenis).toUpperCase() : '-' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" :class="getStatusClass(item.status)">
+                    {{ (item.status || 'disetujui').toUpperCase() }}
                   </span>
                 </td>
                 <td class="text-center" @click.stop>
@@ -267,14 +283,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import spoService from '@/services/spoService'
 import Swal from 'sweetalert2'
 import { useMenuStore } from '@/stores/menu'
-import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
 const menuStore = useMenuStore()
+const authStore = useAuthStore()
 const canDelete = computed(() => menuStore.hasMenuPermissionByRoute('/central-archive/spo', 'can_delete'))
+
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
 
 // State
 const loading = ref(false)
@@ -282,7 +304,8 @@ const responseList = ref([])
 const searchQuery = ref('')
 const filters = ref({
   tgl_terbit: '',
-  jenis: ''
+  jenis: '',
+  status: ''
 })
 
 const pagination = ref({
@@ -295,6 +318,14 @@ const pagination = ref({
 const showDetail = ref(false)
 const selectedItem = ref(null)
 const spoUnits = ref([])
+
+const getStatusClass = (status) => {
+  const s = (status || '').toLowerCase()
+  if (s === 'pengajuan') return 'bg-warning text-dark'
+  if (s === 'disetujui') return 'bg-success'
+  if (s === 'ditolak') return 'bg-danger'
+  return 'bg-secondary'
+}
 
 // Methods
 const fetchData = async (page = 1) => {
@@ -315,8 +346,17 @@ const fetchData = async (page = 1) => {
       payload.filters.push({ field: 'jenis', operator: '=', value: filters.value.jenis })
     }
 
+    if (filters.value.status) {
+      payload.filters.push({ field: 'status', operator: '=', value: filters.value.status })
+    }
+
     if (filters.value.tgl_terbit) {
       payload.filters.push({ field: 'tgl_terbit', operator: '=', value: filters.value.tgl_terbit })
+    }
+
+    const userDept = authStore.userDepartment
+    if (!isKoordinator.value && userDept && userDept !== '-') {
+      payload.departemen = userDept
     }
 
     const response = await spoService.searchSpo(payload)
