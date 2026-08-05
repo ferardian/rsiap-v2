@@ -63,6 +63,16 @@
               <option value="B">SK Pengangkatan Jabatan</option>
             </select>
           </div>
+
+          <div class="filter-box select-wrapper">
+            <i class="fas fa-tasks filter-icon"></i>
+            <select v-model="filterStatusApproval" @change="handleSearch" class="select-input">
+              <option value="">Semua Status Approval</option>
+              <option value="pengajuan">Pengajuan</option>
+              <option value="disetujui">Disetujui</option>
+              <option value="ditolak">Ditolak</option>
+            </select>
+          </div>
         </div>
 
         <!-- Add Button Right -->
@@ -88,11 +98,12 @@
           <thead>
             <tr>
               <th width="5%">No</th>
-              <th width="20%">Nomor SK</th>
-              <th width="35%">Judul SK</th>
-              <th width="15%">Tanggal Terbit</th>
+              <th width="18%">Nomor SK</th>
+              <th width="30%">Judul SK</th>
+              <th width="14%">Tanggal Terbit</th>
               <th width="15%">Penanggung Jawab</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="10%">Status</th>
+              <th width="8%" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -120,6 +131,11 @@
                   <div class="pj-avatar">{{ getInitials(sk.penanggung_jawab?.nama || sk.pj) }}</div>
                   <span class="pj-name text-truncate">{{ sk.penanggung_jawab?.nama || sk.pj }}</span>
                 </div>
+              </td>
+              <td>
+                <span class="badge" :class="getStatusApprovalClass(sk.status_approval)">
+                  {{ (sk.status_approval || 'disetujui').toUpperCase() }}
+                </span>
               </td>
               <td>
                 <div class="action-buttons-cell justify-content-center">
@@ -263,15 +279,22 @@
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { skService } from '@/services/skService'
+import { useAuthStore } from '@/stores/auth'
 import debounce from 'lodash/debounce'
 import { format } from 'date-fns'
 
-// Import Modals (we will create these next)
+// Import Modals
 import SkFormModal from './components/SkFormModal.vue'
 import SkDetailModal from './components/SkDetailModal.vue'
 import SkUploadModal from './components/SkUploadModal.vue'
 
 const toast = useToast()
+const authStore = useAuthStore()
+
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
 
 // State
 const skList = ref([])
@@ -279,6 +302,7 @@ const loading = ref(true)
 const searchQuery = ref('')
 const filterDate = ref('')
 const filterJenis = ref('')
+const filterStatusApproval = ref('')
 const activeMenu = ref(null)
 
 const pagination = ref({
@@ -321,35 +345,56 @@ const toggleMenu = (index) => {
   }
 }
 
-const buildFilters = () => {
-  const filters = [
-    { field: 'status', operator: '=', value: '1' }
-  ]
-  
-  if (filterJenis.value) {
-    filters.push({ field: 'jenis', operator: '=', value: filterJenis.value })
-  }
-  
-  if (filterDate.value) {
-    // Add 1 day to match backend logic based on Filetrack
-    const dateObj = new Date(filterDate.value)
-    dateObj.setDate(dateObj.getDate() + 1)
-    const formattedDate = dateObj.toISOString().split('T')[0]
-    filters.push({ field: 'tgl_terbit', operator: '=', value: formattedDate })
-  }
-  
-  return filters
+const getStatusApprovalClass = (status) => {
+  const s = (status || '').toLowerCase()
+  if (s === 'pengajuan') return 'bg-warning text-dark'
+  if (s === 'disetujui') return 'bg-success'
+  if (s === 'ditolak') return 'bg-danger'
+  return 'bg-secondary'
 }
 
 const loadSk = async (page = 1) => {
   loading.value = true
   try {
-    const filters = buildFilters()
-    const response = await skService.searchSk(searchQuery.value, pagination.value.per_page, page, filters)
+    const payload = {
+      page: page,
+      limit: pagination.value.per_page,
+      sort: [{ field: 'created_at', direction: 'desc' }],
+      filters: [
+        { field: 'status', operator: '=', value: '1' }
+      ],
+      include: ['penanggungJawab', 'targetPegawai']
+    }
+
+    if (searchQuery.value) {
+      payload.search = { value: searchQuery.value }
+    }
+
+    if (filterJenis.value) {
+      payload.filters.push({ field: 'jenis', operator: '=', value: filterJenis.value })
+    }
+
+    if (filterStatusApproval.value) {
+      payload.filters.push({ field: 'status_approval', operator: '=', value: filterStatusApproval.value })
+    }
+
+    if (filterDate.value) {
+      const dateObj = new Date(filterDate.value)
+      dateObj.setDate(dateObj.getDate() + 1)
+      const formattedDate = dateObj.toISOString().split('T')[0]
+      payload.filters.push({ field: 'tgl_terbit', operator: '=', value: formattedDate })
+    }
+
+    const userDept = authStore.userDepartment
+    if (!isKoordinator.value && userDept && userDept !== '-') {
+      payload.departemen = userDept
+    }
+
+    const response = await skService.searchSk(payload)
     
     if (response.data) {
       skList.value = response.data.data || []
-      pagination.value = response.data.meta || {
+      pagination.value = response.data.meta || response.data.pagination || {
         current_page: 1,
         last_page: 1,
         per_page: 20,

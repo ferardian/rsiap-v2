@@ -2,18 +2,15 @@ import api from './api'
 
 export const skService = {
     /**
-     * Search SK
+     * Search SK using Orion search endpoint
      */
-    searchSk(query = '', limit = 20, page = 1, filters = []) {
-        return api.post('/berkas/sk/search', {
-            search: { value: query },
-            limit: limit,
-            page: page,
-            filters: filters,
-            sort: [
-                { field: 'created_at', direction: 'desc' }
-            ]
-        })
+    searchSk(payload = {}) {
+        let params = {}
+        if (payload.departemen) {
+            params.departemen = payload.departemen
+            delete payload.departemen
+        }
+        return api.post('/berkas/sk/search', payload, { params })
     },
 
     /**

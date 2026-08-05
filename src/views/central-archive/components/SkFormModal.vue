@@ -103,6 +103,20 @@
               </select>
             </div>
           </div>
+
+          <!-- Status Approval -->
+          <div class="form-group row-group">
+            <div class="label-wrapper">
+              <label>Status Persetujuan <span>*</span></label>
+            </div>
+            <div class="input-wrapper">
+              <select v-model="formData.status_approval" class="form-control" :disabled="!isKoordinator" required>
+                <option value="pengajuan">Pengajuan</option>
+                <option value="disetujui">Disetujui</option>
+                <option value="ditolak">Ditolak</option>
+              </select>
+            </div>
+          </div>
         </form>
       </div>
 
@@ -125,6 +139,7 @@ import { skService } from '@/services/skService'
 import { format } from 'date-fns'
 import debounce from 'lodash/debounce'
 import { pegawaiService } from '@/services/pegawaiService'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   show: Boolean,
@@ -134,6 +149,12 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 const toast = useToast()
+const authStore = useAuthStore()
+
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
 
 const loading = ref(false)
 const searchPj = ref('')
@@ -145,7 +166,8 @@ const formData = reactive({
   judul: '',
   pj: '',
   tgl_terbit: format(new Date(), 'yyyy-MM-dd'),
-  jenis: ''
+  jenis: '',
+  status_approval: 'pengajuan'
 })
 
 // Validation
@@ -153,7 +175,8 @@ const isValid = computed(() => {
   return formData.judul && formData.judul.length >= 3 && 
          formData.pj && 
          formData.tgl_terbit && 
-         formData.jenis
+         formData.jenis &&
+         formData.status_approval
 })
 
 // Initialize form
@@ -171,11 +194,13 @@ watch(() => props.show, (newVal) => {
         formData.tgl_terbit = format(new Date(), 'yyyy-MM-dd')
       }
       formData.jenis = props.skData.jenis || ''
+      formData.status_approval = props.skData.status_approval || 'pengajuan'
     } else {
       formData.judul = ''
       formData.pj = ''
       formData.tgl_terbit = format(new Date(), 'yyyy-MM-dd')
       formData.jenis = ''
+      formData.status_approval = 'pengajuan'
       searchPj.value = ''
       selectedPjName.value = ''
     }
