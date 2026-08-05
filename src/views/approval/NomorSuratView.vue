@@ -200,6 +200,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 import { suratInternalService } from '@/services/suratInternalService'
 import { suratEksternalService } from '@/services/suratEksternalService'
 import { skService } from '@/services/skService'
+import pksService from '@/services/pksService'
 import { komiteKeperawatanService } from '@/services/komiteKeperawatanService'
 import { komiteKesehatanService } from '@/services/komiteKesehatanService'
 import { komiteMedisService } from '@/services/komiteMedisService'
@@ -212,6 +213,8 @@ const suratList = ref([])
 const activeTab = ref('internal')
 const internalStats = ref({})
 const eksternalStats = ref({})
+const pksStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
+const skRegulerStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const kredensialStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const undanganStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const kesehatanStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
@@ -220,6 +223,8 @@ const medisStats = ref({ total: 0, pengajuan: 0, disetujui: 0 })
 const tabs = [
   { id: 'internal', label: 'Internal', icon: 'fa-building' },
   { id: 'eksternal', label: 'Eksternal', icon: 'fa-globe' },
+  { id: 'pks', label: 'PKS', icon: 'fa-handshake' },
+  { id: 'sk_reguler', label: 'SK Reguler', icon: 'fa-file-signature' },
   { id: 'kredensial', label: 'SK Kredensial', icon: 'fa-id-badge' },
   { id: 'undangan', label: 'Komite Keperawatan', icon: 'fa-envelope-open-text' },
   { id: 'kesehatan', label: 'Komite Kesehatan', icon: 'fa-briefcase-medical' },
@@ -230,6 +235,8 @@ const tabs = [
 const activeTabLabel = computed(() => {
   if (activeTab.value === 'internal') return 'Surat Internal'
   if (activeTab.value === 'eksternal') return 'Surat Eksternal'
+  if (activeTab.value === 'pks') return 'Perjanjian Kerja Sama (PKS)'
+  if (activeTab.value === 'sk_reguler') return 'SK Biasa / Reguler'
   if (activeTab.value === 'undangan') return 'Komite Keperawatan'
   if (activeTab.value === 'kesehatan') return 'Komite Kesehatan'
   if (activeTab.value === 'medis') return 'Komite Medis'
@@ -239,6 +246,8 @@ const activeTabLabel = computed(() => {
 const currentStats = computed(() => {
   if (activeTab.value === 'internal') return internalStats.value
   if (activeTab.value === 'eksternal') return eksternalStats.value
+  if (activeTab.value === 'pks') return pksStats.value
+  if (activeTab.value === 'sk_reguler') return skRegulerStats.value
   if (activeTab.value === 'undangan') return undanganStats.value
   if (activeTab.value === 'kesehatan') return kesehatanStats.value
   if (activeTab.value === 'medis') return medisStats.value
@@ -258,7 +267,53 @@ watch(activeTab, () => {
 const loadData = async () => {
   loading.value = true
   try {
-    if (activeTab.value === 'kredensial') {
+    if (activeTab.value === 'pks') {
+      const res = await pksService.searchPks({
+        limit: 100,
+        page: 1,
+        filters: [{ field: 'status', operator: '=', value: 'pengajuan' }]
+      })
+
+      const rawData = res.data?.data || []
+      suratList.value = rawData.map(item => ({
+        id: item.id,
+        perihal: item.judul,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.penanggung_jawab,
+        pj: item.pj,
+        status: item.status,
+        no_surat: item.no_pks_internal,
+        _original: item
+      }))
+
+      pksStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
+    } else if (activeTab.value === 'sk_reguler') {
+      const res = await skService.searchSk('', 100, 1, [
+        { field: 'status_approval', operator: '=', value: 'pengajuan' }
+      ])
+
+      const rawData = (res.data?.data || []).filter(item => !item.id_kredensial && !(item.judul || '').includes('SPK RKK'))
+      suratList.value = rawData.map(item => ({
+        id: btoa(`${item.nomor}.${item.jenis}.${item.tgl_terbit.split(' ')[0]}`),
+        perihal: item.judul,
+        tgl_terbit: item.tgl_terbit,
+        penanggung_jawab: item.penanggung_jawab,
+        pj: item.pj,
+        status: item.status_approval,
+        no_surat: null,
+        _original: item
+      }))
+
+      skRegulerStats.value = {
+        total: suratList.value.length,
+        pengajuan: suratList.value.length,
+        disetujui: 0
+      }
+    } else if (activeTab.value === 'kredensial') {
       const res = await skService.searchSk('SPK RKK', 100, 1, [
         { field: 'status_approval', operator: '=', value: 'pengajuan' }
       ])
@@ -396,7 +451,11 @@ const handleAction = async (surat, status) => {
 
   processingId.value = surat.id
   try {
-    if (activeTab.value === 'kredensial') {
+    if (activeTab.value === 'pks') {
+      await pksService.updatePks(surat.id, { status })
+    } else if (activeTab.value === 'sk_reguler') {
+      await skService.updateSk(surat.id, { status_approval: status })
+    } else if (activeTab.value === 'kredensial') {
       if (status === 'disetujui') {
         await skService.approveKredensial(surat.id)
       } else {
@@ -484,17 +543,27 @@ onMounted(async () => {
 
 const loadAllStats = async () => {
   try {
-    const [intStats, ekstStats, kredRes, undRes] = await Promise.all([
+    const [intStats, ekstStats, pksRes, skAllRes, kredRes, undRes] = await Promise.all([
       suratInternalService.getStats(),
       suratEksternalService.getStats(),
-      skService.searchSk('SPK RKK', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]),
+      pksService.searchPks({ limit: 100, page: 1, filters: [{ field: 'status', operator: '=', value: 'pengajuan' }] }),
+      skService.searchSk('', 100, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]),
+      skService.searchSk('SPK RKK', 100, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }]),
       komiteKeperawatanService.search('', 1, 1, [{ field: 'status_approval', operator: '=', value: 'pengajuan' }])
     ])
 
     internalStats.value = intStats.data.data || intStats.data || {}
     eksternalStats.value = ekstStats.data.data || ekstStats.data || {}
     
-    // Pastikan mengambil dari total atau count
+    pksStats.value = {
+      pengajuan: pksRes.data?.total ?? pksRes.data?.meta?.total ?? pksRes.data?.data?.length ?? 0
+    }
+
+    const skRegulerList = (skAllRes.data?.data || []).filter(item => !item.id_kredensial && !(item.judul || '').includes('SPK RKK'))
+    skRegulerStats.value = {
+      pengajuan: skRegulerList.length
+    }
+
     kredensialStats.value = { 
       pengajuan: kredRes.data?.total ?? kredRes.data?.meta?.total ?? kredRes.data?.data?.length ?? 0 
     }
@@ -519,6 +588,8 @@ const loadAllStats = async () => {
 const getTabPendingCount = (tabId) => {
   if (tabId === 'internal') return internalStats.value.pengajuan || 0
   if (tabId === 'eksternal') return eksternalStats.value.pengajuan || 0
+  if (tabId === 'pks') return pksStats.value.pengajuan || 0
+  if (tabId === 'sk_reguler') return skRegulerStats.value.pengajuan || 0
   if (tabId === 'kredensial') return kredensialStats.value.pengajuan || 0
   if (tabId === 'undangan') return undanganStats.value.pengajuan || 0
   if (tabId === 'kesehatan') return kesehatanStats.value.pengajuan || 0
