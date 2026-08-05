@@ -111,9 +111,10 @@
                 <!-- Status -->
                 <div class="col-md-4">
                   <label class="form-label small fw-bold text-muted">Status <span class="text-danger">*</span></label>
-                  <select v-model="state.status" class="form-select">
-                    <option value="1">Aktif</option>
-                    <option value="0">Non-Aktif</option>
+                  <select v-model="state.status" class="form-select" :disabled="!isKoordinator">
+                    <option value="pengajuan">Pengajuan</option>
+                    <option value="disetujui">Disetujui</option>
+                    <option value="ditolak">Ditolak</option>
                   </select>
                 </div>
 
@@ -163,16 +164,23 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import pksService from '@/services/pksService'
 import { pegawaiService } from '@/services/pegawaiService'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import Swal from 'sweetalert2'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const submitting = ref(false)
 const pegawaiDict = ref([])
+
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
 
 const state = reactive({
   no_pks_internal: '',
@@ -184,7 +192,7 @@ const state = reactive({
   file: null,
   pj: '',
   pj_model: null,
-  status: '1',
+  status: 'pengajuan',
   jenis: 'A'
 })
 

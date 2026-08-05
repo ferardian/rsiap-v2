@@ -45,15 +45,13 @@
 
                 <!-- Nomor PKS -->
                 <div class="col-md-6">
-                  <label class="form-label small fw-bold text-muted">No. PKS Internal <span class="text-danger">*</span></label>
+                  <label class="form-label small fw-bold text-muted">No. PKS Internal <span class="text-muted">(Otomatis)</span></label>
                   <input 
-                    v-model="state.no_pks_internal" 
                     type="text" 
-                    class="form-control" 
-                    placeholder="Contoh: 001/A/PKS/..."
-                   :class="{'is-invalid': errors.no_pks_internal}"
+                    class="form-control bg-light" 
+                    :value="state.no_pks_internal || '(Generasi otomatis saat disetujui)'" 
+                    disabled
                   />
-                  <div class="invalid-feedback">{{ errors.no_pks_internal }}</div>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small fw-bold text-muted">No. PKS Eksternal</label>
@@ -108,9 +106,10 @@
                 <!-- Status -->
                 <div class="col-md-4">
                   <label class="form-label small fw-bold text-muted">Status <span class="text-danger">*</span></label>
-                  <select v-model="state.status" class="form-select">
-                    <option value="1">Aktif</option>
-                    <option value="0">Non-Aktif</option>
+                  <select v-model="state.status" class="form-select" :disabled="!isKoordinator">
+                    <option value="pengajuan">Pengajuan</option>
+                    <option value="disetujui">Disetujui</option>
+                    <option value="ditolak">Ditolak</option>
                   </select>
                 </div>
 
@@ -162,18 +161,25 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import pksService from '@/services/pksService'
 import { pegawaiService } from '@/services/pegawaiService'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import Swal from 'sweetalert2'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
 const loading = ref(true)
 const submitting = ref(false)
 const pegawaiDict = ref([])
+
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
 
 const state = reactive({
   no_pks_internal: '',
@@ -186,12 +192,11 @@ const state = reactive({
   berkas: '',
   pj: '',
   pj_model: null,
-  status: '1'
+  status: 'pengajuan'
 })
 
 const errors = reactive({
   judul: '',
-  no_pks_internal: '',
   tanggal_awal: '',
   pj: ''
 })
@@ -259,7 +264,7 @@ const fetchPksData = async () => {
         })
 
         // Ensure status is string for select
-        state.status = String(data.status || '0')
+        state.status = String(data.status || 'pengajuan')
 
         // Handle PJ model for v-select
         if (data.penanggung_jawab) {
@@ -282,7 +287,6 @@ const validate = () => {
     Object.keys(errors).forEach(k => errors[k] = '')
 
     if (!state.judul) { errors.judul = 'Judul wajib diisi'; valid = false }
-    if (!state.no_pks_internal) { errors.no_pks_internal = 'Nomor PKS wajib diisi'; valid = false }
     if (!state.tanggal_awal) { errors.tanggal_awal = 'Tanggal awal wajib diisi'; valid = false }
     if (!state.pj_model) { errors.pj = 'Pilih penanggung jawab'; valid = false }
 

@@ -2,7 +2,14 @@ import api from './api';
 
 const service = {
     // Get list of PKS with Orion Search Pagination
-    searchPks: (payload) => api.post('/berkas/pks/search', payload),
+    searchPks: (payload = {}) => {
+        const params = {};
+        if (payload.departemen) {
+            params.departemen = payload.departemen;
+            delete payload.departemen;
+        }
+        return api.post('/berkas/pks/search', payload, { params });
+    },
 
     // Get list of PKS with filters
     getPks: (params) => api.get('/berkas/pks', { params }),

@@ -121,7 +121,7 @@
             <tbody>
               <tr v-for="item in responseList" :key="item.id" @click="viewDetail(item)">
                 <td>
-                    <div class="fw-bold">{{ item.no_pks_internal || '-' }}</div>
+                    <div class="fw-bold" :class="{'text-warning fst-italic': !item.no_pks_internal}">{{ item.no_pks_internal || '(Belum Terbit)' }}</div>
                     <div class="small text-muted">{{ item.no_pks_eksternal || '-' }}</div>
                 </td>
                 <td>
@@ -178,7 +178,7 @@
         <div v-if="!loading && responseList.length > 0" class="mobile-view">
           <div v-for="item in responseList" :key="item.id" class="mobile-card" @click="viewDetail(item)">
             <div class="mobile-card-header">
-              <span class="badge bg-light text-dark fw-bold border">{{ item.no_pks_internal || '-' }}</span>
+              <span class="badge bg-light text-dark fw-bold border">{{ item.no_pks_internal || '(Belum Terbit)' }}</span>
               <span class="badge" :class="getStatusClass(item)">{{ getStatusLabel(item) }}</span>
             </div>
             <div class="mobile-card-body">
@@ -343,6 +343,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import pksService from '@/services/pksService'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
@@ -350,6 +351,12 @@ import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
+const isKoordinator = computed(() => {
+  const role = authStore.userRole || ''
+  return role.includes('Koordinator Diklat')
+})
 
 // State
 const loading = ref(false)
@@ -379,7 +386,7 @@ const fetchData = async (page = 1) => {
     const payload = {
       page: page,
       limit: pagination.value.per_page,
-      sort: [{ field: 'tanggal_awal', direction: 'desc' }],
+      sort: [{ field: 'created_at', direction: 'desc' }],
       filters: [],
       // Always include Penanggung Jawab
       include: ['penanggungJawab']
@@ -400,6 +407,12 @@ const fetchData = async (page = 1) => {
 
     if (filters.value.tanggal_awal) {
       payload.filters.push({ field: 'tanggal_awal', operator: '>=', value: filters.value.tanggal_awal })
+    }
+
+    // Auto-filter by User's Department if not Koordinator Diklat
+    const userDept = authStore.userDepartment
+    if (!isKoordinator.value && userDept && userDept !== '-') {
+      payload.departemen = userDept
     }
 
     const response = await pksService.searchPks(payload)
