@@ -483,14 +483,28 @@ const handleAction = async (surat, status) => {
     if (activeTab.value === 'pks') {
       await pksService.updatePks(surat.id, { status })
     } else if (activeTab.value === 'sk_reguler') {
-      await skService.updateSk(surat.id, { status_approval: status })
+      const orig = surat._original || {}
+      await skService.updateSk(surat.id, {
+        jenis: orig.jenis || 'A',
+        judul: orig.judul || surat.perihal,
+        pj: orig.pj || surat.pj,
+        tgl_terbit: getLocalDateString(orig.tgl_terbit || surat.tgl_terbit),
+        status_approval: status
+      })
     } else if (activeTab.value === 'spo') {
       await spoService.updateSpo(surat.id, { status })
     } else if (activeTab.value === 'kredensial') {
       if (status === 'disetujui') {
         await skService.approveKredensial(surat.id)
       } else {
-        await skService.updateSk(surat.id, { status_approval: 'ditolak' })
+        const orig = surat._original || {}
+        await skService.updateSk(surat.id, {
+          jenis: orig.jenis || 'A',
+          judul: orig.judul || surat.perihal,
+          pj: orig.pj || surat.pj,
+          tgl_terbit: getLocalDateString(orig.tgl_terbit || surat.tgl_terbit),
+          status_approval: 'ditolak'
+        })
       }
     } else if (activeTab.value === 'undangan' || activeTab.value === 'kesehatan' || activeTab.value === 'medis') {
       let currentService = komiteKeperawatanService
