@@ -535,6 +535,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/rs-online/ref-tempat-tidur',
+    name: 'RsOnlineRefTempatTidur',
+    component: () => import('../views/rs-online/RefTempatTidurView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/satusehat/dashboard',
     name: 'SatuSehatDashboard',
     component: () => import('../views/satusehat/SatuSehatDashboardView.vue'),
