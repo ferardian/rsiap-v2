@@ -371,12 +371,15 @@
                 v-else
                 v-for="b in filteredBangsalOptions" 
                 :key="b.kd_bangsal"
-                class="select-option-item"
+                class="select-option-item d-flex align-items-center justify-content-between gap-2"
                 :class="{ active: formMapping.kd_bangsal === b.kd_bangsal }"
                 @click="selectBangsalOption(b)"
               >
-                <div class="fw-bold text-slate-900 text-xs">{{ b.nm_bangsal }}</div>
-                <div class="text-xs text-slate-500 font-mono">Kode: {{ b.kd_bangsal }}</div>
+                <div class="fw-bold text-slate-900 text-xs me-1 text-truncate">{{ b.nm_bangsal }}</div>
+                <div class="d-flex align-items-center gap-1 font-mono text-xs flex-shrink-0">
+                  <span class="badge bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded">{{ b.kd_bangsal }}</span>
+                  <span v-if="b.kelas" class="badge bg-emerald-50 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded">{{ b.kelas }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -477,7 +480,8 @@ const filteredBangsalOptions = computed(() => {
   const q = bangsalSearchQuery.value.toLowerCase().trim()
   return bangsalOptions.value.filter(b => 
     String(b.nm_bangsal || '').toLowerCase().includes(q) ||
-    String(b.kd_bangsal || '').toLowerCase().includes(q)
+    String(b.kd_bangsal || '').toLowerCase().includes(q) ||
+    String(b.kelas || '').toLowerCase().includes(q)
   )
 })
 
@@ -577,6 +581,9 @@ const closeMappingModal = () => {
 
 const selectBangsalOption = (b) => {
   formMapping.value.kd_bangsal = b.kd_bangsal
+  if (b.kelas) {
+    formMapping.value.kelas = b.kelas
+  }
   bangsalSearchQuery.value = b.nm_bangsal
   isBangsalDropdownOpen.value = false
 }
@@ -1132,8 +1139,8 @@ onMounted(() => {
   width: 100%;
   border: none;
   background: transparent;
-  padding: 0.5rem 0;
-  font-size: 0.85rem;
+  padding: 0.45rem 0;
+  font-size: 0.825rem;
   font-weight: 600;
   color: #0f172a;
 }
@@ -1166,13 +1173,13 @@ onMounted(() => {
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
   z-index: 99;
 }
 
 .select-option-item {
-  padding: 0.5rem 0.85rem;
+  padding: 0.35rem 0.65rem;
   border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
   transition: background 0.15s;
