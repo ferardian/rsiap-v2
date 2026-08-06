@@ -376,9 +376,9 @@
                 @click="selectBangsalOption(b)"
               >
                 <div class="fw-bold text-slate-900 text-xs me-1 text-truncate">{{ b.nm_bangsal }}</div>
-                <div class="d-flex align-items-center gap-1 font-mono text-xs flex-shrink-0">
-                  <span class="badge bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded">{{ b.kd_bangsal }}</span>
-                  <span v-if="b.kelas" class="badge bg-emerald-50 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded">{{ b.kelas }}</span>
+                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                  <span v-if="b.kd_bangsal && b.kd_bangsal !== '-'" class="option-badge-code">{{ b.kd_bangsal }}</span>
+                  <span v-if="b.kelas && b.kelas !== '-'" class="option-badge-kelas">{{ b.kelas }}</span>
                 </div>
               </div>
             </div>
@@ -1179,7 +1179,7 @@ onMounted(() => {
 }
 
 .select-option-item {
-  padding: 0.35rem 0.65rem;
+  padding: 0.4rem 0.75rem;
   border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
   transition: background 0.15s;
@@ -1191,7 +1191,45 @@ onMounted(() => {
 
 .select-option-item:hover,
 .select-option-item.active {
-  background: #f0fdf4;
+  background-color: #ecfdf5;
+}
+
+.option-badge-code {
+  background-color: #f1f5f9;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1;
+  font-weight: 800;
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.option-badge-kelas {
+  background-color: #d1fae5;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0;
+  font-weight: 800;
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.select-option-item:hover .option-badge-code,
+.select-option-item.active .option-badge-code {
+  background-color: #e2e8f0;
+  color: #0f172a !important;
+  border-color: #94a3b8;
+}
+
+.select-option-item:hover .option-badge-kelas,
+.select-option-item.active .option-badge-kelas {
+  background-color: #a7f3d0;
+  color: #064e3b !important;
+  border-color: #34d399;
 }
 
 /* Modal Custom Styles */
