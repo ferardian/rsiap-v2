@@ -1,8 +1,8 @@
 <template>
   <div class="rs-online-wrapper">
     <div class="rs-online-container">
-      <!-- Compact Hero Header -->
-      <div class="compact-hero-header">
+      <!-- Hero Header -->
+      <div class="compact-hero-header mb-3">
         <div class="hero-content">
           <div class="hero-icon">
             <i class="fas fa-bed"></i>
@@ -10,140 +10,284 @@
           <div>
             <div class="d-flex align-items-center gap-2 mb-1">
               <span class="badge bg-soft-emerald text-emerald font-mono text-xs px-2 py-0.5 rounded-full border border-emerald-300">
-                <i class="fas fa-plug text-xs me-1"></i> SIRS Kemenkes
+                <i class="fas fa-plug text-xs me-1"></i> SIRS Kemenkes (RS Online Versi 3)
               </span>
               <span class="badge bg-white/20 text-white font-mono text-xs px-2 py-0.5 rounded-full border border-white/30">
                 Faskes ID: 3326051
               </span>
             </div>
-            <h1 class="hero-title">Master Referensi Tempat Tidur</h1>
-            <p class="hero-subtitle">B. Entry Data Ruangan dan Tempat Tidur — RS Online Kementerian Kesehatan RI</p>
+            <h1 class="hero-title">Bridging Ketersediaan Tempat Tidur RS Online</h1>
+            <p class="hero-subtitle">Entry Data Ruangan dan Tempat Tidur Terintegrasi SIMRS — SIRS Kemenkes RI</p>
           </div>
         </div>
 
-        <div class="hero-actions">
-          <button class="btn btn-emerald-glass btn-sm" @click="fetchData" :disabled="loading">
-            <i class="fas fa-sync-alt me-1.5" :class="{ 'fa-spin': loading }"></i> Segarkan Data
+        <div class="hero-actions d-flex align-items-center gap-2">
+          <button class="btn btn-emerald-glass btn-sm" @click="syncStructure" :disabled="loadingSync">
+            <i class="fas fa-download me-1.5" :class="{ 'fa-spin': loadingSync }"></i> Tarik Struktur RS Online
+          </button>
+          <button class="btn btn-emerald-solid btn-sm" @click="sendBulkUpdate" :disabled="loadingUpdate">
+            <i class="fas fa-paper-plane me-1.5" :class="{ 'fa-spin': loadingUpdate }"></i> Kirim Update Ke RS Online
           </button>
         </div>
       </div>
 
-      <!-- Compact 3-Column Stats Row -->
-      <div class="row g-3 mb-3">
-        <div class="col-12 col-md-4">
-          <div class="stat-card">
-            <div class="stat-icon bg-emerald-50 text-emerald-600">
-              <i class="fas fa-list-ol"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Total Referensi TT</span>
-              <h3 class="stat-value text-slate-800">{{ tempatTidurList.length }} <span class="text-xs font-normal text-slate-500">Jenis</span></h3>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="stat-card">
-            <div class="stat-icon bg-blue-50 text-blue-600">
-              <i class="fas fa-filter"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Hasil Filter</span>
-              <h3 class="stat-value text-slate-800">{{ filteredList.length }} <span class="text-xs font-normal text-slate-500">Ditemukan</span></h3>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="stat-card">
-            <div class="stat-icon bg-purple-50 text-purple-600">
-              <i class="fas fa-server"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-label">Status Server SIRS</span>
-              <h3 class="stat-value text-emerald-600 d-flex align-items-center gap-1.5 text-base">
-                <span class="status-indicator animate-pulse"></span> Terkoneksi (200 OK)
-              </h3>
-            </div>
-          </div>
-        </div>
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs-wrapper mb-3">
+        <ul class="nav nav-tabs-modern">
+          <li class="nav-item">
+            <button 
+              class="nav-link-modern" 
+              :class="{ active: activeTab === 'mapping' }"
+              @click="activeTab = 'mapping'"
+            >
+              <i class="fas fa-tasks me-2"></i> Mapping & Update Live RS Online
+              <span class="badge bg-emerald-100 text-emerald-700 ms-2 font-mono text-xs px-2 py-0.5 rounded-full">
+                {{ mappingList.length }} Entri
+              </span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button 
+              class="nav-link-modern" 
+              :class="{ active: activeTab === 'referensi' }"
+              @click="activeTab = 'referensi'"
+            >
+              <i class="fas fa-book me-2"></i> Master Referensi TT Kemenkes
+              <span class="badge bg-slate-100 text-slate-700 ms-2 font-mono text-xs px-2 py-0.5 rounded-full">
+                {{ refList.length }} Jenis
+              </span>
+            </button>
+          </li>
+        </ul>
       </div>
 
-      <!-- Table Container & Filter Bar -->
-      <div class="content-area">
-        <!-- Compact Filter Bar -->
-        <div class="action-bar-compact d-flex justify-content-between align-items-center">
-          <div class="search-box-compact">
-            <i class="fas fa-search search-icon"></i>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="Cari tempat tidur berdasarkan nama atau kode..."
-            >
-            <button v-if="searchQuery" @click="searchQuery = ''" class="btn-clear-compact text-slate-400 hover:text-slate-600">
-              <i class="fas fa-times"></i>
+      <!-- TAB 1: MAPPING & UPDATE LIVE RS ONLINE -->
+      <div v-if="activeTab === 'mapping'">
+        <!-- 3 Stats Cards -->
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-md-4">
+            <div class="stat-card">
+              <div class="stat-icon bg-emerald-50 text-emerald-600">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Ter-Mapping & Aktif</span>
+                <h3 class="stat-value text-slate-800">{{ activeMappedCount }} <span class="text-xs font-normal text-slate-500">Ruangan</span></h3>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="stat-card">
+              <div class="stat-icon bg-blue-50 text-blue-600">
+                <i class="fas fa-bed"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Total TT Terpakai (SIMRS)</span>
+                <h3 class="stat-value text-slate-800">{{ totalSimrsTerpakai }} <span class="text-xs font-normal text-slate-500">Dari {{ totalSimrsKapasitas }} TT</span></h3>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="stat-card">
+              <div class="stat-icon bg-purple-50 text-purple-600">
+                <i class="fas fa-server"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Metode Update Bridging</span>
+                <h3 class="stat-value text-emerald-600 d-flex align-items-center gap-1.5 text-sm fw-bold">
+                  <span class="status-indicator animate-pulse"></span> Explicit PUT via id_t_tt
+                </h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="content-area">
+          <!-- Toolbar -->
+          <div class="action-bar-compact d-flex justify-content-between align-items-center">
+            <div class="search-box-compact">
+              <i class="fas fa-search search-icon"></i>
+              <input 
+                v-model="mappingSearch" 
+                type="text" 
+                placeholder="Cari ruangan RS Online, ID TT, atau Bangsal SIMRS..."
+              >
+              <button v-if="mappingSearch" @click="mappingSearch = ''" class="btn-clear-compact text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-secondary" @click="fetchMappings" :disabled="loadingMapping">
+                <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loadingMapping }"></i> Refresh Table
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div v-if="loadingMapping" class="loading-state-unified py-8">
+            <div class="spinner-container">
+              <i class="fas fa-circle-notch fa-spin text-emerald-600 text-2xl"></i>
+            </div>
+            <p class="mt-2 text-slate-600 fw-semibold text-sm">Memuat Data Mapping Tempat Tidur RS Online...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="filteredMappingList.length === 0" class="empty-state-unified py-8">
+            <div class="empty-icon-container mb-2">
+              <i class="fas fa-inbox text-slate-300 text-4xl"></i>
+            </div>
+            <h4 class="fw-bold text-slate-700 fs-6 mb-1">Data Mapping Kosong</h4>
+            <p class="text-slate-500 text-xs mb-3">Klik tombol "Tarik Struktur RS Online" untuk menyinkronkan data entri dari RS Online.</p>
+            <button class="btn btn-sm btn-emerald-glass text-slate-800 border-slate-300" @click="syncStructure">
+              <i class="fas fa-download me-1"></i> Tarik Struktur RS Online
             </button>
           </div>
 
-          <div class="endpoint-badge d-none d-md-flex align-items-center gap-1.5 text-xs text-slate-500 fw-medium">
-            <i class="fas fa-link text-slate-400"></i> Endpoint:
-            <code class="bg-slate-100 px-2 py-0.5 rounded text-emerald-700 font-mono fw-semibold">/Referensi/tempat_tidur</code>
+          <!-- Table Mapping -->
+          <div v-else class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th width="50" class="text-center">No</th>
+                  <th width="120">ID_T_TT</th>
+                  <th width="80" class="text-center">Kode TT</th>
+                  <th>Ruangan RS Online</th>
+                  <th>Mapping Bangsal & Kelas SIMRS</th>
+                  <th width="100" class="text-center">Kapasitas</th>
+                  <th width="100" class="text-center">Terpakai</th>
+                  <th width="100" class="text-center">Tersedia</th>
+                  <th width="80" class="text-center">Bridging</th>
+                  <th width="100" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in filteredMappingList" :key="item.id">
+                  <td class="text-center text-slate-400 font-mono fw-semibold text-xs">{{ index + 1 }}</td>
+                  <td>
+                    <span class="code-badge font-mono text-slate-700 bg-slate-100 border-slate-200">{{ item.id_t_tt || '-' }}</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="code-badge font-mono bg-emerald-50 text-emerald-700 border-emerald-200">{{ item.id_tt }}</span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-slate-800 text-sm mb-0">{{ item.ruang }}</div>
+                    <div class="text-xs text-slate-400" v-if="item.tgl_update_sirs">
+                      SIRS Update: {{ item.tgl_update_sirs }}
+                    </div>
+                  </td>
+                  <td>
+                    <div v-if="item.kd_bangsal" class="d-flex flex-column">
+                      <span class="fw-semibold text-slate-700 text-xs me-1">
+                        <i class="fas fa-door-open me-1 text-slate-400"></i>{{ item.nm_bangsal || item.kd_bangsal }}
+                      </span>
+                      <span class="text-xs text-slate-500 font-mono">({{ item.kd_bangsal }} &bull; {{ item.kelas }})</span>
+                    </div>
+                    <span v-else class="badge bg-amber-50 text-amber-600 border border-amber-200 text-xs px-2 py-0.5 rounded">
+                      <i class="fas fa-exclamation-circle me-1"></i> Belum Di-map
+                    </span>
+                  </td>
+                  <td class="text-center fw-bold text-slate-700">
+                    {{ item.simrs_kapasitas }} <span class="text-xs font-normal text-slate-400">TT</span>
+                  </td>
+                  <td class="text-center fw-bold text-blue-600">
+                    {{ item.simrs_terpakai }} <span class="text-xs font-normal text-slate-400">TT</span>
+                  </td>
+                  <td class="text-center fw-bold text-emerald-600">
+                    {{ item.simrs_tersedia }} <span class="text-xs font-normal text-slate-400">TT</span>
+                  </td>
+                  <td class="text-center">
+                    <div class="form-check form-switch d-inline-block">
+                      <input 
+                        class="form-check-input cursor-pointer" 
+                        type="checkbox" 
+                        :checked="item.is_active"
+                        @change="toggleActive(item)"
+                      >
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <button 
+                      class="btn btn-action-send btn-xs" 
+                      title="Kirim Update PUT ke RS Online"
+                      :disabled="!item.kd_bangsal || sendingId === item.id"
+                      @click="sendSingleUpdate(item)"
+                    >
+                      <i class="fas fa-paper-plane me-1" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
+      </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-state-unified py-8">
-          <div class="spinner-container">
-            <i class="fas fa-circle-notch fa-spin text-emerald-600 text-2xl"></i>
+      <!-- TAB 2: MASTER REFERENSI TT KEMENKES -->
+      <div v-else-if="activeTab === 'referensi'">
+        <div class="content-area">
+          <div class="action-bar-compact d-flex justify-content-between align-items-center">
+            <div class="search-box-compact">
+              <i class="fas fa-search search-icon"></i>
+              <input 
+                v-model="refSearch" 
+                type="text" 
+                placeholder="Cari tempat tidur berdasarkan nama atau kode..."
+              >
+              <button v-if="refSearch" @click="refSearch = ''" class="btn-clear-compact text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="endpoint-badge d-none d-md-flex align-items-center gap-1.5 text-xs text-slate-500 fw-medium">
+              <i class="fas fa-link text-slate-400"></i> Endpoint:
+              <code class="bg-slate-100 px-2 py-0.5 rounded text-emerald-700 font-mono fw-semibold">/Referensi/tempat_tidur</code>
+            </div>
           </div>
-          <p class="mt-2 text-slate-600 fw-semibold text-sm">Memuat Data Referensi Tempat Tidur SIRS Kemenkes...</p>
-        </div>
 
-        <!-- Empty State -->
-        <div v-else-if="filteredList.length === 0" class="empty-state-unified py-8">
-          <div class="empty-icon-container mb-2">
-            <i class="fas fa-inbox text-slate-300 text-4xl"></i>
+          <div v-if="loadingRef" class="loading-state-unified py-8">
+            <div class="spinner-container">
+              <i class="fas fa-circle-notch fa-spin text-emerald-600 text-2xl"></i>
+            </div>
+            <p class="mt-2 text-slate-600 fw-semibold text-sm">Memuat Master Referensi Tempat Tidur...</p>
           </div>
-          <h4 class="fw-bold text-slate-700 fs-6 mb-1">Data Tidak Ditemukan</h4>
-          <p class="text-slate-500 text-xs mb-3">Tidak ada tempat tidur yang cocok dengan pencarian "{{ searchQuery }}".</p>
-          <button class="btn btn-sm btn-outline-secondary rounded-lg px-3" @click="searchQuery = ''">
-            <i class="fas fa-undo me-1"></i> Reset Pencarian
-          </button>
-        </div>
 
-        <!-- Desktop Table View -->
-        <div v-else class="table-responsive">
-          <table class="modern-table">
-            <thead>
-              <tr>
-                <th width="60" class="text-center">No</th>
-                <th width="140">Kode TT SIRS</th>
-                <th>Nama Referensi Tempat Tidur</th>
-                <th width="120" class="text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in filteredList" :key="item.kode_tt">
-                <td class="text-center text-slate-400 font-mono fw-semibold text-xs">{{ index + 1 }}</td>
-                <td>
-                  <span class="code-badge font-mono">{{ item.kode_tt }}</span>
-                </td>
-                <td>
-                  <div class="fw-bold text-slate-800 text-sm mb-0">{{ item.nama_tt }}</div>
-                  <div class="text-xs text-slate-400">Master Referensi SIRS Kemenkes RI</div>
-                </td>
-                <td class="text-center">
-                  <button 
-                    class="btn btn-action-copy btn-xs" 
-                    title="Salin Kode TT"
-                    @click="copyToClipboard(item.kode_tt, item.nama_tt)"
-                  >
-                    <i class="fas fa-copy me-1"></i> Salin Kode
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div v-else class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th width="60" class="text-center">No</th>
+                  <th width="140">Kode TT SIRS</th>
+                  <th>Nama Referensi Tempat Tidur</th>
+                  <th width="120" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in filteredRefList" :key="item.kode_tt">
+                  <td class="text-center text-slate-400 font-mono fw-semibold text-xs">{{ index + 1 }}</td>
+                  <td>
+                    <span class="code-badge font-mono">{{ item.kode_tt }}</span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-slate-800 text-sm mb-0">{{ item.nama_tt }}</div>
+                    <div class="text-xs text-slate-400">Master Referensi SIRS Kemenkes RI</div>
+                  </td>
+                  <td class="text-center">
+                    <button 
+                      class="btn btn-action-copy btn-xs" 
+                      title="Salin Kode TT"
+                      @click="copyToClipboard(item.kode_tt, item.nama_tt)"
+                    >
+                      <i class="fas fa-copy me-1"></i> Salin Kode
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -155,31 +299,148 @@ import { ref, computed, onMounted } from 'vue'
 import rsOnlineService from '@/services/rsOnlineService'
 import Swal from 'sweetalert2'
 
-const loading = ref(false)
-const tempatTidurList = ref([])
-const searchQuery = ref('')
+const activeTab = ref('mapping')
+const loadingRef = ref(false)
+const loadingMapping = ref(false)
+const loadingSync = ref(false)
+const loadingUpdate = ref(false)
+const sendingId = ref(null)
 
-const filteredList = computed(() => {
-  if (!searchQuery.value.trim()) return tempatTidurList.value
-  const q = searchQuery.value.toLowerCase().trim()
-  return tempatTidurList.value.filter(item => 
+const refList = ref([])
+const mappingList = ref([])
+const refSearch = ref('')
+const mappingSearch = ref('')
+
+const filteredRefList = computed(() => {
+  if (!refSearch.value.trim()) return refList.value
+  const q = refSearch.value.toLowerCase().trim()
+  return refList.value.filter(item => 
     String(item.kode_tt).toLowerCase().includes(q) ||
     String(item.nama_tt).toLowerCase().includes(q)
   )
 })
 
-const fetchData = async () => {
-  loading.value = true
+const filteredMappingList = computed(() => {
+  if (!mappingSearch.value.trim()) return mappingList.value
+  const q = mappingSearch.value.toLowerCase().trim()
+  return mappingList.value.filter(item => 
+    String(item.ruang || '').toLowerCase().includes(q) ||
+    String(item.id_t_tt || '').toLowerCase().includes(q) ||
+    String(item.id_tt || '').toLowerCase().includes(q) ||
+    String(item.kd_bangsal || '').toLowerCase().includes(q) ||
+    String(item.nm_bangsal || '').toLowerCase().includes(q)
+  )
+})
+
+const activeMappedCount = computed(() => {
+  return mappingList.value.filter(i => i.is_active && i.kd_bangsal).length
+})
+
+const totalSimrsKapasitas = computed(() => {
+  return mappingList.value.filter(i => i.is_active && i.kd_bangsal).reduce((sum, i) => sum + (i.simrs_kapasitas || 0), 0)
+})
+
+const totalSimrsTerpakai = computed(() => {
+  return mappingList.value.filter(i => i.is_active && i.kd_bangsal).reduce((sum, i) => sum + (i.simrs_terpakai || 0), 0)
+})
+
+const fetchRefData = async () => {
+  loadingRef.value = true
   try {
     const response = await rsOnlineService.getRefTempatTidur()
     const resData = response.data
-    tempatTidurList.value = resData.data || resData || []
+    refList.value = resData.data || resData || []
   } catch (error) {
     console.error('Failed to fetch RS Online Ref Tempat Tidur:', error)
-    const msg = error.response?.data?.message || 'Gagal terhubung ke API RS Online SIRS Kemenkes.'
-    Swal.fire('Error', msg, 'error')
   } finally {
-    loading.value = false
+    loadingRef.value = false
+  }
+}
+
+const fetchMappings = async () => {
+  loadingMapping.value = true
+  try {
+    const response = await rsOnlineService.getBedMappings()
+    mappingList.value = response.data.data || []
+  } catch (error) {
+    console.error('Failed to fetch RS Online Bed Mappings:', error)
+    Swal.fire('Error', 'Gagal mengambil data mapping kamar dari server.', 'error')
+  } finally {
+    loadingMapping.value = false
+  }
+}
+
+const syncStructure = async () => {
+  loadingSync.value = true
+  try {
+    const res = await rsOnlineService.syncStructure()
+    Swal.fire('Sukses', res.data.message || 'Berhasil menyinkronkan struktur dari RS Online.', 'success')
+    fetchMappings()
+  } catch (error) {
+    console.error('Failed to sync structure:', error)
+    Swal.fire('Error', error.response?.data?.message || 'Gagal menyinkronkan struktur dari RS Online.', 'error')
+  } finally {
+    loadingSync.value = false
+  }
+}
+
+const toggleActive = async (item) => {
+  try {
+    const newStatus = !item.is_active
+    item.is_active = newStatus
+    await rsOnlineService.updateMapping(item.id, { is_active: newStatus })
+  } catch (error) {
+    console.error('Failed to update mapping active status:', error)
+    item.is_active = !item.is_active
+    Swal.fire('Error', 'Gagal memperbarui status bridging.', 'error')
+  }
+}
+
+const sendSingleUpdate = async (item) => {
+  sendingId.value = item.id
+  try {
+    const res = await rsOnlineService.sendUpdate(item.id)
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Kamar "${item.ruang}" berhasil diupdate di RS Online!`,
+      showConfirmButton: false,
+      timer: 2000
+    })
+    fetchMappings()
+  } catch (error) {
+    console.error('Failed to send single update:', error)
+    Swal.fire('Error', error.response?.data?.message || 'Gagal memperbarui kamar ke RS Online.', 'error')
+  } finally {
+    sendingId.value = null
+  }
+}
+
+const sendBulkUpdate = async () => {
+  const result = await Swal.fire({
+    title: 'Kirim Update Ke RS Online?',
+    text: `Update ketersediaan TT real-time akan dikirimkan untuk ${activeMappedCount.value} ruangan yang aktif.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#059669',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Ya, Kirim Update',
+    cancelButtonText: 'Batal'
+  })
+
+  if (!result.isConfirmed) return
+
+  loadingUpdate.value = true
+  try {
+    const res = await rsOnlineService.sendUpdate(null, { force: true })
+    Swal.fire('Berhasil', res.data.message || 'Ketersediaan tempat tidur berhasil dikirim ke RS Online.', 'success')
+    fetchMappings()
+  } catch (error) {
+    console.error('Failed to send bulk update:', error)
+    Swal.fire('Error', error.response?.data?.message || 'Gagal mengirim update ke RS Online.', 'error')
+  } finally {
+    loadingUpdate.value = false
   }
 }
 
@@ -199,7 +460,8 @@ const copyToClipboard = (code, name) => {
 }
 
 onMounted(() => {
-  fetchData()
+  fetchRefData()
+  fetchMappings()
 })
 </script>
 
@@ -227,7 +489,6 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
   box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.25);
 }
 
@@ -297,6 +558,58 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
+.btn-emerald-solid {
+  background: #ffffff;
+  color: #047857;
+  border: none;
+  font-weight: 800;
+  padding: 0.45rem 1.15rem;
+  font-size: 0.825rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.btn-emerald-solid:hover:not(:disabled) {
+  background: #ecfdf5;
+  color: #065f46;
+  transform: translateY(-1px);
+}
+
+/* Nav Tabs */
+.nav-tabs-wrapper {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.nav-tabs-modern {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-link-modern {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-link-modern:hover {
+  color: #059669;
+}
+
+.nav-link-modern.active {
+  color: #059669;
+  border-bottom-color: #059669;
+}
+
 /* Stat Cards */
 .stat-card {
   background: white;
@@ -348,7 +661,7 @@ onMounted(() => {
   display: inline-block;
 }
 
-/* Compact Action & Search Bar */
+/* Content Area */
 .content-area {
   background: white;
   border-radius: 14px;
@@ -437,14 +750,12 @@ onMounted(() => {
 }
 
 .code-badge {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
   padding: 0.2rem 0.55rem;
   border-radius: 6px;
   font-weight: 700;
   font-size: 0.775rem;
   display: inline-block;
+  border: 1px solid transparent;
 }
 
 .btn-action-copy {
@@ -464,6 +775,23 @@ onMounted(() => {
   border-color: #059669;
 }
 
+.btn-action-send {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.btn-action-send:hover:not(:disabled) {
+  background-color: #059669;
+  color: white;
+  border-color: #059669;
+}
+
 .btn-xs {
   font-size: 0.75rem;
   padding: 0.2rem 0.5rem;
@@ -475,5 +803,9 @@ onMounted(() => {
 
 .text-emerald {
   color: #10b981;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>
