@@ -153,15 +153,15 @@
               <thead>
                 <tr>
                   <th width="50" class="text-center">No</th>
-                  <th width="120">ID_T_TT</th>
+                  <th width="110">ID_T_TT</th>
                   <th width="80" class="text-center">Kode TT</th>
                   <th>Ruangan RS Online</th>
                   <th>Mapping Bangsal & Kelas SIMRS</th>
-                  <th width="100" class="text-center">Kapasitas</th>
-                  <th width="100" class="text-center">Terpakai</th>
-                  <th width="100" class="text-center">Tersedia</th>
+                  <th width="90" class="text-center">Kapasitas</th>
+                  <th width="90" class="text-center">Terpakai</th>
+                  <th width="90" class="text-center">Tersedia</th>
                   <th width="80" class="text-center">Bridging</th>
-                  <th width="100" class="text-center">Aksi</th>
+                  <th width="130" class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -180,15 +180,25 @@
                     </div>
                   </td>
                   <td>
-                    <div v-if="item.kd_bangsal" class="d-flex flex-column">
-                      <span class="fw-semibold text-slate-700 text-xs me-1">
-                        <i class="fas fa-door-open me-1 text-slate-400"></i>{{ item.nm_bangsal || item.kd_bangsal }}
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                      <div v-if="item.kd_bangsal" class="d-flex flex-column">
+                        <span class="fw-semibold text-slate-700 text-xs me-1">
+                          <i class="fas fa-door-open me-1 text-slate-400"></i>{{ item.nm_bangsal || item.kd_bangsal }}
+                        </span>
+                        <span class="text-xs text-slate-500 font-mono">({{ item.kd_bangsal }} &bull; {{ item.kelas }})</span>
+                      </div>
+                      <span v-else class="badge bg-amber-50 text-amber-600 border border-amber-200 text-xs px-2 py-0.5 rounded">
+                        <i class="fas fa-exclamation-circle me-1"></i> Belum Di-map
                       </span>
-                      <span class="text-xs text-slate-500 font-mono">({{ item.kd_bangsal }} &bull; {{ item.kelas }})</span>
+
+                      <button 
+                        class="btn btn-edit-mapping btn-xs"
+                        title="Edit Mapping Bangsal SIMRS"
+                        @click="openMappingModal(item)"
+                      >
+                        <i class="fas fa-pencil-alt text-slate-500"></i>
+                      </button>
                     </div>
-                    <span v-else class="badge bg-amber-50 text-amber-600 border border-amber-200 text-xs px-2 py-0.5 rounded">
-                      <i class="fas fa-exclamation-circle me-1"></i> Belum Di-map
-                    </span>
                   </td>
                   <td class="text-center fw-bold text-slate-700">
                     {{ item.simrs_kapasitas }} <span class="text-xs font-normal text-slate-400">TT</span>
@@ -210,14 +220,16 @@
                     </div>
                   </td>
                   <td class="text-center">
-                    <button 
-                      class="btn btn-action-send btn-xs" 
-                      title="Kirim Update PUT ke RS Online"
-                      :disabled="!item.kd_bangsal || sendingId === item.id"
-                      @click="sendSingleUpdate(item)"
-                    >
-                      <i class="fas fa-paper-plane me-1" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
-                    </button>
+                    <div class="d-flex align-items-center justify-content-center gap-1">
+                      <button 
+                        class="btn btn-action-send btn-xs" 
+                        title="Kirim Update PUT ke RS Online"
+                        :disabled="!item.kd_bangsal || sendingId === item.id"
+                        @click="sendSingleUpdate(item)"
+                      >
+                        <i class="fas fa-paper-plane me-1" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -291,6 +303,79 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL EDIT MAPPING BANGSAL SIMRS -->
+    <div v-if="showMappingModal" class="modal-overlay-custom" @click.self="closeMappingModal">
+      <div class="modal-card-custom">
+        <div class="modal-header-custom">
+          <div>
+            <h3 class="modal-title-custom">
+              <i class="fas fa-link me-2 text-emerald-600"></i> Mapping Ruangan SIMRS
+            </h3>
+            <p class="modal-subtitle-custom">Hubungkan ruangan RS Online dengan Bangsal & Kelas SIMRS Khanza</p>
+          </div>
+          <button class="btn-close-modal" @click="closeMappingModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body-custom" v-if="selectedItem">
+          <!-- Info Box RS Online -->
+          <div class="info-box-sirs mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-xs fw-bold text-slate-500 uppercase font-mono">Entri RS Online</span>
+              <span class="badge bg-emerald-100 text-emerald-800 text-xs font-mono">Kode TT: {{ selectedItem.id_tt }}</span>
+            </div>
+            <div class="fw-bold text-slate-800 fs-6">{{ selectedItem.ruang }}</div>
+            <div class="text-xs text-slate-500 font-mono mt-0.5">ID_T_TT: {{ selectedItem.id_t_tt || '-' }}</div>
+          </div>
+
+          <!-- Form Select Bangsal SIMRS -->
+          <div class="mb-3">
+            <label class="form-label-custom">Pilih Bangsal SIMRS <span class="text-rose-500">*</span></label>
+            <select v-model="formMapping.kd_bangsal" class="form-select-custom">
+              <option value="">-- Pilih Bangsal SIMRS --</option>
+              <option v-for="b in bangsalOptions" :key="b.kd_bangsal" :value="b.kd_bangsal">
+                {{ b.nm_bangsal }} ({{ b.kd_bangsal }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Form Select Kelas SIMRS -->
+          <div class="mb-3">
+            <label class="form-label-custom">Pilih Kelas Kamar SIMRS <span class="text-rose-500">*</span></label>
+            <select v-model="formMapping.kelas" class="form-select-custom">
+              <option value="">-- Pilih Kelas SIMRS --</option>
+              <option v-for="k in kelasOptions" :key="k" :value="k">
+                {{ k }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Switch Is Active -->
+          <div class="form-check form-switch mt-3 pt-2 border-top">
+            <input 
+              class="form-check-input cursor-pointer" 
+              type="checkbox" 
+              id="modalActiveSwitch" 
+              v-model="formMapping.is_active"
+            >
+            <label class="form-check-label cursor-pointer text-sm fw-semibold text-slate-700 ms-2" for="modalActiveSwitch">
+              Aktifkan Update Otomatis (Bridging Enabled)
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer-custom">
+          <button class="btn btn-secondary btn-sm rounded-lg px-3" @click="closeMappingModal" :disabled="savingMapping">
+            Batal
+          </button>
+          <button class="btn btn-emerald-solid-sm btn-sm rounded-lg px-3" @click="saveMapping" :disabled="savingMapping">
+            <i class="fas fa-save me-1.5" :class="{ 'fa-spin': savingMapping }"></i> Simpan Mapping
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -304,12 +389,24 @@ const loadingRef = ref(false)
 const loadingMapping = ref(false)
 const loadingSync = ref(false)
 const loadingUpdate = ref(false)
+const savingMapping = ref(false)
 const sendingId = ref(null)
 
 const refList = ref([])
 const mappingList = ref([])
+const bangsalOptions = ref([])
+const kelasOptions = ref(['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas Utama', 'Kelas VIP', 'Kelas VVIP'])
+
 const refSearch = ref('')
 const mappingSearch = ref('')
+
+const showMappingModal = ref(false)
+const selectedItem = ref(null)
+const formMapping = ref({
+  kd_bangsal: '',
+  kelas: '',
+  is_active: true
+})
 
 const filteredRefList = computed(() => {
   if (!refSearch.value.trim()) return refList.value
@@ -370,6 +467,20 @@ const fetchMappings = async () => {
   }
 }
 
+const fetchBangsalOptions = async () => {
+  try {
+    const res = await rsOnlineService.getBangsalOptions()
+    if (res.data?.data) {
+      bangsalOptions.value = res.data.data.bangsal || []
+      if (res.data.data.kelas && res.data.data.kelas.length > 0) {
+        kelasOptions.value = res.data.data.kelas
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch Bangsal Options:', error)
+  }
+}
+
 const syncStructure = async () => {
   loadingSync.value = true
   try {
@@ -381,6 +492,44 @@ const syncStructure = async () => {
     Swal.fire('Error', error.response?.data?.message || 'Gagal menyinkronkan struktur dari RS Online.', 'error')
   } finally {
     loadingSync.value = false
+  }
+}
+
+const openMappingModal = (item) => {
+  selectedItem.value = item
+  formMapping.value = {
+    kd_bangsal: item.kd_bangsal || '',
+    kelas: item.kelas || 'Kelas 1',
+    is_active: item.is_active ?? true
+  }
+  showMappingModal.value = true
+}
+
+const closeMappingModal = () => {
+  showMappingModal.value = false
+  selectedItem.value = null
+}
+
+const saveMapping = async () => {
+  if (!selectedItem.value) return
+  savingMapping.value = true
+  try {
+    await rsOnlineService.updateMapping(selectedItem.value.id, formMapping.value)
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Mapping bangsal berhasil disimpan!',
+      showConfirmButton: false,
+      timer: 2000
+    })
+    closeMappingModal()
+    fetchMappings()
+  } catch (error) {
+    console.error('Failed to save mapping:', error)
+    Swal.fire('Error', error.response?.data?.message || 'Gagal menyimpan mapping bangsal.', 'error')
+  } finally {
+    savingMapping.value = false
   }
 }
 
@@ -462,6 +611,7 @@ const copyToClipboard = (code, name) => {
 onMounted(() => {
   fetchRefData()
   fetchMappings()
+  fetchBangsalOptions()
 })
 </script>
 
@@ -568,6 +718,18 @@ onMounted(() => {
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
+}
+
+.btn-emerald-solid-sm {
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-emerald-solid-sm:hover:not(:disabled) {
+  background: #047857;
+  color: #ffffff;
 }
 
 .btn-emerald-solid:hover:not(:disabled) {
@@ -758,6 +920,19 @@ onMounted(() => {
   border: 1px solid transparent;
 }
 
+.btn-edit-mapping {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  transition: all 0.2s;
+}
+
+.btn-edit-mapping:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
 .btn-action-copy {
   background-color: #f1f5f9;
   color: #334155;
@@ -807,5 +982,124 @@ onMounted(() => {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Modal Custom Styles */
+.modal-overlay-custom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card-custom {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header-custom {
+  padding: 1.15rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f8fafc;
+}
+
+.modal-title-custom {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  color: #0f172a;
+}
+
+.modal-subtitle-custom {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0.15rem 0 0 0;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  transition: color 0.2s;
+}
+
+.btn-close-modal:hover {
+  color: #334155;
+}
+
+.modal-body-custom {
+  padding: 1.25rem 1.5rem;
+}
+
+.info-box-sirs {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.form-label-custom {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+.form-select-custom {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  background-color: #f8fafc;
+  transition: all 0.2s;
+}
+
+.form-select-custom:focus {
+  outline: none;
+  background: white;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.modal-footer-custom {
+  padding: 0.85rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 </style>
