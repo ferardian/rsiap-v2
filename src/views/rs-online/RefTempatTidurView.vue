@@ -339,15 +339,46 @@
             <div class="text-xs text-slate-600 font-mono mt-0.5 fw-medium">ID_T_TT: {{ selectedItem.id_t_tt || '-' }}</div>
           </div>
 
-          <!-- Form Select Bangsal SIMRS -->
-          <div class="mb-3">
+          <!-- Form Searchable Select Bangsal SIMRS -->
+          <div class="mb-3 position-relative">
             <label class="form-label-custom">Pilih Bangsal SIMRS <span class="text-rose-600">*</span></label>
-            <select v-model="formMapping.kd_bangsal" class="form-select-custom">
-              <option value="">-- Pilih Bangsal SIMRS --</option>
-              <option v-for="b in bangsalOptions" :key="b.kd_bangsal" :value="b.kd_bangsal">
-                {{ b.nm_bangsal }} ({{ b.kd_bangsal }})
-              </option>
-            </select>
+            
+            <div class="search-select-box" :class="{ open: isBangsalDropdownOpen }">
+              <i class="fas fa-search search-select-icon text-slate-400"></i>
+              <input 
+                type="text" 
+                v-model="bangsalSearchQuery" 
+                @focus="isBangsalDropdownOpen = true"
+                @input="isBangsalDropdownOpen = true"
+                placeholder="Ketik untuk mencari bangsal SIMRS..."
+                class="search-select-input"
+              >
+              <button v-if="formMapping.kd_bangsal || bangsalSearchQuery" class="btn-clear-select" @click="clearSelectedBangsal">
+                <i class="fas fa-times text-slate-400 hover:text-slate-600"></i>
+              </button>
+              <i class="fas fa-chevron-down select-arrow text-slate-400" @click="isBangsalDropdownOpen = !isBangsalDropdownOpen"></i>
+            </div>
+
+            <!-- Dropdown Options Menu -->
+            <div v-if="isBangsalDropdownOpen" class="search-select-menu">
+              <div 
+                v-if="filteredBangsalOptions.length === 0" 
+                class="select-option-item text-slate-400 text-center py-2 text-xs"
+              >
+                Bangsal tidak ditemukan
+              </div>
+              <div 
+                v-else
+                v-for="b in filteredBangsalOptions" 
+                :key="b.kd_bangsal"
+                class="select-option-item"
+                :class="{ active: formMapping.kd_bangsal === b.kd_bangsal }"
+                @click="selectBangsalOption(b)"
+              >
+                <div class="fw-bold text-slate-900 text-xs">{{ b.nm_bangsal }}</div>
+                <div class="text-xs text-slate-500 font-mono">Kode: {{ b.kd_bangsal }}</div>
+              </div>
+            </div>
           </div>
 
           <!-- Form Select Kelas SIMRS -->
@@ -411,6 +442,9 @@ const mappingSearch = ref('')
 
 const showMappingModal = ref(false)
 const selectedItem = ref(null)
+const isBangsalDropdownOpen = ref(false)
+const bangsalSearchQuery = ref('')
+
 const formMapping = ref({
   kd_bangsal: '',
   kelas: '',
@@ -435,6 +469,15 @@ const filteredMappingList = computed(() => {
     String(item.id_tt || '').toLowerCase().includes(q) ||
     String(item.kd_bangsal || '').toLowerCase().includes(q) ||
     String(item.nm_bangsal || '').toLowerCase().includes(q)
+  )
+})
+
+const filteredBangsalOptions = computed(() => {
+  if (!bangsalSearchQuery.value.trim()) return bangsalOptions.value
+  const q = bangsalSearchQuery.value.toLowerCase().trim()
+  return bangsalOptions.value.filter(b => 
+    String(b.nm_bangsal || '').toLowerCase().includes(q) ||
+    String(b.kd_bangsal || '').toLowerCase().includes(q)
   )
 })
 
@@ -511,12 +554,37 @@ const openMappingModal = (item) => {
     kelas: item.kelas || 'Kelas 1',
     is_active: item.is_active ?? true
   }
+
+  // Pre-fill search input with mapped bangsal name
+  if (item.nm_bangsal) {
+    bangsalSearchQuery.value = item.nm_bangsal
+  } else if (item.kd_bangsal) {
+    const found = bangsalOptions.value.find(b => b.kd_bangsal === item.kd_bangsal)
+    bangsalSearchQuery.value = found ? found.nm_bangsal : item.kd_bangsal
+  } else {
+    bangsalSearchQuery.value = ''
+  }
+
+  isBangsalDropdownOpen.value = false
   showMappingModal.value = true
 }
 
 const closeMappingModal = () => {
   showMappingModal.value = false
   selectedItem.value = null
+  isBangsalDropdownOpen.value = false
+}
+
+const selectBangsalOption = (b) => {
+  formMapping.value.kd_bangsal = b.kd_bangsal
+  bangsalSearchQuery.value = b.nm_bangsal
+  isBangsalDropdownOpen.value = false
+}
+
+const clearSelectedBangsal = () => {
+  formMapping.value.kd_bangsal = ''
+  bangsalSearchQuery.value = ''
+  isBangsalDropdownOpen.value = true
 }
 
 const saveMapping = async () => {
@@ -1036,16 +1104,87 @@ onMounted(() => {
   border-color: #047857;
 }
 
-.bg-soft-emerald {
-  background-color: rgba(16, 185, 129, 0.15);
+/* Searchable Select Custom Styles */
+.search-select-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  transition: all 0.2s;
 }
 
-.text-emerald {
-  color: #10b981;
+.search-select-box.open,
+.search-select-box:focus-within {
+  background: white;
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
 }
 
-.cursor-pointer {
+.search-select-icon {
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
+
+.search-select-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.search-select-input:focus {
+  outline: none;
+}
+
+.btn-clear-select {
+  background: none;
+  border: none;
+  padding: 0 0.25rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.select-arrow {
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.search-select-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 99;
+}
+
+.select-option-item {
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.select-option-item:last-child {
+  border-bottom: none;
+}
+
+.select-option-item:hover,
+.select-option-item.active {
+  background: #f0fdf4;
 }
 
 /* Modal Custom Styles */
