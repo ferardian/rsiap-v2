@@ -536,7 +536,14 @@ const routes = [
   },
   {
     path: '/rs-online/ref-tempat-tidur',
+    alias: '/rs-online/ketersediaan-kamar',
     name: 'RsOnlineRefTempatTidur',
+    component: () => import('../views/rs-online/RefTempatTidurView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/rs-online/ketersediaan-kamar',
+    name: 'RsOnlineKetersediaanKamar',
     component: () => import('../views/rs-online/RefTempatTidurView.vue'),
     meta: { requiresAuth: true }
   },
