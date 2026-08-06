@@ -9,10 +9,10 @@
           </div>
           <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-              <span class="badge bg-soft-emerald text-emerald font-mono text-xs px-2 py-0.5 rounded-full border border-emerald-300">
-                <i class="fas fa-plug text-xs me-1"></i> SIRS Kemenkes (RS Online Versi 3)
+              <span class="badge bg-emerald-900/40 text-emerald-100 font-mono text-xs px-2.5 py-1 rounded-full border border-emerald-400/40 fw-semibold">
+                <i class="fas fa-plug text-xs me-1 text-emerald-300"></i> SIRS Kemenkes (RS Online Versi 3)
               </span>
-              <span class="badge bg-white/20 text-white font-mono text-xs px-2 py-0.5 rounded-full border border-white/30">
+              <span class="badge bg-white/20 text-white font-mono text-xs px-2.5 py-1 rounded-full border border-white/30 fw-semibold">
                 Faskes ID: 3326051
               </span>
             </div>
@@ -22,10 +22,10 @@
         </div>
 
         <div class="hero-actions d-flex align-items-center gap-2">
-          <button class="btn btn-emerald-glass btn-sm" @click="syncStructure" :disabled="loadingSync">
+          <button class="btn btn-hero-glass" @click="syncStructure" :disabled="loadingSync">
             <i class="fas fa-download me-1.5" :class="{ 'fa-spin': loadingSync }"></i> Tarik Struktur RS Online
           </button>
-          <button class="btn btn-emerald-solid btn-sm" @click="sendBulkUpdate" :disabled="loadingUpdate">
+          <button class="btn btn-hero-solid" @click="sendBulkUpdate" :disabled="loadingUpdate">
             <i class="fas fa-paper-plane me-1.5" :class="{ 'fa-spin': loadingUpdate }"></i> Kirim Update Ke RS Online
           </button>
         </div>
@@ -41,7 +41,10 @@
               @click="activeTab = 'mapping'"
             >
               <i class="fas fa-tasks me-2"></i> Mapping & Update Live RS Online
-              <span class="badge bg-emerald-100 text-emerald-700 ms-2 font-mono text-xs px-2 py-0.5 rounded-full">
+              <span 
+                class="ms-2 font-mono text-xs px-2.5 py-0.5 rounded-full fw-bold"
+                :class="activeTab === 'mapping' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700 border border-slate-300'"
+              >
                 {{ mappingList.length }} Entri
               </span>
             </button>
@@ -53,7 +56,10 @@
               @click="activeTab = 'referensi'"
             >
               <i class="fas fa-book me-2"></i> Master Referensi TT Kemenkes
-              <span class="badge bg-slate-100 text-slate-700 ms-2 font-mono text-xs px-2 py-0.5 rounded-full">
+              <span 
+                class="ms-2 font-mono text-xs px-2.5 py-0.5 rounded-full fw-bold"
+                :class="activeTab === 'referensi' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700 border border-slate-300'"
+              >
                 {{ refList.length }} Jenis
               </span>
             </button>
@@ -67,36 +73,36 @@
         <div class="row g-3 mb-3">
           <div class="col-12 col-md-4">
             <div class="stat-card">
-              <div class="stat-icon bg-emerald-50 text-emerald-600">
+              <div class="stat-icon bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <i class="fas fa-check-circle"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label">Ter-Mapping & Aktif</span>
-                <h3 class="stat-value text-slate-800">{{ activeMappedCount }} <span class="text-xs font-normal text-slate-500">Ruangan</span></h3>
+                <span class="stat-label text-slate-600">Ter-Mapping & Aktif</span>
+                <h3 class="stat-value text-slate-900">{{ activeMappedCount }} <span class="text-xs font-normal text-slate-600">Ruangan</span></h3>
               </div>
             </div>
           </div>
 
           <div class="col-12 col-md-4">
             <div class="stat-card">
-              <div class="stat-icon bg-blue-50 text-blue-600">
+              <div class="stat-icon bg-blue-50 text-blue-700 border border-blue-200">
                 <i class="fas fa-bed"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label">Total TT Terpakai (SIMRS)</span>
-                <h3 class="stat-value text-slate-800">{{ totalSimrsTerpakai }} <span class="text-xs font-normal text-slate-500">Dari {{ totalSimrsKapasitas }} TT</span></h3>
+                <span class="stat-label text-slate-600">Total TT Terpakai (SIMRS)</span>
+                <h3 class="stat-value text-slate-900">{{ totalSimrsTerpakai }} <span class="text-xs font-normal text-slate-600">Dari {{ totalSimrsKapasitas }} TT</span></h3>
               </div>
             </div>
           </div>
 
           <div class="col-12 col-md-4">
             <div class="stat-card">
-              <div class="stat-icon bg-purple-50 text-purple-600">
+              <div class="stat-icon bg-purple-50 text-purple-700 border border-purple-200">
                 <i class="fas fa-server"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label">Metode Update Bridging</span>
-                <h3 class="stat-value text-emerald-600 d-flex align-items-center gap-1.5 text-sm fw-bold">
+                <span class="stat-label text-slate-600">Metode Update Bridging</span>
+                <h3 class="stat-value text-emerald-700 d-flex align-items-center gap-1.5 text-sm fw-bold">
                   <span class="status-indicator animate-pulse"></span> Explicit PUT via id_t_tt
                 </h3>
               </div>
@@ -115,13 +121,13 @@
                 type="text" 
                 placeholder="Cari ruangan RS Online, ID TT, atau Bangsal SIMRS..."
               >
-              <button v-if="mappingSearch" @click="mappingSearch = ''" class="btn-clear-compact text-slate-400 hover:text-slate-600">
+              <button v-if="mappingSearch" @click="mappingSearch = ''" class="btn-clear-compact text-slate-500 hover:text-slate-800">
                 <i class="fas fa-times"></i>
               </button>
             </div>
 
             <div class="d-flex align-items-center gap-2">
-              <button class="btn btn-sm btn-outline-secondary" @click="fetchMappings" :disabled="loadingMapping">
+              <button class="btn btn-sm btn-outline-secondary fw-bold text-slate-700" @click="fetchMappings" :disabled="loadingMapping">
                 <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loadingMapping }"></i> Refresh Table
               </button>
             </div>
@@ -132,7 +138,7 @@
             <div class="spinner-container">
               <i class="fas fa-circle-notch fa-spin text-emerald-600 text-2xl"></i>
             </div>
-            <p class="mt-2 text-slate-600 fw-semibold text-sm">Memuat Data Mapping Tempat Tidur RS Online...</p>
+            <p class="mt-2 text-slate-700 fw-semibold text-sm">Memuat Data Mapping Tempat Tidur RS Online...</p>
           </div>
 
           <!-- Empty State -->
@@ -140,8 +146,8 @@
             <div class="empty-icon-container mb-2">
               <i class="fas fa-inbox text-slate-300 text-4xl"></i>
             </div>
-            <h4 class="fw-bold text-slate-700 fs-6 mb-1">Data Mapping Kosong</h4>
-            <p class="text-slate-500 text-xs mb-3">Klik tombol "Tarik Struktur RS Online" untuk menyinkronkan data entri dari RS Online.</p>
+            <h4 class="fw-bold text-slate-800 fs-6 mb-1">Data Mapping Kosong</h4>
+            <p class="text-slate-600 text-xs mb-3">Klik tombol "Tarik Struktur RS Online" untuk menyinkronkan data entri dari RS Online.</p>
             <button class="btn btn-sm btn-emerald-glass text-slate-800 border-slate-300" @click="syncStructure">
               <i class="fas fa-download me-1"></i> Tarik Struktur RS Online
             </button>
@@ -157,57 +163,62 @@
                   <th width="80" class="text-center">Kode TT</th>
                   <th>Ruangan RS Online</th>
                   <th>Mapping Bangsal & Kelas SIMRS</th>
-                  <th width="90" class="text-center">Kapasitas</th>
-                  <th width="90" class="text-center">Terpakai</th>
-                  <th width="90" class="text-center">Tersedia</th>
+                  <th width="95" class="text-center">Kapasitas</th>
+                  <th width="95" class="text-center">Terpakai</th>
+                  <th width="95" class="text-center">Tersedia</th>
                   <th width="80" class="text-center">Bridging</th>
-                  <th width="130" class="text-center">Aksi</th>
+                  <th width="120" class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(item, index) in filteredMappingList" :key="item.id">
-                  <td class="text-center text-slate-400 font-mono fw-semibold text-xs">{{ index + 1 }}</td>
+                  <td class="text-center text-slate-500 font-mono fw-bold text-xs">{{ index + 1 }}</td>
                   <td>
-                    <span class="code-badge font-mono text-slate-700 bg-slate-100 border-slate-200">{{ item.id_t_tt || '-' }}</span>
+                    <span class="code-badge font-mono text-slate-800 bg-slate-100 border-slate-300">{{ item.id_t_tt || '-' }}</span>
                   </td>
                   <td class="text-center">
-                    <span class="code-badge font-mono bg-emerald-50 text-emerald-700 border-emerald-200">{{ item.id_tt }}</span>
+                    <span class="code-badge font-mono bg-emerald-50 text-emerald-800 border-emerald-300 fw-bold">{{ item.id_tt }}</span>
                   </td>
                   <td>
-                    <div class="fw-bold text-slate-800 text-sm mb-0">{{ item.ruang }}</div>
-                    <div class="text-xs text-slate-400" v-if="item.tgl_update_sirs">
-                      SIRS Update: {{ item.tgl_update_sirs }}
+                    <div class="fw-bold text-slate-900 text-sm mb-0">{{ item.ruang }}</div>
+                    <div class="text-xs text-slate-600 fw-medium" v-if="item.tgl_update_sirs">
+                      <i class="far fa-clock me-1 text-slate-400"></i>SIRS Update: {{ item.tgl_update_sirs }}
                     </div>
                   </td>
                   <td>
-                    <div class="d-flex align-items-center justify-content-between gap-2">
-                      <div v-if="item.kd_bangsal" class="d-flex flex-column">
-                        <span class="fw-semibold text-slate-700 text-xs me-1">
-                          <i class="fas fa-door-open me-1 text-slate-400"></i>{{ item.nm_bangsal || item.kd_bangsal }}
+                    <div v-if="item.kd_bangsal" class="mapped-box d-flex align-items-center justify-content-between gap-2">
+                      <div class="d-flex flex-column">
+                        <span class="fw-bold text-slate-900 text-xs">
+                          <i class="fas fa-door-open me-1 text-emerald-600"></i>{{ item.nm_bangsal || item.kd_bangsal }}
                         </span>
-                        <span class="text-xs text-slate-500 font-mono">({{ item.kd_bangsal }} &bull; {{ item.kelas }})</span>
+                        <span class="text-xs text-slate-600 font-mono fw-semibold">({{ item.kd_bangsal }} &bull; {{ item.kelas }})</span>
                       </div>
-                      <span v-else class="badge bg-amber-50 text-amber-600 border border-amber-200 text-xs px-2 py-0.5 rounded">
-                        <i class="fas fa-exclamation-circle me-1"></i> Belum Di-map
-                      </span>
 
                       <button 
-                        class="btn btn-edit-mapping btn-xs"
+                        class="btn-icon-edit"
                         title="Edit Mapping Bangsal SIMRS"
                         @click="openMappingModal(item)"
                       >
-                        <i class="fas fa-pencil-alt text-slate-500"></i>
+                        <i class="fas fa-pen text-slate-600"></i>
                       </button>
                     </div>
+
+                    <button 
+                      v-else
+                      class="btn-map-empty"
+                      @click="openMappingModal(item)"
+                    >
+                      <i class="fas fa-plus-circle me-1.5 text-amber-600"></i> Belum Di-map
+                    </button>
                   </td>
-                  <td class="text-center fw-bold text-slate-700">
-                    {{ item.simrs_kapasitas }} <span class="text-xs font-normal text-slate-400">TT</span>
+                  <td class="text-center fw-bold text-slate-800 fs-6">
+                    {{ item.simrs_kapasitas }} <span class="text-xs font-normal text-slate-500">TT</span>
                   </td>
-                  <td class="text-center fw-bold text-blue-600">
-                    {{ item.simrs_terpakai }} <span class="text-xs font-normal text-slate-400">TT</span>
+                  <td class="text-center fw-bold text-blue-700 fs-6">
+                    {{ item.simrs_terpakai }} <span class="text-xs font-normal text-slate-500">TT</span>
                   </td>
-                  <td class="text-center fw-bold text-emerald-600">
-                    {{ item.simrs_tersedia }} <span class="text-xs font-normal text-slate-400">TT</span>
+                  <td class="text-center fw-bold text-emerald-700 fs-6">
+                    {{ item.simrs_tersedia }} <span class="text-xs font-normal text-slate-500">TT</span>
                   </td>
                   <td class="text-center">
                     <div class="form-check form-switch d-inline-block">
@@ -220,16 +231,14 @@
                     </div>
                   </td>
                   <td class="text-center">
-                    <div class="d-flex align-items-center justify-content-center gap-1">
-                      <button 
-                        class="btn btn-action-send btn-xs" 
-                        title="Kirim Update PUT ke RS Online"
-                        :disabled="!item.kd_bangsal || sendingId === item.id"
-                        @click="sendSingleUpdate(item)"
-                      >
-                        <i class="fas fa-paper-plane me-1" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
-                      </button>
-                    </div>
+                    <button 
+                      class="btn btn-action-send" 
+                      title="Kirim Update PUT ke RS Online"
+                      :disabled="!item.kd_bangsal || sendingId === item.id"
+                      @click="sendSingleUpdate(item)"
+                    >
+                      <i class="fas fa-paper-plane me-1.5" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -249,14 +258,14 @@
                 type="text" 
                 placeholder="Cari tempat tidur berdasarkan nama atau kode..."
               >
-              <button v-if="refSearch" @click="refSearch = ''" class="btn-clear-compact text-slate-400 hover:text-slate-600">
+              <button v-if="refSearch" @click="refSearch = ''" class="btn-clear-compact text-slate-500 hover:text-slate-800">
                 <i class="fas fa-times"></i>
               </button>
             </div>
 
-            <div class="endpoint-badge d-none d-md-flex align-items-center gap-1.5 text-xs text-slate-500 fw-medium">
+            <div class="endpoint-badge d-none d-md-flex align-items-center gap-1.5 text-xs text-slate-600 fw-semibold">
               <i class="fas fa-link text-slate-400"></i> Endpoint:
-              <code class="bg-slate-100 px-2 py-0.5 rounded text-emerald-700 font-mono fw-semibold">/Referensi/tempat_tidur</code>
+              <code class="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-emerald-800 font-mono fw-bold">/Referensi/tempat_tidur</code>
             </div>
           </div>
 
@@ -264,7 +273,7 @@
             <div class="spinner-container">
               <i class="fas fa-circle-notch fa-spin text-emerald-600 text-2xl"></i>
             </div>
-            <p class="mt-2 text-slate-600 fw-semibold text-sm">Memuat Master Referensi Tempat Tidur...</p>
+            <p class="mt-2 text-slate-700 fw-semibold text-sm">Memuat Master Referensi Tempat Tidur...</p>
           </div>
 
           <div v-else class="table-responsive">
@@ -279,21 +288,21 @@
               </thead>
               <tbody>
                 <tr v-for="(item, index) in filteredRefList" :key="item.kode_tt">
-                  <td class="text-center text-slate-400 font-mono fw-semibold text-xs">{{ index + 1 }}</td>
+                  <td class="text-center text-slate-500 font-mono fw-bold text-xs">{{ index + 1 }}</td>
                   <td>
-                    <span class="code-badge font-mono">{{ item.kode_tt }}</span>
+                    <span class="code-badge font-mono bg-slate-100 text-slate-800 border-slate-300 fw-bold">{{ item.kode_tt }}</span>
                   </td>
                   <td>
-                    <div class="fw-bold text-slate-800 text-sm mb-0">{{ item.nama_tt }}</div>
-                    <div class="text-xs text-slate-400">Master Referensi SIRS Kemenkes RI</div>
+                    <div class="fw-bold text-slate-900 text-sm mb-0">{{ item.nama_tt }}</div>
+                    <div class="text-xs text-slate-500">Master Referensi SIRS Kemenkes RI</div>
                   </td>
                   <td class="text-center">
                     <button 
-                      class="btn btn-action-copy btn-xs" 
+                      class="btn btn-action-copy" 
                       title="Salin Kode TT"
                       @click="copyToClipboard(item.kode_tt, item.nama_tt)"
                     >
-                      <i class="fas fa-copy me-1"></i> Salin Kode
+                      <i class="fas fa-copy me-1.5"></i> Salin Kode
                     </button>
                   </td>
                 </tr>
@@ -323,16 +332,16 @@
           <!-- Info Box RS Online -->
           <div class="info-box-sirs mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="text-xs fw-bold text-slate-500 uppercase font-mono">Entri RS Online</span>
-              <span class="badge bg-emerald-100 text-emerald-800 text-xs font-mono">Kode TT: {{ selectedItem.id_tt }}</span>
+              <span class="text-xs fw-bold text-slate-600 uppercase font-mono">Entri RS Online</span>
+              <span class="badge bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-mono fw-bold">Kode TT: {{ selectedItem.id_tt }}</span>
             </div>
-            <div class="fw-bold text-slate-800 fs-6">{{ selectedItem.ruang }}</div>
-            <div class="text-xs text-slate-500 font-mono mt-0.5">ID_T_TT: {{ selectedItem.id_t_tt || '-' }}</div>
+            <div class="fw-bold text-slate-900 fs-6">{{ selectedItem.ruang }}</div>
+            <div class="text-xs text-slate-600 font-mono mt-0.5 fw-medium">ID_T_TT: {{ selectedItem.id_t_tt || '-' }}</div>
           </div>
 
           <!-- Form Select Bangsal SIMRS -->
           <div class="mb-3">
-            <label class="form-label-custom">Pilih Bangsal SIMRS <span class="text-rose-500">*</span></label>
+            <label class="form-label-custom">Pilih Bangsal SIMRS <span class="text-rose-600">*</span></label>
             <select v-model="formMapping.kd_bangsal" class="form-select-custom">
               <option value="">-- Pilih Bangsal SIMRS --</option>
               <option v-for="b in bangsalOptions" :key="b.kd_bangsal" :value="b.kd_bangsal">
@@ -343,7 +352,7 @@
 
           <!-- Form Select Kelas SIMRS -->
           <div class="mb-3">
-            <label class="form-label-custom">Pilih Kelas Kamar SIMRS <span class="text-rose-500">*</span></label>
+            <label class="form-label-custom">Pilih Kelas Kamar SIMRS <span class="text-rose-600">*</span></label>
             <select v-model="formMapping.kelas" class="form-select-custom">
               <option value="">-- Pilih Kelas SIMRS --</option>
               <option v-for="k in kelasOptions" :key="k" :value="k">
@@ -360,17 +369,17 @@
               id="modalActiveSwitch" 
               v-model="formMapping.is_active"
             >
-            <label class="form-check-label cursor-pointer text-sm fw-semibold text-slate-700 ms-2" for="modalActiveSwitch">
+            <label class="form-check-label cursor-pointer text-sm fw-bold text-slate-800 ms-2" for="modalActiveSwitch">
               Aktifkan Update Otomatis (Bridging Enabled)
             </label>
           </div>
         </div>
 
         <div class="modal-footer-custom">
-          <button class="btn btn-secondary btn-sm rounded-lg px-3" @click="closeMappingModal" :disabled="savingMapping">
+          <button class="btn btn-secondary btn-sm rounded-lg px-3 fw-bold" @click="closeMappingModal" :disabled="savingMapping">
             Batal
           </button>
-          <button class="btn btn-emerald-solid-sm btn-sm rounded-lg px-3" @click="saveMapping" :disabled="savingMapping">
+          <button class="btn btn-emerald-solid-sm btn-sm rounded-lg px-3.5 fw-bold" @click="saveMapping" :disabled="savingMapping">
             <i class="fas fa-save me-1.5" :class="{ 'fa-spin': savingMapping }"></i> Simpan Mapping
           </button>
         </div>
@@ -620,7 +629,7 @@ onMounted(() => {
   background-color: #f8fafc;
   min-height: 100vh;
   padding: 1rem 1.25rem;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .rs-online-container {
@@ -628,18 +637,18 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-/* Compact Hero Header */
+/* Hero Header */
 .compact-hero-header {
-  background: linear-gradient(135deg, #059669 0%, #047857 60%, #064e3b 100%);
+  background: linear-gradient(135deg, #047857 0%, #065f46 60%, #064e3b 100%);
   position: relative;
   overflow: hidden;
   border-radius: 16px;
-  padding: 1.15rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.25);
+  box-shadow: 0 10px 20px -5px rgba(4, 120, 87, 0.3);
 }
 
 .compact-hero-header::before {
@@ -662,21 +671,21 @@ onMounted(() => {
 }
 
 .hero-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  font-size: 1.35rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .hero-title {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.02em;
@@ -684,40 +693,56 @@ onMounted(() => {
 }
 
 .hero-subtitle {
-  margin: 0.15rem 0 0 0;
+  margin: 0.2rem 0 0 0;
   opacity: 0.95;
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   line-height: 1.3;
 }
 
-.btn-emerald-glass {
-  background: rgba(255, 255, 255, 0.2);
+.btn-hero-glass {
+  background: rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
   font-weight: 700;
-  padding: 0.45rem 1rem;
+  height: 38px;
+  padding: 0 1.15rem;
   font-size: 0.825rem;
   border-radius: 10px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
-.btn-emerald-glass:hover:not(:disabled) {
+.btn-hero-glass:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.3);
-  color: white;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
-.btn-emerald-solid {
+.btn-hero-solid {
   background: #ffffff;
   color: #047857;
   border: none;
   font-weight: 800;
-  padding: 0.45rem 1.15rem;
+  height: 38px;
+  padding: 0 1.25rem;
   font-size: 0.825rem;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
   transition: all 0.2s ease;
+}
+
+.btn-hero-solid:hover:not(:disabled) {
+  background: #f0fdf4;
+  color: #065f46;
+  transform: translateY(-1px);
 }
 
 .btn-emerald-solid-sm {
@@ -732,15 +757,9 @@ onMounted(() => {
   color: #ffffff;
 }
 
-.btn-emerald-solid:hover:not(:disabled) {
-  background: #ecfdf5;
-  color: #065f46;
-  transform: translateY(-1px);
-}
-
 /* Nav Tabs */
 .nav-tabs-wrapper {
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .nav-tabs-modern {
@@ -755,43 +774,44 @@ onMounted(() => {
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  padding: 0.65rem 1.15rem;
-  font-size: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #64748b;
+  color: #475569;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .nav-link-modern:hover {
-  color: #059669;
+  color: #047857;
 }
 
 .nav-link-modern.active {
-  color: #059669;
-  border-bottom-color: #059669;
+  color: #047857;
+  font-weight: 800;
+  border-bottom-color: #047857;
 }
 
 /* Stat Cards */
 .stat-card {
   background: white;
   border-radius: 12px;
-  padding: 0.85rem 1.15rem;
+  padding: 0.95rem 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
 .stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
@@ -801,15 +821,15 @@ onMounted(() => {
 }
 
 .stat-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .stat-value {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 800;
   margin: 0;
   line-height: 1.2;
@@ -827,15 +847,15 @@ onMounted(() => {
 .content-area {
   background: white;
   border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
 .action-bar-compact {
-  padding: 0.85rem 1.15rem;
+  padding: 0.85rem 1.25rem;
   background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .search-box-compact {
@@ -849,17 +869,19 @@ onMounted(() => {
   left: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
-  font-size: 0.825rem;
+  color: #64748b;
+  font-size: 0.85rem;
 }
 
 .search-box-compact input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.45rem 2rem 0.45rem 2.25rem;
-  border: 1px solid #e2e8f0;
+  padding: 0.5rem 2rem 0.5rem 2.25rem;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.825rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #0f172a;
   transition: all 0.2s;
   background: #f8fafc;
 }
@@ -867,8 +889,8 @@ onMounted(() => {
 .search-box-compact input:focus {
   outline: none;
   background: white;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
 }
 
 .btn-clear-compact {
@@ -889,20 +911,20 @@ onMounted(() => {
 }
 
 .modern-table th {
-  background: #f8fafc;
-  padding: 0.75rem 1.15rem;
+  background: #f1f5f9;
+  padding: 0.85rem 1.15rem;
   text-align: left;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.725rem;
+  font-weight: 800;
+  color: #334155;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 2px solid #cbd5e1;
 }
 
 .modern-table td {
   padding: 0.75rem 1.15rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.85rem;
   vertical-align: middle;
 }
@@ -912,64 +934,106 @@ onMounted(() => {
 }
 
 .code-badge {
-  padding: 0.2rem 0.55rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 6px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.775rem;
   display: inline-block;
   border: 1px solid transparent;
 }
 
-.btn-edit-mapping {
-  background: #f1f5f9;
+/* Mapping Cell Components */
+.mapped-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+}
+
+.btn-icon-edit {
+  background: white;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  padding: 0.15rem 0.45rem;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-edit-mapping:hover {
-  background: #e2e8f0;
-  border-color: #94a3b8;
+.btn-icon-edit:hover {
+  background: #047857;
+  border-color: #047857;
+}
+
+.btn-icon-edit:hover i {
+  color: white !important;
+}
+
+.btn-map-empty {
+  background: #fffbe6;
+  border: 1px dashed #fde047;
+  color: #b45309;
+  font-weight: 700;
+  font-size: 0.775rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.btn-map-empty:hover {
+  background: #fef08a;
+  border-color: #eab308;
+  color: #854d0e;
 }
 
 .btn-action-copy {
   background-color: #f1f5f9;
-  color: #334155;
+  color: #1e293b;
   border: 1px solid #cbd5e1;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 6px;
-  padding: 0.25rem 0.65rem;
+  height: 30px;
+  padding: 0 0.75rem;
   font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
 .btn-action-copy:hover {
-  background-color: #059669;
+  background-color: #047857;
   color: white;
-  border-color: #059669;
+  border-color: #047857;
 }
 
 .btn-action-send {
   background-color: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
-  font-weight: 700;
+  font-weight: 800;
   border-radius: 6px;
-  padding: 0.25rem 0.65rem;
-  font-size: 0.75rem;
+  height: 30px;
+  padding: 0 0.75rem;
+  font-size: 0.775rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
 .btn-action-send:hover:not(:disabled) {
-  background-color: #059669;
+  background-color: #047857;
   color: white;
-  border-color: #059669;
-}
-
-.btn-xs {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
+  border-color: #047857;
 }
 
 .bg-soft-emerald {
@@ -991,7 +1055,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
   z-index: 9999;
   display: flex;
@@ -1023,7 +1087,7 @@ onMounted(() => {
 
 .modal-header-custom {
   padding: 1.15rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -1039,14 +1103,15 @@ onMounted(() => {
 
 .modal-subtitle-custom {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #475569;
+  font-weight: 500;
   margin: 0.15rem 0 0 0;
 }
 
 .btn-close-modal {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   font-size: 1rem;
   cursor: pointer;
   padding: 0.2rem;
@@ -1054,7 +1119,7 @@ onMounted(() => {
 }
 
 .btn-close-modal:hover {
-  color: #334155;
+  color: #0f172a;
 }
 
 .modal-body-custom {
@@ -1070,8 +1135,8 @@ onMounted(() => {
 
 .form-label-custom {
   font-size: 0.775rem;
-  font-weight: 700;
-  color: #334155;
+  font-weight: 800;
+  color: #1e293b;
   margin-bottom: 0.35rem;
   display: block;
 }
@@ -1082,7 +1147,8 @@ onMounted(() => {
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 0.85rem;
-  color: #1e293b;
+  font-weight: 600;
+  color: #0f172a;
   background-color: #f8fafc;
   transition: all 0.2s;
 }
@@ -1090,13 +1156,13 @@ onMounted(() => {
 .form-select-custom:focus {
   outline: none;
   background: white;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
 }
 
 .modal-footer-custom {
   padding: 0.85rem 1.5rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #e2e8f0;
   background: #f8fafc;
   display: flex;
   justify-content: flex-end;
