@@ -231,6 +231,17 @@ export const satuSehatService = {
   },
   syncObservationLab(data) {
     return api.post('/satusehat/observation-lab/sync', data)
+  },
+
+  // DiagnosticReport Lab PK
+  getDiagnosticReportLab(params) {
+    return api.get('/satusehat/diagnosticreport-lab', { params })
+  },
+  sendDiagnosticReportLab(data) {
+    return api.post('/satusehat/diagnosticreport-lab/send', data)
+  },
+  syncDiagnosticReportLab(data) {
+    return api.post('/satusehat/diagnosticreport-lab/sync', data)
   }
 }
 
