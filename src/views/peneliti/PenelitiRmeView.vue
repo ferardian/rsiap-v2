@@ -1,18 +1,18 @@
 <template>
-  <div class="peneliti-rme-page min-vh-100 p-3 p-md-4">
+  <div class="peneliti-rme-page min-vh-100 p-2 p-md-3">
     <!-- Navbar / Header for Researcher -->
-    <div class="card navbar-researcher border-0 shadow-xl rounded-4 mb-4 text-white p-3 p-md-4 position-relative overflow-hidden">
+    <div class="card navbar-researcher border-0 shadow-lg rounded-4 mb-3 text-white p-2.5 p-md-3 position-relative overflow-hidden">
       <div class="navbar-bg-glow"></div>
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative z-2">
-        <div class="d-flex align-items-center gap-3">
-          <div class="brand-logo-glass me-1">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 position-relative z-2">
+        <div class="d-flex align-items-center gap-2.5">
+          <div class="brand-logo-glass">
             <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="img-fluid logo-img">
           </div>
           <div>
             <div class="d-flex align-items-center gap-2">
-              <h4 class="mb-0 fw-extrabold text-white tracking-tight">{{ permohonan.judul_penelitian || permohonan.judul || 'Portal Data Penelitian RME' }}</h4>
+              <h5 class="mb-0 fw-extrabold text-white tracking-tight">{{ permohonan.judul_penelitian || permohonan.judul || 'Portal Data Penelitian RME' }}</h5>
             </div>
-            <div class="text-xs text-slate-300 mt-1">
+            <div class="text-xs text-slate-300 mt-0.5">
               Peneliti: <b class="text-white">{{ permohonan.nama_peneliti || permohonan.peneliti || username }}</b> &bull; {{ permohonan.institusi || 'Institusi' }}
             </div>
           </div>
@@ -29,11 +29,11 @@
       </div>
     </div>
 
-    <!-- Quick Stats Cards for Researcher -->
-    <div class="row g-3 mb-4">
+    <!-- Quick Stats Cards for Researcher (Compact) -->
+    <div class="row g-2.5 mb-3">
       <div class="col-6 col-md-4">
         <div class="card stat-card-modern border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-          <div class="card-body p-3.5 d-flex align-items-center gap-3">
+          <div class="card-body p-2.5 d-flex align-items-center gap-2.5">
             <div class="stat-icon-modern primary">
               <i class="fas fa-database"></i>
             </div>
@@ -47,7 +47,7 @@
 
       <div class="col-6 col-md-4">
         <div class="card stat-card-modern border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-          <div class="card-body p-3.5 d-flex align-items-center gap-3">
+          <div class="card-body p-2.5 d-flex align-items-center gap-2.5">
             <div class="stat-icon-modern info">
               <i class="fas fa-user-shield"></i>
             </div>
@@ -61,7 +61,7 @@
 
       <div class="col-12 col-md-4">
         <div class="card stat-card-modern border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-          <div class="card-body p-3.5 d-flex align-items-center gap-3">
+          <div class="card-body p-2.5 d-flex align-items-center gap-2.5">
             <div class="stat-icon-modern success">
               <i class="fas fa-certificate"></i>
             </div>
@@ -74,10 +74,10 @@
       </div>
     </div>
 
-    <!-- Filter & Search Toolbar -->
-    <div class="card toolbar-card-modern border-0 shadow-sm rounded-4 mb-4">
-      <div class="card-body p-3">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <!-- Filter & Search Toolbar (Compact) -->
+    <div class="card toolbar-card-modern border-0 shadow-sm rounded-4 mb-3">
+      <div class="card-body p-2.5">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
             <div class="search-input-wrapper flex-grow-1">
               <i class="fas fa-search search-icon"></i>
@@ -112,31 +112,31 @@
             </button>
             <button class="btn btn-export-excel-modern shadow-sm" @click="exportCsv" :disabled="loading || isExporting || pagination.total === 0">
               <i :class="['fas me-1.5', isExporting ? 'fa-spinner fa-spin' : 'fa-file-excel']"></i>
-              <span>{{ isExporting ? 'Mengunduh Semuanya...' : 'Export Semua CSV' }}</span>
+              <span>{{ isExporting ? 'Mengunduh...' : 'Export Semua CSV' }}</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Data Table Card -->
-    <div class="card table-card-modern border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <!-- Data Table Card (Scrollable Container & Sticky Header) -->
+    <div class="card table-card-modern border-0 shadow-sm rounded-4 overflow-hidden mb-0">
       <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 custom-table-modern">
+        <div class="table-responsive-scrollable">
+          <table class="table table-hover align-middle mb-0 custom-table-compact">
             <thead>
               <tr>
-                <th class="ps-4">No. Rawat & RM (Masked)</th>
+                <th class="ps-3">No. Rawat & RM (Masked)</th>
                 <th>Identitas Pasien (Ter-Masking)</th>
                 <th>Umur / JK</th>
                 <th>Poliklinik & Penjamin</th>
                 <th>Diagnosa Utama (ICD-10)</th>
-                <th class="pe-4 text-end">Tgl Registrasi</th>
+                <th class="pe-3 text-end">Tgl Registrasi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading" v-for="n in 5" :key="n">
-                <td colspan="6" class="p-4 text-center">
+                <td colspan="6" class="p-3 text-center">
                   <div class="shimmer-line mb-2"></div>
                   <div class="shimmer-line w-75 mx-auto"></div>
                 </td>
@@ -151,21 +151,21 @@
                 </td>
               </tr>
               <tr v-for="item in items" :key="item.no_rawat" class="hover-row">
-                <td class="ps-4">
-                  <div class="fw-bold font-mono text-slate-900 text-sm">{{ item.no_rawat }}</div>
-                  <div class="text-xs text-slate-500 font-mono">{{ item.no_rkm_medis }}</div>
+                <td class="ps-3">
+                  <div class="fw-bold font-mono text-slate-900 text-xs">{{ item.no_rawat }}</div>
+                  <div class="text-2xs text-slate-500 font-mono">{{ item.no_rkm_medis }}</div>
                 </td>
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <div class="patient-avatar-circle">
+                    <div class="patient-avatar-circle-sm">
                       <i class="fas fa-user-shield"></i>
                     </div>
                     <div>
-                      <div class="fw-bold text-slate-900 text-sm">{{ item.nm_pasien }}</div>
-                      <div class="text-xs text-slate-500">
+                      <div class="fw-bold text-slate-900 text-xs">{{ item.nm_pasien }}</div>
+                      <div class="text-2xs text-slate-500">
                         <span class="me-2"><i class="fas fa-id-card text-blue-500 me-1"></i> NIK: {{ item.no_ktp }}</span>
                       </div>
-                      <div class="text-xs text-slate-400">
+                      <div class="text-2xs text-slate-400">
                         <i class="fas fa-map-marker-alt text-rose-500 me-1"></i> {{ item.alamat }}
                       </div>
                     </div>
@@ -175,21 +175,21 @@
                   <span :class="item.jk === 'L' ? 'badge badge-jk male' : 'badge badge-jk female'">
                     {{ item.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}
                   </span>
-                  <div class="text-xs text-slate-600 font-semibold mt-1">{{ item.umur }}</div>
+                  <div class="text-2xs text-slate-600 font-semibold mt-0.5">{{ item.umur }}</div>
                 </td>
                 <td>
-                  <div class="fw-bold text-slate-900 text-sm">{{ item.nm_poli }}</div>
-                  <div class="text-xs text-slate-500">{{ item.penjamin }}</div>
+                  <div class="fw-bold text-slate-900 text-xs">{{ item.nm_poli }}</div>
+                  <div class="text-2xs text-slate-500">{{ item.penjamin }}</div>
                 </td>
                 <td>
-                  <div class="d-flex align-items-center gap-2">
+                  <div class="d-flex align-items-center gap-1.5">
                     <span class="badge badge-icd10 font-mono">{{ item.icd10_utama || 'N/A' }}</span>
-                    <span class="fw-semibold text-slate-800 text-xs">{{ item.nama_diagnosa || 'Diagnosa belum terisi' }}</span>
+                    <span class="fw-semibold text-slate-800 text-xs text-truncate max-w-diagnosa">{{ item.nama_diagnosa || 'Diagnosa belum terisi' }}</span>
                   </div>
                 </td>
-                <td class="pe-4 text-end">
-                  <div class="fw-semibold text-sm text-slate-900">{{ formatDate(item.tgl_registrasi) }}</div>
-                  <div class="text-xs text-slate-400 font-mono">{{ item.jam_reg }}</div>
+                <td class="pe-3 text-end">
+                  <div class="fw-semibold text-xs text-slate-900">{{ formatDate(item.tgl_registrasi) }}</div>
+                  <div class="text-2xs text-slate-400 font-mono">{{ item.jam_reg }}</div>
                 </td>
               </tr>
             </tbody>
@@ -197,23 +197,23 @@
         </div>
       </div>
 
-      <!-- Modern Pagination Footer -->
-      <div class="card-footer bg-white p-3.5 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <!-- Modern Pagination Footer (Anchored below table) -->
+      <div class="card-footer bg-white p-2.5 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div class="d-flex align-items-center gap-2">
-          <span class="text-xs text-slate-500 font-medium">Tampilkan per halaman:</span>
-          <select v-model="filters.limit" @change="onLimitChange" class="form-select form-select-sm limit-select-modern">
+          <span class="text-xs text-slate-500 font-medium">Per halaman:</span>
+          <select v-model="filters.limit" @change="onLimitChange" class="form-select form-select-sm limit-select-compact">
             <option :value="15">15</option>
             <option :value="25">25</option>
             <option :value="50">50</option>
             <option :value="100">100</option>
           </select>
-          <span class="text-xs text-slate-500 ms-2">
-            Menampilkan <b>{{ ((pagination.current_page - 1) * filters.limit) + 1 }}</b> - <b>{{ Math.min(pagination.current_page * filters.limit, pagination.total) }}</b> dari total <b>{{ pagination.total.toLocaleString() }}</b> data
+          <span class="text-xs text-slate-500 ms-1">
+            <b>{{ ((pagination.current_page - 1) * filters.limit) + 1 }}</b> - <b>{{ Math.min(pagination.current_page * filters.limit, pagination.total) }}</b> dari <b>{{ pagination.total.toLocaleString() }}</b> data
           </span>
         </div>
 
         <nav v-if="pagination.last_page > 1">
-          <ul class="pagination pagination-modern mb-0">
+          <ul class="pagination pagination-compact mb-0">
             <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
               <button class="page-link" @click="changePage(1)" title="Halaman Pertama">
                 <i class="fas fa-angle-double-left"></i>
@@ -416,10 +416,14 @@ export default {
   min-height: 100vh;
 }
 
+.text-2xs {
+  font-size: 0.7rem;
+}
+
 .navbar-researcher {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 20px !important;
+  border-radius: 16px !important;
 }
 
 .navbar-bg-glow {
@@ -429,11 +433,11 @@ export default {
 }
 
 .brand-logo-glass {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 14px;
-  padding: 5px;
+  border-radius: 12px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -445,9 +449,9 @@ export default {
   background: rgba(16, 185, 129, 0.12);
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.25);
-  font-size: 0.775rem;
+  font-size: 0.725rem;
   font-weight: 700;
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 50px;
 }
 
@@ -455,10 +459,10 @@ export default {
   background: rgba(255, 255, 255, 0.1);
   color: #e2e8f0;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 0.825rem;
+  font-size: 0.775rem;
   transition: all 0.2s ease;
 }
 
@@ -468,22 +472,21 @@ export default {
   border-color: #ef4444;
 }
 
-/* Stat Cards */
+/* Stat Cards Compact */
 .stat-card-modern {
   background: white;
-  border-radius: 18px !important;
+  border-radius: 14px !important;
   transition: transform 0.2s ease;
 }
-.stat-card-modern:hover { transform: translateY(-2px); }
 
 .stat-icon-modern {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 .stat-icon-modern.primary { background: #eff6ff; color: #3b82f6; }
@@ -491,7 +494,7 @@ export default {
 .stat-icon-modern.success { background: #ecfdf5; color: #10b981; }
 
 .stat-label-modern {
-  font-size: 0.725rem;
+  font-size: 0.675rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -499,16 +502,16 @@ export default {
 }
 
 .stat-value-modern {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.2;
 }
 
-/* Toolbar */
+/* Toolbar Compact */
 .toolbar-card-modern {
   background: white;
-  border-radius: 18px !important;
+  border-radius: 14px !important;
 }
 
 .search-input-wrapper, .icd-input-wrapper {
@@ -517,23 +520,23 @@ export default {
   align-items: center;
 }
 
-.search-input-wrapper { min-width: 260px; }
-.icd-input-wrapper { width: 220px; }
+.search-input-wrapper { min-width: 240px; }
+.icd-input-wrapper { width: 190px; }
 
 .search-icon {
   position: absolute;
-  left: 1rem;
+  left: 0.85rem;
   color: #94a3b8;
-  font-size: 0.9rem;
+  font-size: 0.825rem;
 }
 
 .search-input-modern {
-  padding-left: 2.75rem;
-  padding-right: 2rem;
-  height: 46px;
-  border-radius: 14px;
+  padding-left: 2.35rem;
+  padding-right: 1.75rem;
+  height: 38px;
+  border-radius: 10px;
   border: 1px solid #cbd5e1;
-  font-size: 0.875rem;
+  font-size: 0.825rem;
   background: #f8fafc;
   transition: all 0.2s ease;
 }
@@ -546,22 +549,23 @@ export default {
 
 .btn-clear-search {
   position: absolute;
-  right: 0.75rem;
+  right: 0.65rem;
   background: transparent;
   border: none;
   color: #94a3b8;
   cursor: pointer;
+  font-size: 0.75rem;
 }
 
 .btn-refresh-modern {
-  height: 46px;
-  padding: 0 1.25rem;
-  border-radius: 14px;
+  height: 38px;
+  padding: 0 1rem;
+  border-radius: 10px;
   background: white;
   border: 1px solid #cbd5e1;
   color: #475569;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.825rem;
   display: flex;
   align-items: center;
   transition: all 0.2s ease;
@@ -574,14 +578,14 @@ export default {
 }
 
 .btn-export-excel-modern {
-  height: 46px;
-  padding: 0 1.25rem;
-  border-radius: 14px;
+  height: 38px;
+  padding: 0 1rem;
+  border-radius: 10px;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
   color: white;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.825rem;
   display: flex;
   align-items: center;
   transition: all 0.2s ease;
@@ -590,44 +594,62 @@ export default {
 .btn-export-excel-modern:hover:not(:disabled) {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
 }
 
-/* Table */
+/* Scrollable Table Container & Sticky Header */
 .table-card-modern {
-  border-radius: 20px !important;
+  border-radius: 16px !important;
   background: white;
 }
 
-.custom-table-modern thead th {
+.table-responsive-scrollable {
+  max-height: calc(100vh - 275px);
+  min-height: 380px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.custom-table-compact thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   background: #f8fafc;
-  padding: 1.1rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.65rem 0.65rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   font-weight: 700;
   color: #64748b;
   border-bottom: 2px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.patient-avatar-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+.custom-table-compact tbody td {
+  padding: 0.55rem 0.65rem;
+}
+
+.hover-row { transition: background 0.15s ease; }
+.hover-row:hover { background-color: #f8fafc; }
+
+.patient-avatar-circle-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: #f1f5f9;
   color: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 0.825rem;
   flex-shrink: 0;
 }
 
 .badge-jk {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 8px;
+  padding: 3px 6px;
+  border-radius: 6px;
 }
 .badge-jk.male { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
 .badge-jk.female { background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; }
@@ -636,76 +658,82 @@ export default {
   background: #ecfeff;
   color: #0891b2;
   border: 1px solid #a5f3fc;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 8px;
+  padding: 3px 6px;
+  border-radius: 6px;
+}
+
+.max-w-diagnosa {
+  max-width: 260px;
 }
 
 .empty-icon-box {
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   background: #f1f5f9;
   color: #94a3b8;
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
 }
 
-/* Limit Select & Pagination Modern */
-.limit-select-modern {
-  width: 70px;
-  border-radius: 10px;
+/* Limit Select & Pagination Compact */
+.limit-select-compact {
+  width: 65px;
+  border-radius: 8px;
   border: 1px solid #cbd5e1;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.775rem;
   background-color: #f8fafc;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
-.pagination-modern {
+.pagination-compact {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
 
-.pagination-modern .page-item .page-link {
+.pagination-compact .page-item .page-link {
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   color: #475569;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 0.825rem;
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 0.775rem;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.pagination-modern .page-item:not(.active):not(.disabled) .page-link:hover {
+.pagination-compact .page-item:not(.active):not(.disabled) .page-link:hover {
   background: #eff6ff;
   color: #2563eb;
   border-color: #bfdbfe;
 }
 
-.pagination-modern .page-item.active .page-link {
+.pagination-compact .page-item.active .page-link {
   background: #2563eb;
   border-color: #2563eb;
   color: white;
   font-weight: 700;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
 }
 
-.pagination-modern .page-item.disabled .page-link {
+.pagination-compact .page-item.disabled .page-link {
   opacity: 0.4;
   background: #f1f5f9;
   color: #94a3b8;
 }
 
 .shimmer-line {
-  height: 18px;
+  height: 16px;
   background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 @keyframes shimmer {
