@@ -16,7 +16,7 @@
         <div class="header-actions d-flex align-items-center gap-2">
           <router-link to="/diklit/penelitian/laporan-sla" class="btn btn-action-secondary shadow-sm">
             <i class="fas fa-chart-line text-primary me-1"></i>
-            <span>Laporan SLA (Akreditasi)</span>
+            <span>Laporan SLA</span>
           </router-link>
           <button class="btn btn-action-primary shadow-sm" @click="openCreateModal">
             <i class="fas fa-plus-circle me-1"></i>

@@ -66,8 +66,8 @@
               <i class="fas fa-certificate"></i>
             </div>
             <div>
-              <div class="stat-label-modern">Standar Akreditasi</div>
-              <div class="stat-value-modern text-success">Elemen EP e</div>
+              <div class="stat-label-modern">Target Ketepatan Waktu</div>
+              <div class="stat-value-modern text-success">≤ 3 Hari Kerja</div>
             </div>
           </div>
         </div>

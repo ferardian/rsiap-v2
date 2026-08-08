@@ -110,7 +110,7 @@ const currentPageTitle = computed(() => {
     '/admin/role-menu': 'Admin > Manajemen Role-Menu',
     '/admin/face-master': 'Admin > Manajemen Face Master',
     '/diklit/penelitian': 'Diklit > Permohonan Data Penelitian',
-    '/diklit/penelitian/laporan-sla': 'Diklit > Laporan SLA Akreditasi',
+    '/diklit/penelitian/laporan-sla': 'Diklit > Laporan SLA',
     '/satusehat/mapping-radiology': 'SatuSehat > Mapping Radiologi'
   }
   

@@ -26,7 +26,7 @@
           <!-- Hero Content & Illustration -->
           <div class="position-relative z-2 my-auto py-4">
             <div class="badge-hero mb-3">
-              <i class="fas fa-shield-check text-emerald-400 me-2"></i> Standard Akreditasi RS
+              <i class="fas fa-shield-check text-emerald-400 me-2"></i> Standar Pelayanan Data RS
             </div>
             <h2 class="hero-title fw-extrabold mb-3">Sistem Akses Data RME Ter-masking</h2>
             <p class="hero-desc text-slate-300 mb-4">

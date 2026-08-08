@@ -10,7 +10,7 @@
             </div>
             <h2 class="page-title mb-0">Laporan Indikator Ketepatan Waktu Riset</h2>
           </div>
-          <p class="page-subtitle text-muted mb-0">Bukti kelengkapan fisik akreditasi RS — Elemen Penilaian Ketepatan Waktu Data (SLA ≤ 3 Hari)</p>
+          <p class="page-subtitle text-muted mb-0">Laporan Indikator Ketepatan Waktu Penyediaan Data Riset (Target SLA ≤ 3 Hari)</p>
         </div>
 
         <div class="header-actions d-flex align-items-center gap-2">
@@ -20,7 +20,7 @@
           </router-link>
           <button class="btn btn-action-success shadow-sm" @click="printReport">
             <i class="fas fa-print me-1"></i>
-            <span>Cetak Laporan Akreditasi</span>
+            <span>Cetak Laporan SLA</span>
           </button>
         </div>
       </div>
