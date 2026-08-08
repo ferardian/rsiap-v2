@@ -538,7 +538,8 @@ export default {
 
     openEditModal(item) {
       this.isEdit = true
-      this.form = { ...item, file_surat_permohonan: null }
+      const { user_access, userAccess, ...cleanItem } = item
+      this.form = { ...cleanItem, file_surat_permohonan: null }
       this.bsFormModal.show()
     },
 
@@ -550,11 +551,22 @@ export default {
       this.saving = true
       try {
         const formData = new FormData()
-        Object.keys(this.form).forEach(k => {
-          if (this.form[k] !== null && this.form[k] !== undefined) {
+        const allowedKeys = [
+          'no_surat', 'judul_penelitian', 'nama_peneliti', 'institusi',
+          'no_hp', 'email', 'tgl_pengajuan', 'tgl_disposisi', 'tgl_data_selesai',
+          'kriteria_diagnosa', 'rentang_tgl_awal', 'rentang_tgl_akhir',
+          'status', 'catatan'
+        ]
+
+        allowedKeys.forEach(k => {
+          if (this.form[k] !== null && this.form[k] !== undefined && typeof this.form[k] !== 'object') {
             formData.append(k, this.form[k])
           }
         })
+
+        if (this.form.file_surat_permohonan instanceof File) {
+          formData.append('file_surat_permohonan', this.form.file_surat_permohonan)
+        }
 
         let res
         if (this.isEdit) {
