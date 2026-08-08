@@ -1,53 +1,120 @@
 <template>
-  <div class="peneliti-rme-view min-vh-100 bg-light p-3 p-md-4">
+  <div class="peneliti-rme-view min-vh-100 bg-slate-50 p-3 p-md-4">
     <!-- Navbar / Header for Researcher -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white p-3">
+    <div class="card navbar-researcher border-0 shadow-md rounded-4 mb-4 text-white p-3 p-md-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div class="d-flex align-items-center gap-3">
-          <div class="header-icon-box bg-white text-dark">
-            <i class="fas fa-user-shield"></i>
+          <div class="header-icon-box">
+            <i class="fas fa-microscope"></i>
           </div>
           <div>
-            <h4 class="mb-0 fw-bold">{{ permohonan.judul || 'Portal Data Penelitian RME' }}</h4>
-            <div class="text-xs opacity-75">
-              Peneliti: <b>{{ permohonan.peneliti || username }}</b> ({{ permohonan.institusi || 'Institusi' }})
+            <div class="d-flex align-items-center gap-2">
+              <h4 class="mb-0 fw-extrabold text-white">{{ permohonan.judul_penelitian || permohonan.judul || 'Portal Data Penelitian RME' }}</h4>
+            </div>
+            <div class="text-xs text-white-50 mt-1">
+              Peneliti: <b class="text-white">{{ permohonan.nama_peneliti || permohonan.peneliti || username }}</b> &bull; {{ permohonan.institusi || 'Institusi' }}
             </div>
           </div>
         </div>
+
         <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-warning text-dark"><i class="fas fa-lock me-1"></i> Data Masked Mode</span>
-          <button class="btn btn-sm btn-outline-light rounded-pill px-3" @click="handleLogout">
+          <span class="badge badge-security-active">
+            <i class="fas fa-shield-alt me-1"></i> Data Masked Mode Active
+          </span>
+          <button class="btn btn-logout-portal" @click="handleLogout">
             <i class="fas fa-sign-out-alt me-1"></i> Logout
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Quick Stats Cards for Researcher -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4">
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+          <div class="card-body p-3 d-flex align-items-center gap-3">
+            <div class="stat-icon primary">
+              <i class="fas fa-database"></i>
+            </div>
+            <div>
+              <div class="stat-label">Total Data Ditemukan</div>
+              <div class="stat-value">{{ pagination.total }} Record</div>
+            </div>
+          </div>
+          <div class="stat-bar primary"></div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4">
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+          <div class="card-body p-3 d-flex align-items-center gap-3">
+            <div class="stat-icon info">
+              <i class="fas fa-user-lock"></i>
+            </div>
+            <div>
+              <div class="stat-label">Proteksi Identitas</div>
+              <div class="stat-value text-info">De-Identified</div>
+            </div>
+          </div>
+          <div class="stat-bar info"></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+          <div class="card-body p-3 d-flex align-items-center gap-3">
+            <div class="stat-icon success">
+              <i class="fas fa-certificate"></i>
+            </div>
+            <div>
+              <div class="stat-label">Standar Akses Riset</div>
+              <div class="stat-value text-success">MRMIK 1 EP e</div>
+            </div>
+          </div>
+          <div class="stat-bar success"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Filter & Search Toolbar -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card toolbar-card border-0 shadow-sm rounded-4 mb-4">
       <div class="card-body p-3">
-        <div class="row g-3 align-items-center">
-          <div class="col-md-5">
-            <div class="input-group">
-              <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
+            <div class="search-input-wrapper flex-grow-1">
+              <i class="fas fa-search search-icon"></i>
               <input 
                 type="text" 
-                class="form-control border-start-0 ps-0" 
+                class="form-control search-input" 
                 v-model="filters.search" 
-                placeholder="Cari ICD-10, Diagnosa, atau Poliklinik..."
+                placeholder="Cari Diagnosa, Poliklinik, atau Kata Kunci..."
+                @keyup.enter="fetchData"
+              >
+              <button v-if="filters.search" class="btn-clear-search" @click="filters.search = ''; fetchData()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="icd-input-wrapper">
+              <i class="fas fa-hashtag search-icon"></i>
+              <input 
+                type="text" 
+                class="form-control search-input" 
+                v-model="filters.kd_penyakit" 
+                placeholder="Filter ICD-10 (misal: O14)" 
                 @keyup.enter="fetchData"
               >
             </div>
           </div>
-          <div class="col-md-3">
-            <input type="text" class="form-control" v-model="filters.kd_penyakit" placeholder="Kode ICD-10 (misal: O14)" @keyup.enter="fetchData">
-          </div>
-          <div class="col-md-4 text-end d-flex gap-2 justify-content-end">
-            <button class="btn btn-outline-primary rounded-3 shadow-sm" @click="fetchData" :disabled="loading">
-              <i :class="['fas fa-sync-alt me-1', { 'fa-spin': loading }]"></i> Refresh
+
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-refresh-premium shadow-sm" @click="fetchData" :disabled="loading">
+              <i :class="['fas fa-sync-alt me-1', { 'fa-spin': loading }]"></i>
+              <span>Refresh</span>
             </button>
-            <button class="btn btn-success rounded-3 shadow-sm" @click="exportCsv" :disabled="loading || items.length === 0">
-              <i class="fas fa-file-excel me-1"></i> Export CSV
+            <button class="btn btn-export-excel shadow-sm" @click="exportCsv" :disabled="loading || items.length === 0">
+              <i class="fas fa-file-excel me-1"></i>
+              <span>Export CSV</span>
             </button>
           </div>
         </div>
@@ -55,10 +122,10 @@
     </div>
 
     <!-- Data Table Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card table-card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 custom-table">
+          <table class="table table-hover align-middle mb-0 custom-table-premium">
             <thead>
               <tr>
                 <th class="ps-4">No. Rawat (Masked)</th>
@@ -71,41 +138,53 @@
             </thead>
             <tbody>
               <tr v-if="loading" v-for="n in 5" :key="n">
-                <td colspan="6" class="py-4 text-center">
-                  <div class="spinner-border spinner-border-sm text-primary me-2"></div> Memuat data RME ter-masking...
+                <td colspan="6" class="p-4 text-center">
+                  <div class="shimmer-line mb-2"></div>
+                  <div class="shimmer-line w-75 mx-auto"></div>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="6" class="py-5 text-center text-muted">
-                  <i class="fas fa-search fa-2x mb-2 d-block opacity-50"></i>
-                  Tidak ada data RME ditemukan untuk kriteria ini
+                <td colspan="6" class="py-5 text-center">
+                  <div class="empty-icon-box mx-auto mb-2">
+                    <i class="fas fa-search-minus"></i>
+                  </div>
+                  <p class="fw-semibold text-secondary mb-1">Tidak Ada Data RME Ditemukan</p>
+                  <p class="text-xs text-muted">Coba ubah kriteria pencarian atau kriteria diagnosa</p>
                 </td>
               </tr>
-              <tr v-for="item in items" :key="item.no_rawat">
+              <tr v-for="item in items" :key="item.no_rawat" class="hover-row">
                 <td class="ps-4">
-                  <div class="fw-mono text-dark font-semibold">{{ item.no_rawat }}</div>
-                  <div class="text-xs text-muted">{{ item.no_rkm_medis }}</div>
+                  <div class="fw-bold font-mono text-dark text-sm">{{ item.no_rawat }}</div>
+                  <div class="text-xs text-muted font-mono">{{ item.no_rkm_medis }}</div>
                 </td>
                 <td>
-                  <div class="fw-bold text-dark">{{ item.nm_pasien }}</div>
-                  <div class="text-xs text-muted"><i class="fas fa-id-card me-1"></i> NIK: {{ item.no_ktp }}</div>
-                  <div class="text-xs text-muted"><i class="fas fa-map-marker-alt me-1"></i> {{ item.alamat }}</div>
+                  <div class="fw-bold text-dark text-sm">{{ item.nm_pasien }}</div>
+                  <div class="text-xs text-muted mt-1">
+                    <span class="me-2"><i class="fas fa-id-card text-primary me-1"></i> NIK: {{ item.no_ktp }}</span>
+                  </div>
+                  <div class="text-xs text-muted">
+                    <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ item.alamat }}
+                  </div>
                 </td>
                 <td>
-                  <span class="badge bg-light text-dark border me-1">{{ item.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
-                  <div class="text-xs text-muted mt-1">{{ item.umur }}</div>
+                  <span :class="item.jk === 'L' ? 'badge badge-jk male' : 'badge badge-jk female'">
+                    {{ item.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}
+                  </span>
+                  <div class="text-xs text-muted font-semibold mt-1">{{ item.umur }}</div>
                 </td>
                 <td>
-                  <div class="fw-semibold text-dark">{{ item.nm_poli }}</div>
+                  <div class="fw-bold text-dark text-sm">{{ item.nm_poli }}</div>
                   <div class="text-xs text-muted">{{ item.penjamin }}</div>
                 </td>
                 <td>
-                  <span class="badge bg-info-subtle text-info border border-info font-mono me-1">{{ item.icd10_utama || 'N/A' }}</span>
-                  <div class="fw-semibold text-dark text-xs mt-1">{{ item.nama_diagnosa || 'Diagnosa belum terisi' }}</div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge badge-icd10 font-mono">{{ item.icd10_utama || 'N/A' }}</span>
+                    <span class="fw-semibold text-dark text-xs">{{ item.nama_diagnosa || 'Diagnosa belum terisi' }}</span>
+                  </div>
                 </td>
                 <td class="pe-4 text-end">
-                  <div class="fw-semibold">{{ formatDate(item.tgl_registrasi) }}</div>
-                  <div class="text-xs text-muted">{{ item.jam_reg }}</div>
+                  <div class="fw-semibold text-sm">{{ formatDate(item.tgl_registrasi) }}</div>
+                  <div class="text-xs text-muted font-mono">{{ item.jam_reg }}</div>
                 </td>
               </tr>
             </tbody>
@@ -114,9 +193,9 @@
       </div>
 
       <!-- Pagination -->
-      <div class="card-footer bg-white p-3 border-top-0 d-flex justify-content-between align-items-center">
-        <div class="text-xs text-muted">
-          Showing <b>{{ items.length }}</b> of <b>{{ pagination.total }}</b> entries
+      <div class="card-footer bg-white p-3 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="text-xs text-muted fw-semibold">
+          Menampilkan <b>{{ items.length }}</b> dari total <b>{{ pagination.total }}</b> data RME
         </div>
         <nav v-if="pagination.last_page > 1">
           <ul class="pagination pagination-sm mb-0">
@@ -235,27 +314,245 @@ export default {
 </script>
 
 <style scoped>
+.peneliti-rme-view {
+  padding-bottom: 2rem;
+}
+
+.navbar-researcher {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
 .header-icon-box {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  color: white;
+}
+
+.badge-security-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 0.775rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 10px;
+}
+
+.btn-logout-portal {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.825rem;
+  transition: all 0.2s ease;
+}
+
+.btn-logout-portal:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+/* Stat Cards */
+.stat-card {
+  position: relative;
+  transition: transform 0.2s ease;
+  background: white;
+}
+.stat-card:hover { transform: translateY(-3px); }
+
+.stat-icon {
   width: 44px;
   height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.stat-icon.primary { background: #eff6ff; color: #3b82f6; }
+.stat-icon.info { background: #ecfeff; color: #0891b2; }
+.stat-icon.success { background: #ecfdf5; color: #10b981; }
+
+.stat-label {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
 }
 
-.fw-mono {
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
 }
 
-.custom-table thead th {
+.stat-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-bar.primary { background: #3b82f6; }
+.stat-bar.info { background: #0891b2; }
+.stat-bar.success { background: #10b981; }
+
+/* Toolbar */
+.toolbar-card {
+  background: white;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.search-input-wrapper, .icd-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrapper { min-width: 260px; }
+.icd-input-wrapper { width: 220px; }
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.search-input {
+  padding-left: 2.75rem;
+  padding-right: 2rem;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.875rem;
   background: #f8fafc;
-  padding: 1rem 0.75rem;
+}
+
+.search-input:focus {
+  background: white;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.btn-refresh-premium {
+  height: 44px;
+  padding: 0 1.25rem;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-premium:hover:not(:disabled) {
+  background: #f8fafc;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+
+.btn-export-excel {
+  height: 44px;
+  padding: 0 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.btn-export-excel:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Table */
+.custom-table-premium thead th {
+  background: #f8fafc;
+  padding: 1.1rem 0.75rem;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
   color: #64748b;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.hover-row { transition: background 0.15s ease; }
+.hover-row:hover { background-color: #f8fafc; }
+
+.badge-jk {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.badge-jk.male { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.badge-jk.female { background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; }
+
+.badge-icd10 {
+  background: #ecfeff;
+  color: #0891b2;
+  border: 1px solid #a5f3fc;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.empty-icon-box {
+  width: 54px;
+  height: 54px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.shimmer-line {
+  height: 18px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 </style>
