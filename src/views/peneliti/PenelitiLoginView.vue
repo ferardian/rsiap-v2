@@ -206,12 +206,20 @@ export default {
   backdrop-filter: blur(20px);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   border-radius: 28px !important;
+  border: none !important;
+  outline: none !important;
+  isolation: isolate;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* Hero Left Section */
 .hero-section {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   min-height: 520px;
+  border-top-left-radius: 28px;
+  border-bottom-left-radius: 28px;
+  overflow: hidden;
 }
 
 .hero-overlay {
