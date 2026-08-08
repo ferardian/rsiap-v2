@@ -110,9 +110,9 @@
               <i :class="['fas fa-sync-alt me-1.5', { 'fa-spin': loading }]"></i>
               <span>Refresh</span>
             </button>
-            <button class="btn btn-export-excel-modern shadow-sm" @click="exportCsv" :disabled="loading || items.length === 0">
-              <i class="fas fa-file-excel me-1.5"></i>
-              <span>Export CSV</span>
+            <button class="btn btn-export-excel-modern shadow-sm" @click="exportCsv" :disabled="loading || isExporting || pagination.total === 0">
+              <i :class="['fas me-1.5', isExporting ? 'fa-spinner fa-spin' : 'fa-file-excel']"></i>
+              <span>{{ isExporting ? 'Mengunduh Semuanya...' : 'Export Semua CSV' }}</span>
             </button>
           </div>
         </div>
@@ -197,21 +197,53 @@
         </div>
       </div>
 
-      <!-- Pagination -->
-      <div class="card-footer bg-white p-3.5 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div class="text-xs text-slate-500 font-medium">
-          Menampilkan <b>{{ items.length }}</b> dari total <b>{{ pagination.total }}</b> data RME
+      <!-- Modern Pagination Footer -->
+      <div class="card-footer bg-white p-3.5 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-xs text-slate-500 font-medium">Tampilkan per halaman:</span>
+          <select v-model="filters.limit" @change="onLimitChange" class="form-select form-select-sm limit-select-modern">
+            <option :value="15">15</option>
+            <option :value="25">25</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+          <span class="text-xs text-slate-500 ms-2">
+            Menampilkan <b>{{ ((pagination.current_page - 1) * filters.limit) + 1 }}</b> - <b>{{ Math.min(pagination.current_page * filters.limit, pagination.total) }}</b> dari total <b>{{ pagination.total.toLocaleString() }}</b> data
+          </span>
         </div>
+
         <nav v-if="pagination.last_page > 1">
-          <ul class="pagination pagination-sm mb-0">
+          <ul class="pagination pagination-modern mb-0">
             <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-              <button class="page-link" @click="changePage(pagination.current_page - 1)"><i class="fas fa-chevron-left"></i></button>
+              <button class="page-link" @click="changePage(1)" title="Halaman Pertama">
+                <i class="fas fa-angle-double-left"></i>
+              </button>
             </li>
-            <li class="page-item active">
-              <span class="page-link">{{ pagination.current_page }} / {{ pagination.last_page }}</span>
+            <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+              <button class="page-link" @click="changePage(pagination.current_page - 1)" title="Sebelumnya">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+            </li>
+
+            <li 
+              v-for="p in visiblePages" 
+              :key="p" 
+              class="page-item" 
+              :class="{ active: p === pagination.current_page, disabled: p === '...' }"
+            >
+              <button v-if="p !== '...'" class="page-link" @click="changePage(p)">{{ p }}</button>
+              <span v-else class="page-link">...</span>
+            </li>
+
+            <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+              <button class="page-link" @click="changePage(pagination.current_page + 1)" title="Berikutnya">
+                <i class="fas fa-chevron-right"></i>
+              </button>
             </li>
             <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
-              <button class="page-link" @click="changePage(pagination.current_page + 1)"><i class="fas fa-chevron-right"></i></button>
+              <button class="page-link" @click="changePage(pagination.last_page)" title="Halaman Terakhir">
+                <i class="fas fa-angle-double-right"></i>
+              </button>
             </li>
           </ul>
         </nav>
@@ -231,11 +263,38 @@ export default {
     return {
       items: [],
       loading: false,
+      isExporting: false,
       username: localStorage.getItem('peneliti_username') || '',
       accessId: localStorage.getItem('peneliti_access_id') || '',
       permohonan: JSON.parse(localStorage.getItem('peneliti_permohonan') || '{}'),
       filters: { search: '', kd_penyakit: '', page: 1, limit: 15 },
       pagination: { current_page: 1, last_page: 1, total: 0 }
+    }
+  },
+  computed: {
+    visiblePages() {
+      const current = this.pagination.current_page
+      const last = this.pagination.last_page
+      const delta = 2
+      const range = []
+
+      for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) {
+        range.push(i)
+      }
+
+      if (current - delta > 2) {
+        range.unshift('...')
+      }
+      if (current + delta < last - 1) {
+        range.push('...')
+      }
+
+      range.unshift(1)
+      if (last > 1) {
+        range.push(last)
+      }
+
+      return range
     }
   },
   mounted() {
@@ -280,8 +339,13 @@ export default {
     },
 
     changePage(p) {
-      if (p < 1 || p > this.pagination.last_page) return
+      if (p < 1 || p > this.pagination.last_page || p === '...') return
       this.filters.page = p
+      this.fetchData()
+    },
+
+    onLimitChange() {
+      this.filters.page = 1
       this.fetchData()
     },
 
@@ -298,21 +362,49 @@ export default {
       this.$router.push('/portal-peneliti/login')
     },
 
-    exportCsv() {
-      if (this.items.length === 0) return
+    async exportCsv() {
+      if (this.pagination.total === 0) return
 
-      let csv = 'No Rawat,No RM,NIK,Nama Pasien,JK,Umur,Alamat,Poliklinik,Penjamin,ICD10 Utama,Nama Diagnosa,Tgl Registrasi\n'
-      this.items.forEach(i => {
-        csv += `"${i.no_rawat}","${i.no_rkm_medis}","${i.no_ktp}","${i.nm_pasien}","${i.jk}","${i.umur}","${i.alamat}","${i.nm_poli}","${i.penjamin}","${i.icd10_utama || ''}","${i.nama_diagnosa || ''}","${i.tgl_registrasi}"\n`
-      })
+      this.isExporting = true
+      try {
+        const headers = {
+          'X-Peneliti-Username': this.username,
+          'X-Peneliti-Access-Id': this.accessId
+        }
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.setAttribute('download', `data_rme_masked_${dayjs().format('YYYYMMDD')}.csv`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+        const exportParams = { ...this.filters, export: 1 }
+        const res = await penelitianService.getRmeMasked(exportParams, headers)
+
+        if (res.data.success) {
+          const exportData = res.data.data
+
+          let csv = 'No Rawat,No RM,NIK,Nama Pasien,JK,Umur,Alamat,Poliklinik,Penjamin,ICD10 Utama,Nama Diagnosa,Tgl Registrasi\n'
+          exportData.forEach(i => {
+            csv += `"${i.no_rawat}","${i.no_rkm_medis}","${i.no_ktp}","${i.nm_pasien}","${i.jk}","${i.umur}","${i.alamat}","${i.nm_poli}","${i.penjamin}","${i.icd10_utama || ''}","${i.nama_diagnosa || ''}","${i.tgl_registrasi}"\n`
+          })
+
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blob)
+          link.setAttribute('download', `data_rme_masked_${dayjs().format('YYYYMMDD_HHmm')}.csv`)
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Export Berhasil',
+            text: `Sebanyak ${exportData.length} record data RME ter-masking telah diunduh.`,
+            timer: 2000,
+            showConfirmButton: false
+          })
+        }
+      } catch (err) {
+        console.error('Export CSV error:', err)
+        Swal.fire('Error', 'Gagal mengekspor data CSV', 'error')
+      } finally {
+        this.isExporting = false
+      }
     }
   }
 }
@@ -560,6 +652,52 @@ export default {
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
+}
+
+/* Limit Select & Pagination Modern */
+.limit-select-modern {
+  width: 70px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background-color: #f8fafc;
+}
+
+.pagination-modern {
+  display: flex;
+  gap: 4px;
+}
+
+.pagination-modern .page-item .page-link {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.pagination-modern .page-item:not(.active):not(.disabled) .page-link:hover {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.pagination-modern .page-item.active .page-link {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.pagination-modern .page-item.disabled .page-link {
+  opacity: 0.4;
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 
 .shimmer-line {
