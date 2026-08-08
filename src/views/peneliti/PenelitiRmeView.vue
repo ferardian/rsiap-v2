@@ -1,27 +1,28 @@
 <template>
-  <div class="peneliti-rme-view min-vh-100 bg-slate-50 p-3 p-md-4">
+  <div class="peneliti-rme-page min-vh-100 p-3 p-md-4">
     <!-- Navbar / Header for Researcher -->
-    <div class="card navbar-researcher border-0 shadow-md rounded-4 mb-4 text-white p-3 p-md-4">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="card navbar-researcher border-0 shadow-xl rounded-4 mb-4 text-white p-3 p-md-4 position-relative overflow-hidden">
+      <div class="navbar-bg-glow"></div>
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative z-2">
         <div class="d-flex align-items-center gap-3">
-          <div class="header-icon-box">
-            <i class="fas fa-microscope"></i>
+          <div class="brand-logo-glass me-1">
+            <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="img-fluid logo-img">
           </div>
           <div>
             <div class="d-flex align-items-center gap-2">
-              <h4 class="mb-0 fw-extrabold text-white">{{ permohonan.judul_penelitian || permohonan.judul || 'Portal Data Penelitian RME' }}</h4>
+              <h4 class="mb-0 fw-extrabold text-white tracking-tight">{{ permohonan.judul_penelitian || permohonan.judul || 'Portal Data Penelitian RME' }}</h4>
             </div>
-            <div class="text-xs text-white-50 mt-1">
+            <div class="text-xs text-slate-300 mt-1">
               Peneliti: <b class="text-white">{{ permohonan.nama_peneliti || permohonan.peneliti || username }}</b> &bull; {{ permohonan.institusi || 'Institusi' }}
             </div>
           </div>
         </div>
 
         <div class="d-flex align-items-center gap-2">
-          <span class="badge badge-security-active">
-            <i class="fas fa-shield-alt me-1"></i> Data Masked Mode Active
+          <span class="badge badge-security-glow">
+            <i class="fas fa-shield-check me-1 text-emerald-400"></i> Protected & Masked Mode
           </span>
-          <button class="btn btn-logout-portal" @click="handleLogout">
+          <button class="btn btn-logout-glass" @click="handleLogout">
             <i class="fas fa-sign-out-alt me-1"></i> Logout
           </button>
         </div>
@@ -31,53 +32,50 @@
     <!-- Quick Stats Cards for Researcher -->
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-4">
-        <div class="card stat-card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-          <div class="card-body p-3 d-flex align-items-center gap-3">
-            <div class="stat-icon primary">
+        <div class="card stat-card-modern border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+          <div class="card-body p-3.5 d-flex align-items-center gap-3">
+            <div class="stat-icon-modern primary">
               <i class="fas fa-database"></i>
             </div>
             <div>
-              <div class="stat-label">Total Data Ditemukan</div>
-              <div class="stat-value">{{ pagination.total }} Record</div>
+              <div class="stat-label-modern">Total Record Ditemukan</div>
+              <div class="stat-value-modern">{{ pagination.total }} Pasien</div>
             </div>
           </div>
-          <div class="stat-bar primary"></div>
         </div>
       </div>
 
       <div class="col-6 col-md-4">
-        <div class="card stat-card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-          <div class="card-body p-3 d-flex align-items-center gap-3">
-            <div class="stat-icon info">
-              <i class="fas fa-user-lock"></i>
+        <div class="card stat-card-modern border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+          <div class="card-body p-3.5 d-flex align-items-center gap-3">
+            <div class="stat-icon-modern info">
+              <i class="fas fa-user-shield"></i>
             </div>
             <div>
-              <div class="stat-label">Proteksi Identitas</div>
-              <div class="stat-value text-info">De-Identified</div>
+              <div class="stat-label-modern">Status Anonimasi</div>
+              <div class="stat-value-modern text-info">De-Identified</div>
             </div>
           </div>
-          <div class="stat-bar info"></div>
         </div>
       </div>
 
       <div class="col-12 col-md-4">
-        <div class="card stat-card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-          <div class="card-body p-3 d-flex align-items-center gap-3">
-            <div class="stat-icon success">
+        <div class="card stat-card-modern border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+          <div class="card-body p-3.5 d-flex align-items-center gap-3">
+            <div class="stat-icon-modern success">
               <i class="fas fa-certificate"></i>
             </div>
             <div>
-              <div class="stat-label">Standar Akses Riset</div>
-              <div class="stat-value text-success">MRMIK 1 EP e</div>
+              <div class="stat-label-modern">Standar Akreditasi</div>
+              <div class="stat-value-modern text-success">MRMIK 1 EP e</div>
             </div>
           </div>
-          <div class="stat-bar success"></div>
         </div>
       </div>
     </div>
 
     <!-- Filter & Search Toolbar -->
-    <div class="card toolbar-card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card toolbar-card-modern border-0 shadow-sm rounded-4 mb-4">
       <div class="card-body p-3">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
           <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
@@ -85,7 +83,7 @@
               <i class="fas fa-search search-icon"></i>
               <input 
                 type="text" 
-                class="form-control search-input" 
+                class="form-control search-input-modern" 
                 v-model="filters.search" 
                 placeholder="Cari Diagnosa, Poliklinik, atau Kata Kunci..."
                 @keyup.enter="fetchData"
@@ -99,7 +97,7 @@
               <i class="fas fa-hashtag search-icon"></i>
               <input 
                 type="text" 
-                class="form-control search-input" 
+                class="form-control search-input-modern" 
                 v-model="filters.kd_penyakit" 
                 placeholder="Filter ICD-10 (misal: O14)" 
                 @keyup.enter="fetchData"
@@ -108,12 +106,12 @@
           </div>
 
           <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-refresh-premium shadow-sm" @click="fetchData" :disabled="loading">
-              <i :class="['fas fa-sync-alt me-1', { 'fa-spin': loading }]"></i>
+            <button class="btn btn-refresh-modern shadow-sm" @click="fetchData" :disabled="loading">
+              <i :class="['fas fa-sync-alt me-1.5', { 'fa-spin': loading }]"></i>
               <span>Refresh</span>
             </button>
-            <button class="btn btn-export-excel shadow-sm" @click="exportCsv" :disabled="loading || items.length === 0">
-              <i class="fas fa-file-excel me-1"></i>
+            <button class="btn btn-export-excel-modern shadow-sm" @click="exportCsv" :disabled="loading || items.length === 0">
+              <i class="fas fa-file-excel me-1.5"></i>
               <span>Export CSV</span>
             </button>
           </div>
@@ -122,13 +120,13 @@
     </div>
 
     <!-- Data Table Card -->
-    <div class="card table-card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card table-card-modern border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 custom-table-premium">
+          <table class="table table-hover align-middle mb-0 custom-table-modern">
             <thead>
               <tr>
-                <th class="ps-4">No. Rawat (Masked)</th>
+                <th class="ps-4">No. Rawat & RM (Masked)</th>
                 <th>Identitas Pasien (Ter-Masking)</th>
                 <th>Umur / JK</th>
                 <th>Poliklinik & Penjamin</th>
@@ -148,43 +146,50 @@
                   <div class="empty-icon-box mx-auto mb-2">
                     <i class="fas fa-search-minus"></i>
                   </div>
-                  <p class="fw-semibold text-secondary mb-1">Tidak Ada Data RME Ditemukan</p>
-                  <p class="text-xs text-muted">Coba ubah kriteria pencarian atau kriteria diagnosa</p>
+                  <p class="fw-bold text-slate-700 mb-1">Tidak Ada Data RME Ditemukan</p>
+                  <p class="text-xs text-slate-500">Coba atur ulang filter pencarian atau kata kunci diagnosa</p>
                 </td>
               </tr>
               <tr v-for="item in items" :key="item.no_rawat" class="hover-row">
                 <td class="ps-4">
-                  <div class="fw-bold font-mono text-dark text-sm">{{ item.no_rawat }}</div>
-                  <div class="text-xs text-muted font-mono">{{ item.no_rkm_medis }}</div>
+                  <div class="fw-bold font-mono text-slate-900 text-sm">{{ item.no_rawat }}</div>
+                  <div class="text-xs text-slate-500 font-mono">{{ item.no_rkm_medis }}</div>
                 </td>
                 <td>
-                  <div class="fw-bold text-dark text-sm">{{ item.nm_pasien }}</div>
-                  <div class="text-xs text-muted mt-1">
-                    <span class="me-2"><i class="fas fa-id-card text-primary me-1"></i> NIK: {{ item.no_ktp }}</span>
-                  </div>
-                  <div class="text-xs text-muted">
-                    <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ item.alamat }}
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="patient-avatar-circle">
+                      <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                      <div class="fw-bold text-slate-900 text-sm">{{ item.nm_pasien }}</div>
+                      <div class="text-xs text-slate-500">
+                        <span class="me-2"><i class="fas fa-id-card text-blue-500 me-1"></i> NIK: {{ item.no_ktp }}</span>
+                      </div>
+                      <div class="text-xs text-slate-400">
+                        <i class="fas fa-map-marker-alt text-rose-500 me-1"></i> {{ item.alamat }}
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td>
                   <span :class="item.jk === 'L' ? 'badge badge-jk male' : 'badge badge-jk female'">
                     {{ item.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}
                   </span>
-                  <div class="text-xs text-muted font-semibold mt-1">{{ item.umur }}</div>
+                  <div class="text-xs text-slate-600 font-semibold mt-1">{{ item.umur }}</div>
                 </td>
                 <td>
-                  <div class="fw-bold text-dark text-sm">{{ item.nm_poli }}</div>
-                  <div class="text-xs text-muted">{{ item.penjamin }}</div>
+                  <div class="fw-bold text-slate-900 text-sm">{{ item.nm_poli }}</div>
+                  <div class="text-xs text-slate-500">{{ item.penjamin }}</div>
                 </td>
                 <td>
                   <div class="d-flex align-items-center gap-2">
                     <span class="badge badge-icd10 font-mono">{{ item.icd10_utama || 'N/A' }}</span>
-                    <span class="fw-semibold text-dark text-xs">{{ item.nama_diagnosa || 'Diagnosa belum terisi' }}</span>
+                    <span class="fw-semibold text-slate-800 text-xs">{{ item.nama_diagnosa || 'Diagnosa belum terisi' }}</span>
                   </div>
                 </td>
                 <td class="pe-4 text-end">
-                  <div class="fw-semibold text-sm">{{ formatDate(item.tgl_registrasi) }}</div>
-                  <div class="text-xs text-muted font-mono">{{ item.jam_reg }}</div>
+                  <div class="fw-semibold text-sm text-slate-900">{{ formatDate(item.tgl_registrasi) }}</div>
+                  <div class="text-xs text-slate-400 font-mono">{{ item.jam_reg }}</div>
                 </td>
               </tr>
             </tbody>
@@ -193,8 +198,8 @@
       </div>
 
       <!-- Pagination -->
-      <div class="card-footer bg-white p-3 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div class="text-xs text-muted fw-semibold">
+      <div class="card-footer bg-white p-3.5 border-top-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="text-xs text-slate-500 font-medium">
           Menampilkan <b>{{ items.length }}</b> dari total <b>{{ pagination.total }}</b> data RME
         </div>
         <nav v-if="pagination.last_page > 1">
@@ -314,79 +319,86 @@ export default {
 </script>
 
 <style scoped>
-.peneliti-rme-view {
-  padding-bottom: 2rem;
+.peneliti-rme-page {
+  background-color: #0f172a;
+  min-height: 100vh;
 }
 
 .navbar-researcher {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
 }
 
-.header-icon-box {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.navbar-bg-glow {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.2), transparent 70%);
+}
+
+.brand-logo-glass {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 14px;
+  padding: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  color: white;
 }
 
-.badge-security-active {
-  background: rgba(16, 185, 129, 0.15);
+.logo-img { max-height: 100%; object-fit: contain; }
+
+.badge-security-glow {
+  background: rgba(16, 185, 129, 0.12);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   font-size: 0.775rem;
   font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 10px;
+  padding: 6px 14px;
+  border-radius: 50px;
 }
 
-.btn-logout-portal {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 6px 14px;
-  border-radius: 10px;
+.btn-logout-glass {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 16px;
+  border-radius: 50px;
   font-weight: 700;
   font-size: 0.825rem;
   transition: all 0.2s ease;
 }
 
-.btn-logout-portal:hover {
-  background: #ef4444;
+.btn-logout-glass:hover {
+  background: rgba(239, 68, 68, 0.8);
   color: white;
   border-color: #ef4444;
 }
 
 /* Stat Cards */
-.stat-card {
-  position: relative;
-  transition: transform 0.2s ease;
+.stat-card-modern {
   background: white;
+  border-radius: 18px !important;
+  transition: transform 0.2s ease;
 }
-.stat-card:hover { transform: translateY(-3px); }
+.stat-card-modern:hover { transform: translateY(-2px); }
 
-.stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+.stat-icon-modern {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
-.stat-icon.primary { background: #eff6ff; color: #3b82f6; }
-.stat-icon.info { background: #ecfeff; color: #0891b2; }
-.stat-icon.success { background: #ecfdf5; color: #10b981; }
+.stat-icon-modern.primary { background: #eff6ff; color: #3b82f6; }
+.stat-icon-modern.info { background: #ecfeff; color: #0891b2; }
+.stat-icon-modern.success { background: #ecfdf5; color: #10b981; }
 
-.stat-label {
+.stat-label-modern {
   font-size: 0.725rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -394,26 +406,17 @@ export default {
   color: #64748b;
 }
 
-.stat-value {
-  font-size: 1.2rem;
+.stat-value-modern {
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.2;
 }
 
-.stat-bar {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 3px;
-}
-.stat-bar.primary { background: #3b82f6; }
-.stat-bar.info { background: #0891b2; }
-.stat-bar.success { background: #10b981; }
-
 /* Toolbar */
-.toolbar-card {
+.toolbar-card-modern {
   background: white;
-  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
 }
 
 .search-input-wrapper, .icd-input-wrapper {
@@ -429,20 +432,21 @@ export default {
   position: absolute;
   left: 1rem;
   color: #94a3b8;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
 }
 
-.search-input {
+.search-input-modern {
   padding-left: 2.75rem;
   padding-right: 2rem;
-  height: 44px;
-  border-radius: 12px;
+  height: 46px;
+  border-radius: 14px;
   border: 1px solid #cbd5e1;
   font-size: 0.875rem;
   background: #f8fafc;
+  transition: all 0.2s ease;
 }
 
-.search-input:focus {
+.search-input-modern:focus {
   background: white;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -457,10 +461,10 @@ export default {
   cursor: pointer;
 }
 
-.btn-refresh-premium {
-  height: 44px;
+.btn-refresh-modern {
+  height: 46px;
   padding: 0 1.25rem;
-  border-radius: 12px;
+  border-radius: 14px;
   background: white;
   border: 1px solid #cbd5e1;
   color: #475569;
@@ -471,16 +475,16 @@ export default {
   transition: all 0.2s ease;
 }
 
-.btn-refresh-premium:hover:not(:disabled) {
+.btn-refresh-modern:hover:not(:disabled) {
   background: #f8fafc;
   color: #1e293b;
   border-color: #94a3b8;
 }
 
-.btn-export-excel {
-  height: 44px;
+.btn-export-excel-modern {
+  height: 46px;
   padding: 0 1.25rem;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
   color: white;
@@ -491,14 +495,19 @@ export default {
   transition: all 0.2s ease;
 }
 
-.btn-export-excel:hover:not(:disabled) {
+.btn-export-excel-modern:hover:not(:disabled) {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 /* Table */
-.custom-table-premium thead th {
+.table-card-modern {
+  border-radius: 20px !important;
+  background: white;
+}
+
+.custom-table-modern thead th {
   background: #f8fafc;
   padding: 1.1rem 0.75rem;
   font-size: 0.75rem;
@@ -509,14 +518,24 @@ export default {
   border-bottom: 2px solid #e2e8f0;
 }
 
-.hover-row { transition: background 0.15s ease; }
-.hover-row:hover { background-color: #f8fafc; }
+.patient-avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
 
 .badge-jk {
   font-size: 0.7rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 .badge-jk.male { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
 .badge-jk.female { background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; }
@@ -527,8 +546,8 @@ export default {
   border: 1px solid #a5f3fc;
   font-size: 0.75rem;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 
 .empty-icon-box {
