@@ -67,7 +67,7 @@
             </div>
             <div>
               <div class="stat-label-modern">Standar Akreditasi</div>
-              <div class="stat-value-modern text-success">MRMIK 1 EP e</div>
+              <div class="stat-value-modern text-success">Elemen EP e</div>
             </div>
           </div>
         </div>

@@ -110,7 +110,7 @@ const currentPageTitle = computed(() => {
     '/admin/role-menu': 'Admin > Manajemen Role-Menu',
     '/admin/face-master': 'Admin > Manajemen Face Master',
     '/diklit/penelitian': 'Diklit > Permohonan Data Penelitian',
-    '/diklit/penelitian/laporan-sla': 'Diklit > Laporan SLA Akreditasi (MRMIK 1 EP e)',
+    '/diklit/penelitian/laporan-sla': 'Diklit > Laporan SLA Akreditasi',
     '/satusehat/mapping-radiology': 'SatuSehat > Mapping Radiologi'
   }
   

@@ -10,7 +10,7 @@
             </div>
             <h2 class="page-title mb-0">Permohonan Data Penelitian & Riset</h2>
           </div>
-          <p class="page-subtitle text-muted mb-0">Manajemen permohonan data RME, upload disposisi & pengeluaran izin akun ter-masking (MRMIK 1 EP e)</p>
+          <p class="page-subtitle text-muted mb-0">Manajemen permohonan data RME, upload disposisi & pengeluaran izin akun ter-masking</p>
         </div>
 
         <div class="header-actions d-flex align-items-center gap-2">

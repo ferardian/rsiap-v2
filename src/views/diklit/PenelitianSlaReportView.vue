@@ -10,7 +10,7 @@
             </div>
             <h2 class="page-title mb-0">Laporan Indikator Ketepatan Waktu Riset</h2>
           </div>
-          <p class="page-subtitle text-muted mb-0">Bukti kelengkapan fisik akreditasi RS — Standar Elemen Penilaian MRMIK 1 EP e (SLA ≤ 3 Hari)</p>
+          <p class="page-subtitle text-muted mb-0">Bukti kelengkapan fisik akreditasi RS — Elemen Penilaian Ketepatan Waktu Data (SLA ≤ 3 Hari)</p>
         </div>
 
         <div class="header-actions d-flex align-items-center gap-2">
@@ -117,7 +117,7 @@
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3">
           <div>
             <h5 class="fw-extrabold text-dark mb-1">REKAPITULASI KETEPATAN WAKTU PENYEDIAAN DATA RISET / PENDIDIKAN</h5>
-            <p class="text-xs text-muted mb-0">Standar Akreditasi MRMIK 1 EP e | Periode: <b>{{ formatDate(filters.tgl_awal) }}</b> s/d <b>{{ formatDate(filters.tgl_akhir) }}</b></p>
+            <p class="text-xs text-muted mb-0">Standar Ketepatan Waktu Penyediaan Data | Periode: <b>{{ formatDate(filters.tgl_awal) }}</b> s/d <b>{{ formatDate(filters.tgl_akhir) }}</b></p>
           </div>
           <div class="text-end">
             <span class="badge badge-sla-compliance">
