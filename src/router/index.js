@@ -692,6 +692,30 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/diklit/penelitian',
+    name: 'PenelitianPermohonan',
+    component: () => import('@/views/diklit/PenelitianPermohonanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/diklit/penelitian/laporan-sla',
+    name: 'PenelitianSlaReport',
+    component: () => import('@/views/diklit/PenelitianSlaReportView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/portal-peneliti/login',
+    name: 'PenelitiLogin',
+    component: () => import('@/views/peneliti/PenelitiLoginView.vue'),
+    meta: { layout: 'blank' }
+  },
+  {
+    path: '/portal-peneliti/rme',
+    name: 'PenelitiRme',
+    component: () => import('@/views/peneliti/PenelitiRmeView.vue'),
+    meta: { layout: 'blank' }
+  },
+  {
     path: '/laporan/hais',
     name: 'LaporanHais',
     component: () => import('../views/laporan/HaisLaporanView.vue'),
