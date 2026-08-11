@@ -20,7 +20,7 @@
       <div class="card-body p-3">
         <div class="row g-3 align-items-end">
           <!-- Date Range -->
-          <div class="col-lg-4 col-md-6">
+          <div class="col-lg-3 col-md-6">
             <label class="filter-label"><i class="fas fa-calendar-alt me-1 text-primary"></i> Periode</label>
             <div class="d-flex align-items-center gap-2">
               <input type="date" v-model="filters.tgl_awal" class="form-control form-control-sm filter-date" />
@@ -39,8 +39,19 @@
             </select>
           </div>
 
+          <!-- Doctor Filter -->
+          <div class="col-lg-3 col-md-6">
+            <label class="filter-label"><i class="fas fa-user-md me-1 text-primary"></i> Dokter DPJP</label>
+            <select v-model="filters.kd_dokter" class="form-select form-select-sm modern-select">
+              <option value="all">Semua Dokter</option>
+              <option v-for="d in dokterList" :key="d.kd_dokter" :value="d.kd_dokter">
+                {{ d.nm_dokter }}
+              </option>
+            </select>
+          </div>
+
           <!-- Search Filter -->
-          <div class="col-lg-4 col-md-8">
+          <div class="col-lg-3 col-md-6">
             <label class="filter-label"><i class="fas fa-search me-1 text-primary"></i> Cari Diagnosa / Prosedur</label>
             <div class="search-input-wrapper">
               <i class="fas fa-search search-icon"></i>
@@ -55,10 +66,9 @@
           </div>
 
           <!-- Action Button -->
-          <div class="col-lg-2 col-md-4 d-grid">
+          <div class="col-lg-1 col-md-12 d-grid">
             <button @click="refreshData" class="btn btn-primary btn-sm rounded-3 fw-bold btn-refresh-custom" :disabled="loading">
-              <i class="fas fa-sync-alt me-2" :class="{ 'fa-spin': loading }"></i>
-              Tampilkan
+              <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
             </button>
           </div>
         </div>
@@ -262,6 +272,7 @@
                     <th class="ps-4">Registrasi</th>
                     <th>Identitas Pasien</th>
                     <th>Info Rawat</th>
+                    <th>Dokter DPJP</th>
                     <th>Detail Fisik</th>
                     <th>Alamat</th>
                     <th class="pe-4">Pembiayaan</th>
@@ -285,6 +296,10 @@
                       <div class="small text-muted">Lahir: {{ p.tgl_lahir }}</div>
                     </td>
                     <td>
+                      <div class="fw-bold text-dark text-nowrap"><i class="fas fa-user-md text-primary me-1"></i>{{ p.nm_dokter || '-' }}</div>
+                      <div class="small text-muted font-mono" v-if="p.kd_dokter">{{ p.kd_dokter }}</div>
+                    </td>
+                    <td>
                       <div class="fw-bold text-dark">{{ p.umur }}</div>
                     </td>
                     <td>
@@ -295,7 +310,7 @@
                     </td>
                   </tr>
                   <tr v-if="filteredPatients.length === 0">
-                    <td colspan="6" class="text-center py-5">
+                    <td colspan="7" class="text-center py-5">
                       <div class="no-data-content py-4">
                         <i class="fas fa-user-slash fa-3x mb-3 text-muted opacity-25"></i>
                         <p class="text-muted fw-600">Tidak ada pasien yang cocok dengan filter Anda</p>
@@ -323,6 +338,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import laporanService from '@/services/laporanService'
+import dokterService from '@/services/dokterService'
 import VueApexCharts from 'vue3-apexcharts'
 import * as XLSX from 'xlsx'
 import { debounce } from 'lodash'
@@ -334,6 +350,7 @@ const activeTab = ref('diagnosa')
 const diagnosaData = ref([])
 const prosedurData = ref([])
 const patientList = ref([])
+const dokterList = ref([])
 const patientSearch = ref('')
 const patientPjFilter = ref('all')
 const patientStatusFilter = ref('all')
@@ -351,7 +368,8 @@ const filteredPatients = computed(() => {
     const matchesSearch = 
       p.nm_pasien.toLowerCase().includes(patientSearch.value.toLowerCase()) ||
       p.no_rkm_medis.toLowerCase().includes(patientSearch.value.toLowerCase()) ||
-      p.no_rawat.toLowerCase().includes(patientSearch.value.toLowerCase())
+      p.no_rawat.toLowerCase().includes(patientSearch.value.toLowerCase()) ||
+      (p.nm_dokter && p.nm_dokter.toLowerCase().includes(patientSearch.value.toLowerCase()))
     
     const matchesPj = patientPjFilter.value === 'all' || p.pembiayaan === patientPjFilter.value
     const matchesStatus = patientStatusFilter.value === 'all' || p.status === patientStatusFilter.value
@@ -364,8 +382,18 @@ const filters = reactive({
   tgl_awal: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
   tgl_akhir: new Date().toISOString().split('T')[0],
   status: 'all',
+  kd_dokter: 'all',
   keyword: ''
 })
+
+const fetchDokterList = async () => {
+  try {
+    const res = await dokterService.getAllDokter({ status: '1' })
+    dokterList.value = res.data.data || res.data || []
+  } catch (err) {
+    console.error('Gagal mengambil daftar dokter:', err)
+  }
+}
 
 const diagnosaSummary = computed(() => {
   return {
@@ -513,12 +541,12 @@ const exportPatientsExcel = () => {
     ["Diagnosa/Prosedur:", `${code} - ${name}`],
     ["Periode:", `${filters.tgl_awal} s/d ${filters.tgl_akhir}`],
     [""], // Spacer
-    ["Tgl Registrasi", "No RM", "No Rawat", "Status", "Nama Pasien", "Tgl Lahir", "Umur", "No KTP", "JK", "Alamat", "Pembiayaan"]
+    ["Tgl Registrasi", "No RM", "No Rawat", "Status", "Nama Pasien", "Dokter DPJP", "Tgl Lahir", "Umur", "No KTP", "JK", "Alamat", "Pembiayaan"]
   ]
   
   // Format patient data
   const data = filteredPatients.value.map(p => [
-    p.tgl_registrasi, p.no_rkm_medis, p.no_rawat, p.status, p.nm_pasien, p.tgl_lahir, p.umur, p.no_ktp, p.jk, p.alamat, p.pembiayaan
+    p.tgl_registrasi, p.no_rkm_medis, p.no_rawat, p.status, p.nm_pasien, p.nm_dokter || '-', p.tgl_lahir, p.umur, p.no_ktp, p.jk, p.alamat, p.pembiayaan
   ])
   
   const worksheet = XLSX.utils.aoa_to_sheet([...headerData, ...data])
@@ -533,7 +561,10 @@ watch(() => filters.keyword, () => {
   debouncedRefresh()
 })
 
-onMounted(refreshData)
+onMounted(() => {
+  fetchDokterList()
+  refreshData()
+})
 
 watch(activeTab, () => {
   // Can trigger sub-actions here if needed
