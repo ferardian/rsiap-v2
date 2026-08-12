@@ -481,7 +481,14 @@ const handleAction = async (surat, status) => {
   processingId.value = surat.id
   try {
     if (activeTab.value === 'pks') {
-      await pksService.updatePks(surat.id, { status })
+      const orig = surat._original || {}
+      await pksService.updatePks(surat.id, {
+        judul: orig.judul || surat.perihal,
+        tgl_terbit: getLocalDateString(orig.tgl_terbit || surat.tgl_terbit),
+        pj: orig.pj || surat.pj,
+        jenis: orig.jenis || 'A',
+        status
+      })
     } else if (activeTab.value === 'sk_reguler') {
       const orig = surat._original || {}
       await skService.updateSk(surat.id, {
