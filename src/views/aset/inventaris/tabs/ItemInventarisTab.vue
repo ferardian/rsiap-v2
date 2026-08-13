@@ -178,7 +178,15 @@
            <button @click="closeStickerModal" class="close-btn">&times;</button>
         </div>
         <div class="modal-body flex-center">
-             <div class="sticker-preview-box">
+             <div class="form-group w-100 mb-3">
+                <label class="font-semibold text-sm text-slate-700">Pilih Ukuran Stiker</label>
+                <select v-model="selectedStickerSize" class="form-select">
+                   <option value="65x40">Ukuran Existing (65mm x 40mm)</option>
+                   <option value="55x20">Ukuran Ringkas (55mm x 20mm)</option>
+                </select>
+             </div>
+
+             <div v-if="selectedStickerSize === '65x40'" class="sticker-preview-box">
                 <div class="s-header">RSIA Aisyiyah Pekajangan</div>
                 <div class="s-body">
                    <div class="s-qr">
@@ -195,7 +203,27 @@
                    <span>{{ selectedStickerItem.ruang?.nama_ruang }}</span>
                 </div>
              </div>
-             <p class="mt-2 text-muted text-center">Preview Stiker (65mm x 40mm)</p>
+
+             <div v-else class="sticker-preview-box-compact">
+                <div class="sc-header">RSIA AISYIYAH PEKAJANGAN</div>
+                <div class="sc-body">
+                   <div class="sc-qr">
+                      <img v-if="qrCodeUrl" :src="qrCodeUrl" class="qr-code" />
+                   </div>
+                   <div class="sc-info">
+                      <div class="sc-kode">{{ selectedStickerItem.no_inventaris }}</div>
+                      <div class="sc-nama">{{ selectedStickerItem.barang?.nama_barang }}</div>
+                      <div class="sc-sub">
+                         <span>{{ formatDate(selectedStickerItem.tgl_pengadaan) }}</span> &bull; 
+                         <span>{{ selectedStickerItem.ruang?.nama_ruang }}</span>
+                      </div>
+                   </div>
+                </div>
+             </div>
+
+             <p class="mt-2 text-muted text-center">
+               Preview Stiker ({{ selectedStickerSize === '65x40' ? '65mm x 40mm' : '55mm x 20mm' }})
+             </p>
         </div>
         <div class="modal-footer">
            <button @click="closeStickerModal" class="btn-cancel">Tutup</button>
@@ -224,6 +252,7 @@ const search = ref('')
 // Sticker State
 const showStickerModal = ref(false)
 const selectedStickerItem = ref({})
+const selectedStickerSize = ref('65x40')
 const qrCodeUrl = ref('')
 
 // CRUD Form State
@@ -386,87 +415,156 @@ const closeStickerModal = () => {
   showStickerModal.value = false
   selectedStickerItem.value = {}
   qrCodeUrl.value = ''
+  selectedStickerSize.value = '65x40'
 }
 
 const confirmPrint = () => {
     const item = selectedStickerItem.value
     const qr = qrCodeUrl.value
-    const w = window.open('', '_blank', 'width=400,height=300')
-    w.document.write(`
-      <html>
-        <head>
-          <title>Stiker ${item.no_inventaris}</title>
-          <style>
-            @page { size: 65mm 40mm; margin: 0; }
-            body { 
-              width: 65mm; height: 40mm; margin: 0; padding: 0; 
-              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-              box-sizing: border-box; overflow: hidden;
-              border: 1px dotted #ccc; /* Preview border */
-            }
-            .sticker-container {
-              width: 100%; height: 100%;
-              display: flex; flex-direction: column;
-              border: 1px solid #000;
-              box-sizing: border-box;
-            }
-            .header { 
-              background: #000; color: #fff; 
-              text-align: center; font-size: 7.5pt; font-weight: 800; 
-              padding: 2px 0; text-transform: uppercase;
-              -webkit-print-color-adjust: exact;
-            }
-            .body-wrap {
-              flex: 1; display: flex; align-items: center; padding: 1mm 2mm; gap: 2mm;
-            }
-            .qr-box { 
-              width: 22mm; height: 22mm; 
-              display: flex; justify-content: center; align-items: center;
-              border: 1px solid #000; border-radius: 4px; padding: 1mm;
-            }
-            .qr-img { width: 100%; height: 100%; object-fit: contain; }
-            .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-            .kode-label { font-size: 6pt; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
-            .kode { font-size: 11pt; font-weight: 900; margin-bottom: 2px; font-family: monospace; letter-spacing: -0.5px; }
-            .nama { font-size: 8pt; line-height: 1.1; font-weight: 600; max-height: 24px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-            .footer { 
-              border-top: 1px solid #000; padding: 2px 3mm; 
-              font-size: 6.5pt; font-weight: 600;
-              display: flex; justify-content: space-between;
-              background: #f0f0f0;
-              -webkit-print-color-adjust: exact;
-            }
-            @media print {
-              body { border: none; }
-              .header { background: #000 !important; color: #fff !important; }
-              .footer { background: #eee !important; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="sticker-container">
-            <div class="header">RSIA Aisyiyah Pekajangan</div>
-            <div class="body-wrap">
-               <div class="qr-box">
-                  <img src="${qr}" class="qr-img" />
-               </div>
-               <div class="info-box">
-                  <div class="kode-label">No. Inventaris</div>
-                  <div class="kode">${item.no_inventaris}</div>
-                  <div class="nama">${item.barang?.nama_barang || ''}</div>
-               </div>
+    const isCompact = selectedStickerSize.value === '55x20'
+    const w = window.open('', '_blank', 'width=450,height=350')
+
+    if (isCompact) {
+      w.document.write(`
+        <html>
+          <head>
+            <title>Stiker ${item.no_inventaris}</title>
+            <style>
+              @page { size: 55mm 20mm; margin: 0; }
+              body { 
+                width: 55mm; height: 20mm; margin: 0; padding: 0; 
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                box-sizing: border-box; overflow: hidden;
+                border: 1px dotted #ccc;
+              }
+              .sticker-container {
+                width: 100%; height: 100%;
+                display: flex; flex-direction: column;
+                border: 1px solid #000;
+                box-sizing: border-box;
+              }
+              .header { 
+                background: #000; color: #fff; 
+                text-align: center; font-size: 5.5pt; font-weight: 800; 
+                padding: 1px 0; text-transform: uppercase;
+                -webkit-print-color-adjust: exact;
+              }
+              .body-wrap {
+                flex: 1; display: flex; align-items: center; padding: 1mm 1.5mm; gap: 1.5mm;
+              }
+              .qr-box { 
+                width: 14mm; height: 14mm; 
+                display: flex; justify-content: center; align-items: center;
+                border: 1px solid #000; border-radius: 2px; padding: 0.5mm; flex-shrink: 0;
+              }
+              .qr-img { width: 100%; height: 100%; object-fit: contain; }
+              .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+              .kode { font-size: 7.5pt; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; line-height: 1; margin-bottom: 1px; color: #000; }
+              .nama { font-size: 5.5pt; line-height: 1.1; font-weight: 700; max-height: 16px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #111; }
+              .sub-info { font-size: 4.5pt; font-weight: 600; color: #444; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+              @media print {
+                body { border: none; }
+                .header { background: #000 !important; color: #fff !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="sticker-container">
+              <div class="header">RSIA Aisyiyah Pekajangan</div>
+              <div class="body-wrap">
+                 <div class="qr-box">
+                    <img src="${qr}" class="qr-img" />
+                 </div>
+                 <div class="info-box">
+                    <div class="kode">${item.no_inventaris}</div>
+                    <div class="nama">${item.barang?.nama_barang || ''}</div>
+                    <div class="sub-info">${formatDate(item.tgl_pengadaan)} &bull; ${item.ruang?.nama_ruang || 'Gudang'}</div>
+                 </div>
+              </div>
             </div>
-            <div class="footer">
-              <span>${item.tgl_pengadaan || '-'}</span>
-              <span>${item.ruang?.nama_ruang || 'Gudang'}</span>
+            <script>
+              window.onload = () => { window.print(); window.close(); }
+            <\/script>
+          </body>
+        </html>
+      `)
+    } else {
+      w.document.write(`
+        <html>
+          <head>
+            <title>Stiker ${item.no_inventaris}</title>
+            <style>
+              @page { size: 65mm 40mm; margin: 0; }
+              body { 
+                width: 65mm; height: 40mm; margin: 0; padding: 0; 
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                box-sizing: border-box; overflow: hidden;
+                border: 1px dotted #ccc; /* Preview border */
+              }
+              .sticker-container {
+                width: 100%; height: 100%;
+                display: flex; flex-direction: column;
+                border: 1px solid #000;
+                box-sizing: border-box;
+              }
+              .header { 
+                background: #000; color: #fff; 
+                text-align: center; font-size: 7.5pt; font-weight: 800; 
+                padding: 2px 0; text-transform: uppercase;
+                -webkit-print-color-adjust: exact;
+              }
+              .body-wrap {
+                flex: 1; display: flex; align-items: center; padding: 1mm 2mm; gap: 2mm;
+              }
+              .qr-box { 
+                width: 22mm; height: 22mm; 
+                display: flex; justify-content: center; align-items: center;
+                border: 1px solid #000; border-radius: 4px; padding: 1mm;
+              }
+              .qr-img { width: 100%; height: 100%; object-fit: contain; }
+              .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+              .kode-label { font-size: 6pt; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+              .kode { font-size: 11pt; font-weight: 900; margin-bottom: 2px; font-family: monospace; letter-spacing: -0.5px; }
+              .nama { font-size: 8pt; line-height: 1.1; font-weight: 600; max-height: 24px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+              .footer { 
+                border-top: 1px solid #000; padding: 2px 3mm; 
+                font-size: 6.5pt; font-weight: 600;
+                display: flex; justify-content: space-between;
+                background: #f0f0f0;
+                -webkit-print-color-adjust: exact;
+              }
+              @media print {
+                body { border: none; }
+                .header { background: #000 !important; color: #fff !important; }
+                .footer { background: #eee !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="sticker-container">
+              <div class="header">RSIA Aisyiyah Pekajangan</div>
+              <div class="body-wrap">
+                 <div class="qr-box">
+                    <img src="${qr}" class="qr-img" />
+                 </div>
+                 <div class="info-box">
+                    <div class="kode-label">No. Inventaris</div>
+                    <div class="kode">${item.no_inventaris}</div>
+                    <div class="nama">${item.barang?.nama_barang || ''}</div>
+                 </div>
+              </div>
+              <div class="footer">
+                <span>${formatDate(item.tgl_pengadaan)}</span>
+                <span>${item.ruang?.nama_ruang || 'Gudang'}</span>
+              </div>
             </div>
-          </div>
-          <script>
-            window.onload = () => { window.print(); window.close(); }
-          <\/script>
-        </body>
-      </html>
-    `)
+            <script>
+              window.onload = () => { window.print(); window.close(); }
+            <\/script>
+          </body>
+        </html>
+      `)
+    }
     w.document.close()
 }
 
@@ -596,7 +694,7 @@ onMounted(() => fetchData())
 .input-group .prefix { padding: 0.6rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-right: none; border-top-left-radius: 6px; border-bottom-left-radius: 6px; color: #64748b; font-size: 0.85rem; }
 .input-group input { border-top-left-radius: 0; border-bottom-left-radius: 0; flex: 1; }
 
-/* Sticker Preview Box */
+/* Sticker Preview Box (65mm x 40mm) */
 .sticker-preview-box {
   width: 65mm;
   height: 40mm;
@@ -634,4 +732,37 @@ onMounted(() => fetchData())
   padding: 2px 3mm; font-size: 0.55rem; font-weight: 600; color: #475569;
   display: flex; justify-content: space-between;
 }
+
+/* Compact Sticker Preview Box (55mm x 20mm) */
+.sticker-preview-box-compact {
+  width: 55mm;
+  height: 20mm;
+  background: white;
+  border: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+.sc-header { 
+  background: #1e293b; color: white;
+  text-align: center; font-size: 0.5rem; font-weight: 800; 
+  padding: 1px 0; text-transform: uppercase;
+}
+.sc-body {
+  flex: 1; display: flex; align-items: center; padding: 1mm 2mm; gap: 2mm;
+  background: white; overflow: hidden;
+}
+.sc-qr { 
+  width: 13mm; height: 13mm; 
+  border: 1px solid #cbd5e1; border-radius: 2px; padding: 0.5mm;
+  display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+}
+.sc-info { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.sc-kode { font-size: 0.65rem; font-weight: 900; color: #0f172a; margin-bottom: 1px; font-family: monospace; letter-spacing: -0.5px; }
+.sc-nama { font-size: 0.55rem; line-height: 1.1; font-weight: 700; color: #1e293b; max-height: 18px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sc-sub { font-size: 0.48rem; font-weight: 600; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 </style>
