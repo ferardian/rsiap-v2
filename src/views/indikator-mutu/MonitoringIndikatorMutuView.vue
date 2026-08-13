@@ -41,6 +41,13 @@
         </button>
         <button 
           class="tab-btn" 
+          :class="{ active: activeTab === 'analisa_pdsa' }" 
+          @click="activeTab = 'analisa_pdsa'"
+        >
+          <i class="fas fa-sync-alt"></i> Analisa PDSA
+        </button>
+        <button 
+          class="tab-btn" 
           :class="{ active: activeTab === 'kamus' }" 
           @click="activeTab = 'kamus'"
         >
@@ -84,6 +91,10 @@
         <KeepAlive>
             <AnalisaMutuTab v-if="activeTab === 'analisa'" />
         </KeepAlive>
+
+        <KeepAlive>
+            <AnalisaPdsaTab v-if="activeTab === 'analisa_pdsa'" />
+        </KeepAlive>
         
         <KeepAlive>
              <KamusInmutTab v-if="activeTab === 'kamus'" />
@@ -111,6 +122,7 @@ import { ref } from 'vue'
 import RekapTahunanTab from '@/components/indikator-mutu/RekapTahunanTab.vue'
 import MonitoringInmutTab from '@/components/indikator-mutu/MonitoringInmutTab.vue'
 import AnalisaMutuTab from '@/components/indikator-mutu/AnalisaMutuTab.vue'
+import AnalisaPdsaTab from '@/components/indikator-mutu/AnalisaPdsaTab.vue'
 import KamusInmutTab from '@/components/indikator-mutu/KamusInmutTab.vue'
 import LaporanMutuTab from '@/components/indikator-mutu/LaporanMutuTab.vue'
 import RekapFeedbackTab from '@/components/indikator-mutu/RekapFeedbackTab.vue'

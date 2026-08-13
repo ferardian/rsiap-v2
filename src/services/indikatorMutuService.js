@@ -31,6 +31,7 @@ const service = {
 
     // PDSA
     getPdsa: (params) => api.get('/indikator-mutu/pdsa', { params }),
+    getAllPdsa: (params) => api.get('/indikator-mutu/pdsa/all', { params }),
     storePdsa: (data) => api.post('/indikator-mutu/pdsa', data),
 
     // Input Data / Realisasi
