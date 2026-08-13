@@ -2763,10 +2763,12 @@ const calculateLamaInap = (item) => {
   if (typeof item === 'string') {
     try {
       const start = new Date(item)
+      start.setHours(0, 0, 0, 0)
       const now = new Date()
+      now.setHours(0, 0, 0, 0)
       const diffTime = now - start
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-      return diffDays > 0 ? diffDays : 1
+      return diffDays >= 0 ? diffDays + 1 : 1
     } catch (e) {
       return '-'
     }
@@ -2780,14 +2782,17 @@ const calculateLamaInap = (item) => {
 
   try {
     const start = new Date(startStr)
+    start.setHours(0, 0, 0, 0)
+
     const end = (isPulang || tglKeluarValid) && tglKeluarValid
       ? new Date(item.tgl_keluar)
       : new Date()
+    end.setHours(0, 0, 0, 0)
 
     const diffTime = end - start
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     
-    return diffDays > 0 ? diffDays : 1
+    return diffDays >= 0 ? diffDays + 1 : 1
   } catch (e) {
     return '-'
   }
