@@ -140,6 +140,7 @@
                 <th class="px-2 py-1" style="width: 110px">Tgl Pulang</th>
                 <th class="px-2 py-1 text-center" style="width: 80px">Lama</th>
                 <th class="px-2 py-1">Diagnosa Awal</th>
+                <th class="px-2 py-1">Diagnosa Akhir</th>
                 <th class="px-2 py-1">Jenis Bayar</th>
                 <th class="px-2 py-1">DPJP (Dokter)</th>
                 <th class="px-2 py-1">Bangsal</th>
@@ -149,14 +150,14 @@
             </thead>
             <tbody>
               <tr v-if="loading && items.length === 0">
-                <td colspan="11" class="text-center py-5">
+                <td colspan="12" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="11" class="text-center py-5 text-muted">
+                <td colspan="12" class="text-center py-5 text-muted">
                   <i class="fas fa-bed fa-2x mb-2 d-block opacity-50"></i>
                   Tidak ada pasien rawat inap yang sesuai
                 </td>
@@ -218,6 +219,20 @@
                 </td>
                 <td class="px-2 py-1">
                   <div class="small text-dark">{{ item.diagnosa_awal || '-' }}</div>
+                </td>
+                <td class="px-2 py-1">
+                  <div v-if="getDiagnosaAkhir(item).length > 0">
+                    <div v-for="(diag, idx) in getDiagnosaAkhir(item)" :key="idx" class="small mb-1">
+                      <span class="badge me-1" :class="diag.prioritas == 1 ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-secondary border'" style="font-size: 0.68rem;">
+                        {{ diag.kd_penyakit }}
+                      </span>
+                      <span class="text-dark" style="font-size: 0.78rem;">{{ diag.penyakit?.nm_penyakit || '-' }}</span>
+                    </div>
+                  </div>
+                  <div v-else-if="item.diagnosa_akhir" class="small text-muted">
+                    {{ item.diagnosa_akhir }}
+                  </div>
+                  <div v-else class="text-muted small">—</div>
                 </td>
                 <td class="px-2 py-1">
                   <div class="d-flex align-items-center">
@@ -406,6 +421,19 @@
                      <div class="col-md-6">
                         <label class="detail-label text-muted mb-1">Diagnosa Awal</label>
                         <div class="detail-value text-dark">{{ selectedItem.diagnosa_awal || '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="detail-label text-muted mb-1">Diagnosa Akhir (ICD-10)</label>
+                        <div v-if="getDiagnosaAkhir(selectedItem).length > 0">
+                          <div v-for="(diag, idx) in getDiagnosaAkhir(selectedItem)" :key="idx" class="small mb-1">
+                            <span class="badge me-1" :class="diag.prioritas == 1 ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-light text-secondary border'">P{{ diag.prioritas }}</span>
+                            <strong>[{{ diag.kd_penyakit }}]</strong> {{ diag.penyakit?.nm_penyakit || '' }}
+                          </div>
+                        </div>
+                        <div v-else-if="selectedItem.diagnosa_akhir" class="detail-value text-dark">
+                          {{ selectedItem.diagnosa_akhir }}
+                        </div>
+                        <div v-else class="detail-value text-muted">-</div>
                     </div>
                   </div>
                 </div>
@@ -2134,26 +2162,41 @@ const fetchAllData = async () => {
     return []
 }
 
+const getDiagnosaAkhir = (item) => {
+  if (!item) return []
+  if (item.reg_periksa?.diagnosa_pasien && item.reg_periksa.diagnosa_pasien.length > 0) {
+    return item.reg_periksa.diagnosa_pasien
+  }
+  return []
+}
+
 const formatDataForExport = (data) => {
-  return data.map(item => ({
-    'Kamar': item.kamar?.kd_kamar,
-    'No Rawat': item.no_rawat,
-    'No RM': item.reg_periksa?.no_rkm_medis,
-    'Nama Pasien': item.reg_periksa?.pasien?.nm_pasien,
-    'JK': item.reg_periksa?.pasien?.jk,
-    'Tgl Masuk': `${item.tgl_masuk} ${item.jam_masuk}`,
-    'Tgl Keluar': (item.tgl_keluar && item.tgl_keluar !== '0000-00-00') ? `${item.tgl_keluar} ${item.jam_keluar}` : '-',
-    'Lama Inap (Hari)': calculateLamaInap(item),
-    'Status Pulang': item.stts_pulang || '-',
-    'Diagnosa Awal': item.diagnosa_awal || '-',
-    'Jenis Bayar': item.png_jawab,
-    'Status SEP': item.sep_simple ? 'Terbit' : 'Belum',
-    'Dokter': item.reg_periksa?.dokter?.nm_dokter,
-    'Bangsal': item.kamar?.bangsal?.nm_bangsal,
-    'Penanggung Jawab': item.reg_periksa?.p_jawab,
-    'Hubungan PJ': item.reg_periksa?.hubunganpj,
-    'Alamat Penanggung Jawab': item.reg_periksa?.almt_pj
-  }))
+  return data.map(item => {
+    const diagAkhirList = (item.reg_periksa?.diagnosa_pasien || [])
+      .map(d => `[${d.kd_penyakit}] ${d.penyakit?.nm_penyakit || ''}`)
+      .join('; ')
+
+    return {
+      'Kamar': item.kamar?.kd_kamar,
+      'No Rawat': item.no_rawat,
+      'No RM': item.reg_periksa?.no_rkm_medis,
+      'Nama Pasien': item.reg_periksa?.pasien?.nm_pasien,
+      'JK': item.reg_periksa?.pasien?.jk,
+      'Tgl Masuk': `${item.tgl_masuk} ${item.jam_masuk}`,
+      'Tgl Keluar': (item.tgl_keluar && item.tgl_keluar !== '0000-00-00') ? `${item.tgl_keluar} ${item.jam_keluar}` : '-',
+      'Lama Inap (Hari)': calculateLamaInap(item),
+      'Status Pulang': item.stts_pulang || '-',
+      'Diagnosa Awal': item.diagnosa_awal || '-',
+      'Diagnosa Akhir': diagAkhirList || item.diagnosa_akhir || '-',
+      'Jenis Bayar': item.png_jawab,
+      'Status SEP': item.sep_simple ? 'Terbit' : 'Belum',
+      'Dokter': item.reg_periksa?.dokter?.nm_dokter,
+      'Bangsal': item.kamar?.bangsal?.nm_bangsal,
+      'Penanggung Jawab': item.reg_periksa?.p_jawab,
+      'Hubungan PJ': item.reg_periksa?.hubunganpj,
+      'Alamat Penanggung Jawab': item.reg_periksa?.almt_pj
+    }
+  })
 }
 
 const copyToClipboard = async () => {
