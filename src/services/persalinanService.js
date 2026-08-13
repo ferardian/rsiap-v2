@@ -4,6 +4,9 @@ export default {
     getLaporanList(params) {
         return api.get('/laporan/statistik/ranap/persalinan', { params })
     },
+    getNonPartusList(params) {
+        return api.get('/laporan/statistik/ranap/non-partus', { params })
+    },
     getOperasiList(params) {
         return api.get('/operasi/laporan/list', { params })
     },

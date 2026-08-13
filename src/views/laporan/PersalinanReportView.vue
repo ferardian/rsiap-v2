@@ -8,8 +8,8 @@
             <i class="fas fa-baby-carriage"></i>
           </div>
           <div>
-            <h3 class="page-title mb-0">Laporan Persalinan</h3>
-            <p class="page-subtitle mb-0 small">Rangkuman data persalinan baik melalui tindakan operasi (SC) maupun persalinan normal (Partus)</p>
+            <h3 class="page-title mb-0">Laporan Pelayanan Kebidanan & Persalinan</h3>
+            <p class="page-subtitle mb-0 small">Rangkuman data pelayanan kebidanan meliputi tindakan operasi (SC/Kuret), persalinan normal (Partus), dan perawatan kebidanan non-partus (HEG/Konservatif)</p>
           </div>
         </div>
         
@@ -24,7 +24,13 @@
             @click="currentTab = 'partus'" 
             :class="['tab-btn', { active: currentTab === 'partus' }]"
           >
-            <i class="fas fa-baby me-2"></i> Tindakan Partus (Normal)
+            <i class="fas fa-baby me-2"></i> Partus (Normal)
+          </button>
+          <button 
+            @click="currentTab = 'non_partus'" 
+            :class="['tab-btn', { active: currentTab === 'non_partus' }]"
+          >
+            <i class="fas fa-bed-pulse me-2"></i> Perawatan Kebidanan (Non-Partus / HEG)
           </button>
         </div>
       </div>
@@ -127,12 +133,12 @@
     <div class="content-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <div class="card-header-modern">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <h5>{{ currentTab === 'operasi' ? 'Daftar Tindakan Operasi' : 'Daftar Tindakan Partus (Normal)' }}</h5>
+          <h5>{{ currentTab === 'operasi' ? 'Daftar Tindakan Operasi' : (currentTab === 'partus' ? 'Daftar Tindakan Partus (Normal)' : 'Daftar Perawatan Kebidanan Non-Partus (HEG / Konservatif)') }}</h5>
           <div class="search-box">
             <input 
               type="text" 
               v-model="filters.q" 
-              placeholder="Cari No. Rawat/RM/Pasien..." 
+              placeholder="Cari No. Rawat/RM/Pasien/Diagnosa..." 
               @input="onSearch" 
               class="form-control form-control-sm"
             >
@@ -201,7 +207,7 @@
         </table>
 
         <!-- Partus Table -->
-        <table v-else class="table table-hover mb-0 align-middle table-responsive-custom">
+        <table v-else-if="currentTab === 'partus'" class="table table-hover mb-0 align-middle table-responsive-custom">
           <thead>
             <tr>
               <th width="50" class="text-center">#</th>
@@ -254,6 +260,73 @@
                 <div class="medic-badge">
                   <i class="fas fa-user-nurse me-2"></i>
                   {{ item.petugas?.nama || '-' }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Non-Partus Table (HEG / Konservatif) -->
+        <table v-else-if="currentTab === 'non_partus'" class="table table-hover mb-0 align-middle table-responsive-custom">
+          <thead>
+            <tr>
+              <th width="50" class="text-center">#</th>
+              <th>Tgl. Masuk / Keluar</th>
+              <th>Identitas Pasien</th>
+              <th>Cara Bayar</th>
+              <th>Diagnosa Utama / ICD-10</th>
+              <th>Ruang Rawat</th>
+              <th>Dokter DPJP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loading" v-for="n in 5">
+              <td colspan="7"><div class="skeleton-line"></div></td>
+            </tr>
+            <tr v-else-if="items.length === 0">
+              <td colspan="7" class="text-center py-5">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
+                Tidak ada data perawatan kebidanan non-partus ditemukan
+              </td>
+            </tr>
+            <tr v-for="(item, index) in items" :key="index">
+              <td class="text-center">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+              <td>
+                <div class="date-badge non-partus">
+                  <span class="day">{{ formatDate(item.tgl_masuk, 'DD') }}</span>
+                  <span class="month">{{ formatDate(item.tgl_masuk, 'MMM YYYY') }}</span>
+                </div>
+                <div class="text-xs text-muted mt-1" v-if="item.tgl_keluar && item.tgl_keluar !== '0000-00-00'">
+                  s/d {{ formatDate(item.tgl_keluar, 'DD MMM YYYY') }}
+                </div>
+              </td>
+              <td>
+                <div class="patient-info">
+                  <span class="rm">{{ item.reg_periksa?.pasien?.no_rkm_medis }}</span>
+                  <span class="name">{{ item.reg_periksa?.pasien?.nm_pasien }}</span>
+                  <span class="rawat">{{ item.no_rawat }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge-bayar">{{ item.reg_periksa?.cara_bayar?.png_jawab }}</span>
+              </td>
+              <td>
+                <div v-if="item.reg_periksa?.diagnosa_pasien && item.reg_periksa?.diagnosa_pasien.length > 0">
+                  <div v-for="d in item.reg_periksa.diagnosa_pasien" :key="d.kd_penyakit" class="mb-1">
+                    <span class="badge bg-primary-subtle text-primary me-1">{{ d.kd_penyakit }}</span>
+                    <span class="text-sm fw-medium">{{ d.penyakit?.nm_penyakit || d.kd_penyakit }}</span>
+                  </div>
+                </div>
+                <span v-else class="text-muted text-sm">-</span>
+              </td>
+              <td>
+                <div class="text-sm font-medium">{{ item.kamar?.bangsal?.nm_bangsal || '-' }}</div>
+                <div class="text-xs text-slate-500">Kamar: {{ item.kd_kamar }}</div>
+              </td>
+              <td>
+                <div class="doctor-badge">
+                  <i class="fas fa-user-md me-2"></i>
+                  {{ item.reg_periksa?.dokter?.nm_dokter || '-' }}
                 </div>
               </td>
             </tr>
@@ -534,8 +607,10 @@ const loadData = async (page = 1) => {
     let response
     if (currentTab.value === 'operasi') {
       response = await persalinanService.getOperasiList(params)
-    } else {
+    } else if (currentTab.value === 'partus') {
       response = await persalinanService.getLaporanList(params)
+    } else {
+      response = await persalinanService.getNonPartusList(params)
     }
 
     if (response.data.success) {
@@ -576,8 +651,10 @@ const exportToExcel = async () => {
     let response
     if (currentTab.value === 'operasi') {
       response = await persalinanService.getOperasiList(exportParams)
-    } else {
+    } else if (currentTab.value === 'partus') {
       response = await persalinanService.getLaporanList(exportParams)
+    } else {
+      response = await persalinanService.getNonPartusList(exportParams)
     }
 
     if (!response.data.success || !response.data.data.data.length) {
@@ -586,7 +663,7 @@ const exportToExcel = async () => {
     }
 
     const exportItems = response.data.data.data
-    const reportTitle = currentTab.value === 'operasi' ? 'Laporan Tindakan Operasi' : 'Laporan Tindakan Partus'
+    const reportTitle = currentTab.value === 'operasi' ? 'Laporan Tindakan Operasi' : (currentTab.value === 'partus' ? 'Laporan Tindakan Partus' : 'Laporan Perawatan Kebidanan Non-Partus')
     const wsData = []
 
     // Add Header Information
@@ -627,7 +704,7 @@ const exportToExcel = async () => {
           item.detail_dokter_anestesi?.nm_dokter || '-'
         ])
       })
-    } else {
+    } else if (currentTab.value === 'partus') {
       // Headers for Partus
       wsData.push([
         'No',
@@ -652,6 +729,36 @@ const exportToExcel = async () => {
           item.jenis_perawatan?.nm_perawatan || '-',
           item.dokter?.nm_dokter || '-',
           item.petugas?.nama || '-'
+        ])
+      })
+    } else {
+      // Headers for Non-Partus
+      wsData.push([
+        'No',
+        'No. Rawat',
+        'No. RM',
+        'Nama Pasien',
+        'Tgl. Masuk',
+        'Tgl. Keluar',
+        'Cara Bayar',
+        'Diagnosa / ICD-10',
+        'Ruang Rawat',
+        'Dokter DPJP'
+      ])
+
+      exportItems.forEach((item, index) => {
+        const diagStr = item.reg_periksa?.diagnosa_pasien ? item.reg_periksa.diagnosa_pasien.map(d => `${d.kd_penyakit} - ${d.penyakit?.nm_penyakit || ''}`).join('; ') : '-'
+        wsData.push([
+          index + 1,
+          item.no_rawat,
+          item.reg_periksa?.pasien?.no_rkm_medis || '-',
+          item.reg_periksa?.pasien?.nm_pasien || '-',
+          item.tgl_masuk,
+          item.tgl_keluar || '-',
+          item.reg_periksa?.cara_bayar?.png_jawab || '-',
+          diagStr,
+          item.kamar?.bangsal?.nm_bangsal || '-',
+          item.reg_periksa?.dokter?.nm_dokter || '-'
         ])
       })
     }
@@ -941,6 +1048,10 @@ onMounted(() => {
 
 .date-badge.partus .month {
   background: #10b981;
+}
+
+.date-badge.non-partus .month {
+  background: #8b5cf6;
 }
 
 .patient-info .rm {
