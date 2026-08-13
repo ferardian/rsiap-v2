@@ -9,7 +9,7 @@
           </div>
           <div>
             <h3 class="page-title mb-0">Laporan Pelayanan Kebidanan & Persalinan</h3>
-            <p class="page-subtitle mb-0 small">Rangkuman data pelayanan kebidanan meliputi tindakan operasi (SC/Kuret), persalinan normal (Partus), dan perawatan kebidanan non-partus (HEG/Konservatif)</p>
+            <p class="page-subtitle mb-0 small">Rangkuman data pelayanan kebidanan meliputi tindakan operasi (SC/Kuret), persalinan normal (Partus), dan perawatan kebidanan non-partus (konservatif)</p>
           </div>
         </div>
         
@@ -30,7 +30,7 @@
             @click="currentTab = 'non_partus'" 
             :class="['tab-btn', { active: currentTab === 'non_partus' }]"
           >
-            <i class="fas fa-bed-pulse me-2"></i> Perawatan Kebidanan (Non-Partus / HEG)
+            <i class="fas fa-bed-pulse me-2"></i> Perawatan Kebidanan (Non-Partus)
           </button>
         </div>
       </div>
@@ -133,7 +133,7 @@
     <div class="content-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
       <div class="card-header-modern">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <h5>{{ currentTab === 'operasi' ? 'Daftar Tindakan Operasi' : (currentTab === 'partus' ? 'Daftar Tindakan Partus (Normal)' : 'Daftar Perawatan Kebidanan Non-Partus (HEG / Konservatif)') }}</h5>
+          <h5>{{ currentTab === 'operasi' ? 'Daftar Tindakan Operasi' : (currentTab === 'partus' ? 'Daftar Tindakan Partus (Normal)' : 'Daftar Perawatan Kebidanan Non-Partus (Konservatif)') }}</h5>
           <div class="search-box">
             <input 
               type="text" 
