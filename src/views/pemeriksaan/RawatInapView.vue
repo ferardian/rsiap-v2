@@ -2772,40 +2772,21 @@ const calculateLamaInap = (item) => {
     }
   }
 
-  // 1. Check if patient has already discharged (stts_pulang != '-' or valid tgl_keluar)
+  const startStr = item.tgl_masuk || item.reg_periksa?.tgl_registrasi
+  if (!startStr) return '-'
+
   const isPulang = item.stts_pulang && item.stts_pulang !== '-'
   const tglKeluarValid = item.tgl_keluar && item.tgl_keluar !== '0000-00-00'
 
-  if (isPulang || tglKeluarValid) {
-    if (item.lama !== undefined && item.lama !== null && item.lama !== '') {
-      return item.lama
-    }
-    const startStr = item.tgl_masuk || item.reg_periksa?.tgl_registrasi
-    const endStr = tglKeluarValid ? item.tgl_keluar : null
-    if (startStr && endStr) {
-      try {
-        const start = new Date(startStr)
-        const end = new Date(endStr)
-        const diffTime = end - start
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-        return !isNaN(diffDays) ? (diffDays >= 0 ? diffDays : 1) : 1
-      } catch (e) {
-        return item.lama ?? 1
-      }
-    }
-    if (item.lama !== undefined && item.lama !== null) {
-      return item.lama
-    }
-  }
-
-  // 2. Patient still admitted (belum pulang) -> calculate from tgl_masuk / tgl_registrasi to TODAY
-  const startStr = item.tgl_masuk || item.reg_periksa?.tgl_registrasi
-  if (!startStr) return '-'
   try {
     const start = new Date(startStr)
-    const now = new Date()
-    const diffTime = now - start
+    const end = (isPulang || tglKeluarValid) && tglKeluarValid
+      ? new Date(item.tgl_keluar)
+      : new Date()
+
+    const diffTime = end - start
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    
     return diffDays > 0 ? diffDays : 1
   } catch (e) {
     return '-'
