@@ -755,9 +755,10 @@ const getViaIcon = (ket) => {
 }
 
 const openBerkas = (filename) => {
+  if (!filename) return
   const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('192.168') || window.location.hostname.includes('127.0.0.1')
   const baseUrl = isLocal ? 'http://192.168.100.33' : 'https://sim.rsiaaisyiyah.com'
-  const url = `${baseUrl}/webapps/rsia_surat_masuk/${filename}`
+  const url = `${baseUrl}/webapps/rsia_surat_masuk/${encodeURI(filename)}`
   window.open(url, '_blank')
 }
 
