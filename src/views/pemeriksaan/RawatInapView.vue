@@ -214,7 +214,7 @@
                   <div v-else class="text-muted small">—</div>
                 </td>
                 <td class="px-2 py-1 text-center">
-                    <span class="badge bg-light text-dark border">{{ calculateLamaInap(item.reg_periksa?.tgl_registrasi) }} Hari</span>
+                    <span class="badge bg-light text-dark border">{{ calculateLamaInap(item) }} Hari</span>
                 </td>
                 <td class="px-2 py-1">
                   <div class="small text-dark">{{ item.diagnosa_awal || '-' }}</div>
@@ -2142,6 +2142,9 @@ const formatDataForExport = (data) => {
     'Nama Pasien': item.reg_periksa?.pasien?.nm_pasien,
     'JK': item.reg_periksa?.pasien?.jk,
     'Tgl Masuk': `${item.tgl_masuk} ${item.jam_masuk}`,
+    'Tgl Keluar': (item.tgl_keluar && item.tgl_keluar !== '0000-00-00') ? `${item.tgl_keluar} ${item.jam_keluar}` : '-',
+    'Lama Inap (Hari)': calculateLamaInap(item),
+    'Status Pulang': item.stts_pulang || '-',
     'Diagnosa Awal': item.diagnosa_awal || '-',
     'Jenis Bayar': item.png_jawab,
     'Status SEP': item.sep_simple ? 'Terbit' : 'Belum',
@@ -2753,16 +2756,59 @@ const getLabResultBadgeClass = (keterangan) => {
   return 'bg-secondary text-white'
 }
 
-const calculateLamaInap = (dateStr) => {
-  if (!dateStr) return '-'
-  try {
-      const start = new Date(dateStr)
+const calculateLamaInap = (item) => {
+  if (!item) return '-'
+  
+  // If passed a date string directly (fallback)
+  if (typeof item === 'string') {
+    try {
+      const start = new Date(item)
       const now = new Date()
       const diffTime = now - start
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
       return diffDays > 0 ? diffDays : 1
-  } catch (e) {
+    } catch (e) {
       return '-'
+    }
+  }
+
+  // 1. Check if patient has already discharged (stts_pulang != '-' or valid tgl_keluar)
+  const isPulang = item.stts_pulang && item.stts_pulang !== '-'
+  const tglKeluarValid = item.tgl_keluar && item.tgl_keluar !== '0000-00-00'
+
+  if (isPulang || tglKeluarValid) {
+    if (item.lama !== undefined && item.lama !== null && item.lama !== '') {
+      return item.lama
+    }
+    const startStr = item.tgl_masuk || item.reg_periksa?.tgl_registrasi
+    const endStr = tglKeluarValid ? item.tgl_keluar : null
+    if (startStr && endStr) {
+      try {
+        const start = new Date(startStr)
+        const end = new Date(endStr)
+        const diffTime = end - start
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        return !isNaN(diffDays) ? (diffDays >= 0 ? diffDays : 1) : 1
+      } catch (e) {
+        return item.lama ?? 1
+      }
+    }
+    if (item.lama !== undefined && item.lama !== null) {
+      return item.lama
+    }
+  }
+
+  // 2. Patient still admitted (belum pulang) -> calculate from tgl_masuk / tgl_registrasi to TODAY
+  const startStr = item.tgl_masuk || item.reg_periksa?.tgl_registrasi
+  if (!startStr) return '-'
+  try {
+    const start = new Date(startStr)
+    const now = new Date()
+    const diffTime = now - start
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays > 0 ? diffDays : 1
+  } catch (e) {
+    return '-'
   }
 }
 
