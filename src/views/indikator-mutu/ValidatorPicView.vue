@@ -53,7 +53,7 @@
                 <th class="ps-4" style="width: 80px;">No</th>
                 <th style="min-width: 200px;">Unit / Departemen</th>
                 <th style="min-width: 250px;">PIC Penginput</th>
-                <th style="min-width: 250px;">Validator Koordinator</th>
+                <th style="min-width: 250px;">Validator/Penanggung Jawab</th>
                 <th class="text-center" style="width: 150px;">Aksi</th>
               </tr>
             </thead>
@@ -209,7 +209,7 @@
 
               <!-- Validator Autocomplete -->
               <div class="mb-4 position-relative">
-                <label class="form-label fw-semibold text-secondary small">Validator Koordinator</label>
+                <label class="form-label fw-semibold text-secondary small">Validator/Penanggung Jawab</label>
                 <div class="input-group modern-input-group shadow-sm rounded-3 overflow-hidden">
                   <span class="input-group-text bg-white border-end-0">
                     <i class="fas fa-user-shield text-muted opacity-50"></i>
