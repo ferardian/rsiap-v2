@@ -562,21 +562,21 @@
                 <h5 class="section-title mb-1">{{ kategoris[3].nama }}</h5>
                 <p class="section-desc mb-0">{{ kategoris[3].desc }}</p>
               </div>
-              <div class="section-badge-group d-flex align-items-center gap-2 flex-wrap">
+              <div class="section-badge-group d-flex align-items-center gap-2 flex-nowrap">
+                <span class="section-badge badge-total mb-0" style="white-space: nowrap;">
+                  <i class="fas fa-list me-1"></i>
+                  {{ kategorisData[3]?.total ?? 0 }} Insiden
+                </span>
                 <a 
                   href="http://192.168.100.31:8123/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-2 shadow-sm border-0"
-                  style="text-decoration: none; font-size: 0.825rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"
+                  class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-2 shadow-sm border-0 ms-1"
+                  style="text-decoration: none; font-size: 0.825rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); white-space: nowrap;"
                 >
                   <i class="fas fa-external-link-alt"></i>
                   <span>Lapor IKP</span>
                 </a>
-                <span class="section-badge badge-total">
-                  <i class="fas fa-list me-1"></i>
-                  {{ kategorisData[3]?.total ?? 0 }} Insiden
-                </span>
               </div>
             </div>
           </div>
