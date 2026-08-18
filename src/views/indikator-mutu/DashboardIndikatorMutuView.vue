@@ -73,23 +73,37 @@
     </div>
 
     <!-- ===== TOP LEVEL TAB SWITCHER ===== -->
-    <div class="top-tab-switcher mb-4">
-      <button 
-        class="tab-btn" 
-        :class="{ active: activeTab === 'mutu' }" 
-        @click="activeTab = 'mutu'"
+    <div class="top-tab-switcher mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex gap-2">
+        <button 
+          class="tab-btn" 
+          :class="{ active: activeTab === 'mutu' }" 
+          @click="activeTab = 'mutu'"
+        >
+          <i class="fas fa-chart-line me-2"></i>
+          Mutu
+        </button>
+        <button 
+          class="tab-btn" 
+          :class="{ active: activeTab === 'ikp' }" 
+          @click="activeTab = 'ikp'"
+        >
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          IKP
+        </button>
+      </div>
+
+      <a 
+        v-if="activeTab === 'ikp'"
+        href="http://192.168.100.31:8123/" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="btn btn-outline-danger rounded-pill px-3 py-1.5 fw-bold d-inline-flex align-items-center gap-2 shadow-sm ms-auto"
+        style="text-decoration: none; border-width: 1.5px; font-size: 0.85rem; transition: all 0.2s ease;"
       >
-        <i class="fas fa-chart-line me-2"></i>
-        Mutu
-      </button>
-      <button 
-        class="tab-btn" 
-        :class="{ active: activeTab === 'ikp' }" 
-        @click="activeTab = 'ikp'"
-      >
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        IKP
-      </button>
+        <i class="fas fa-external-link-alt"></i>
+        <span>Buka Web IKP</span>
+      </a>
     </div>
 
     <!-- ===== LOADING STATE ===== -->
@@ -562,7 +576,17 @@
                 <h5 class="section-title mb-1">{{ kategoris[3].nama }}</h5>
                 <p class="section-desc mb-0">{{ kategoris[3].desc }}</p>
               </div>
-              <div class="section-badge-group">
+              <div class="section-badge-group d-flex align-items-center gap-2 flex-wrap">
+                <a 
+                  href="http://192.168.100.31:8123/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  class="btn btn-light btn-sm rounded-pill px-3 py-1.5 fw-bold text-danger d-inline-flex align-items-center gap-2 shadow-sm border"
+                  style="text-decoration: none; font-size: 0.825rem;"
+                >
+                  <i class="fas fa-external-link-alt"></i>
+                  <span>Buka Web IKP (192.168.100.31:8123)</span>
+                </a>
                 <span class="section-badge badge-total">
                   <i class="fas fa-list me-1"></i>
                   {{ kategorisData[3]?.total ?? 0 }} Insiden
