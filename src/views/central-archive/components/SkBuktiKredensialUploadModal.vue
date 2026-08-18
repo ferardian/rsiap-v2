@@ -45,7 +45,7 @@
                 required
                 @change="handleFileChange"
               >
-              <small class="text-muted mt-1 d-block">Maksimal ukuran file: 10MB. Format: PDF/JPG/PNG.</small>
+              <small class="text-muted mt-1 d-block">Maksimal ukuran file: 20MB. Format: PDF/JPG/PNG.</small>
             </div>
           </div>
         </form>
@@ -105,8 +105,8 @@ const formatNomorSk = (data) => {
 const handleFileChange = (e) => {
   const file = e.target.files[0]
   if (file) {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Ukuran file terlalu besar. Maksimal 10MB.')
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Ukuran file terlalu besar. Maksimal 20MB.')
       fileInput.value.value = ''
       fileSelected.value = false
       return

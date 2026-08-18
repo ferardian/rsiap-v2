@@ -483,7 +483,7 @@
             </div>
             <p v-if="!buktiFile" class="fw-bold text-dark mb-1">Klik atau seret file ke sini</p>
             <p v-else class="text-success fw-bold mb-1">{{ buktiFile.name }}</p>
-            <p class="text-muted fs-xs">Format: PDF, JPG, PNG (Maks 10MB)</p>
+            <p class="text-muted fs-xs">Format: PDF, JPG, PNG (Maks 20MB)</p>
           </div>
         </div>
         <div class="modal-footer">
@@ -882,13 +882,13 @@ const handleDrop = (e) => {
 
 const validateAndSetFile = (file) => {
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
-  const maxSize = 10 * 1024 * 1024 // 10MB
+  const maxSize = 20 * 1024 * 1024 // 20MB
   if (!allowedTypes.includes(file.type)) {
     toast.error('Format berkas tidak didukung. Gunakan PDF/JPG/PNG')
     return
   }
   if (file.size > maxSize) {
-    toast.error('Ukuran berkas terlalu besar. Maksimal 10MB')
+    toast.error('Ukuran berkas terlalu besar. Maksimal 20MB')
     return
   }
   buktiFile.value = file

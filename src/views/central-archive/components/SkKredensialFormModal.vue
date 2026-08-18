@@ -164,7 +164,7 @@
                 accept="application/pdf"
                 @change="handleSkFileChange"
               >
-              <small class="text-muted mt-1 d-block" v-if="isLinking">Opsional: Unggah file untuk memperbarui/melengkapi berkas SPK RKK</small>
+              <small class="text-muted mt-1 d-block">Format PDF (Maksimal 20MB)</small>
             </div>
             <div class="form-group col-sm-6">
               <label>Upload Bukti Kredensial (Opsional)</label>
@@ -175,7 +175,7 @@
                 accept="application/pdf,image/jpeg,image/png"
                 @change="handleBuktiFileChange"
               >
-              <small class="text-muted mt-1 d-block">Lembar asesmen / logbook</small>
+              <small class="text-muted mt-1 d-block">Lembar asesmen / logbook (Maksimal 20MB)</small>
             </div>
           </div>
 
@@ -492,8 +492,8 @@ const applySuggestion = () => {
 
 const handleSkFileChange = (e) => {
   const file = e.target.files[0]
-  if (file && file.size > 5 * 1024 * 1024) {
-    toast.error('Ukuran file SK maksimal 5MB')
+  if (file && file.size > 20 * 1024 * 1024) {
+    toast.error('Ukuran file SK maksimal 20MB')
     skFileInput.value.value = ''
     skFile.value = null
     return
@@ -503,8 +503,8 @@ const handleSkFileChange = (e) => {
 
 const handleBuktiFileChange = (e) => {
   const file = e.target.files[0]
-  if (file && file.size > 5 * 1024 * 1024) {
-    toast.error('Ukuran file Bukti maksimal 5MB')
+  if (file && file.size > 20 * 1024 * 1024) {
+    toast.error('Ukuran file Bukti maksimal 20MB')
     buktiFileInput.value.value = ''
     buktiFile.value = null
     return

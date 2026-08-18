@@ -63,7 +63,7 @@
                 required
                 @change="handleFileChange"
               >
-              <small class="text-muted mt-1 d-block">Maksimal ukuran file: 5MB. Format: PDF.</small>
+              <small class="text-muted mt-1 d-block">Maksimal ukuran file: 20MB. Format: PDF.</small>
             </div>
           </div>
         </form>
@@ -125,8 +125,8 @@ const handleFileChange = (e) => {
   const file = e.target.files[0]
   if (file) {
     // Basic validation
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Ukuran file terlalu besar. Maksimal 5MB.')
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Ukuran file terlalu besar. Maksimal 20MB.')
       fileInput.value.value = ''
       fileSelected.value = false
       return
