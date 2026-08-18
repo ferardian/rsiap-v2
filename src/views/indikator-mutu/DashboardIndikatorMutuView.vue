@@ -574,8 +574,8 @@
                   href="http://192.168.100.31:8123/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  class="btn btn-danger btn-sm rounded-pill d-inline-flex align-items-center justify-content-center gap-2 shadow-sm border-0 mb-0"
-                  style="text-decoration: none; height: 36px; padding: 0 1rem; font-size: 0.825rem; font-weight: 700; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); white-space: nowrap;"
+                  class="btn btn-danger btn-sm rounded-pill btn-lapor-ikp-glow d-inline-flex align-items-center justify-content-center gap-2 shadow-sm border-0 mb-0"
+                  style="text-decoration: none; height: 36px; padding: 0 1.15rem; font-size: 0.825rem; font-weight: 700; white-space: nowrap;"
                 >
                   <i class="fas fa-external-link-alt"></i>
                   <span>Lapor IKP</span>
@@ -2392,5 +2392,53 @@ onMounted(() => {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   background-color: #ffffff !important;
+}
+
+/* Glowing Pulsing & Shimmer Button for Lapor IKP */
+.btn-lapor-ikp-glow {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff !important;
+  border: none;
+  animation: btn-pulse-glow 2s infinite ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-lapor-ikp-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: btn-shimmer 3s infinite ease-in-out;
+}
+
+.btn-lapor-ikp-glow:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.65) !important;
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+}
+
+@keyframes btn-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.65), 0 4px 12px rgba(239, 68, 68, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(239, 68, 68, 0), 0 6px 18px rgba(239, 68, 68, 0.55);
+  }
+}
+
+@keyframes btn-shimmer {
+  0% { left: -100%; }
+  35%, 100% { left: 160%; }
 }
 </style>
