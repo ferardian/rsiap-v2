@@ -855,28 +855,6 @@ const submitUploadBukti = async () => {
 
 const calculateKredensial = (staf) => {
   if (staf.level_kredensial) return staf.level_kredensial
-  if (!staf.tgl_terbit_sk) return '-'
-  
-  const pendidikan = (staf.pendidikan || '').toUpperCase()
-  const tglTerbit = new Date(staf.tgl_terbit_sk)
-  const tahunTerbit = tglTerbit.getFullYear()
-  const tahunAwal = 2017
-  const masaKerja = tahunTerbit - tahunAwal
-
-  if (pendidikan.includes('D3') || pendidikan.includes('DIII')) {
-    if (masaKerja >= 22) return 'PK V (>= 22 Tahun)'
-    if (masaKerja >= 19) return 'PK IV (>= 19 Tahun)'
-    if (masaKerja > 9) return 'PK III (> 9 - 12 Tahun)'
-    if (masaKerja > 6) return 'PK II (> 6 - 9 Tahun)'
-    if (masaKerja >= 3) return 'PK I (3 - 6 Tahun)'
-    return 'PRA PK (0 - 3 Tahun)'
-  } else if (pendidikan.includes('NERS')) {
-    if (masaKerja > 12) return 'Utama (> 12 tahun)'
-    if (masaKerja >= 6) return 'Madya (6 - 12 tahun)'
-    if (masaKerja >= 2) return 'Muda (2 - 6 tahun)'
-    return 'Pratama (0 - 2 tahun)'
-  }
-  
   return '-'
 }
 
@@ -953,9 +931,10 @@ const getLevelClass = (level) => {
   if (upperLevel.includes('PK I')) return 'level-pk-i'
   if (upperLevel.includes('PRA PK')) return 'level-pra-pk'
   if (upperLevel.includes('UTAMA')) return 'level-ners-utama'
-  if (upperLevel.includes('MADYA')) return 'level-ners-madya'
-  if (upperLevel.includes('MUDA')) return 'level-ners-muda'
+  if (upperLevel.includes('MADYA') || upperLevel.includes('MAHIR')) return 'level-ners-madya'
+  if (upperLevel.includes('MUDA') || upperLevel.includes('TERAMPIL')) return 'level-ners-muda'
   if (upperLevel.includes('PRATAMA')) return 'level-ners-pratama'
+  if (upperLevel.includes('PEMULA')) return 'level-pra-pk'
   return 'level-default'
 }
 
