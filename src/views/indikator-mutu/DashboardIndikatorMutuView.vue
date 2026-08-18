@@ -571,7 +571,7 @@
                   style="text-decoration: none; font-size: 0.825rem; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"
                 >
                   <i class="fas fa-external-link-alt"></i>
-                  <span>Buka Web IKP</span>
+                  <span>Lapor IKP</span>
                 </a>
                 <span class="section-badge badge-total">
                   <i class="fas fa-list me-1"></i>
