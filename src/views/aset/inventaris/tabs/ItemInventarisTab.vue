@@ -426,46 +426,78 @@ const confirmPrint = () => {
 
     if (isCompact) {
       w.document.write(`
+        <!DOCTYPE html>
         <html>
           <head>
             <title>Stiker ${item.no_inventaris}</title>
             <style>
-              @page { size: 55mm 20mm; margin: 0; }
-              body { 
-                width: 55mm; height: 20mm; margin: 0; padding: 0; 
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-                box-sizing: border-box; overflow: hidden;
-                border: 1px dotted #ccc;
+              @page { 
+                size: 55mm 20mm; 
+                margin: 0; 
               }
-              .sticker-container {
-                width: 100%; height: 100%;
-                display: flex; flex-direction: column;
-                border: 1px solid #000;
+              *, *:before, *:after {
                 box-sizing: border-box;
               }
+              html, body { 
+                width: 55mm; 
+                height: 20mm; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                box-sizing: border-box; 
+                overflow: hidden !important;
+                background: #fff;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .sticker-container {
+                width: 55mm; 
+                height: 20mm;
+                display: flex; 
+                flex-direction: column;
+                border: 1px solid #000;
+                box-sizing: border-box;
+                overflow: hidden;
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
               .header { 
-                background: #000; color: #fff; 
-                text-align: center; font-size: 5.5pt; font-weight: 800; 
-                padding: 1px 0; text-transform: uppercase;
-                -webkit-print-color-adjust: exact;
+                background: #000 !important; 
+                color: #fff !important; 
+                text-align: center; 
+                font-size: 5pt; 
+                font-weight: 800; 
+                padding: 1px 0; 
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                flex-shrink: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               .body-wrap {
-                flex: 1; display: flex; align-items: center; padding: 1mm 1.5mm; gap: 1.5mm;
+                flex: 1; 
+                display: flex; 
+                align-items: center; 
+                padding: 0.5mm 1.5mm; 
+                gap: 1.5mm;
+                overflow: hidden;
               }
               .qr-box { 
-                width: 14mm; height: 14mm; 
-                display: flex; justify-content: center; align-items: center;
-                border: 1px solid #000; border-radius: 2px; padding: 0.5mm; flex-shrink: 0;
+                width: 12.5mm; 
+                height: 12.5mm; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center;
+                border: 1px solid #000; 
+                border-radius: 2px; 
+                padding: 0.5mm; 
+                flex-shrink: 0;
               }
               .qr-img { width: 100%; height: 100%; object-fit: contain; }
-              .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-              .kode { font-size: 7.5pt; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; line-height: 1; margin-bottom: 1px; color: #000; }
-              .nama { font-size: 5.5pt; line-height: 1.1; font-weight: 700; max-height: 16px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #111; }
-              .sub-info { font-size: 4.5pt; font-weight: 600; color: #444; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-              @media print {
-                body { border: none; }
-                .header { background: #000 !important; color: #fff !important; }
-              }
+              .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; min-width: 0; }
+              .kode { font-size: 7.5pt; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; line-height: 1; margin-bottom: 1px; color: #000; white-space: nowrap; }
+              .nama { font-size: 5pt; line-height: 1.1; font-weight: 700; max-height: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #111; word-break: break-word; }
+              .sub-info { font-size: 4.2pt; font-weight: 600; color: #333; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             </style>
           </head>
           <body>
@@ -490,53 +522,90 @@ const confirmPrint = () => {
       `)
     } else {
       w.document.write(`
+        <!DOCTYPE html>
         <html>
           <head>
             <title>Stiker ${item.no_inventaris}</title>
             <style>
-              @page { size: 65mm 40mm; margin: 0; }
-              body { 
-                width: 65mm; height: 40mm; margin: 0; padding: 0; 
-                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-                box-sizing: border-box; overflow: hidden;
-                border: 1px dotted #ccc; /* Preview border */
+              @page { 
+                size: 65mm 40mm; 
+                margin: 0; 
               }
-              .sticker-container {
-                width: 100%; height: 100%;
-                display: flex; flex-direction: column;
-                border: 1px solid #000;
+              *, *:before, *:after {
                 box-sizing: border-box;
               }
+              html, body { 
+                width: 65mm; 
+                height: 40mm; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                box-sizing: border-box; 
+                overflow: hidden !important;
+                background: #fff;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .sticker-container {
+                width: 65mm; 
+                height: 40mm;
+                display: flex; 
+                flex-direction: column;
+                justify-content: space-between;
+                border: 1px solid #000;
+                box-sizing: border-box;
+                overflow: hidden;
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
               .header { 
-                background: #000; color: #fff; 
-                text-align: center; font-size: 7.5pt; font-weight: 800; 
-                padding: 2px 0; text-transform: uppercase;
-                -webkit-print-color-adjust: exact;
+                background: #000 !important; 
+                color: #fff !important; 
+                text-align: center; 
+                font-size: 7.5pt; 
+                font-weight: 800; 
+                padding: 2px 0; 
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                flex-shrink: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               .body-wrap {
-                flex: 1; display: flex; align-items: center; padding: 1mm 2mm; gap: 2mm;
+                flex: 1; 
+                display: flex; 
+                align-items: center; 
+                padding: 1.5mm 2.5mm; 
+                gap: 2.5mm;
+                overflow: hidden;
               }
               .qr-box { 
-                width: 22mm; height: 22mm; 
-                display: flex; justify-content: center; align-items: center;
-                border: 1px solid #000; border-radius: 4px; padding: 1mm;
+                width: 20mm; 
+                height: 20mm; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center;
+                border: 1px solid #000; 
+                border-radius: 3px; 
+                padding: 0.5mm;
+                flex-shrink: 0;
               }
               .qr-img { width: 100%; height: 100%; object-fit: contain; }
-              .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-              .kode-label { font-size: 6pt; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
-              .kode { font-size: 11pt; font-weight: 900; margin-bottom: 2px; font-family: monospace; letter-spacing: -0.5px; }
-              .nama { font-size: 8pt; line-height: 1.1; font-weight: 600; max-height: 24px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+              .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; min-width: 0; }
+              .kode-label { font-size: 5.5pt; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+              .kode { font-size: 10.5pt; font-weight: 900; margin-bottom: 2px; font-family: monospace; letter-spacing: -0.5px; color: #000; }
+              .nama { font-size: 7.5pt; line-height: 1.1; font-weight: 600; max-height: 22px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #111; word-break: break-word; }
               .footer { 
-                border-top: 1px solid #000; padding: 2px 3mm; 
-                font-size: 6.5pt; font-weight: 600;
-                display: flex; justify-content: space-between;
-                background: #f0f0f0;
-                -webkit-print-color-adjust: exact;
-              }
-              @media print {
-                body { border: none; }
-                .header { background: #000 !important; color: #fff !important; }
-                .footer { background: #eee !important; }
+                border-top: 1px solid #000; 
+                padding: 2px 3mm; 
+                font-size: 6pt; 
+                font-weight: 600;
+                display: flex; 
+                justify-content: space-between;
+                background: #f0f0f0 !important;
+                flex-shrink: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             </style>
           </head>
