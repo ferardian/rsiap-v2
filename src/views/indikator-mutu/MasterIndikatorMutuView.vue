@@ -540,12 +540,11 @@ onMounted(() => {
   font-weight: 600;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   white-space: nowrap;
   width: auto !important;
   flex-shrink: 0;
-}
-  justify-content: center;
   transition: all 0.2s ease;
 }
 
