@@ -120,7 +120,7 @@
                     </div>
                     <div class="dropzone-text">
                       <p class="main-text">{{ fileName || 'Klik untuk memilih file' }}</p>
-                      <p class="sub-text">Format: PDF, JPG, PNG (Maks. 2MB)</p>
+                      <p class="sub-text">Format: PDF, JPG, PNG (Maks. 20MB)</p>
                     </div>
                   </div>
                   <div v-if="selectedFile" class="file-badge">
@@ -263,8 +263,8 @@ const fetchNamaBerkas = async () => {
 const onFileChange = (e) => {
   const file = e.target.files[0]
   if (file) {
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Ukuran file maksimal 2MB')
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 20MB')
       selectedFile.value = null
       fileName.value = ''
       e.target.value = ''
