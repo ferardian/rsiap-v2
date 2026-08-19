@@ -74,7 +74,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            :disabled="inputMode === 'unit' && isUnitLocked"
             @update:modelValue="fetchIndicators"
           />
         </div>
@@ -95,8 +95,8 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-            @update:modelValue="fetchMonthlyData"
+            :disabled="inputMode === 'unit' && isUnitLocked"
+            @update:modelValue="handleMonthlyUnitChange"
           />
         </div>
         <div class="filter-bar-item" style="flex: 2; min-width: 260px;">
@@ -127,13 +127,26 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
+            :disabled="inputMode === 'unit' && isUnitLocked"
           />
         </div>
       </template>
 
       <!-- ANALISA MODE FILTERS -->
       <template v-else-if="viewMode === 'analisa'">
+        <div class="filter-bar-item unit-select-container">
+          <label class="filter-bar-label">Unit / Ruangan</label>
+          <v-select append-to-body
+            :options="units"
+            label="nama_ruang"
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit"
+            class="filter-vselect unit-select"
+            :disabled="inputMode === 'unit' && isUnitLocked"
+            @update:modelValue="handleAnalisaUnitChange"
+          />
+        </div>
         <div class="filter-bar-item" style="flex: 2; min-width: 260px;">
           <label class="filter-bar-label">Pilih Indikator</label>
           <v-select append-to-body
@@ -149,6 +162,10 @@
           <label class="filter-bar-label">Bulan &amp; Tahun</label>
           <input type="month" class="filter-date-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
         </div>
+      </template>
+
+      <!-- PDSA MODE FILTERS -->
+      <template v-else-if="viewMode === 'pdsa'">
         <div class="filter-bar-item unit-select-container">
           <label class="filter-bar-label">Unit / Ruangan</label>
           <v-select append-to-body
@@ -158,14 +175,10 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-            @update:modelValue="fetchAnalisaData"
+            :disabled="inputMode === 'unit' && isUnitLocked"
+            @update:modelValue="handlePdsaUnitChange"
           />
         </div>
-      </template>
-
-      <!-- PDSA MODE FILTERS -->
-      <template v-else-if="viewMode === 'pdsa'">
         <div class="filter-bar-item" style="flex: 2; min-width: 260px;">
           <label class="filter-bar-label">Pilih Indikator</label>
           <v-select append-to-body
@@ -188,19 +201,6 @@
             </select>
             <input type="number" class="filter-date-input" style="width: 90px;" v-model="selectedYear" @change="handleTriwulanChange">
           </div>
-        </div>
-        <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
-          <v-select append-to-body
-            :options="units"
-            label="nama_ruang"
-            v-model="filters.unit"
-            :reduce="unit => unit.dep_id"
-            placeholder="Pilih Unit"
-            class="filter-vselect unit-select"
-            :disabled="inputMode === 'komite' || (inputMode === 'unit' && isUnitLocked)"
-            @update:modelValue="fetchPdsaData"
-          />
         </div>
       </template>
 
@@ -1411,6 +1411,33 @@ const handleTriwulanChange = () => {
     }
 }
 
+const handleMonthlyUnitChange = async () => {
+    selectedIndicator.value = null
+    if (filters.unit) {
+        await fetchIndicators()
+        fetchMonthlyData()
+    }
+}
+
+const handleAnalisaUnitChange = async () => {
+    selectedIndicator.value = null
+    if (filters.unit) {
+        await fetchIndicators()
+        fetchAnalisaData()
+    }
+}
+
+const handlePdsaUnitChange = async () => {
+    selectedIndicator.value = null
+    if (filters.unit) {
+        await fetchIndicators()
+        if (indicators.value.length > 0) {
+            selectedIndicator.value = indicators.value[0]
+            fetchPdsaData()
+        }
+    }
+}
+
 const fetchCorrectData = () => {
     if (viewMode.value === 'daily') fetchIndicators()
     else if (viewMode.value === 'monthly') fetchMonthlyData()
@@ -1419,7 +1446,7 @@ const fetchCorrectData = () => {
 }
 
 // Watch viewMode to sync and auto-fetch
-watch(viewMode, (newMode) => {
+watch(viewMode, async (newMode) => {
     if (newMode === 'monthly' || newMode === 'analisa' || newMode === 'pdsa') {
         monthlyFilterDate.value = filters.tgl_transaksi.slice(0, 7)
         analisaFilters.bulan = monthlyFilterDate.value
@@ -1434,14 +1461,20 @@ watch(viewMode, (newMode) => {
             else if (month <= 9) selectedTriwulan.value = '09'
             else selectedTriwulan.value = '12'
             
-            // Re-sync to make sure the selectedTriwulan sets the month precisely to the end of the triwulan 
-            // only if they haven't explicitly set it to an end month before
             const newBulan = `${selectedYear.value}-${selectedTriwulan.value}`
             monthlyFilterDate.value = newBulan
             filters.tgl_transaksi = `${newBulan}-01`
             analisaFilters.bulan = newBulan
         }
     }
+
+    if (filters.unit) {
+        await fetchIndicators()
+        if (newMode === 'pdsa' && !selectedIndicator.value && indicators.value.length > 0) {
+            selectedIndicator.value = indicators.value[0]
+        }
+    }
+    
     fetchCorrectData()
 })
 
