@@ -74,7 +74,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
+            :disabled="isUnitLocked"
             @update:modelValue="fetchIndicators"
           />
         </div>
@@ -95,7 +95,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
+            :disabled="isUnitLocked"
             @update:modelValue="handleMonthlyUnitChange"
           />
         </div>
@@ -127,7 +127,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
+            :disabled="isUnitLocked"
           />
         </div>
       </template>
@@ -143,7 +143,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
+            :disabled="isUnitLocked"
             @update:modelValue="handleAnalisaUnitChange"
           />
         </div>
@@ -175,7 +175,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
+            :disabled="isUnitLocked"
             @update:modelValue="handlePdsaUnitChange"
           />
         </div>
