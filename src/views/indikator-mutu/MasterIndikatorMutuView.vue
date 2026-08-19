@@ -1,49 +1,47 @@
 <template>
-  <div class="container-fluid py-4 px-4">
-    <div class="row mb-4 align-items-center">
-      <div class="col-12">
-        <h3 class="fw-bold text-dark mb-1">
-          <i class="fas fa-database text-primary me-2"></i> Master Indikator Mutu
-        </h3>
-        <p class="text-muted">Kelola master data indikator mutu utama dan ruangan secara terpusat</p>
+  <div class="container-fluid py-3 px-3 px-md-4 main-bg">
+    <!-- Header Section -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 class="fw-bold text-slate-800 mb-1 d-flex align-items-center gap-2 page-title">
+          <i class="fas fa-database text-blue-600"></i> Master Indikator Mutu
+        </h4>
+        <p class="text-slate-500 mb-0 small">Kelola master data indikator mutu utama dan ruangan secara terpusat</p>
       </div>
     </div>
 
-    <!-- Tabs Header -->
-    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 shadow-sm border d-inline-flex">
-      <li class="nav-item">
+    <!-- Segmented Tabs Header -->
+    <div class="tab-segment-wrapper mb-3">
+      <div class="tab-segment">
         <button 
-          class="nav-link px-4 py-2 fw-semibold" 
+          class="tab-btn" 
           :class="{ active: activeTab === 'utama' }"
           @click="switchTab('utama')"
         >
-          <i class="fas fa-star me-2"></i> Master Utama
+          <i class="fas fa-star me-1.5"></i> Master Utama
         </button>
-      </li>
-      <li class="nav-item">
         <button 
-          class="nav-link px-4 py-2 fw-semibold" 
+          class="tab-btn" 
           :class="{ active: activeTab === 'ruang' }"
           @click="switchTab('ruang')"
         >
-          <i class="fas fa-hospital me-2"></i> Master Indikator Ruang
+          <i class="fas fa-hospital me-1.5"></i> Master Indikator Ruang
         </button>
-      </li>
-    </ul>
+      </div>
+    </div>
 
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-      <div class="card-header bg-primary border-0 py-3 px-4">
-        <div class="d-flex flex-wrap flex-lg-nowrap gap-3 align-items-center justify-content-between">
+    <!-- Main Card & Toolbar -->
+    <div class="card main-card shadow-sm border-0 rounded-3">
+      <div class="card-header bg-white border-bottom py-2.5 px-3">
+        <div class="d-flex flex-wrap flex-md-nowrap gap-2 align-items-center justify-content-between">
           <!-- Search & Filters Group -->
-          <div class="d-flex flex-wrap flex-lg-nowrap flex-grow-1 gap-2 align-items-center">
-            <!-- Search -->
-            <div class="input-group shadow-sm rounded-3 overflow-hidden border action-item bg-white search-group">
-              <span class="input-group-text bg-white border-0 pe-1 ps-3">
-                <i class="fas fa-search text-muted"></i>
-              </span>
+          <div class="d-flex flex-wrap flex-md-nowrap flex-grow-1 gap-2 align-items-center">
+            <!-- Search Input -->
+            <div class="search-input-group">
+              <i class="fas fa-search search-icon"></i>
               <input 
                 type="text" 
-                class="form-control border-0 ps-2 py-0" 
+                class="form-control compact-input" 
                 placeholder="Cari indikator, PJ, atau kategori..."
                 v-model="filters.keyword"
                 @keyup.enter="refreshData"
@@ -53,7 +51,7 @@
             <!-- Filter Kategori (Only for Utama) -->
             <select 
               v-if="activeTab === 'utama'"
-              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select filter-select" 
+              class="form-select compact-select filter-kategori" 
               v-model="filters.kategori"
               @change="refreshData"
             >
@@ -66,7 +64,7 @@
             <!-- Filter Unit (Only for Ruang) -->
             <select 
               v-if="activeTab === 'ruang'"
-              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select filter-select-unit" 
+              class="form-select compact-select filter-unit" 
               v-model="filters.dep_id"
               @change="refreshData"
             >
@@ -79,7 +77,7 @@
 
             <!-- Filter Status -->
             <select 
-              class="form-select border shadow-sm rounded-3 action-item bg-white custom-select filter-select-status" 
+              class="form-select compact-select filter-status" 
               v-model="filters.status"
               @change="refreshData"
             >
@@ -90,12 +88,12 @@
           </div>
 
           <!-- Action Button Group -->
-          <div class="mt-2 mt-lg-0">
+          <div class="w-100 w-md-auto mt-2 mt-md-0">
             <button 
-              class="btn btn-add-gradient w-100 w-lg-auto px-4 rounded-3 shadow-sm fw-bold action-item"
+              class="btn btn-primary-clean w-100 w-md-auto"
               @click="openCreateModal"
             >
-              <i class="fas fa-plus me-2"></i> Tambah Indikator
+              <i class="fas fa-plus me-1.5"></i> Tambah Indikator
             </button>
           </div>
         </div>
@@ -420,110 +418,140 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.container-fluid {
-    background-color: #f8f9fa;
-    min-height: 100vh;
+.main-bg {
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
-.nav-pills {
-    padding: 0.5rem;
+.text-slate-800 { color: #1e293b; }
+.text-slate-500 { color: #64748b; }
+.text-blue-600 { color: #2563eb; }
+
+.page-title {
+  font-size: 1.15rem;
 }
 
-.nav-pills .nav-link {
-    color: #6c757d;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
+/* Segmented Tabs Control */
+.tab-segment-wrapper {
+  display: inline-block;
 }
 
-.nav-pills .nav-link.active {
-    background-color: var(--bs-primary);
-    color: white;
-    box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.25);
+.tab-segment {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
 }
 
-.nav-pills .nav-link:hover:not(.active) {
-    background-color: #f1f3f5;
-    color: #495057;
+.tab-btn {
+  border: none;
+  background: transparent;
+  padding: 0.4rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
-.action-item {
-    height: 42px !important;
-    margin: 0 !important;
-    display: flex;
-    align-items: center;
+.tab-btn:hover:not(.active) {
+  color: #334155;
 }
 
-.action-item .form-control {
-    height: 100% !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding-top: 0;
-    padding-bottom: 0;
+.tab-btn.active {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.custom-select {
-    cursor: pointer;
-    background-position: right 0.75rem center;
-    background-size: 12px 10px;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    height: 42px !important;
+/* Main Card */
+.main-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
 }
 
-.custom-select:focus {
-    border-color: #fff !important;
-    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.2) !important;
+/* Compact Controls */
+.search-input-group {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
 }
 
-.search-group {
-    width: 100%;
-    max-width: 400px;
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  pointer-events: none;
 }
 
-.filter-select {
-    width: 280px;
+.compact-input {
+  height: 36px;
+  padding-left: 2.2rem;
+  padding-right: 0.75rem;
+  font-size: 0.8125rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
-.filter-select-unit {
-    width: 350px;
+.compact-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-.filter-select-status {
-    width: 160px;
+.compact-select {
+  height: 36px;
+  font-size: 0.8125rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  cursor: pointer;
+  color: #334155;
 }
 
-.btn-add-gradient {
-    height: 42px !important;
-    background: linear-gradient(45deg, #28a745, #20c997);
-    border: none;
-    color: white;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
-    margin: 0;
+.compact-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-.btn-add-gradient:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4) !important;
-    color: white;
-    filter: brightness(1.1);
+.filter-kategori { width: 240px; }
+.filter-unit { width: 260px; }
+.filter-status { width: 140px; }
+
+.btn-primary-clean {
+  height: 36px;
+  padding: 0 1.25rem;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.btn-add-gradient:active {
-    transform: translateY(0) scale(0.98);
-}
-
-.rounded-4 {
-    border-radius: 1rem !important;
+.btn-primary-clean:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 /* Animations */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .fade-enter-from,
@@ -531,37 +559,13 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .container-fluid {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    
-    .nav-pills {
-        width: 100%;
-        display: flex !important;
-    }
-    
-    .nav-pills .nav-item {
-        flex: 1;
-    }
-    
-    .nav-pills .nav-link {
-        width: 100%;
-        text-align: center;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-    }
-
-    .search-group, .filter-select, .filter-select-unit, .filter-select-status {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    .card-header {
-        padding: 1rem !important;
-    }
+  .search-input-group,
+  .filter-kategori,
+  .filter-unit,
+  .filter-status {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 </style>

@@ -1,61 +1,61 @@
 <template>
-  <div class="card shadow-sm border-0">
+  <div class="card border-0">
     <div class="card-body p-0">
       <div class="table-responsive d-none d-md-block">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="bg-light">
+        <table class="table table-hover align-middle mb-0 clean-table">
+          <thead>
             <tr>
-              <th width="5%" class="text-center">#</th>
-              <th width="30%">Nama Indikator</th>
-              <th width="15%">Kategori</th>
+              <th width="4%" class="text-center">#</th>
+              <th width="32%">Nama Indikator</th>
+              <th width="18%">Kategori</th>
               <th width="10%" class="text-center">Status</th>
-              <th width="15%">Standar</th>
+              <th width="12%">Standar</th>
               <th width="10%">Satuan</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="14%" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
               <td colspan="7" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border text-primary spinner-border-sm" role="status">
                   <span class="visually-hidden">Loading...</span>
                 </div>
               </td>
             </tr>
             <tr v-else-if="items.length === 0">
               <td colspan="7" class="text-center py-5 text-muted">
-                <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                <p>Tidak ada data ditemukan.</p>
+                <i class="fas fa-inbox fa-2x mb-2 opacity-40"></i>
+                <p class="small mb-0">Tidak ada data ditemukan.</p>
               </td>
             </tr>
             <tr v-else v-for="(item, index) in items" :key="item.id_master">
-              <td class="text-center">{{ (page - 1) * limit + index + 1 }}</td>
+              <td class="text-center text-slate-400 font-mono small">{{ (page - 1) * limit + index + 1 }}</td>
               <td>
-                <div class="fw-bold text-primary">{{ item.nama_inmut }}</div>
-                <small class="text-muted text-truncate d-block" style="max-width: 300px;">{{ stripHtml(item.definisi) }}</small>
+                <div class="inmut-title">{{ item.nama_inmut }}</div>
+                <div class="inmut-def text-truncate" style="max-width: 380px;" :title="stripHtml(item.definisi)">{{ stripHtml(item.definisi) }}</div>
               </td>
               <td>
-                <span class="badge bg-light text-dark border">{{ item.kategori }}</span>
+                <span class="badge-kategori">{{ item.kategori }}</span>
               </td>
               <td class="text-center">
-                 <span v-if="item.status == '1'" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3">
-                   <i class="fas fa-check-circle me-1"></i> Aktif
+                 <span v-if="item.status == '1'" class="badge-status active">
+                   <i class="fas fa-check-circle"></i> Aktif
                  </span>
-                 <span v-else class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3">
-                   <i class="fas fa-times-circle me-1"></i> Non-Aktif
+                 <span v-else class="badge-status inactive">
+                   <i class="fas fa-times-circle"></i> Non-Aktif
                  </span>
                </td>
-              <td>{{ getRumusSymbol(item.rumus) }} {{ item.standar }}</td>
-              <td>{{ item.satuan }}</td>
+              <td class="fw-semibold text-slate-700 small">{{ getRumusSymbol(item.rumus) }} {{ item.standar }}</td>
+              <td class="text-slate-600 small">{{ item.satuan || '-' }}</td>
               <td class="text-center">
-                <div class="d-flex justify-content-center">
-                  <button class="btn btn-sm btn-outline-primary me-1" @click="$emit('edit', item)" title="Edit">
-                    <i class="fas fa-edit"></i>
+                <div class="d-flex justify-content-center gap-1">
+                  <button class="btn-action-icon edit" @click="$emit('edit', item)" title="Edit">
+                    <i class="fas fa-pen"></i>
                   </button>
-                  <button v-if="item.status == '1'" class="btn btn-sm btn-outline-danger" @click="$emit('delete', item)" title="Non-aktifkan">
-                    <i class="fas fa-trash"></i>
+                  <button v-if="item.status == '1'" class="btn-action-icon delete" @click="$emit('delete', item)" title="Non-aktifkan">
+                    <i class="fas fa-trash-alt"></i>
                   </button>
-                  <button v-else class="btn btn-sm btn-outline-success" @click="$emit('activate', item)" title="Aktifkan">
+                  <button v-else class="btn-action-icon activate" @click="$emit('activate', item)" title="Aktifkan">
                     <i class="fas fa-check-circle"></i>
                   </button>
                 </div>
@@ -222,42 +222,133 @@ const getRumusSymbol = (val) => {
 </script>
 
 <style scoped>
+.clean-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.clean-table thead th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.clean-table tbody td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.clean-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.inmut-title {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.inmut-def {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.badge-kategori {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge-status.active {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-status.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-action-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: #f8fafc;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.775rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-icon.edit:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.btn-action-icon.delete:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.btn-action-icon.activate:hover {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
 .pagination-rounded .page-link {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    color: var(--bs-primary);
-    background: #f8f9fa;
-    transition: all 0.2s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 0.775rem;
+  color: #475569;
+  background: #f8fafc;
+  transition: all 0.2s ease;
 }
 
 .pagination-rounded .page-item.active .page-link {
-    background-color: var(--bs-primary);
-    color: white;
-    box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.3) !important;
+  background-color: #2563eb;
+  color: white;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
 }
 
 .pagination-rounded .page-link:hover:not(.active) {
-    background-color: #e9ecef;
-    transform: translateY(-2px);
+  background-color: #e2e8f0;
 }
 
-.pagination-rounded .page-item.disabled .page-link {
-    opacity: 0.5;
-    background: #f8f9fa;
-    cursor: not-allowed;
-}
-
-.text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+.text-slate-400 { color: #94a3b8; }
+.text-slate-600 { color: #475569; }
+.text-slate-700 { color: #334155; }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
