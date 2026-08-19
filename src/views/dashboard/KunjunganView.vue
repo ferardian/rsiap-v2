@@ -223,10 +223,10 @@
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
               <div class="d-flex align-items-center gap-3">
                 <h4 class="card-title mb-0">Tren Kunjungan {{ filters.mode === 'tahunan' ? 'Bulanan' : 'Harian' }}</h4>
-                <div class="view-toggle-pill">
+                <div class="trend-toggle-box">
                   <button 
                     type="button"
-                    class="toggle-segment" 
+                    class="trend-btn" 
                     :class="{ active: trendViewMode === 'both' || trendViewMode === 'chart' }"
                     @click="trendViewMode = (trendViewMode === 'chart' ? 'both' : 'chart')"
                     title="Tampilkan Grafik"
@@ -236,7 +236,7 @@
                   </button>
                   <button 
                     type="button"
-                    class="toggle-segment" 
+                    class="trend-btn" 
                     :class="{ active: trendViewMode === 'both' || trendViewMode === 'table' }"
                     @click="trendViewMode = (trendViewMode === 'table' ? 'both' : 'table')"
                     title="Tampilkan Tabel Angka"
@@ -2295,41 +2295,49 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.view-toggle-pill {
-  display: inline-flex;
-  align-items: center;
-  background: #f1f5f9;
-  padding: 3px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  gap: 2px;
+.trend-toggle-box {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #f1f5f9 !important;
+  padding: 3px !important;
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  gap: 2px !important;
+  height: auto !important;
+  box-sizing: border-box !important;
 }
 
-.toggle-segment {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 7px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
+.trend-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 4px 10px !important;
+  height: 28px !important;
+  line-height: 1 !important;
+  border: none !important;
+  background: transparent !important;
+  color: #475569 !important;
+  font-size: 0.725rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
-.toggle-segment:hover {
-  color: #1e293b;
+.trend-btn:hover {
+  color: #0f172a !important;
+  background: rgba(255, 255, 255, 0.6) !important;
 }
 
-.toggle-segment.active {
-  background: white;
-  color: #2563eb;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+.trend-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 .trend-table-container {
