@@ -68,8 +68,8 @@
             <thead>
               <tr>
                 <th width="60">Foto</th>
-                <th>Nama & NIK</th>
-                <th>Jabatan & Pendidikan</th>
+                <th>Nama &amp; NIK</th>
+                <th>Jabatan &amp; Pendidikan</th>
                 <th>Unit Kerja</th>
                 <th class="text-center">Kategori</th>
                 <template v-if="hasClinicalStaff">
@@ -78,6 +78,7 @@
                   <th class="text-center">SPK/RKK</th>
                   <th class="text-center">VERIF IJAZAH</th>
                 </template>
+                <th class="text-center" width="110">Aksi / Berkas</th>
               </tr>
             </thead>
             <tbody>
@@ -96,7 +97,7 @@
               </tr>
               <tr v-for="item in karyawan" :key="item.nik">
                 <td>
-                  <div class="avatar-box">
+                  <div class="avatar-box clickable" @click="openDetailPegawai(item)" title="Klik untuk lihat detail & berkas">
                     <img v-if="item.photo" :src="getPhotoUrl(item.photo)" :alt="item.nama" class="avatar-img" />
                     <div v-else class="avatar-placeholder">
                       <i class="fas" :class="item.jk === 'Pria' ? 'fa-user' : 'fa-user-nurse'"></i>
@@ -104,7 +105,7 @@
                   </div>
                 </td>
                 <td>
-                  <div class="name-box">
+                  <div class="name-box clickable" @click="openDetailPegawai(item)" title="Klik untuk lihat detail & berkas">
                     <span class="staff-name">{{ item.nama }}</span>
                     <span class="staff-nik">{{ item.nik }}</span>
                   </div>
@@ -174,12 +175,27 @@
                     <span class="non-clinical-info">Tanpa Dokumen Klinis</span>
                   </td>
                 </template>
+
+                <!-- Berkas Pegawai Column -->
+                <td class="text-center">
+                  <button class="btn-view-berkas" @click="openDetailPegawai(item)" title="Lihat Detail & Berkas Pegawai">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Berkas</span>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
+
+    <!-- Pegawai Detail & Berkas Modal -->
+    <PegawaiDetailModal
+      :show="showDetailModal"
+      :pegawai="selectedPegawai"
+      @close="showDetailModal = false"
+    />
   </div>
 </template>
 
@@ -187,10 +203,16 @@
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { karyawanUnitService } from '@/services/sdi/karyawanUnitService';
+import { pegawaiService } from '@/services/pegawaiService';
+import PegawaiDetailModal from './components/PegawaiDetailModal.vue';
 
 const authStore = useAuthStore();
 const karyawan = ref([]);
 const isLoading = ref(false);
+
+const showDetailModal = ref(false);
+const selectedPegawai = ref(null);
+const isLoadingDetail = ref(false);
 
 const departemen = computed(() => authStore.userDepartment);
 
@@ -201,7 +223,7 @@ const hasClinicalStaff = computed(() => {
 
 // Calculate colspan for loading/empty states
 const dynamicColspan = computed(() => {
-  return hasClinicalStaff.value ? 10 : 6;
+  return hasClinicalStaff.value ? 11 : 7;
 });
 
 // Stats for Dashboard
@@ -240,6 +262,24 @@ const fetchData = async () => {
     console.error('Error fetching data:', err);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const openDetailPegawai = async (item) => {
+  isLoadingDetail.value = true;
+  try {
+    const res = await pegawaiService.getPegawaiById(item.nik);
+    if (res.data && res.data.success) {
+      selectedPegawai.value = res.data.data;
+    } else {
+      selectedPegawai.value = item;
+    }
+  } catch (err) {
+    console.error('Error fetching pegawai detail:', err);
+    selectedPegawai.value = item;
+  } finally {
+    isLoadingDetail.value = false;
+    showDetailModal.value = true;
   }
 };
 
@@ -735,5 +775,44 @@ onMounted(() => {
   background: #dcfce7;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-view-berkas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-view-berkas:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px -1px rgba(59, 130, 246, 0.3);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.name-box.clickable:hover .staff-name {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.avatar-box.clickable:hover {
+  border-color: #3b82f6;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
 }
 </style>
