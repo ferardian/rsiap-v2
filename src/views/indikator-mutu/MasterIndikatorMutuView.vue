@@ -30,6 +30,66 @@
       </div>
     </div>
 
+    <!-- Summary KPI Stat Cards -->
+    <div class="row g-2.5 mb-3">
+      <!-- Stat 1: Total Indikator -->
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-blue-light text-blue-600">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Indikator</span>
+            <div class="stat-value">{{ currentStats.total }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat 2: Aktif -->
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-emerald-light text-emerald-600">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Status Aktif</span>
+            <div class="stat-value text-emerald-600">{{ currentStats.aktif }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat 3: Non-Aktif -->
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-slate-100 text-slate-500">
+            <i class="fas fa-pause-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Non-Aktif</span>
+            <div class="stat-value text-slate-500">{{ currentStats.nonAktif }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat 4: Per Kategori Breakdown -->
+      <div class="col-6 col-md-3">
+        <div class="stat-card flex-column align-items-start justify-content-center py-2 px-3">
+          <span class="stat-label mb-1">Per Kategori</span>
+          <div class="d-flex flex-wrap gap-1.5 w-100">
+            <span class="stat-badge-pill" title="Indikator Mutu Nasional">
+              <span class="dot bg-blue"></span> INM: <strong>{{ currentStats.imn }}</strong>
+            </span>
+            <span class="stat-badge-pill" title="Indikator Mutu Prioritas Rumah Sakit">
+              <span class="dot bg-purple"></span> IMPRS: <strong>{{ currentStats.imprs }}</strong>
+            </span>
+            <span class="stat-badge-pill" title="Indikator Mutu Prioritas Unit">
+              <span class="dot bg-amber"></span> IMPU: <strong>{{ currentStats.impu }}</strong>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Card & Toolbar -->
     <div class="card main-card shadow-sm border-0 rounded-3">
       <div class="card-header bg-white border-bottom py-2.5 px-3">
@@ -156,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 import api from '@/services/indikatorMutuService'
@@ -176,6 +236,56 @@ const filters = reactive({
 })
 const isSaving = ref(false)
 const units = ref([])
+
+// Summary Stats State
+const statsUtama = reactive({
+    total: 0,
+    aktif: 0,
+    nonAktif: 0,
+    imn: 0,
+    imprs: 0,
+    impu: 0
+})
+
+const statsRuang = reactive({
+    total: 0,
+    aktif: 0,
+    nonAktif: 0,
+    imn: 0,
+    imprs: 0,
+    impu: 0
+})
+
+const fetchSummaryStats = async () => {
+    try {
+        const [resUtama, resRuang] = await Promise.all([
+            api.getUtama({ limit: 1000 }),
+            api.getRuang({ limit: 1000 })
+        ])
+
+        const listUtama = resUtama.data.data.data || resUtama.data.data || []
+        statsUtama.total = listUtama.length
+        statsUtama.aktif = listUtama.filter(i => String(i.status) === '1').length
+        statsUtama.nonAktif = listUtama.filter(i => String(i.status) !== '1').length
+        statsUtama.imn = listUtama.filter(i => i.kategori === 'Indikator Mutu Nasional').length
+        statsUtama.imprs = listUtama.filter(i => i.kategori === 'Indikator Mutu Prioritas Rumah Sakit').length
+        statsUtama.impu = listUtama.filter(i => i.kategori === 'Indikator Mutu Prioritas Unit').length
+
+        const listRuang = resRuang.data.data.data || resRuang.data.data || []
+        statsRuang.total = listRuang.length
+        statsRuang.aktif = listRuang.filter(i => String(i.status) === '1').length
+        statsRuang.nonAktif = listRuang.filter(i => String(i.status) !== '1').length
+        statsRuang.imn = listRuang.filter(i => i.nama_jenis === 'Indikator Mutu Nasional').length
+        statsRuang.imprs = listRuang.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Rumah Sakit').length
+        statsRuang.impu = listRuang.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Unit').length
+    } catch (error) {
+        console.error('Gagal memuat statistik summary:', error)
+    }
+}
+
+const currentStats = computed(() => {
+    return activeTab.value === 'utama' ? statsUtama : statsRuang
+})
 
 // State for Master Utama
 const utama = reactive({
@@ -411,6 +521,7 @@ const deleteItem = async (item) => {
 // Initial Load
 onMounted(() => {
     fetchUnits()
+    fetchSummaryStats()
     refreshData()
 })
 
@@ -426,10 +537,81 @@ onMounted(() => {
 .text-slate-800 { color: #1e293b; }
 .text-slate-500 { color: #64748b; }
 .text-blue-600 { color: #2563eb; }
+.text-emerald-600 { color: #059669; }
 
 .page-title {
   font-size: 1.15rem;
 }
+
+/* Stat Cards */
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.bg-blue-light { background-color: #eff6ff; }
+.bg-emerald-light { background-color: #ecfdf5; }
+.bg-slate-100 { background-color: #f1f5f9; }
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.stat-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+.stat-badge-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.stat-badge-pill .dot.bg-blue { background-color: #2563eb; }
+.stat-badge-pill .dot.bg-purple { background-color: #8b5cf6; }
+.stat-badge-pill .dot.bg-amber { background-color: #f59e0b; }
 
 /* Segmented Tabs Control */
 .tab-segment-wrapper {
