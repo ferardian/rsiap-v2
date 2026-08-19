@@ -1148,7 +1148,22 @@ const toast = useToast()
 const loading = ref(false)
 const units = ref([])
 const indicators = ref([])
-const isUnitLocked = ref(false)
+const isUnitLocked = computed(() => {
+    if (inputMode.value === 'komite') {
+        return false
+    }
+    
+    const userDepNameOrId = authStore.user?.data?.detail?.departemen || 
+                            authStore.user?.detail?.departemen || 
+                            authStore.user?.dep_id
+    const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId || '').toUpperCase().trim())
+    
+    if (isPharmacyUser && !isCommitteeMember.value) {
+        return false
+    }
+
+    return true
+})
 
 const userNik = computed(() => authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik || '')
 
@@ -1927,22 +1942,10 @@ const fetchUnits = async () => {
                     filters.unit = 'FAR2'
                 }
                 
-                // Allow them to switch between FAR1 and FAR2 (do not lock)
-                isUnitLocked.value = false
-                console.log('Pharmacy units (FAR1, FAR2) unlocked for pharmacy user')
-            } else if (isCommitteeMember.value || isKomiteMutu.value) {
-                isUnitLocked.value = false
+            } else {
                 const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
                 if (myUnit && !filters.unit) {
                     filters.unit = myUnit.dep_id
-                }
-                console.log('Unit unlocked for Komite Mutu / Committee member')
-            } else {
-                const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
-                if (myUnit) {
-                    filters.unit = myUnit.dep_id
-                    isUnitLocked.value = true
-                    console.log('Unit locked to user department:', myUnit.nama_ruang)
                 }
             }
         }
@@ -2622,20 +2625,16 @@ const handleModeChange = () => {
                                 authStore.user?.detail?.departemen || 
                                 authStore.user?.dep_id
         
-        const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId).toUpperCase().trim())
+        const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId || '').toUpperCase().trim())
         
-        if (isCommitteeMember.value || isKomiteMutu.value) {
-            isUnitLocked.value = false
-        } else if (isPharmacyUser) {
+        if (isPharmacyUser && !isCommitteeMember.value) {
             // Keep the selected pharmacy unit if already selected (FAR1 or FAR2), otherwise default to FAR2
             if (!['FAR1', 'FAR2'].includes(filters.unit)) {
                 filters.unit = 'FAR2'
             }
-            isUnitLocked.value = false
         } else {
             const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
             if (myUnit) filters.unit = myUnit.dep_id
-            isUnitLocked.value = true
         }
     } else {
         // Switch to the first committee's department
@@ -2645,7 +2644,6 @@ const handleModeChange = () => {
                 filters.unit = commDepId
             }
         }
-        isUnitLocked.value = false
     }
     fetchIndicators()
 }
