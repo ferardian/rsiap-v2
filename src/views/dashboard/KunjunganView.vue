@@ -218,18 +218,99 @@
 
         <!-- Trends & Charts Section -->
         <div class="visuals-grid mb-4">
-          <!-- Daily/Monthly Trend Chart -->
+          <!-- Daily/Monthly Trend Chart & Data Table -->
           <div class="visual-card full-width">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h4 class="card-title mb-0">Tren Kunjungan {{ filters.mode === 'tahunan' ? 'Bulanan' : 'Harian' }}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <div class="d-flex align-items-center gap-3">
+                <h4 class="card-title mb-0">Tren Kunjungan {{ filters.mode === 'tahunan' ? 'Bulanan' : 'Harian' }}</h4>
+                <div class="btn-group btn-group-sm mode-toggle-group">
+                  <button 
+                    type="button"
+                    class="btn btn-outline-secondary" 
+                    :class="{ active: trendViewMode === 'both' || trendViewMode === 'chart' }"
+                    @click="trendViewMode = (trendViewMode === 'chart' ? 'both' : 'chart')"
+                    title="Tampilkan Grafik"
+                  >
+                    <i class="fas fa-chart-line me-1"></i> Grafik
+                  </button>
+                  <button 
+                    type="button"
+                    class="btn btn-outline-secondary" 
+                    :class="{ active: trendViewMode === 'both' || trendViewMode === 'table' }"
+                    @click="trendViewMode = (trendViewMode === 'table' ? 'both' : 'table')"
+                    title="Tampilkan Tabel Angka"
+                  >
+                    <i class="fas fa-table me-1"></i> Tabel Angka
+                  </button>
+                </div>
+              </div>
               <div v-if="visitData.trend" class="trend-badge" :class="visitData.trend.percent >= 0 ? 'up' : 'down'">
                  <i class="fas" :class="visitData.trend.percent >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'"></i>
                  {{ Math.abs(visitData.trend.percent) }}% dibanding {{ visitData.trend.label }}
               </div>
             </div>
-            <div class="chart-container" style="position: relative; height:300px;">
+
+            <!-- Chart -->
+            <div v-show="trendViewMode === 'chart' || trendViewMode === 'both'" class="chart-container mb-3" style="position: relative; height:280px;">
               <Line v-if="chartDataReady" :data="lineChartData" :options="lineChartOptions" />
               <div v-else class="chart-placeholder">Menyiapkan grafik...</div>
+            </div>
+
+            <!-- Data Table (Summary Table) -->
+            <div v-show="trendViewMode === 'table' || trendViewMode === 'both'" class="trend-table-container mt-2">
+              <!-- Yearly Mode (Monthly Table) -->
+              <div v-if="filters.mode === 'tahunan'" class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0 text-center custom-trend-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th v-for="m in (visitData.monthly_breakdown || [])" :key="m.bulan" class="text-center">
+                        {{ m.nama_bulan }}
+                      </th>
+                      <th class="text-center bg-primary text-white">Total {{ filters.tahun }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td v-for="m in (visitData.monthly_breakdown || [])" :key="'val-'+m.bulan" class="fw-bold">
+                        <span :class="m.total > 0 ? 'text-primary' : 'text-muted'">{{ m.total?.toLocaleString('id-ID') || 0 }}</span>
+                      </td>
+                      <td class="fw-bold bg-primary-subtle text-primary">
+                        {{ totalYearlyVisits.toLocaleString('id-ID') }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Daily Mode (Daily Table) -->
+              <div v-else class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-sm table-hover align-middle mb-0 text-center custom-trend-table">
+                  <thead class="sticky-top bg-light">
+                    <tr>
+                      <th class="text-start">Tanggal</th>
+                      <th class="text-center">Rawat Jalan (Ralan)</th>
+                      <th class="text-center">Rawat Inap (Ranap)</th>
+                      <th class="text-center bg-primary text-white">Total Kunjungan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in (visitData.charts || [])" :key="row.date">
+                      <td class="text-start fw-medium">{{ formatDateIndo(row.date) }}</td>
+                      <td class="text-center text-info fw-semibold">{{ row.ralan || 0 }}</td>
+                      <td class="text-center text-warning fw-semibold">{{ row.ranap || 0 }}</td>
+                      <td class="text-center fw-bold text-primary">{{ (row.total || (row.ralan + row.ranap))?.toLocaleString('id-ID') || 0 }}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="sticky-bottom bg-light fw-bold">
+                    <tr>
+                      <td class="text-start">Total Periode</td>
+                      <td class="text-info">{{ totalDailyRalan.toLocaleString('id-ID') }}</td>
+                      <td class="text-warning">{{ totalDailyRanap.toLocaleString('id-ID') }}</td>
+                      <td class="bg-primary text-white">{{ totalDailyVisits.toLocaleString('id-ID') }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
           
@@ -666,6 +747,7 @@ ChartJS.register(
 const loading = ref(true)
 const isFilterVisible = ref(false)
 const isMobile = ref(false)
+const trendViewMode = ref('both')
 const poliklinikOptions = ref([])
 const dokterOptions = ref([])
 const summary = ref({ 
@@ -675,6 +757,38 @@ const summary = ref({
 })
 const visitData = ref({ registrasi: [], cara_bayar: [], poli: [], dokter: [], bangsal: [], kategori: [], kelas: [] })
 const inpatientCare = ref(null)
+
+const totalYearlyVisits = computed(() => {
+  if (!visitData.value.monthly_breakdown) return 0
+  return visitData.value.monthly_breakdown.reduce((sum, item) => sum + (item.total || 0), 0)
+})
+
+const totalDailyRalan = computed(() => {
+  if (!visitData.value.charts) return 0
+  return visitData.value.charts.reduce((sum, item) => sum + (item.ralan || 0), 0)
+})
+
+const totalDailyRanap = computed(() => {
+  if (!visitData.value.charts) return 0
+  return visitData.value.charts.reduce((sum, item) => sum + (item.ranap || 0), 0)
+})
+
+const totalDailyVisits = computed(() => {
+  if (!visitData.value.charts) return 0
+  return visitData.value.charts.reduce((sum, item) => sum + (item.total || ((item.ralan || 0) + (item.ranap || 0)) || 0), 0)
+})
+
+const formatDateIndo = (dateStr) => {
+  if (!dateStr) return '-'
+  const parts = dateStr.split('-')
+  if (parts.length === 3) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agus', 'Sep', 'Okt', 'Nov', 'Des']
+    const day = parseInt(parts[2], 10)
+    const month = months[parseInt(parts[1], 10) - 1]
+    return `${day} ${month} ${parts[0]}`
+  }
+  return dateStr
+}
 
 const detailModal = ref({
   show: false,
@@ -2179,4 +2293,40 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
+.mode-toggle-group .btn {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border-color: #cbd5e1;
+}
+.mode-toggle-group .btn.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.trend-table-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.custom-trend-table {
+  font-size: 0.8rem;
+  margin-bottom: 0;
+}
+
+.custom-trend-table th {
+  font-weight: 700;
+  padding: 9px 10px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.custom-trend-table td {
+  padding: 8px 10px;
+}
 </style>
