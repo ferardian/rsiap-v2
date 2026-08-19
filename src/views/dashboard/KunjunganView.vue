@@ -223,24 +223,26 @@
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
               <div class="d-flex align-items-center gap-3">
                 <h4 class="card-title mb-0">Tren Kunjungan {{ filters.mode === 'tahunan' ? 'Bulanan' : 'Harian' }}</h4>
-                <div class="btn-group btn-group-sm mode-toggle-group">
+                <div class="view-toggle-pill">
                   <button 
                     type="button"
-                    class="btn btn-outline-secondary" 
+                    class="toggle-segment" 
                     :class="{ active: trendViewMode === 'both' || trendViewMode === 'chart' }"
                     @click="trendViewMode = (trendViewMode === 'chart' ? 'both' : 'chart')"
                     title="Tampilkan Grafik"
                   >
-                    <i class="fas fa-chart-line me-1"></i> Grafik
+                    <i class="fas fa-chart-line"></i>
+                    <span>Grafik</span>
                   </button>
                   <button 
                     type="button"
-                    class="btn btn-outline-secondary" 
+                    class="toggle-segment" 
                     :class="{ active: trendViewMode === 'both' || trendViewMode === 'table' }"
                     @click="trendViewMode = (trendViewMode === 'table' ? 'both' : 'table')"
                     title="Tampilkan Tabel Angka"
                   >
-                    <i class="fas fa-table me-1"></i> Tabel Angka
+                    <i class="fas fa-table"></i>
+                    <span>Tabel Angka</span>
                   </button>
                 </div>
               </div>
@@ -2293,16 +2295,41 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.mode-toggle-group .btn {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border-color: #cbd5e1;
+.view-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  gap: 2px;
 }
-.mode-toggle-group .btn.active {
-  background-color: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+
+.toggle-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.toggle-segment:hover {
+  color: #1e293b;
+}
+
+.toggle-segment.active {
+  background: white;
+  color: #2563eb;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .trend-table-container {
