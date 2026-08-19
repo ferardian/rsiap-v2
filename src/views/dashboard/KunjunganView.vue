@@ -227,9 +227,9 @@
                   <button 
                     type="button"
                     class="trend-btn" 
-                    :class="{ active: trendViewMode === 'both' || trendViewMode === 'chart' }"
-                    @click="trendViewMode = (trendViewMode === 'chart' ? 'both' : 'chart')"
-                    title="Tampilkan Grafik"
+                    :class="{ active: showChart }"
+                    @click="toggleChart"
+                    title="Tampilkan / Sembunyikan Grafik"
                   >
                     <i class="fas fa-chart-line"></i>
                     <span>Grafik</span>
@@ -237,9 +237,9 @@
                   <button 
                     type="button"
                     class="trend-btn" 
-                    :class="{ active: trendViewMode === 'both' || trendViewMode === 'table' }"
-                    @click="trendViewMode = (trendViewMode === 'table' ? 'both' : 'table')"
-                    title="Tampilkan Tabel Angka"
+                    :class="{ active: showTable }"
+                    @click="toggleTable"
+                    title="Tampilkan / Sembunyikan Tabel Angka"
                   >
                     <i class="fas fa-table"></i>
                     <span>Tabel Angka</span>
@@ -253,13 +253,13 @@
             </div>
 
             <!-- Chart -->
-            <div v-show="trendViewMode === 'chart' || trendViewMode === 'both'" class="chart-container mb-3" style="position: relative; height:280px;">
+            <div v-show="showChart" class="chart-container mb-3" style="position: relative; height:280px;">
               <Line v-if="chartDataReady" :data="lineChartData" :options="lineChartOptions" />
               <div v-else class="chart-placeholder">Menyiapkan grafik...</div>
             </div>
 
             <!-- Data Table (Summary Table) -->
-            <div v-show="trendViewMode === 'table' || trendViewMode === 'both'" class="trend-table-container mt-2">
+            <div v-show="showTable" class="trend-table-container mt-2">
               <!-- Yearly Mode (Monthly Table) -->
               <div v-if="filters.mode === 'tahunan'" class="table-responsive">
                 <table class="table table-sm table-hover table-striped align-middle mb-0 text-center custom-trend-table">
@@ -749,7 +749,23 @@ ChartJS.register(
 const loading = ref(true)
 const isFilterVisible = ref(false)
 const isMobile = ref(false)
-const trendViewMode = ref('both')
+const showChart = ref(true)
+const showTable = ref(true)
+
+const toggleChart = () => {
+  showChart.value = !showChart.value
+  if (!showChart.value && !showTable.value) {
+    showTable.value = true
+  }
+}
+
+const toggleTable = () => {
+  showTable.value = !showTable.value
+  if (!showChart.value && !showTable.value) {
+    showChart.value = true
+  }
+}
+
 const poliklinikOptions = ref([])
 const dokterOptions = ref([])
 const summary = ref({ 
