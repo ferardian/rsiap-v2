@@ -2,7 +2,7 @@
   <div class="berkas-section">
     <div class="section-header">
       <h4><i class="fas fa-file-alt"></i> Berkas Pegawai</h4>
-      <button class="btn-add-berkas" @click="showUploadModal = true">
+      <button v-if="!readOnly" class="btn-add-berkas" @click="showUploadModal = true">
         <i class="fas fa-plus-circle"></i> Tambah Berkas
       </button>
     </div>
@@ -32,7 +32,7 @@
           <button class="btn-action view" @click="viewBerkas(berkas)" title="Lihat">
             <i class="fas fa-eye"></i>
           </button>
-          <button class="btn-action delete" @click="confirmDelete(berkas)" title="Hapus">
+          <button v-if="!readOnly" class="btn-action delete" @click="confirmDelete(berkas)" title="Hapus">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -188,6 +188,10 @@ const props = defineProps({
     required: true
   },
   autoOpenUpload: {
+    type: Boolean,
+    default: false
+  },
+  readOnly: {
     type: Boolean,
     default: false
   }

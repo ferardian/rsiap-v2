@@ -190,8 +190,8 @@
       </div>
     </div>
 
-    <!-- Pegawai Detail & Berkas Modal -->
-    <PegawaiDetailModal
+    <!-- Pegawai Berkas Modal (Read-Only) -->
+    <PegawaiBerkasModal
       :show="showDetailModal"
       :pegawai="selectedPegawai"
       @close="showDetailModal = false"
@@ -204,7 +204,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { karyawanUnitService } from '@/services/sdi/karyawanUnitService';
 import { pegawaiService } from '@/services/pegawaiService';
-import PegawaiDetailModal from './components/PegawaiDetailModal.vue';
+import PegawaiBerkasModal from './components/PegawaiBerkasModal.vue';
 
 const authStore = useAuthStore();
 const karyawan = ref([]);
