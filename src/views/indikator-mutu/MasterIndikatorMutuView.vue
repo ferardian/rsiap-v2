@@ -18,14 +18,14 @@
           :class="{ active: activeTab === 'utama' }"
           @click="switchTab('utama')"
         >
-          <i class="fas fa-star me-1.5"></i> Master Utama
+          <i class="fas fa-star me-2"></i> Master Utama
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'ruang' }"
           @click="switchTab('ruang')"
         >
-          <i class="fas fa-hospital me-1.5"></i> Master Indikator Ruang
+          <i class="fas fa-hospital me-2"></i> Master Indikator Ruang
         </button>
       </div>
     </div>
@@ -33,9 +33,9 @@
     <!-- Main Card & Toolbar -->
     <div class="card main-card shadow-sm border-0 rounded-3">
       <div class="card-header bg-white border-bottom py-2.5 px-3">
-        <div class="d-flex flex-wrap flex-md-nowrap gap-2 align-items-center justify-content-between">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <!-- Search & Filters Group -->
-          <div class="d-flex flex-wrap flex-md-nowrap flex-grow-1 gap-2 align-items-center">
+          <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
             <!-- Search Input -->
             <div class="search-input-group">
               <i class="fas fa-search search-icon"></i>
@@ -88,12 +88,12 @@
           </div>
 
           <!-- Action Button Group -->
-          <div class="w-100 w-md-auto mt-2 mt-md-0">
+          <div class="flex-shrink-0">
             <button 
-              class="btn btn-primary-clean w-100 w-md-auto"
+              class="btn btn-primary-clean"
               @click="openCreateModal"
             >
-              <i class="fas fa-plus me-1.5"></i> Tambah Indikator
+              <i class="fas fa-plus me-1"></i> Tambah Indikator
             </button>
           </div>
         </div>
@@ -447,15 +447,16 @@ onMounted(() => {
 .tab-btn {
   border: none;
   background: transparent;
-  padding: 0.4rem 1rem;
+  padding: 0.45rem 1.1rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #64748b;
   border-radius: 8px;
   transition: all 0.2s ease;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .tab-btn:hover:not(.active) {
@@ -477,7 +478,8 @@ onMounted(() => {
 /* Compact Controls */
 .search-input-group {
   position: relative;
-  width: 100%;
+  min-width: 220px;
+  flex: 1 1 240px;
   max-width: 320px;
 }
 
@@ -523,9 +525,9 @@ onMounted(() => {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-.filter-kategori { width: 240px; }
-.filter-unit { width: 260px; }
-.filter-status { width: 140px; }
+.filter-kategori { width: 220px; }
+.filter-unit { width: 220px; }
+.filter-status { width: 130px; }
 
 .btn-primary-clean {
   height: 36px;
@@ -538,6 +540,11 @@ onMounted(() => {
   font-weight: 600;
   display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  width: auto !important;
+  flex-shrink: 0;
+}
   justify-content: center;
   transition: all 0.2s ease;
 }

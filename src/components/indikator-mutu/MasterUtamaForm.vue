@@ -309,6 +309,7 @@ const save = () => {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
 }
 
 .modal-tab-btn:hover:not(.active) {
