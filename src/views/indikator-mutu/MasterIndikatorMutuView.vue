@@ -73,18 +73,24 @@
 
       <!-- Stat 4: Per Kategori Breakdown -->
       <div class="col-6 col-md-3">
-        <div class="stat-card flex-column align-items-start justify-content-center py-2 px-3">
-          <span class="stat-label mb-1">Per Kategori</span>
-          <div class="d-flex flex-wrap gap-1.5 w-100">
-            <span class="stat-badge-pill" title="Indikator Mutu Nasional">
-              <span class="dot bg-blue"></span> INM: <strong>{{ currentStats.imn }}</strong>
-            </span>
-            <span class="stat-badge-pill" title="Indikator Mutu Prioritas Rumah Sakit">
-              <span class="dot bg-purple"></span> IMPRS: <strong>{{ currentStats.imprs }}</strong>
-            </span>
-            <span class="stat-badge-pill" title="Indikator Mutu Prioritas Unit">
-              <span class="dot bg-amber"></span> IMPU: <strong>{{ currentStats.impu }}</strong>
-            </span>
+        <div class="stat-card flex-column justify-content-between py-2 px-3">
+          <div class="w-100 d-flex align-items-center justify-content-between mb-1">
+            <span class="stat-label">Per Kategori</span>
+            <span class="cat-total-hint">3 Kategori</span>
+          </div>
+          <div class="category-grid w-100">
+            <div class="cat-item cat-inm" title="Indikator Mutu Nasional">
+              <span class="cat-tag">INM</span>
+              <span class="cat-count">{{ currentStats.imn }}</span>
+            </div>
+            <div class="cat-item cat-imprs" title="Indikator Mutu Prioritas Rumah Sakit">
+              <span class="cat-tag">IMPRS</span>
+              <span class="cat-count">{{ currentStats.imprs }}</span>
+            </div>
+            <div class="cat-item cat-impu" title="Indikator Mutu Prioritas Unit">
+              <span class="cat-tag">IMPU</span>
+              <span class="cat-count">{{ currentStats.impu }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -591,27 +597,62 @@ onMounted(() => {
   line-height: 1.2;
 }
 
-.stat-badge-pill {
-  display: inline-flex;
+.cat-total-hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.category-grid {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.cat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 0.7rem;
-  color: #475569;
+  justify-content: center;
+  padding: 3px 4px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
-.stat-badge-pill .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.cat-item.cat-inm {
+  background: #eff6ff;
+  border-color: #dbeafe;
+  color: #1d4ed8;
 }
 
-.stat-badge-pill .dot.bg-blue { background-color: #2563eb; }
-.stat-badge-pill .dot.bg-purple { background-color: #8b5cf6; }
-.stat-badge-pill .dot.bg-amber { background-color: #f59e0b; }
+.cat-item.cat-imprs {
+  background: #f3e8ff;
+  border-color: #e9d5ff;
+  color: #6b21a8;
+}
+
+.cat-item.cat-impu {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.cat-tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  opacity: 0.85;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.cat-count {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
 
 /* Segmented Tabs Control */
 .tab-segment-wrapper {
