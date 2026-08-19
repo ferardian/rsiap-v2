@@ -74,7 +74,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'unit' && isUnitLocked"
+            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
             @update:modelValue="fetchIndicators"
           />
         </div>
@@ -95,7 +95,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'unit' && isUnitLocked"
+            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
             @update:modelValue="handleMonthlyUnitChange"
           />
         </div>
@@ -127,7 +127,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'unit' && isUnitLocked"
+            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
           />
         </div>
       </template>
@@ -143,7 +143,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'unit' && isUnitLocked"
+            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
             @update:modelValue="handleAnalisaUnitChange"
           />
         </div>
@@ -175,7 +175,7 @@
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit"
             class="filter-vselect unit-select"
-            :disabled="inputMode === 'unit' && isUnitLocked"
+            :disabled="isUnitLocked && !isKomiteMutu && !isCommitteeMember"
             @update:modelValue="handlePdsaUnitChange"
           />
         </div>
@@ -1236,10 +1236,11 @@ const userCommittees = ref([])
 // === ROLE CHECK COMPUTED VALUES ===
 const isKomiteMutu = computed(() => {
     const role = authStore.userRole?.toLowerCase() || '';
+    const userDep = (authStore.user?.data?.detail?.departemen || authStore.user?.detail?.departemen || authStore.user?.dep_id || '').toLowerCase();
     if (role.includes('pic') || role.includes('penginput')) {
         return false;
     }
-    return role.includes('mutu') || role.includes('pmkp') || role.includes('admin') || role.includes('komite');
+    return role.includes('mutu') || role.includes('pmkp') || role.includes('admin') || role.includes('komite') || userDep.includes('pmkp') || userDep.includes('komite') || isCommitteeMember.value;
 });
 
 const activeUnitInfo = computed(() => {
@@ -1929,19 +1930,19 @@ const fetchUnits = async () => {
                 // Allow them to switch between FAR1 and FAR2 (do not lock)
                 isUnitLocked.value = false
                 console.log('Pharmacy units (FAR1, FAR2) unlocked for pharmacy user')
-            } else if (!isCommitteeMember.value) {
+            } else if (isCommitteeMember.value || isKomiteMutu.value) {
+                isUnitLocked.value = false
                 const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
-                
+                if (myUnit && !filters.unit) {
+                    filters.unit = myUnit.dep_id
+                }
+                console.log('Unit unlocked for Komite Mutu / Committee member')
+            } else {
+                const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
                 if (myUnit) {
                     filters.unit = myUnit.dep_id
                     isUnitLocked.value = true
                     console.log('Unit locked to user department:', myUnit.nama_ruang)
-                }
-            } else {
-                isUnitLocked.value = (inputMode.value === 'unit')
-                const myUnit = units.value.find(u => u.dep_id === userDepNameOrId || u.nama_ruang === userDepNameOrId)
-                if (myUnit) {
-                    filters.unit = myUnit.dep_id
                 }
             }
         }
@@ -2623,7 +2624,9 @@ const handleModeChange = () => {
         
         const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId).toUpperCase().trim())
         
-        if (isPharmacyUser && !isCommitteeMember.value) {
+        if (isCommitteeMember.value || isKomiteMutu.value) {
+            isUnitLocked.value = false
+        } else if (isPharmacyUser) {
             // Keep the selected pharmacy unit if already selected (FAR1 or FAR2), otherwise default to FAR2
             if (!['FAR1', 'FAR2'].includes(filters.unit)) {
                 filters.unit = 'FAR2'
