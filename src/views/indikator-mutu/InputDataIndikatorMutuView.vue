@@ -1149,6 +1149,10 @@ const loading = ref(false)
 const units = ref([])
 const indicators = ref([])
 const isUnitLocked = computed(() => {
+    if (isKomiteMutu.value || isCommitteeMember.value) {
+        return false
+    }
+
     if (inputMode.value === 'komite') {
         return false
     }
@@ -1158,7 +1162,7 @@ const isUnitLocked = computed(() => {
                             authStore.user?.dep_id
     const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId || '').toUpperCase().trim())
     
-    if (isPharmacyUser && !isCommitteeMember.value) {
+    if (isPharmacyUser) {
         return false
     }
 
@@ -1255,7 +1259,9 @@ const isKomiteMutu = computed(() => {
     if (role.includes('pic') || role.includes('penginput')) {
         return false;
     }
-    return role.includes('mutu') || role.includes('pmkp') || role.includes('admin') || role.includes('komite') || userDep.includes('pmkp') || userDep.includes('komite') || isCommitteeMember.value;
+    const isPmkpDep = userDep.includes('pmkp') || userDep.includes('komite');
+    const isPmkpRole = role.includes('pmkp') || (role.includes('mutu') && !role.includes('indikator'));
+    return isPmkpDep || isPmkpRole || isCommitteeMember.value;
 });
 
 const activeUnitInfo = computed(() => {
