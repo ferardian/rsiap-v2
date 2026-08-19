@@ -260,8 +260,9 @@ const fetchDepartments = async () => {
 
 const fetchMasterUtama = async () => {
     try {
-        const response = await indikatorMutuService.getUtama({ limit: 1000 })
-        masterUtamaList.value = response.data.data.data || []
+        const response = await indikatorMutuService.getUtama({ limit: 1000, status: '1' })
+        const raw = response.data.data.data || response.data.data || []
+        masterUtamaList.value = raw.filter(item => String(item.status) === '1')
     } catch (error) {
         console.error('Error fetching Master Utama:', error)
     }
