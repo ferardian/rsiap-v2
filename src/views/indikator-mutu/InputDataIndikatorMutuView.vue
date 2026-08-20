@@ -1254,14 +1254,35 @@ const userCommittees = ref([])
 
 // === ROLE CHECK COMPUTED VALUES ===
 const isKomiteMutu = computed(() => {
-    const role = authStore.userRole?.toLowerCase() || '';
-    const userDep = (authStore.user?.data?.detail?.departemen || authStore.user?.detail?.departemen || authStore.user?.dep_id || '').toLowerCase();
-    if (role.includes('pic') || role.includes('penginput')) {
-        return false;
-    }
-    const isPmkpDep = userDep.includes('pmkp') || userDep.includes('komite');
-    const isPmkpRole = role.includes('pmkp') || (role.includes('mutu') && !role.includes('indikator'));
-    return isPmkpDep || isPmkpRole || isCommitteeMember.value;
+    const role = (authStore.userRole || '').toLowerCase();
+    const userDep = String(
+        authStore.user?.data?.detail?.departemen || 
+        authStore.user?.detail?.departemen || 
+        authStore.user?.dep_id || 
+        ''
+    ).toLowerCase();
+
+    // Check department name or dep_id for Komite PMKP or Komite Mutu
+    const isPmkpDep = userDep.includes('pmkp') || 
+                      userDep.includes('komite') || 
+                      userDep.includes('mutu') || 
+                      userDep.includes('kkm');
+
+    // Check user role
+    const isPmkpRole = role.includes('pmkp') || 
+                       role.includes('komite') || 
+                       (role.includes('mutu') && !role.includes('indikator')) ||
+                       role.includes('direksi') ||
+                       role.includes('admin') ||
+                       role.includes('superadmin');
+
+    // Check committee membership
+    const isPmkpCommittee = isCommitteeMember.value || (userCommittees.value && userCommittees.value.some(c => {
+        const name = (c.komite?.nama || c.nama || '').toLowerCase();
+        return name.includes('pmkp') || name.includes('mutu') || name.includes('komite');
+    }));
+
+    return isPmkpDep || isPmkpRole || isPmkpCommittee;
 });
 
 const activeUnitInfo = computed(() => {
