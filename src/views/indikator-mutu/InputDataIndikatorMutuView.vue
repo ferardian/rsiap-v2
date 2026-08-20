@@ -1149,20 +1149,12 @@ const loading = ref(false)
 const units = ref([])
 const indicators = ref([])
 const isUnitLocked = computed(() => {
-    if (isKomiteMutu.value || isCommitteeMember.value) {
+    // Only unlock unit selection if user is strictly from Komite PMKP or Komite Mutu
+    if (isKomiteMutu.value) {
         return false
     }
 
     if (inputMode.value === 'komite') {
-        return false
-    }
-    
-    const userDepNameOrId = authStore.user?.data?.detail?.departemen || 
-                            authStore.user?.detail?.departemen || 
-                            authStore.user?.dep_id
-    const isPharmacyUser = ['DPM1', 'FAR1', 'FAR2', 'FARMASI', 'FARMASI RAWAT JALAN', 'FARMASI RAWAT INAP'].includes(String(userDepNameOrId || '').toUpperCase().trim())
-    
-    if (isPharmacyUser) {
         return false
     }
 
@@ -1262,25 +1254,24 @@ const isKomiteMutu = computed(() => {
         ''
     ).toLowerCase();
 
-    // Check department name or dep_id for Komite PMKP or Komite Mutu
+    // Strictly check department name for Komite PMKP or Komite Mutu
     const isPmkpDep = userDep.includes('pmkp') || 
-                      userDep.includes('komite') || 
-                      userDep.includes('mutu') || 
-                      userDep.includes('kkm');
+                      userDep.includes('komite mutu') || 
+                      userDep.includes('komite pmkp') ||
+                      userDep === 'pmkp' ||
+                      userDep === 'kkm';
 
-    // Check user role
-    const isPmkpRole = role.includes('pmkp') || 
-                       role.includes('komite') || 
-                       (role.includes('mutu') && !role.includes('indikator')) ||
-                       role.includes('direksi') ||
-                       role.includes('admin') ||
-                       role.includes('superadmin');
+    // Strictly check user role for PMKP or Komite Mutu
+    const isPmkpRole = role === 'pmkp' || 
+                       role === 'komite_pmkp' || 
+                       role === 'komite_mutu' || 
+                       role.includes('komite_pmkp');
 
-    // Check committee membership
-    const isPmkpCommittee = isCommitteeMember.value || (userCommittees.value && userCommittees.value.some(c => {
-        const name = (c.komite?.nama || c.nama || '').toLowerCase();
-        return name.includes('pmkp') || name.includes('mutu') || name.includes('komite');
-    }));
+    // Strictly check committee membership for PMKP or Komite Mutu
+    const isPmkpCommittee = userCommittees.value && userCommittees.value.some(c => {
+        const name = (c.komite?.nama || c.nama || '').toUpperCase();
+        return name.includes('PMKP') || name.includes('KOMITE MUTU');
+    });
 
     return isPmkpDep || isPmkpRole || isPmkpCommittee;
 });
