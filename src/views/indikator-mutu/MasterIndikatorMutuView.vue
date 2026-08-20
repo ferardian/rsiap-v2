@@ -75,19 +75,22 @@
       <div class="col-6 col-md-3">
         <div class="stat-card flex-column justify-content-between py-2 px-3">
           <div class="w-100 d-flex align-items-center justify-content-between mb-1">
-            <span class="stat-label">Per Kategori</span>
+            <span class="stat-label d-flex align-items-center gap-1">
+              Per Kategori
+              <span class="badge bg-emerald-light text-emerald-600 border border-emerald-light rounded-pill px-2 py-0.5" style="font-size: 0.6rem;">AKTIF</span>
+            </span>
             <span class="cat-total-hint">3 Kategori</span>
           </div>
           <div class="category-grid w-100">
-            <div class="cat-item cat-inm" title="Indikator Mutu Nasional">
+            <div class="cat-item cat-inm" title="Indikator Mutu Nasional (Aktif)">
               <span class="cat-tag">INM</span>
               <span class="cat-count">{{ currentStats.imn }}</span>
             </div>
-            <div class="cat-item cat-imprs" title="Indikator Mutu Prioritas Rumah Sakit">
+            <div class="cat-item cat-imprs" title="Indikator Mutu Prioritas Rumah Sakit (Aktif)">
               <span class="cat-tag">IMPRS</span>
               <span class="cat-count">{{ currentStats.imprs }}</span>
             </div>
-            <div class="cat-item cat-impu" title="Indikator Mutu Prioritas Unit">
+            <div class="cat-item cat-impu" title="Indikator Mutu Prioritas Unit (Aktif)">
               <span class="cat-tag">IMPU</span>
               <span class="cat-count">{{ currentStats.impu }}</span>
             </div>
@@ -270,20 +273,22 @@ const fetchSummaryStats = async () => {
         ])
 
         const listUtama = resUtama.data.data.data || resUtama.data.data || []
+        const listUtamaAktif = listUtama.filter(i => String(i.status) === '1')
         statsUtama.total = listUtama.length
-        statsUtama.aktif = listUtama.filter(i => String(i.status) === '1').length
+        statsUtama.aktif = listUtamaAktif.length
         statsUtama.nonAktif = listUtama.filter(i => String(i.status) !== '1').length
-        statsUtama.imn = listUtama.filter(i => i.kategori === 'Indikator Mutu Nasional').length
-        statsUtama.imprs = listUtama.filter(i => i.kategori === 'Indikator Mutu Prioritas Rumah Sakit').length
-        statsUtama.impu = listUtama.filter(i => i.kategori === 'Indikator Mutu Prioritas Unit').length
+        statsUtama.imn = listUtamaAktif.filter(i => i.kategori === 'Indikator Mutu Nasional').length
+        statsUtama.imprs = listUtamaAktif.filter(i => i.kategori === 'Indikator Mutu Prioritas Rumah Sakit').length
+        statsUtama.impu = listUtamaAktif.filter(i => i.kategori === 'Indikator Mutu Prioritas Unit').length
 
         const listRuang = resRuang.data.data.data || resRuang.data.data || []
+        const listRuangAktif = listRuang.filter(i => String(i.status) === '1')
         statsRuang.total = listRuang.length
-        statsRuang.aktif = listRuang.filter(i => String(i.status) === '1').length
+        statsRuang.aktif = listRuangAktif.length
         statsRuang.nonAktif = listRuang.filter(i => String(i.status) !== '1').length
-        statsRuang.imn = listRuang.filter(i => i.nama_jenis === 'Indikator Mutu Nasional').length
-        statsRuang.imprs = listRuang.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Rumah Sakit').length
-        statsRuang.impu = listRuang.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Unit').length
+        statsRuang.imn = listRuangAktif.filter(i => i.nama_jenis === 'Indikator Mutu Nasional').length
+        statsRuang.imprs = listRuangAktif.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Rumah Sakit').length
+        statsRuang.impu = listRuangAktif.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Unit').length
     } catch (error) {
         console.error('Gagal memuat statistik summary:', error)
     }
