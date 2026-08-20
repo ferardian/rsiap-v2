@@ -34,6 +34,13 @@
         </button>
         <button 
           class="tab-btn" 
+          :class="{ active: activeTab === 'validasi' }" 
+          @click="activeTab = 'validasi'"
+        >
+          <i class="fas fa-check-circle"></i> Validasi Data
+        </button>
+        <button 
+          class="tab-btn" 
           :class="{ active: activeTab === 'analisa' }" 
           @click="activeTab = 'analisa'"
         >
@@ -89,6 +96,10 @@
         </KeepAlive>
         
         <KeepAlive>
+            <MonitoringValidasiTab v-if="activeTab === 'validasi'" />
+        </KeepAlive>
+        
+        <KeepAlive>
             <AnalisaMutuTab v-if="activeTab === 'analisa'" />
         </KeepAlive>
 
@@ -121,6 +132,7 @@
 import { ref } from 'vue'
 import RekapTahunanTab from '@/components/indikator-mutu/RekapTahunanTab.vue'
 import MonitoringInmutTab from '@/components/indikator-mutu/MonitoringInmutTab.vue'
+import MonitoringValidasiTab from '@/components/indikator-mutu/MonitoringValidasiTab.vue'
 import AnalisaMutuTab from '@/components/indikator-mutu/AnalisaMutuTab.vue'
 import AnalisaPdsaTab from '@/components/indikator-mutu/AnalisaPdsaTab.vue'
 import KamusInmutTab from '@/components/indikator-mutu/KamusInmutTab.vue'
