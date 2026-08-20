@@ -11,7 +11,7 @@
 
       <div class="col-md-7 d-flex justify-content-end align-items-center gap-2 filter-container">
         <!-- Date filter -->
-        <div class="input-group date-filter" style="max-width: 220px;">
+        <div class="input-group date-filter" style="max-width: 180px; flex-shrink: 0;">
           <span class="input-group-text bg-white border-end-0">
              <i class="fas fa-calendar-alt text-muted"></i>
           </span>
@@ -25,15 +25,15 @@
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit / Ruang..."
-            class="style-chooser unit-select"
-            style="min-width: 220px;"
+            class="style-chooser unit-select flex-grow-1"
+            style="min-width: 280px; max-width: 380px;"
         >
              <template #no-options="{ search, searching, loading }">
                 Unit tidak ditemukan
             </template>
         </v-select>
 
-        <button class="btn btn-primary refresh-btn" @click="refreshTab" title="Refresh">
+        <button class="btn btn-primary refresh-btn px-3 flex-shrink-0" style="width: auto;" @click="refreshTab" title="Refresh">
           <i class="fas fa-sync-alt"></i>
         </button>
       </div>
