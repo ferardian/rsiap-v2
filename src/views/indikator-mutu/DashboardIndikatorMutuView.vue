@@ -1130,7 +1130,10 @@ const fetchAll = async () => {
 
     const setKategoriData = (index, items) => {
       const tercapai = items.filter(item => isTargetMet(item)).length
-      const tidakTercapai = items.filter(item => item.capaian != null && !isTargetMet(item)).length
+      const tidakTercapai = items.filter(item => {
+        const lastCap = getLastMeasuredCapaian(item)
+        return lastCap != null && !isTargetMet(item)
+      }).length
       const ratePercent = items.length > 0
         ? Math.round((tercapai / items.length) * 100)
         : 0
@@ -1363,49 +1366,81 @@ const getTargetDisplay = (item) => {
   return `${symbol}${std}${satuan ? ' ' + satuan : ''}`
 }
 
+const getLastMeasuredCapaian = (item) => {
+  if (!item) return null
+
+  if (item.monthly_breakdown) {
+    const months = periodMonths.value || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    // Search backwards from month 12 down to 1 in periodMonths
+    for (let m = 12; m >= 1; m--) {
+      if (months.includes(m)) {
+        const mData = item.monthly_breakdown[m]
+        if (mData && mData.has_data) {
+          return parseFloat(mData.score)
+        }
+      }
+    }
+    // Search backwards across all 12 months as fallback
+    for (let m = 12; m >= 1; m--) {
+      const mData = item.monthly_breakdown[m]
+      if (mData && mData.has_data) {
+        return parseFloat(mData.score)
+      }
+    }
+  }
+
+  return item.capaian != null ? parseFloat(item.capaian) : null
+}
+
 const isTargetMet = (item) => {
-  if (item.capaian == null || isNaN(item.capaian)) return false
-  const capaian = parseFloat(item.capaian)
+  const capaianVal = getLastMeasuredCapaian(item)
+  if (capaianVal == null || isNaN(capaianVal)) return false
   const std = parseFloat(item.standar || item.standar_utama)
   if (isNaN(std)) return false
   const rumusCode = String(item.rumus_code || item.rumus || '')
   switch (rumusCode) {
-    case '1': return capaian === std
-    case '2': return capaian <= std
-    case '3': return capaian < std
-    case '4': return capaian >= std
-    case '5': return capaian > std
-    default: return capaian >= std // default: assume ≥
+    case '1': return capaianVal === std
+    case '2': return capaianVal <= std
+    case '3': return capaianVal < std
+    case '4': return capaianVal >= std
+    case '5': return capaianVal > std
+    default: return capaianVal >= std // default: assume ≥
   }
 }
 
 const getCardClass = (item) => {
-  if (item.capaian == null) return 'card-no-data'
+  const cap = getLastMeasuredCapaian(item)
+  if (cap == null) return 'card-no-data'
   return isTargetMet(item) ? 'card-achieved' : 'card-not-achieved'
 }
 
 const getRibbonClass = (item) => {
-  if (item.capaian == null) return 'ribbon-gray'
+  const cap = getLastMeasuredCapaian(item)
+  if (cap == null) return 'ribbon-gray'
   return isTargetMet(item) ? 'ribbon-green' : 'ribbon-red'
 }
 
 const getStatusDotClass = (item) => {
-  if (item.capaian == null) return 'dot-gray'
+  const cap = getLastMeasuredCapaian(item)
+  if (cap == null) return 'dot-gray'
   return isTargetMet(item) ? 'dot-green' : 'dot-red'
 }
 
 const getStatusBadgeClass = (item) => {
-  if (item.capaian == null) return 'badge-nodata'
+  const cap = getLastMeasuredCapaian(item)
+  if (cap == null) return 'badge-nodata'
   return isTargetMet(item) ? 'badge-achieved' : 'badge-notachieved'
 }
 
 const getStatusIcon = (item) => {
-  if (item.capaian == null) return 'fas fa-minus-circle'
+  const cap = getLastMeasuredCapaian(item)
+  if (cap == null) return 'fas fa-minus-circle'
   return isTargetMet(item) ? 'fas fa-check-circle' : 'fas fa-times-circle'
 }
 
 const getStatusLabel = (item) => {
-  if (item.capaian == null) return 'Belum Ada Data'
+  const cap = getLastMeasuredCapaian(item)
+  if (cap == null) return 'Belum Ada Data'
   return isTargetMet(item) ? 'Tercapai' : 'Tidak Tercapai'
 }
 
