@@ -286,9 +286,9 @@ const fetchSummaryStats = async () => {
         statsRuang.total = listRuang.length
         statsRuang.aktif = listRuangAktif.length
         statsRuang.nonAktif = listRuang.filter(i => String(i.status) !== '1').length
-        statsRuang.imn = listRuangAktif.filter(i => i.nama_jenis === 'Indikator Mutu Nasional').length
-        statsRuang.imprs = listRuangAktif.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Rumah Sakit').length
-        statsRuang.impu = listRuangAktif.filter(i => i.nama_jenis === 'Indikator Mutu Prioritas Unit').length
+        statsRuang.imn = listRuangAktif.filter(i => i.nama_jenis && (i.nama_jenis.includes('Nasional') || i.nama_jenis.includes('INM'))).length
+        statsRuang.imprs = listRuangAktif.filter(i => i.nama_jenis && (i.nama_jenis.includes('Rumah Sakit') || i.nama_jenis.includes('IMPRS'))).length
+        statsRuang.impu = listRuangAktif.filter(i => i.nama_jenis && (i.nama_jenis.includes('Prioritas Unit') || i.nama_jenis.includes('Mutu Unit') || i.nama_jenis.includes('IMPU'))).length
     } catch (error) {
         console.error('Gagal memuat statistik summary:', error)
     }
