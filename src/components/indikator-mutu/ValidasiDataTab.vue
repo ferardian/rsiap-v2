@@ -455,8 +455,9 @@ const calculateAgreementRate = (item) => {
 }
 
 const needsDenominator = (item) => {
-  // If rumus is standard or item needs denominator
-  return item.rumus !== '1' && item.rumus !== 'J' // adjust based on standard formula logic
+  if (!item) return true
+  if (item.ket_denum && item.ket_denum.trim() !== '') return true
+  return item.satuan === '%' || item.satuan === 'Persen' || !!item.rumus
 }
 
 const getTargetSymbol = (val) => {
