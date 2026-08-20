@@ -142,6 +142,7 @@
                 <th class="px-2 py-1">Diagnosa Awal</th>
                 <th class="px-2 py-1">Diagnosa Akhir</th>
                 <th class="px-2 py-1">Jenis Bayar</th>
+                <th class="px-2 py-1 text-end" style="width: 135px">Pemakaian Biaya</th>
                 <th class="px-2 py-1">DPJP (Dokter)</th>
                 <th class="px-2 py-1">Bangsal</th>
                 <th class="px-2 py-1">Penanggung Jawab</th>
@@ -150,14 +151,14 @@
             </thead>
             <tbody>
               <tr v-if="loading && items.length === 0">
-                <td colspan="12" class="text-center py-5">
+                <td colspan="13" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                   </div>
                 </td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="12" class="text-center py-5 text-muted">
+                <td colspan="13" class="text-center py-5 text-muted">
                   <i class="fas fa-bed fa-2x mb-2 d-block opacity-50"></i>
                   Tidak ada pasien rawat inap yang sesuai
                 </td>
@@ -251,6 +252,15 @@
                     <i v-else-if="!item.png_jawab?.toLowerCase().includes('umum')" class="fas fa-times-circle text-danger" title="SEP Belum Terbit"></i>
                   </div>
                 </td>
+                <!-- Pemakaian Biaya / Estimasi Biaya -->
+                <td class="px-2 py-1 text-end">
+                  <div class="fw-bold text-primary" style="font-size: 0.85rem;">
+                    {{ formatCurrency(item.pemakaian_biaya || 0) }}
+                  </div>
+                  <div class="small text-muted" style="font-size: 0.7rem;" title="Estimasi biaya pemakaian berjalan (kamar, obat, tindakan, lab, radiologi)">
+                    Estimasi Biaya
+                  </div>
+                </td>
                 <td class="px-2 py-1">
                   {{ item.reg_periksa?.dokter?.nm_dokter }}
                 </td>
@@ -309,17 +319,25 @@
           <!-- Sticky Header Wrapper -->
           <div class="sticky-header-wrapper">
             <!-- Patient Header (Always Visible) -->
-             <div class="d-flex align-items-center mb-3 pb-2 border-bottom bg-white pt-2">
-              <div class="avatar-circle me-3" style="width: 40px; height: 40px; min-width: 40px;">
-                <span class="text-white fw-bold fs-5">{{ selectedItem.reg_periksa?.pasien?.nm_pasien?.charAt(0) }}</span>
+              <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom bg-white pt-2">
+                <div class="d-flex align-items-center">
+                  <div class="avatar-circle me-3" style="width: 40px; height: 40px; min-width: 40px;">
+                    <span class="text-white fw-bold fs-5">{{ selectedItem.reg_periksa?.pasien?.nm_pasien?.charAt(0) }}</span>
+                  </div>
+                  <div>
+                    <h6 class="mb-0 fw-bold">{{ selectedItem.reg_periksa?.pasien?.nm_pasien }}</h6>
+                    <p class="mb-0 text-muted small" style="font-size: 0.8rem;">
+                      {{ selectedItem.reg_periksa?.no_rkm_medis }} • {{ selectedItem.no_rawat }}
+                    </p>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <div class="fw-bold text-primary fs-6 mb-0">{{ formatCurrency(selectedItem.pemakaian_biaya || 0) }}</div>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.68rem;">
+                    <i class="fas fa-coins me-1"></i> Estimasi Pemakaian Biaya
+                  </span>
+                </div>
               </div>
-              <div>
-                <h6 class="mb-0 fw-bold">{{ selectedItem.reg_periksa?.pasien?.nm_pasien }}</h6>
-                <p class="mb-0 text-muted small" style="font-size: 0.8rem;">
-                  {{ selectedItem.reg_periksa?.no_rkm_medis }} • {{ selectedItem.no_rawat }}
-                </p>
-              </div>
-            </div>
 
             <!-- Tabs Navigation -->
             <ul class="nav nav-pills mb-4 nav-justified bg-light p-1 rounded">
