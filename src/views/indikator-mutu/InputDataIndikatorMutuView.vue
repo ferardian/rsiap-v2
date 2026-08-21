@@ -1968,6 +1968,13 @@ const fetchUnits = async () => {
             }
         }
 
+        if (!filters.unit && userNik) {
+            const mappedUnit = units.value.find(u => u.nik_pic === userNik || u.nik_validator === userNik)
+            if (mappedUnit) {
+                filters.unit = mappedUnit.dep_id
+            }
+        }
+
         if (units.value.length > 0 && !filters.unit) {
             filters.unit = units.value[0].dep_id
         }

@@ -95,6 +95,12 @@ const fetchUnits = async () => {
         filters.unit = myUnit.dep_id
       }
     }
+    if (!filters.unit && userNik.value) {
+      const mappedUnit = units.value.find(u => u.nik_pic === userNik.value || u.nik_validator === userNik.value)
+      if (mappedUnit) {
+        filters.unit = mappedUnit.dep_id
+      }
+    }
     if (units.value.length > 0 && !filters.unit) {
       filters.unit = units.value[0].dep_id
     }
