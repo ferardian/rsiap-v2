@@ -23,6 +23,43 @@
       </div>
     </div>
 
+    <!-- Quick Access Shiny Buttons -->
+    <div class="sidebar-quick-links" v-if="!effectiveIsCollapsed">
+      <a 
+        href="http://192.168.100.31/erm" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="quick-btn quick-btn-erm"
+        title="Buka ERM (192.168.100.31/erm)"
+      >
+        <span class="btn-shine"></span>
+        <i class="fas fa-notes-medical me-1"></i>
+        <span>ERM</span>
+      </a>
+      <a 
+        href="http://192.168.100.33/dms" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="quick-btn quick-btn-dms"
+        title="Buka DMS (192.168.100.33/dms)"
+      >
+        <span class="btn-shine"></span>
+        <i class="fas fa-folder-open me-1"></i>
+        <span>DMS</span>
+      </a>
+      <a 
+        href="http://192.168.100.31:8123" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="quick-btn quick-btn-iot"
+        title="Buka Port 8123 (192.168.100.31:8123)"
+      >
+        <span class="btn-shine"></span>
+        <i class="fas fa-bolt me-1"></i>
+        <span>8123</span>
+      </a>
+    </div>
+
     <!-- Search Menu -->
     <div class="sidebar-search" v-if="!effectiveIsCollapsed" @click.stop>
       <div class="search-box">
@@ -425,6 +462,97 @@ onMounted(async () => {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Quick Links Shiny Buttons */
+.sidebar-quick-links {
+  padding: 0 1rem 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.quick-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.35rem;
+  border-radius: 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quick-btn-erm {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.quick-btn-dms {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+.quick-btn-iot {
+  background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+}
+
+.quick-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  color: #ffffff !important;
+}
+
+.quick-btn-erm:hover {
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55);
+}
+
+.quick-btn-dms:hover {
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.55);
+}
+
+.quick-btn-iot:hover {
+  box-shadow: 0 6px 18px rgba(217, 70, 239, 0.55);
+}
+
+.btn-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 70%
+  );
+  transform: rotate(25deg);
+  animation: shineAnimation 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shineAnimation {
+  0% {
+    left: -120%;
+    top: -120%;
+  }
+  30% {
+    left: 120%;
+    top: 120%;
+  }
+  100% {
+    left: 120%;
+    top: 120%;
+  }
 }
 
 /* Search */
