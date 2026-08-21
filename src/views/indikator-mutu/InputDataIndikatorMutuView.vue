@@ -66,9 +66,15 @@
           <input type="date" class="filter-date-input" v-model="filters.tgl_transaksi" @change="fetchIndicators">
         </div>
         <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
+          <div class="d-flex align-items-center justify-content-between">
+            <label class="filter-bar-label mb-0">Unit / Ruangan</label>
+            <button v-if="hasUnitFilterMapping" type="button" class="btn btn-link btn-xs text-decoration-none p-0 border-0 ms-2 fw-semibold" style="font-size: 0.72rem;" @click="showAllUnits = !showAllUnits" :title="showAllUnits ? 'Batasi hanya unit pengawasan Anda' : 'Tampilkan seluruh unit rumah sakit'">
+              <i class="fas" :class="showAllUnits ? 'fa-filter text-primary' : 'fa-globe text-secondary'"></i>
+              {{ showAllUnits ? 'Filter (' + userMappedUnits.length + ' Unit)' : 'Semua (' + units.length + ')' }}
+            </button>
+          </div>
           <v-select append-to-body
-            :options="units"
+            :options="displayedUnits"
             label="nama_ruang"
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
@@ -87,9 +93,15 @@
           <input type="month" class="filter-date-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
         </div>
         <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
+          <div class="d-flex align-items-center justify-content-between">
+            <label class="filter-bar-label mb-0">Unit / Ruangan</label>
+            <button v-if="hasUnitFilterMapping" type="button" class="btn btn-link btn-xs text-decoration-none p-0 border-0 ms-2 fw-semibold" style="font-size: 0.72rem;" @click="showAllUnits = !showAllUnits">
+              <i class="fas" :class="showAllUnits ? 'fa-filter text-primary' : 'fa-globe text-secondary'"></i>
+              {{ showAllUnits ? 'Filter (' + userMappedUnits.length + ' Unit)' : 'Semua (' + units.length + ')' }}
+            </button>
+          </div>
           <v-select append-to-body
-            :options="units"
+            :options="displayedUnits"
             label="nama_ruang"
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
@@ -119,9 +131,15 @@
           <input type="month" class="filter-date-input" v-model="monthlyFilterDate" @change="handleMonthlyDateChange">
         </div>
         <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
+          <div class="d-flex align-items-center justify-content-between">
+            <label class="filter-bar-label mb-0">Unit / Ruangan</label>
+            <button v-if="hasUnitFilterMapping" type="button" class="btn btn-link btn-xs text-decoration-none p-0 border-0 ms-2 fw-semibold" style="font-size: 0.72rem;" @click="showAllUnits = !showAllUnits">
+              <i class="fas" :class="showAllUnits ? 'fa-filter text-primary' : 'fa-globe text-secondary'"></i>
+              {{ showAllUnits ? 'Filter (' + userMappedUnits.length + ' Unit)' : 'Semua (' + units.length + ')' }}
+            </button>
+          </div>
           <v-select append-to-body
-            :options="units"
+            :options="displayedUnits"
             label="nama_ruang"
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
@@ -135,9 +153,15 @@
       <!-- ANALISA MODE FILTERS -->
       <template v-else-if="viewMode === 'analisa'">
         <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
+          <div class="d-flex align-items-center justify-content-between">
+            <label class="filter-bar-label mb-0">Unit / Ruangan</label>
+            <button v-if="hasUnitFilterMapping" type="button" class="btn btn-link btn-xs text-decoration-none p-0 border-0 ms-2 fw-semibold" style="font-size: 0.72rem;" @click="showAllUnits = !showAllUnits">
+              <i class="fas" :class="showAllUnits ? 'fa-filter text-primary' : 'fa-globe text-secondary'"></i>
+              {{ showAllUnits ? 'Filter (' + userMappedUnits.length + ' Unit)' : 'Semua (' + units.length + ')' }}
+            </button>
+          </div>
           <v-select append-to-body
-            :options="units"
+            :options="displayedUnits"
             label="nama_ruang"
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
@@ -167,9 +191,15 @@
       <!-- PDSA MODE FILTERS -->
       <template v-else-if="viewMode === 'pdsa'">
         <div class="filter-bar-item unit-select-container">
-          <label class="filter-bar-label">Unit / Ruangan</label>
+          <div class="d-flex align-items-center justify-content-between">
+            <label class="filter-bar-label mb-0">Unit / Ruangan</label>
+            <button v-if="hasUnitFilterMapping" type="button" class="btn btn-link btn-xs text-decoration-none p-0 border-0 ms-2 fw-semibold" style="font-size: 0.72rem;" @click="showAllUnits = !showAllUnits">
+              <i class="fas" :class="showAllUnits ? 'fa-filter text-primary' : 'fa-globe text-secondary'"></i>
+              {{ showAllUnits ? 'Filter (' + userMappedUnits.length + ' Unit)' : 'Semua (' + units.length + ')' }}
+            </button>
+          </div>
           <v-select append-to-body
-            :options="units"
+            :options="displayedUnits"
             label="nama_ruang"
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
@@ -1147,6 +1177,20 @@ const authStore = useAuthStore()
 const toast = useToast()
 const loading = ref(false)
 const units = ref([])
+const showAllUnits = ref(false)
+const userMappedUnits = ref([])
+
+const hasUnitFilterMapping = computed(() => {
+    return userMappedUnits.value.length > 0 && !isCommitteeMember.value
+})
+
+const displayedUnits = computed(() => {
+    if (showAllUnits.value || !hasUnitFilterMapping.value) {
+        return units.value
+    }
+    return userMappedUnits.value
+})
+
 const indicators = ref([])
 const isUnitLocked = computed(() => {
     // Only unlock unit selection if user is strictly from Komite PMKP or Komite Mutu
@@ -1965,6 +2009,18 @@ const fetchUnits = async () => {
                 if (myUnit && !filters.unit) {
                     filters.unit = myUnit.dep_id
                 }
+            }
+        }
+
+        if (userNik && !isCommitteeMember.value) {
+            const mapped = units.value.filter(u => 
+                u.dep_id === userDepNameOrId || 
+                u.nama_ruang === userDepNameOrId || 
+                u.nik_pic === userNik || 
+                u.nik_validator === userNik
+            )
+            if (mapped.length > 0) {
+                userMappedUnits.value = mapped
             }
         }
 
