@@ -19,27 +19,19 @@
         </div>
         
         <!-- Unit Select -->
-        <div class="d-flex flex-column flex-grow-1" style="min-width: 280px; max-width: 380px;">
-          <div class="d-flex justify-content-between align-items-center mb-1 px-1" v-if="hasUnitFilterMapping">
-            <small class="text-muted fw-semibold" style="font-size: 0.7rem;">UNIT / RUANG</small>
-            <button type="button" class="btn btn-link btn-xs text-decoration-none p-0 border-0 fw-semibold" style="font-size: 0.7rem;" @click="showAllUnits = !showAllUnits">
-              <i class="fas" :class="showAllUnits ? 'fa-filter text-primary' : 'fa-globe text-secondary'"></i>
-              {{ showAllUnits ? 'Filter (' + userMappedUnits.length + ' Unit)' : 'Semua (' + units.length + ')' }}
-            </button>
-          </div>
-          <v-select 
-              :options="displayedUnits" 
-              label="nama_ruang" 
-              v-model="filters.unit"
-              :reduce="unit => unit.dep_id"
-              placeholder="Pilih Unit / Ruang..."
-              class="style-chooser unit-select flex-grow-1"
-          >
-               <template #no-options="{ search, searching, loading }">
-                  Unit tidak ditemukan
-              </template>
-          </v-select>
-        </div>
+        <v-select 
+            :options="displayedUnits" 
+            label="nama_ruang" 
+            v-model="filters.unit"
+            :reduce="unit => unit.dep_id"
+            placeholder="Pilih Unit / Ruang..."
+            class="style-chooser unit-select flex-grow-1"
+            style="min-width: 280px; max-width: 380px;"
+        >
+             <template #no-options="{ search, searching, loading }">
+                Unit tidak ditemukan
+            </template>
+        </v-select>
 
         <button class="btn btn-primary refresh-btn px-3 flex-shrink-0" style="width: auto;" @click="refreshTab" title="Refresh">
           <i class="fas fa-sync-alt"></i>
@@ -74,7 +66,6 @@ import ValidasiDataTab from '@/components/indikator-mutu/ValidasiDataTab.vue'
 
 const authStore = useAuthStore()
 const units = ref([])
-const showAllUnits = ref(false)
 const userMappedUnits = ref([])
 const isCommitteeMember = ref(false)
 const userCommittees = ref([])
@@ -88,7 +79,7 @@ const hasUnitFilterMapping = computed(() => {
 })
 
 const displayedUnits = computed(() => {
-  if (showAllUnits.value || !hasUnitFilterMapping.value) {
+  if (!hasUnitFilterMapping.value) {
     return units.value
   }
   return userMappedUnits.value
