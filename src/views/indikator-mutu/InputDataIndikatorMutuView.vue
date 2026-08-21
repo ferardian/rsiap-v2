@@ -1171,8 +1171,8 @@ const isUnitLocked = computed(() => {
         return false
     }
 
-    // Unlock unit selection if user has multiple assigned units or has activated showAllUnits
-    if (displayedUnits.value.length > 1 || userMappedUnits.value.length > 1 || showAllUnits.value) {
+    // Unlock unit selection if user has multiple assigned units
+    if (displayedUnits.value.length > 1 || userMappedUnits.value.length > 1) {
         return false
     }
 
