@@ -1357,13 +1357,18 @@ const getNumericTarget = (item) => {
 const rumusSymbolMap = { '1': '=', '2': '≤', '3': '<', '4': '≥', '5': '>' }
 
 const getTargetDisplay = (item) => {
-  const std = item.standar || item.standar_utama
-  if (!std) return '–'
-  const rumusCode = String(item.rumus_code || item.rumus || '')
+  if (!item) return '–'
+  const rawStd = (item.standar !== null && item.standar !== undefined && item.standar !== '') 
+    ? item.standar 
+    : item.standar_utama
+
+  if (rawStd === null || rawStd === undefined || rawStd === '') return '–'
+
+  const rumusCode = String(item.rumus_code || item.rumus || item.rumus_utama || '')
   const symbol = rumusSymbolMap[rumusCode] || ''
   let satuan = item.satuan || item.satuan_utama || ''
   if (satuan === 'Persentase') satuan = '%'
-  return `${symbol}${std}${satuan ? ' ' + satuan : ''}`
+  return `${symbol}${rawStd}${satuan ? ' ' + satuan : ''}`
 }
 
 const getLastMeasuredCapaian = (item) => {
@@ -1395,9 +1400,16 @@ const getLastMeasuredCapaian = (item) => {
 const isTargetMet = (item) => {
   const capaianVal = getLastMeasuredCapaian(item)
   if (capaianVal == null || isNaN(capaianVal)) return false
-  const std = parseFloat(item.standar || item.standar_utama)
+
+  const rawStd = (item.standar !== null && item.standar !== undefined && item.standar !== '') 
+    ? item.standar 
+    : item.standar_utama
+
+  if (rawStd === null || rawStd === undefined || rawStd === '') return false
+  const std = parseFloat(rawStd)
   if (isNaN(std)) return false
-  const rumusCode = String(item.rumus_code || item.rumus || '')
+
+  const rumusCode = String(item.rumus_code || item.rumus || item.rumus_utama || '')
   switch (rumusCode) {
     case '1': return capaianVal === std
     case '2': return capaianVal <= std
