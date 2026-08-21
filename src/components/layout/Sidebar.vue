@@ -51,12 +51,12 @@
         href="http://192.168.100.31:8123" 
         target="_blank" 
         rel="noopener noreferrer" 
-        class="quick-btn quick-btn-iot"
-        title="Buka Port 8123 (192.168.100.31:8123)"
+        class="quick-btn quick-btn-ikp"
+        title="Buka IKP (192.168.100.31:8123)"
       >
         <span class="btn-shine"></span>
-        <i class="fas fa-bolt me-1"></i>
-        <span>8123</span>
+        <i class="fas fa-shield-alt me-1"></i>
+        <span>IKP</span>
       </a>
     </div>
 
@@ -493,34 +493,34 @@ onMounted(async () => {
 
 .quick-btn-erm {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
 }
 
 .quick-btn-dms {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
 }
 
-.quick-btn-iot {
-  background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+.quick-btn-ikp {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 }
 
 .quick-btn:hover {
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-2px) scale(1.03);
   color: #ffffff !important;
 }
 
 .quick-btn-erm:hover {
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
 }
 
 .quick-btn-dms:hover {
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.55);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
-.quick-btn-iot:hover {
-  box-shadow: 0 6px 18px rgba(217, 70, 239, 0.55);
+.quick-btn-ikp:hover {
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
 }
 
 .btn-shine {
