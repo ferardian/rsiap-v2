@@ -60,8 +60,8 @@
             <tr>
               <th width="4%">#</th>
               <th width="28%">Indikator Mutu &amp; Target</th>
-              <th width="18%" class="text-center">Capaian Indikator Mutu</th>
-              <th width="20%" class="text-center">Validasi</th>
+              <th width="18%" class="text-center">Capaian PIC (P1)</th>
+              <th width="20%" class="text-center">Validasi (P2)</th>
               <th width="16%" class="text-center">Status Validasi</th>
               <th width="14%" class="text-end">Aksi</th>
             </tr>
@@ -95,7 +95,7 @@
                   </span>
                 </div>
               </td>
-              <!-- Akumulasi Awal -->
+              <!-- Akumulasi Awal PIC (P1) -->
               <td class="text-center">
                 <div class="original-scores">
                   <div class="fraction">
@@ -103,12 +103,12 @@
                     <span class="divider">/</span>
                     <span class="denum">{{ item.sum_denum }}</span>
                   </div>
-                  <div class="percentage text-muted small mt-1">
-                    {{ calculatePercentage(item.sum_num, item.sum_denum) }}%
+                  <div class="percentage text-muted small mt-1 font-monospace fw-bold">
+                    P1: {{ calculateP1(item) }}%
                   </div>
                 </div>
               </td>
-              <!-- Akumulasi Validasi (Editable) -->
+              <!-- Akumulasi Validasi (P2) -->
               <td class="text-center">
                 <!-- If Verified: read only -->
                 <div v-if="item.status === 'verified'" class="validated-scores">
@@ -117,13 +117,13 @@
                     <span class="divider">/</span>
                     <span class="denum">{{ item.denum_validasi }}</span>
                   </div>
-                  <div class="percentage text-success small mt-1 fw-semibold">
-                    {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
+                  <div class="percentage text-success small mt-1 fw-bold font-monospace">
+                    P2: {{ calculateP2(item) }}%
                   </div>
                   <div class="mt-2">
-                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)}% / ${calculateP1(item)}%) * 100`">
                       <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
-                      AR: {{ calculateAgreementRate(item) }}%
+                      AR (P2/P1): {{ calculateAgreementRate(item) }}%
                     </span>
                   </div>
                 </div>
@@ -151,13 +151,13 @@
                     >
                   </div>
                   <div class="text-center mt-1">
-                    <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">
-                      Koreksi: <span class="text-primary fw-bold">{{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%</span>
+                    <div class="text-muted small fw-semibold font-monospace" style="font-size: 0.75rem;">
+                      P2: <span class="text-primary fw-bold">{{ calculateP2(item) }}%</span>
                     </div>
-                    <div class="mt-1" v-if="item.num_validasi !== item.num_awal || item.denum_validasi !== item.denum_awal">
-                      <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                    <div class="mt-1">
+                      <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)}% / ${calculateP1(item)}%) * 100`">
                         <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
-                        AR: {{ calculateAgreementRate(item) }}%
+                        AR (P2/P1): {{ calculateAgreementRate(item) }}%
                       </span>
                     </div>
                   </div>
@@ -169,13 +169,13 @@
                     <span class="divider">/</span>
                     <span class="denum">{{ item.denum_validasi }}</span>
                   </div>
-                  <div class="percentage small mt-1">
-                    {{ calculatePercentage(item.num_validasi, item.denum_validasi) }}%
+                  <div class="percentage small mt-1 font-monospace fw-bold">
+                    P2: {{ calculateP2(item) }}%
                   </div>
-                  <div class="mt-2" v-if="item.status !== 'pending' || item.num_validasi !== item.num_awal || item.denum_validasi !== item.denum_awal">
-                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'">
+                  <div class="mt-2">
+                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)}% / ${calculateP1(item)}%) * 100`">
                       <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
-                      AR: {{ calculateAgreementRate(item) }}%
+                      AR (P2/P1): {{ calculateAgreementRate(item) }}%
                     </span>
                   </div>
                 </div>
@@ -426,32 +426,40 @@ const calculatePercentage = (num, denum) => {
   return Math.round((num / denum) * 100 * 100) / 100
 }
 
+const calculateP1 = (item) => {
+  if (!item) return 0
+  const num = item.sum_num !== undefined ? item.sum_num : (item.num_awal || 0)
+  const denum = item.sum_denum !== undefined ? item.sum_denum : (item.denum_awal || 0)
+  if (!needsDenominator(item)) return 100
+  if (!denum || denum === 0) return 0
+  return Math.round((num / denum) * 100 * 100) / 100
+}
+
+const calculateP2 = (item) => {
+  if (!item) return 0
+  const numAwal = item.sum_num !== undefined ? item.sum_num : (item.num_awal || 0)
+  const denumAwal = item.sum_denum !== undefined ? item.sum_denum : (item.denum_awal || 0)
+  const num = item.num_validasi !== undefined && item.num_validasi !== null ? item.num_validasi : numAwal
+  const denum = item.denum_validasi !== undefined && item.denum_validasi !== null ? item.denum_validasi : denumAwal
+  if (!needsDenominator(item)) return 100
+  if (!denum || denum === 0) return 0
+  return Math.round((num / denum) * 100 * 100) / 100
+}
+
 const calculateAgreementRate = (item) => {
-  const numAwal = item.num_awal || 0
-  const numValidasi = item.num_validasi !== undefined && item.num_validasi !== null ? item.num_validasi : numAwal
-  
-  const denumAwal = item.denum_awal || 0
-  const denumValidasi = item.denum_validasi !== undefined && item.denum_validasi !== null ? item.denum_validasi : denumAwal
+  const p1 = calculateP1(item)
+  const p2 = calculateP2(item)
 
-  let accuracyNum = 100
-  const maxNum = Math.max(numAwal, numValidasi)
-  if (maxNum > 0) {
-    accuracyNum = (1 - Math.abs(numAwal - numValidasi) / maxNum) * 100
-  }
+  // If both P1 and P2 are 0%, they are in 100% agreement!
+  if (p1 === 0 && p2 === 0) return 100
 
-  let accuracyDenum = 100
-  const maxDenum = Math.max(denumAwal, denumValidasi)
-  if (maxDenum > 0) {
-    accuracyDenum = (1 - Math.abs(denumAwal - denumValidasi) / maxDenum) * 100
-  }
+  const minP = Math.min(p1, p2)
+  const maxP = Math.max(p1, p2)
 
-  const hasDenum = needsDenominator(item)
-  if (!hasDenum) {
-    accuracyDenum = 100
-  }
+  if (maxP === 0) return 100
 
-  const agreementRate = (accuracyNum + accuracyDenum) / 2
-  return Math.round(agreementRate * 100) / 100
+  const ar = (minP / maxP) * 100
+  return Math.round(ar * 100) / 100
 }
 
 const needsDenominator = (item) => {

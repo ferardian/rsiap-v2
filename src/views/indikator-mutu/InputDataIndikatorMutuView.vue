@@ -2963,25 +2963,18 @@ const calculateAgreementRateForExport = (indicator, realisasiList, validation) =
     const numValidasi = validation ? (validation.num_validasi !== null && validation.num_validasi !== undefined ? validation.num_validasi : numAwal) : numAwal
     const denumValidasi = validation ? (validation.denum_validasi !== null && validation.denum_validasi !== undefined ? validation.denum_validasi : denumAwal) : denumAwal
 
-    let accuracyNum = 100
-    const maxNum = Math.max(numAwal, numValidasi)
-    if (maxNum > 0) {
-        accuracyNum = (1 - Math.abs(numAwal - numValidasi) / maxNum) * 100
-    }
-
-    let accuracyDenum = 100
-    const maxDenum = Math.max(denumAwal, denumValidasi)
-    if (maxDenum > 0) {
-        accuracyDenum = (1 - Math.abs(denumAwal - denumValidasi) / maxDenum) * 100
-    }
-
     const hasDenum = needsDenominator(indicator)
-    if (!hasDenum) {
-        accuracyDenum = 100
-    }
+    const p1 = hasDenum ? (denumAwal > 0 ? (numAwal / denumAwal) * 100 : 0) : 100
+    const p2 = hasDenum ? (denumValidasi > 0 ? (numValidasi / denumValidasi) * 100 : 0) : 100
 
-    const agreementRate = (accuracyNum + accuracyDenum) / 2
-    return Math.round(agreementRate * 100) / 100
+    if (p1 === 0 && p2 === 0) return 100
+
+    const minP = Math.min(p1, p2)
+    const maxP = Math.max(p1, p2)
+    if (maxP === 0) return 100
+
+    const ar = (minP / maxP) * 100
+    return Math.round(ar * 100) / 100
 }
 
 const exportRegisterBulanan = async (format, indicatorId = null) => {
