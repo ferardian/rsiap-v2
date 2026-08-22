@@ -268,6 +268,14 @@ const handleSearchSk = (showDropdown = true) => {
 const selectSk = (sk) => {
   selectedSkToLink.value = sk
   showSkList.value = false
+  if (sk.id_kredensial) {
+    formData.value.id_kredensial = sk.id_kredensial
+    const mk = masterKredensialList.value.find(m => String(m.id) === String(sk.id_kredensial))
+    if (mk && mk.jenjang_pendidikan) {
+      tempJenjangPendidikan.value = mk.jenjang_pendidikan
+      filterMasterKredensial()
+    }
+  }
 }
 
 const masterKredensialList = ref([])
@@ -354,6 +362,14 @@ const loadMasterKredensial = async () => {
     const response = await pegawaiService.getMasterKredensial()
     if (response.data.success) {
       masterKredensialList.value = response.data.data
+      
+      if (formData.value.id_kredensial) {
+        const mk = masterKredensialList.value.find(m => String(m.id) === String(formData.value.id_kredensial))
+        if (mk && mk.jenjang_pendidikan) {
+          tempJenjangPendidikan.value = mk.jenjang_pendidikan
+        }
+      }
+      
       filterMasterKredensial()
       autoSuggestKredensial()
     }
@@ -540,35 +556,35 @@ const submitForm = async () => {
     
     loading.value = true
     try {
-      // If files are provided, update the linked SK first
-      if (skFile.value || buktiFile.value) {
-        const skId = btoa(`${selectedSkToLink.value.nomor}.${selectedSkToLink.value.jenis}.${selectedSkToLink.value.tgl_terbit.split(' ')[0]}`)
-        
-        const skPayload = new FormData()
-        skPayload.append('jenis', selectedSkToLink.value.jenis)
-        skPayload.append('judul', selectedSkToLink.value.judul || selectedSkToLink.value.perihal)
-        
-        const pj = selectedSkToLink.value.pj || selectedSkToLink.value.penanggung_jawab?.nik || props.data.pj || props.data.penanggung_jawab?.nik
-        skPayload.append('pj', pj)
-        
-        if (selectedSkToLink.value.nik) {
-          skPayload.append('nik', selectedSkToLink.value.nik)
-        } else if (targetPegawai.value?.nik) {
-          skPayload.append('nik', targetPegawai.value.nik)
-        }
-        
-        skPayload.append('tgl_terbit', selectedSkToLink.value.tgl_terbit.split(' ')[0])
-        skPayload.append('id_kredensial', formData.value.id_kredensial)
-        
-        if (skFile.value) {
-          skPayload.append('file', skFile.value)
-        }
-        if (buktiFile.value) {
-          skPayload.append('bukti_kredensial_file', buktiFile.value)
-        }
-        
-        await skService.updateSk(skId, skPayload, true)
+      // Always update the linked SK in rsia_sk so id_kredensial, title, and files stay synced
+      const skId = btoa(`${selectedSkToLink.value.nomor}.${selectedSkToLink.value.jenis || 'B'}.${selectedSkToLink.value.tgl_terbit.split(' ')[0]}`)
+      
+      const skPayload = new FormData()
+      skPayload.append('jenis', selectedSkToLink.value.jenis || 'B')
+      skPayload.append('judul', selectedSkToLink.value.judul || selectedSkToLink.value.perihal)
+      
+      const pj = selectedSkToLink.value.pj || selectedSkToLink.value.penanggung_jawab?.nik || props.data.pj || props.data.penanggung_jawab?.nik
+      if (pj) skPayload.append('pj', pj)
+      
+      if (selectedSkToLink.value.nik) {
+        skPayload.append('nik', selectedSkToLink.value.nik)
+      } else if (targetPegawai.value?.nik) {
+        skPayload.append('nik', targetPegawai.value.nik)
       }
+      
+      skPayload.append('tgl_terbit', selectedSkToLink.value.tgl_terbit.split(' ')[0])
+      if (formData.value.id_kredensial) {
+        skPayload.append('id_kredensial', formData.value.id_kredensial)
+      }
+      
+      if (skFile.value) {
+        skPayload.append('file', skFile.value)
+      }
+      if (buktiFile.value) {
+        skPayload.append('bukti_kredensial_file', buktiFile.value)
+      }
+      
+      await skService.updateSk(skId, skPayload, true)
 
       const identifier = btoa(`${props.data.nomor}.${props.data.tgl_terbit.split(' ')[0]}`)
       
