@@ -86,8 +86,11 @@
             <tr v-else v-for="(item, idx) in items" :key="item.id_inmut" :class="{ 'row-verified': item.status === 'verified' }">
               <td class="text-center fw-bold text-secondary">{{ idx + 1 }}</td>
               <td>
-                <div class="indicator-title-wrap mb-1">
-                  <span class="indicator-name">{{ item.nama_inmut }}</span>
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                  <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(item).badgeClass]" :title="getCategoryBadge(item).label">
+                    {{ getCategoryBadge(item).code }}
+                  </span>
+                  <span class="indicator-name mb-0">{{ item.nama_inmut }}</span>
                 </div>
                 <div class="mt-1">
                   <span class="badge badge-target">
@@ -468,6 +471,20 @@ const needsDenominator = (item) => {
 const getTargetSymbol = (val) => {
   const map = { '1': '=', '2': '≤', '3': '<', '4': '≥', '5': '>' }
   return map[val] || val || '≥'
+}
+
+const getCategoryBadge = (item) => {
+  if (!item) return { code: '-', label: '-', badgeClass: 'badge-cat-default' }
+  const kat = item.kategori_utama || item.nama_jenis || item.kategori || ''
+  const katLower = kat.toLowerCase()
+  if (katLower.includes('nasional') || katLower.includes('inm')) {
+    return { code: 'INM', label: 'Indikator Mutu Nasional (INM)', badgeClass: 'badge-cat-inm' }
+  } else if (katLower.includes('rumah sakit') || katLower.includes('imprs') || katLower.includes('rs')) {
+    return { code: 'IMPRS', label: 'Indikator Mutu Prioritas Rumah Sakit (IMPRS)', badgeClass: 'badge-cat-imprs' }
+  } else if (katLower.includes('unit') || katLower.includes('impu')) {
+    return { code: 'IMPU', label: 'Indikator Mutu Prioritas Unit (IMPU)', badgeClass: 'badge-cat-impu' }
+  }
+  return { code: kat ? (kat.length > 6 ? kat.substring(0, 6) + '..' : kat) : '-', label: kat || '-', badgeClass: 'badge-cat-default' }
 }
 
 const formatStatus = (status) => {
@@ -877,5 +894,34 @@ const submitRejection = async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* Category Badge Styles */
+.badge-cat-inm {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 700 !important;
+}
+
+.badge-cat-imprs {
+  background-color: #f5f3ff !important;
+  color: #6d28d9 !important;
+  border: 1px solid #ddd6fe !important;
+  font-weight: 700 !important;
+}
+
+.badge-cat-impu {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 700 !important;
+}
+
+.badge-cat-default {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  font-weight: 700 !important;
 }
 </style>
