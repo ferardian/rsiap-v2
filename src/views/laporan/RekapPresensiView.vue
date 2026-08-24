@@ -25,52 +25,55 @@
     <transition name="slide-fade">
       <div v-if="isFilterVisible" class="card glass-card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
-        <form @submit.prevent="fetchData" class="row g-3">
-          <div class="col-md-6 col-lg-2">
-            <label class="small-label mb-2 text-primary">TANGGAL AWAL</label>
-            <div class="input-group input-group-sm rounded-3 overflow-hidden border">
-              <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
-              <input v-model="filters.tgl_awal" type="date" class="form-control border-0 px-2 shadow-none">
+        <form @submit.prevent="fetchData">
+          <div class="row g-3">
+            <div class="col-12 col-md-4 col-lg-2">
+              <label class="small-label mb-2 text-primary">TANGGAL AWAL</label>
+              <div class="input-group input-group-sm rounded-3 overflow-hidden border">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                <input v-model="filters.tgl_awal" type="date" class="form-control border-0 px-2 shadow-none">
+              </div>
+            </div>
+            <div class="col-12 col-md-4 col-lg-2">
+              <label class="small-label mb-2 text-primary">TANGGAL AKHIR</label>
+              <div class="input-group input-group-sm rounded-3 overflow-hidden border">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                <input v-model="filters.tgl_akhir" type="date" class="form-control border-0 px-2 shadow-none">
+              </div>
+            </div>
+            <div class="col-12 col-md-4 col-lg-3">
+              <label class="small-label mb-2 text-primary">UNIT / DEPARTEMEN</label>
+              <v-select
+                :options="departemenList"
+                label="nama"
+                v-model="filters.departemen"
+                :reduce="d => d.dep_id"
+                placeholder="Semua Departemen..."
+                class="filter-vselect-custom"
+              />
+            </div>
+            <div class="col-12 col-md-6 col-lg-2">
+              <label class="small-label mb-2 text-primary">STATUS PRESENSI</label>
+              <select v-model="filters.status" class="form-select form-select-sm border rounded-3 px-3 shadow-none" style="height: 31px;">
+                <option value="">Semua Status</option>
+                <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <label class="small-label mb-2 text-primary">CARI PEGAWAI</label>
+              <div class="input-group input-group-sm rounded-3 overflow-hidden border">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                <input v-model="filters.search" type="text" class="form-control border-0 px-2 shadow-none" placeholder="Nama / NIK...">
+              </div>
             </div>
           </div>
-          <div class="col-md-6 col-lg-2">
-            <label class="small-label mb-2 text-primary">TANGGAL AKHIR</label>
-            <div class="input-group input-group-sm rounded-3 overflow-hidden border">
-              <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
-              <input v-model="filters.tgl_akhir" type="date" class="form-control border-0 px-2 shadow-none">
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-3">
-            <label class="small-label mb-2 text-primary">UNIT / DEPARTEMEN</label>
-            <v-select
-              :options="departemenList"
-              label="nama"
-              v-model="filters.departemen"
-              :reduce="d => d.dep_id"
-              placeholder="Semua Departemen..."
-              class="filter-vselect-custom"
-            />
-          </div>
-          <div class="col-md-6 col-lg-2.5">
-            <label class="small-label mb-2 text-primary">STATUS PRESENSI</label>
-            <select v-model="filters.status" class="form-select form-select-sm border rounded-3 px-3 shadow-none" style="height: 31px;">
-              <option value="">Semua Status</option>
-              <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
-            </select>
-          </div>
-          <div class="col-md-6 col-lg-2.5">
-            <label class="small-label mb-2 text-primary">CARI PEGAWAI</label>
-            <div class="input-group input-group-sm rounded-3 overflow-hidden border">
-              <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
-              <input v-model="filters.search" type="text" class="form-control border-0 px-2 shadow-none" placeholder="Nama / NIK...">
-            </div>
-          </div>
-          <div class="col-12 d-flex justify-content-end mt-3">
-            <button type="submit" class="btn btn-primary rounded-pill px-4" :disabled="loading">
-              <i class="fas fa-filter me-2"></i> {{ loading ? 'Memproses...' : 'Terapkan Filter' }}
+
+          <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
+            <button type="button" @click="resetFilters" class="btn btn-light btn-sm rounded-pill px-4">
+              <i class="fas fa-undo me-1"></i> Reset
             </button>
-            <button type="button" @click="resetFilters" class="btn btn-light rounded-pill px-4 ms-2">
-              Reset
+            <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" :disabled="loading">
+              <i class="fas fa-filter me-1"></i> {{ loading ? 'Memproses...' : 'Terapkan Filter' }}
             </button>
           </div>
         </form>
