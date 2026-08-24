@@ -728,6 +728,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/kepatuhan-hak-akses',
+    name: 'KepatuhanHakAkses',
+    component: () => import('../views/laporan/KepatuhanHakAksesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/laporan/kunjungan-rl3-5',
     name: 'laporan-kunjungan-rl35',
     component: () => import('@/views/laporan/KunjunganRL35View.vue'),
