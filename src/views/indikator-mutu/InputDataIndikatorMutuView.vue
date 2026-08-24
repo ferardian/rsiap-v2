@@ -108,7 +108,24 @@
             placeholder="Pilih Indikator untuk Entri..."
             class="filter-vselect"
             @update:modelValue="fetchMonthlyData"
-          />
+          >
+            <template #option="option">
+              <div class="d-flex align-items-center gap-2 py-0.5">
+                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(option).badgeClass]">
+                  {{ getCategoryBadge(option).code }}
+                </span>
+                <span>{{ option.nama_inmut }}</span>
+              </div>
+            </template>
+            <template #selected-option="option">
+              <div class="d-flex align-items-center gap-2">
+                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(option).badgeClass]">
+                  {{ getCategoryBadge(option).code }}
+                </span>
+                <span class="text-truncate">{{ option.nama_inmut }}</span>
+              </div>
+            </template>
+          </v-select>
         </div>
       </template>
 
@@ -156,7 +173,24 @@
             placeholder="Pilih Indikator..."
             class="filter-vselect"
             @update:modelValue="fetchAnalisaData"
-          />
+          >
+            <template #option="option">
+              <div class="d-flex align-items-center gap-2 py-0.5">
+                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(option).badgeClass]">
+                  {{ getCategoryBadge(option).code }}
+                </span>
+                <span>{{ option.nama_inmut }}</span>
+              </div>
+            </template>
+            <template #selected-option="option">
+              <div class="d-flex align-items-center gap-2">
+                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(option).badgeClass]">
+                  {{ getCategoryBadge(option).code }}
+                </span>
+                <span class="text-truncate">{{ option.nama_inmut }}</span>
+              </div>
+            </template>
+          </v-select>
         </div>
         <div class="filter-bar-item">
           <label class="filter-bar-label">Bulan &amp; Tahun</label>
@@ -188,7 +222,24 @@
             placeholder="Pilih Indikator..."
             class="filter-vselect"
             @update:modelValue="fetchPdsaData"
-          />
+          >
+            <template #option="option">
+              <div class="d-flex align-items-center gap-2 py-0.5">
+                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(option).badgeClass]">
+                  {{ getCategoryBadge(option).code }}
+                </span>
+                <span>{{ option.nama_inmut }}</span>
+              </div>
+            </template>
+            <template #selected-option="option">
+              <div class="d-flex align-items-center gap-2">
+                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(option).badgeClass]">
+                  {{ getCategoryBadge(option).code }}
+                </span>
+                <span class="text-truncate">{{ option.nama_inmut }}</span>
+              </div>
+            </template>
+          </v-select>
         </div>
         <div class="filter-bar-item">
           <label class="filter-bar-label">Periode Analisa</label>
@@ -267,7 +318,12 @@
                     <tr v-for="(item, index) in indicators" :key="item.id_inmut">
                         <td class="text-center">{{ index + 1 }}</td>
                         <td>
-                            <div class="indicator-title">{{ item.nama_inmut }}</div>
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(item).badgeClass]" :title="getCategoryBadge(item).label">
+                                    {{ getCategoryBadge(item).code }}
+                                </span>
+                                <div class="indicator-title mb-0">{{ item.nama_inmut }}</div>
+                            </div>
                             <div class="indicator-desc" :title="stripHtml(item.definisi_operasional)">
                                 {{ stripHtml(item.definisi_operasional) }}
                             </div>
@@ -363,8 +419,13 @@
                          <div class="monthly-info-icon">
                              <i class="fas fa-calendar-alt"></i>
                          </div>
-                         <div class="monthly-info-text">
-                             <span class="monthly-info-title">{{ selectedIndicator.nama_inmut }}</span>
+                          <div class="monthly-info-text">
+                              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                  <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(selectedIndicator).badgeClass]" :title="getCategoryBadge(selectedIndicator).label">
+                                      {{ getCategoryBadge(selectedIndicator).code }}
+                                  </span>
+                                  <span class="monthly-info-title mb-0">{{ selectedIndicator.nama_inmut }}</span>
+                              </div>
                              <div class="monthly-info-period">
                                  <i class="fas fa-clock me-1 opacity-50"></i>
                                  Periode: {{ new Date(filters.tgl_transaksi).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) }}
@@ -492,11 +553,16 @@
                             <div :class="item.isAnalyzed ? 'bg-success' : (item.isComplete ? 'bg-primary' : 'bg-warning')" style="height: 4px;"></div>
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-1 text-dark text-truncate-2" style="font-size: 0.9rem; min-height: 2.7rem;">
-                                            {{ item.nama_inmut }}
-                                        </h6>
-                                    </div>
+                                     <div class="flex-grow-1">
+                                         <div class="d-flex align-items-center gap-1.5 mb-1 flex-wrap">
+                                             <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(item).badgeClass]" :title="getCategoryBadge(item).label">
+                                                 {{ getCategoryBadge(item).code }}
+                                             </span>
+                                         </div>
+                                         <h6 class="fw-bold mb-1 text-dark text-truncate-2" style="font-size: 0.9rem; min-height: 2.7rem;">
+                                             {{ item.nama_inmut }}
+                                         </h6>
+                                     </div>
                                     <div class="ms-2 d-flex flex-column align-items-end gap-1">
                                         <!-- Primary Status -->
                                         <span v-if="item.isAnalyzed" class="badge bg-success rounded-pill extra-small">
@@ -572,7 +638,12 @@
                     </div>
                     <div class="back-nav-content">
                         <span class="back-nav-label">Kembali ke Daftar Indikator</span>
-                        <span class="back-nav-sub">{{ selectedIndicator?.nama_inmut }}</span>
+                        <div class="d-flex align-items-center gap-2 mt-0.5">
+                            <span :class="['badge rounded-pill px-2 py-0.5 extra-small', getCategoryBadge(selectedIndicator).badgeClass]" :title="getCategoryBadge(selectedIndicator).label">
+                                {{ getCategoryBadge(selectedIndicator).code }}
+                            </span>
+                            <span class="back-nav-sub mb-0">{{ selectedIndicator?.nama_inmut }}</span>
+                        </div>
                     </div>
                     <i class="fas fa-times back-nav-close"></i>
                 </div>                <!-- Side-by-Side Grid Layout -->
@@ -2597,6 +2668,20 @@ const calculateCapaian = (num, denum) => {
     return ((num / denum) * 100).toFixed(2)
 }
 
+const getCategoryBadge = (item) => {
+    if (!item) return { code: '-', label: '-', badgeClass: 'badge-cat-default' }
+    const kat = item.masterUtama?.kategori || item.master_utama?.kategori || item.kategori_utama || item.nama_jenis || item.kategori || ''
+    const katLower = kat.toLowerCase()
+    if (katLower.includes('nasional') || katLower.includes('inm')) {
+        return { code: 'INM', label: 'Indikator Mutu Nasional (INM)', badgeClass: 'badge-cat-inm' }
+    } else if (katLower.includes('rumah sakit') || katLower.includes('imprs') || katLower.includes('rs')) {
+        return { code: 'IMPRS', label: 'Indikator Mutu Prioritas Rumah Sakit (IMPRS)', badgeClass: 'badge-cat-imprs' }
+    } else if (katLower.includes('unit') || katLower.includes('impu')) {
+        return { code: 'IMPU', label: 'Indikator Mutu Prioritas Unit (IMPU)', badgeClass: 'badge-cat-impu' }
+    }
+    return { code: kat ? (kat.length > 6 ? kat.substring(0, 6) + '..' : kat) : '-', label: kat || '-', badgeClass: 'badge-cat-default' }
+}
+
 const getTargetDisplay = (indicator) => {
     if (!indicator) return '-'
     const symbol = getRumusSymbol(indicator.rumus)
@@ -4597,5 +4682,34 @@ onMounted(() => {
 }
 .text-danger-emphasis { 
   color: #58151c !important; 
+}
+
+/* Category Badge Styles */
+.badge-cat-inm {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 700 !important;
+}
+
+.badge-cat-imprs {
+  background-color: #f5f3ff !important;
+  color: #6d28d9 !important;
+  border: 1px solid #ddd6fe !important;
+  font-weight: 700 !important;
+}
+
+.badge-cat-impu {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 700 !important;
+}
+
+.badge-cat-default {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  font-weight: 700 !important;
 }
 </style>
