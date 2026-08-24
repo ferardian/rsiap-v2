@@ -193,9 +193,6 @@
                     <div class="text-truncate max-w-150" :title="`Oleh: ${item.validator_nama}`">
                       <i class="fas fa-user-check me-1"></i> {{ item.validator_nama }}
                     </div>
-                    <div class="extra-small text-secondary mt-0.5">
-                      <i class="fas fa-clock me-1"></i> {{ formatDateTime(item.verified_at) }}
-                    </div>
                   </div>
 
                   <!-- Rejection note -->
