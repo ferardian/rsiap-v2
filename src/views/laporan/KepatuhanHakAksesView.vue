@@ -135,10 +135,10 @@
             </div>
 
             <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
-              <button type="button" @click="resetFilters" class="btn btn-light btn-sm rounded-pill px-4">
+              <button type="button" @click="resetFilters" class="btn btn-light btn-sm rounded-pill px-3 py-1.5 btn-compact">
                 <i class="fas fa-undo me-1"></i> Reset
               </button>
-              <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" :disabled="loading">
+              <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 py-1.5 shadow-sm btn-compact" :disabled="loading">
                 <i class="fas fa-filter me-1"></i> {{ loading ? 'Memproses...' : 'Terapkan Filter' }}
               </button>
             </div>
@@ -618,6 +618,12 @@ onMounted(() => {
 :deep(.filter-vselect-custom .vs__selected) {
   font-size: 0.8rem;
   margin: 2px 0;
+}
+
+.btn-compact {
+  width: auto !important;
+  min-width: auto !important;
+  flex: 0 0 auto !important;
 }
 
 @media (max-width: 767px) {
