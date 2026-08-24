@@ -26,28 +26,39 @@
       <div v-if="isFilterVisible" class="card glass-card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
         <form @submit.prevent="fetchData" class="row g-3">
-          <div class="col-md-3">
+          <div class="col-md-6 col-lg-2">
             <label class="small-label mb-2 text-primary">TANGGAL AWAL</label>
             <div class="input-group input-group-sm rounded-3 overflow-hidden border">
               <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
               <input v-model="filters.tgl_awal" type="date" class="form-control border-0 px-2 shadow-none">
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-6 col-lg-2">
             <label class="small-label mb-2 text-primary">TANGGAL AKHIR</label>
             <div class="input-group input-group-sm rounded-3 overflow-hidden border">
               <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt text-muted"></i></span>
               <input v-model="filters.tgl_akhir" type="date" class="form-control border-0 px-2 shadow-none">
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-6 col-lg-3">
+            <label class="small-label mb-2 text-primary">UNIT / DEPARTEMEN</label>
+            <v-select
+              :options="departemenList"
+              label="nama"
+              v-model="filters.departemen"
+              :reduce="d => d.dep_id"
+              placeholder="Semua Departemen..."
+              class="filter-vselect-custom"
+            />
+          </div>
+          <div class="col-md-6 col-lg-2.5">
             <label class="small-label mb-2 text-primary">STATUS PRESENSI</label>
-            <select v-model="filters.status" class="form-select form-select-sm border rounded-3 px-3 shadow-none">
+            <select v-model="filters.status" class="form-select form-select-sm border rounded-3 px-3 shadow-none" style="height: 31px;">
               <option value="">Semua Status</option>
               <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
             </select>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-6 col-lg-2.5">
             <label class="small-label mb-2 text-primary">CARI PEGAWAI</label>
             <div class="input-group input-group-sm rounded-3 overflow-hidden border">
               <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
@@ -306,10 +317,12 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import rekapPresensiService from '../../services/rekapPresensiService'
+import departemenService from '../../services/departemenService'
 
 const loading = ref(false)
 const items = ref([])
 const summaryItems = ref([])
+const departemenList = ref([])
 const displayMode = ref('detail') // detail | summary
 const selectedItem = ref(null)
 const focusedEmployee = ref(null)
@@ -329,6 +342,7 @@ const filters = reactive({
   tgl_awal: formatDateIso(new Date(today.getFullYear(), today.getMonth(), 1)),
   tgl_akhir: formatDateIso(today),
   status: '',
+  departemen: '',
   shift: '',
   search: '',
   page: 1,
@@ -398,10 +412,22 @@ const fetchSummary = async () => {
   }
 }
 
+const fetchDepartemen = async () => {
+  try {
+    const res = await departemenService.index({ limit: 200 })
+    if (res.data && res.data.data) {
+      departemenList.value = res.data.data.data || res.data.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching departemen:', error)
+  }
+}
+
 const resetFilters = () => {
   filters.tgl_awal = formatDateIso(new Date(today.getFullYear(), today.getMonth(), 1))
   filters.tgl_akhir = formatDateIso(today)
   filters.status = ''
+  filters.departemen = ''
   filters.search = ''
   filters.page = 1
   focusedEmployee.value = null
@@ -490,6 +516,7 @@ const visiblePages = computed(() => {
 })
 
 onMounted(() => {
+  fetchDepartemen()
   fetchData()
 })
 </script>
@@ -614,5 +641,26 @@ onMounted(() => {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+:deep(.filter-vselect-custom .vs__dropdown-toggle) {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  min-height: 31px;
+  height: 31px;
+  padding: 0 4px;
+  background: #fff;
+}
+:deep(.filter-vselect-custom .vs__selected-options) {
+  padding: 0 4px;
+}
+:deep(.filter-vselect-custom .vs__search) {
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 0;
+}
+:deep(.filter-vselect-custom .vs__selected) {
+  font-size: 0.8rem;
+  margin: 2px 0;
 }
 </style>
