@@ -85,7 +85,12 @@
                     </div>
                     <div>
                       <div class="fw-semibold text-dark">{{ item.nama_pic }}</div>
-                      <span class="text-muted small font-monospace">{{ item.nik_pic }}</span>
+                      <div class="d-flex align-items-center flex-wrap gap-1 mt-0.5">
+                        <span class="text-muted small font-monospace me-1">{{ item.nik_pic }}</span>
+                        <span v-if="item.jbtn_pic" class="badge bg-light text-primary border border-primary-subtle fw-normal px-2 py-0.5 small rounded-pill">
+                          <i class="fas fa-briefcase me-1 opacity-75"></i>{{ item.jbtn_pic }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div v-else class="text-muted small italic-placeholder">
@@ -99,7 +104,12 @@
                     </div>
                     <div>
                       <div class="fw-semibold text-dark">{{ item.nama_validator }}</div>
-                      <span class="text-muted small font-monospace">{{ item.nik_validator }}</span>
+                      <div class="d-flex align-items-center flex-wrap gap-1 mt-0.5">
+                        <span class="text-muted small font-monospace me-1">{{ item.nik_validator }}</span>
+                        <span v-if="item.jbtn_validator" class="badge bg-light text-success border border-success-subtle fw-normal px-2 py-0.5 small rounded-pill">
+                          <i class="fas fa-user-tie me-1 opacity-75"></i>{{ item.jbtn_validator }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div v-else class="text-muted small italic-placeholder">
@@ -584,8 +594,10 @@ const filteredMappings = computed(() => {
     map.nama_ruang.toLowerCase().includes(query) ||
     (map.nama_pic && map.nama_pic.toLowerCase().includes(query)) ||
     (map.nik_pic && map.nik_pic.toLowerCase().includes(query)) ||
+    (map.jbtn_pic && map.jbtn_pic.toLowerCase().includes(query)) ||
     (map.nama_validator && map.nama_validator.toLowerCase().includes(query)) ||
-    (map.nik_validator && map.nik_validator.toLowerCase().includes(query))
+    (map.nik_validator && map.nik_validator.toLowerCase().includes(query)) ||
+    (map.jbtn_validator && map.jbtn_validator.toLowerCase().includes(query))
   )
 })
 
