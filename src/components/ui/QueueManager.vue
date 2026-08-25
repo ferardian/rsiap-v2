@@ -63,24 +63,38 @@
             v-for="t in tickets" 
             :key="t.kd_list" 
             class="queue-item animate__animated animate__fadeInUp"
-            :class="{ 'calling': t.status === 'Call' }"
+            :class="{ 
+              'calling': t.status === 'Call',
+              'called': t.status === 'Finish' && t.kd_loket
+            }"
           >
             <div class="q-number-box">
               <span class="q-number">{{ t.antrian }}</span>
-              <span class="q-time">{{ formatTime(t.jam_ambil) }}</span>
+              <span class="q-time"><i class="far fa-clock me-1"></i>{{ formatTime(t.jam_ambil) }}</span>
             </div>
             
             <div class="q-info">
-              <div class="q-badge" :class="t.created_by.toLowerCase()">{{ t.created_by }}</div>
-              <div class="q-status-text" v-if="t.status === 'Call' || t.status === 'Finish'">
-                {{ t.status === 'Call' ? 'Dipanggil @ Loket ' + (t.kd_loket || '') : (t.kd_loket ? 'Sudah Dipanggil @ Loket ' + t.kd_loket : 'Belum Ditautkan') }}
+              <div class="d-flex align-items-center gap-1 flex-wrap mb-1">
+                <span class="q-badge" :class="t.created_by ? t.created_by.toLowerCase() : 'petugas'">
+                  {{ t.created_by || 'PETUGAS' }}
+                </span>
+              </div>
+              <div class="q-status-tag" v-if="t.status === 'Call'">
+                <i class="fas fa-volume-up me-1"></i> Dipanggil @ Loket {{ t.kd_loket }}
+              </div>
+              <div class="q-status-tag called" v-else-if="t.status === 'Finish' && t.kd_loket">
+                <i class="fas fa-history me-1"></i> Dipanggil @ Loket {{ t.kd_loket }}
+              </div>
+              <div class="q-status-tag waiting" v-else>
+                <i class="fas fa-user-clock me-1"></i> Belum Dipanggil
               </div>
             </div>
 
-            <div class="q-actions d-flex gap-1">
+            <div class="q-actions">
               <button 
                 @click="panggil(t)" 
                 class="btn-action call" 
+                :class="{ 'recalled': t.status === 'Finish' }"
                 :title="t.status === 'Print' ? 'Panggil Antrean' : 'Panggil Ulang (Recall)'"
                 :disabled="!selectedLoket || processing === t.kd_list"
               >
@@ -89,7 +103,7 @@
               <button 
                 @click="linkRegistration(t)" 
                 class="btn-action link" 
-                title="Selesaikan & Link"
+                title="Selesaikan & Link Pasien"
                 :disabled="processing === t.kd_list"
               >
                 <i class="fas fa-link"></i>
@@ -97,7 +111,7 @@
               <button 
                 @click="batalAntrean(t)" 
                 class="btn-action delete" 
-                title="Batalkan"
+                title="Batalkan Antrean"
                 :disabled="processing === t.kd_list"
               >
                 <i class="fas fa-trash-alt"></i>
@@ -401,109 +415,145 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-/* List */
+/* List Grid & Cards */
 .queue-list {
-  max-height: 400px;
+  max-height: 420px;
   overflow-y: auto;
   padding: 4px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.85rem;
 }
 
 .queue-item {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 0.8rem 1rem;
   background: #f8fafc;
-  border: 1px solid #edf2f7;
-  border-radius: 16px;
-  transition: all 0.3s;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
 .queue-item:hover {
-  border-color: #3b82f6;
+  border-color: #93c5fd;
   background: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+  transform: translateY(-1px);
 }
 
 .queue-item.calling {
-  background: #fff9e6;
-  border-color: #f59e0b;
+  background: #fffbeb;
+  border-color: #fcd34d;
   animation: pulse-yellow 2s infinite;
 }
 
+.queue-item.called {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
 @keyframes pulse-yellow {
-  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.2); }
-  70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.25); }
+  70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
   100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 .q-number-box {
   display: flex;
   flex-direction: column;
-  margin-right: 1.25rem;
+  margin-right: 0.85rem;
+  min-width: 52px;
 }
 
 .q-number {
   font-family: 'Roboto Mono', monospace;
   font-weight: 800;
-  font-size: 1.25rem;
-  color: #1e3c72;
+  font-size: 1.35rem;
+  color: #1e293b;
+  line-height: 1.1;
 }
 
 .q-time {
-  font-size: 0.7rem;
-  color: #94a3b8;
+  font-size: 0.68rem;
+  color: #64748b;
   font-weight: 600;
+  margin-top: 2px;
 }
 
 .q-info {
   flex-grow: 1;
+  min-width: 0;
+  padding-right: 0.5rem;
 }
 
 .q-badge {
   display: inline-block;
-  font-size: 0.65rem;
-  padding: 0.2rem 0.5rem;
+  font-size: 0.62rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 6px;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.q-badge.apm { background: #e0f2fe; color: #0369a1; }
-.q-badge.petugas { background: #fef3c7; color: #92400e; }
+.q-badge.apm { background: #e0f2fe; color: #0284c7; }
+.q-badge.petugas { background: #fef3c7; color: #d97706; }
 
-.q-status-text {
-  font-size: 0.75rem;
-  color: #f59e0b;
+.q-status-tag {
+  font-size: 0.72rem;
   font-weight: 700;
-  margin-top: 0.25rem;
+  color: #d97706;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.q-status-tag.called {
+  color: #0284c7;
+}
+
+.q-status-tag.waiting {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.q-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .btn-action {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   color: white;
+  font-size: 0.8rem;
 }
 
 .btn-action.call { background: #f59e0b; }
+.btn-action.call.recalled { background: #0284c7; }
 .btn-action.link { background: #10b981; }
 .btn-action.delete { background: #ef4444; }
 
 .btn-action:hover:not(:disabled) {
-  transform: scale(1.1);
-  filter: brightness(1.1);
+  transform: scale(1.08);
+  filter: brightness(1.08);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 .btn-action:disabled {
-  background: #e2e8f0;
+  background: #cbd5e1;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .section-title-small {
