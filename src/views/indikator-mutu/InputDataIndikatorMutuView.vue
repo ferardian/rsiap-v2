@@ -3163,13 +3163,32 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                         const numStr = r.num !== null && r.num !== undefined ? r.num : '-'
                         const denumStr = needsDenominator(indicator) ? (r.denum !== null && r.denum !== undefined ? r.denum : '-') : '-'
                         
-                        let scoreVal = '-'
-                        if (needsDenominator(indicator)) {
-                            if (r.denum > 0) {
-                                scoreVal = `${Math.round((r.num / r.denum) * 100 * 100) / 100}%`
+                        let valNumStr = numStr
+                        let valDenumStr = denumStr
+                        let valScoreVal = scoreVal
+
+                        if (isVerified && validation) {
+                            const sumNum = indRealisasi.reduce((acc, item) => acc + (item.num || 0), 0)
+                            const sumDenum = indRealisasi.reduce((acc, item) => acc + (item.denum || 0), 0)
+
+                            if (needsDenominator(indicator)) {
+                                if (sumNum > 0 && sumDenum > 0 && r.denum > 0) {
+                                    const propNum = Math.round((r.num / (sumNum || 1)) * validation.num_validasi * 100) / 100
+                                    const propDenum = Math.round((r.denum / (sumDenum || 1)) * validation.denum_validasi * 100) / 100
+                                    valNumStr = isNaN(propNum) ? numStr : propNum
+                                    valDenumStr = isNaN(propDenum) ? denumStr : propDenum
+                                    valScoreVal = propDenum > 0 ? `${Math.round((propNum / propDenum) * 100 * 100) / 100}%` : '-'
+                                } else {
+                                    valNumStr = validation.num_validasi
+                                    valDenumStr = validation.denum_validasi
+                                    valScoreVal = validation.denum_validasi > 0 ? `${Math.round((validation.num_validasi / validation.denum_validasi) * 100 * 100) / 100}%` : '-'
+                                }
+                            } else {
+                                const propNum = sumNum > 0 ? Math.round((r.num / sumNum) * validation.num_validasi * 100) / 100 : validation.num_validasi
+                                valNumStr = isNaN(propNum) ? numStr : propNum
+                                valDenumStr = '-'
+                                valScoreVal = `${valNumStr}`
                             }
-                        } else if (r.num !== null && r.num !== undefined) {
-                            scoreVal = `${r.num}`
                         }
 
                         const tteInput = r.nik_input ? `TTE-ELEKTRONIK-PENGINPUT-${r.nik_input}` : '-'
@@ -3181,9 +3200,9 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                             numStr,
                             denumStr,
                             scoreVal,
-                            numStr,
-                            denumStr,
-                            scoreVal,
+                            valNumStr,
+                            valDenumStr,
+                            valScoreVal,
                             r.penginput?.nama || r.nik_input || '-',
                             r.tanggal_input ? formatDateTime(r.tanggal_input) : '-',
                             tteInput,
@@ -3298,6 +3317,34 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                             scoreVal = `${r.num}`
                         }
 
+                        let valNumStr = numStr
+                        let valDenumStr = denumStr
+                        let valScoreVal = scoreVal
+
+                        if (isVerified && validation) {
+                            const sumNum = indRealisasi.reduce((acc, item) => acc + (item.num || 0), 0)
+                            const sumDenum = indRealisasi.reduce((acc, item) => acc + (item.denum || 0), 0)
+
+                            if (needsDenominator(indicator)) {
+                                if (sumNum > 0 && sumDenum > 0 && r.denum > 0) {
+                                    const propNum = Math.round((r.num / (sumNum || 1)) * validation.num_validasi * 100) / 100
+                                    const propDenum = Math.round((r.denum / (sumDenum || 1)) * validation.denum_validasi * 100) / 100
+                                    valNumStr = isNaN(propNum) ? numStr : propNum
+                                    valDenumStr = isNaN(propDenum) ? denumStr : propDenum
+                                    valScoreVal = propDenum > 0 ? `${Math.round((propNum / propDenum) * 100 * 100) / 100}%` : '-'
+                                } else {
+                                    valNumStr = validation.num_validasi
+                                    valDenumStr = validation.denum_validasi
+                                    valScoreVal = validation.denum_validasi > 0 ? `${Math.round((validation.num_validasi / validation.denum_validasi) * 100 * 100) / 100}%` : '-'
+                                }
+                            } else {
+                                const propNum = sumNum > 0 ? Math.round((r.num / sumNum) * validation.num_validasi * 100) / 100 : validation.num_validasi
+                                valNumStr = isNaN(propNum) ? numStr : propNum
+                                valDenumStr = '-'
+                                valScoreVal = `${valNumStr}`
+                            }
+                        }
+
                         const inputName = r.penginput?.nama || r.nik_input || '-'
                         const inputTime = r.tanggal_input ? formatDateTime(r.tanggal_input).slice(11) : '-'
                         const inputDate = r.tanggal_input ? formatDateTime(r.tanggal_input).slice(0, 10) : '-'
@@ -3311,9 +3358,9 @@ const exportRegisterBulanan = async (format, indicatorId = null) => {
                             numStr,
                             denumStr,
                             scoreVal,
-                            numStr,
-                            denumStr,
-                            scoreVal,
+                            valNumStr,
+                            valDenumStr,
+                            valScoreVal,
                             inputText,
                             koorTextStr
                         ])
