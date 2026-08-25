@@ -165,9 +165,9 @@
                   <div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">
                     {{ item.analisa?.nama_inmut || item.id_inmut }}
                   </div>
-                  <div v-if="item.created_at" class="text-muted extra-small">
+                  <!-- <div v-if="item.created_at" class="text-muted extra-small">
                     <i class="fas fa-clock me-1"></i> Dibuat: {{ formatDate(item.created_at) }}
-                  </div>
+                  </div> -->
                 </td>
                 <td>
                   <div class="topik-badge mb-1">
