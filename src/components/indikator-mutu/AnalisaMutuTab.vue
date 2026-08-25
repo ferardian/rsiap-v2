@@ -151,9 +151,9 @@
                   <span v-if="item.feedback" class="badge bg-success shadow-sm rounded-pill px-2 py-1 mb-1" style="font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px;">
                       <i class="fas fa-check-circle me-1"></i> TER-SUPERVISI ({{ formatDate(item.feedback.tgl_feedback) }})
                   </span>
-                  <div v-if="item.created_at" class="text-muted extra-small mt-1" style="font-size: 0.68rem; font-weight: 500;">
+                  <!-- <div v-if="item.created_at" class="text-muted extra-small mt-1" style="font-size: 0.68rem; font-weight: 500;">
                       <i class="fas fa-clock me-1"></i>{{ formatDateTime(item.created_at) }}
-                  </div>
+                  </div> -->
                   <div class="text-secondary extra-small" style="font-size: 0.68rem; font-weight: 500;">
                       <i class="fas fa-user-edit me-1"></i>Analis: {{ item.analis ? item.analis.nama : (item.nik_analis || '-') }}
                   </div>
