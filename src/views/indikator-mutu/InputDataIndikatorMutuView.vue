@@ -54,11 +54,17 @@
         <button class="tab-btn" :class="{ active: viewMode === 'pdsa' }" @click="viewMode = 'pdsa'">
           <i class="fas fa-project-diagram"></i> PDSA
         </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'rekap_tahunan' }" @click="viewMode = 'rekap_tahunan'">
+          <i class="fas fa-calendar-alt"></i> Rekap Tahunan
+        </button>
+        <button class="tab-btn" :class="{ active: viewMode === 'monitoring' }" @click="viewMode = 'monitoring'">
+          <i class="fas fa-desktop"></i> Monitoring
+        </button>
       </div>
     </nav>
 
     <!-- Filter Bar -->
-    <div class="filter-bar mb-3">
+    <div class="filter-bar mb-3" v-if="viewMode !== 'rekap_tahunan' && viewMode !== 'monitoring'">
       <!-- DAILY MODE FILTERS -->
       <template v-if="viewMode === 'daily'">
         <div class="filter-bar-item">
@@ -1192,6 +1198,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- REKAP TAHUNAN VIEW -->
+        <div v-else-if="viewMode === 'rekap_tahunan'" class="p-3">
+          <RekapTahunanTab />
+        </div>
+
+        <!-- MONITORING VIEW -->
+        <div v-else-if="viewMode === 'monitoring'" class="p-3">
+          <MonitoringInmutTab />
+        </div>
       </div>
     </div>
   </div>
@@ -1211,6 +1227,8 @@ import pdfHeader from '@/assets/pdf-header.png'
 import pdfFooter from '@/assets/pdf-footer.png'
 import QRCode from 'qrcode'
 import ValidasiDataTab from '@/components/indikator-mutu/ValidasiDataTab.vue'
+import RekapTahunanTab from '@/components/indikator-mutu/RekapTahunanTab.vue'
+import MonitoringInmutTab from '@/components/indikator-mutu/MonitoringInmutTab.vue'
 
 const apexchart = VueApexCharts
 
