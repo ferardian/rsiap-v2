@@ -1574,8 +1574,8 @@ watch(viewMode, async (newMode) => {
         monthlyFilterDate.value = filters.tgl_transaksi.slice(0, 7)
         analisaFilters.bulan = monthlyFilterDate.value
         
-        // Ensure Triwulan selector matches
-        if (newMode === 'analisa' || newMode === 'pdsa') {
+        // Ensure Triwulan selector matches for PDSA
+        if (newMode === 'pdsa') {
             const dateObj = new Date(filters.tgl_transaksi)
             selectedYear.value = dateObj.getFullYear()
             const month = dateObj.getMonth() + 1
