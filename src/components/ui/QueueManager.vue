@@ -72,8 +72,8 @@
             
             <div class="q-info">
               <div class="q-badge" :class="t.created_by.toLowerCase()">{{ t.created_by }}</div>
-              <div class="q-status-text" v-if="t.status === 'Call'">
-                Dipanggil @ Loket {{ t.kd_loket }}
+              <div class="q-status-text" v-if="t.status === 'Call' || t.status === 'Finish'">
+                {{ t.status === 'Call' ? 'Dipanggil @ Loket ' + (t.kd_loket || '') : (t.kd_loket ? 'Sudah Dipanggil @ Loket ' + t.kd_loket : 'Belum Ditautkan') }}
               </div>
             </div>
 
@@ -81,7 +81,7 @@
               <button 
                 @click="panggil(t)" 
                 class="btn-action call" 
-                title="Panggil Antrean"
+                :title="t.status === 'Print' ? 'Panggil Antrean' : 'Panggil Ulang (Recall)'"
                 :disabled="!selectedLoket || processing === t.kd_list"
               >
                 <i class="fas fa-volume-up"></i>
