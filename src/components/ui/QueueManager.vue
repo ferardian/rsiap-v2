@@ -212,7 +212,7 @@ const panggil = async (ticket) => {
     await registrasiService.updateAntrean({
       kd_list: ticket.kd_list,
       status: 'Call',
-      kd_loket: selectedLoket.value
+      kd_loket: String(selectedLoket.value)
     })
     // No alert needed as it's a silent update for the dashboard
     fetchTickets()
