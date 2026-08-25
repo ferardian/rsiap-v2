@@ -234,11 +234,57 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
+import committeeService from '@/services/committeeService'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const toast = useToast()
 const items = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
+const userCommittees = ref([])
+
+const userDepId = computed(() => {
+    return authStore.user?.data?.detail?.dep_id || 
+           authStore.user?.detail?.dep_id || 
+           authStore.user?.dep_id || 
+           ''
+})
+
+const checkCommittee = async () => {
+    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik
+    if (userNik) {
+        try {
+            const commRes = await committeeService.getByNik(userNik)
+            userCommittees.value = commRes.data.data || []
+        } catch (error) {
+            console.error('Error checking committee:', error)
+        }
+    }
+}
+
+const isKomiteMutu = computed(() => {
+    const role = (authStore.userRole || '').toLowerCase();
+    const userDep = String(userDepId.value).toLowerCase();
+
+    const isPmkpDep = userDep.includes('pmkp') || 
+                      userDep.includes('komite mutu') || 
+                      userDep.includes('komite pmkp') ||
+                      userDep === 'pmkp' ||
+                      userDep === 'kkm';
+
+    const isPmkpRole = role === 'pmkp' || 
+                       role === 'komite_pmkp' || 
+                       role === 'komite_mutu' || 
+                       role.includes('komite_pmkp');
+
+    const isPmkpCommittee = userCommittees.value && userCommittees.value.some(c => {
+        const name = (c.komite?.nama || c.nama || '').toUpperCase();
+        return name.includes('PMKP') || name.includes('KOMITE MUTU');
+    });
+
+    return isPmkpDep || isPmkpRole || isPmkpCommittee;
+})
 
 const filters = reactive({
   tahun: new Date().getFullYear(),
@@ -301,6 +347,9 @@ const fetchData = async () => {
       tahun: filters.tahun,
       kategori: filters.kategori
     }
+    if (!isKomiteMutu.value && userDepId.value) {
+      params.dep_id = userDepId.value
+    }
     const response = await api.getRekapTahunan(params)
     items.value = response.data.data || []
   } catch (error) {
@@ -313,12 +362,22 @@ const fetchData = async () => {
 
 // Search and filter
 const filteredItems = computed(() => {
-  if (!searchQuery.value) return items.value
+  let list = items.value
+  if (!isKomiteMutu.value && userDepId.value) {
+    list = list.filter(item => !item.dep_id || item.dep_id === userDepId.value)
+  }
+
+  if (!searchQuery.value) return list
   const query = searchQuery.value.toLowerCase()
-  return items.value.filter(item => 
+  return list.filter(item => 
     (item.nama_inmut && item.nama_inmut.toLowerCase().includes(query)) ||
     (item.nama_ruang && item.nama_ruang.toLowerCase().includes(query))
   )
+})
+
+onMounted(async () => {
+  await checkCommittee()
+  fetchData()
 })
 
 // Truncate text

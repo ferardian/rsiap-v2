@@ -32,6 +32,7 @@
             placeholder="Pilih Unit / Ruang"
             class="style-chooser unit-select"
             style="min-width: 200px;"
+            :disabled="isUnitLocked"
             @update:modelValue="fetchData"
         >
              <template #no-options="{ search, searching, loading }">
@@ -59,11 +60,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
+import committeeService from '@/services/committeeService'
+import { useAuthStore } from '@/stores/auth'
 import MonitoringTable from '@/components/indikator-mutu/MonitoringTable.vue'
 
+const authStore = useAuthStore()
 const toast = useToast()
 const items = ref([])
 const units = ref([])
@@ -73,6 +77,53 @@ const total = ref(0)
 const page = ref(1)
 const limit = ref(10)
 const totalPages = ref(1)
+const userCommittees = ref([])
+
+const userDepId = computed(() => {
+    return authStore.user?.data?.detail?.dep_id || 
+           authStore.user?.detail?.dep_id || 
+           authStore.user?.dep_id || 
+           ''
+})
+
+const checkCommittee = async () => {
+    const userNik = authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik
+    if (userNik) {
+        try {
+            const commRes = await committeeService.getByNik(userNik)
+            userCommittees.value = commRes.data.data || []
+        } catch (error) {
+            console.error('Error checking committee:', error)
+        }
+    }
+}
+
+const isKomiteMutu = computed(() => {
+    const role = (authStore.userRole || '').toLowerCase();
+    const userDep = String(userDepId.value).toLowerCase();
+
+    const isPmkpDep = userDep.includes('pmkp') || 
+                      userDep.includes('komite mutu') || 
+                      userDep.includes('komite pmkp') ||
+                      userDep === 'pmkp' ||
+                      userDep === 'kkm';
+
+    const isPmkpRole = role === 'pmkp' || 
+                       role === 'komite_pmkp' || 
+                       role === 'komite_mutu' || 
+                       role.includes('komite_pmkp');
+
+    const isPmkpCommittee = userCommittees.value && userCommittees.value.some(c => {
+        const name = (c.komite?.nama || c.nama || '').toUpperCase();
+        return name.includes('PMKP') || name.includes('KOMITE MUTU');
+    });
+
+    return isPmkpDep || isPmkpRole || isPmkpCommittee;
+})
+
+const isUnitLocked = computed(() => {
+    return !isKomiteMutu.value && !!userDepId.value;
+})
 
 const filters = reactive({
     bulan: new Date().toISOString().slice(0, 7), // YYYY-MM
@@ -130,9 +181,15 @@ const showDetail = (item) => {
     toast.info('Fitur Analisa / Detail akan segera hadir')
 }
 
-onMounted(() => {
-    fetchUnits()
-    fetchMasterUtama()
+onMounted(async () => {
+    await checkCommittee()
+    await fetchUnits()
+    await fetchMasterUtama()
+    
+    if (isUnitLocked.value) {
+        filters.unit = userDepId.value
+    }
+    
     fetchData()
 })
 </script>
