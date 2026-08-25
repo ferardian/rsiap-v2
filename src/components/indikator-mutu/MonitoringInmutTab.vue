@@ -25,14 +25,14 @@
         </div>
         
         <v-select 
-            :options="units" 
+            :options="displayedUnitOptions" 
             label="nama_ruang" 
             v-model="filters.unit"
             :reduce="unit => unit.dep_id"
             placeholder="Pilih Unit / Ruang"
             class="style-chooser unit-select"
             style="min-width: 200px;"
-            :disabled="isUnitLocked"
+            :disabled="effectiveIsUnitLocked"
             @update:modelValue="fetchData"
         >
              <template #no-options="{ search, searching, loading }">
@@ -60,12 +60,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import committeeService from '@/services/committeeService'
 import { useAuthStore } from '@/stores/auth'
 import MonitoringTable from '@/components/indikator-mutu/MonitoringTable.vue'
+
+const props = defineProps({
+  isKomiteMutu: { type: Boolean, default: false },
+  isUnitLocked: { type: Boolean, default: false },
+  userDepId: { type: String, default: null },
+  units: { type: Array, default: () => [] }
+})
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -99,6 +106,7 @@ const checkCommittee = async () => {
 }
 
 const isKomiteMutu = computed(() => {
+    if (props.isKomiteMutu) return true;
     const role = (authStore.userRole || '').toLowerCase();
     const userDep = String(userDepId.value).toLowerCase();
 
@@ -121,9 +129,32 @@ const isKomiteMutu = computed(() => {
     return isPmkpDep || isPmkpRole || isPmkpCommittee;
 })
 
-const isUnitLocked = computed(() => {
-    return !isKomiteMutu.value && !!userDepId.value;
+const effectiveIsUnitLocked = computed(() => {
+    if (props.isKomiteMutu) return false;
+    if (props.isUnitLocked) return true;
+    return !isKomiteMutu.value && !!effectiveUserDepId.value;
 })
+
+const effectiveUserDepId = computed(() => {
+    return props.userDepId || userDepId.value;
+})
+
+const displayedUnitOptions = computed(() => {
+    if (props.units && props.units.length > 0) {
+        return props.units;
+    }
+    if (effectiveIsUnitLocked.value && effectiveUserDepId.value) {
+        return units.value.filter(u => u.dep_id === effectiveUserDepId.value);
+    }
+    return units.value;
+})
+
+watch(() => [props.userDepId, props.isUnitLocked], ([newDep, newLocked]) => {
+    if (newLocked && newDep) {
+        filters.unit = newDep
+        fetchData()
+    }
+}, { immediate: true })
 
 const filters = reactive({
     bulan: new Date().toISOString().slice(0, 7), // YYYY-MM
@@ -186,8 +217,8 @@ onMounted(async () => {
     await fetchUnits()
     await fetchMasterUtama()
     
-    if (isUnitLocked.value) {
-        filters.unit = userDepId.value
+    if (effectiveIsUnitLocked.value && effectiveUserDepId.value) {
+        filters.unit = effectiveUserDepId.value
     }
     
     fetchData()

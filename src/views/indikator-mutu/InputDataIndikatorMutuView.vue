@@ -1201,12 +1201,21 @@
 
         <!-- REKAP TAHUNAN VIEW -->
         <div v-else-if="viewMode === 'rekap_tahunan'" class="p-3">
-          <RekapTahunanTab />
+          <RekapTahunanTab 
+            :isKomiteMutu="isKomiteMutu"
+            :isUnitLocked="isUnitLocked"
+            :userDepId="filters.unit"
+          />
         </div>
 
         <!-- MONITORING VIEW -->
         <div v-else-if="viewMode === 'monitoring'" class="p-3">
-          <MonitoringInmutTab />
+          <MonitoringInmutTab 
+            :isKomiteMutu="isKomiteMutu"
+            :isUnitLocked="isUnitLocked"
+            :userDepId="filters.unit"
+            :units="displayedUnits"
+          />
         </div>
       </div>
     </div>

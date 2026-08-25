@@ -231,11 +231,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import committeeService from '@/services/committeeService'
 import { useAuthStore } from '@/stores/auth'
+
+const props = defineProps({
+  isKomiteMutu: { type: Boolean, default: false },
+  isUnitLocked: { type: Boolean, default: false },
+  userDepId: { type: String, default: null }
+})
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -264,6 +270,7 @@ const checkCommittee = async () => {
 }
 
 const isKomiteMutu = computed(() => {
+    if (props.isKomiteMutu) return true;
     const role = (authStore.userRole || '').toLowerCase();
     const userDep = String(userDepId.value).toLowerCase();
 
@@ -284,6 +291,15 @@ const isKomiteMutu = computed(() => {
     });
 
     return isPmkpDep || isPmkpRole || isPmkpCommittee;
+})
+
+const effectiveIsKomite = computed(() => {
+    if (props.isKomiteMutu) return true;
+    return isKomiteMutu.value;
+})
+
+const effectiveUserDepId = computed(() => {
+    return props.userDepId || userDepId.value;
 })
 
 const filters = reactive({
@@ -347,8 +363,8 @@ const fetchData = async () => {
       tahun: filters.tahun,
       kategori: filters.kategori
     }
-    if (!isKomiteMutu.value && userDepId.value) {
-      params.dep_id = userDepId.value
+    if (!effectiveIsKomite.value && effectiveUserDepId.value) {
+      params.dep_id = effectiveUserDepId.value
     }
     const response = await api.getRekapTahunan(params)
     items.value = response.data.data || []
@@ -363,8 +379,8 @@ const fetchData = async () => {
 // Search and filter
 const filteredItems = computed(() => {
   let list = items.value
-  if (!isKomiteMutu.value && userDepId.value) {
-    list = list.filter(item => !item.dep_id || item.dep_id === userDepId.value)
+  if (!effectiveIsKomite.value && effectiveUserDepId.value) {
+    list = list.filter(item => !item.dep_id || item.dep_id === effectiveUserDepId.value)
   }
 
   if (!searchQuery.value) return list
@@ -373,6 +389,10 @@ const filteredItems = computed(() => {
     (item.nama_inmut && item.nama_inmut.toLowerCase().includes(query)) ||
     (item.nama_ruang && item.nama_ruang.toLowerCase().includes(query))
   )
+})
+
+watch(() => [props.userDepId, props.isKomiteMutu], () => {
+  fetchData()
 })
 
 onMounted(async () => {
