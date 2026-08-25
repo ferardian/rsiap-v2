@@ -1221,7 +1221,7 @@ const units = ref([])
 const userMappedUnits = ref([])
 
 const hasUnitFilterMapping = computed(() => {
-    return userMappedUnits.value.length > 0 && !isCommitteeMember.value
+    return userMappedUnits.value.length > 0 && !isKomiteMutu.value
 })
 
 const displayedUnits = computed(() => {

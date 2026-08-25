@@ -74,8 +74,34 @@ const refreshKey = ref(0)
 const userNik = computed(() => authStore.user?.data?.detail?.nik || authStore.user?.detail?.nik || authStore.user?.nik || '')
 const userDepNameOrId = computed(() => authStore.user?.data?.detail?.departemen || authStore.user?.detail?.departemen || authStore.user?.dep_id || '')
 
+const isKomiteMutu = computed(() => {
+  const role = (authStore.userRole || '').toLowerCase()
+  const userDep = String(userDepNameOrId.value || '').toLowerCase()
+
+  const isPmkpDep = userDep.includes('pmkp') || 
+                    userDep.includes('komite mutu') || 
+                    userDep.includes('komite pmkp') ||
+                    userDep === 'pmkp' ||
+                    userDep === 'kkm'
+
+  const isPmkpRole = role === 'pmkp' || 
+                     role === 'komite_pmkp' || 
+                     role === 'komite_mutu' || 
+                     role.includes('komite_pmkp') ||
+                     role === 'admin' ||
+                     role === 'direksi' ||
+                     role === 'direktur'
+
+  const isPmkpCommittee = isCommitteeMember.value || (userCommittees.value && userCommittees.value.some(c => {
+    const name = (c.komite?.nama || c.nama || '').toUpperCase()
+    return name.includes('PMKP') || name.includes('MUTU') || name.includes('KOMITE')
+  }))
+
+  return isPmkpDep || isPmkpRole || isPmkpCommittee
+})
+
 const hasUnitFilterMapping = computed(() => {
-  return userMappedUnits.value.length > 0 && !isCommitteeMember.value
+  return userMappedUnits.value.length > 0 && !isKomiteMutu.value
 })
 
 const displayedUnits = computed(() => {
@@ -100,7 +126,7 @@ const fetchUnits = async () => {
     const res = await api.getUnits()
     units.value = res.data.data || []
     
-    if (userNik.value && !isCommitteeMember.value) {
+    if (userNik.value && !isKomiteMutu.value) {
       const mapped = units.value.filter(u => 
         u.dep_id === userDepNameOrId.value || 
         u.nama_ruang === userDepNameOrId.value || 
@@ -157,9 +183,9 @@ const refreshTab = () => {
   refreshKey.value++
 }
 
-onMounted(() => {
-  fetchUnits()
-  checkCommittee()
+onMounted(async () => {
+  await checkCommittee()
+  await fetchUnits()
 })
 </script>
 
