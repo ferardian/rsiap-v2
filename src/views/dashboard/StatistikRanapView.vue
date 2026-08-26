@@ -357,7 +357,8 @@ const categories = [
   { label: "Kandungan", value: "Kandungan" },
   { label: "Bayi", value: "BYC" },
   { label: "ICU", value: "ICU" },
-  { label: "Isolasi", value: "Isolasi" }
+  { label: "Isolasi", value: "Isolasi" },
+  { label: "VK (Kamar Bersalin)", value: "VK" }
 ]
 const monthNamesLong = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
