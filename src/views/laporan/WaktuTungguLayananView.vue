@@ -393,10 +393,40 @@
 
           <!-- TAB 3: DETAIL PASIEN -->
           <div v-else-if="activeTab === 'pasien'" class="tab-pane-content">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
               <h6 class="fw-bold m-0 text-dark">Detail Waktu Tunggu & Layanan Pasien</h6>
-              <div class="search-box">
-                <input type="text" class="form-control form-control-sm rounded-3 shadow-none" placeholder="Cari nama pasien / RM..." v-model="searchPasien">
+              
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Poli Filter -->
+                <div style="min-width: 160px;">
+                  <select class="form-select form-select-sm rounded-3 shadow-none" v-model="pasienPoliFilter">
+                    <option value="">Semua Poli</option>
+                    <option v-for="poli in poliOptions" :key="poli.kd_poli" :value="poli.kd_poli">
+                      {{ poli.nm_poli }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Dokter Filter -->
+                <div style="min-width: 180px;">
+                  <select class="form-select form-select-sm rounded-3 shadow-none" v-model="pasienDokterFilter">
+                    <option value="">Semua Dokter</option>
+                    <option v-for="dok in dokterOptions" :key="dok.kd_dokter" :value="dok.kd_dokter">
+                      {{ dok.nm_dokter }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Search Box -->
+                <div class="search-box">
+                  <input 
+                    type="text" 
+                    class="form-control form-control-sm rounded-3 shadow-none" 
+                    placeholder="Cari Nama Pasien / RM / Rawat..." 
+                    v-model="searchPasien"
+                    style="min-width: 220px;"
+                  >
+                </div>
               </div>
             </div>
 
@@ -408,6 +438,7 @@
                     <th class="py-3">Poli & Dokter</th>
                     <th class="text-center py-3">Task 1 (Ambil)</th>
                     <th class="text-center py-3">Task 2 (Admisi)</th>
+                    <th class="text-center py-3 bg-warning-subtle text-dark">Total Waktu Tunggu</th>
                     <th class="text-center py-3">Task 3 (Periksa)</th>
                     <th class="text-center py-3">Task 5 (Resep)</th>
                     <th class="text-center py-3">Task 7 (Obat)</th>
@@ -416,7 +447,7 @@
                 </thead>
                 <tbody>
                   <tr v-if="filteredPatientList.length === 0">
-                    <td colspan="8" class="text-center py-4 text-muted">Tidak ada rincian pasien ditemukan</td>
+                    <td colspan="9" class="text-center py-4 text-muted">Tidak ada rincian pasien ditemukan</td>
                   </tr>
                   <tr v-for="item in filteredPatientList" :key="item.no_rawat">
                     <td class="ps-3">
@@ -429,11 +460,16 @@
                     </td>
                     <td class="text-center text-muted">{{ item.task1_ambil || '-' }}</td>
                     <td class="text-center text-muted">{{ item.task2_reg || '-' }}</td>
+                    <td class="text-center bg-warning-subtle bg-opacity-25">
+                      <span class="badge px-2 py-1" :class="item.durasi?.total_tunggu !== null ? getSpmBadgeClass(item.durasi.total_tunggu, 60) : 'bg-secondary-subtle text-secondary'">
+                        {{ item.durasi?.total_tunggu !== null ? item.durasi.total_tunggu + ' mnt' : '-' }}
+                      </span>
+                    </td>
                     <td class="text-center text-muted">{{ item.task3_periksa || '-' }}</td>
                     <td class="text-center text-muted">{{ item.task5_resep || '-' }}</td>
                     <td class="text-center text-muted">{{ item.task7_penyerahan || '-' }}</td>
                     <td class="text-center fw-bold text-success">
-                      {{ item.durasi?.total_layanan ? item.durasi.total_layanan + ' mnt' : '-' }}
+                      {{ item.durasi?.total_layanan !== null ? item.durasi.total_layanan + ' mnt' : '-' }}
                     </td>
                   </tr>
                 </tbody>
@@ -466,6 +502,8 @@ const filters = reactive({
 const searchPoli = ref('')
 const searchDokter = ref('')
 const searchPasien = ref('')
+const pasienPoliFilter = ref('')
+const pasienDokterFilter = ref('')
 
 const analytics = ref({
   overall: {},
@@ -500,13 +538,26 @@ const filteredDokterList = computed(() => {
 })
 
 const filteredPatientList = computed(() => {
-  if (!searchPasien.value) return analytics.value.patient_details
-  const k = searchPasien.value.toLowerCase()
-  return analytics.value.patient_details.filter(p => 
-    p.nm_pasien.toLowerCase().includes(k) || 
-    p.no_rkm_medis.toLowerCase().includes(k) ||
-    p.no_rawat.toLowerCase().includes(k)
-  )
+  let list = analytics.value.patient_details || []
+
+  if (pasienPoliFilter.value) {
+    list = list.filter(p => p.kd_poli === pasienPoliFilter.value || p.nm_poli === pasienPoliFilter.value)
+  }
+
+  if (pasienDokterFilter.value) {
+    list = list.filter(p => p.kd_dokter === pasienDokterFilter.value || p.nm_dokter === pasienDokterFilter.value)
+  }
+
+  if (searchPasien.value) {
+    const k = searchPasien.value.toLowerCase()
+    list = list.filter(p => 
+      (p.nm_pasien && p.nm_pasien.toLowerCase().includes(k)) || 
+      (p.no_rkm_medis && p.no_rkm_medis.toLowerCase().includes(k)) ||
+      (p.no_rawat && p.no_rawat.toLowerCase().includes(k))
+    )
+  }
+
+  return list
 })
 
 const getSpmBadgeClass = (val, std) => {
