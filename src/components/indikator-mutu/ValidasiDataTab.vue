@@ -44,13 +44,13 @@
           <i class="fas fa-check-double text-success me-1"></i> Laporan Terverifikasi
         </span>
         <!-- Single Export Dropdown -->
-        <div class="dropdown position-relative">
-          <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white" type="button" @click.stop="toggleTabExportDropdown" style="font-size: 0.72rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626; border: none;">
+        <div class="dropdown position-relative" @click.stop>
+          <button class="btn btn-xs btn-danger dropdown-toggle fw-bold text-white shadow-sm" type="button" @click.stop="toggleTabExportDropdown" style="font-size: 0.72rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border-color: #dc2626; border: none;">
             <i class="fas fa-file-export me-1"></i> Unduh Laporan
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3 show" v-if="showTabExportDropdown" style="display: block; position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 140px; font-size: 0.8rem; text-align: left;">
-            <li><a class="dropdown-item py-2" @click.prevent="triggerTabExport('pdf')" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
-            <li><a class="dropdown-item py-2" @click.prevent="triggerTabExport('excel')" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
+            <li><a class="dropdown-item py-2 cursor-pointer" @click.prevent.stop="triggerTabExport('pdf')" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF</a></li>
+            <li><a class="dropdown-item py-2 cursor-pointer" @click.prevent.stop="triggerTabExport('excel')" href="#"><i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel</a></li>
           </ul>
         </div>
       </div>
@@ -301,6 +301,7 @@
             </button>
           </div>
         </div>
+{{ ... }}
       </div>
     </div>
   </div>
@@ -310,6 +311,11 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import inmutService from '@/services/indikatorMutuService'
 import Swal from 'sweetalert2'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
+import pdfHeader from '@/assets/pdf-header.png'
+import pdfFooter from '@/assets/pdf-footer.png'
 
 const emit = defineEmits(['export'])
 
@@ -324,7 +330,7 @@ const props = defineProps({
   },
   userNik: {
     type: String,
-    required: true
+    default: ''
   },
   isCommitteeMember: {
     type: Boolean,
@@ -332,14 +338,15 @@ const props = defineProps({
   },
   activeUnitInfo: {
     type: Object,
-    default: () => ({})
+    default: () => null
   }
 })
 
+// State
 const items = ref([])
 const loading = ref(false)
 
-// Reject Modal State
+// Modal Reject State
 const showRejectModal = ref(false)
 const activeRejectItem = ref(null)
 const rejectNote = ref('')
@@ -351,7 +358,174 @@ const toggleTabExportDropdown = () => {
 }
 const triggerTabExport = (format) => {
   showTabExportDropdown.value = false
+  if (format === 'pdf') {
+    exportPDF()
+  } else if (format === 'excel') {
+    exportExcel()
+  }
   emit('export', { format, indicatorId: null })
+}
+
+const loadImage = (src) => {
+    return new Promise((resolve) => {
+        const img = new Image()
+        img.src = src
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+    })
+}
+
+const exportExcel = () => {
+    showTabExportDropdown.value = false
+    const verifiedItems = items.value.filter(i => i.status === 'verified')
+    const listToExport = verifiedItems.length > 0 ? verifiedItems : items.value
+
+    if (!listToExport || listToExport.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Tidak ada data validasi untuk diunduh' })
+        return
+    }
+
+    try {
+        const dataForExcel = listToExport.map((item, index) => {
+            const numPic = item.num_pic || 0
+            const denumPic = item.denum_pic || 0
+            const scorePic = denumPic > 0 ? ((numPic / denumPic) * 100).toFixed(2) + '%' : '0%'
+
+            const numVal = item.num_validasi || 0
+            const denumVal = item.denum_validasi || 0
+            const scoreVal = denumVal > 0 ? ((numVal / denumVal) * 100).toFixed(2) + '%' : '0%'
+
+            const ar = calculateAgreementRate(item)
+
+            return {
+                'No': index + 1,
+                'Indikator Mutu': item.nama_inmut || '-',
+                'Target': `${getTargetSymbol(item.rumus)} ${item.standar}%`,
+                'Num PIC': numPic,
+                'Denum PIC': denumPic,
+                'Capaian PIC (%)': scorePic,
+                'Num Validasi': numVal,
+                'Denum Validasi': denumVal,
+                'Validasi (%)': scoreVal,
+                'Agreement Rate (%)': `${ar}%`,
+                'Status': item.status === 'verified' ? 'Terverifikasi' : 'Pending'
+            }
+        })
+
+        const worksheet = XLSX.utils.json_to_sheet(dataForExcel)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Validasi')
+
+        worksheet['!cols'] = [
+            { wch: 6 },
+            { wch: 45 },
+            { wch: 15 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 15 },
+            { wch: 18 },
+            { wch: 15 }
+        ]
+
+        const unitName = (props.activeUnitInfo?.nama_ruang || props.depId || 'Unit').replace(/[^a-zA-Z0-9]/g, '_')
+        XLSX.writeFile(workbook, `Laporan_Validasi_Mutu_${props.monthlyDate}_${unitName}.xlsx`)
+    } catch (err) {
+        console.error('Error exporting Excel:', err)
+        Swal.fire({ icon: 'error', title: 'Gagal Export', text: 'Terjadi kesalahan saat mengunduh Excel.' })
+    }
+}
+
+const exportPDF = async () => {
+    showTabExportDropdown.value = false
+    const verifiedItems = items.value.filter(i => i.status === 'verified')
+    const listToExport = verifiedItems.length > 0 ? verifiedItems : items.value
+
+    if (!listToExport || listToExport.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Tidak ada data validasi untuk diunduh' })
+        return
+    }
+
+    try {
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+
+        const headerImg = await loadImage(pdfHeader)
+        const footerImg = await loadImage(pdfFooter)
+
+        const unitLabel = props.activeUnitInfo?.nama_ruang || props.depId || '-'
+        const periodLabel = props.monthlyDate || '-'
+
+        const tableBody = listToExport.map((item, index) => {
+            const numPic = item.num_pic || 0
+            const denumPic = item.denum_pic || 0
+            const scorePic = denumPic > 0 ? `${((numPic / denumPic) * 100).toFixed(2)}%` : '0%'
+
+            const numVal = item.num_validasi || 0
+            const denumVal = item.denum_validasi || 0
+            const scoreVal = denumVal > 0 ? `${((numVal / denumVal) * 100).toFixed(2)}%` : '0%'
+
+            const ar = calculateAgreementRate(item)
+
+            return [
+                index + 1,
+                item.nama_inmut || '-',
+                `${getTargetSymbol(item.rumus)} ${item.standar}%`,
+                `${numPic}/${denumPic} (${scorePic})`,
+                `${numVal}/${denumVal} (${scoreVal})`,
+                `${ar}%`,
+                item.status === 'verified' ? 'TERVERIFIKASI' : 'PENDING'
+            ]
+        })
+
+        autoTable(doc, {
+            head: [['No', 'Indikator Mutu', 'Target', 'Capaian PIC (P1)', 'Hasil Validasi (P2)', 'Agreement Rate', 'Status']],
+            body: tableBody,
+            startY: 42,
+            margin: { top: 40, bottom: 25, left: 14, right: 14 },
+            styles: { fontSize: 8, cellPadding: 3 },
+            headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                1: { cellWidth: 95 },
+                2: { halign: 'center', cellWidth: 25 },
+                3: { halign: 'center', cellWidth: 45 },
+                4: { halign: 'center', cellWidth: 45 },
+                5: { halign: 'center', cellWidth: 25, fontStyle: 'bold' },
+                6: { halign: 'center', cellWidth: 24, fontStyle: 'bold' }
+            },
+            didDrawPage: (data) => {
+                if (headerImg) {
+                    doc.addImage(headerImg, 'PNG', 0, 0, 297, 32)
+                }
+
+                doc.setFontSize(11)
+                doc.setFont('helvetica', 'bold')
+                doc.setTextColor(30, 41, 59)
+                doc.text(`BERITA ACARA VALIDASI INDIKATOR MUTU UNIT`, 14, 34)
+
+                doc.setFontSize(8)
+                doc.setFont('helvetica', 'normal')
+                doc.setTextColor(100, 116, 139)
+                doc.text(`Periode: ${periodLabel} | Unit: ${unitLabel}`, 14, 38)
+
+                if (footerImg) {
+                    doc.addImage(footerImg, 'PNG', 0, 188, 297, 22)
+                }
+
+                doc.setFontSize(8)
+                doc.setTextColor(100, 116, 139)
+                doc.text(`Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 283, 202, { align: 'right' })
+            }
+        })
+
+        const unitName = (props.activeUnitInfo?.nama_ruang || props.depId || 'Unit').replace(/[^a-zA-Z0-9]/g, '_')
+        doc.save(`Laporan_Validasi_Mutu_${props.monthlyDate}_${unitName}.pdf`)
+    } catch (err) {
+        console.error('Error exporting PDF:', err)
+        Swal.fire({ icon: 'error', title: 'Gagal Export', text: 'Terjadi kesalahan saat mengunduh PDF.' })
+    }
 }
 
 const closeDropdown = () => {
