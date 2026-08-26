@@ -324,7 +324,7 @@
               <div class="d-flex align-items-start gap-2">
                 <i class="fas fa-info-circle info-icon"></i>
                 <div class="info-text">
-                  <strong>Catatan Statistik:</strong> Menghitung beban pelayanan klinis per-spesialisasi. Pada persalinan, mencakup registrasi Ibu (Kandungan) dan Bayi Baru Lahir (Perina).
+                  <strong>Catatan Data:</strong> Total kategori berbeda dengan Total Kunjungan karena 1 persalinan mencakup 2 registrasi layanan (Ibu di Kandungan & Bayi Baru Lahir di Perina), serta pelayanan di unit tindakan (VK).
                 </div>
               </div>
             </div>
