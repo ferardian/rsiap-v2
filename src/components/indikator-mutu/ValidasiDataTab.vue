@@ -488,16 +488,16 @@ const exportPDF = async () => {
             body: tableBody,
             startY: 38,
             margin: { top: 36, bottom: 20, left: 14, right: 14 },
-            styles: { fontSize: 8, cellPadding: 3 },
-            headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
+            styles: { fontSize: 7.5, cellPadding: 2.5 },
+            headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
             columnStyles: {
-                0: { halign: 'center', cellWidth: 10 },
-                1: { cellWidth: 65 },
-                2: { halign: 'center', cellWidth: 20 },
-                3: { halign: 'center', cellWidth: 26 },
-                4: { halign: 'center', cellWidth: 26 },
-                5: { halign: 'center', cellWidth: 18, fontStyle: 'bold' },
-                6: { halign: 'center', cellWidth: 17, fontStyle: 'bold' }
+                0: { halign: 'center', cellWidth: 8 },
+                1: { cellWidth: 62 },
+                2: { halign: 'center', cellWidth: 18 },
+                3: { halign: 'center', cellWidth: 25 },
+                4: { halign: 'center', cellWidth: 25 },
+                5: { halign: 'center', cellWidth: 22, fontStyle: 'bold' },
+                6: { halign: 'center', cellWidth: 22, fontStyle: 'bold' }
             },
             didDrawPage: (data) => {
                 if (headerImg) {
