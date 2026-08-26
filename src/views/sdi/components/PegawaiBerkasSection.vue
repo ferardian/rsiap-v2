@@ -225,7 +225,8 @@ const loadBerkas = async () => {
   try {
     const response = await pegawaiService.getBerkas(props.nik)
     if (response.data.success) {
-      berkasList.value = response.data.data.berkas || []
+      const raw = response.data.data.berkas || []
+      berkasList.value = [...raw].sort((a, b) => new Date(b.tgl_uploud) - new Date(a.tgl_uploud))
       saveLocation.value = response.data.data.save_location || ''
     }
   } catch (error) {
