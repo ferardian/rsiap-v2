@@ -5,7 +5,7 @@
       <div class="header-text">
         <h1 class="page-title m-0">⏱️ Laporan Waktu Tunggu & Waktu Layanan</h1>
         <p class="page-subtitle text-muted m-0 mt-1">
-          Monitoring durasi alur pelayanan pasien per pos Task ID (Task 1 s/d Task 7) sesuai standar BPJS & SIMRS
+          Monitoring durasi alur pelayanan pasien per pos Task ID (Task 1 s/d Task 7)
         </p>
       </div>
       <div class="header-actions">
@@ -165,7 +165,7 @@
       <!-- Task ID Pipeline Visualization -->
       <div class="pipeline-section card border-0 shadow-sm rounded-4 mb-4 p-4">
         <h5 class="card-title fw-bold text-dark mb-3">
-          <i class="fas fa-project-diagram me-2 text-primary"></i>Alur Pipeline Task ID BPJS Antrol & SIMRS
+          <i class="fas fa-project-diagram me-2 text-primary"></i>Alur Pipeline Task ID Pelayanan Pasien
         </h5>
         
         <div class="pipeline-flow-wrapper custom-scrollbar py-2">
