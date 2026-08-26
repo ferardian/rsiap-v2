@@ -1122,8 +1122,7 @@ onUnmounted(() => {
 }
 
 .header-content-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -1162,21 +1161,27 @@ onUnmounted(() => {
   background: #f8fafc;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-  padding: 0.75rem;
+  padding: 0.85rem 1.25rem;
   margin-top: 0.75rem;
+  width: 100%;
 }
 
 .filter-items-container {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 1.25rem;
+  align-items: flex-end;
+  gap: 0.75rem 1.25rem;
+  width: 100%;
 }
 
 .filter-unit {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.mode-unit, .date-unit, .service-unit, .refresh-unit {
+  flex: 0 0 auto;
 }
 
 .unit-label {
@@ -1260,9 +1265,9 @@ onUnmounted(() => {
   border: 1px solid #dbeafe;
 }
 
-.poli-unit {
-  flex: 1;
-  min-width: 220px;
+.poli-unit, .dokter-unit {
+  flex: 1 1 180px;
+  min-width: 160px;
 }
 
 .searchable-wrapper {
