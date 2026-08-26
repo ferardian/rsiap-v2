@@ -318,24 +318,15 @@
           
           <!-- Kategori & Kelas Pasien (Below Trend) -->
           <div v-if="filters.status_lanjut === 'Ranap'" class="visual-card">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h4 class="card-title mb-0">Kategori Pasien</h4>
-              <button 
-                type="button" 
-                class="btn btn-sm btn-light border-0 p-1 text-primary d-flex align-items-center gap-1"
-                style="font-size: 11px; background: #eff6ff; color: #2563eb; border-radius: 6px;"
-                @click="showKategoriInfo = !showKategoriInfo"
-                title="Petunjuk Pembacaan Data"
-              >
-                <i class="fas fa-info-circle"></i>
-                <span>Info Data</span>
-              </button>
-            </div>
-
-            <div v-if="showKategoriInfo" class="alert alert-info py-2 px-3 mb-3 border-0 rounded-3" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe !important; font-size: 11px; line-height: 1.4;">
-              <i class="fas fa-info-circle me-1"></i>
-              <strong>Catatan Kategori Pasien:</strong><br>
-              Pengelompokan menghitung beban pelayanan medis per-spesialisasi (Anak, Kandungan, Perina, VK, Isolasi, ICU). Pada kasus persalinan, statistik mencakup registrasi Ibu (Kandungan) dan registrasi Bayi Baru Lahir (Perina).
+            <h4 class="card-title mb-2">Kategori Pasien</h4>
+            
+            <div class="kategori-info-box mb-3">
+              <div class="d-flex align-items-start gap-2">
+                <i class="fas fa-info-circle info-icon"></i>
+                <div class="info-text">
+                  <strong>Catatan Statistik:</strong> Menghitung beban pelayanan klinis per-spesialisasi. Pada persalinan, mencakup registrasi Ibu (Kandungan) dan Bayi Baru Lahir (Perina).
+                </div>
+              </div>
             </div>
 
             <div class="list-visual">
@@ -1492,6 +1483,29 @@ onUnmounted(() => {
   margin-bottom: 1.5rem;
   border-left: 4px solid #3b82f6;
   padding-left: 0.75rem;
+}
+
+.kategori-info-box {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+  border: 1px solid #dbeafe;
+  border-left: 3.5px solid #2563eb;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.73rem;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.kategori-info-box .info-icon {
+  color: #2563eb;
+  font-size: 0.85rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.kategori-info-box .info-text strong {
+  color: #1e40af;
+  font-weight: 600;
 }
 
 /* Bar Components */
