@@ -394,8 +394,8 @@ const exportPDF = async () => {
         autoTable(doc, {
             head: [['No', 'Indikator Mutu', 'Unit / Ruangan', 'Standar', 'Num', 'Denum', 'Capaian']],
             body: tableBody,
-            startY: 42,
-            margin: { top: 40, bottom: 25, left: 14, right: 14 },
+            startY: 38,
+            margin: { top: 36, bottom: 20, left: 14, right: 14 },
             styles: { fontSize: 8, cellPadding: 3 },
             headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
             columnStyles: {
@@ -409,26 +409,26 @@ const exportPDF = async () => {
             },
             didDrawPage: (data) => {
                 if (headerImg) {
-                    doc.addImage(headerImg, 'PNG', 0, 0, 210, 32)
+                    doc.addImage(headerImg, 'PNG', 0, 0, 210, 27.01)
                 }
 
-                doc.setFontSize(11)
+                doc.setFontSize(10)
                 doc.setFont('helvetica', 'bold')
                 doc.setTextColor(30, 41, 59)
-                doc.text(`LAPORAN MONITORING INDIKATOR MUTU`, 14, 34)
+                doc.text(`LAPORAN MONITORING INDIKATOR MUTU`, 14, 31)
 
                 doc.setFontSize(8)
                 doc.setFont('helvetica', 'normal')
                 doc.setTextColor(100, 116, 139)
-                doc.text(`Periode: ${monthYearLabel} | Unit: ${unitLabel}`, 14, 38)
+                doc.text(`Periode: ${monthYearLabel} | Unit: ${unitLabel}`, 14, 35)
 
                 if (footerImg) {
-                    doc.addImage(footerImg, 'PNG', 0, 275, 210, 22)
+                    doc.addImage(footerImg, 'PNG', 0, 285.82, 210, 11.18)
                 }
 
                 doc.setFontSize(8)
                 doc.setTextColor(100, 116, 139)
-                doc.text(`Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 196, 288, { align: 'right' })
+                doc.text(`Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 196, 292, { align: 'right' })
             }
         })
 
