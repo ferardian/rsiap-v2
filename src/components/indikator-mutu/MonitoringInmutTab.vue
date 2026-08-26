@@ -44,33 +44,31 @@
           <i class="fas fa-sync-alt"></i>
         </button>
 
-        <!-- Export Laporan Dropdown -->
-        <div class="dropdown position-relative me-1" @click.stop>
-          <button 
-            class="btn btn-danger dropdown-toggle fw-bold text-white shadow-sm d-flex align-items-center gap-1" 
-            type="button" 
-            @click="toggleExportDropdown" 
-            style="font-size: 0.8rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border: none;"
-          >
-            <i class="fas fa-file-export me-1"></i> Unduh Laporan
-          </button>
-          <ul 
-            class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3" 
-            :class="{ show: showExportDropdown }" 
-            style="position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 160px; font-size: 0.8rem;"
-          >
-            <li>
-              <a class="dropdown-item py-2" @click.prevent="exportPDF" href="#">
-                <i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF (.pdf)
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2" @click.prevent="exportExcel" href="#">
-                <i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel (.xlsx)
-              </a>
-            </li>
-          </ul>
-        </div>
+        <!-- Direct Export PDF Button -->
+        <button 
+          class="btn btn-outline-danger fw-bold d-flex align-items-center gap-1 shadow-sm" 
+          @click="exportPDF" 
+          :disabled="loadingPdf || loadingExcel"
+          title="Unduh Laporan PDF"
+          style="font-size: 0.8rem; padding: 6px 14px; border-radius: 8px;"
+        >
+          <i v-if="loadingPdf" class="fas fa-spinner fa-spin"></i>
+          <i v-else class="fas fa-file-pdf"></i>
+          <span>PDF</span>
+        </button>
+
+        <!-- Direct Export Excel Button -->
+        <button 
+          class="btn btn-outline-success fw-bold d-flex align-items-center gap-1 shadow-sm" 
+          @click="exportExcel" 
+          :disabled="loadingPdf || loadingExcel"
+          title="Unduh Laporan Excel"
+          style="font-size: 0.8rem; padding: 6px 14px; border-radius: 8px;"
+        >
+          <i v-if="loadingExcel" class="fas fa-spinner fa-spin"></i>
+          <i v-else class="fas fa-file-excel"></i>
+          <span>Excel</span>
+        </button>
       </div>
     </div>
 
@@ -269,6 +267,9 @@ const showDetail = (item) => {
     toast.info('Fitur Analisa / Detail akan segera hadir')
 }
 
+const loadingPdf = ref(false)
+const loadingExcel = ref(false)
+
 // Helper: load image for PDF
 const loadImage = (src) => {
     return new Promise((resolve) => {
@@ -296,7 +297,7 @@ const getStandarText = (item) => {
 
 // Export Excel
 const exportExcel = async () => {
-    showExportDropdown.value = false
+    loadingExcel.value = true
     try {
         toast.info('Menyiapkan file Excel...')
         // Fetch all data for export if available
@@ -346,12 +347,14 @@ const exportExcel = async () => {
     } catch (error) {
         console.error('Error exporting excel:', error)
         toast.error('Gagal mengunduh laporan Excel')
+    } finally {
+        loadingExcel.value = false
     }
 }
 
 // Export PDF
 const exportPDF = async () => {
-    showExportDropdown.value = false
+    loadingPdf.value = true
     try {
         toast.info('Menyiapkan file PDF...')
         // Fetch all data for export if available
@@ -435,11 +438,12 @@ const exportPDF = async () => {
     } catch (error) {
         console.error('Error exporting PDF:', error)
         toast.error('Gagal mengunduh laporan PDF')
+    } finally {
+        loadingPdf.value = false
     }
 }
 
 onMounted(async () => {
-    window.addEventListener('click', closeExportDropdown)
     await checkCommittee()
     await fetchUnits()
     await fetchMasterUtama()
