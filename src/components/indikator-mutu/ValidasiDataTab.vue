@@ -448,13 +448,18 @@ const exportPDF = async () => {
     }
 
     try {
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
         const headerImg = await loadImage(pdfHeader)
         const footerImg = await loadImage(pdfFooter)
 
         const unitLabel = props.activeUnitInfo?.nama_ruang || props.depId || '-'
         const periodLabel = props.monthlyDate || '-'
+
+        const getAsciiSymbol = (val) => {
+            const map = { '1': '=', '2': '<=', '3': '<', '4': '>=', '5': '>' }
+            return map[val] || val || '>='
+        }
 
         const tableBody = listToExport.map((item, index) => {
             const numPic = item.num_pic || 0
@@ -470,7 +475,7 @@ const exportPDF = async () => {
             return [
                 index + 1,
                 item.nama_inmut || '-',
-                `${getTargetSymbol(item.rumus)} ${item.standar}%`,
+                `${getAsciiSymbol(item.rumus)} ${item.standar}%`,
                 `${numPic}/${denumPic} (${scorePic})`,
                 `${numVal}/${denumVal} (${scoreVal})`,
                 `${ar}%`,
@@ -487,16 +492,16 @@ const exportPDF = async () => {
             headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
             columnStyles: {
                 0: { halign: 'center', cellWidth: 10 },
-                1: { cellWidth: 95 },
-                2: { halign: 'center', cellWidth: 25 },
-                3: { halign: 'center', cellWidth: 45 },
-                4: { halign: 'center', cellWidth: 45 },
-                5: { halign: 'center', cellWidth: 25, fontStyle: 'bold' },
-                6: { halign: 'center', cellWidth: 24, fontStyle: 'bold' }
+                1: { cellWidth: 65 },
+                2: { halign: 'center', cellWidth: 20 },
+                3: { halign: 'center', cellWidth: 26 },
+                4: { halign: 'center', cellWidth: 26 },
+                5: { halign: 'center', cellWidth: 18, fontStyle: 'bold' },
+                6: { halign: 'center', cellWidth: 17, fontStyle: 'bold' }
             },
             didDrawPage: (data) => {
                 if (headerImg) {
-                    doc.addImage(headerImg, 'PNG', 0, 0, 297, 32)
+                    doc.addImage(headerImg, 'PNG', 0, 0, 210, 32)
                 }
 
                 doc.setFontSize(11)
@@ -510,12 +515,12 @@ const exportPDF = async () => {
                 doc.text(`Periode: ${periodLabel} | Unit: ${unitLabel}`, 14, 38)
 
                 if (footerImg) {
-                    doc.addImage(footerImg, 'PNG', 0, 188, 297, 22)
+                    doc.addImage(footerImg, 'PNG', 0, 275, 210, 22)
                 }
 
                 doc.setFontSize(8)
                 doc.setTextColor(100, 116, 139)
-                doc.text(`Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 283, 202, { align: 'right' })
+                doc.text(`Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 196, 288, { align: 'right' })
             }
         })
 
