@@ -289,12 +289,20 @@ const getPhotoUrl = (photoName) => {
 
 const openDocument = (fileName, type = 'ijazah') => {
   if (!fileName) return;
+  if (fileName.startsWith('http')) {
+    window.open(fileName, '_blank');
+    return;
+  }
   
   let baseUrl = 'https://sim.rsiaaisyiyah.com/rsiap/file/pegawai/';
   if (type === 'ijazah') {
     baseUrl = 'https://sim.rsiaaisyiyah.com/webapps/rsia_kualifikasi/';
   } else if (type === 'sk') {
-    baseUrl = 'https://sim.rsiaaisyiyah.com/webapps/rsia_sk/';
+    if (fileName.includes('/') || fileName.includes('berkaspegawai')) {
+      baseUrl = 'https://sim.rsiaaisyiyah.com/webapps/penggajian/';
+    } else {
+      baseUrl = 'https://sim.rsiaaisyiyah.com/webapps/rsia_sk/';
+    }
   }
   
   window.open(`${baseUrl}${fileName}`, '_blank');
