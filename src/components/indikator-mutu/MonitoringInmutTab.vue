@@ -43,6 +43,34 @@
         <button class="btn btn-primary refresh-btn" @click="fetchData" title="Refresh">
           <i class="fas fa-sync-alt"></i>
         </button>
+
+        <!-- Export Laporan Dropdown -->
+        <div class="dropdown position-relative me-1" @click.stop>
+          <button 
+            class="btn btn-danger dropdown-toggle fw-bold text-white shadow-sm d-flex align-items-center gap-1" 
+            type="button" 
+            @click="toggleExportDropdown" 
+            style="font-size: 0.8rem; padding: 6px 14px; border-radius: 8px; background-color: #dc2626; border: none;"
+          >
+            <i class="fas fa-file-export me-1"></i> Unduh Laporan
+          </button>
+          <ul 
+            class="dropdown-menu dropdown-menu-end shadow-sm border border-light rounded-3" 
+            :class="{ show: showExportDropdown }" 
+            style="position: absolute; right: 0; top: 100%; z-index: 1050; min-width: 160px; font-size: 0.8rem;"
+          >
+            <li>
+              <a class="dropdown-item py-2" @click.prevent="exportPDF" href="#">
+                <i class="fas fa-file-pdf me-2 text-danger"></i> Unduh PDF (.pdf)
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2" @click.prevent="exportExcel" href="#">
+                <i class="fas fa-file-excel me-2 text-success"></i> Unduh Excel (.xlsx)
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -60,12 +88,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/indikatorMutuService'
 import committeeService from '@/services/committeeService'
 import { useAuthStore } from '@/stores/auth'
 import MonitoringTable from '@/components/indikator-mutu/MonitoringTable.vue'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
+import pdfHeader from '@/assets/pdf-header.png'
+import pdfFooter from '@/assets/pdf-footer.png'
 
 const props = defineProps({
   isKomiteMutu: { type: Boolean, default: false },
@@ -85,6 +118,15 @@ const page = ref(1)
 const limit = ref(10)
 const totalPages = ref(1)
 const userCommittees = ref([])
+const showExportDropdown = ref(false)
+
+const toggleExportDropdown = () => {
+    showExportDropdown.value = !showExportDropdown.value
+}
+
+const closeExportDropdown = () => {
+    showExportDropdown.value = false
+}
 
 const userDepId = computed(() => {
     return authStore.user?.data?.detail?.dep_id || 
@@ -149,6 +191,21 @@ const displayedUnitOptions = computed(() => {
     return units.value;
 })
 
+const selectedUnitName = computed(() => {
+    if (!filters.unit) return 'Semua Unit'
+    const found = units.value.find(u => u.dep_id === filters.unit)
+    return found ? found.nama_ruang : filters.unit
+})
+
+const formatBulanLabel = (bulanStr) => {
+    if (!bulanStr) return ''
+    const parts = bulanStr.split('-')
+    if (parts.length < 2) return bulanStr
+    const mIdx = parseInt(parts[1], 10) - 1
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+    return `${monthNames[mIdx] || parts[1]} ${parts[0]}`
+}
+
 watch(() => [props.userDepId, props.isUnitLocked], ([newDep, newLocked]) => {
     if (newLocked && newDep) {
         filters.unit = newDep
@@ -212,7 +269,177 @@ const showDetail = (item) => {
     toast.info('Fitur Analisa / Detail akan segera hadir')
 }
 
+// Helper: load image for PDF
+const loadImage = (src) => {
+    return new Promise((resolve) => {
+        const img = new Image()
+        img.src = src
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+    })
+}
+
+// Helper: format standar
+const getRumusSymbol = (val) => {
+    const map = { '1': '=', '2': '≤', '3': '<', '4': '≥', '5': '>' }
+    return (val in map) ? map[val] : (val || '')
+}
+
+const getStandarText = (item) => {
+    if (!item) return '-'
+    const rumus = item.rumus || item.rumus_utama
+    const std = item.standar || item.standar_utama
+    let satuan = item.satuan || item.satuan_utama
+    if (satuan === 'Persentase') satuan = '%'
+    return `${getRumusSymbol(rumus)} ${std}${satuan ? ' ' + satuan : ''}`.trim()
+}
+
+// Export Excel
+const exportExcel = async () => {
+    showExportDropdown.value = false
+    try {
+        toast.info('Menyiapkan file Excel...')
+        // Fetch all data for export if available
+        const params = {
+            page: 1,
+            limit: 1000,
+            bulan: filters.bulan,
+            dep_id: filters.unit,
+            keyword: filters.keyword
+        }
+        const response = await api.getMonitoring(params)
+        const exportItems = response.data?.data?.data || items.value
+
+        if (!exportItems || exportItems.length === 0) {
+            toast.warning('Tidak ada data monitoring untuk diunduh')
+            return
+        }
+
+        const dataForExcel = exportItems.map((item, index) => ({
+            'No': index + 1,
+            'Nama Indikator': item.nama_inmut || '-',
+            'Unit / Ruangan': item.nama_ruang || '-',
+            'Standar': getStandarText(item),
+            'Numerator (Num)': item.total_num || 0,
+            'Denominator (Denum)': item.total_denum || 0,
+            'Capaian (%)': parseFloat(item.score || 0).toFixed(2) + '%'
+        }))
+
+        const worksheet = XLSX.utils.json_to_sheet(dataForExcel)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Monitoring Inmut')
+
+        worksheet['!cols'] = [
+            { wch: 6 },
+            { wch: 45 },
+            { wch: 25 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 18 },
+            { wch: 15 }
+        ]
+
+        const unitName = selectedUnitName.value ? selectedUnitName.value.replace(/[^a-zA-Z0-9]/g, '_') : 'Semua_Unit'
+        const fileName = `Monitoring_Indikator_Mutu_${filters.bulan}_${unitName}.xlsx`
+        XLSX.writeFile(workbook, fileName)
+        toast.success('Laporan Excel berhasil diunduh')
+    } catch (error) {
+        console.error('Error exporting excel:', error)
+        toast.error('Gagal mengunduh laporan Excel')
+    }
+}
+
+// Export PDF
+const exportPDF = async () => {
+    showExportDropdown.value = false
+    try {
+        toast.info('Menyiapkan file PDF...')
+        // Fetch all data for export if available
+        const params = {
+            page: 1,
+            limit: 1000,
+            bulan: filters.bulan,
+            dep_id: filters.unit,
+            keyword: filters.keyword
+        }
+        const response = await api.getMonitoring(params)
+        const exportItems = response.data?.data?.data || items.value
+
+        if (!exportItems || exportItems.length === 0) {
+            toast.warning('Tidak ada data monitoring untuk diunduh')
+            return
+        }
+
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+
+        const headerImg = await loadImage(pdfHeader)
+        const footerImg = await loadImage(pdfFooter)
+
+        const unitLabel = selectedUnitName.value || 'Semua Unit'
+        const monthYearLabel = formatBulanLabel(filters.bulan)
+
+        const tableBody = exportItems.map((item, index) => [
+            index + 1,
+            item.nama_inmut || '-',
+            item.nama_ruang || '-',
+            getStandarText(item),
+            item.total_num || 0,
+            item.total_denum || 0,
+            `${parseFloat(item.score || 0).toFixed(2)}%`
+        ])
+
+        autoTable(doc, {
+            head: [['No', 'Indikator Mutu', 'Unit / Ruangan', 'Standar', 'Num', 'Denum', 'Capaian']],
+            body: tableBody,
+            startY: 42,
+            margin: { top: 40, bottom: 25, left: 14, right: 14 },
+            styles: { fontSize: 8, cellPadding: 3 },
+            headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                1: { cellWidth: 65 },
+                2: { cellWidth: 35 },
+                3: { halign: 'center', cellWidth: 22 },
+                4: { halign: 'center', cellWidth: 15 },
+                5: { halign: 'center', cellWidth: 15 },
+                6: { halign: 'center', cellWidth: 20, fontStyle: 'bold' }
+            },
+            didDrawPage: (data) => {
+                if (headerImg) {
+                    doc.addImage(headerImg, 'PNG', 0, 0, 210, 32)
+                }
+
+                doc.setFontSize(11)
+                doc.setFont('helvetica', 'bold')
+                doc.setTextColor(30, 41, 59)
+                doc.text(`LAPORAN MONITORING INDIKATOR MUTU`, 14, 34)
+
+                doc.setFontSize(8)
+                doc.setFont('helvetica', 'normal')
+                doc.setTextColor(100, 116, 139)
+                doc.text(`Periode: ${monthYearLabel} | Unit: ${unitLabel}`, 14, 38)
+
+                if (footerImg) {
+                    doc.addImage(footerImg, 'PNG', 0, 275, 210, 22)
+                }
+
+                doc.setFontSize(8)
+                doc.setTextColor(100, 116, 139)
+                doc.text(`Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`, 196, 288, { align: 'right' })
+            }
+        })
+
+        const unitName = selectedUnitName.value ? selectedUnitName.value.replace(/[^a-zA-Z0-9]/g, '_') : 'Semua_Unit'
+        doc.save(`Monitoring_Indikator_Mutu_${filters.bulan}_${unitName}.pdf`)
+        toast.success('Laporan PDF berhasil diunduh')
+    } catch (error) {
+        console.error('Error exporting PDF:', error)
+        toast.error('Gagal mengunduh laporan PDF')
+    }
+}
+
 onMounted(async () => {
+    window.addEventListener('click', closeExportDropdown)
     await checkCommittee()
     await fetchUnits()
     await fetchMasterUtama()
@@ -222,6 +449,10 @@ onMounted(async () => {
     }
     
     fetchData()
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('click', closeExportDropdown)
 })
 </script>
 
