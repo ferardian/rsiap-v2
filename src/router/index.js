@@ -517,6 +517,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/waktu-tunggu-waktu-layanan',
+    name: 'LaporanWaktuTungguLayanan',
+    component: () => import('../views/laporan/WaktuTungguLayananView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/bpjs/antrol',
     name: 'BpjsAntrol',
     component: () => import('../views/bpjs/AntrolView.vue'),
