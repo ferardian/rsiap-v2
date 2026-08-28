@@ -337,6 +337,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/sdi/monitoring-kebugaran',
+    name: 'MonitoringKebugaran',
+    component: () => import('../views/sdi/MonitoringKebugaranView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/aset-fasilitas/master-data',
     name: 'MasterDataAset',
     component: () => import('../views/aset/master/MasterDataView.vue'),
