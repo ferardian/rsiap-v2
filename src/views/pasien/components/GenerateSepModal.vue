@@ -381,7 +381,7 @@
       </div>
 
       <!-- Compact Footer -->
-      <div class="modal-footer-compact px-3.5 py-3">
+      <div class="modal-footer-compact">
         <button class="btn-cancel-compact" @click="close" :disabled="submitting">Batal</button>
         <button class="btn-generate-compact" @click="submitSep" :disabled="submitting || !isFormValid">
           <span v-if="submitting"><i class="fas fa-spinner fa-spin me-1.5"></i>Memproses...</span>
@@ -1390,9 +1390,11 @@ const getInitials = (name) => {
 .modal-footer-compact {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 0.75rem;
+  padding: 1rem 1.75rem;
   background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
@@ -1411,6 +1413,7 @@ const getInitials = (name) => {
 
 .btn-cancel-compact:hover {
   background: #f1f5f9;
+  color: #1e293b;
 }
 
 .btn-generate-compact {
@@ -1433,9 +1436,12 @@ const getInitials = (name) => {
 }
 
 .btn-generate-compact:disabled {
-  opacity: 0.6;
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  box-shadow: none !important;
   cursor: not-allowed;
-  filter: grayscale(1);
+  opacity: 1 !important;
+  filter: none !important;
 }
 </style>
 
