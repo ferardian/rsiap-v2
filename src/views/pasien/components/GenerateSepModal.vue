@@ -1,291 +1,306 @@
 <template>
   <div v-if="show" class="modal-overlay" @click="close">
     <div class="modal-content animate__animated animate__zoomIn" @click.stop>
-      <div class="modal-header-premium">
-        <div class="d-flex align-items-center gap-3">
-          <div class="header-icon-bg">
+      <!-- Compact Header -->
+      <div class="modal-header-compact">
+        <div class="d-flex align-items-center gap-2.5">
+          <div class="header-icon-compact">
             <i class="fas fa-file-medical"></i>
           </div>
           <div>
-            <h3 class="modal-title mb-0">{{ isEditMode ? 'Edit SEP' : 'Terbitkan SEP Baru' }}</h3>
-            <p class="text-muted small mb-0">{{ isEditMode ? 'Update data Surat Eligibilitas Peserta' : 'Generate Surat Eligibilitas Peserta via BPJS VClaim' }}</p>
+            <h4 class="modal-title mb-0">{{ isEditMode ? 'Edit SEP' : 'Terbitkan SEP Baru' }}</h4>
+            <p class="text-muted extra-small mb-0">{{ isEditMode ? 'Update Surat Eligibilitas Peserta' : 'Generate Surat Eligibilitas Peserta via BPJS VClaim' }}</p>
           </div>
         </div>
-        <button class="btn-close-premium" @click="close">
+        <button class="btn-close-compact" @click="close">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
-      <div class="modal-body custom-scroll p-4">
-        <div v-if="registration" class="row g-4">
-          <!-- Left Column: Patient & Basic Info -->
-          <div class="col-lg-5">
+      <!-- Compact Body (3-Column Layout) -->
+      <div class="modal-body custom-scroll p-3 p-lg-3.5">
+        <div v-if="registration" class="row g-3">
+          <!-- Column 1: Peserta & Pelayanan -->
+          <div class="col-lg-4">
             <div class="info-section">
-              <h4 class="section-subtitle"><i class="fas fa-user-circle me-2"></i>Informasi Peserta</h4>
-              <div class="patient-summary-card mb-4">
-                <div class="patient-avatar">
+              <h5 class="section-subtitle"><i class="fas fa-user-circle me-1.5 text-primary"></i>1. Informasi Peserta & SEP</h5>
+              
+              <div class="patient-summary-card mb-2.5">
+                <div class="patient-avatar-compact">
                    {{ getInitials(registration.pasien?.nm_pasien) }}
                 </div>
-                <div class="patient-detail">
-                  <h5 class="mb-1">{{ registration.pasien?.nm_pasien }}</h5>
-                  <div class="d-flex flex-wrap gap-2">
-                    <span class="badge bg-light text-dark border">{{ registration.no_rkm_medis }}</span>
-                    <span class="badge bg-primary bg-opacity-10 text-primary border-primary border-opacity-25">{{ registration.pasien?.no_peserta }}</span>
+                <div class="patient-detail flex-grow-1 overflow-hidden">
+                  <h6 class="mb-1 text-truncate fw-bold text-dark">{{ registration.pasien?.nm_pasien }}</h6>
+                  <div class="d-flex flex-wrap gap-1.5">
+                    <span class="badge bg-light text-dark border extra-small">{{ registration.no_rkm_medis }}</span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 extra-small">{{ registration.pasien?.no_peserta }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Nomor Kartu BPJS</label>
-                <input type="text" v-model="form.noKartu" class="form-control-premium" readonly />
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <label class="form-label-compact">No. Kartu BPJS</label>
+                  <input type="text" v-model="form.noKartu" class="form-control-compact" readonly />
+                </div>
+                <div class="col-6">
+                  <label class="form-label-compact">Tanggal SEP</label>
+                  <input type="date" v-model="form.tglSep" class="form-control-compact" />
+                </div>
               </div>
 
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Tanggal SEP</label>
-                <input type="date" v-model="form.tglSep" class="form-control-premium" />
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <label class="form-label-compact">Jenis Pelayanan</label>
+                  <select v-model="form.jnsPelayanan" class="form-select-compact">
+                    <option value="1">Rawat Inap</option>
+                    <option value="2">Rawat Jalan</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label-compact">Kelas Hak</label>
+                  <select v-model="form.klsRawat.klsRawatHak" class="form-select-compact">
+                    <option value="1">Kelas 1</option>
+                    <option value="2">Kelas 2</option>
+                    <option value="3">Kelas 3</option>
+                  </select>
+                </div>
               </div>
 
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Jenis Pelayanan</label>
-                <select v-model="form.jnsPelayanan" class="form-select-premium">
-                  <option value="1">Rawat Inap</option>
-                  <option value="2">Rawat Jalan</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Kelas Rawat</label>
-                <select v-model="form.klsRawat.klsRawatHak" class="form-select-premium">
-                  <option value="1">Kelas 1</option>
-                  <option value="2">Kelas 2</option>
-                  <option value="3">Kelas 3</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Catatan</label>
-                <textarea v-model="form.catatan" class="form-control-premium" rows="2" placeholder="Catatan tambahan..."></textarea>
+              <div class="form-group">
+                <label class="form-label-compact">Catatan SEP</label>
+                <input type="text" v-model="form.catatan" class="form-control-compact" placeholder="Catatan tambahan..." />
               </div>
             </div>
           </div>
 
-          <!-- Right Column: Rujukan & Clinical -->
-          <div class="col-lg-7">
+          <!-- Column 2: Asal Rujukan & Poliklinik -->
+          <div class="col-lg-4 border-start-lg">
             <div class="info-section">
-              <h4 class="section-subtitle"><i class="fas fa-exchange-alt me-2"></i>Asal Rujukan</h4>
-              <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                  <label class="form-label-premium">Tgl Rujukan</label>
-                  <input type="date" v-model="form.rujukan.tglRujukan" class="form-control-premium" />
+              <h5 class="section-subtitle"><i class="fas fa-exchange-alt me-1.5 text-primary"></i>2. Asal Rujukan & Poliklinik</h5>
+              
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <label class="form-label-compact">Tgl Rujukan</label>
+                  <input type="date" v-model="form.rujukan.tglRujukan" class="form-control-compact" />
                 </div>
-                <div class="col-md-6">
-                  <label class="form-label-premium">Asal Rujukan</label>
-                  <select v-model="form.rujukan.asalRujukan" class="form-select-premium">
-                    <option value="1">Faskes 1 (Puskesmas/Klinik)</option>
-                    <option value="2">Faskes 2 (RS Tingkat 2)</option>
+                <div class="col-6">
+                  <label class="form-label-compact">Asal Rujukan</label>
+                  <select v-model="form.rujukan.asalRujukan" class="form-select-compact">
+                    <option value="1">Faskes 1 (Puskesmas)</option>
+                    <option value="2">Faskes 2 (RS Rujukan)</option>
                   </select>
                 </div>
-                    <div class="d-flex gap-2 align-items-end mb-3">
-                       <div class="flex-grow-1">
-                         <label class="form-label-premium">Nomor Rujukan</label>
-                         <input type="text" v-model="form.rujukan.noRujukan" class="form-control-premium" placeholder="Masukkan nomor rujukan..." />
-                       </div>
-                       <button @click="checkRujukan" class="btn-check-rujukan" :disabled="checkingRujukan">
-                         <i class="fas fa-search" v-if="!checkingRujukan"></i>
-                         <i class="fas fa-spinner fa-spin" v-else></i>
-                       </button>
-                    </div>
+              </div>
 
-                 <div class="col-md-12">
-                   <label class="form-label-premium">Faskes Perujuk (Pemberi Rujukan)</label>
-                   <v-select
-                     v-model="form.rujukan.ppkRujukan"
-                     :options="faskesOptions"
-                     :reduce="opt => opt.kode"
-                     label="nama"
-                     @search="onSearchFaskes"
-                     @option:selected="opt => form.rujukan.nmppkrujukan = opt.nama"
-                     :filterable="false"
-                     placeholder="Cari Faskes Pemberi Rujukan..."
-                     class="v-select-premium"
-                   >
-                     <template #no-options="{ search, searching }">
-                       <template v-if="searching">Mencari...</template>
-                       <em v-else style="opacity: 0.5;">Cari Faskes (Ketik minimal 3 huruf)...</em>
-                     </template>
-                   </v-select>
-                 </div>
-               </div>
+              <div class="form-group mb-2">
+                <label class="form-label-compact">Nomor Rujukan</label>
+                <div class="d-flex gap-1.5">
+                  <input type="text" v-model="form.rujukan.noRujukan" class="form-control-compact flex-grow-1" placeholder="Masukkan nomor rujukan..." />
+                  <button @click="checkRujukan" class="btn-compact-action btn-primary-compact" :disabled="checkingRujukan" title="Cek Rujukan BPJS">
+                    <i class="fas fa-search" v-if="!checkingRujukan"></i>
+                    <i class="fas fa-spinner fa-spin" v-else></i>
+                  </button>
+                </div>
+              </div>
 
-              <h4 class="section-subtitle"><i class="fas fa-stethoscope me-2"></i>Diagnosa & Tujuan</h4>
-              <div class="row g-3 mb-4">
-                <div class="col-md-12">
-                  <label class="form-label-premium">Diagnosa Awal (ICD-10)</label>
+              <div class="form-group mb-2">
+                <label class="form-label-compact">Faskes Perujuk</label>
+                <v-select
+                  v-model="form.rujukan.ppkRujukan"
+                  :options="faskesOptions"
+                  :reduce="opt => opt.kode"
+                  label="nama"
+                  @search="onSearchFaskes"
+                  @option:selected="opt => form.rujukan.nmppkrujukan = opt.nama"
+                  :filterable="false"
+                  placeholder="Cari Faskes..."
+                  class="v-select-compact"
+                >
+                  <template #no-options="{ searching }">
+                    <span class="extra-small">{{ searching ? 'Mencari...' : 'Ketik min 3 huruf' }}</span>
+                  </template>
+                </v-select>
+              </div>
+
+              <template v-if="form.jnsPelayanan !== '1'">
+                <div class="form-group mb-2">
+                  <label class="form-label-compact">Poli Tujuan</label>
                   <v-select
-                    v-model="form.diagAwal"
-                    :options="diagnosaOptions"
+                    v-model="form.poli.tujuan"
+                    :options="poliOptions"
                     :reduce="opt => opt.kode"
                     label="nama"
-                    @search="onSearchDiagnosa"
-                    @option:selected="opt => form.nmdiagnosaawal = opt.nama"
+                    @search="onSearchPoli"
                     :filterable="false"
-                    placeholder="Ketik kode atau nama diagnosa..."
-                    class="v-select-premium"
+                    placeholder="Ketik nama poli..."
+                    class="v-select-compact"
                   >
-                    <template #no-options="{ search, searching }">
-                      <template v-if="searching">Mencari...</template>
-                      <em v-else style="opacity: 0.5;">Cari Diagnosa ICD-10...</em>
+                    <template #no-options="{ searching }">
+                      <span class="extra-small">{{ searching ? 'Mencari...' : 'Cari Poliklinik BPJS' }}</span>
                     </template>
                   </v-select>
                 </div>
-                <template v-if="form.jnsPelayanan !== '1'">
-                  <div class="col-md-12">
-                    <label class="form-label-premium">Poli Tujuan</label>
-                    <v-select
-                      v-model="form.poli.tujuan"
-                      :options="poliOptions"
-                      :reduce="opt => opt.kode"
-                      label="nama"
-                      @search="onSearchPoli"
-                      :filterable="false"
-                      placeholder="Ketik nama poli..."
-                      class="v-select-premium"
-                    >
-                      <template #no-options="{ search, searching }">
-                        <template v-if="searching">Mencari...</template>
-                        <em v-else style="opacity: 0.5;">Cari Poliklinik BPJS...</em>
-                      </template>
-                    </v-select>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-check-premium mt-1">
-                      <input type="checkbox" id="eksekutif" v-model="form.poli.eksekutif" true-value="1" false-value="0" />
-                      <label for="eksekutif">Poli Eksekutif</label>
-                    </div>
-                  </div>
-                </template>
+                <div class="form-check-compact">
+                  <input type="checkbox" id="eksekutif" v-model="form.poli.eksekutif" true-value="1" false-value="0" />
+                  <label for="eksekutif" class="form-label-compact mb-0 cursor-pointer">Poli Eksekutif</label>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Column 3: Diagnosa & Dokter DPJP -->
+          <div class="col-lg-4 border-start-lg">
+            <div class="info-section">
+              <h5 class="section-subtitle"><i class="fas fa-stethoscope me-1.5 text-primary"></i>3. Diagnosa & Dokter DPJP</h5>
+              
+              <div class="form-group mb-2">
+                <label class="form-label-compact">Diagnosa Awal (ICD-10)</label>
+                <v-select
+                  v-model="form.diagAwal"
+                  :options="diagnosaOptions"
+                  :reduce="opt => opt.kode"
+                  label="nama"
+                  @search="onSearchDiagnosa"
+                  @option:selected="opt => form.nmdiagnosaawal = opt.nama"
+                  :filterable="false"
+                  placeholder="Ketik kode/nama ICD-10..."
+                  class="v-select-compact"
+                >
+                  <template #no-options="{ searching }">
+                    <span class="extra-small">{{ searching ? 'Mencari...' : 'Cari Diagnosa ICD-10' }}</span>
+                  </template>
+                </v-select>
               </div>
 
-               <h4 class="section-subtitle"><i class="fas fa-user-md me-2"></i>Dokter DPJP</h4>
-               <div class="col-md-12 mb-4">
-                  <v-select
-                    v-model="form.skdp.kodeDPJP"
-                    :options="combinedDokterOptions"
-                    :reduce="opt => opt.kode"
-                    label="nama"
-                    @option:selected="opt => { form.nmdpdjp = opt.nama; if(form.jnsPelayanan == '2') form.nmdpjplayanan = opt.nama; }"
-                    placeholder="Pilih Dokter DPJP BPJS..."
-                    class="v-select-premium mb-2"
-                  ></v-select>
-                  <div class="d-flex gap-2 position-relative">
-                    <input type="text" v-model="form.skdp.noSurat" class="form-control-premium w-100" placeholder="No. Surat Kontrol / SPRI (Opsional)" />
-                    <button @click="lookupSurat" class="btn-lookup-surat" :disabled="searchingSurat">
-                      <i class="fas fa-search" v-if="!searchingSurat"></i>
-                      <i class="fas fa-spinner fa-spin" v-else></i>
-                    </button>
+              <div class="form-group mb-2">
+                <label class="form-label-compact">Dokter DPJP</label>
+                <v-select
+                  v-model="form.skdp.kodeDPJP"
+                  :options="combinedDokterOptions"
+                  :reduce="opt => opt.kode"
+                  label="nama"
+                  @option:selected="opt => { form.nmdpdjp = opt.nama; if(form.jnsPelayanan == '2') form.nmdpjplayanan = opt.nama; }"
+                  placeholder="Pilih Dokter DPJP BPJS..."
+                  class="v-select-compact"
+                ></v-select>
+              </div>
 
-                    <!-- Surat Lookup Results List -->
-                    <div v-if="showSuratList" class="surat-lookup-results custom-scroll animate__animated animate__fadeIn">
-                      <div class="d-flex justify-content-between align-items-center p-3 border-bottom sticky-top bg-white">
-                        <span class="fw-bold small text-muted">RIWAYAT SURAT KONTROL / SPRI</span>
-                        <button class="btn-close-small" @click="showSuratList = false"><i class="fas fa-times"></i></button>
-                      </div>
-                      
-                      <div class="p-3 border-bottom bg-light">
-                        <div class="row g-2 align-items-center">
-                          <div class="col">
-                            <input type="date" v-model="lookupDate" class="form-control form-control-sm border-0 shadow-none bg-transparent" />
-                          </div>
-                          <div class="col-auto">
-                            <button @click="lookupSurat" class="btn btn-sm btn-primary rounded-pill px-3" :disabled="searchingSurat">
-                              <i class="fas fa-sync-alt me-1"></i> Cari
-                            </button>
-                          </div>
+              <div class="form-group mb-2.5">
+                <label class="form-label-compact">No. Surat Kontrol / SPRI</label>
+                <div class="d-flex gap-1.5 position-relative">
+                  <input type="text" v-model="form.skdp.noSurat" class="form-control-compact flex-grow-1" placeholder="No. Surat Kontrol (Opsional)" />
+                  <button @click="lookupSurat" class="btn-compact-action btn-outline-compact" :disabled="searchingSurat" title="Riwayat Surat Kontrol">
+                    <i class="fas fa-search" v-if="!searchingSurat"></i>
+                    <i class="fas fa-spinner fa-spin" v-else></i>
+                  </button>
+
+                  <!-- Surat Lookup Results List -->
+                  <div v-if="showSuratList" class="surat-lookup-results custom-scroll animate__animated animate__fadeIn">
+                    <div class="d-flex justify-content-between align-items-center p-2 border-bottom sticky-top bg-white">
+                      <span class="fw-bold extra-small text-muted">RIWAYAT SURAT KONTROL / SPRI</span>
+                      <button class="btn-close-small" @click="showSuratList = false"><i class="fas fa-times"></i></button>
+                    </div>
+                    
+                    <div class="p-2 border-bottom bg-light">
+                      <div class="row g-1 align-items-center">
+                        <div class="col">
+                          <input type="date" v-model="lookupDate" class="form-control form-control-sm border-0 shadow-none bg-transparent" />
                         </div>
-                      </div>
-                      
-                      <div v-if="searchingSurat" class="p-4 text-center">
-                        <i class="fas fa-spinner fa-spin me-2"></i> Mencari...
-                      </div>
-                      
-                      <div v-else-if="suratOptions.length === 0" class="p-4 text-center text-muted">
-                        Tidak ada surat kontrol/SPRI ditemukan.
-                      </div>
-                      
-                      <div v-else>
-                        <div v-for="surat in suratOptions" :key="surat.no_surat" @click="selectSurat(surat)" class="surat-item">
-                          <div class="d-flex justify-content-between mb-1">
-                            <span class="badge" :class="surat.jenis === 'SPRI' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'">{{ surat.jenis }}</span>
-                            <span class="text-muted extra-small">{{ dayjs(surat.tgl_rencana).format('DD/MM/YYYY') }}</span>
-                          </div>
-                          <div class="fw-bold small text-primary mb-1">{{ surat.no_surat }}</div>
-                          <div class="extra-small text-dark mb-1"><i class="fas fa-user-md me-1 text-muted"></i> {{ surat.nm_dokter }}</div>
-                          <div class="extra-small text-muted"><i class="fas fa-hospital me-1"></i> {{ surat.nm_poli }}</div>
+                        <div class="col-auto">
+                          <button @click="lookupSurat" class="btn btn-sm btn-primary rounded-pill px-2 py-0.5 extra-small" :disabled="searchingSurat">
+                            <i class="fas fa-sync-alt me-1"></i> Cari
+                          </button>
                         </div>
                       </div>
                     </div>
+                    
+                    <div v-if="searchingSurat" class="p-3 text-center extra-small">
+                      <i class="fas fa-spinner fa-spin me-1"></i> Mencari...
+                    </div>
+                    
+                    <div v-else-if="suratOptions.length === 0" class="p-3 text-center text-muted extra-small">
+                      Tidak ada surat ditemukan.
+                    </div>
+                    
+                    <div v-else>
+                      <div v-for="surat in suratOptions" :key="surat.no_surat" @click="selectSurat(surat)" class="surat-item">
+                        <div class="d-flex justify-content-between mb-1">
+                          <span class="badge" :class="surat.jenis === 'SPRI' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'">{{ surat.jenis }}</span>
+                          <span class="text-muted extra-small">{{ dayjs(surat.tgl_rencana).format('DD/MM/YYYY') }}</span>
+                        </div>
+                        <div class="fw-bold extra-small text-primary mb-0.5">{{ surat.no_surat }}</div>
+                        <div class="extra-small text-dark mb-0.5"><i class="fas fa-user-md me-1 text-muted"></i> {{ surat.nm_dokter }}</div>
+                        <div class="extra-small text-muted"><i class="fas fa-hospital me-1"></i> {{ surat.nm_poli }}</div>
+                      </div>
+                    </div>
                   </div>
-               </div>
-             </div>
-           </div>
- 
-         <!-- Advanced Sections -->
-         <div class="col-md-12 mt-4 pt-4 border-top px-4">
-          <h4 class="section-subtitle mb-4"><i class="fas fa-plus-circle me-2 text-primary"></i>Informasi Tambahan & Penjaminan</h4>
-          
-          <div class="row g-4">
-            <!-- Section: Basic Extra Info -->
-            <div class="col-md-6">
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Nomor Telepon</label>
-                <input type="text" v-model="form.noTelp" class="form-control-premium shadow-none" placeholder="Masukkan nomor telepon aktif..." />
+                </div>
               </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-group mb-3">
-                <label class="form-label-premium">COB</label>
-                <select v-model="form.cob.cob" class="form-select-premium">
-                  <option value="0">Tidak</option>
-                  <option value="1">Ya</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Katarak</label>
-                <select v-model="form.katarak.katarak" class="form-select-premium">
-                  <option value="0">Tidak</option>
-                  <option value="1">Ya</option>
-                </select>
-              </div>
-            </div>
 
-            <!-- Section: Tujuan Kunjungan -->
-            <div class="col-md-12">
-              <div class="glass-card p-4 mb-4 border border-info border-opacity-10 bg-info bg-opacity-10 rounded-4 shadow-sm">
-                <h6 class="text-info-emphasis fw-bold mb-3 d-flex align-items-center gap-2 border-bottom pb-2">
-                  <i class="fas fa-hospital-user"></i> Tujuan Kunjungan & Prosedur
-                </h6>
-                <div class="row g-3">
+              <!-- Status KLL Quick Toggle -->
+              <div class="form-group">
+                <label class="form-label-compact">Status Kecelakaan (Laka Lantas)</label>
+                <select v-model="form.jaminan.lakaLantas" class="form-select-compact text-danger fw-bold bg-danger bg-opacity-10 border-danger border-opacity-25">
+                  <option value="0">Bukan KLL</option>
+                  <option value="1">KLL & Bukan Kec. Kerja</option>
+                  <option value="2">KLL & Kec. Kerja</option>
+                  <option value="3">Kec. Kerja</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Collapsible Section -->
+          <div class="col-12 mt-2">
+            <details class="advanced-section-details">
+              <summary class="advanced-section-summary">
+                <span><i class="fas fa-sliders-h me-1.5 text-primary"></i> Pengaturan Tambahan (No. Telp, COB, Katarak, Tujuan Kunjungan, Detail Laka Lantas)</span>
+                <i class="fas fa-chevron-down summary-icon"></i>
+              </summary>
+              <div class="advanced-section-body p-3 mt-2 rounded-3 bg-light border">
+                <div class="row g-2 mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label-compact">Nomor Telepon</label>
+                    <input type="text" v-model="form.noTelp" class="form-control-compact" placeholder="Nomor telepon aktif..." />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label-compact">COB</label>
+                    <select v-model="form.cob.cob" class="form-select-compact">
+                      <option value="0">Tidak</option>
+                      <option value="1">Ya</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label-compact">Katarak</label>
+                    <select v-model="form.katarak.katarak" class="form-select-compact">
+                      <option value="0">Tidak</option>
+                      <option value="1">Ya</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Tujuan Kunjungan -->
+                <div class="row g-2 mb-3 pt-2 border-top">
                   <div class="col-md-3">
-                    <label class="form-label-premium small">Tujuan Kunjungan</label>
-                    <select v-model="form.tujuanKunj" class="form-select-premium">
+                    <label class="form-label-compact">Tujuan Kunjungan</label>
+                    <select v-model="form.tujuanKunj" class="form-select-compact">
                       <option value="0">Normal</option>
                       <option value="1">Prosedur</option>
                       <option value="2">Konsul Dokter</option>
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label-premium small">Flag Prosedur</label>
-                    <select v-model="form.flagProcedure" class="form-select-premium">
+                    <label class="form-label-compact">Flag Prosedur</label>
+                    <select v-model="form.flagProcedure" class="form-select-compact">
                       <option value="">(Tanpa Flag)</option>
                       <option value="0">Prosedur Tidak Berkelanjutan</option>
                       <option value="1">Prosedur Berkelanjutan</option>
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label-premium small">Penunjang</label>
-                    <select v-model="form.kdPenunjang" class="form-select-premium">
+                    <label class="form-label-compact">Penunjang</label>
+                    <select v-model="form.kdPenunjang" class="form-select-compact">
                       <option value="">(Tanpa Penunjang)</option>
                       <option value="1">Radiologi</option>
                       <option value="2">Laboratorium</option>
@@ -294,151 +309,87 @@
                       <option value="5">Lain-lain</option>
                       <option value="6">MRI</option>
                       <option value="7">CT-SCAN</option>
-                      <option value="8">Echocardiography</option>
-                      <option value="9">Endoscopy</option>
-                      <option value="10">Kardiologi</option>
-                      <option value="11">Hemodialisa</option>
-                      <option value="12">Kesehatan Jiwa</option>
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label-premium small">Asesmen Pelayanan</label>
-                    <select v-model="form.assesmentPel" class="form-select-premium">
+                    <label class="form-label-compact">Asesmen Pelayanan</label>
+                    <select v-model="form.assesmentPel" class="form-select-compact">
                       <option value="">(Tanpa Asesmen)</option>
-                      <option value="1">Poli spesialis tidak tersedia hari ini</option>
+                      <option value="1">Poli tidak tersedia hari ini</option>
                       <option value="2">Hari Libur</option>
-                      <option value="3">Spesialis diluar jam pelayanan</option>
+                      <option value="3">Spesialis luar jam</option>
                       <option value="4">Kendala fasilitas</option>
-                      <option value="5">Pemeriksaan Penunjang</option>
                     </select>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Section: Laka Lantas -->
-            <div class="col-md-12">
-              <div class="form-group mb-3">
-                <label class="form-label-premium">Status Kecelakaan (Laka Lantas)</label>
-                <select v-model="form.jaminan.lakaLantas" class="form-select-premium border-danger border-opacity-25 bg-danger bg-opacity-10 text-danger fw-bold shadow-sm">
-                  <option value="0">Bukan KLL</option>
-                  <option value="1">KLL & Bukan Kec. Kerja</option>
-                  <option value="2">KLL & Kec. Kerja</option>
-                  <option value="3">Kec. Kerja</option>
-                </select>
-              </div>
+                <!-- Detail Laka Lantas jika KLL -->
+                <div v-if="form.jaminan.lakaLantas !== '0'" class="p-3 border border-danger border-opacity-25 rounded-3 bg-danger bg-opacity-10 mb-2">
+                  <h6 class="text-danger fw-bold mb-2 extra-small"><i class="fas fa-ambulance me-1"></i> Detail Kecelakaan</h6>
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <label class="form-label-compact">Tanggal Kejadian</label>
+                      <input type="date" v-model="form.jaminan.penjamin.tglKejadian" class="form-control-compact" />
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label-compact">Suplesi</label>
+                      <select v-model="form.jaminan.penjamin.suplesi.suplesi" class="form-select-compact">
+                        <option value="0">Tidak</option>
+                        <option value="1">Ya</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label-compact">No. SEP Suplesi</label>
+                      <input type="text" v-model="form.jaminan.penjamin.suplesi.noSepSuplesi" class="form-control-compact" :disabled="form.jaminan.penjamin.suplesi.suplesi === '0'" placeholder="No. SEP Suplesi..." />
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label-compact">Keterangan Kejadian</label>
+                      <textarea v-model="form.jaminan.penjamin.keterangan" class="form-control-compact" rows="1" placeholder="Kronologi singkat..."></textarea>
+                    </div>
+                  </div>
+                </div>
 
-              <div v-if="form.jaminan.lakaLantas !== '0'" class="animate__animated animate__fadeIn glass-card p-4 border border-danger border-opacity-25 mb-4 rounded-4 shadow-sm bg-danger bg-opacity-10">
-                <h6 class="text-danger-emphasis fw-bold mb-4 d-flex align-items-center gap-2 border-bottom border-danger border-opacity-25 pb-2">
-                  <i class="fas fa-ambulance text-danger"></i> Detail Kejadian Kecelakaan
-                </h6>
-                <div class="row g-4">
-                  <div class="col-md-4">
-                    <label class="form-label-premium small">Tanggal Kejadian</label>
-                    <input type="date" v-model="form.jaminan.penjamin.tglKejadian" class="form-control-premium" />
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label-premium small">Suplesi</label>
-                    <select v-model="form.jaminan.penjamin.suplesi.suplesi" class="form-select-premium">
-                      <option value="0">Tidak</option>
-                      <option value="1">Ya</option>
-                    </select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label-premium small">No. SEP Suplesi</label>
-                    <input type="text" v-model="form.jaminan.penjamin.suplesi.noSepSuplesi" class="form-control-premium" :disabled="form.jaminan.penjamin.suplesi.suplesi === '0'" placeholder="Input No. SEP Suplesi..." />
-                  </div>
-                  <div class="col-md-12">
-                    <label class="form-label-premium small">Keterangan Kejadian</label>
-                    <textarea v-model="form.jaminan.penjamin.keterangan" class="form-control-premium shadow-none" rows="2" placeholder="Jelaskan kronologi singkat kejadian..."></textarea>
-                  </div>
-                  
-                  <!-- Location Lookups -->
-                  <div class="col-md-4">
-                    <label class="form-label-premium small text-dark">Provinsi Kejadian</label>
-                    <v-select 
-                      v-model="form.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi"
-                      :options="propinsiOptions"
-                      :reduce="opt => opt.kode"
-                      label="nama"
-                      placeholder="Cari Provinsi..."
-                      class="v-select-premium"
-                    ></v-select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label-premium small text-dark">Kabupaten Kejadian</label>
-                    <v-select 
-                      v-model="form.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten"
-                      :options="kabupatenOptions"
-                      :reduce="opt => opt.kode"
-                      label="nama"
-                      placeholder="Cari Kabupaten..."
-                      class="v-select-premium"
-                      :disabled="!form.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi"
-                    ></v-select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label-premium small text-dark">Kecamatan Kejadian</label>
-                    <v-select 
-                      v-model="form.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan"
-                      :options="kecamatanOptions"
-                      :reduce="opt => opt.kode"
-                      label="nama"
-                      placeholder="Cari Kecamatan..."
-                      class="v-select-premium"
-                      :disabled="!form.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten"
-                    ></v-select>
+                <!-- Naik Kelas if Ranap -->
+                <div v-if="form.jnsPelayanan === '1'" class="p-3 border border-warning border-opacity-25 rounded-3 bg-warning bg-opacity-10">
+                  <h6 class="text-warning-emphasis fw-bold mb-2 extra-small"><i class="fas fa-level-up-alt me-1"></i> Naik Kelas Rawat</h6>
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <label class="form-label-compact">Pilih Kelas Naik</label>
+                      <select v-model="form.klsRawat.klsRawatNaik" class="form-select-compact">
+                        <option value="">(Tidak Naik Kelas)</option>
+                        <option value="1">VVIP</option>
+                        <option value="2">VIP</option>
+                        <option value="3">Kelas 1</option>
+                        <option value="4">Kelas 2</option>
+                      </select>
+                    </div>
+                    <div v-if="form.klsRawat.klsRawatNaik" class="col-md-4">
+                      <label class="form-label-compact">Pembiayaan</label>
+                      <select v-model="form.klsRawat.pembiayaan" class="form-select-compact">
+                        <option value="1">Pribadi</option>
+                        <option value="2">Pemberi Kerja</option>
+                        <option value="3">Asuransi Tambahan</option>
+                      </select>
+                    </div>
+                    <div v-if="form.klsRawat.klsRawatNaik" class="col-md-4">
+                      <label class="form-label-compact">Penanggung Jawab</label>
+                      <input type="text" v-model="form.klsRawat.penanggungJawab" class="form-control-compact" placeholder="Nama P.J..." />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </details>
+          </div>
+        </div>
+      </div>
 
-            <!-- Section: Naik Kelas (Ranap Only) -->
-            <div v-if="form.jnsPelayanan === '1'" class="col-md-12">
-              <div class="glass-card p-4 border border-warning border-opacity-25 bg-warning bg-opacity-10 rounded-4 shadow-sm mb-4">
-                <h6 class="text-warning-emphasis fw-bold mb-4 d-flex align-items-center gap-2 border-bottom border-warning border-opacity-25 pb-2">
-                  <i class="fas fa-level-up-alt text-warning"></i> Pengaturan Naik Kelas Rawat
-                </h6>
-                <div class="row g-4">
-                  <div class="col-md-4">
-                    <label class="form-label-premium small">Pilih Kelas Naik</label>
-                    <select v-model="form.klsRawat.klsRawatNaik" class="form-select-premium">
-                      <option value="">(Tidak Naik Kelas)</option>
-                      <option value="1">VVIP</option>
-                      <option value="2">VIP</option>
-                      <option value="3">Kelas 1</option>
-                      <option value="4">Kelas 2</option>
-                      <option value="5">Kelas 3</option>
-                      <option value="6">ICCU</option>
-                      <option value="7">ICU</option>
-                    </select>
-                  </div>
-                  <div v-if="form.klsRawat.klsRawatNaik" class="col-md-4">
-                    <label class="form-label-premium small">Metode Pembiayaan</label>
-                    <select v-model="form.klsRawat.pembiayaan" class="form-select-premium">
-                      <option value="1">Pribadi</option>
-                      <option value="2">Pemberi Kerja</option>
-                      <option value="3">Asuransi Kesehatan Tambahan</option>
-                    </select>
-                  </div>
-                  <div v-if="form.klsRawat.klsRawatNaik" class="col-md-4">
-                    <label class="form-label-premium small">Nama Penanggung Jawab</label>
-                    <input type="text" v-model="form.klsRawat.penanggungJawab" class="form-control-premium shadow-none" placeholder="Input nama P.J..." />
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </div>
-         </div>
-       </div>
-     </div>
-
-   <div class="modal-footer-premium p-4">
-        <button class="btn-cancel-premium" @click="close" :disabled="submitting">Batal</button>
-        <button class="btn-generate-premium" @click="submitSep" :disabled="submitting || !isFormValid">
-          <span v-if="submitting"><i class="fas fa-spinner fa-spin me-2"></i>Memproses...</span>
+      <!-- Compact Footer -->
+      <div class="modal-footer-compact px-3 py-2.5">
+        <button class="btn-cancel-compact" @click="close" :disabled="submitting">Batal</button>
+        <button class="btn-generate-compact" @click="submitSep" :disabled="submitting || !isFormValid">
+          <span v-if="submitting"><i class="fas fa-spinner fa-spin me-1.5"></i>Memproses...</span>
           <span v-else>
-            <i class="fas" :class="isEditMode ? 'fa-save' : 'fa-check-circle'"></i>
+            <i class="fas me-1.5" :class="isEditMode ? 'fa-save' : 'fa-check-circle'"></i>
              {{ isEditMode ? 'Simpan Perubahan' : 'Terbitkan SEP' }}
           </span>
         </button>
@@ -1168,9 +1119,9 @@ const getInitials = (name) => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1178,63 +1129,66 @@ const getInitials = (name) => {
 }
 
 .modal-content {
-  width: 95%;
-  max-width: 1100px;
-  max-height: 90vh;
+  width: 96%;
+  max-width: 1280px;
+  max-height: 94vh;
   background: #ffffff !important;
-  border-radius: 30px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25);
   color: #1e293b;
 }
 
-.modal-header-premium {
-  padding: 1.5rem 2.5rem;
+.modal-header-compact {
+  padding: 0.85rem 1.5rem;
   background: #ffffff !important;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
-.header-icon-bg {
-  width: 50px;
-  height: 50px;
+.header-icon-compact {
+  width: 38px;
+  height: 38px;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
-  border-radius: 15px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 .modal-title {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  color: #1e293b;
-  font-size: 1.4rem;
+  color: #0f172a;
+  font-size: 1.15rem;
 }
 
-.btn-close-premium {
+.btn-close-compact {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   color: #64748b;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
-.btn-close-premium:hover {
+.btn-close-compact:hover {
   background: #fee2e2;
   color: #ef4444;
   border-color: #fca5a5;
-  transform: rotate(90deg);
 }
 
 .modal-body {
@@ -1243,14 +1197,14 @@ const getInitials = (name) => {
 }
 
 .info-section {
-    position: relative;
+  position: relative;
 }
 
 .section-subtitle {
-  font-size: 0.95rem;
+  font-size: 0.825rem;
   font-weight: 700;
-  color: #64748b;
-  margin-bottom: 1.25rem;
+  color: #475569;
+  margin-bottom: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: flex;
@@ -1259,17 +1213,17 @@ const getInitials = (name) => {
 
 .patient-summary-card {
   background: #f8fafc;
-  padding: 1.25rem;
-  border-radius: 20px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  border: 1px solid #edf2f7;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
 }
 
-.patient-avatar {
-  width: 60px;
-  height: 60px;
+.patient-avatar-compact {
+  width: 38px;
+  height: 38px;
   background: white;
   border: 2px solid #3b82f6;
   border-radius: 50%;
@@ -1278,337 +1232,247 @@ const getInitials = (name) => {
   justify-content: center;
   font-weight: 800;
   color: #3b82f6;
-  font-size: 1.25rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
-.patient-detail h5 {
-  font-weight: 700;
-  color: #1e293b;
-}
-
-/* Premium Form Elements */
-.form-label-premium {
-  font-size: 0.85rem;
+.form-label-compact {
+  font-size: 0.775rem;
   font-weight: 600;
   color: #475569;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
   display: block;
 }
 
-.form-control-premium, 
-.form-select-premium {
+.form-control-compact, 
+.form-select-compact {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
+  padding: 0.38rem 0.65rem;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
   background: #ffffff;
-  color: #1e293b;
+  color: #0f172a;
+  font-size: 0.825rem;
   font-weight: 500;
+  height: 36px;
   transition: all 0.2s;
 }
 
-.form-control-premium:focus, 
-.form-select-premium:focus {
+.form-control-compact:focus, 
+.form-select-compact:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   outline: none;
 }
 
-.btn-check-rujukan {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+.btn-compact-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.btn-check-rujukan:hover:not(:disabled) {
-    background: #2563eb;
-    transform: translateY(-2px);
+.btn-primary-compact {
+  background: #3b82f6;
+  color: white;
+  border: none;
 }
 
-.btn-lookup-surat {
-    background: #f8fafc;
-    color: #64748b;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
+.btn-primary-compact:hover:not(:disabled) {
+  background: #2563eb;
 }
 
-.btn-lookup-surat:hover:not(:disabled) {
-    background: white;
-    color: #3b82f6;
-    border-color: #3b82f6;
+.btn-outline-compact {
+  background: #f8fafc;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+}
+
+.btn-outline-compact:hover:not(:disabled) {
+  background: white;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.form-check-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.form-check-compact input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+@media (min-width: 992px) {
+  .border-start-lg {
+    border-left: 1px solid #f1f5f9;
+  }
 }
 
 .surat-lookup-results {
-    position: absolute;
-    bottom: 110%;
-    right: 0;
-    width: 320px;
-    max-height: 350px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-    border: 1px solid #f1f5f9;
-    z-index: 100;
-    overflow-y: auto;
+  position: absolute;
+  bottom: 110%;
+  right: 0;
+  width: 320px;
+  max-height: 320px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  border: 1px solid #e2e8f0;
+  z-index: 100;
+  overflow-y: auto;
 }
 
 .surat-item {
-    padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.surat-item:hover {
-    background: #f8fafc;
-}
-
-.surat-item:last-child {
-    border-bottom: none;
-}
-
-.extra-small {
-    font-size: 0.75rem;
-}
-
-.btn-close-small {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    padding: 0.25rem;
-}
-
-.form-check-premium {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.form-check-premium input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-.form-check-premium label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #1e293b;
-    cursor: pointer;
-}
-
-.modal-footer-premium {
-    flex-shrink: 0;
-}
-
-.glass-card {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-    transition: all 0.3s ease;
-}
-
-.glass-card:hover {
-    background: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-}
-
-.text-info-emphasis {
-    color: #0891b2;
-}
-
-.text-danger-emphasis {
-    color: #e11d48;
-}
-
-.text-warning-emphasis {
-    color: #d97706;
-}
-
-.v-select-premium .vs__dropdown-toggle {
-    border: 1.5px solid #e2e8f0 !important;
-    border-radius: 12px !important;
-    padding: 6px 4px !important;
-    background: white !important;
-    transition: all 0.2s !important;
-}
-
-.v-select-premium.vs--open .vs__dropdown-toggle {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
-}
-
-.v-select-premium .vs__selected {
-    color: #1e293b !important;
-    font-weight: 500 !important;
-}
-
-.v-select-premium .vs__search::placeholder {
-    color: #94a3b8 !important;
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translate3d(0, -10px, 0);
-    }
-    to {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
-}
-
-.animate__fadeInDown {
-    animation-name: fadeInDown;
-}
-
-.modal-footer-premium {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
-}
-
-.btn-cancel-premium {
-  padding: 0.75rem 2rem;
-  border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
-  background: white;
-  color: #64748b;
-  font-weight: 700;
+  padding: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-cancel-premium:hover {
+.surat-item:hover {
+  background: #f8fafc;
+}
+
+.extra-small {
+  font-size: 0.725rem;
+}
+
+.btn-close-small {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.advanced-section-details {
+  border-radius: 12px;
+}
+
+.advanced-section-summary {
+  cursor: pointer;
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #2563eb;
+  padding: 0.5rem 0.85rem;
+  background: #f0f9ff;
+  border-radius: 10px;
+  border: 1px solid #bae6fd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.advanced-section-summary:hover {
+  background: #e0f2fe;
+}
+
+.advanced-section-details[open] .summary-icon {
+  transform: rotate(180deg);
+}
+
+.summary-icon {
+  transition: transform 0.2s ease;
+  font-size: 0.75rem;
+}
+
+.modal-footer-compact {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.btn-cancel-compact {
+  padding: 0.4rem 1.5rem;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: white;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.825rem;
+  cursor: pointer;
+  height: 36px;
+  transition: all 0.2s;
+}
+
+.btn-cancel-compact:hover {
   background: #f1f5f9;
 }
 
-.btn-generate-premium {
-  padding: 0.75rem 2.5rem;
-  border-radius: 14px;
+.btn-generate-compact {
+  padding: 0.4rem 1.75rem;
+  border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
   font-weight: 700;
+  font-size: 0.825rem;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+  height: 36px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.btn-generate-premium:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.4);
+.btn-generate-compact:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
-.btn-generate-premium:disabled {
+.btn-generate-compact:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   filter: grayscale(1);
 }
-
-/* SweetAlert2 Glass-morphism & Icon Precision */
-.swal2-glass {
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border-radius: 28px !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-    padding: 2rem !important;
-}
-
-.swal2-glass .swal2-title {
-    color: #1e293b !important;
-    font-size: 1.75rem !important;
-}
-
-.swal2-glass .swal2-icon {
-    border-width: 3px !important;
-    zoom: 1.1;
-    margin-top: 1.5rem !important;
-    margin-bottom: 1.5rem !important;
-    box-sizing: content-box !important;
-}
-
-/* Precise Icon Alignment Fix */
-.swal2-glass .swal2-success-line-tip,
-.swal2-glass .swal2-success-line-long {
-    background-color: #10b981 !important;
-    height: 5px !important;
-    border-radius: 5px !important;
-}
-
-.swal2-glass .swal2-success-line-tip {
-    left: 0.75rem !important;
-    top: 2.8rem !important;
-    width: 1.5rem !important;
-}
-
-.swal2-glass .swal2-success-line-long {
-    right: 0.5rem !important;
-    top: 2.3rem !important;
-    width: 2.8rem !important;
-}
-
-.swal2-glass .swal2-success-ring {
-    border-color: rgba(16, 185, 129, 0.2) !important;
-    border-width: 5px !important;
-}
-
-.swal2-glass .swal2-success-fix {
-    background-color: transparent !important;
-}
-
-.swal2-glass .swal2-success-circular-line-left,
-.swal2-glass .swal2-success-circular-line-right {
-    background-color: transparent !important;
-}
-
-.glass-badge {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    letter-spacing: 0.5px;
-    font-size: 1.1rem;
-    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
-}
 </style>
 
 <style>
-/* Global overwrite for v-select premium look */
-.v-select-premium .vs__dropdown-toggle {
-    border-radius: 12px !important;
-    border: 1.5px solid #e2e8f0 !important;
-    padding: 0.4rem 0 !important;
-    background: white !important;
+/* Global overwrite for v-select compact look */
+.v-select-compact .vs__dropdown-toggle {
+  border-radius: 8px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  padding: 0 !important;
+  background: white !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
-.v-select-premium .vs__selected {
-    color: #1e293b !important;
-    font-weight: 600 !important;
+.v-select-compact .vs__selected {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.825rem !important;
+  margin: 0 2px !important;
+  padding: 0 4px !important;
 }
 
-.v-select-premium .vs__search::placeholder {
-    color: #94a3b8 !important;
-    font-weight: 500 !important;
+.v-select-compact .vs__search {
+  font-size: 0.825rem !important;
+  margin: 0 !important;
+  padding: 0 4px !important;
+}
+
+.v-select-compact .vs__search::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  font-size: 0.8rem !important;
+}
+
+.v-select-compact .vs__actions {
+  padding: 0 6px !important;
 }
 </style>
