@@ -1,6 +1,6 @@
 <template>
   <div v-if="show" class="modal-overlay" @click="close">
-    <div class="modal-content glass-effect animate__animated animate__zoomIn" @click.stop>
+    <div class="modal-content animate__animated animate__zoomIn" @click.stop>
       <div class="modal-header-premium">
         <div class="d-flex align-items-center gap-3">
           <div class="header-icon-bg">
@@ -1181,17 +1181,18 @@ const getInitials = (name) => {
   width: 95%;
   max-width: 1100px;
   max-height: 90vh;
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff !important;
   border-radius: 30px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  color: #1e293b;
 }
 
 .modal-header-premium {
   padding: 1.5rem 2.5rem;
-  background: white;
+  background: #ffffff !important;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
@@ -1238,6 +1239,7 @@ const getInitials = (name) => {
 
 .modal-body {
   overflow-y: auto;
+  background: #ffffff !important;
 }
 
 .info-section {
