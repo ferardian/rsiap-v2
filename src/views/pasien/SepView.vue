@@ -1,12 +1,21 @@
 <template>
   <div class="sep-container">
-    <div class="page-header">
+    <div class="page-header d-flex justify-content-between align-items-center mb-3">
       <div class="header-content">
         <h2 class="page-title">
           <i class="fas fa-file-invoice"></i>
           Data SEP BPJS
         </h2>
-        <p class="page-subtitle">Monitoring Surat Eligibilitas Peserta (bridging_sep)</p>
+        <p class="page-subtitle mb-0">Monitoring Surat Eligibilitas Peserta (bridging_sep)</p>
+      </div>
+      <div>
+        <button 
+          class="btn btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm d-flex align-items-center gap-2"
+          @click="openCekPesertaModal()"
+        >
+          <i class="fas fa-id-card"></i>
+          <span>Cek Kepesertaan BPJS</span>
+        </button>
       </div>
     </div>
 
@@ -155,6 +164,13 @@
               <td class="text-center">
                 <div class="d-flex gap-1 justify-content-center">
                   <button 
+                    class="btn btn-sm btn-icon-glass btn-outline-info"
+                    @click="checkPesertaRow(item)"
+                    title="Cek Kepesertaan BPJS & Hak Kelas"
+                  >
+                    <i class="fas fa-id-card"></i>
+                  </button>
+                  <button 
                     class="btn btn-sm btn-icon-glass btn-outline-primary"
                     @click="showDetail(item)"
                     title="Detail SEP"
@@ -223,6 +239,16 @@
         @close="showEditModal = false"
         @success="handleEditSuccess"
     />
+
+    <!-- Cek Kepesertaan Modal -->
+    <CekPesertaModal
+      v-if="showCekPesertaModal"
+      :noKartu="selectedCekPesertaData.noKartu"
+      :nik="selectedCekPesertaData.nik"
+      :tglSepDate="selectedCekPesertaData.tglSepDate"
+      :sepKlsRawat="selectedCekPesertaData.sepKlsRawat"
+      @close="showCekPesertaModal = false"
+    />
   </div>
 </template>
 
@@ -233,6 +259,7 @@ import dokterService from '@/services/dokterService'
 import bpjsVclaimService from '@/services/bpjsVclaimService'
 import SepDetailModal from './components/SepDetailModal.vue'
 import GenerateSepModal from './components/GenerateSepModal.vue'
+import CekPesertaModal from './components/CekPesertaModal.vue'
 import { debounce } from 'lodash'
 import Swal from 'sweetalert2'
 
@@ -241,9 +268,17 @@ const loading = ref(false)
 const sepList = ref([])
 const showModal = ref(false)
 const showEditModal = ref(false)
+const showCekPesertaModal = ref(false)
 const selectedSep = ref(null)
 const selectedRegistration = ref(null)
 const doctorOptions = ref([])
+
+const selectedCekPesertaData = reactive({
+  noKartu: '',
+  nik: '',
+  tglSepDate: '',
+  sepKlsRawat: ''
+})
 
 const filters = reactive({
   q: '',
@@ -315,6 +350,22 @@ const changePage = (page) => {
   if (page < 1 || page > pagination.last_page) return
   pagination.current_page = page
   fetchSEP()
+}
+
+const openCekPesertaModal = () => {
+  selectedCekPesertaData.noKartu = ''
+  selectedCekPesertaData.nik = ''
+  selectedCekPesertaData.tglSepDate = new Date().toISOString().slice(0, 10)
+  selectedCekPesertaData.sepKlsRawat = ''
+  showCekPesertaModal.value = true
+}
+
+const checkPesertaRow = (item) => {
+  selectedCekPesertaData.noKartu = item.no_kartu || ''
+  selectedCekPesertaData.nik = item.pasien?.no_ktp || ''
+  selectedCekPesertaData.tglSepDate = item.tglsep || new Date().toISOString().slice(0, 10)
+  selectedCekPesertaData.sepKlsRawat = String(item.klsrawat || '')
+  showCekPesertaModal.value = true
 }
 
 const showDetail = (item) => {
@@ -578,6 +629,15 @@ onMounted(() => {
 .btn-icon-glass:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.btn-outline-info.btn-icon-glass {
+    border-color: #cff4fc;
+    color: #0dcaf0;
+}
+.btn-outline-info.btn-icon-glass:hover {
+    background: #0dcaf0;
+    color: white;
 }
 
 .btn-outline-primary.btn-icon-glass {
