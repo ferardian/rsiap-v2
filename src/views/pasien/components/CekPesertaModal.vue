@@ -215,7 +215,7 @@
 
           <!-- Footer -->
           <div class="modal-footer bg-white border-t border-slate-100 py-2.5 px-4 flex justify-end">
-            <button type="button" class="btn btn-sm btn-light border border-slate-300 rounded-full px-4 font-semibold text-slate-600 shadow-xs" @click="close">
+            <button type="button" class="btn btn-sm btn-light border border-slate-300 rounded-full px-4 font-semibold text-slate-600 shadow-xs" style="width: auto !important;" @click="close">
               <i class="fas fa-times me-1 text-slate-400"></i> Tutup
             </button>
           </div>

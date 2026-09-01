@@ -60,7 +60,7 @@
                 </div>
                 <div class="info-row" v-if="sepData.klsnaik">
                   <span class="label">Naik Kelas</span>
-                  <span class="value">Kelas {{ sepData.klsnaik }}</span>
+                  <span class="value">{{ translateKlsNaik(sepData.klsnaik) }}</span>
                 </div>
               </div>
             </div>
@@ -195,9 +195,9 @@
           </div>
         </div>
 
-        <div class="modal-footer bg-light border-0 py-2 px-3">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" @click="close">Tutup</button>
-          <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" @click="handlePrint">
+        <div class="modal-footer bg-light border-0 py-2.5 px-3 d-flex align-items-center justify-content-end gap-2">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4 shadow-xs" style="width: auto !important;" @click="close">Tutup</button>
+          <button type="button" class="btn btn-sm btn-primary rounded-pill px-4 shadow-xs" style="width: auto !important;" @click="handlePrint">
             <i class="fas fa-print me-1"></i> Cetak SEP
           </button>
         </div>
@@ -227,6 +227,21 @@ const tabs = [
 ]
 
 const close = () => emit('close')
+
+const translateKlsNaik = (code) => {
+  if (!code) return '-'
+  const mapping = {
+    '1': 'VVIP',
+    '2': 'VIP',
+    '3': 'Kelas I',
+    '4': 'Kelas II',
+    '5': 'Kelas III',
+    '6': 'ICCU',
+    '7': 'ICU',
+    '8': 'Diatas Kelas 1'
+  }
+  return mapping[code] || `Kelas ${code}`
+}
 
 const formatDate = (dateString) => {
   if (!dateString || dateString === '0000-00-00') return '-'
