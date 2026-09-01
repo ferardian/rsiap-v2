@@ -331,13 +331,13 @@ onMounted(async () => {
 
 /* Brand */
 .sidebar-brand {
-  padding: 2rem 1.5rem;
+  padding: 1.15rem 1rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 100%);
   border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
   position: relative;
   z-index: 2; /* Ensure brand is above scrolling content */
 }
@@ -345,10 +345,10 @@ onMounted(async () => {
 /* Collapse Button Top */
 .collapse-btn-top {
   position: absolute;
-  right: -16px;
-  bottom: -16px; /* Positioned exactly at the bottom-right corner of the brand area, aligning with the gap */
-  width: 32px;
-  height: 32px;
+  right: -14px;
+  bottom: -14px; /* Positioned exactly at the bottom-right corner of the brand area, aligning with the gap */
+  width: 28px;
+  height: 28px;
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 50%;
@@ -356,7 +356,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   cursor: pointer;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -372,20 +372,20 @@ onMounted(async () => {
 }
 
 .sidebar.collapsed .collapse-btn-top {
-  right: -16px; /* Keep same right position relative to collapsed width */
+  right: -14px; /* Keep same right position relative to collapsed width */
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   background: white;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 3px;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.15);
   border: 1px solid #e2e8f0;
   transition: transform 0.3s ease;
   overflow: hidden;
@@ -402,7 +402,7 @@ onMounted(async () => {
 }
 
 .brand-title {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
@@ -411,7 +411,7 @@ onMounted(async () => {
 }
 
 .brand-text h1 {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
@@ -420,24 +420,24 @@ onMounted(async () => {
 }
 
 .brand-text p {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: #64748b;
   margin: 0;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 /* Profile */
 .sidebar-profile {
-  padding: 0 1rem 1.5rem;
+  padding: 0 0.85rem 0.65rem;
 }
 
 .profile-info {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  padding: 1rem;
-  border-radius: 12px;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   transition: background 0.2s ease;
@@ -450,26 +450,27 @@ onMounted(async () => {
 
 .profile-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   color: #0f172a;
   letter-spacing: 0.01em;
+  line-height: 1.25;
 }
 
 .profile-role {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: #64748b;
-  margin-top: 0.25rem;
+  margin-top: 0.15rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 /* Quick Links Shiny Buttons */
 .sidebar-quick-links {
-  padding: 0 1rem 1rem;
+  padding: 0 0.85rem 0.65rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .quick-btn {
@@ -477,9 +478,9 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.55rem 0.35rem;
-  border-radius: 10px;
-  font-size: 0.76rem;
+  padding: 0.38rem 0.25rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #ffffff !important;
   text-decoration: none !important;
@@ -493,34 +494,34 @@ onMounted(async () => {
 
 .quick-btn-erm {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
 }
 
 .quick-btn-dms {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
 }
 
 .quick-btn-ikp {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.2);
 }
 
 .quick-btn:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-1px) scale(1.02);
   color: #ffffff !important;
 }
 
 .quick-btn-erm:hover {
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
 }
 
 .quick-btn-dms:hover {
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
 }
 
 .quick-btn-ikp:hover {
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3);
 }
 
 .btn-shine {
@@ -557,17 +558,17 @@ onMounted(async () => {
 
 /* Search */
 .sidebar-search {
-  padding: 0 1rem 1rem;
+  padding: 0 0.85rem 0.65rem;
 }
 
 .search-box {
   position: relative;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.38rem 0.65rem;
   transition: all 0.2s ease;
 }
 
@@ -578,16 +579,16 @@ onMounted(async () => {
 }
 
 .search-icon {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #94a3b8;
-  margin-right: 0.75rem;
+  margin-right: 0.65rem;
 }
 
 .search-input {
   background: transparent;
   border: none;
   color: #0f172a;
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   width: 100%;
   outline: none;
 }
@@ -601,8 +602,8 @@ onMounted(async () => {
   border: none;
   color: #94a3b8;
   cursor: pointer;
-  padding: 0.2rem;
-  font-size: 0.8rem;
+  padding: 0.15rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -622,7 +623,7 @@ onMounted(async () => {
 /* Navigation */
 .sidebar-nav {
   flex: 1;
-  padding: 0 1rem 4rem 1rem; /* Added bottom padding to prevent last item from being cut off on mobile */
+  padding: 0 0.85rem 3rem 0.85rem; /* Added bottom padding to prevent last item from being cut off on mobile */
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -634,19 +635,19 @@ onMounted(async () => {
 }
 
 .nav-item {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 0.85rem 1rem;
+  padding: 0.65rem 0.85rem;
   color: #475569;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 500;
 }
 
