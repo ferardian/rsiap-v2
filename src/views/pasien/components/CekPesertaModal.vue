@@ -3,47 +3,52 @@
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content border-0 shadow-lg modal-glass">
         <!-- Modal Header -->
-        <div class="modal-header bg-gradient-primary text-white py-3 border-0">
-          <h5 class="modal-title fw-bold d-flex align-items-center gap-2 text-white">
-            <i class="fas fa-id-card fs-4"></i>
-            Cek Kepesertaan BPJS Kesehatan
-          </h5>
+        <div class="modal-header bg-gradient-indigo text-white py-2.5 px-3 border-0">
+          <h6 class="modal-title fw-bold d-flex align-items-center gap-2 text-white mb-0">
+            <div class="icon-head-bg">
+              <i class="fas fa-id-card"></i>
+            </div>
+            <span>Cek Kepesertaan BPJS Kesehatan</span>
+          </h6>
+          <span class="badge bg-white-20 text-white rounded-pill px-2 py-1 text-xs fw-normal ms-auto me-2">
+            <i class="fas fa-circle text-emerald me-1 animate-pulse"></i> VClaim 2.0
+          </span>
           <button type="button" class="btn-close btn-close-white shadow-none" @click="close"></button>
         </div>
 
         <div class="modal-body p-3">
           <!-- Search Form -->
-          <div class="card shadow-sm border-0 mb-3 bg-light-subtle">
+          <div class="card shadow-sm border-0 mb-3 search-card">
             <div class="card-body p-2 px-3">
               <div class="row g-2 align-items-end">
                 <div class="col-md-3">
-                  <label class="form-label text-xs fw-bold text-muted mb-1">Cari Berdasarkan</label>
-                  <select v-model="searchType" class="form-select form-select-sm">
+                  <label class="form-label text-xs fw-bold text-slate-600 mb-1">Cari Berdasarkan</label>
+                  <select v-model="searchType" class="form-select form-select-sm custom-input">
                     <option value="nokartu">No. Kartu BPJS</option>
                     <option value="nik">NIK KTP</option>
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label text-xs fw-bold text-muted mb-1">Nomor {{ searchType === 'nokartu' ? 'Kartu' : 'NIK' }}</label>
+                  <label class="form-label text-xs fw-bold text-slate-600 mb-1">Nomor {{ searchType === 'nokartu' ? 'Kartu' : 'NIK' }}</label>
                   <input
                     type="text"
                     v-model="searchQuery"
                     :placeholder="searchType === 'nokartu' ? '13 digit No. Kartu...' : '16 digit NIK...'"
-                    class="form-control form-control-sm"
+                    class="form-control form-control-sm custom-input"
                     @keyup.enter="handleSearch"
                   />
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label text-xs fw-bold text-muted mb-1">Tgl. SEP / Pelayanan</label>
+                  <label class="form-label text-xs fw-bold text-slate-600 mb-1">Tgl. SEP / Pelayanan</label>
                   <input
                     type="date"
                     v-model="tglSep"
-                    class="form-control form-control-sm"
+                    class="form-control form-control-sm custom-input"
                   />
                 </div>
                 <div class="col-md-2">
                   <button
-                    class="btn btn-primary btn-sm w-100 fw-bold d-flex align-items-center justify-content-center gap-1"
+                    class="btn btn-indigo btn-sm w-100 fw-bold d-flex align-items-center justify-content-center gap-1 shadow-sm"
                     :disabled="loading"
                     @click="handleSearch"
                   >
@@ -58,10 +63,10 @@
 
           <!-- Loading State -->
           <div v-if="loading" class="py-4 text-center">
-            <div class="spinner-border text-primary mb-2" role="status" style="width: 2.2rem; height: 2.2rem;">
+            <div class="spinner-border text-indigo mb-2" role="status" style="width: 2.2rem; height: 2.2rem;">
               <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="text-muted small fw-semibold">Menghubungkan ke Server BPJS VClaim...</p>
+            <p class="text-slate-600 small fw-semibold">Menghubungkan ke Server BPJS VClaim...</p>
           </div>
 
           <!-- Error Alert State -->
@@ -76,18 +81,18 @@
           <!-- Result Content -->
           <div v-else-if="peserta" class="fade-in">
             <!-- Header Result Card -->
-            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-3" :class="isAktif ? 'bg-success-gradient' : 'bg-danger-gradient'">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-3" :class="isAktif ? 'bg-emerald-gradient' : 'bg-rose-gradient'">
               <div class="card-body p-3 text-white">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                   <div>
-                    <span class="badge bg-white text-dark fw-bold mb-1 shadow-sm px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
-                      <i class="fas fa-user me-1 text-primary"></i> {{ peserta.jenisPeserta?.keterangan || 'Peserta BPJS' }}
+                    <span class="badge bg-glass-pill text-white fw-semibold mb-1 px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
+                      <i class="fas fa-user-tag me-1 text-amber"></i> {{ peserta.jenisPeserta?.keterangan || 'Peserta BPJS' }}
                     </span>
-                    <h5 class="fw-bold mb-1 text-white">{{ peserta.nama }}</h5>
-                    <div class="d-flex gap-3 text-white-50 text-xs flex-wrap">
-                      <span><i class="fas fa-credit-card me-1"></i> Kartu: <strong>{{ peserta.noKartu }}</strong></span>
-                      <span><i class="fas fa-id-card me-1"></i> NIK: <strong>{{ peserta.nik }}</strong></span>
-                      <span><i class="fas fa-hospital-user me-1"></i> RM: <strong>{{ peserta.mr?.noMR || '-' }}</strong></span>
+                    <h5 class="fw-extrabold mb-1 text-white letter-spacing-tight">{{ peserta.nama }}</h5>
+                    <div class="d-flex gap-2.5 text-white-80 text-xs flex-wrap mt-2">
+                      <span class="badge-glass-item"><i class="fas fa-credit-card me-1 opacity-75"></i> Kartu: <strong>{{ peserta.noKartu }}</strong></span>
+                      <span class="badge-glass-item"><i class="fas fa-id-card me-1 opacity-75"></i> NIK: <strong>{{ peserta.nik }}</strong></span>
+                      <span class="badge-glass-item"><i class="fas fa-hospital-user me-1 opacity-75"></i> RM: <strong>{{ peserta.mr?.noMR || '-' }}</strong></span>
                     </div>
                   </div>
 
@@ -97,7 +102,7 @@
                       <i :class="isAktif ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1" style="font-size: 0.75rem;"></i>
                       {{ peserta.statusPeserta?.keterangan?.toUpperCase() || 'STATUS UNKNOWN' }}
                     </div>
-                    <small class="d-block text-white-50 mt-1" style="font-size: 0.65rem;">
+                    <small class="d-block text-white-75 mt-1" style="font-size: 0.65rem;">
                       TMT: {{ formatDate(peserta.tglTMT) }}
                     </small>
                   </div>
@@ -106,7 +111,7 @@
             </div>
 
             <!-- Kelas Rawat Compatibility Banner -->
-            <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden" :class="kelasCheck.bgClass">
+            <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden banner-compat" :class="kelasCheck.bgClass">
               <div class="card-body p-2 px-3 d-flex align-items-center gap-3">
                 <div class="icon-circle shadow-sm" :class="kelasCheck.iconBgClass">
                   <i :class="kelasCheck.icon" class="fs-5"></i>
@@ -127,13 +132,13 @@
             <div class="row g-2">
               <!-- Hak Kelas BPJS -->
               <div class="col-md-6">
-                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                <div class="detail-box box-indigo p-2 px-3 rounded-3 bg-white shadow-sm">
                   <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-layer-group text-primary me-1"></i> Hak Kelas BPJS
+                    <i class="fas fa-layer-group text-indigo me-1"></i> Hak Kelas BPJS
                   </div>
                   <div class="fw-bold text-dark text-sm">
                     {{ peserta.hakKelas?.keterangan || '-' }}
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 0.7rem;">
+                    <span class="badge bg-indigo-subtle text-indigo border border-indigo-subtle ms-2" style="font-size: 0.7rem;">
                       Kode: {{ peserta.hakKelas?.kode || '-' }}
                     </span>
                   </div>
@@ -143,9 +148,9 @@
 
               <!-- Kelas SEP / SIMRS (If Provided) -->
               <div class="col-md-6">
-                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                <div class="detail-box box-cyan p-2 px-3 rounded-3 bg-white shadow-sm">
                   <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-procedures text-primary me-1"></i> Kelas Rawat di SEP / SIMRS
+                    <i class="fas fa-procedures text-cyan me-1"></i> Kelas Rawat di SEP / SIMRS
                   </div>
                   <div class="fw-bold text-dark text-sm">
                     {{ sepKlsText }}
@@ -156,9 +161,9 @@
 
               <!-- Faskes 1 -->
               <div class="col-md-6">
-                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                <div class="detail-box box-emerald p-2 px-3 rounded-3 bg-white shadow-sm">
                   <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-clinic-medical text-success me-1"></i> Faskes Tingkat 1 (FKTP)
+                    <i class="fas fa-clinic-medical text-emerald me-1"></i> Faskes Tingkat 1 (FKTP)
                   </div>
                   <div class="fw-bold text-dark text-sm">
                     {{ peserta.provUmum?.nmProvider || '-' }}
@@ -171,9 +176,9 @@
 
               <!-- Jenis & Pemberi Kerja -->
               <div class="col-md-6">
-                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                <div class="detail-box box-amber p-2 px-3 rounded-3 bg-white shadow-sm">
                   <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-building text-warning me-1"></i> Instansi / Pemberi Kerja
+                    <i class="fas fa-building text-amber me-1"></i> Instansi / Pemberi Kerja
                   </div>
                   <div class="fw-bold text-dark text-sm">
                     {{ peserta.pemberiKerja?.keterangan || 'Tidak Ada / Mandiri' }}
@@ -186,9 +191,9 @@
 
               <!-- Demografi & Umur -->
               <div class="col-md-6">
-                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                <div class="detail-box box-sky p-2 px-3 rounded-3 bg-white shadow-sm">
                   <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-user-clock text-info me-1"></i> Tgl Lahir & Umur
+                    <i class="fas fa-user-clock text-sky me-1"></i> Tgl Lahir & Umur
                   </div>
                   <div class="fw-bold text-dark text-sm">
                     {{ formatDate(peserta.tglLahir) }} ({{ peserta.sex === 'L' ? 'Laki-laki' : 'Perempuan' }})
@@ -201,9 +206,9 @@
 
               <!-- Informasi Tambahan / COB -->
               <div class="col-md-6">
-                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                <div class="detail-box box-rose p-2 px-3 rounded-3 bg-white shadow-sm">
                   <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-shield-alt text-danger me-1"></i> COB & Kontak
+                    <i class="fas fa-shield-alt text-rose me-1"></i> COB & Kontak
                   </div>
                   <div class="fw-bold text-dark text-sm">
                     COB: {{ peserta.cob?.nmAsuransi ? peserta.cob.nmAsuransi : 'Tidak Ada' }}
@@ -218,8 +223,10 @@
         </div>
 
         <!-- Footer -->
-        <div class="modal-footer bg-light border-0 py-2 px-3">
-          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" @click="close">Tutup</button>
+        <div class="modal-footer bg-light-subtle border-0 py-2 px-3 justify-content-end">
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fw-semibold" @click="close">
+            <i class="fas fa-times me-1"></i> Tutup
+          </button>
         </div>
       </div>
     </div>
@@ -400,31 +407,100 @@ onMounted(() => {
 
 <style scoped>
 .modal-glass {
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+.bg-gradient-indigo {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
 }
 
-.bg-success-gradient {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+.icon-head-bg {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
 }
 
-.bg-danger-gradient {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+.bg-white-20 {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.text-emerald { color: #34d399 !important; }
+.text-indigo { color: #4f46e5 !important; }
+.text-cyan { color: #0891b2 !important; }
+.text-amber { color: #f59e0b !important; }
+.text-sky { color: #0284c7 !important; }
+.text-rose { color: #f43f5e !important; }
+
+.search-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.75rem;
+}
+
+.custom-input {
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.custom-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.btn-indigo {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-indigo:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.bg-emerald-gradient {
+  background: linear-gradient(135deg, #059669 0%, #10b981 60%, #0d9488 100%);
+}
+
+.bg-rose-gradient {
+  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+}
+
+.bg-glass-pill {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.badge-glass-item {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .badge-status-pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.35rem 0.85rem;
+  padding: 0.3rem 0.8rem;
   border-radius: 2rem;
   font-weight: 800;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 .pill-aktif {
@@ -437,9 +513,13 @@ onMounted(() => {
   color: #b91c1c;
 }
 
+.banner-compat {
+  transition: all 0.2s ease;
+}
+
 .icon-circle {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -448,27 +528,40 @@ onMounted(() => {
 }
 
 .detail-box {
+  border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
 }
 
 .detail-box:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.08) !important;
 }
 
-.bg-blue-subtle {
-  background-color: #eff6ff;
-}
+.box-indigo { border-left: 4px solid #4f46e5 !important; }
+.box-cyan { border-left: 4px solid #0891b2 !important; }
+.box-emerald { border-left: 4px solid #10b981 !important; }
+.box-amber { border-left: 4px solid #f59e0b !important; }
+.box-sky { border-left: 4px solid #0284c7 !important; }
+.box-rose { border-left: 4px solid #f43f5e !important; }
 
-.border-blue-subtle {
-  border: 1px solid #bfdbfe;
-}
+.bg-indigo-subtle { background-color: #e0e7ff; }
+.border-indigo-subtle { border-color: #c7d2fe !important; }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.25s ease-in-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 </style>
