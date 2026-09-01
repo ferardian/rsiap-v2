@@ -413,82 +413,84 @@
                       <p class="mb-0 small">Tidak ada rincian faktur outstanding.</p>
                     </td>
                   </tr>
-                  <template v-else v-for="inv in detailInvoices" :key="inv.no_faktur">
-                    <tr class="hover-row-light">
-                      <td class="text-center">
-                        <button 
-                          v-if="inv.pembayaran && inv.pembayaran.length > 0"
-                          @click="toggleInvoice(inv.no_faktur)"
-                          class="btn btn-link btn-xs p-0 text-decoration-none shadow-none text-muted"
-                          style="width: 24px; height: 24px;"
-                        >
-                          <i class="fas fa-fw" :class="expandedInvoices[inv.no_faktur] ? 'fa-chevron-down text-primary' : 'fa-chevron-right'"></i>
-                        </button>
-                        <span v-else class="text-muted opacity-50 small">-</span>
-                      </td>
-                      <td>
-                        <span class="fw-bold text-dark font-monospace">{{ inv.no_faktur }}</span>
-                      </td>
-                      <td>
-                        <span class="text-muted font-monospace">{{ inv.no_order || '-' }}</span>
-                      </td>
-                      <td class="text-nowrap">{{ formatDate(inv.tgl_pesan) }}</td>
-                      <td class="text-nowrap">
-                        <span :class="{'text-danger fw-bold': isOverdue(inv.tgl_tempo)}">
-                          {{ formatDate(inv.tgl_tempo) }}
-                          <i v-if="isOverdue(inv.tgl_tempo)" class="fas fa-exclamation-circle ms-1" title="Jatuh Tempo!"></i>
-                        </span>
-                      </td>
-                      <td class="text-end numeric-text font-500">{{ formatRupiah(inv.tagihan) }}</td>
-                      <td class="text-end numeric-text text-success font-500">{{ formatRupiah(inv.besar_bayar) }}</td>
-                      <td class="text-end text-danger numeric-text fw-bold">{{ formatRupiah(inv.sisa_hutang) }}</td>
-                      <td class="text-center">
-                        <span :class="getStatusBadgeClass(inv.status)">
-                          {{ inv.status }}
-                        </span>
-                      </td>
-                    </tr>
-                    <!-- Rincian Pembayaran Breakdown Row -->
-                    <tr v-if="expandedInvoices[inv.no_faktur] && inv.pembayaran && inv.pembayaran.length > 0">
-                      <td colspan="9" class="p-3 bg-light-subtle border-bottom">
-                        <div class="px-3 py-2 bg-white rounded-3 border shadow-sm">
-                          <div class="d-flex align-items-center mb-2 pb-1 border-bottom">
-                            <i class="fas fa-receipt text-success me-2"></i>
-                            <span class="fw-bold text-dark small">Rincian Transaksi Pembayaran</span>
+                  <template v-else>
+                    <template v-for="inv in detailInvoices" :key="inv.no_faktur">
+                      <tr class="hover-row-light">
+                        <td class="text-center">
+                          <button 
+                            v-if="inv.pembayaran && inv.pembayaran.length > 0"
+                            @click="toggleInvoice(inv.no_faktur)"
+                            class="btn btn-link btn-xs p-0 text-decoration-none shadow-none text-muted"
+                            style="width: 24px; height: 24px;"
+                          >
+                            <i class="fas fa-fw" :class="expandedInvoices[inv.no_faktur] ? 'fa-chevron-down text-primary' : 'fa-chevron-right'"></i>
+                          </button>
+                          <span v-else class="text-muted opacity-50 small">-</span>
+                        </td>
+                        <td>
+                          <span class="fw-bold text-dark font-monospace">{{ inv.no_faktur }}</span>
+                        </td>
+                        <td>
+                          <span class="text-muted font-monospace">{{ inv.no_order || '-' }}</span>
+                        </td>
+                        <td class="text-nowrap">{{ formatDate(inv.tgl_pesan) }}</td>
+                        <td class="text-nowrap">
+                          <span :class="{'text-danger fw-bold': isOverdue(inv.tgl_tempo)}">
+                            {{ formatDate(inv.tgl_tempo) }}
+                            <i v-if="isOverdue(inv.tgl_tempo)" class="fas fa-exclamation-circle ms-1" title="Jatuh Tempo!"></i>
+                          </span>
+                        </td>
+                        <td class="text-end numeric-text font-500">{{ formatRupiah(inv.tagihan) }}</td>
+                        <td class="text-end numeric-text text-success font-500">{{ formatRupiah(inv.besar_bayar) }}</td>
+                        <td class="text-end text-danger numeric-text fw-bold">{{ formatRupiah(inv.sisa_hutang) }}</td>
+                        <td class="text-center">
+                          <span :class="getStatusBadgeClass(inv.status)">
+                            {{ inv.status }}
+                          </span>
+                        </td>
+                      </tr>
+                      <!-- Rincian Pembayaran Breakdown Row -->
+                      <tr v-if="expandedInvoices[inv.no_faktur] && inv.pembayaran && inv.pembayaran.length > 0">
+                        <td colspan="9" class="p-3 bg-light-subtle border-bottom">
+                          <div class="px-3 py-2 bg-white rounded-3 border shadow-sm">
+                            <div class="d-flex align-items-center mb-2 pb-1 border-bottom">
+                              <i class="fas fa-receipt text-success me-2"></i>
+                              <span class="fw-bold text-dark small">Rincian Transaksi Pembayaran</span>
+                            </div>
+                            <div class="table-responsive">
+                              <table class="table table-sm table-borderless align-middle mb-0 text-xs text-muted">
+                                <thead>
+                                  <tr class="text-muted border-bottom" style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
+                                    <th style="width: 15%">No. Bukti</th>
+                                    <th style="width: 15%">Tgl. Bayar</th>
+                                    <th style="width: 25%">Akun Bayar</th>
+                                    <th class="text-end" style="width: 15%">Pembayaran</th>
+                                    <th>Keterangan</th>
+                                    <th style="width: 15%">Petugas</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr v-for="p in inv.pembayaran" :key="p.no_bukti + p.tgl_bayar" class="border-bottom-dashed">
+                                    <td>
+                                      <span class="badge bg-success-light text-success rounded-pill fw-bold px-2 py-1">{{ p.no_bukti }}</span>
+                                    </td>
+                                    <td class="text-nowrap">{{ formatDate(p.tgl_bayar) }}</td>
+                                    <td class="fw-bold text-dark">{{ p.nama_bayar || '-' }}</td>
+                                    <td class="text-end text-success fw-bold numeric-text">{{ formatRupiah(p.besar_bayar) }}</td>
+                                    <td class="text-wrap small text-dark">{{ p.keterangan || '-' }}</td>
+                                    <td>
+                                      <span class="small text-muted" :title="p.nip">
+                                        <i class="fas fa-user-circle me-1"></i> {{ p.nama_petugas || p.nip || '-' }}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
-                          <div class="table-responsive">
-                            <table class="table table-sm table-borderless align-middle mb-0 text-xs text-muted">
-                              <thead>
-                                <tr class="text-muted border-bottom" style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
-                                  <th style="width: 15%">No. Bukti</th>
-                                  <th style="width: 15%">Tgl. Bayar</th>
-                                  <th style="width: 25%">Akun Bayar</th>
-                                  <th class="text-end" style="width: 15%">Pembayaran</th>
-                                  <th>Keterangan</th>
-                                  <th style="width: 15%">Petugas</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr v-for="p in inv.pembayaran" :key="p.no_bukti + p.tgl_bayar" class="border-bottom-dashed">
-                                  <td>
-                                    <span class="badge bg-success-light text-success rounded-pill fw-bold px-2 py-1">{{ p.no_bukti }}</span>
-                                  </td>
-                                  <td class="text-nowrap">{{ formatDate(p.tgl_bayar) }}</td>
-                                  <td class="fw-bold text-dark">{{ p.nama_bayar || '-' }}</td>
-                                  <td class="text-end text-success fw-bold numeric-text">{{ formatRupiah(p.besar_bayar) }}</td>
-                                  <td class="text-wrap small text-dark">{{ p.keterangan || '-' }}</td>
-                                  <td>
-                                    <span class="small text-muted" :title="p.nip">
-                                      <i class="fas fa-user-circle me-1"></i> {{ p.nama_petugas || p.nip || '-' }}
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+                    </template>
                   </template>
                 </tbody>
                 <tfoot v-if="detailInvoices.length > 0 && !detailLoading">
