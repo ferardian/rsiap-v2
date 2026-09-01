@@ -120,31 +120,32 @@
             <!-- Right Side Buttons (Direct Action Buttons) -->
             <div class="d-flex align-items-center gap-2">
               <button 
-                @click="exportToExcel" 
-                class="btn btn-outline-success px-3 py-2" 
-                :disabled="items.length === 0"
-                title="Export Ringkasan Per Vendor ke Excel"
-                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 600; font-size: 0.85rem;"
-              >
-                <i class="fas fa-file-excel me-2"></i> Excel Summary
-              </button>
-
-              <button 
                 @click="exportAllDetailsToExcel" 
-                class="btn btn-success px-3 py-2 text-white shadow-xs" 
+                class="btn text-white shadow-xs px-3 py-2" 
                 :disabled="items.length === 0 || exportDetailLoading"
                 title="Export Semua Rincian Faktur & Tanggal Transaksi ke Excel"
-                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 600; font-size: 0.85rem;"
+                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; font-size: 0.82rem; background-color: #059669; border: 1px solid #047857;"
               >
                 <span v-if="exportDetailLoading" class="spinner-border spinner-border-sm me-2"></span>
                 <i v-else class="fas fa-file-excel me-2"></i> Excel Detail Faktur
               </button>
 
               <button 
-                @click="exportToPDF" 
-                class="btn btn-outline-danger px-3 py-2" 
+                @click="exportToExcel" 
+                class="btn px-3 py-2" 
                 :disabled="items.length === 0"
-                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 600; font-size: 0.85rem;"
+                title="Export Ringkasan Per Vendor ke Excel"
+                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; font-size: 0.82rem; background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #047857;"
+              >
+                <i class="fas fa-file-excel me-2"></i> Excel Summary
+              </button>
+
+              <button 
+                @click="exportToPDF" 
+                class="btn px-3 py-2" 
+                :disabled="items.length === 0"
+                title="Unduh Laporan Ringkasan PDF"
+                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; font-size: 0.82rem; background-color: #fff1f2; border: 1px solid #fecdd3; color: #be123c;"
               >
                 <i class="fas fa-file-pdf me-2"></i> Unduh PDF
               </button>
@@ -368,18 +369,20 @@
               </div>
               <div class="d-flex align-items-center gap-2">
                 <button 
-                  @click="exportDetailToPDF" 
-                  class="btn btn-sm btn-outline-danger fw-bold rounded-3"
+                  @click="exportDetailToExcel" 
+                  class="btn text-white shadow-xs px-3 py-2" 
                   :disabled="detailInvoices.length === 0"
+                  style="width: auto !important; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; font-size: 0.8rem; background-color: #059669; border: 1px solid #047857;"
                 >
-                  <i class="fas fa-file-pdf me-1"></i> Unduh PDF (Faktur)
+                  <i class="fas fa-file-excel me-1-5"></i> Export Excel (Faktur)
                 </button>
                 <button 
-                  @click="exportDetailToExcel" 
-                  class="btn btn-sm btn-outline-success fw-bold rounded-3"
+                  @click="exportDetailToPDF" 
+                  class="btn px-3 py-2" 
                   :disabled="detailInvoices.length === 0"
+                  style="width: auto !important; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 600; font-size: 0.8rem; background-color: #fff1f2; border: 1px solid #fecdd3; color: #be123c;"
                 >
-                  <i class="fas fa-file-excel me-1"></i> Export Excel (Faktur)
+                  <i class="fas fa-file-pdf me-1-5"></i> Unduh PDF (Faktur)
                 </button>
               </div>
             </div>
