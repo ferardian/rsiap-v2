@@ -782,8 +782,6 @@ const exportToExcel = () => {
   XLSX.utils.book_append_sheet(wb, ws, "Summary Hutang")
   XLSX.writeFile(wb, `Ringkasan_Hutang_Vendor_Farmasi_${today}.xlsx`)
   toast.success('Excel summary berhasil diunduh')
-}
-
 // Export Supplier Invoice Details list to Excel (Helicopter View detail download)
 const exportDetailToExcel = () => {
   const dateInfo = []
@@ -791,16 +789,17 @@ const exportDetailToExcel = () => {
     dateInfo.push(`Periode Tgl. Datang: ${formatDate(filters.tgl_datang_awal)} s/d ${formatDate(filters.tgl_datang_akhir)}`)
   }
   if (filters.enableTglTempo) {
-    dateInfo.push(`Periode Tgl. Jatuh Tempo: ${formatDate(filters.tgl_tempo_awal)} s/d ${formatDate(filters.tgl_tempo_akhir)}`)
+    dateInfo.push(`Periode Tgl. Tempo: ${formatDate(filters.tgl_tempo_awal)} s/d ${formatDate(filters.tgl_tempo_akhir)}`)
   }
   const filterText = dateInfo.length > 0 ? dateInfo.join(' | ') : 'Semua Periode Transaksi'
 
   const wsData = [
     ['RSIA AISYIYAH PEKAJANGAN'],
-    [`RINCIAN FAKTUR HUTANG VENDOR - ${selectedSupplier.nama.toUpperCase()} (${selectedSupplier.code})`],
+    [`LAPORAN DETAIL FAKTUR HUTANG VENDOR - ${selectedSupplier.nama.toUpperCase()} (${selectedSupplier.code})`],
     [`Tanggal Transaksi / Filter: ${filterText}`],
     [`Tanggal Export: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`],
     [],
+    [`SUPPLIER: ${selectedSupplier.nama.toUpperCase()} (${selectedSupplier.code})`],
     [
       'No. Faktur',
       'No. Order',
@@ -808,22 +807,34 @@ const exportDetailToExcel = () => {
       'Tgl. Jatuh Tempo',
       'Tagihan',
       'Sudah Dibayar',
-      'Sisa Hutang',
+      'Sisa Hutang (Outstanding)',
       'Status',
       'Rincian Transaksi Pembayaran'
     ]
   ]
 
+  let totalTagihan = 0
+  let totalBayar = 0
+  let totalSisa = 0
+
   detailInvoices.value.forEach(inv => {
-    // Invoice Main Row
+    const tagihan = parseFloat(inv.tagihan) || 0
+    const bayar = parseFloat(inv.besar_bayar) || 0
+    const sisa = parseFloat(inv.sisa_hutang) || 0
+
+    totalTagihan += tagihan
+    totalBayar += bayar
+    totalSisa += sisa
+
+    // Main Invoice Row
     wsData.push([
       inv.no_faktur,
       inv.no_order || '-',
       inv.tgl_pesan ? formatDate(inv.tgl_pesan) : '-',
       inv.tgl_tempo ? formatDate(inv.tgl_tempo) : '-',
-      parseFloat(inv.tagihan),
-      parseFloat(inv.besar_bayar),
-      parseFloat(inv.sisa_hutang),
+      tagihan,
+      bayar,
+      sisa,
       inv.status,
       ''
     ])
@@ -840,22 +851,21 @@ const exportDetailToExcel = () => {
           '',
           '',
           '   └─ Bayar:',
-          `Bukti: ${p.no_bukti} | Tgl Transaksi Bayar: ${formatDate(p.tgl_bayar)} | Akun: ${p.nama_bayar} | Nominal: ${formatRupiah(p.besar_bayar)} | Keterangan: ${p.keterangan || '-'} | Petugas: ${p.nama_petugas || p.nip || '-'}`
+          `Bukti: ${p.no_bukti} | Tgl Transaksi: ${formatDate(p.tgl_bayar)} | Akun: ${p.nama_bayar} | Nominal: ${formatRupiah(p.besar_bayar)} | Keterangan: ${p.keterangan || '-'} | Petugas: ${p.nama_petugas || p.nip || '-'}`
         ])
       })
     }
   })
 
   // Summary Row inside detail Sheet
-  wsData.push([])
   wsData.push([
-    'TOTAL OUTSTANDING',
+    `TOTAL OUTSTANDING (${selectedSupplier.code})`,
     '',
     '',
     '',
-    detailInvoices.value.reduce((acc, c) => acc + parseFloat(c.tagihan), 0),
-    detailInvoices.value.reduce((acc, c) => acc + parseFloat(c.besar_bayar), 0),
-    selectedSupplier.outstanding,
+    totalTagihan,
+    totalBayar,
+    totalSisa,
     '',
     ''
   ])
@@ -867,7 +877,7 @@ const exportDetailToExcel = () => {
   toast.success('Excel rincian faktur berhasil diunduh')
 }
 
-// Export ALL Vendor Invoice Details list to Excel (Global Detail Faktur Export)
+// Export ALL Vendor Invoice Details list to Excel (Global Breakdown per Supplier)
 const exportDetailLoading = ref(false)
 const exportAllDetailsToExcel = async () => {
   exportDetailLoading.value = true
@@ -905,15 +915,38 @@ const exportAllDetailsToExcel = async () => {
       }
       const filterText = dateInfo.length > 0 ? dateInfo.join(' | ') : 'Semua Periode Transaksi'
 
+      // Group invoices by Supplier
+      const groupedByVendor = {}
+      allDetails.forEach(inv => {
+        const key = inv.kode_suplier || 'LAIN'
+        if (!groupedByVendor[key]) {
+          groupedByVendor[key] = {
+            kode_suplier: inv.kode_suplier,
+            nama_suplier: inv.nama_suplier || 'Tanpa Nama Supplier',
+            invoices: []
+          }
+        }
+        groupedByVendor[key].invoices.push(inv)
+      })
+
       const wsData = [
         ['RSIA AISYIYAH PEKAJANGAN'],
-        ['LAPORAN DETAIL FAKTUR HUTANG VENDOR FARMASI'],
+        ['LAPORAN RINCIAN HUTANG VENDOR FARMASI (BREAKDOWN PER SUPPLIER)'],
         [`Tanggal Transaksi / Filter: ${filterText}`],
         [`Tanggal Export: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`],
-        [],
-        [
-          'Kode Supplier',
-          'Nama Supplier',
+        []
+      ]
+
+      let grandTotalTagihan = 0
+      let grandTotalBayar = 0
+      let grandTotalSisa = 0
+
+      Object.values(groupedByVendor).forEach(vendor => {
+        // Vendor Header Row
+        wsData.push([`SUPPLIER: ${vendor.nama_suplier.toUpperCase()} (${vendor.kode_suplier})`])
+        
+        // Table Column Header for this Vendor
+        wsData.push([
           'No. Faktur',
           'No. Order',
           'Tgl. Datang (Pesan)',
@@ -923,66 +956,91 @@ const exportAllDetailsToExcel = async () => {
           'Sisa Hutang (Outstanding)',
           'Status',
           'Rincian Transaksi Pembayaran'
-        ]
-      ]
+        ])
 
-      allDetails.forEach(inv => {
-        // Main Invoice Row
+        let vendorTagihan = 0
+        let vendorBayar = 0
+        let vendorSisa = 0
+
+        vendor.invoices.forEach(inv => {
+          const tagihan = parseFloat(inv.tagihan) || 0
+          const bayar = parseFloat(inv.besar_bayar) || 0
+          const sisa = parseFloat(inv.sisa_hutang) || 0
+
+          vendorTagihan += tagihan
+          vendorBayar += bayar
+          vendorSisa += sisa
+
+          // Main Invoice Row
+          wsData.push([
+            inv.no_faktur,
+            inv.no_order || '-',
+            inv.tgl_pesan ? formatDate(inv.tgl_pesan) : '-',
+            inv.tgl_tempo ? formatDate(inv.tgl_tempo) : '-',
+            tagihan,
+            bayar,
+            sisa,
+            inv.status,
+            ''
+          ])
+
+          // Payments breakdown sub-rows if available
+          if (inv.pembayaran && inv.pembayaran.length > 0) {
+            inv.pembayaran.forEach(p => {
+              wsData.push([
+                '',
+                '',
+                '', 
+                '',
+                '',
+                '',
+                '',
+                '   └─ Bayar:',
+                `Bukti: ${p.no_bukti} | Tgl Transaksi: ${formatDate(p.tgl_bayar)} | Akun: ${p.nama_bayar} | Nominal: ${formatRupiah(p.besar_bayar)} | Keterangan: ${p.keterangan || '-'} | Petugas: ${p.nama_petugas || p.nip || '-'}`
+              ])
+            })
+          }
+        })
+
+        // Vendor Subtotal Row
         wsData.push([
-          inv.kode_suplier || '-',
-          inv.nama_suplier || '-',
-          inv.no_faktur,
-          inv.no_order || '-',
-          inv.tgl_pesan ? formatDate(inv.tgl_pesan) : '-',
-          inv.tgl_tempo ? formatDate(inv.tgl_tempo) : '-',
-          parseFloat(inv.tagihan),
-          parseFloat(inv.besar_bayar),
-          parseFloat(inv.sisa_hutang),
-          inv.status,
+          `SUBTOTAL (${vendor.kode_suplier})`,
+          '',
+          '',
+          '',
+          vendorTagihan,
+          vendorBayar,
+          vendorSisa,
+          '',
           ''
         ])
 
-        // Payments breakdown sub-rows if available
-        if (inv.pembayaran && inv.pembayaran.length > 0) {
-          inv.pembayaran.forEach(p => {
-            wsData.push([
-              '',
-              '',
-              '', 
-              '',
-              '',
-              '',
-              '',
-              '',
-              '',
-              '   └─ Bayar:',
-              `Bukti: ${p.no_bukti} | Tgl Transaksi Bayar: ${formatDate(p.tgl_bayar)} | Akun: ${p.nama_bayar} | Nominal: ${formatRupiah(p.besar_bayar)} | Keterangan: ${p.keterangan || '-'} | Petugas: ${p.nama_petugas || p.nip || '-'}`
-            ])
-          })
-        }
+        grandTotalTagihan += vendorTagihan
+        grandTotalBayar += vendorBayar
+        grandTotalSisa += vendorSisa
+
+        // Empty row separator
+        wsData.push([])
       })
 
-      // Total summary row
-      wsData.push([])
+      // Grand Total Row
       wsData.push([
-        'TOTAL OUTSTANDING',
+        'GRAND TOTAL OUTSTANDING',
         '',
         '',
         '',
-        '',
-        '',
-        allDetails.reduce((acc, c) => acc + parseFloat(c.tagihan), 0),
-        allDetails.reduce((acc, c) => acc + parseFloat(c.besar_bayar), 0),
-        allDetails.reduce((acc, c) => acc + parseFloat(c.sisa_hutang), 0),
+        grandTotalTagihan,
+        grandTotalBayar,
+        grandTotalSisa,
         '',
         ''
       ])
 
       const ws = XLSX.utils.aoa_to_sheet(wsData)
       const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, "Detail Faktur Hutang")
-      XLSX.writeFile(wb, `Laporan_Detail_Faktur_Hutang_Vendor_${today}.xlsx`)
-      toast.success('Excel detail faktur berhasil diunduh')
+      XLSX.utils.book_append_sheet(wb, ws, "Breakdown Hutang Vendor")
+      XLSX.writeFile(wb, `Breakdown_Hutang_Vendor_Farmasi_${today}.xlsx`)
+      toast.success('Excel breakdown rincian faktur berhasil diunduh')
     } else {
       toast.error('Gagal mengambil detail faktur')
     }
