@@ -160,6 +160,12 @@
                   {{ item.jnspelayanan == '1' ? 'Rawat Inap' : 'Rawat Jalan' }}
                 </span>
                 <div class="mt-1 small text-muted">Kelas {{ item.klsrawat }}</div>
+                <div v-if="item.jnspelayanan == '1' && item.klsnaik" class="mt-1">
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;" :title="`Naik Kelas ke ${translateKlsNaik(item.klsnaik)}`">
+                    <i class="fas fa-arrow-alt-circle-up me-1 text-warning"></i>
+                    Naik {{ translateKlsNaik(item.klsnaik) }}
+                  </span>
+                </div>
               </td>
               <td class="text-center">
                 <div class="d-flex gap-1 justify-content-center">
@@ -450,6 +456,21 @@ const deleteSep = async (item) => {
       })
     }
   }
+}
+
+const translateKlsNaik = (code) => {
+  if (!code) return ''
+  const mapping = {
+    '1': 'VVIP',
+    '2': 'VIP',
+    '3': 'Kelas I',
+    '4': 'Kelas II',
+    '5': 'Kelas III',
+    '6': 'ICCU',
+    '7': 'ICU',
+    '8': 'Diatas Kelas 1'
+  }
+  return mapping[code] || `Kelas ${code}`
 }
 
 const formatDate = (dateString) => {
