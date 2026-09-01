@@ -123,9 +123,21 @@
                 @click="exportToExcel" 
                 class="btn btn-outline-success px-3 py-2" 
                 :disabled="items.length === 0"
+                title="Export Ringkasan Per Vendor ke Excel"
                 style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 600; font-size: 0.85rem;"
               >
-                <i class="fas fa-file-excel me-2"></i> Excel (.xlsx)
+                <i class="fas fa-file-excel me-2"></i> Excel Summary
+              </button>
+
+              <button 
+                @click="exportAllDetailsToExcel" 
+                class="btn btn-success px-3 py-2 text-white shadow-xs" 
+                :disabled="items.length === 0 || exportDetailLoading"
+                title="Export Semua Rincian Faktur & Tanggal Transaksi ke Excel"
+                style="width: auto !important; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 600; font-size: 0.85rem;"
+              >
+                <span v-if="exportDetailLoading" class="spinner-border spinner-border-sm me-2"></span>
+                <i v-else class="fas fa-file-excel me-2"></i> Excel Detail Faktur
               </button>
 
               <button 
@@ -853,6 +865,133 @@ const exportDetailToExcel = () => {
   XLSX.utils.book_append_sheet(wb, ws, "Rincian Faktur")
   XLSX.writeFile(wb, `Rincian_Hutang_${selectedSupplier.code}_${today}.xlsx`)
   toast.success('Excel rincian faktur berhasil diunduh')
+}
+
+// Export ALL Vendor Invoice Details list to Excel (Global Detail Faktur Export)
+const exportDetailLoading = ref(false)
+const exportAllDetailsToExcel = async () => {
+  exportDetailLoading.value = true
+  
+  const params = {
+    keyword: filters.keyword.trim()
+  }
+
+  if (filters.enableTglDatang) {
+    params.tgl_datang_awal = filters.tgl_datang_awal
+    params.tgl_datang_akhir = filters.tgl_datang_akhir
+  }
+
+  if (filters.enableTglTempo) {
+    params.tgl_tempo_awal = filters.tgl_tempo_awal
+    params.tgl_tempo_akhir = filters.tgl_tempo_akhir
+  }
+
+  try {
+    const res = await keuanganHutangService.getHutangVendorFarmasiDetail(params)
+    if (res.data.success) {
+      const allDetails = res.data.data || []
+      
+      if (allDetails.length === 0) {
+        toast.info('Tidak ada rincian faktur untuk diexport.')
+        return
+      }
+
+      const dateInfo = []
+      if (filters.enableTglDatang) {
+        dateInfo.push(`Periode Tgl. Datang: ${formatDate(filters.tgl_datang_awal)} s/d ${formatDate(filters.tgl_datang_akhir)}`)
+      }
+      if (filters.enableTglTempo) {
+        dateInfo.push(`Periode Tgl. Tempo: ${formatDate(filters.tgl_tempo_awal)} s/d ${formatDate(filters.tgl_tempo_akhir)}`)
+      }
+      const filterText = dateInfo.length > 0 ? dateInfo.join(' | ') : 'Semua Periode Transaksi'
+
+      const wsData = [
+        ['RSIA AISYIYAH PEKAJANGAN'],
+        ['LAPORAN DETAIL FAKTUR HUTANG VENDOR FARMASI'],
+        [`Tanggal Transaksi / Filter: ${filterText}`],
+        [`Tanggal Export: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`],
+        [],
+        [
+          'Kode Supplier',
+          'Nama Supplier',
+          'No. Faktur',
+          'No. Order',
+          'Tgl. Datang (Pesan)',
+          'Tgl. Jatuh Tempo',
+          'Tagihan',
+          'Sudah Dibayar',
+          'Sisa Hutang (Outstanding)',
+          'Status',
+          'Rincian Transaksi Pembayaran'
+        ]
+      ]
+
+      allDetails.forEach(inv => {
+        // Main Invoice Row
+        wsData.push([
+          inv.kode_suplier || '-',
+          inv.nama_suplier || '-',
+          inv.no_faktur,
+          inv.no_order || '-',
+          inv.tgl_pesan ? formatDate(inv.tgl_pesan) : '-',
+          inv.tgl_tempo ? formatDate(inv.tgl_tempo) : '-',
+          parseFloat(inv.tagihan),
+          parseFloat(inv.besar_bayar),
+          parseFloat(inv.sisa_hutang),
+          inv.status,
+          ''
+        ])
+
+        // Payments breakdown sub-rows if available
+        if (inv.pembayaran && inv.pembayaran.length > 0) {
+          inv.pembayaran.forEach(p => {
+            wsData.push([
+              '',
+              '',
+              '', 
+              '',
+              '',
+              '',
+              '',
+              '',
+              '',
+              '   └─ Bayar:',
+              `Bukti: ${p.no_bukti} | Tgl Transaksi Bayar: ${formatDate(p.tgl_bayar)} | Akun: ${p.nama_bayar} | Nominal: ${formatRupiah(p.besar_bayar)} | Keterangan: ${p.keterangan || '-'} | Petugas: ${p.nama_petugas || p.nip || '-'}`
+            ])
+          })
+        }
+      })
+
+      // Total summary row
+      wsData.push([])
+      wsData.push([
+        'TOTAL OUTSTANDING',
+        '',
+        '',
+        '',
+        '',
+        '',
+        allDetails.reduce((acc, c) => acc + parseFloat(c.tagihan), 0),
+        allDetails.reduce((acc, c) => acc + parseFloat(c.besar_bayar), 0),
+        allDetails.reduce((acc, c) => acc + parseFloat(c.sisa_hutang), 0),
+        '',
+        ''
+      ])
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, "Detail Faktur Hutang")
+      XLSX.writeFile(wb, `Laporan_Detail_Faktur_Hutang_Vendor_${today}.xlsx`)
+      toast.success('Excel detail faktur berhasil diunduh')
+    } else {
+      toast.error('Gagal mengambil detail faktur')
+    }
+  } catch (error) {
+    console.error('Error exporting all details to excel:', error)
+    toast.error('Gagal memuat rincian faktur dari server')
+  } finally {
+    exportDetailLoading.value = false
+  }
 }
 
 // Export Summary List to PDF File
