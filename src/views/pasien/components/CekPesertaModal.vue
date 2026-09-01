@@ -11,30 +11,30 @@
           <button type="button" class="btn-close btn-close-white shadow-none" @click="close"></button>
         </div>
 
-        <div class="modal-body p-4">
+        <div class="modal-body p-3">
           <!-- Search Form -->
-          <div class="card shadow-sm border-0 mb-4 bg-light-subtle">
-            <div class="card-body p-3">
+          <div class="card shadow-sm border-0 mb-3 bg-light-subtle">
+            <div class="card-body p-2 px-3">
               <div class="row g-2 align-items-end">
                 <div class="col-md-3">
-                  <label class="form-label small fw-bold text-muted">Cari Berdasarkan</label>
+                  <label class="form-label text-xs fw-bold text-muted mb-1">Cari Berdasarkan</label>
                   <select v-model="searchType" class="form-select form-select-sm">
                     <option value="nokartu">No. Kartu BPJS</option>
                     <option value="nik">NIK KTP</option>
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted">Nomor {{ searchType === 'nokartu' ? 'Kartu' : 'NIK' }}</label>
+                  <label class="form-label text-xs fw-bold text-muted mb-1">Nomor {{ searchType === 'nokartu' ? 'Kartu' : 'NIK' }}</label>
                   <input
                     type="text"
                     v-model="searchQuery"
-                    :placeholder="searchType === 'nokartu' ? 'Masukkan 13 digit No. Kartu...' : 'Masukkan 16 digit NIK...'"
+                    :placeholder="searchType === 'nokartu' ? '13 digit No. Kartu...' : '16 digit NIK...'"
                     class="form-control form-control-sm"
                     @keyup.enter="handleSearch"
                   />
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label small fw-bold text-muted">Tgl. SEP / Pelayanan</label>
+                  <label class="form-label text-xs fw-bold text-muted mb-1">Tgl. SEP / Pelayanan</label>
                   <input
                     type="date"
                     v-model="tglSep"
@@ -57,35 +57,35 @@
           </div>
 
           <!-- Loading State -->
-          <div v-if="loading" class="py-5 text-center">
-            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+          <div v-if="loading" class="py-4 text-center">
+            <div class="spinner-border text-primary mb-2" role="status" style="width: 2.2rem; height: 2.2rem;">
               <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="text-muted fw-semibold">Menghubungkan ke Server BPJS VClaim...</p>
+            <p class="text-muted small fw-semibold">Menghubungkan ke Server BPJS VClaim...</p>
           </div>
 
           <!-- Error Alert State -->
-          <div v-else-if="errorMessage" class="alert alert-danger shadow-sm border-0 rounded-3 d-flex align-items-center gap-3">
-            <i class="fas fa-exclamation-triangle fs-2 text-danger"></i>
+          <div v-else-if="errorMessage" class="alert alert-danger shadow-sm border-0 rounded-3 d-flex align-items-center gap-3 p-3 mb-0">
+            <i class="fas fa-exclamation-triangle fs-4 text-danger"></i>
             <div>
-              <h6 class="fw-bold mb-1">Pemeriksaan Kepesertaan Gagal</h6>
-              <p class="mb-0 small text-secondary">{{ errorMessage }}</p>
+              <h6 class="fw-bold mb-0 small">Pemeriksaan Kepesertaan Gagal</h6>
+              <p class="mb-0 text-xs text-secondary">{{ errorMessage }}</p>
             </div>
           </div>
 
           <!-- Result Content -->
           <div v-else-if="peserta" class="fade-in">
             <!-- Header Result Card -->
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" :class="isAktif ? 'bg-success-gradient' : 'bg-danger-gradient'">
-              <div class="card-body p-4 text-white">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-3" :class="isAktif ? 'bg-success-gradient' : 'bg-danger-gradient'">
+              <div class="card-body p-3 text-white">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                   <div>
-                    <span class="badge bg-white text-dark fw-bold mb-2 shadow-sm px-3 py-1 rounded-pill" style="font-size: 0.75rem;">
+                    <span class="badge bg-white text-dark fw-bold mb-1 shadow-sm px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
                       <i class="fas fa-user me-1 text-primary"></i> {{ peserta.jenisPeserta?.keterangan || 'Peserta BPJS' }}
                     </span>
-                    <h3 class="fw-bold mb-1 text-white">{{ peserta.nama }}</h3>
-                    <div class="d-flex gap-3 text-white-50 small flex-wrap">
-                      <span><i class="fas fa-credit-card me-1"></i> No. Kartu: <strong>{{ peserta.noKartu }}</strong></span>
+                    <h5 class="fw-bold mb-1 text-white">{{ peserta.nama }}</h5>
+                    <div class="d-flex gap-3 text-white-50 text-xs flex-wrap">
+                      <span><i class="fas fa-credit-card me-1"></i> Kartu: <strong>{{ peserta.noKartu }}</strong></span>
                       <span><i class="fas fa-id-card me-1"></i> NIK: <strong>{{ peserta.nik }}</strong></span>
                       <span><i class="fas fa-hospital-user me-1"></i> RM: <strong>{{ peserta.mr?.noMR || '-' }}</strong></span>
                     </div>
@@ -94,11 +94,11 @@
                   <!-- Status Badge Pill -->
                   <div class="text-end">
                     <div :class="['badge-status-pill', isAktif ? 'pill-aktif' : 'pill-nonaktif']">
-                      <i :class="isAktif ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1 fs-6"></i>
+                      <i :class="isAktif ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1" style="font-size: 0.75rem;"></i>
                       {{ peserta.statusPeserta?.keterangan?.toUpperCase() || 'STATUS UNKNOWN' }}
                     </div>
-                    <small class="d-block text-white-50 mt-1" style="font-size: 0.7rem;">
-                      Mulai Terdaftar: {{ formatDate(peserta.tglTMT) }}
+                    <small class="d-block text-white-50 mt-1" style="font-size: 0.65rem;">
+                      TMT: {{ formatDate(peserta.tglTMT) }}
                     </small>
                   </div>
                 </div>
@@ -106,64 +106,64 @@
             </div>
 
             <!-- Kelas Rawat Compatibility Banner -->
-            <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden" :class="kelasCheck.bgClass">
-              <div class="card-body p-3 d-flex align-items-center gap-3">
+            <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden" :class="kelasCheck.bgClass">
+              <div class="card-body p-2 px-3 d-flex align-items-center gap-3">
                 <div class="icon-circle shadow-sm" :class="kelasCheck.iconBgClass">
-                  <i :class="kelasCheck.icon" class="fs-4"></i>
+                  <i :class="kelasCheck.icon" class="fs-5"></i>
                 </div>
                 <div class="flex-grow-1">
                   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <h6 class="fw-bold mb-0" :class="kelasCheck.textClass">{{ kelasCheck.title }}</h6>
-                    <span class="badge rounded-pill fw-bold" :class="kelasCheck.badgeClass">
+                    <h6 class="fw-bold mb-0 text-sm" :class="kelasCheck.textClass">{{ kelasCheck.title }}</h6>
+                    <span class="badge rounded-pill fw-bold" :class="kelasCheck.badgeClass" style="font-size: 0.7rem;">
                       {{ kelasCheck.badgeText }}
                     </span>
                   </div>
-                  <p class="mb-0 small text-secondary mt-1">{{ kelasCheck.description }}</p>
+                  <p class="mb-0 text-xs text-secondary mt-1">{{ kelasCheck.description }}</p>
                 </div>
               </div>
             </div>
 
             <!-- Grid Details -->
-            <div class="row g-3">
+            <div class="row g-2">
               <!-- Hak Kelas BPJS -->
               <div class="col-md-6">
-                <div class="detail-box p-3 rounded-3 bg-white border shadow-sm">
-                  <div class="text-muted small fw-bold text-uppercase mb-1">
+                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-layer-group text-primary me-1"></i> Hak Kelas BPJS
                   </div>
-                  <div class="fs-5 fw-bold text-dark">
+                  <div class="fw-bold text-dark text-sm">
                     {{ peserta.hakKelas?.keterangan || '-' }}
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 0.75rem;">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 0.7rem;">
                       Kode: {{ peserta.hakKelas?.kode || '-' }}
                     </span>
                   </div>
-                  <div class="small text-muted mt-1">Sesuai data kepesertaan terdaftar BPJS</div>
+                  <div class="text-xs text-muted mt-0.5">Sesuai data kepesertaan terdaftar BPJS</div>
                 </div>
               </div>
 
               <!-- Kelas SEP / SIMRS (If Provided) -->
               <div class="col-md-6">
-                <div class="detail-box p-3 rounded-3 bg-white border shadow-sm">
-                  <div class="text-muted small fw-bold text-uppercase mb-1">
+                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-procedures text-primary me-1"></i> Kelas Rawat di SEP / SIMRS
                   </div>
-                  <div class="fs-5 fw-bold text-dark">
+                  <div class="fw-bold text-dark text-sm">
                     {{ sepKlsText }}
                   </div>
-                  <div class="small text-muted mt-1">Kelas yang diinputkan untuk perlayanan ini</div>
+                  <div class="text-xs text-muted mt-0.5">Kelas yang diinputkan untuk pelayanan ini</div>
                 </div>
               </div>
 
               <!-- Faskes 1 -->
               <div class="col-md-6">
-                <div class="detail-box p-3 rounded-3 bg-white border shadow-sm">
-                  <div class="text-muted small fw-bold text-uppercase mb-1">
+                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-clinic-medical text-success me-1"></i> Faskes Tingkat 1 (FKTP)
                   </div>
-                  <div class="fw-bold text-dark">
+                  <div class="fw-bold text-dark text-sm">
                     {{ peserta.provUmum?.nmProvider || '-' }}
                   </div>
-                  <div class="small text-muted mt-1">
+                  <div class="text-xs text-muted mt-0.5">
                     Kode Faskes: {{ peserta.provUmum?.kdProvider || '-' }}
                   </div>
                 </div>
@@ -171,14 +171,14 @@
 
               <!-- Jenis & Pemberi Kerja -->
               <div class="col-md-6">
-                <div class="detail-box p-3 rounded-3 bg-white border shadow-sm">
-                  <div class="text-muted small fw-bold text-uppercase mb-1">
+                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-building text-warning me-1"></i> Instansi / Pemberi Kerja
                   </div>
-                  <div class="fw-bold text-dark">
+                  <div class="fw-bold text-dark text-sm">
                     {{ peserta.pemberiKerja?.keterangan || 'Tidak Ada / Mandiri' }}
                   </div>
-                  <div class="small text-muted mt-1">
+                  <div class="text-xs text-muted mt-0.5">
                     Jenis: {{ peserta.jenisPeserta?.keterangan || '-' }}
                   </div>
                 </div>
@@ -186,14 +186,14 @@
 
               <!-- Demografi & Umur -->
               <div class="col-md-6">
-                <div class="detail-box p-3 rounded-3 bg-white border shadow-sm">
-                  <div class="text-muted small fw-bold text-uppercase mb-1">
+                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-user-clock text-info me-1"></i> Tgl Lahir & Umur
                   </div>
-                  <div class="fw-bold text-dark">
+                  <div class="fw-bold text-dark text-sm">
                     {{ formatDate(peserta.tglLahir) }} ({{ peserta.sex === 'L' ? 'Laki-laki' : 'Perempuan' }})
                   </div>
-                  <div class="small text-muted mt-1">
+                  <div class="text-xs text-muted mt-0.5">
                     {{ peserta.umur?.umurSaatPelayanan || peserta.umur?.umurSekarang || '-' }}
                   </div>
                 </div>
@@ -201,14 +201,14 @@
 
               <!-- Informasi Tambahan / COB -->
               <div class="col-md-6">
-                <div class="detail-box p-3 rounded-3 bg-white border shadow-sm">
-                  <div class="text-muted small fw-bold text-uppercase mb-1">
+                <div class="detail-box p-2 px-3 rounded-3 bg-white border shadow-sm">
+                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-shield-alt text-danger me-1"></i> COB & Kontak
                   </div>
-                  <div class="fw-bold text-dark">
+                  <div class="fw-bold text-dark text-sm">
                     COB: {{ peserta.cob?.nmAsuransi ? peserta.cob.nmAsuransi : 'Tidak Ada' }}
                   </div>
-                  <div class="small text-muted mt-1">
+                  <div class="text-xs text-muted mt-0.5">
                     No. Telp: {{ peserta.mr?.noTelepon || '-' }}
                   </div>
                 </div>
@@ -218,8 +218,8 @@
         </div>
 
         <!-- Footer -->
-        <div class="modal-footer bg-light border-0 py-3">
-          <button type="button" class="btn btn-secondary rounded-pill px-4" @click="close">Tutup</button>
+        <div class="modal-footer bg-light border-0 py-2 px-3">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" @click="close">Tutup</button>
         </div>
       </div>
     </div>

@@ -521,13 +521,14 @@ onMounted(() => {
   color: #475569;
   font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  padding: 1rem 1.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0.85rem;
 }
 
 .custom-table tbody td {
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
 }
 
 .badge-sep {
@@ -535,9 +536,9 @@ onMounted(() => {
   color: #334155;
   font-family: 'Roboto Mono', monospace;
   font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.5rem;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.375rem;
   border: 1px solid #e2e8f0;
   display: inline-block;
 }
@@ -545,10 +546,11 @@ onMounted(() => {
 .small-title {
   font-weight: 600;
   color: #334155;
+  font-size: 0.83rem;
 }
 
 .text-dpjp {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -557,9 +559,9 @@ onMounted(() => {
 
 .badge-status {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 2rem;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -576,31 +578,33 @@ onMounted(() => {
 
 /* Form Controls */
 .form-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #475569;
+  margin-bottom: 0.25rem;
 }
 
 .form-control, .form-select {
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
-  padding: 0.625rem 1rem;
-  font-size: 0.95rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
 }
 
 .form-control:focus, .form-select:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .page-link {
   color: #64748b;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .page-item.active .page-link {
@@ -609,26 +613,27 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .sep-container { padding: 1rem; }
+  .sep-container { padding: 0.5rem; }
   .header-content { text-align: center; }
   .page-title { justify-content: center; }
 }
 
 /* Glass Buttons */
 .btn-icon-glass {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
     transition: all 0.2s;
     background: transparent;
 }
 
 .btn-icon-glass:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .btn-outline-info.btn-icon-glass {
