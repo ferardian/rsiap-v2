@@ -1,24 +1,24 @@
 <template>
   <div class="modal fade show d-block" tabindex="-1" @click.self="close">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg modal-glass">
+      <div class="modal-content border-0 shadow-lg modal-white">
         <!-- Modal Header -->
-        <div class="modal-header bg-gradient-indigo text-white py-2.5 px-3 border-0">
-          <h6 class="modal-title fw-bold d-flex align-items-center gap-2 text-white mb-0">
+        <div class="modal-header bg-white py-2.5 px-3 border-bottom">
+          <h6 class="modal-title fw-bold d-flex align-items-center gap-2 text-slate-800 mb-0">
             <div class="icon-head-bg">
-              <i class="fas fa-id-card"></i>
+              <i class="fas fa-id-card text-primary"></i>
             </div>
             <span>Cek Kepesertaan BPJS Kesehatan</span>
           </h6>
-          <span class="badge bg-white-20 text-white rounded-pill px-2 py-1 text-xs fw-normal ms-auto me-2">
-            <i class="fas fa-circle text-emerald me-1 animate-pulse"></i> VClaim 2.0
+          <span class="badge bg-slate-100 text-slate-600 rounded-pill px-2.5 py-1 text-xs fw-medium ms-auto me-2 border">
+            <i class="fas fa-circle text-success me-1 animate-pulse" style="font-size: 0.55rem;"></i> VClaim 2.0
           </span>
-          <button type="button" class="btn-close btn-close-white shadow-none" @click="close"></button>
+          <button type="button" class="btn-close shadow-none" @click="close"></button>
         </div>
 
-        <div class="modal-body p-3">
+        <div class="modal-body p-3 bg-slate-50">
           <!-- Search Form -->
-          <div class="card shadow-sm border-0 mb-3 search-card">
+          <div class="card shadow-xs border mb-3 bg-white rounded-3">
             <div class="card-body p-2 px-3">
               <div class="row g-2 align-items-end">
                 <div class="col-md-3">
@@ -48,7 +48,7 @@
                 </div>
                 <div class="col-md-2">
                   <button
-                    class="btn btn-indigo btn-sm w-100 fw-bold d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                    class="btn btn-primary btn-sm w-100 fw-bold d-flex align-items-center justify-content-center gap-1 shadow-xs"
                     :disabled="loading"
                     @click="handleSearch"
                   >
@@ -63,14 +63,14 @@
 
           <!-- Loading State -->
           <div v-if="loading" class="py-4 text-center">
-            <div class="spinner-border text-indigo mb-2" role="status" style="width: 2.2rem; height: 2.2rem;">
+            <div class="spinner-border text-primary mb-2" role="status" style="width: 2.2rem; height: 2.2rem;">
               <span class="visually-hidden">Loading...</span>
             </div>
             <p class="text-slate-600 small fw-semibold">Menghubungkan ke Server BPJS VClaim...</p>
           </div>
 
           <!-- Error Alert State -->
-          <div v-else-if="errorMessage" class="alert alert-danger shadow-sm border-0 rounded-3 d-flex align-items-center gap-3 p-3 mb-0">
+          <div v-else-if="errorMessage" class="alert alert-danger shadow-xs border border-danger-subtle rounded-3 d-flex align-items-center gap-3 p-3 mb-0">
             <i class="fas fa-exclamation-triangle fs-4 text-danger"></i>
             <div>
               <h6 class="fw-bold mb-0 small">Pemeriksaan Kepesertaan Gagal</h6>
@@ -80,29 +80,29 @@
 
           <!-- Result Content -->
           <div v-else-if="peserta" class="fade-in">
-            <!-- Header Result Card -->
-            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-3" :class="isAktif ? 'bg-emerald-gradient' : 'bg-rose-gradient'">
-              <div class="card-body p-3 text-white">
+            <!-- Header Result Card (Clean White Tone) -->
+            <div class="card border shadow-xs rounded-3 overflow-hidden mb-3 bg-white">
+              <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                   <div>
-                    <span class="badge bg-glass-pill text-white fw-semibold mb-1 px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
-                      <i class="fas fa-user-tag me-1 text-amber"></i> {{ peserta.jenisPeserta?.keterangan || 'Peserta BPJS' }}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-bold mb-1 px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
+                      <i class="fas fa-user-tag me-1"></i> {{ peserta.jenisPeserta?.keterangan || 'Peserta BPJS' }}
                     </span>
-                    <h5 class="fw-extrabold mb-1 text-white letter-spacing-tight">{{ peserta.nama }}</h5>
-                    <div class="d-flex gap-2.5 text-white-80 text-xs flex-wrap mt-2">
-                      <span class="badge-glass-item"><i class="fas fa-credit-card me-1 opacity-75"></i> Kartu: <strong>{{ peserta.noKartu }}</strong></span>
-                      <span class="badge-glass-item"><i class="fas fa-id-card me-1 opacity-75"></i> NIK: <strong>{{ peserta.nik }}</strong></span>
-                      <span class="badge-glass-item"><i class="fas fa-hospital-user me-1 opacity-75"></i> RM: <strong>{{ peserta.mr?.noMR || '-' }}</strong></span>
+                    <h5 class="fw-bold mb-1 text-slate-900 letter-spacing-tight">{{ peserta.nama }}</h5>
+                    <div class="d-flex gap-2 text-slate-600 text-xs flex-wrap mt-2">
+                      <span class="badge-white-item"><i class="fas fa-credit-card me-1 text-primary"></i> Kartu: <strong>{{ peserta.noKartu }}</strong></span>
+                      <span class="badge-white-item"><i class="fas fa-id-card me-1 text-primary"></i> NIK: <strong>{{ peserta.nik }}</strong></span>
+                      <span class="badge-white-item"><i class="fas fa-hospital-user me-1 text-primary"></i> RM: <strong>{{ peserta.mr?.noMR || '-' }}</strong></span>
                     </div>
                   </div>
 
                   <!-- Status Badge Pill -->
                   <div class="text-end">
-                    <div :class="['badge-status-pill', isAktif ? 'pill-aktif' : 'pill-nonaktif']">
+                    <div :class="['badge-status-pill', isAktif ? 'pill-aktif-white' : 'pill-nonaktif-white']">
                       <i :class="isAktif ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="me-1" style="font-size: 0.75rem;"></i>
                       {{ peserta.statusPeserta?.keterangan?.toUpperCase() || 'STATUS UNKNOWN' }}
                     </div>
-                    <small class="d-block text-white-75 mt-1" style="font-size: 0.65rem;">
+                    <small class="d-block text-slate-500 mt-1" style="font-size: 0.65rem;">
                       TMT: {{ formatDate(peserta.tglTMT) }}
                     </small>
                   </div>
@@ -111,9 +111,9 @@
             </div>
 
             <!-- Kelas Rawat Compatibility Banner -->
-            <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden banner-compat" :class="kelasCheck.bgClass">
+            <div class="card border shadow-xs rounded-3 mb-3 overflow-hidden banner-compat" :class="kelasCheck.bgClass">
               <div class="card-body p-2 px-3 d-flex align-items-center gap-3">
-                <div class="icon-circle shadow-sm" :class="kelasCheck.iconBgClass">
+                <div class="icon-circle shadow-xs" :class="kelasCheck.iconBgClass">
                   <i :class="kelasCheck.icon" class="fs-5"></i>
                 </div>
                 <div class="flex-grow-1">
@@ -128,47 +128,47 @@
               </div>
             </div>
 
-            <!-- Grid Details -->
+            <!-- Grid Details (Clean White Tone) -->
             <div class="row g-2">
               <!-- Hak Kelas BPJS -->
               <div class="col-md-6">
-                <div class="detail-box box-indigo p-2 px-3 rounded-3 bg-white shadow-sm">
-                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-layer-group text-indigo me-1"></i> Hak Kelas BPJS
+                <div class="detail-box box-primary p-2.5 px-3 rounded-3 bg-white border shadow-xs">
+                  <div class="text-slate-500 text-xs fw-bold text-uppercase mb-1">
+                    <i class="fas fa-layer-group text-primary me-1"></i> Hak Kelas BPJS
                   </div>
-                  <div class="fw-bold text-dark text-sm">
+                  <div class="fw-bold text-slate-900 text-sm">
                     {{ peserta.hakKelas?.keterangan || '-' }}
-                    <span class="badge bg-indigo-subtle text-indigo border border-indigo-subtle ms-2" style="font-size: 0.7rem;">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 0.7rem;">
                       Kode: {{ peserta.hakKelas?.kode || '-' }}
                     </span>
                   </div>
-                  <div class="text-xs text-muted mt-0.5">Sesuai data kepesertaan terdaftar BPJS</div>
+                  <div class="text-xs text-slate-500 mt-0.5">Sesuai data kepesertaan terdaftar BPJS</div>
                 </div>
               </div>
 
               <!-- Kelas SEP / SIMRS (If Provided) -->
               <div class="col-md-6">
-                <div class="detail-box box-cyan p-2 px-3 rounded-3 bg-white shadow-sm">
-                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
+                <div class="detail-box box-cyan p-2.5 px-3 rounded-3 bg-white border shadow-xs">
+                  <div class="text-slate-500 text-xs fw-bold text-uppercase mb-1">
                     <i class="fas fa-procedures text-cyan me-1"></i> Kelas Rawat di SEP / SIMRS
                   </div>
-                  <div class="fw-bold text-dark text-sm">
+                  <div class="fw-bold text-slate-900 text-sm">
                     {{ sepKlsText }}
                   </div>
-                  <div class="text-xs text-muted mt-0.5">Kelas yang diinputkan untuk pelayanan ini</div>
+                  <div class="text-xs text-slate-500 mt-0.5">Kelas yang diinputkan untuk pelayanan ini</div>
                 </div>
               </div>
 
               <!-- Faskes 1 -->
               <div class="col-md-6">
-                <div class="detail-box box-emerald p-2 px-3 rounded-3 bg-white shadow-sm">
-                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-clinic-medical text-emerald me-1"></i> Faskes Tingkat 1 (FKTP)
+                <div class="detail-box box-success p-2.5 px-3 rounded-3 bg-white border shadow-xs">
+                  <div class="text-slate-500 text-xs fw-bold text-uppercase mb-1">
+                    <i class="fas fa-clinic-medical text-success me-1"></i> Faskes Tingkat 1 (FKTP)
                   </div>
-                  <div class="fw-bold text-dark text-sm">
+                  <div class="fw-bold text-slate-900 text-sm">
                     {{ peserta.provUmum?.nmProvider || '-' }}
                   </div>
-                  <div class="text-xs text-muted mt-0.5">
+                  <div class="text-xs text-slate-500 mt-0.5">
                     Kode Faskes: {{ peserta.provUmum?.kdProvider || '-' }}
                   </div>
                 </div>
@@ -176,14 +176,14 @@
 
               <!-- Jenis & Pemberi Kerja -->
               <div class="col-md-6">
-                <div class="detail-box box-amber p-2 px-3 rounded-3 bg-white shadow-sm">
-                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-building text-amber me-1"></i> Instansi / Pemberi Kerja
+                <div class="detail-box box-warning p-2.5 px-3 rounded-3 bg-white border shadow-xs">
+                  <div class="text-slate-500 text-xs fw-bold text-uppercase mb-1">
+                    <i class="fas fa-building text-warning me-1"></i> Instansi / Pemberi Kerja
                   </div>
-                  <div class="fw-bold text-dark text-sm">
+                  <div class="fw-bold text-slate-900 text-sm">
                     {{ peserta.pemberiKerja?.keterangan || 'Tidak Ada / Mandiri' }}
                   </div>
-                  <div class="text-xs text-muted mt-0.5">
+                  <div class="text-xs text-slate-500 mt-0.5">
                     Jenis: {{ peserta.jenisPeserta?.keterangan || '-' }}
                   </div>
                 </div>
@@ -191,14 +191,14 @@
 
               <!-- Demografi & Umur -->
               <div class="col-md-6">
-                <div class="detail-box box-sky p-2 px-3 rounded-3 bg-white shadow-sm">
-                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-user-clock text-sky me-1"></i> Tgl Lahir & Umur
+                <div class="detail-box box-info p-2.5 px-3 rounded-3 bg-white border shadow-xs">
+                  <div class="text-slate-500 text-xs fw-bold text-uppercase mb-1">
+                    <i class="fas fa-user-clock text-info me-1"></i> Tgl Lahir & Umur
                   </div>
-                  <div class="fw-bold text-dark text-sm">
+                  <div class="fw-bold text-slate-900 text-sm">
                     {{ formatDate(peserta.tglLahir) }} ({{ peserta.sex === 'L' ? 'Laki-laki' : 'Perempuan' }})
                   </div>
-                  <div class="text-xs text-muted mt-0.5">
+                  <div class="text-xs text-slate-500 mt-0.5">
                     {{ peserta.umur?.umurSaatPelayanan || peserta.umur?.umurSekarang || '-' }}
                   </div>
                 </div>
@@ -206,14 +206,14 @@
 
               <!-- Informasi Tambahan / COB -->
               <div class="col-md-6">
-                <div class="detail-box box-rose p-2 px-3 rounded-3 bg-white shadow-sm">
-                  <div class="text-muted text-xs fw-bold text-uppercase mb-1">
-                    <i class="fas fa-shield-alt text-rose me-1"></i> COB & Kontak
+                <div class="detail-box box-danger p-2.5 px-3 rounded-3 bg-white border shadow-xs">
+                  <div class="text-slate-500 text-xs fw-bold text-uppercase mb-1">
+                    <i class="fas fa-shield-alt text-danger me-1"></i> COB & Kontak
                   </div>
-                  <div class="fw-bold text-dark text-sm">
+                  <div class="fw-bold text-slate-900 text-sm">
                     COB: {{ peserta.cob?.nmAsuransi ? peserta.cob.nmAsuransi : 'Tidak Ada' }}
                   </div>
-                  <div class="text-xs text-muted mt-0.5">
+                  <div class="text-xs text-slate-500 mt-0.5">
                     No. Telp: {{ peserta.mr?.noTelepon || '-' }}
                   </div>
                 </div>
@@ -223,9 +223,9 @@
         </div>
 
         <!-- Footer -->
-        <div class="modal-footer bg-light-subtle border-0 py-2 px-3 justify-content-end">
-          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fw-semibold" @click="close">
-            <i class="fas fa-times me-1"></i> Tutup
+        <div class="modal-footer bg-white border-top py-2 px-3 justify-content-end">
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-4 fw-semibold shadow-xs" @click="close">
+            <i class="fas fa-times me-1 text-slate-500"></i> Tutup
           </button>
         </div>
       </div>
@@ -316,7 +316,7 @@ const kelasCheck = computed(() => {
     return {
       title: 'Kelas Rawat Sesuai (Match)',
       badgeText: 'SESUAI ✅',
-      badgeClass: 'bg-success text-white shadow-sm',
+      badgeClass: 'bg-success text-white shadow-xs',
       bgClass: 'bg-success-subtle border-success-subtle',
       textClass: 'text-success-emphasis',
       icon: 'fas fa-check-circle',
@@ -333,7 +333,7 @@ const kelasCheck = computed(() => {
     return {
       title: 'Pasien Naik Kelas Rawat',
       badgeText: 'NAIK KELAS ⚠️',
-      badgeClass: 'bg-warning text-dark shadow-sm',
+      badgeClass: 'bg-warning text-dark shadow-xs',
       bgClass: 'bg-warning-subtle border-warning-subtle',
       textClass: 'text-warning-emphasis',
       icon: 'fas fa-arrow-alt-circle-up',
@@ -345,7 +345,7 @@ const kelasCheck = computed(() => {
   return {
     title: 'Perbedaan Kelas Rawat Detected',
     badgeText: 'BEDA KELAS ❌',
-    badgeClass: 'bg-danger text-white shadow-sm',
+    badgeClass: 'bg-danger text-white shadow-xs',
     bgClass: 'bg-danger-subtle border-danger-subtle',
     textClass: 'text-danger-emphasis',
     icon: 'fas fa-exclamation-circle',
@@ -406,20 +406,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.modal-glass {
+.modal-white {
+  background: #ffffff;
   border-radius: 1.25rem;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.15) !important;
 }
 
-.bg-gradient-indigo {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+.bg-slate-50 {
+  background-color: #f8fafc;
 }
 
 .icon-head-bg {
   width: 28px;
   height: 28px;
-  background: rgba(255, 255, 255, 0.15);
+  background: #eff6ff;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -427,90 +428,52 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-.bg-white-20 {
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(6px);
-}
-
-.text-emerald { color: #34d399 !important; }
-.text-indigo { color: #4f46e5 !important; }
+.text-slate-900 { color: #0f172a !important; }
+.text-slate-800 { color: #1e293b !important; }
+.text-slate-600 { color: #475569 !important; }
+.text-slate-500 { color: #64748b !important; }
 .text-cyan { color: #0891b2 !important; }
-.text-amber { color: #f59e0b !important; }
-.text-sky { color: #0284c7 !important; }
-.text-rose { color: #f43f5e !important; }
-
-.search-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 0.75rem;
-}
 
 .custom-input {
   border-radius: 0.5rem;
   border: 1px solid #cbd5e1;
   font-size: 0.85rem;
+  background-color: #ffffff;
 }
 
 .custom-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-.btn-indigo {
-  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.btn-indigo:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
-  color: white;
-  transform: translateY(-1px);
-}
-
-.bg-emerald-gradient {
-  background: linear-gradient(135deg, #059669 0%, #10b981 60%, #0d9488 100%);
-}
-
-.bg-rose-gradient {
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
-}
-
-.bg-glass-pill {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.badge-glass-item {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
+.badge-white-item {
+  background: #f8fafc;
   padding: 0.2rem 0.6rem;
   border-radius: 0.375rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #e2e8f0;
+  color: #334155;
 }
 
 .badge-status-pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.3rem 0.8rem;
+  padding: 0.3rem 0.85rem;
   border-radius: 2rem;
   font-weight: 800;
   font-size: 0.78rem;
   letter-spacing: 0.04em;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
-.pill-aktif {
-  background: #ffffff;
-  color: #047857;
+.pill-aktif-white {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
-.pill-nonaktif {
-  background: #ffffff;
-  color: #b91c1c;
+.pill-nonaktif-white {
+  background: #ffe4e6;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
 
 .banner-compat {
@@ -528,24 +491,21 @@ onMounted(() => {
 }
 
 .detail-box {
-  border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
+  background-color: #ffffff;
 }
 
 .detail-box:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.06) !important;
 }
 
-.box-indigo { border-left: 4px solid #4f46e5 !important; }
-.box-cyan { border-left: 4px solid #0891b2 !important; }
-.box-emerald { border-left: 4px solid #10b981 !important; }
-.box-amber { border-left: 4px solid #f59e0b !important; }
-.box-sky { border-left: 4px solid #0284c7 !important; }
-.box-rose { border-left: 4px solid #f43f5e !important; }
-
-.bg-indigo-subtle { background-color: #e0e7ff; }
-.border-indigo-subtle { border-color: #c7d2fe !important; }
+.box-primary { border-left: 3.5px solid #2563eb !important; }
+.box-cyan { border-left: 3.5px solid #0891b2 !important; }
+.box-success { border-left: 3.5px solid #16a34a !important; }
+.box-warning { border-left: 3.5px solid #d97706 !important; }
+.box-info { border-left: 3.5px solid #0284c7 !important; }
+.box-danger { border-left: 3.5px solid #e11d48 !important; }
 
 .fade-in {
   animation: fadeIn 0.25s ease-in-out;
