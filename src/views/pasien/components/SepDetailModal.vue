@@ -196,6 +196,9 @@
         </div>
 
         <div class="modal-footer bg-light border-0 py-2.5 px-3 d-flex align-items-center justify-content-end gap-2">
+          <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3 shadow-xs" style="width: auto !important;" @click="openWsModal" title="Cek Detail SEP Realtime dari WebService BPJS VClaim">
+            <i class="fas fa-globe me-1"></i> Cek WS BPJS
+          </button>
           <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4 shadow-xs" style="width: auto !important;" @click="close">Tutup</button>
           <button type="button" class="btn btn-sm btn-primary rounded-pill px-4 shadow-xs" style="width: auto !important;" @click="handlePrint">
             <i class="fas fa-print me-1"></i> Cetak SEP
@@ -217,7 +220,8 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'open-ws'])
+const openWsModal = () => emit('open-ws', props.sepData.no_sep)
 
 const activeTab = ref('sep')
 const tabs = [

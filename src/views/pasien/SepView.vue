@@ -177,9 +177,16 @@
                     <i class="fas fa-id-card"></i>
                   </button>
                   <button 
+                    class="btn btn-sm btn-icon-glass btn-outline-teal text-teal-600 border-teal-200 hover:bg-teal-50"
+                    @click="openCekSepWsModal(item.no_sep)"
+                    title="Cek Data SEP dari WS BPJS VClaim"
+                  >
+                    <i class="fas fa-globe"></i>
+                  </button>
+                  <button 
                     class="btn btn-sm btn-icon-glass btn-outline-primary"
                     @click="showDetail(item)"
-                    title="Detail SEP"
+                    title="Detail SEP SIMRS"
                   >
                     <i class="fas fa-eye"></i>
                   </button>
@@ -200,42 +207,53 @@
                 </div>
               </td>
             </tr>
+            <tr v-if="sepList.length === 0">
+              <td colspan="6" class="text-center py-5">
+                <div class="empty-state">
+                  <i class="fas fa-folder-open text-muted opacity-50 mb-3" style="font-size: 2.5rem;"></i>
+                  <h6 class="fw-bold text-dark mb-1">Tidak Ada Data SEP</h6>
+                  <p class="text-muted text-xs mb-0">Coba atur ulang tanggal atau filter pencarian Anda</p>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Pagination Footer -->
-      <div class="card-footer bg-white border-top-0 py-3" v-if="pagination.total > 0">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div class="pagination-info">
-            Menampilkan <strong>{{ pagination.from }}</strong> - <strong>{{ pagination.to }}</strong> dari <strong>{{ pagination.total }}</strong> SEP
-          </div>
-          <nav aria-label="Page navigation">
-            <ul class="pagination pagination-sm m-0 gap-1">
-              <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-                <button class="page-link rounded-circle border-0 shadow-none" @click="changePage(pagination.current_page - 1)">
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-              </li>
-              <li class="page-item active">
-                <span class="page-link rounded-circle border-0">{{ pagination.current_page }}</span>
-              </li>
-              <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
-                <button class="page-link rounded-circle border-0 shadow-none" @click="changePage(pagination.current_page + 1)">
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-              </li>
-            </ul>
-          </nav>
+      <!-- Footer Pagination -->
+      <div class="card-footer bg-white border-top py-2 px-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-2" v-if="pagination.total > 0">
+        <div class="text-xs text-muted">
+          Menampilkan <span class="fw-bold text-dark">{{ pagination.from }}</span> - <span class="fw-bold text-dark">{{ pagination.to }}</span> dari <span class="fw-bold text-dark">{{ pagination.total }}</span> data SEP
         </div>
+        <ul class="pagination pagination-sm m-0">
+          <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+            <button class="page-link" @click="changePage(pagination.current_page - 1)" :disabled="pagination.current_page === 1">
+              <i class="fas fa-chevron-left text-xs"></i>
+            </button>
+          </li>
+          <li 
+            v-for="page in getPaginationPages()" 
+            :key="page" 
+            class="page-item"
+            :class="{ active: pagination.current_page === page, disabled: page === '...' }"
+          >
+            <button class="page-link" @click="page !== '...' && changePage(page)">{{ page }}</button>
+          </li>
+          <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+            <button class="page-link" @click="changePage(pagination.current_page + 1)" :disabled="pagination.current_page === pagination.last_page">
+              <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+          </li>
+        </ul>
       </div>
     </div>
 
-    <!-- Detail Modal -->
-    <SepDetailModal 
-      v-if="showModal"
-      :sepData="selectedSep"
-      @close="showModal = false"
+    <!-- Modals -->
+    <SepDetailModal
+        v-if="showModal"
+        :sepData="selectedSep"
+        @close="showModal = false"
+        @open-ws="handleOpenWsFromDetail"
     />
 
     <!-- Generate/Edit Modal -->
@@ -255,6 +273,13 @@
       :sepKlsRawat="selectedCekPesertaData.sepKlsRawat"
       @close="showCekPesertaModal = false"
     />
+
+    <!-- Cek SEP WS BPJS Modal -->
+    <CekSepWsModal
+      v-if="showCekSepWsModal"
+      :noSep="selectedNoSepWs"
+      @close="showCekSepWsModal = false"
+    />
   </div>
 </template>
 
@@ -266,6 +291,7 @@ import bpjsVclaimService from '@/services/bpjsVclaimService'
 import SepDetailModal from './components/SepDetailModal.vue'
 import GenerateSepModal from './components/GenerateSepModal.vue'
 import CekPesertaModal from './components/CekPesertaModal.vue'
+import CekSepWsModal from './components/CekSepWsModal.vue'
 import { debounce } from 'lodash'
 import Swal from 'sweetalert2'
 
@@ -275,6 +301,8 @@ const sepList = ref([])
 const showModal = ref(false)
 const showEditModal = ref(false)
 const showCekPesertaModal = ref(false)
+const showCekSepWsModal = ref(false)
+const selectedNoSepWs = ref('')
 const selectedSep = ref(null)
 const selectedRegistration = ref(null)
 const doctorOptions = ref([])
@@ -364,6 +392,17 @@ const openCekPesertaModal = () => {
   selectedCekPesertaData.tglSepDate = new Date().toISOString().slice(0, 10)
   selectedCekPesertaData.sepKlsRawat = ''
   showCekPesertaModal.value = true
+}
+
+const openCekSepWsModal = (noSep) => {
+  if (!noSep) return
+  selectedNoSepWs.value = noSep
+  showCekSepWsModal.value = true
+}
+
+const handleOpenWsFromDetail = (noSep) => {
+  showModal.value = false
+  openCekSepWsModal(noSep)
 }
 
 const checkPesertaRow = (item) => {
