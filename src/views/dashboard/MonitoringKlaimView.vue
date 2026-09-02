@@ -271,17 +271,75 @@
           </div>
         </div>
 
-        <div v-if="filters.isYearlyMode" class="col-lg-8 mb-4">
+        <!-- Monthly Status Timeline Chart & Table (Only in Yearly mode) -->
+        <div v-if="filters.isYearlyMode" class="col-lg-12 mb-4">
           <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <h5 class="card-title-sm mb-4">Tren Status Klaim Bulanan {{ filters.tahun }}</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+              <h5 class="card-title-sm mb-0">Tren Status Klaim Bulanan {{ filters.tahun }}</h5>
+              <div v-if="statusTimelineSeries.length > 0" class="d-flex align-items-center gap-2">
+                <button 
+                  type="button" 
+                  class="btn btn-sm shadow-xs" 
+                  :class="showStatusTable ? 'btn-primary' : 'btn-outline-secondary'"
+                  style="border-radius: 20px; font-size: 0.75rem; font-weight: 600;"
+                  @click="showStatusTable = !showStatusTable"
+                >
+                  <i class="fas me-1" :class="showStatusTable ? 'fa-table' : 'fa-table-list'"></i>
+                  {{ showStatusTable ? 'Tabel Angka' : 'Tampilkan Tabel' }}
+                </button>
+              </div>
+            </div>
+
             <div v-if="statusTimelineSeries.length > 0" style="height: 300px;">
               <apexchart type="line" height="100%" :options="statusLineChartOptions" :series="statusTimelineSeries"></apexchart>
             </div>
             <div v-else class="text-center text-muted mt-5">Tidak cukup data</div>
+
+            <!-- Nominal Data Table under Status Chart -->
+            <div v-if="statusTimelineSeries.length > 0" v-show="showStatusTable" class="trend-table-container mt-4 animate__animated animate__fadeIn">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0 text-center custom-trend-table">
+                  <thead class="bg-light">
+                    <tr>
+                      <th class="text-start px-3" style="min-width: 160px;">Status Klaim</th>
+                      <th v-for="(m, idx) in monthsShort" :key="idx" class="text-center" style="min-width: 70px;">
+                        {{ m }}
+                      </th>
+                      <th class="text-end px-3 bg-primary text-white" style="min-width: 120px;">Total {{ filters.tahun }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="s in statusTimelineSeries" :key="s.name">
+                      <td class="text-start fw-bold px-3" :style="{ color: getStatusColor(s.name) }">
+                        <i class="fas fa-circle me-1" :style="{ fontSize: '0.55rem', color: getStatusColor(s.name) }"></i>
+                        {{ s.name }}
+                      </td>
+                      <td v-for="(val, idx) in s.data" :key="s.name + '-' + idx" class="text-center font-monospace text-xs" :class="val > 0 ? 'fw-bold text-dark' : 'text-muted opacity-50'">
+                        {{ val > 0 ? val.toLocaleString('id-ID') : 0 }}
+                      </td>
+                      <td class="text-end fw-bold px-3 font-monospace text-xs" :style="{ color: getStatusColor(s.name), backgroundColor: '#f8fafc' }">
+                        {{ getStatusYearTotal(s.data).toLocaleString('id-ID') }}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="bg-light fw-bold">
+                    <tr>
+                      <td class="text-start px-3 text-dark">Total Berkas</td>
+                      <td v-for="(m, idx) in monthsShort" :key="'tot-month-'+idx" class="text-center font-monospace text-xs text-primary">
+                        {{ getMonthlyStatusTotal(idx).toLocaleString('id-ID') }}
+                      </td>
+                      <td class="text-end px-3 bg-primary text-white font-monospace text-xs">
+                        {{ getGrandStatusTotal().toLocaleString('id-ID') }}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div :class="[filters.isYearlyMode ? 'col-lg-4' : 'col-lg-12']" class="mb-4">
+        <div class="col-lg-12 mb-4">
           <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
             <h5 class="card-title-sm mb-4">Distribusi INA-CBG Teratas</h5>
             <div v-if="donutSeries.length > 0" style="height: 300px; display: flex; align-items: center; justify-content: center;">
@@ -593,6 +651,34 @@ const statusTimelineSeries = computed(() => {
     }
   })
 })
+
+const showStatusTable = ref(true)
+
+const getStatusColor = (statusName) => {
+  if (!statusName) return '#64748b'
+  if (statusName.includes('Tidak Layak')) return '#ef4444'
+  if (statusName.includes('Proses')) return '#f59e0b'
+  if (statusName.includes('Pending')) return '#4f46e5'
+  if (statusName.includes('Klaim') || statusName.includes('Selesai')) return '#10b981'
+  return '#64748b'
+}
+
+const getStatusYearTotal = (dataArr) => {
+  if (!dataArr) return 0
+  return dataArr.reduce((sum, v) => sum + (v || 0), 0)
+}
+
+const getMonthlyStatusTotal = (monthIdx) => {
+  if (!statusTimelineSeries.value) return 0
+  return statusTimelineSeries.value.reduce((sum, s) => sum + (s.data[monthIdx] || 0), 0)
+}
+
+const getGrandStatusTotal = () => {
+  if (!statusTimelineSeries.value) return 0
+  return statusTimelineSeries.value.reduce((sum, s) => {
+    return sum + (s.data ? s.data.reduce((a, b) => a + (b || 0), 0) : 0)
+  }, 0)
+}
 
 const statusLineChartOptions = computed(() => ({
   chart: { 
