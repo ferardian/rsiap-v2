@@ -203,14 +203,33 @@
                   <div v-if="item.tgl_keluar && item.tgl_keluar !== '0000-00-00'">
                     <div class="fw-semibold text-success">{{ formatDateIndo(item.tgl_keluar) }}</div>
                     <div class="small text-muted" style="font-size: 0.75rem;">{{ item.jam_keluar }}</div>
-                    <div v-if="item.stts_pulang && item.stts_pulang !== '-'" class="mt-1">
+                    <div v-if="item.stts_pulang && item.stts_pulang !== '-'" class="mt-1 d-flex flex-column gap-1">
                       <span 
-                        class="badge border"
+                        class="badge border align-self-start"
                         style="font-size: 0.65rem;"
                         :class="getStatusPulangClass(item.stts_pulang)"
                       >
                         {{ item.stts_pulang }}
                       </span>
+                      <!-- Info Surat Kontrol BPJS untuk status selain Pindah Kamar -->
+                      <template v-if="item.stts_pulang !== 'Pindah Kamar'">
+                        <span 
+                          v-if="item.surat_kontrol_bpjs?.status" 
+                          class="badge bg-success-subtle text-success border border-success-subtle align-self-start"
+                          style="font-size: 0.63rem;"
+                          :title="'SKDP BPJS Terbit: ' + item.surat_kontrol_bpjs.no_surat + (item.surat_kontrol_bpjs.tgl_rencana ? ' (Tgl Rencana: ' + item.surat_kontrol_bpjs.tgl_rencana + ')' : '')"
+                        >
+                          <i class="fas fa-file-signature me-1"></i> SKDP Terbit
+                        </span>
+                        <span 
+                          v-else 
+                          class="badge bg-danger-subtle text-danger border border-danger-subtle align-self-start"
+                          style="font-size: 0.63rem;"
+                          title="Surat Kontrol (SKDP) BPJS belum diterbitkan di bridging_surat_kontrol_bpjs"
+                        >
+                          <i class="fas fa-exclamation-triangle me-1"></i> SKDP Belum Terbit
+                        </span>
+                      </template>
                     </div>
                   </div>
                   <div v-else class="text-muted small">—</div>
@@ -452,6 +471,23 @@
                           {{ selectedItem.diagnosa_akhir }}
                         </div>
                         <div v-else class="detail-value text-muted">-</div>
+                    </div>
+                    <div v-if="selectedItem.stts_pulang && selectedItem.stts_pulang !== '-' && selectedItem.stts_pulang !== 'Pindah Kamar'" class="col-md-6">
+                        <label class="detail-label text-muted mb-1">Status Surat Kontrol BPJS (SKDP)</label>
+                        <div v-if="selectedItem.surat_kontrol_bpjs?.status">
+                          <span class="badge bg-success-subtle text-success border border-success-subtle me-2">
+                            <i class="fas fa-check-circle me-1"></i> Terbit
+                          </span>
+                          <span class="fw-bold text-dark">{{ selectedItem.surat_kontrol_bpjs.no_surat }}</span>
+                          <small v-if="selectedItem.surat_kontrol_bpjs.tgl_rencana" class="text-muted d-block mt-1">
+                            Rencana Kontrol: {{ formatDateIndo(selectedItem.surat_kontrol_bpjs.tgl_rencana) }} {{ selectedItem.surat_kontrol_bpjs.nm_dokter_bpjs ? '(' + selectedItem.surat_kontrol_bpjs.nm_dokter_bpjs + ')' : '' }}
+                          </small>
+                        </div>
+                        <div v-else>
+                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                            <i class="fas fa-times-circle me-1"></i> Belum Diterbitkan
+                          </span>
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -2204,6 +2240,9 @@ const formatDataForExport = (data) => {
       'Tgl Keluar': (item.tgl_keluar && item.tgl_keluar !== '0000-00-00') ? `${item.tgl_keluar} ${item.jam_keluar}` : '-',
       'Lama Inap (Hari)': calculateLamaInap(item),
       'Status Pulang': item.stts_pulang || '-',
+      'Surat Kontrol BPJS': (item.stts_pulang && item.stts_pulang !== '-' && item.stts_pulang !== 'Pindah Kamar')
+        ? (item.surat_kontrol_bpjs?.status ? `Terbit (${item.surat_kontrol_bpjs.no_surat})` : 'Belum Diterbitkan')
+        : '-',
       'Diagnosa Awal': item.diagnosa_awal || '-',
       'Diagnosa Akhir': diagAkhirList || item.diagnosa_akhir || '-',
       'Jenis Bayar': item.png_jawab,
