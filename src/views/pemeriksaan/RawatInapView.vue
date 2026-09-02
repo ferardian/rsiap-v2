@@ -217,17 +217,17 @@
                           v-if="item.surat_kontrol_bpjs?.status" 
                           class="badge bg-success-subtle text-success border border-success-subtle align-self-start"
                           style="font-size: 0.63rem;"
-                          :title="'SKDP BPJS Terbit: ' + item.surat_kontrol_bpjs.no_surat + (item.surat_kontrol_bpjs.tgl_rencana ? ' (Tgl Rencana: ' + item.surat_kontrol_bpjs.tgl_rencana + ')' : '')"
+                          :title="'SKU BPJS Terbit: ' + item.surat_kontrol_bpjs.no_surat + (item.surat_kontrol_bpjs.tgl_rencana ? ' (Tgl Rencana: ' + item.surat_kontrol_bpjs.tgl_rencana + ')' : '')"
                         >
-                          <i class="fas fa-file-signature me-1"></i> SKDP Terbit
+                          <i class="fas fa-file-signature me-1"></i> SKU Terbit
                         </span>
                         <span 
                           v-else 
                           class="badge bg-danger-subtle text-danger border border-danger-subtle align-self-start"
                           style="font-size: 0.63rem;"
-                          title="Surat Kontrol (SKDP) BPJS belum diterbitkan di bridging_surat_kontrol_bpjs"
+                          title="Surat Kontrol (SKU) BPJS belum diterbitkan di bridging_surat_kontrol_bpjs"
                         >
-                          <i class="fas fa-exclamation-triangle me-1"></i> SKDP Belum Terbit
+                          <i class="fas fa-exclamation-triangle me-1"></i> SKU Belum Terbit
                         </span>
                       </template>
                     </div>
@@ -473,7 +473,7 @@
                         <div v-else class="detail-value text-muted">-</div>
                     </div>
                     <div v-if="selectedItem.stts_pulang && selectedItem.stts_pulang !== '-' && selectedItem.stts_pulang !== 'Pindah Kamar'" class="col-md-6">
-                        <label class="detail-label text-muted mb-1">Status Surat Kontrol BPJS (SKDP)</label>
+                        <label class="detail-label text-muted mb-1">Status Surat Kontrol BPJS (SKU)</label>
                         <div v-if="selectedItem.surat_kontrol_bpjs?.status">
                           <span class="badge bg-success-subtle text-success border border-success-subtle me-2">
                             <i class="fas fa-check-circle me-1"></i> Terbit
