@@ -362,13 +362,40 @@
           </div>
         </div>
 
-        <div class="col-lg-12 mb-4">
+        <!-- 3-Column Distribution Row: INA-CBG, ICD-10 (Diagnosa), and ICD-9 (Tindakan) -->
+        <div class="col-lg-4 mb-4">
           <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <h5 class="card-title-sm mb-4">Distribusi INA-CBG Teratas</h5>
-            <div v-if="donutSeries.length > 0" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+            <h5 class="card-title-sm mb-4">
+              <i class="fas fa-layer-group text-primary me-2"></i>Distribusi INA-CBG
+            </h5>
+            <div v-if="donutSeries.length > 0" style="height: 280px; display: flex; align-items: center; justify-content: center;">
               <apexchart type="donut" width="100%" :options="donutChartOptions" :series="donutSeries"></apexchart>
             </div>
-            <div v-else class="text-center text-muted mt-5">Tidak cukup data</div>
+            <div v-else class="text-center text-muted py-5">Tidak ada data INA-CBG</div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="card-title-sm mb-4">
+              <i class="fas fa-stethoscope text-info me-2"></i>Top Diagnosa (ICD-10)
+            </h5>
+            <div v-if="icd10DonutSeries.length > 0" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+              <apexchart type="donut" width="100%" :options="icd10DonutChartOptions" :series="icd10DonutSeries"></apexchart>
+            </div>
+            <div v-else class="text-center text-muted py-5">Tidak ada data ICD-10</div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+            <h5 class="card-title-sm mb-4">
+              <i class="fas fa-procedures text-purple me-2"></i>Top Prosedur (ICD-9)
+            </h5>
+            <div v-if="icd9DonutSeries.length > 0" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+              <apexchart type="donut" width="100%" :options="icd9DonutChartOptions" :series="icd9DonutSeries"></apexchart>
+            </div>
+            <div v-else class="text-center text-muted py-5">Tidak ada data ICD-9</div>
           </div>
         </div>
       </div>
@@ -629,7 +656,9 @@ const topInacbg = computed(() => {
   const counts = {}
   claimsData.value.forEach(c => {
     const code = c.Inacbg?.kode || 'Unknown'
-    counts[code] = (counts[code] || 0) + 1
+    if (code && code !== '-') {
+      counts[code] = (counts[code] || 0) + 1
+    }
   })
   return Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
@@ -647,8 +676,72 @@ const donutChartOptions = computed(() => ({
   plotOptions: {
     pie: {
       donut: {
-        size: '70%',
+        size: '68%',
         labels: { show: true, name: { show: true }, value: { show: true, formatter: (val) => val + " Berkas" }, total: { show: true, label: 'Kasus' } }
+      }
+    }
+  }
+}))
+
+// Top ICD-10 Diagnosa
+const topIcd10 = computed(() => {
+  const counts = {}
+  claimsData.value.forEach(c => {
+    const code = c.diagnosa?.kode || c.Inacbg?.kode || 'Unknown'
+    if (code && code !== '-') {
+      counts[code] = (counts[code] || 0) + 1
+    }
+  })
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+})
+
+const icd10DonutSeries = computed(() => topIcd10.value.map(i => i[1]))
+
+const icd10DonutChartOptions = computed(() => ({
+  chart: { type: 'donut', fontFamily: 'Inter, sans-serif' },
+  labels: topIcd10.value.map(i => i[0]),
+  colors: ['#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1'],
+  dataLabels: { enabled: false },
+  legend: { position: 'bottom' },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '68%',
+        labels: { show: true, name: { show: true }, value: { show: true, formatter: (val) => val + " Berkas" }, total: { show: true, label: 'Diagnosa' } }
+      }
+    }
+  }
+}))
+
+// Top ICD-9 Prosedur / Tindakan
+const topIcd9 = computed(() => {
+  const counts = {}
+  claimsData.value.forEach(c => {
+    const code = c.prosedur?.kode
+    if (code && code !== '-' && code !== 'Unknown') {
+      counts[code] = (counts[code] || 0) + 1
+    }
+  })
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+})
+
+const icd9DonutSeries = computed(() => topIcd9.value.map(i => i[1]))
+
+const icd9DonutChartOptions = computed(() => ({
+  chart: { type: 'donut', fontFamily: 'Inter, sans-serif' },
+  labels: topIcd9.value.map(i => i[0]),
+  colors: ['#8b5cf6', '#14b8a6', '#f97316', '#3b82f6', '#e11d48'],
+  dataLabels: { enabled: false },
+  legend: { position: 'bottom' },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '68%',
+        labels: { show: true, name: { show: true }, value: { show: true, formatter: (val) => val + " Berkas" }, total: { show: true, label: 'Tindakan' } }
       }
     }
   }
