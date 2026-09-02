@@ -60,7 +60,7 @@
       <!-- Summary KPI Cards (Pos-pos Waktu Utama) -->
       <div class="row g-3 mb-4">
         <!-- 1. Tunggu Admisi -->
-        <div class="col-6 col-lg-2">
+        <div class="col-6 col-md-4 col-xl">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-info">
             <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">1. Tunggu Admisi</span>
             <div class="d-flex align-items-baseline gap-1">
@@ -77,7 +77,7 @@
         </div>
 
         <!-- 2. Tunggu Anamnesa -->
-        <div class="col-6 col-lg-2">
+        <div class="col-6 col-md-4 col-xl">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-warning">
             <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">2. Tunggu Anamnesa</span>
             <div class="d-flex align-items-baseline gap-1">
@@ -93,10 +93,27 @@
           </div>
         </div>
 
-        <!-- 3. Layanan Dokter -->
-        <div class="col-6 col-lg-2">
+        <!-- 3. Tunggu Dokter -->
+        <div class="col-6 col-md-4 col-xl">
+          <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-indigo">
+            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">3. Tunggu Dokter</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold m-0 text-dark">{{ analytics.overall?.avg_tunggu_dokter || 0 }}</h3>
+              <span class="text-muted small">mnt</span>
+            </div>
+            <small class="text-muted text-xs mt-2 d-block">
+              <i class="fas fa-stethoscope me-1 text-indigo"></i>Task 3 ➔ Task 4
+            </small>
+            <span class="badge mt-2 bg-indigo-subtle text-indigo border-indigo-subtle">
+              Panggil Masuk Poli
+            </span>
+          </div>
+        </div>
+
+        <!-- 4. Layanan Dokter -->
+        <div class="col-6 col-md-4 col-xl">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-primary">
-            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">3. Layanan Dokter</span>
+            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">4. Layanan Dokter</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold m-0 text-dark">{{ analytics.overall?.avg_layanan_dokter || 0 }}</h3>
               <span class="text-muted small">mnt</span>
@@ -110,10 +127,10 @@
           </div>
         </div>
 
-        <!-- 4. Tunggu Farmasi -->
-        <div class="col-6 col-lg-2">
+        <!-- 5. Tunggu Farmasi -->
+        <div class="col-6 col-md-4 col-xl">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-purple">
-            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">4. Tunggu Farmasi</span>
+            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">5. Tunggu Farmasi</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold m-0 text-dark">{{ analytics.overall?.avg_tunggu_farmasi || 0 }}</h3>
               <span class="text-muted small">mnt</span>
@@ -127,10 +144,10 @@
           </div>
         </div>
 
-        <!-- 5. Layanan Farmasi -->
-        <div class="col-6 col-lg-2">
+        <!-- 6. Layanan Farmasi -->
+        <div class="col-6 col-md-4 col-xl">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-teal">
-            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">5. Layanan Farmasi</span>
+            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">6. Layanan Farmasi</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold m-0 text-dark">{{ analytics.overall?.avg_layanan_farmasi || 0 }}</h3>
               <span class="text-muted small">mnt</span>
@@ -144,8 +161,8 @@
           </div>
         </div>
 
-        <!-- 6. Total Layanan -->
-        <div class="col-6 col-lg-2">
+        <!-- Total Layanan -->
+        <div class="col-6 col-md-4 col-xl">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-success bg-success-subtle bg-opacity-10">
             <span class="text-success text-xs fw-bold text-uppercase d-block mb-1">Total Waktu Layanan</span>
             <div class="d-flex align-items-baseline gap-1">
@@ -642,6 +659,10 @@ onMounted(() => {
 
 .border-teal {
   border-color: #14b8a6 !important;
+}
+
+.border-indigo {
+  border-color: #6366f1 !important;
 }
 
 .bg-indigo {
