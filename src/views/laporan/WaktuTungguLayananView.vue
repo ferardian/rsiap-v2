@@ -216,6 +216,9 @@
 
             <div class="pipeline-line flex-fill text-center mx-1 position-relative">
               <div class="line-bar bg-info opacity-50"></div>
+              <span class="line-dur-badge badge bg-white border text-dark shadow-xs small">
+                {{ analytics.overall?.avg_tunggu_dokter || 0 }} mnt
+              </span>
             </div>
 
             <!-- Task 4 -->
