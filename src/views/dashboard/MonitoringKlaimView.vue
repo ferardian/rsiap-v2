@@ -197,9 +197,76 @@
         <!-- Monthly Trend Line Chart (Only in Yearly mode) -->
         <div v-if="filters.isYearlyMode && chartSeries.length > 0" class="col-lg-12 mb-4">
           <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-            <h5 class="card-title-sm mb-4">Tren Biaya Klaim {{ filters.tahun }}</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+              <h5 class="card-title-sm mb-0">Tren Biaya Klaim {{ filters.tahun }}</h5>
+              <div class="d-flex align-items-center gap-2">
+                <button 
+                  type="button" 
+                  class="btn btn-sm shadow-xs" 
+                  :class="showTrendTable ? 'btn-primary' : 'btn-outline-secondary'"
+                  style="border-radius: 20px; font-size: 0.75rem; font-weight: 600;"
+                  @click="showTrendTable = !showTrendTable"
+                >
+                  <i class="fas me-1" :class="showTrendTable ? 'fa-table' : 'fa-table-list'"></i>
+                  {{ showTrendTable ? 'Tabel Angka' : 'Tampilkan Tabel' }}
+                </button>
+              </div>
+            </div>
+
             <div style="height: 300px;">
               <apexchart type="area" height="100%" :options="areaChartOptions" :series="chartSeries"></apexchart>
+            </div>
+
+            <!-- Nominal Data Table under Chart -->
+            <div v-show="showTrendTable" class="trend-table-container mt-4 animate__animated animate__fadeIn">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0 text-center custom-trend-table">
+                  <thead class="bg-light">
+                    <tr>
+                      <th class="text-start px-3" style="min-width: 140px;">Kategori Biaya</th>
+                      <th v-for="(m, idx) in monthsShort" :key="idx" class="text-center" style="min-width: 85px;">
+                        {{ m }}
+                      </th>
+                      <th class="text-end px-3 bg-primary text-white" style="min-width: 140px;">Total {{ filters.tahun }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="text-start fw-bold text-orange px-3">
+                        <i class="fas fa-circle me-1" style="font-size: 0.55rem; color: #f97316;"></i> Pengajuan (Rp)
+                      </td>
+                      <td v-for="(m, idx) in monthlyAggregates" :key="'pengajuan-'+idx" class="text-center text-dark font-monospace text-xs">
+                        {{ formatRupiahCompact(m.pengajuan) }}
+                      </td>
+                      <td class="text-end fw-bold text-orange bg-orange-subtle px-3 font-monospace text-xs">
+                        {{ formatRupiah(totalYearlyPengajuan) }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="text-start fw-bold text-primary px-3">
+                        <i class="fas fa-circle me-1" style="font-size: 0.55rem; color: #3b82f6;"></i> Tarif RS (Rp)
+                      </td>
+                      <td v-for="(m, idx) in monthlyAggregates" :key="'tarif-'+idx" class="text-center text-dark font-monospace text-xs">
+                        {{ formatRupiahCompact(m.tarifRs) }}
+                      </td>
+                      <td class="text-end fw-bold text-primary bg-blue-subtle px-3 font-monospace text-xs">
+                        {{ formatRupiah(totalYearlyTarifRs) }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="text-start fw-bold text-success px-3">
+                        <i class="fas fa-circle me-1" style="font-size: 0.55rem; color: #10b981;"></i> Disetujui (Rp)
+                      </td>
+                      <td v-for="(m, idx) in monthlyAggregates" :key="'setuju-'+idx" class="text-center text-dark font-monospace text-xs">
+                        {{ formatRupiahCompact(m.disetujui) }}
+                      </td>
+                      <td class="text-end fw-bold text-success bg-green-subtle px-3 font-monospace text-xs">
+                        {{ formatRupiah(totalYearlyDisetujui) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -356,8 +423,30 @@ const searchQuery = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 15
 
+const showTrendTable = ref(true)
+const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des']
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const yearRange = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)
+
+const totalYearlyPengajuan = computed(() => {
+  if (!monthlyAggregates.value) return 0
+  return monthlyAggregates.value.reduce((sum, m) => sum + (m.pengajuan || 0), 0)
+})
+
+const totalYearlyTarifRs = computed(() => {
+  if (!monthlyAggregates.value) return 0
+  return monthlyAggregates.value.reduce((sum, m) => sum + (m.tarifRs || 0), 0)
+})
+
+const totalYearlyDisetujui = computed(() => {
+  if (!monthlyAggregates.value) return 0
+  return monthlyAggregates.value.reduce((sum, m) => sum + (m.disetujui || 0), 0)
+})
+
+const formatRupiahCompact = (val) => {
+  if (!val || val === 0) return 'Rp 0'
+  return 'Rp ' + Math.round(val).toLocaleString('id-ID')
+}
 
 const filters = reactive({
   isYearlyMode: true,
@@ -652,13 +741,16 @@ const fetchData = async () => {
         claimsData.value = claims
 
         if (filters.isYearlyMode) {
-          // Group by month for chart
-          const aggregates = Array(12).fill({}).map(() => ({ pengajuan: 0, tarifRs: 0 }))
+          // Group by month for chart & trend table
+          const aggregates = Array(12).fill({}).map(() => ({ pengajuan: 0, tarifRs: 0, disetujui: 0 }))
           claims.forEach(c => {
             if (c.tglPulang) {
               const month = parseInt(c.tglPulang.split('-')[1], 10) - 1
-              aggregates[month].pengajuan += parseFloat(c.biaya?.byPengajuan || 0)
-              aggregates[month].tarifRs += parseFloat(c.biaya?.byTarifRS || 0)
+              if (month >= 0 && month < 12) {
+                aggregates[month].pengajuan += parseFloat(c.biaya?.byPengajuan || 0)
+                aggregates[month].tarifRs += parseFloat(c.biaya?.byTarifRS || 0)
+                aggregates[month].disetujui += parseFloat(c.biaya?.bySetujui || 0)
+              }
             }
           })
           monthlyAggregates.value = aggregates
@@ -1170,6 +1262,31 @@ onMounted(() => {
   }
   .page-title { font-size: 1.25rem !important; }
   .page-subtitle { font-size: 0.8rem !important; }
-  .stat-card { padding: 1.25rem !important; }
+}
+
+.trend-table-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.custom-trend-table {
+  font-size: 0.78rem;
+  margin-bottom: 0;
+}
+
+.custom-trend-table th {
+  font-weight: 700;
+  padding: 9px 10px;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.custom-trend-table td {
+  padding: 8px 10px;
+  white-space: nowrap;
 }
 </style>
