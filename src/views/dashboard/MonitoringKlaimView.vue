@@ -1385,7 +1385,7 @@ onMounted(() => {
   letter-spacing: 0.8px;
   color: #475569;
   font-weight: 800;
-  padding: 1.25rem 0.75rem;
+  padding: 0.65rem 0.75rem;
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -1450,9 +1450,9 @@ onMounted(() => {
 }
 
 .styled-table td {
-  padding: 1.25rem 0.75rem;
+  padding: 0.55rem 0.75rem;
   color: #334155;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   border-bottom: 1px solid #f1f5f9;
 }
 
