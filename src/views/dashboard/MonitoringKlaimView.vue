@@ -518,13 +518,14 @@ const chartSeries = computed(() => {
   if (!filters.isYearlyMode || monthlyAggregates.value.length === 0) return []
   return [
     { name: 'Pengajuan (Rp)', data: monthlyAggregates.value.map(m => m.pengajuan) },
-    { name: 'Tarif RS (Rp)', data: monthlyAggregates.value.map(m => m.tarifRs) }
+    { name: 'Tarif RS (Rp)', data: monthlyAggregates.value.map(m => m.tarifRs) },
+    { name: 'Disetujui (Rp)', data: monthlyAggregates.value.map(m => m.disetujui) }
   ]
 })
 
 const areaChartOptions = {
   chart: { type: 'area', fontFamily: 'Inter, sans-serif', toolbar: { show: false } },
-  colors: ['#f97316', '#3b82f6'],
+  colors: ['#f97316', '#3b82f6', '#10b981'],
   dataLabels: { enabled: false },
   stroke: { curve: 'smooth', width: 2 },
   xaxis: { 
