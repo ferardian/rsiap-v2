@@ -295,41 +295,64 @@
             </div>
             <div v-else class="text-center text-muted mt-5">Tidak cukup data</div>
 
-            <!-- Nominal Data Table under Status Chart -->
+            <!-- Nominal & Berkas Data Table under Status Chart -->
             <div v-if="statusTimelineSeries.length > 0" v-show="showStatusTable" class="trend-table-container mt-4 animate__animated animate__fadeIn">
               <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle mb-0 text-center custom-trend-table">
                   <thead class="bg-light">
                     <tr>
-                      <th class="text-start px-3" style="min-width: 160px;">Status Klaim</th>
-                      <th v-for="(m, idx) in monthsShort" :key="idx" class="text-center" style="min-width: 70px;">
+                      <th class="text-start px-3" style="min-width: 170px;">Status Klaim</th>
+                      <th v-for="(m, idx) in monthsShort" :key="idx" class="text-center" style="min-width: 95px;">
                         {{ m }}
                       </th>
-                      <th class="text-end px-3 bg-primary text-white" style="min-width: 120px;">Total {{ filters.tahun }}</th>
+                      <th class="text-end px-3 bg-primary text-white" style="min-width: 140px;">Total {{ filters.tahun }}</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="s in statusTimelineSeries" :key="s.name">
-                      <td class="text-start fw-bold px-3" :style="{ color: getStatusColor(s.name) }">
+                      <td class="text-start fw-bold px-3 py-2" :style="{ color: getStatusColor(s.name) }">
                         <i class="fas fa-circle me-1" :style="{ fontSize: '0.55rem', color: getStatusColor(s.name) }"></i>
                         {{ s.name }}
                       </td>
-                      <td v-for="(val, idx) in s.data" :key="s.name + '-' + idx" class="text-center font-monospace text-xs" :class="val > 0 ? 'fw-bold text-dark' : 'text-muted opacity-50'">
-                        {{ val > 0 ? val.toLocaleString('id-ID') : 0 }}
+                      <td v-for="(val, idx) in s.data" :key="s.name + '-' + idx" class="text-center py-2">
+                        <div class="fw-bold text-xs" :class="val > 0 ? 'text-dark' : 'text-muted opacity-50'">
+                          {{ val > 0 ? val.toLocaleString('id-ID') : 0 }} <small v-if="val > 0" class="fw-normal text-muted" style="font-size: 0.65rem;">berkas</small>
+                        </div>
+                        <div class="font-monospace" :class="s.nominalData[idx] > 0 ? 'text-dark' : 'text-muted opacity-50'" style="font-size: 0.68rem;">
+                          {{ formatRupiahCompact(s.nominalData[idx]) }}
+                        </div>
                       </td>
-                      <td class="text-end fw-bold px-3 font-monospace text-xs" :style="{ color: getStatusColor(s.name), backgroundColor: '#f8fafc' }">
-                        {{ getStatusYearTotal(s.data).toLocaleString('id-ID') }}
+                      <td class="text-end px-3 py-2 bg-light">
+                        <div class="fw-bold font-monospace text-xs" :style="{ color: getStatusColor(s.name) }">
+                          {{ getStatusYearTotalCount(s.data).toLocaleString('id-ID') }} berkas
+                        </div>
+                        <div class="font-monospace text-dark fw-semibold" style="font-size: 0.7rem;">
+                          {{ formatRupiah(getStatusYearTotalNominal(s.nominalData)) }}
+                        </div>
                       </td>
                     </tr>
                   </tbody>
-                  <tfoot class="bg-light fw-bold">
+                  <tfoot class="bg-light">
                     <tr>
-                      <td class="text-start px-3 text-dark">Total Berkas</td>
-                      <td v-for="(m, idx) in monthsShort" :key="'tot-month-'+idx" class="text-center font-monospace text-xs text-primary">
-                        {{ getMonthlyStatusTotal(idx).toLocaleString('id-ID') }}
+                      <td class="text-start px-3 py-2 fw-bold text-dark">
+                        <div>Total Berkas</div>
+                        <div class="text-muted small" style="font-size: 0.7rem;">Total Nominal</div>
                       </td>
-                      <td class="text-end px-3 bg-primary text-white font-monospace text-xs">
-                        {{ getGrandStatusTotal().toLocaleString('id-ID') }}
+                      <td v-for="(m, idx) in monthsShort" :key="'tot-month-'+idx" class="text-center py-2">
+                        <div class="fw-bold text-xs text-primary">
+                          {{ getMonthlyStatusTotalCount(idx).toLocaleString('id-ID') }}
+                        </div>
+                        <div class="font-monospace text-muted" style="font-size: 0.68rem;">
+                          {{ formatRupiahCompact(getMonthlyStatusTotalNominal(idx)) }}
+                        </div>
+                      </td>
+                      <td class="text-end px-3 py-2 bg-primary text-white">
+                        <div class="fw-bold font-monospace text-xs">
+                          {{ getGrandStatusTotalCount().toLocaleString('id-ID') }} berkas
+                        </div>
+                        <div class="font-monospace text-white-50" style="font-size: 0.72rem;">
+                          {{ formatRupiah(getGrandStatusTotalNominal()) }}
+                        </div>
                       </td>
                     </tr>
                   </tfoot>
@@ -639,15 +662,22 @@ const statusTimelineSeries = computed(() => {
   
   return statuses.map(statusName => {
     const monthlyData = Array(12).fill(0)
+    const monthlyNominal = Array(12).fill(0)
+
     claimsData.value.forEach(c => {
       if (c.status === statusName && c.tglPulang) {
         const month = parseInt(c.tglPulang.split('-')[1], 10) - 1
-        monthlyData[month]++
+        if (month >= 0 && month < 12) {
+          monthlyData[month]++
+          monthlyNominal[month] += parseFloat(c.biaya?.byPengajuan || 0)
+        }
       }
     })
+
     return {
       name: statusName,
-      data: monthlyData
+      data: monthlyData,
+      nominalData: monthlyNominal
     }
   })
 })
@@ -663,20 +693,37 @@ const getStatusColor = (statusName) => {
   return '#64748b'
 }
 
-const getStatusYearTotal = (dataArr) => {
+const getStatusYearTotalCount = (dataArr) => {
   if (!dataArr) return 0
   return dataArr.reduce((sum, v) => sum + (v || 0), 0)
 }
 
-const getMonthlyStatusTotal = (monthIdx) => {
+const getStatusYearTotalNominal = (nominalArr) => {
+  if (!nominalArr) return 0
+  return nominalArr.reduce((sum, v) => sum + (v || 0), 0)
+}
+
+const getMonthlyStatusTotalCount = (monthIdx) => {
   if (!statusTimelineSeries.value) return 0
   return statusTimelineSeries.value.reduce((sum, s) => sum + (s.data[monthIdx] || 0), 0)
 }
 
-const getGrandStatusTotal = () => {
+const getMonthlyStatusTotalNominal = (monthIdx) => {
+  if (!statusTimelineSeries.value) return 0
+  return statusTimelineSeries.value.reduce((sum, s) => sum + (s.nominalData ? (s.nominalData[monthIdx] || 0) : 0), 0)
+}
+
+const getGrandStatusTotalCount = () => {
   if (!statusTimelineSeries.value) return 0
   return statusTimelineSeries.value.reduce((sum, s) => {
     return sum + (s.data ? s.data.reduce((a, b) => a + (b || 0), 0) : 0)
+  }, 0)
+}
+
+const getGrandStatusTotalNominal = () => {
+  if (!statusTimelineSeries.value) return 0
+  return statusTimelineSeries.value.reduce((sum, s) => {
+    return sum + (s.nominalData ? s.nominalData.reduce((a, b) => a + (b || 0), 0) : 0)
   }, 0)
 }
 
