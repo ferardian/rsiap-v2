@@ -211,10 +211,24 @@
               </div>
               <span class="step-badge badge bg-warning-subtle text-warning fw-bold">Task 3</span>
               <div class="step-name fw-bold text-dark small mt-1">Masuk Poli</div>
-              <small class="text-muted text-xs">Pemeriksaan Ralan</small>
+              <small class="text-muted text-xs">Panggil Perawat</small>
             </div>
 
-            <div class="pipeline-line flex-fill text-center mx-2 position-relative">
+            <div class="pipeline-line flex-fill text-center mx-1 position-relative">
+              <div class="line-bar bg-info opacity-50"></div>
+            </div>
+
+            <!-- Task 4 -->
+            <div class="pipeline-step text-center">
+              <div class="step-icon bg-indigo text-white rounded-circle shadow-sm mb-2">
+                <i class="fas fa-stethoscope"></i>
+              </div>
+              <span class="step-badge badge bg-indigo-subtle text-indigo fw-bold">Task 4</span>
+              <div class="step-name fw-bold text-dark small mt-1">Mulai Dokter</div>
+              <small class="text-muted text-xs">Pemeriksaan Dokter</small>
+            </div>
+
+            <div class="pipeline-line flex-fill text-center mx-1 position-relative">
               <div class="line-bar bg-primary opacity-50"></div>
               <span class="line-dur-badge badge bg-white border text-dark shadow-xs small">
                 {{ analytics.overall?.avg_layanan_dokter || 0 }} mnt
@@ -439,7 +453,8 @@
                     <th class="text-center py-3">Task 1 (Ambil)</th>
                     <th class="text-center py-3">Task 2 (Admisi)</th>
                     <th class="text-center py-3 bg-warning-subtle text-dark">Total Waktu Tunggu</th>
-                    <th class="text-center py-3">Task 3 (Periksa)</th>
+                    <th class="text-center py-3">Task 3 (Tunggu Poli)</th>
+                    <th class="text-center py-3">Task 4 (Mulai Dokter)</th>
                     <th class="text-center py-3">Task 5 (Resep)</th>
                     <th class="text-center py-3">Task 7 (Obat)</th>
                     <th class="text-center py-3">Total Layanan</th>
@@ -447,7 +462,7 @@
                 </thead>
                 <tbody>
                   <tr v-if="filteredPatientList.length === 0">
-                    <td colspan="9" class="text-center py-4 text-muted">Tidak ada rincian pasien ditemukan</td>
+                    <td colspan="10" class="text-center py-4 text-muted">Tidak ada rincian pasien ditemukan</td>
                   </tr>
                   <tr v-for="item in filteredPatientList" :key="item.no_rawat">
                     <td class="ps-3">
@@ -466,6 +481,7 @@
                       </span>
                     </td>
                     <td class="text-center text-muted">{{ item.task3_periksa || '-' }}</td>
+                    <td class="text-center text-muted fw-bold text-indigo">{{ item.task4_dokter || '-' }}</td>
                     <td class="text-center text-muted">{{ item.task5_resep || '-' }}</td>
                     <td class="text-center text-muted">{{ item.task7_penyerahan || '-' }}</td>
                     <td class="text-center fw-bold text-success">
@@ -623,6 +639,18 @@ onMounted(() => {
 
 .border-teal {
   border-color: #14b8a6 !important;
+}
+
+.bg-indigo {
+  background-color: #6366f1 !important;
+}
+
+.text-indigo {
+  color: #4f46e5 !important;
+}
+
+.bg-indigo-subtle {
+  background-color: #e0e7ff !important;
 }
 
 .text-purple {
