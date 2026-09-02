@@ -368,10 +368,22 @@
             <h5 class="card-title-sm mb-4">
               <i class="fas fa-layer-group text-primary me-2"></i>Distribusi INA-CBG
             </h5>
-            <div v-if="donutSeries.length > 0" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+            <div v-if="donutSeries.length > 0" style="height: 200px; display: flex; align-items: center; justify-content: center;">
               <apexchart type="donut" width="100%" :options="donutChartOptions" :series="donutSeries"></apexchart>
             </div>
             <div v-else class="text-center text-muted py-5">Tidak ada data INA-CBG</div>
+
+            <!-- Custom Detailed Legend with Names -->
+            <div v-if="topInacbg.length > 0" class="mt-3 border-top pt-3">
+              <div v-for="(item, idx) in topInacbg" :key="item.code" class="d-flex align-items-center justify-content-between mb-2 text-xs">
+                <div class="d-flex align-items-center me-2 text-truncate" style="max-width: 78%;">
+                  <i class="fas fa-circle me-2 flex-shrink-0" :style="{ color: inacbgColors[idx], fontSize: '0.55rem' }"></i>
+                  <span class="fw-bold text-dark me-1 flex-shrink-0">{{ item.code }}</span>
+                  <span class="text-muted text-truncate" :title="item.name">{{ item.name }}</span>
+                </div>
+                <span class="fw-bold text-dark font-monospace flex-shrink-0">{{ item.count.toLocaleString('id-ID') }} <small class="fw-normal text-muted" style="font-size: 0.65rem;">berkas</small></span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -380,10 +392,22 @@
             <h5 class="card-title-sm mb-4">
               <i class="fas fa-stethoscope text-info me-2"></i>Top Diagnosa (ICD-10)
             </h5>
-            <div v-if="icd10DonutSeries.length > 0" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+            <div v-if="icd10DonutSeries.length > 0" style="height: 200px; display: flex; align-items: center; justify-content: center;">
               <apexchart type="donut" width="100%" :options="icd10DonutChartOptions" :series="icd10DonutSeries"></apexchart>
             </div>
             <div v-else class="text-center text-muted py-5">Tidak ada data ICD-10</div>
+
+            <!-- Custom Detailed Legend with Names -->
+            <div v-if="topIcd10.length > 0" class="mt-3 border-top pt-3">
+              <div v-for="(item, idx) in topIcd10" :key="item.code" class="d-flex align-items-center justify-content-between mb-2 text-xs">
+                <div class="d-flex align-items-center me-2 text-truncate" style="max-width: 78%;">
+                  <i class="fas fa-circle me-2 flex-shrink-0" :style="{ color: icd10Colors[idx], fontSize: '0.55rem' }"></i>
+                  <span class="fw-bold text-dark me-1 flex-shrink-0">{{ item.code }}</span>
+                  <span class="text-muted text-truncate" :title="item.name">{{ item.name }}</span>
+                </div>
+                <span class="fw-bold text-dark font-monospace flex-shrink-0">{{ item.count.toLocaleString('id-ID') }} <small class="fw-normal text-muted" style="font-size: 0.65rem;">berkas</small></span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -392,10 +416,22 @@
             <h5 class="card-title-sm mb-4">
               <i class="fas fa-procedures text-purple me-2"></i>Top Prosedur (ICD-9)
             </h5>
-            <div v-if="icd9DonutSeries.length > 0" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+            <div v-if="icd9DonutSeries.length > 0" style="height: 200px; display: flex; align-items: center; justify-content: center;">
               <apexchart type="donut" width="100%" :options="icd9DonutChartOptions" :series="icd9DonutSeries"></apexchart>
             </div>
             <div v-else class="text-center text-muted py-5">Tidak ada data ICD-9</div>
+
+            <!-- Custom Detailed Legend with Names -->
+            <div v-if="topIcd9.length > 0" class="mt-3 border-top pt-3">
+              <div v-for="(item, idx) in topIcd9" :key="item.code" class="d-flex align-items-center justify-content-between mb-2 text-xs">
+                <div class="d-flex align-items-center me-2 text-truncate" style="max-width: 78%;">
+                  <i class="fas fa-circle me-2 flex-shrink-0" :style="{ color: icd9Colors[idx], fontSize: '0.55rem' }"></i>
+                  <span class="fw-bold text-dark me-1 flex-shrink-0">{{ item.code }}</span>
+                  <span class="text-muted text-truncate" :title="item.name">{{ item.name }}</span>
+                </div>
+                <span class="fw-bold text-dark font-monospace flex-shrink-0">{{ item.count.toLocaleString('id-ID') }} <small class="fw-normal text-muted" style="font-size: 0.65rem;">berkas</small></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -652,31 +688,42 @@ const areaChartOptions = {
   }
 }
 
+
+
+const inacbgColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+const icd10Colors = ['#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1']
+const icd9Colors = ['#8b5cf6', '#14b8a6', '#f97316', '#3b82f6', '#e11d48']
+
+// Top INA-CBG
 const topInacbg = computed(() => {
-  const counts = {}
+  const map = {}
   claimsData.value.forEach(c => {
-    const code = c.Inacbg?.kode || 'Unknown'
+    const code = c.Inacbg?.kode
+    const name = c.Inacbg?.nama || code
     if (code && code !== '-') {
-      counts[code] = (counts[code] || 0) + 1
+      if (!map[code]) {
+        map[code] = { code, name, count: 0 }
+      }
+      map[code].count++
     }
   })
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5) // Top 5
+  return Object.values(map)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
 })
 
-const donutSeries = computed(() => topInacbg.value.map(i => i[1]))
+const donutSeries = computed(() => topInacbg.value.map(i => i.count))
 
 const donutChartOptions = computed(() => ({
   chart: { type: 'donut', fontFamily: 'Inter, sans-serif' },
-  labels: topInacbg.value.map(i => i[0]),
-  colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
+  labels: topInacbg.value.map(i => i.code),
+  colors: inacbgColors,
   dataLabels: { enabled: false },
-  legend: { position: 'bottom' },
+  legend: { show: false },
   plotOptions: {
     pie: {
       donut: {
-        size: '68%',
+        size: '70%',
         labels: { show: true, name: { show: true }, value: { show: true, formatter: (val) => val + " Berkas" }, total: { show: true, label: 'Kasus' } }
       }
     }
@@ -685,30 +732,34 @@ const donutChartOptions = computed(() => ({
 
 // Top ICD-10 Diagnosa
 const topIcd10 = computed(() => {
-  const counts = {}
+  const map = {}
   claimsData.value.forEach(c => {
-    const code = c.diagnosa?.kode || c.Inacbg?.kode || 'Unknown'
+    const code = c.diagnosa?.kode || c.Inacbg?.kode
+    const name = c.diagnosa?.nama || c.Inacbg?.nama || code
     if (code && code !== '-') {
-      counts[code] = (counts[code] || 0) + 1
+      if (!map[code]) {
+        map[code] = { code, name, count: 0 }
+      }
+      map[code].count++
     }
   })
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
+  return Object.values(map)
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 })
 
-const icd10DonutSeries = computed(() => topIcd10.value.map(i => i[1]))
+const icd10DonutSeries = computed(() => topIcd10.value.map(i => i.count))
 
 const icd10DonutChartOptions = computed(() => ({
   chart: { type: 'donut', fontFamily: 'Inter, sans-serif' },
-  labels: topIcd10.value.map(i => i[0]),
-  colors: ['#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1'],
+  labels: topIcd10.value.map(i => i.code),
+  colors: icd10Colors,
   dataLabels: { enabled: false },
-  legend: { position: 'bottom' },
+  legend: { show: false },
   plotOptions: {
     pie: {
       donut: {
-        size: '68%',
+        size: '70%',
         labels: { show: true, name: { show: true }, value: { show: true, formatter: (val) => val + " Berkas" }, total: { show: true, label: 'Diagnosa' } }
       }
     }
@@ -717,30 +768,34 @@ const icd10DonutChartOptions = computed(() => ({
 
 // Top ICD-9 Prosedur / Tindakan
 const topIcd9 = computed(() => {
-  const counts = {}
+  const map = {}
   claimsData.value.forEach(c => {
     const code = c.prosedur?.kode
+    const name = c.prosedur?.nama || code
     if (code && code !== '-' && code !== 'Unknown') {
-      counts[code] = (counts[code] || 0) + 1
+      if (!map[code]) {
+        map[code] = { code, name, count: 0 }
+      }
+      map[code].count++
     }
   })
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
+  return Object.values(map)
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 })
 
-const icd9DonutSeries = computed(() => topIcd9.value.map(i => i[1]))
+const icd9DonutSeries = computed(() => topIcd9.value.map(i => i.count))
 
 const icd9DonutChartOptions = computed(() => ({
   chart: { type: 'donut', fontFamily: 'Inter, sans-serif' },
-  labels: topIcd9.value.map(i => i[0]),
-  colors: ['#8b5cf6', '#14b8a6', '#f97316', '#3b82f6', '#e11d48'],
+  labels: topIcd9.value.map(i => i.code),
+  colors: icd9Colors,
   dataLabels: { enabled: false },
-  legend: { position: 'bottom' },
+  legend: { show: false },
   plotOptions: {
     pie: {
       donut: {
-        size: '68%',
+        size: '70%',
         labels: { show: true, name: { show: true }, value: { show: true, formatter: (val) => val + " Berkas" }, total: { show: true, label: 'Tindakan' } }
       }
     }
