@@ -215,19 +215,21 @@
                       <template v-if="item.stts_pulang !== 'Pindah Kamar'">
                         <span 
                           v-if="item.surat_kontrol_bpjs?.status" 
-                          class="badge bg-success-subtle text-success border border-success-subtle align-self-start"
-                          style="font-size: 0.63rem;"
-                          :title="'SKU BPJS Terbit: ' + item.surat_kontrol_bpjs.no_surat + (item.surat_kontrol_bpjs.tgl_rencana ? ' (Tgl Rencana: ' + item.surat_kontrol_bpjs.tgl_rencana + ')' : '')"
+                          class="badge bg-success-subtle text-success border border-success-subtle align-self-start cursor-pointer hover-shadow"
+                          style="font-size: 0.63rem; cursor: pointer;"
+                          :title="'Klik untuk melihat detail SKU: ' + item.surat_kontrol_bpjs.no_surat"
+                          @click.stop="openSkuModal(item)"
                         >
-                          <i class="fas fa-file-signature me-1"></i> SKU Terbit
+                          <i class="fas fa-file-signature me-1"></i> SKU Terbit <i class="fas fa-info-circle ms-1 opacity-75"></i>
                         </span>
                         <span 
                           v-else 
-                          class="badge bg-danger-subtle text-danger border border-danger-subtle align-self-start"
-                          style="font-size: 0.63rem;"
-                          title="Surat Kontrol (SKU) BPJS belum diterbitkan di bridging_surat_kontrol_bpjs"
+                          class="badge bg-danger-subtle text-danger border border-danger-subtle align-self-start cursor-pointer hover-shadow"
+                          style="font-size: 0.63rem; cursor: pointer;"
+                          title="Klik untuk info status SKU BPJS"
+                          @click.stop="openSkuModal(item)"
                         >
-                          <i class="fas fa-exclamation-triangle me-1"></i> SKU Belum Terbit
+                          <i class="fas fa-exclamation-triangle me-1"></i> SKU Belum Terbit <i class="fas fa-info-circle ms-1 opacity-75"></i>
                         </span>
                       </template>
                     </div>
@@ -321,6 +323,113 @@
         <small class="text-muted" v-else>
            Belum ada data
         </small>
+      </div>
+    </div>
+
+    <!-- SKU (Surat Kontrol Ulang) Modal -->
+    <div v-if="showSkuModal" class="modal-overlay" @click.self="closeSkuModal" style="z-index: 1100;">
+      <div class="modal-content-custom" style="max-width: 550px;">
+        <div class="modal-header-custom" :class="selectedSkuItem?.surat_kontrol_bpjs?.status ? 'bg-success' : 'bg-secondary'">
+          <h5 class="mb-0 text-white d-flex align-items-center gap-2">
+            <i class="fas" :class="selectedSkuItem?.surat_kontrol_bpjs?.status ? 'fa-file-signature' : 'fa-exclamation-triangle'"></i>
+            Data Surat Kontrol Ulang (SKU) BPJS
+          </h5>
+          <button type="button" class="btn-close-custom" @click="closeSkuModal">×</button>
+        </div>
+        <div class="modal-body-custom p-4" v-if="selectedSkuItem">
+          <!-- Patient Banner -->
+          <div class="p-3 rounded-3 bg-light border mb-4">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <h6 class="fw-bold mb-1 text-dark">{{ selectedSkuItem.reg_periksa?.pasien?.nm_pasien }}</h6>
+                <p class="mb-0 text-muted small" style="font-size: 0.8rem;">
+                  RM: <span class="fw-bold text-dark me-2">{{ selectedSkuItem.reg_periksa?.no_rkm_medis }}</span>
+                  Rawat: <span class="fw-bold text-dark">{{ selectedSkuItem.no_rawat }}</span>
+                </p>
+              </div>
+              <span class="badge border px-2 py-1" :class="getStatusPulangClass(selectedSkuItem.stts_pulang)">
+                {{ selectedSkuItem.stts_pulang }}
+              </span>
+            </div>
+          </div>
+
+          <!-- SKU Data Exists -->
+          <div v-if="selectedSkuItem.surat_kontrol_bpjs?.status">
+            <div class="alert alert-success-subtle border border-success-subtle d-flex align-items-center gap-2 mb-4 p-3 rounded-3">
+              <i class="fas fa-check-circle text-success fa-lg"></i>
+              <div>
+                <div class="fw-bold text-success" style="font-size: 0.9rem;">Surat Kontrol BPJS (SKU) Diterbitkan</div>
+                <small class="text-muted">Data tersimpan di bridging_surat_kontrol_bpjs</small>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label text-xs fw-bold text-uppercase text-muted mb-1">No. Surat Kontrol (SKU)</label>
+                <div class="d-flex align-items-center justify-content-between p-2.5 bg-light rounded-3 border">
+                  <span class="fw-bold font-monospace text-primary fs-6">{{ selectedSkuItem.surat_kontrol_bpjs.no_surat }}</span>
+                  <button class="btn btn-sm btn-outline-primary rounded-2 px-2.5 py-1 text-xs" @click="copyText(selectedSkuItem.surat_kontrol_bpjs.no_surat, 'No. SKU')">
+                    <i class="fas fa-copy me-1"></i> Copy SKU
+                  </button>
+                </div>
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-xs fw-bold text-uppercase text-muted mb-1">Tanggal Terbit Surat</label>
+                <div class="fw-semibold text-dark p-2 bg-light rounded-3 border text-sm">
+                  {{ formatDateIndo(selectedSkuItem.surat_kontrol_bpjs.tgl_surat) || '-' }}
+                </div>
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-xs fw-bold text-uppercase text-muted mb-1">Tanggal Rencana Kontrol</label>
+                <div class="fw-bold text-success p-2 bg-success-subtle bg-opacity-25 rounded-3 border border-success-subtle text-sm">
+                  <i class="fas fa-calendar-alt me-1"></i>
+                  {{ formatDateIndo(selectedSkuItem.surat_kontrol_bpjs.tgl_rencana) || '-' }}
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label text-xs fw-bold text-uppercase text-muted mb-1">Dokter DPJP Kontrol (BPJS)</label>
+                <div class="fw-semibold text-dark p-2 bg-light rounded-3 border text-sm">
+                  <i class="fas fa-user-md me-2 text-primary"></i>
+                  {{ selectedSkuItem.surat_kontrol_bpjs.nm_dokter_bpjs || '-' }}
+                </div>
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-xs fw-bold text-uppercase text-muted mb-1">Poliklinik Tujuan (BPJS)</label>
+                <div class="fw-semibold text-dark p-2 bg-light rounded-3 border text-sm">
+                  <i class="fas fa-clinic-medical me-2 text-info"></i>
+                  {{ selectedSkuItem.surat_kontrol_bpjs.nm_poli_bpjs || '-' }}
+                </div>
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-xs fw-bold text-uppercase text-muted mb-1">No. SEP Asal (Ranap)</label>
+                <div class="fw-semibold text-dark p-2 bg-light rounded-3 border text-sm font-monospace text-truncate">
+                  {{ selectedSkuItem.surat_kontrol_bpjs.no_sep || '-' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SKU Not Found -->
+          <div v-else>
+            <div class="alert alert-warning-subtle border border-warning-subtle text-center p-4 rounded-3">
+              <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3 d-block"></i>
+              <h6 class="fw-bold text-dark mb-1">Surat Kontrol (SKU) Belum Diterbitkan</h6>
+              <p class="text-muted small mb-0">
+                Pasien pulang dengan status <strong>{{ selectedSkuItem.stts_pulang }}</strong> namun data Surat Kontrol belum ditemukan di tabel bridging BPJS.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-custom p-3 bg-light border-top d-flex justify-content-end">
+          <button type="button" class="btn btn-secondary rounded-3 px-4 fw-bold" @click="closeSkuModal">
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2046,7 +2155,25 @@ const penunjangData = ref(null)
 const isLoadingRme = ref(false)
 const isLoadingBilling = ref(false)
 const rmeError = ref(null)
-const billingError = ref(null)
+// SKU Modal State
+const showSkuModal = ref(false)
+const selectedSkuItem = ref(null)
+
+const openSkuModal = (item) => {
+  selectedSkuItem.value = item
+  showSkuModal.value = true
+}
+
+const closeSkuModal = () => {
+  showSkuModal.value = false
+  selectedSkuItem.value = null
+}
+
+const copyText = (text, label = 'Teks') => {
+  if (!text) return
+  navigator.clipboard.writeText(text)
+  toast.success(`${label} berhasil disalin ke clipboard!`)
+}
 
 // Status Pulang State
 const showStatusPulangModal = ref(false)
