@@ -76,16 +76,16 @@
           </div>
         </div>
 
-        <!-- 2. Tunggu Poli -->
+        <!-- 2. Tunggu Anamnesa -->
         <div class="col-6 col-lg-2">
           <div class="kpi-card card border-0 shadow-sm rounded-4 p-3 h-100 border-start border-4 border-warning">
-            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">2. Tunggu Poli</span>
+            <span class="text-muted text-xs fw-bold text-uppercase d-block mb-1">2. Tunggu Anamnesa</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold m-0 text-dark">{{ analytics.overall?.avg_tunggu_poli || 0 }}</h3>
               <span class="text-muted small">mnt</span>
             </div>
             <small class="text-muted text-xs mt-2 d-block">
-              <i class="fas fa-user-clock me-1 text-warning"></i>Task 2 ➔ Task 3
+              <i class="fas fa-user-nurse me-1 text-warning"></i>Task 2 ➔ Task 3
             </small>
             <span class="badge mt-2" :class="getSpmBadgeClass(analytics.overall?.avg_tunggu_poli, 60)">
               Std SPM: ≤ 60 mnt
@@ -102,7 +102,7 @@
               <span class="text-muted small">mnt</span>
             </div>
             <small class="text-muted text-xs mt-2 d-block">
-              <i class="fas fa-user-md me-1 text-primary"></i>Task 3 ➔ Task 5
+              <i class="fas fa-user-md me-1 text-primary"></i>Task 4 ➔ Task 5
             </small>
             <span class="badge mt-2 bg-primary-subtle text-primary border-primary-subtle">
               Pemeriksaan Dokter
@@ -207,11 +207,11 @@
             <!-- Task 3 -->
             <div class="pipeline-step text-center">
               <div class="step-icon bg-warning text-dark rounded-circle shadow-sm mb-2">
-                <i class="fas fa-user-clock"></i>
+                <i class="fas fa-user-nurse"></i>
               </div>
               <span class="step-badge badge bg-warning-subtle text-warning fw-bold">Task 3</span>
-              <div class="step-name fw-bold text-dark small mt-1">Masuk Poli</div>
-              <small class="text-muted text-xs">Panggil Perawat</small>
+              <div class="step-name fw-bold text-dark small mt-1">Anamnesa PPA</div>
+              <small class="text-muted text-xs">Nurse Station</small>
             </div>
 
             <div class="pipeline-line flex-fill text-center mx-1 position-relative">
@@ -224,8 +224,8 @@
                 <i class="fas fa-stethoscope"></i>
               </div>
               <span class="step-badge badge bg-indigo-subtle text-indigo fw-bold">Task 4</span>
-              <div class="step-name fw-bold text-dark small mt-1">Mulai Dokter</div>
-              <small class="text-muted text-xs">Pemeriksaan Dokter</small>
+              <div class="step-name fw-bold text-dark small mt-1">Panggil Poli</div>
+              <small class="text-muted text-xs">Masuk Poli Dokter</small>
             </div>
 
             <div class="pipeline-line flex-fill text-center mx-1 position-relative">
@@ -453,8 +453,8 @@
                     <th class="text-center py-3">Task 1 (Ambil)</th>
                     <th class="text-center py-3">Task 2 (Admisi)</th>
                     <th class="text-center py-3 bg-warning-subtle text-dark">Total Waktu Tunggu</th>
-                    <th class="text-center py-3">Task 3 (Tunggu Poli)</th>
-                    <th class="text-center py-3">Task 4 (Mulai Dokter)</th>
+                    <th class="text-center py-3">Task 3 (Anamnesa PPA)</th>
+                    <th class="text-center py-3">Task 4 (Panggil Poli)</th>
                     <th class="text-center py-3">Task 5 (Resep)</th>
                     <th class="text-center py-3">Task 7 (Obat)</th>
                     <th class="text-center py-3">Total Layanan</th>
