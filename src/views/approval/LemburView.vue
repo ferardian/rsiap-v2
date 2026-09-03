@@ -90,7 +90,7 @@
 
       <!-- Main Body -->
       <div class="card-body p-0">
-        <div class="table-container">
+        <div ref="tableContainerRef" class="table-container">
           <!-- Loading State -->
           <div v-if="loading" class="loading-state">
             <div class="spinner"></div>
@@ -434,7 +434,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { lemburService } from '../../services/sdi/lemburService'
 import { pegawaiService } from '../../services/pegawaiService'
@@ -452,10 +452,19 @@ const currentYear = new Date().getFullYear()
 const years = [currentYear - 1, currentYear, currentYear + 1]
 
 // State
+const tableContainerRef = ref(null)
 const loading = ref(false)
 const lemburList = ref([])
 const departments = ref([])
 const activeTab = ref('pending_mgr') // pending_mgr, pending_sdi, approved, rejected
+
+watch(activeTab, () => {
+  nextTick(() => {
+    if (tableContainerRef.value) {
+      tableContainerRef.value.scrollTop = 0
+    }
+  })
+})
 
 const filter = ref({
   month: new Date().getMonth() + 1,
