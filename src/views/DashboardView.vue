@@ -44,7 +44,7 @@
       <!-- Statistics Cards -->
       <section class="stats-section">
         <!-- Filter Section -->
-        <div class="filter-section mb-12 flex flex-nowrap justify-end items-center gap-3">
+        <div class="filter-section mb-2 flex flex-nowrap justify-end items-center gap-3">
 
           <!-- Tab-Style Filter (Reference Design) -->
           <div class="filter-tabs-container">
@@ -2747,9 +2747,9 @@ onUnmounted(() => {
 .welcome-section {
   background: white;
   border-radius: 12px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.15rem 1.5rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .welcome-content {
@@ -2757,93 +2757,93 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .welcome-text h2 {
   color: #1e40af;
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-size: 1.35rem;
+  margin-bottom: 0.2rem;
+  font-weight: 700;
 }
 
 .welcome-text p {
   color: #666;
-  font-size: 1rem;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
 }
 
 .user-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .user-badge {
   display: inline-block;
   background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .department-badge {
   display: inline-block;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .date-time-info {
   text-align: right;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .date-time {
   color: #3b82f6;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.825rem;
   white-space: nowrap;
 }
 
 .session-info {
   background: #dcfce7;
   color: #16a34a;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.2rem 0.65rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-align: center;
   white-space: nowrap;
 }
 
 /* Statistics Cards */
 .stats-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  padding-top: 2rem;
+  gap: 1rem;
+  padding-top: 0.25rem;
 }
 
 .stat-card {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 0.85rem 1rem;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  gap: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
   border: 1px solid #f1f5f9;
   transition: all 0.25s ease;
 }
@@ -2854,14 +2854,15 @@ onUnmounted(() => {
 }
 
 .stat-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .stat-card:hover .stat-icon {
@@ -2889,25 +2890,26 @@ onUnmounted(() => {
 }
 
 .stat-content h3 {
-  font-size: 2.1rem;
-  font-weight: 750;
+  font-size: 1.65rem;
+  font-weight: 800;
   color: #0f172a;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0;
+  line-height: 1.1;
   letter-spacing: -0.01em;
 }
 
 .stat-content p {
   color: #64748b;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 
 .stat-trend {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.15rem 0.5rem;
-  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
   display: inline-block;
 }
 
