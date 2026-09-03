@@ -1368,29 +1368,51 @@ select.filter-input {
 /* Table Container */
 .table-container {
   width: 100%;
+  max-height: 600px;
   overflow-x: auto;
+  overflow-y: auto;
   min-height: 250px;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .premium-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
 
 .premium-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: #f8fafc;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #64748b;
-  border-bottom: 2px solid #f1f5f9;
+  border-bottom: 2px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .premium-table td {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
