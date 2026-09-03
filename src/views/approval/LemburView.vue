@@ -845,7 +845,7 @@ const fetchData = async () => {
       year: filter.value.year,
       departemen: filter.value.department,
       search: filter.value.search,
-      limit: 100
+      limit: 1000
     }
     
     const res = await lemburService.getApprovalList(params)
