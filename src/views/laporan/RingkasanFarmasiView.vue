@@ -254,14 +254,16 @@
         </div>
 
         <!-- Section Title & Ekspor Button -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
-            <span>{{ currentTabTitle }}</span>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="fw-bold text-dark m-0">{{ currentTabTitle }}</h6>
             <span class="badge bg-soft-primary text-primary px-2 py-1 fs-7 fw-bold">{{ pagination.total }} data</span>
-          </h6>
-          <button class="btn btn-sm btn-outline-success rounded-3 text-nowrap" @click="exportExcel">
-            <i class="fas fa-file-excel me-1"></i> Ekspor Excel
-          </button>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline-success rounded-3 text-nowrap px-3 shadow-xs" style="width: auto !important; max-width: fit-content;" @click="exportExcel">
+              <i class="fas fa-file-excel me-1"></i> Ekspor Excel
+            </button>
+          </div>
         </div>
 
         <!-- Loading State -->
