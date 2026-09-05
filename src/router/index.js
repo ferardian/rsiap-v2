@@ -819,6 +819,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/preskripsi-dpjp',
+    name: 'PreskripsiDpjp',
+    component: () => import('@/views/laporan/PreskripsiDpjpView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/ringkasan-farmasi',
+    name: 'RingkasanFarmasi',
+    component: () => import('@/views/laporan/RingkasanFarmasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ppra/tim',
     name: 'TimPpra',
     component: () => import('../views/ppra/TimPpraView.vue'),
