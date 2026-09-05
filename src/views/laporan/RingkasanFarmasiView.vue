@@ -260,7 +260,7 @@
             <span class="badge bg-soft-primary text-primary px-2 py-1 fs-7 fw-bold">{{ pagination.total }} data</span>
           </div>
           <div>
-            <button class="btn btn-sm btn-outline-success rounded-3 text-nowrap px-3 shadow-xs" style="width: auto !important; max-width: fit-content;" @click="exportExcel">
+            <button class="btn btn-sm btn-success text-white rounded-3 text-nowrap px-3 shadow-sm fw-bold" style="width: auto !important; max-width: fit-content;" @click="exportExcel">
               <i class="fas fa-file-excel me-1"></i> Ekspor Excel
             </button>
           </div>
