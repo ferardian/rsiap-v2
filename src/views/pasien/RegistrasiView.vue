@@ -493,12 +493,9 @@
                                        </a>
                                      </li>
                                      <li>
-                                       <a class="dropdown-item rounded-3 mb-1 py-2 text-muted disabled d-flex align-items-center justify-content-between" href="#" @click.prevent style="cursor: not-allowed; opacity: 0.7;">
-                                         <div class="d-flex align-items-center">
-                                           <i class="fas fa-heartbeat me-2 opacity-50 text-success"></i>
-                                           <span>Surat Sehat</span>
-                                         </div>
-                                         <span class="badge bg-light text-secondary border ms-2" style="font-size: 0.65rem;">Segera</span>
+                                       <a class="dropdown-item rounded-3 mb-1 py-2 text-success d-flex align-items-center" href="#" @click.prevent="openSuratSehat(reg)">
+                                         <i class="fas fa-heartbeat me-2 opacity-75"></i>
+                                         <span style="font-weight: 500;">Surat Sehat</span>
                                        </a>
                                      </li>
                                      <li>
@@ -1017,6 +1014,9 @@
 
     <!-- Surat Sakit Modal -->
     <SuratSakitModal ref="suratSakitModalRef" />
+
+    <!-- Surat Sehat Modal -->
+    <SuratKeteranganSehatModal ref="suratSehatModalRef" />
     <!-- Floating Section Navigation (NEW) -->
     <nav class="floating-section-nav animate__animated animate__fadeInRight">
       <div class="nav-inner glass-effect">
@@ -1187,10 +1187,12 @@ import QueueManager from '@/components/ui/QueueManager.vue';
 import bpjsVclaimService from '../../services/bpjsVclaimService';
 import SuratLayakTerbangModal from '@/components/pemeriksaan/SuratLayakTerbangModal.vue';
 import SuratSakitModal from '@/components/pemeriksaan/SuratSakitModal.vue';
+import SuratKeteranganSehatModal from '@/components/pemeriksaan/SuratKeteranganSehatModal.vue';
 
 // State
 const suratLayakTerbangModalRef = ref(null);
 const suratSakitModalRef = ref(null);
+const suratSehatModalRef = ref(null);
 const activeSubmenu = ref(null);
 
 const toggleSubmenu = (noRawat) => {
@@ -1208,6 +1210,13 @@ const openSuratSakit = (reg) => {
   activeSubmenu.value = null;
   if (suratSakitModalRef.value) {
     suratSakitModalRef.value.open(reg.no_rawat);
+  }
+};
+
+const openSuratSehat = (reg) => {
+  activeSubmenu.value = null;
+  if (suratSehatModalRef.value) {
+    suratSehatModalRef.value.open(reg.no_rawat);
   }
 };
 

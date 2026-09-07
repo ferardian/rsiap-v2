@@ -90,5 +90,31 @@ export default {
         return api.delete('/rawat-jalan/surat-sakit', {
             params: { no_surat }
         });
+    },
+
+    // Get Surat Sehat
+    getSuratSehat(no_rawat) {
+        return api.get('/rawat-jalan/surat-sehat', {
+            params: { no_rawat }
+        });
+    },
+
+    // Save/Update Surat Sehat
+    saveSuratSehat(data) {
+        return api.post('/rawat-jalan/surat-sehat', data);
+    },
+
+    // Get Next Auto Number for Surat Sehat
+    getNextSuratSehatNumber(tanggalsurat) {
+        return api.get('/rawat-jalan/surat-sehat/next-number', {
+            params: { tanggalsurat }
+        });
+    },
+
+    // Delete Surat Sehat
+    deleteSuratSehat(no_surat) {
+        return api.delete('/rawat-jalan/surat-sehat', {
+            params: { no_surat }
+        });
     }
 }
