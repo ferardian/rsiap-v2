@@ -11,8 +11,11 @@
             <i class="fas fa-plane-departure text-white fs-5"></i>
           </div>
           <div>
-            <h6 class="mb-0 fw-bold text-white" style="letter-spacing: 0.5px; font-size: 0.95rem;">Surat Layak Terbang</h6>
-            <small class="text-white text-opacity-80" style="font-size: 0.75rem;">Penerbitan surat keterangan layak terbang</small>
+            <div class="d-flex align-items-center gap-2">
+              <h6 class="mb-0 fw-bold text-white" style="letter-spacing: 0.5px; font-size: 0.95rem;">Surat Layak Terbang</h6>
+              <span class="badge bg-white text-primary px-2 py-0.5 fw-bold" style="font-size: 0.65rem; border-radius: 6px;">Bilingual Ready 🇮🇩/🇬🇧</span>
+            </div>
+            <small class="text-white text-opacity-80" style="font-size: 0.75rem;">Fit to Fly Certificate (Indonesia & English Version)</small>
           </div>
         </div>
         <button type="button" class="btn-close-custom bg-white bg-opacity-10 text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
@@ -41,11 +44,13 @@
               <div class="d-flex align-items-center justify-content-between">
                 <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">{{ regData.pasien?.nm_pasien }}</h6>
                 <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-2 py-0.5 fw-semibold" style="font-size: 0.7rem;">
-                  {{ regData.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan' }}
+                  {{ regData.pasien?.jk === 'L' ? 'Laki-Laki (Male)' : 'Perempuan (Female)' }}
                 </span>
               </div>
-              <p class="mb-0 text-muted small mt-0.5 d-flex gap-2" style="font-size: 0.75rem;">
+              <p class="mb-0 text-muted small mt-0.5 d-flex flex-wrap gap-2" style="font-size: 0.75rem;">
                 <span><strong>RM:</strong> {{ regData.no_rkm_medis }}</span>
+                <span class="text-secondary">•</span>
+                <span><strong>NIK/Passport:</strong> {{ regData.pasien?.no_ktp || '-' }}</span>
                 <span class="text-secondary">•</span>
                 <span><strong>Rawat:</strong> {{ regData.no_rawat }}</span>
                 <span v-if="regData.dokter?.nm_dokter" class="text-secondary">•</span>
@@ -213,7 +218,7 @@
           </button>
         </div>
         
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
           <button type="button" class="btn btn-premium-secondary" @click="close">
             Batal
           </button>
@@ -221,10 +226,21 @@
           <button 
             v-if="savedData"
             type="button" 
-            class="btn btn-premium-print" 
-            @click="printSurat"
+            class="btn btn-premium-print-id" 
+            @click="printSurat('id')"
+            title="Cetak Surat Layak Terbang versi Bahasa Indonesia"
           >
-            <i class="fas fa-print me-1"></i> Cetak Surat
+            <i class="fas fa-print me-1"></i> Cetak (ID) 🇮🇩
+          </button>
+
+          <button 
+            v-if="savedData"
+            type="button" 
+            class="btn btn-premium-print-en" 
+            @click="printSurat('en')"
+            title="Print Fit to Fly Certificate in English Version"
+          >
+            <i class="fas fa-plane-departure me-1"></i> Fit to Fly (EN) 🇬🇧
           </button>
           
           <button 
@@ -401,26 +417,266 @@ const deleteSurat = async () => {
   }
 }
 
-const printSurat = () => {
+const printSurat = (lang = 'id') => {
   const data = regData.value
   const f = form.value
   if (!data || !f.no_surat) return
 
-  const formatTglPanjang = (dateStr) => {
+  const formatTglIndo = (dateStr) => {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
     if (isNaN(d.getTime())) return dateStr
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
-  const jenisKelamin = data.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan'
-  const umur = data.pasien?.age_formatted || '-'
-  const nama = data.pasien?.nm_pasien || '-'
-  const alamat = data.pasien?.alamat || '-'
-  const dokter = data.dokter?.nm_dokter || '-'
-  const tanggal = formatTglPanjang(f.tanggalsurat)
+  const formatTglEnglish = (dateStr) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  }
 
-  const html = `
+  const nama = data.pasien?.nm_pasien || '-'
+  const nik = data.pasien?.no_ktp || '-'
+  const dokter = data.dokter?.nm_dokter || '-'
+  const sipDokter = data.dokter?.no_ijn_praktek || '-'
+  const umurIndo = data.pasien?.age_formatted || '-'
+  const umurEng = data.pasien?.age_years ? `${data.pasien.age_years} years old` : umurIndo
+  const tglLahirEng = data.pasien?.tgl_lahir ? formatTglEnglish(data.pasien.tgl_lahir) : '-'
+  const alamat = data.pasien?.alamat || '-'
+
+  let html = ''
+
+  if (lang === 'en') {
+    // ENGLISH: FIT TO FLY CERTIFICATE (Medical Certificate for Air Travel)
+    const tglSuratEng = formatTglEnglish(f.tanggalsurat)
+    const genderEng = data.pasien?.jk === 'L' ? 'Male' : 'Female'
+    let colorVisionEng = 'Normal'
+    if (f.butawarna === 'Ya') colorVisionEng = 'Color Blind (Defective)'
+    if (f.butawarna === 'Parsial') colorVisionEng = 'Partial Color Blind'
+
+    html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fit to Fly Certificate - ${nama}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      color: #000;
+      background: #fff;
+    }
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 25mm 20mm 25mm;
+      margin: 0 auto;
+      background: #fff;
+    }
+    .kop {
+      display: flex;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #000;
+      position: relative;
+    }
+    .kop::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      border-bottom: 1px solid #000;
+    }
+    .kop img {
+      width: 70px;
+      height: 70px;
+      margin-right: 16px;
+      object-fit: contain;
+    }
+    .kop-text { text-align: center; flex: 1; }
+    .kop-text h1 { font-size: 15pt; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .kop-text p { font-size: 9.5pt; margin: 0; }
+    .judul {
+      text-align: center;
+      margin: 22px 0 18px;
+    }
+    .judul h2 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-decoration: underline;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .judul .sub-judul {
+      font-size: 10.5pt;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+      color: #222;
+    }
+    .judul p { font-size: 10pt; margin-top: 4px; }
+    .intro { margin-bottom: 14px; line-height: 1.6; text-align: justify; }
+    .data-table {
+      width: 100%;
+      margin-bottom: 16px;
+      border-collapse: collapse;
+    }
+    .data-table td {
+      padding: 3px 0;
+      font-size: 11pt;
+      vertical-align: top;
+    }
+    .data-table td:first-child { width: 170px; color: #222; }
+    .data-table td:nth-child(2) { width: 15px; text-align: center; }
+    .ttv-container {
+      margin: 16px 0;
+      border: 1px solid #000;
+      padding: 12px 16px;
+      border-radius: 4px;
+    }
+    .ttv-title {
+      font-weight: bold;
+      font-size: 11pt;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .ttv-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ttv-table td {
+      padding: 3px 0;
+      font-size: 11pt;
+      width: 50%;
+    }
+    .verdict-box {
+      margin: 20px 0;
+      padding: 14px;
+      border: 2px solid #000;
+      text-align: center;
+      background: #fbfbfb;
+    }
+    .verdict-box h3 {
+      font-size: 13pt;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .verdict-box p {
+      font-size: 10pt;
+      margin-top: 4px;
+      color: #333;
+    }
+    .closing { margin-bottom: 35px; line-height: 1.6; text-align: justify; }
+    .signature {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .signature-block {
+      text-align: center;
+      width: 270px;
+    }
+    .signature-block .ttd-space {
+      height: 75px;
+      border-bottom: 1px solid #000;
+      margin-bottom: 4px;
+    }
+    .signature-block .nama-dokter {
+      font-weight: bold;
+      text-decoration: underline;
+      font-size: 11pt;
+    }
+    .signature-block .sip-dokter {
+      font-size: 9.5pt;
+      color: #333;
+    }
+    @media print {
+      html, body { margin: 0; padding: 0; }
+      .page { padding: 15mm 20mm; margin: 0; width: 100%; min-height: auto; }
+      @page { size: A4; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="kop">
+      <img src="${logoRsiaUrl}" alt="Logo RSIA" />
+      <div class="kop-text">
+        <h1>RSIA AISYIYAH PEKAJANGAN</h1>
+        <p>JL. RAYA PEKAJANGAN NO. 610 PEKALONGAN, CENTRAL JAVA, INDONESIA</p>
+        <p>Phone: +62 285 785909 | E-mail: rsiap_pkj@yahoo.co.id</p>
+      </div>
+    </div>
+
+    <div class="judul">
+      <h2>FIT TO FLY CERTIFICATE</h2>
+      <div class="sub-judul">MEDICAL CERTIFICATE FOR AIR TRAVEL</div>
+      <p>Reference No: ${f.no_surat}</p>
+    </div>
+
+    <div class="intro">
+      To whom it may concern / Airline Passenger Transport,<br>
+      The undersigned examining physician hereby certifies that:
+    </div>
+
+    <table class="data-table">
+      <tr><td>Passenger Name</td><td>:</td><td><strong>${nama}</strong></td></tr>
+      <tr><td>Date of Birth / Age</td><td>:</td><td>${tglLahirEng} (${umurEng})</td></tr>
+      <tr><td>Gender</td><td>:</td><td>${genderEng}</td></tr>
+      <tr><td>Passport / National ID No.</td><td>:</td><td>${nik !== '-' ? nik : 'On Record'}</td></tr>
+      <tr><td>Address</td><td>:</td><td>${alamat}</td></tr>
+    </table>
+
+    <div class="ttv-container">
+      <div class="ttv-title">Clinical Assessment & Vital Signs:</div>
+      <table class="ttv-table">
+        <tr>
+          <td>• Body Weight : <strong>${f.berat} kg</strong></td>
+          <td>• Height : <strong>${f.tinggi} cm</strong></td>
+        </tr>
+        <tr>
+          <td>• Blood Pressure : <strong>${f.tensi} mmHg</strong></td>
+          <td>• Color Vision : <strong>${colorVisionEng}</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="intro">
+      Has undergone clinical and physical examination and is declared to be:
+    </div>
+
+    <div class="verdict-box">
+      <h3>MEDICALLY FIT TO FLY / FIT TO TRAVEL BY AIR</h3>
+      <p>The passenger is clinically stable, in good physical condition, and safe to travel by commercial flight.</p>
+    </div>
+
+    <div class="closing">
+      This certificate is issued truthfully upon request for air travel clearance and remains valid in accordance with standard airline regulations.
+    </div>
+
+    <div class="signature">
+      <div class="signature-block">
+        <div>Pekalongan, ${tglSuratEng}</div>
+        <div style="margin-top: 2px;">Examining / Attending Physician,</div>
+        <div class="ttd-space"></div>
+        <div class="nama-dokter">${dokter}</div>
+        <div class="sip-dokter">License/SIP: ${sipDokter}</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+  } else {
+    // INDONESIAN: SURAT KETERANGAN LAYAK TERBANG
+    const tanggalIndo = formatTglIndo(f.tanggalsurat)
+    const jenisKelaminIndo = data.pasien?.jk === 'L' ? 'Laki-Laki' : 'Perempuan'
+
+    html = `
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -516,7 +772,7 @@ const printSurat = () => {
     }
     .signature-block {
       text-align: center;
-      width: 240px;
+      width: 260px;
     }
     .signature-block .ttd-space {
       height: 75px;
@@ -527,6 +783,10 @@ const printSurat = () => {
       font-weight: bold;
       text-decoration: underline;
       font-size: 11pt;
+    }
+    .signature-block .sip-dokter {
+      font-size: 9.5pt;
+      color: #333;
     }
     @media print {
       html, body { margin: 0; padding: 0; }
@@ -541,7 +801,7 @@ const printSurat = () => {
       <img src="${logoRsiaUrl}" alt="Logo RSIA" />
       <div class="kop-text">
         <h1>RSIA AISYIYAH PEKAJANGAN</h1>
-        <p>JL. RAYA PEKAJANGAN NO. 610 PEKALONGAN, PEKALONGAN, JAWA</p>
+        <p>JL. RAYA PEKAJANGAN NO. 610 PEKALONGAN, PEKALONGAN, JAWA TENGAH</p>
         <p>(0285) 785909</p>
       </div>
     </div>
@@ -557,8 +817,9 @@ const printSurat = () => {
 
     <table class="data-table">
       <tr><td>Nama</td><td>:</td><td><strong>${nama}</strong></td></tr>
-      <tr><td>Umur</td><td>:</td><td>${umur}</td></tr>
-      <tr><td>Jenis Kelamin</td><td>:</td><td>${jenisKelamin}</td></tr>
+      <tr><td>Umur</td><td>:</td><td>${umurIndo}</td></tr>
+      <tr><td>Jenis Kelamin</td><td>:</td><td>${jenisKelaminIndo}</td></tr>
+      <tr><td>NIK / No. KTP</td><td>:</td><td>${nik}</td></tr>
       <tr><td>Alamat</td><td>:</td><td>${alamat}</td></tr>
     </table>
 
@@ -587,14 +848,16 @@ const printSurat = () => {
 
     <div class="signature">
       <div class="signature-block">
-        <div>PEKALONGAN, ${tanggal}</div>
+        <div>PEKALONGAN, ${tanggalIndo}</div>
         <div class="ttd-space"></div>
         <div class="nama-dokter">${dokter}</div>
+        <div class="sip-dokter">SIP: ${sipDokter}</div>
       </div>
     </div>
   </div>
 </body>
 </html>`
+  }
 
   const printWindow = window.open('', '_blank', 'width=850,height=900,scrollbars=yes')
   if (!printWindow) {
@@ -652,21 +915,39 @@ defineExpose({
   filter: brightness(1.05);
 }
 
-.btn-premium-print {
-  padding: 0.45rem 1.25rem;
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
+.btn-premium-print-id {
+  padding: 0.45rem 1.1rem;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
   color: white;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   border: none;
   border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(8, 145, 178, 0.2);
+  box-shadow: 0 4px 14px rgba(3, 105, 161, 0.2);
   transition: all 0.2s ease;
 }
 
-.btn-premium-print:hover {
+.btn-premium-print-id:hover {
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(8, 145, 178, 0.3);
+  box-shadow: 0 6px 20px rgba(3, 105, 161, 0.3);
+  filter: brightness(1.05);
+}
+
+.btn-premium-print-en {
+  padding: 0.45rem 1.1rem;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: white;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-premium-print-en:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(30, 58, 138, 0.35);
   filter: brightness(1.05);
 }
 
