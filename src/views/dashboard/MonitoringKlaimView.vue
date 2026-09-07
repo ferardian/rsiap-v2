@@ -13,7 +13,11 @@
           </div>
         </div>
 
-        <div class="action-buttons d-flex gap-3 align-items-center">
+        <div class="action-buttons d-flex gap-2 align-items-center">
+          <span class="badge bg-light text-muted border rounded-pill px-3 py-2 fw-normal d-none d-lg-inline-flex align-items-center">
+            <i class="fas fa-robot text-primary me-2"></i> Auto-Sync: 02:00 WIB
+          </span>
+
           <div class="mode-toggle-group rounded-pill p-1">
             <button @click="setYearlyMode(true)" :class="['mode-pill-btn', { active: filters.isYearlyMode }]">
               <i class="fas fa-calendar-alt me-2"></i> Tahunan
@@ -936,24 +940,52 @@ const fetchDoctors = async () => {
 
 const syncData = async () => {
   const result = await Swal.fire({
-    title: 'Konfirmasi Sinkronisasi',
-    text: `Sistem akan mengambil data klaim terbaru dari BPJS untuk periode ${months[filters.bulan - 1]} ${filters.tahun}. Lanjutkan?`,
+    title: 'Pilih Mode Sinkronisasi',
+    html: `
+      <div class="text-start mt-2">
+        <p class="text-muted small mb-3">
+          Tarik pembaruan data klaim dari server BPJS VClaim untuk periode <b>${months[filters.bulan - 1]} ${filters.tahun}</b>:
+        </p>
+        <div class="p-3 rounded-3 bg-light border mb-2">
+          <div class="fw-bold text-primary mb-1 d-flex align-items-center">
+            <i class="fas fa-bolt me-2"></i> Sync Khusus Pending (Sangat Cepat)
+          </div>
+          <div class="text-muted small">
+            Hanya menarik tanggal-tanggal yang berkasnya masih berstatus <b>Proses Verifikasi</b>, <b>Pending</b>, atau <b>belum ada FPK</b>. Selesai dalam hitungan detik.
+          </div>
+        </div>
+        <div class="p-3 rounded-3 bg-light border">
+          <div class="fw-bold text-secondary mb-1 d-flex align-items-center">
+            <i class="fas fa-calendar-alt me-2"></i> Sync 1 Bulan Penuh
+          </div>
+          <div class="text-muted small">
+            Mengambil seluruh tanggal dari awal sampai akhir bulan secara berurutan. Membutuhkan waktu 1-2 menit.
+          </div>
+        </div>
+      </div>
+    `,
     icon: 'question',
     showCancelButton: true,
-    confirmButtonText: 'Ya, Teruskan!',
+    showDenyButton: true,
+    confirmButtonText: '<i class="fas fa-bolt me-1"></i> Sync Khusus Pending',
+    denyButtonText: '<i class="fas fa-calendar-alt me-1"></i> Sync Bulan Penuh',
     cancelButtonText: 'Batal',
     confirmButtonColor: '#2563eb',
-    cancelButtonColor: '#64748b',
-    reverseButtons: true,
+    denyButtonColor: '#475569',
+    cancelButtonColor: '#94a3b8',
+    reverseButtons: false,
     background: '#ffffff',
     customClass: {
       popup: 'rounded-4 border-0 shadow-lg',
-      confirmButton: 'rounded-pill px-4 fw-bold',
-      cancelButton: 'rounded-pill px-4'
+      confirmButton: 'rounded-pill px-3 fw-bold',
+      denyButton: 'rounded-pill px-3 fw-semibold',
+      cancelButton: 'rounded-pill px-3'
     }
   })
 
-  if (!result.isConfirmed) return
+  if (!result.isConfirmed && !result.isDenied) return
+
+  const isPendingOnly = result.isConfirmed // True jika klik "Sync Khusus Pending"
 
   syncing.value = true
   error.value = null
@@ -964,7 +996,8 @@ const syncData = async () => {
     const params = {
       jenis_pelayanan: filters.jenis_pelayanan,
       status_klaim: filters.status_klaim,
-      tahun: filters.tahun
+      tahun: filters.tahun,
+      pending_only: isPendingOnly
     }
 
     if (!filters.isYearlyMode) {
@@ -974,7 +1007,24 @@ const syncData = async () => {
     const response = await bpjsVclaimService.syncMonitoringKlaim(params)
     
     if (response.data?.metaData?.code === '200') {
-      syncSuccessMessage.value = "Sinkronisasi selesai!"
+      const output = response.data?.response?.output || ''
+      let notifMsg = isPendingOnly 
+        ? 'Pembaruan data berkas klaim pending berhasil!' 
+        : 'Sinkronisasi 1 bulan penuh selesai!'
+      
+      if (output.includes('Semua berkas klaim pada periode ini sudah berstatus Selesai')) {
+        notifMsg = 'Semua berkas klaim periode ini sudah Selesai / Lolos (tidak ada klaim pending).'
+      }
+
+      syncSuccessMessage.value = notifMsg
+      Swal.fire({
+        icon: 'success',
+        title: 'Sinkronisasi Selesai',
+        text: notifMsg,
+        timer: 3500,
+        showConfirmButton: false,
+        customClass: { popup: 'rounded-4 border-0 shadow' }
+      })
       setTimeout(() => syncSuccessMessage.value = '', 5000)
     } else {
       error.value = "Gagal memproses sinkronisasi: " + (response.data?.metaData?.message || "Unknown Error")
