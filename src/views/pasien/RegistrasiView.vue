@@ -474,6 +474,50 @@
                                     <i class="fas fa-print me-2 text-success opacity-75"></i> Print Register
                                   </a>
                                 </li>
+                                <li class="dropdown-submenu position-relative" :class="{ 'show-sub': activeSubmenu === reg.no_rawat }">
+                                   <a class="dropdown-item dropdown-submenu-toggle rounded-3 mb-1 py-2 d-flex align-items-center justify-content-between text-dark" href="#" @click.prevent.stop="toggleSubmenu(reg.no_rawat)">
+                                     <div class="d-flex align-items-center">
+                                       <i class="fas fa-envelope-open-text me-2 text-primary opacity-75"></i>
+                                       <span>Surat - Surat</span>
+                                     </div>
+                                     <i class="fas fa-chevron-left ms-2 submenu-arrow opacity-50"></i>
+                                   </a>
+                                   <ul class="dropdown-menu dropdown-menu-sub shadow border-0 glass-effect p-2 rounded-4">
+                                     <li class="dropdown-header px-2 py-1 text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                                       Pilihan Surat
+                                     </li>
+                                     <li>
+                                       <a class="dropdown-item rounded-3 mb-1 py-2 text-primary d-flex align-items-center" href="#" @click.prevent="openSuratLayakTerbang(reg)">
+                                         <i class="fas fa-plane-departure me-2 opacity-75"></i>
+                                         <span>Surat Layak Terbang</span>
+                                       </a>
+                                     </li>
+                                     <li>
+                                       <a class="dropdown-item rounded-3 mb-1 py-2 text-muted disabled d-flex align-items-center justify-content-between" href="#" @click.prevent style="cursor: not-allowed; opacity: 0.7;">
+                                         <div class="d-flex align-items-center">
+                                           <i class="fas fa-heartbeat me-2 opacity-50 text-success"></i>
+                                           <span>Surat Sehat</span>
+                                         </div>
+                                         <span class="badge bg-light text-secondary border ms-2" style="font-size: 0.65rem;">Segera</span>
+                                       </a>
+                                     </li>
+                                     <li>
+                                       <a class="dropdown-item rounded-3 mb-1 py-2 text-teal d-flex align-items-center" href="#" @click.prevent="openSuratSakit(reg)">
+                                         <i class="fas fa-procedures me-2 text-teal opacity-75" style="color: #0d9488;"></i>
+                                         <span style="color: #0d9488; font-weight: 500;">Surat Sakit</span>
+                                       </a>
+                                     </li>
+                                     <li>
+                                       <a class="dropdown-item rounded-3 mb-1 py-2 text-muted disabled d-flex align-items-center justify-content-between" href="#" @click.prevent style="cursor: not-allowed; opacity: 0.7;">
+                                         <div class="d-flex align-items-center">
+                                           <i class="fas fa-baby me-2 opacity-50 text-warning"></i>
+                                           <span>Surat Cuti Hamil</span>
+                                         </div>
+                                         <span class="badge bg-light text-secondary border ms-2" style="font-size: 0.65rem;">Segera</span>
+                                       </a>
+                                     </li>
+                                   </ul>
+                                 </li>
                                 <li v-if="reg.stts === 'Belum'">
                                   <hr class="dropdown-divider">
                                 </li>
@@ -967,6 +1011,12 @@
       @close="showGenerateSepModal = false"
       @success="fetchRegistrations"
     />
+
+    <!-- Surat Layak Terbang Modal -->
+    <SuratLayakTerbangModal ref="suratLayakTerbangModalRef" />
+
+    <!-- Surat Sakit Modal -->
+    <SuratSakitModal ref="suratSakitModalRef" />
     <!-- Floating Section Navigation (NEW) -->
     <nav class="floating-section-nav animate__animated animate__fadeInRight">
       <div class="nav-inner glass-effect">
@@ -1135,8 +1185,32 @@ import FastTrackCard from './components/FastTrackCard.vue';
 import api from '../../services/api';
 import QueueManager from '@/components/ui/QueueManager.vue';
 import bpjsVclaimService from '../../services/bpjsVclaimService';
+import SuratLayakTerbangModal from '@/components/pemeriksaan/SuratLayakTerbangModal.vue';
+import SuratSakitModal from '@/components/pemeriksaan/SuratSakitModal.vue';
 
 // State
+const suratLayakTerbangModalRef = ref(null);
+const suratSakitModalRef = ref(null);
+const activeSubmenu = ref(null);
+
+const toggleSubmenu = (noRawat) => {
+  activeSubmenu.value = activeSubmenu.value === noRawat ? null : noRawat;
+};
+
+const openSuratLayakTerbang = (reg) => {
+  activeSubmenu.value = null;
+  if (suratLayakTerbangModalRef.value) {
+    suratLayakTerbangModalRef.value.open(reg.no_rawat);
+  }
+};
+
+const openSuratSakit = (reg) => {
+  activeSubmenu.value = null;
+  if (suratSakitModalRef.value) {
+    suratSakitModalRef.value.open(reg.no_rawat);
+  }
+};
+
 const searchQuery = ref('');
 const searchResults = ref([]);
 const searching = ref(false);
@@ -2419,6 +2493,87 @@ onBeforeUnmount(() => {
 .dropdown-item:hover {
     background-color: rgba(52, 152, 219, 0.1);
     transform: translateX(4px);
+}
+
+/* Submenu Surat - Surat */
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu-toggle {
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-submenu-toggle:hover {
+    transform: none !important; /* Prevent parent jitter on hover */
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.submenu-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-submenu:hover .submenu-arrow,
+.dropdown-submenu.show-sub .submenu-arrow {
+    transform: translateX(-3px);
+}
+
+.dropdown-menu-sub {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 100%;
+    margin-right: 4px;
+    min-width: 220px;
+    z-index: 2050 !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    animation: fadeInSubmenu 0.18s ease-out;
+}
+
+.dropdown-submenu:hover > .dropdown-menu-sub,
+.dropdown-submenu.show-sub > .dropdown-menu-sub {
+    display: block;
+}
+
+/* Hover bridge between parent menu and submenu to prevent accidental pointer lost */
+.dropdown-menu-sub::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -10px;
+    width: 10px;
+    height: 100%;
+    background: transparent;
+}
+
+@keyframes fadeInSubmenu {
+    from {
+        opacity: 0;
+        transform: translateX(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .dropdown-menu-sub {
+        position: static;
+        margin: 4px 0 0 0;
+        box-shadow: none !important;
+        border-left: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        background: #f8fafc !important;
+    }
+    .submenu-arrow {
+        transform: rotate(-90deg) !important;
+    }
+    .dropdown-submenu.show-sub .submenu-arrow {
+        transform: rotate(90deg) !important;
+    }
 }
 
 /* Ensure the dropdown container doesn't trap the z-index */

@@ -64,5 +64,31 @@ export default {
         return api.delete('/rawat-jalan/surat-terbang', {
             params: { no_surat }
         });
+    },
+
+    // Get Surat Sakit
+    getSuratSakit(no_rawat) {
+        return api.get('/rawat-jalan/surat-sakit', {
+            params: { no_rawat }
+        });
+    },
+
+    // Save/Update Surat Sakit
+    saveSuratSakit(data) {
+        return api.post('/rawat-jalan/surat-sakit', data);
+    },
+
+    // Get Next Auto Number for Surat Sakit
+    getNextSuratSakitNumber(tanggalawal) {
+        return api.get('/rawat-jalan/surat-sakit/next-number', {
+            params: { tanggalawal }
+        });
+    },
+
+    // Delete Surat Sakit
+    deleteSuratSakit(no_surat) {
+        return api.delete('/rawat-jalan/surat-sakit', {
+            params: { no_surat }
+        });
     }
 }
