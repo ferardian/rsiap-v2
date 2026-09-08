@@ -108,6 +108,34 @@ export const pegawaiService = {
     },
 
     /**
+     * Preview WA reminder message for clinical staff SIP
+     */
+    previewSipWaReminder(nik) {
+        return api.get(`/sdi/kualifikasi-staf/preview-wa-reminder/${nik}`)
+    },
+
+    /**
+     * Send individual WA reminder for clinical staff SIP
+     */
+    sendSipWaReminder(nik) {
+        return api.post(`/sdi/kualifikasi-staf/send-wa-reminder/${nik}`)
+    },
+
+    /**
+     * Send bulk WA reminder for all clinical staff with SIP expiring soon (H-3 bulan)
+     */
+    sendBulkSipWaReminder(params = {}) {
+        return api.post('/sdi/kualifikasi-staf/send-bulk-wa-reminder', params)
+    },
+
+    /**
+     * Get logs of sent SIP WA reminders
+     */
+    getSipReminderLogs(nik = 'all') {
+        return api.get(`/sdi/kualifikasi-staf/reminder-logs/${nik}`)
+    },
+
+    /**
      * Get master list of credentials (PK I, II, etc)
      */
     getMasterKredensial(params = {}) {

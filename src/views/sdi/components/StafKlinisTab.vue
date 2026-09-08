@@ -11,11 +11,26 @@
           placeholder="Cari NIK, nama, jabatan, atau nomor STR/SIP..."
         />
       </div>
-      <div class="header-buttons" style="display: flex; gap: 1rem; align-items: center;">
+      <div class="header-buttons" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
         <button class="btn-export-excel" @click="exportExcel">
           <i class="fas fa-file-excel"></i>
           <span>Export Excel</span>
         </button>
+        <div 
+          v-if="expiringSipList.length > 0" 
+          class="info-card info-card-warning" 
+          @click="openBulkWaModal"
+          title="Klik untuk kirim reminder WA ke staf klinis yang masa berlaku SIP-nya segera habis"
+        >
+          <div class="info-icon info-icon-wa">
+            <i class="fab fa-whatsapp"></i>
+          </div>
+          <div class="info-content">
+            <div class="info-label">SIP Segera Habis (H-3 Bln)</div>
+            <div class="info-value">{{ expiringSipList.length }} Karyawan</div>
+          </div>
+          <i class="fas fa-paper-plane dropdown-icon"></i>
+        </div>
         <div class="info-card" @click="toggleEmployeeList" :class="{ active: showEmployeeList }">
         <div class="info-icon">
           <i class="fas fa-user-clock"></i>
@@ -158,6 +173,15 @@
                     </button>
                     <button class="btn-upload" @click="openUploadBuktiModal(staf)" title="Upload Verifikasi Ijazah">
                       <i class="fas fa-upload"></i>
+                    </button>
+                    <button 
+                      v-if="staf.tanggal_akhir_str && staf.tanggal_akhir_str !== '0000-00-00'" 
+                      class="btn-wa" 
+                      :class="{ 'btn-wa-urgent': isExpiringSoon(staf.tanggal_akhir_str) || isExpired(staf.tanggal_akhir_str) }"
+                      @click="openWaModal(staf)" 
+                      title="Kirim Reminder WA Masa Berlaku SIP"
+                    >
+                      <i class="fab fa-whatsapp"></i>
                     </button>
                     <button class="btn-delete" @click="confirmDelete(staf)" title="Hapus">
                       <i class="fas fa-trash"></i>
@@ -570,6 +594,15 @@
           </div>
         </div>
         <div class="modal-footer modern-footer">
+          <button 
+            v-if="selectedStaf && selectedStaf.tanggal_akhir_str && selectedStaf.tanggal_akhir_str !== '0000-00-00'" 
+            class="btn-send-whatsapp" 
+            @click="openWaModal(selectedStaf)"
+            style="margin-right: auto;"
+          >
+            <i class="fab fa-whatsapp"></i>
+            Kirim Reminder WA
+          </button>
           <button class="btn-cancel" @click="showDetailModal = false">
             <i class="fas fa-times"></i>
             Tutup
@@ -577,6 +610,148 @@
           <button class="btn-save" @click="openEditModal(selectedStaf); showDetailModal = false">
             <i class="fas fa-edit"></i>
             Edit Data
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WA Reminder Individual Modal -->
+    <div v-if="showWaModal" class="modal-overlay" @click="showWaModal = false">
+      <div class="modal-content modern-modal" style="max-width: 560px;" @click.stop>
+        <div class="modal-header modern-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+          <div class="header-content">
+            <div class="header-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+              <i class="fab fa-whatsapp"></i>
+            </div>
+            <div>
+              <h3 style="color: white; margin: 0; font-size: 1.15rem;">Kirim Reminder WA SIP</h3>
+              <p class="header-subtitle" style="color: rgba(255, 255, 255, 0.9); margin: 2px 0 0 0; font-size: 0.85rem;">Notifikasi masa berlaku Surat Izin Praktik ke Karyawan</p>
+            </div>
+          </div>
+          <button class="btn-close" style="color: white;" @click="showWaModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body modern-body">
+          <div v-if="loadingWaPreview" class="text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-success mb-2"></i>
+            <p class="text-muted">Menyiapkan pratinjau pesan WhatsApp...</p>
+          </div>
+          <div v-else-if="waPreviewData">
+            <!-- Staff Summary Card -->
+            <div class="wa-recipient-card">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <div class="wa-recipient-name">{{ waPreviewData.nama }}</div>
+                  <div class="wa-recipient-nik">NIK: {{ waPreviewData.nik }}</div>
+                </div>
+                <span v-if="waPreviewData.has_valid_phone" class="badge bg-success bg-opacity-10 text-success px-2 py-1">
+                  <i class="fas fa-phone-alt me-1"></i> {{ waPreviewData.clean_phone }}
+                </span>
+                <span v-else class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">
+                  <i class="fas fa-exclamation-triangle me-1"></i> No. Telp Tidak Valid
+                </span>
+              </div>
+              <div class="wa-recipient-meta">
+                <span><strong>No. SIP:</strong> {{ waPreviewData.nomor_sip || '-' }}</span>
+                <span><strong>Berakhir:</strong> {{ formatDate(waPreviewData.tanggal_akhir_sip) }}</span>
+              </div>
+            </div>
+
+            <!-- Cooldown Warning if recently sent -->
+            <div v-if="waPreviewData.is_recently_reminded" class="wa-alert-warning">
+              <i class="fas fa-info-circle me-2"></i>
+              <span>Karyawan ini telah dikirimi reminder dalam 30 hari terakhir. Tetap kirim jika diperlukan.</span>
+            </div>
+
+            <!-- Message Preview Bubble -->
+            <div class="wa-preview-container">
+              <div class="wa-preview-header">
+                <i class="fab fa-whatsapp text-success me-1"></i> Pratinjau Pesan yang Akan Dikirim:
+              </div>
+              <div class="wa-chat-bubble">
+                <pre class="wa-bubble-text">{{ waPreviewData.preview_pesan }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer modern-footer">
+          <button class="btn-cancel" @click="showWaModal = false">
+            <i class="fas fa-times"></i> Batal
+          </button>
+          <button 
+            class="btn-send-whatsapp" 
+            :disabled="sendingWa || !waPreviewData || !waPreviewData.has_valid_phone"
+            @click="sendWaNow"
+          >
+            <i :class="sendingWa ? 'fas fa-spinner fa-spin' : 'fab fa-whatsapp'"></i>
+            {{ sendingWa ? 'Mengirim...' : 'Kirim Sekarang' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk WA Reminder Modal -->
+    <div v-if="showBulkWaModal" class="modal-overlay" @click="showBulkWaModal = false">
+      <div class="modal-content modern-modal" style="max-width: 620px;" @click.stop>
+        <div class="modal-header modern-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+          <div class="header-content">
+            <div class="header-icon" style="background: rgba(255, 255, 255, 0.2); color: white;">
+              <i class="fas fa-paper-plane"></i>
+            </div>
+            <div>
+              <h3 style="color: white; margin: 0; font-size: 1.15rem;">Kirim Reminder WA Massal (H-3 Bulan)</h3>
+              <p class="header-subtitle" style="color: rgba(255, 255, 255, 0.9); margin: 2px 0 0 0; font-size: 0.85rem;">Kirim pengingat SIP ke seluruh staf klinis yang masa berlakunya segera habis</p>
+            </div>
+          </div>
+          <button class="btn-close" style="color: white;" @click="showBulkWaModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body modern-body">
+          <p class="text-muted mb-3" style="font-size: 0.9rem;">
+            Ditemukan <strong>{{ expiringSipList.length }} karyawan</strong> staf klinis dengan masa berlaku SIP &le; 90 hari atau telah habis:
+          </p>
+
+          <div class="bulk-list-wrapper">
+            <div v-for="staf in expiringSipList" :key="staf.nik" class="bulk-item">
+              <div class="bulk-item-info">
+                <span class="bulk-emp-name">{{ staf.nama }}</span>
+                <span class="bulk-emp-sub">{{ staf.jbtn || staf.nik }} &bull; {{ staf.no_telp || 'Tanpa no. HP' }}</span>
+              </div>
+              <div class="bulk-item-badge">
+                <span v-if="isExpired(staf.tanggal_akhir_str)" class="badge badge-danger">
+                  Habis: {{ formatDate(staf.tanggal_akhir_str) }}
+                </span>
+                <span v-else class="badge badge-warning">
+                  Habis: {{ formatDate(staf.tanggal_akhir_str) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-check-label d-flex align-items-center gap-2" style="cursor: pointer; font-size: 0.875rem;">
+              <input type="checkbox" v-model="bulkForce" class="form-check-input" />
+              <span>Kirim juga ke karyawan yang sudah pernah dikirimi reminder dalam 30 hari terakhir</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer modern-footer">
+          <button class="btn-cancel" @click="showBulkWaModal = false">
+            <i class="fas fa-times"></i> Batal
+          </button>
+          <button 
+            class="btn-send-whatsapp" 
+            :disabled="sendingBulkWa || expiringSipList.length === 0"
+            @click="sendBulkWaNow"
+          >
+            <i :class="sendingBulkWa ? 'fas fa-spinner fa-spin' : 'fab fa-whatsapp'"></i>
+            {{ sendingBulkWa ? 'Memproses Pengiriman...' : `Kirim ke ${expiringSipList.length} Karyawan` }}
           </button>
         </div>
       </div>
@@ -629,7 +804,26 @@ const form = ref({
   status: '1'
 })
 
+// WA Reminder State
+const showWaModal = ref(false)
+const showBulkWaModal = ref(false)
+const waTargetStaf = ref(null)
+const waPreviewData = ref(null)
+const loadingWaPreview = ref(false)
+const sendingWa = ref(false)
+const sendingBulkWa = ref(false)
+const bulkForce = ref(false)
+
 // Computed
+const expiringSipList = computed(() => {
+  return stafList.value.filter(staf => {
+    if (!staf.has_kualifikasi || !staf.tanggal_akhir_str || staf.tanggal_akhir_str === '0000-00-00') {
+      return false
+    }
+    return isExpiringSoon(staf.tanggal_akhir_str) || isExpired(staf.tanggal_akhir_str)
+  })
+})
+
 const employeesWithoutKualifikasi = computed(() => {
   return stafList.value.filter(staf => !staf.has_kualifikasi).length
 })
@@ -1005,17 +1199,81 @@ const formatDate = (date) => {
   }
 }
 
-const isExpired = (date) => {
+function isExpired(date) {
   if (!date) return false
   return new Date(date) < new Date()
 }
 
-const isExpiringSoon = (date) => {
+function isExpiringSoon(date) {
   if (!date) return false
   const expiryDate = new Date(date)
   const today = new Date()
   const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))
   return daysUntilExpiry > 0 && daysUntilExpiry <= 90 // 90 days warning
+}
+
+const openWaModal = async (staf) => {
+  waTargetStaf.value = staf
+  waPreviewData.value = null
+  loadingWaPreview.value = true
+  showWaModal.value = true
+
+  try {
+    const res = await pegawaiService.previewSipWaReminder(staf.nik)
+    if (res.data.success) {
+      waPreviewData.value = res.data.data
+    } else {
+      toast.error(res.data.message || 'Gagal memuat preview reminder')
+    }
+  } catch (err) {
+    console.error('Error preview WA:', err)
+    toast.error('Gagal mengambil pratinjau pesan reminder')
+    showWaModal.value = false
+  } finally {
+    loadingWaPreview.value = false
+  }
+}
+
+const sendWaNow = async () => {
+  if (!waTargetStaf.value) return
+  sendingWa.value = true
+  try {
+    const res = await pegawaiService.sendSipWaReminder(waTargetStaf.value.nik)
+    if (res.data.success) {
+      toast.success(res.data.message || 'Notifikasi WhatsApp berhasil dikirim')
+      showWaModal.value = false
+    } else {
+      toast.error(res.data.message || 'Gagal mengirim pesan WhatsApp')
+    }
+  } catch (err) {
+    console.error('Error send WA:', err)
+    toast.error(err.response?.data?.message || 'Terjadi kesalahan saat mengirim pesan WhatsApp')
+  } finally {
+    sendingWa.value = false
+  }
+}
+
+const openBulkWaModal = () => {
+  bulkForce.value = false
+  showBulkWaModal.value = true
+}
+
+const sendBulkWaNow = async () => {
+  sendingBulkWa.value = true
+  try {
+    const res = await pegawaiService.sendBulkSipWaReminder({ force: bulkForce.value })
+    if (res.data.success) {
+      toast.success(res.data.message || 'Pengingat WhatsApp massal berhasil dijadwalkan')
+      showBulkWaModal.value = false
+    } else {
+      toast.error(res.data.message || 'Gagal memproses pengiriman massal')
+    }
+  } catch (err) {
+    console.error('Error bulk WA:', err)
+    toast.error(err.response?.data?.message || 'Terjadi kesalahan saat memproses pengiriman massal')
+  } finally {
+    sendingBulkWa.value = false
+  }
 }
 
 // Lifecycle
@@ -2198,5 +2456,188 @@ tbody tr:hover .sticky-col-right {
 .btn-preview-sk-mini:hover .arrow {
   opacity: 1;
   transform: translateX(4px);
+}
+
+/* WhatsApp Reminder Styles */
+.btn-wa {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.btn-wa:hover {
+  background: #bbf7d0;
+  color: #15803d;
+  transform: translateY(-1px);
+}
+
+.btn-wa-urgent {
+  background: #22c55e;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.35);
+}
+
+.btn-wa-urgent:hover {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.btn-send-whatsapp {
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  background: #10b981;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.btn-send-whatsapp:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-send-whatsapp:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.info-card-warning {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  cursor: pointer;
+}
+
+.info-card-warning:hover {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+}
+
+.info-icon-wa {
+  background: #dcfce7 !important;
+  color: #16a34a !important;
+}
+
+.wa-recipient-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.wa-recipient-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.wa-recipient-nik {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.wa-recipient-meta {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.825rem;
+  color: #475569;
+}
+
+.wa-preview-container {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.wa-preview-header {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.wa-chat-bubble {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #22c55e;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.wa-bubble-text {
+  font-family: inherit;
+  font-size: 0.825rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.wa-alert-warning {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #b45309;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.bulk-list-wrapper {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.bulk-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.875rem;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.bulk-item:last-child {
+  border-bottom: none;
+}
+
+.bulk-emp-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+  display: block;
+}
+
+.bulk-emp-sub {
+  font-size: 0.775rem;
+  color: #64748b;
+  display: block;
 }
 </style>
