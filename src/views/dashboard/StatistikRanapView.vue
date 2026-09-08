@@ -170,7 +170,7 @@
                 <!-- Bed SK Disclaimer Note -->
                 <div class="sk-bed-note p-2 rounded-3" style="background: #eff6ff; border-left: 3px solid #3b82f6; font-size: 0.72rem; color: #1e40af; line-height: 1.4;">
                   <i class="fas fa-info-circle me-1"></i>
-                  <strong>Catatan Tempat Tidur:</strong> Total <strong>A (Jml Bed)</strong> pada statistik ini berbeda dengan SK Tempat Tidur RS, karena SK tidak mencantumkan tempat tidur Ruang VK (Kamar Bersalin).
+                  <strong>Catatan Tempat Tidur:</strong> Tempat tidur Ruang VK (Kamar Bersalin) telah diexclude dari statistik <strong>Gabungan & Umum</strong> sesuai standar tempat tidur perawatan. Data spesifik VK dapat dilihat tersendiri pada kategori <strong>VK (Kamar Bersalin)</strong>.
                 </div>
               </div>
             </div>
