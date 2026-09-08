@@ -675,6 +675,10 @@
               </div>
             </div>
           </div>
+          <div v-else class="text-center py-4">
+            <i class="fas fa-exclamation-circle fa-2x text-warning mb-2"></i>
+            <p class="text-muted">Gagal memuat pratinjau pesan atau data tidak ditemukan.</p>
+          </div>
         </div>
 
         <div class="modal-footer modern-footer">
@@ -1220,15 +1224,14 @@ const openWaModal = async (staf) => {
 
   try {
     const res = await pegawaiService.previewSipWaReminder(staf.nik)
-    if (res.data.success) {
-      waPreviewData.value = res.data.data
+    if (res.data && res.data.success) {
+      waPreviewData.value = res.data.data || res.data.message
     } else {
-      toast.error(res.data.message || 'Gagal memuat preview reminder')
+      toast.error(res.data?.message || 'Gagal memuat preview reminder')
     }
   } catch (err) {
     console.error('Error preview WA:', err)
-    toast.error('Gagal mengambil pratinjau pesan reminder')
-    showWaModal.value = false
+    toast.error(err.response?.data?.message || 'Gagal mengambil pratinjau pesan reminder')
   } finally {
     loadingWaPreview.value = false
   }
