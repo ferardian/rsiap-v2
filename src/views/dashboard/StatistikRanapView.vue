@@ -153,7 +153,7 @@
             <!-- Raw Metrics Block -->
             <div class="col-12 mt-2">
               <div class="raw-metrics-card card border-0 bg-white shadow-sm rounded-4 p-3">
-                <div class="row text-center g-0 mb-2">
+                <div class="row text-center g-0">
                   <div class="col-4 border-end">
                     <span class="d-block text-muted text-xs fw-bold">A (Jml Bed)</span>
                     <span class="fw-bold fs-5 text-dark">{{ currentData.raw_metrics?.A || (currentData.metrics?.A || 0) }}</span>
@@ -166,11 +166,6 @@
                     <span class="d-block text-muted text-xs fw-bold">D (Pasien Keluar)</span>
                     <span class="fw-bold fs-5 text-dark">{{ currentData.raw_metrics?.D || (currentData.metrics?.D || 0) }}</span>
                   </div>
-                </div>
-                <!-- Bed SK Disclaimer Note -->
-                <div class="sk-bed-note p-2 rounded-3" style="background: #eff6ff; border-left: 3px solid #3b82f6; font-size: 0.72rem; color: #1e40af; line-height: 1.4;">
-                  <i class="fas fa-info-circle me-1"></i>
-                  <strong>Catatan Tempat Tidur:</strong> Tempat tidur Ruang VK (Kamar Bersalin) telah diexclude dari statistik <strong>Gabungan & Umum</strong> sesuai standar tempat tidur perawatan. Data spesifik VK dapat dilihat tersendiri pada kategori <strong>VK (Kamar Bersalin)</strong>.
                 </div>
               </div>
             </div>
