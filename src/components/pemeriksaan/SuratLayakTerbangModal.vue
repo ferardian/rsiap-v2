@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="surat-terbang-modal-overlay" @click.self="close">
     <div class="modal-content-custom border-0 shadow-2xl animate__animated animate__zoomIn animate__faster" 
-         style="max-width: 620px; height: auto; max-height: 85vh; border-radius: 20px; overflow: hidden; background: #fafafa; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
+         style="width: 100%; max-width: 680px; height: auto; max-height: 85vh; border-radius: 20px; overflow: hidden; background: #fafafa; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column;">
       
       <!-- Header: Vibrant Blue/Indigo Gradient with plane icon -->
       <div class="d-flex align-items-center justify-content-between py-3 px-4 text-white position-relative" 
@@ -203,8 +203,8 @@
       </div>
 
       <!-- Footer: Fixed Action Buttons -->
-      <div v-if="!isLoading" class="modal-footer-custom py-2 px-4 d-flex justify-content-between align-items-center border-top" 
-           style="background: #f8fafc; flex-shrink: 0; z-index: 10;">
+      <div v-if="!isLoading" class="modal-footer-custom py-2.5 px-4 d-flex justify-content-between align-items-center border-top" 
+           style="background: #ffffff; flex-shrink: 0; z-index: 10;">
         <div>
           <button 
             v-if="form.no_surat && savedData" 
@@ -212,13 +212,14 @@
             class="btn btn-premium-danger" 
             @click="deleteSurat"
             :disabled="isDeleting"
+            title="Hapus Surat Layak Terbang"
           >
-            <i v-if="isDeleting" class="spinner-border spinner-border-sm me-1"></i>
-            <i v-else class="fas fa-trash me-1"></i> Hapus
+            <i v-if="isDeleting" class="spinner-border spinner-border-sm me-1.5"></i>
+            <i v-else class="fas fa-trash-alt me-1.5"></i> Hapus
           </button>
         </div>
         
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
           <button type="button" class="btn btn-premium-secondary" @click="close">
             Batal
           </button>
@@ -230,7 +231,7 @@
             @click="printSurat('id')"
             title="Cetak Surat Layak Terbang versi Bahasa Indonesia"
           >
-            <i class="fas fa-print me-1"></i> Cetak (ID) 🇮🇩
+            <i class="fas fa-print me-1.5"></i> Cetak (ID) 🇮🇩
           </button>
 
           <button 
@@ -240,7 +241,7 @@
             @click="printSurat('en')"
             title="Print Fit to Fly Certificate in English Version"
           >
-            <i class="fas fa-plane-departure me-1"></i> Fit to Fly (EN) 🇬🇧
+            <i class="fas fa-plane-departure me-1.5"></i> Fit to Fly (EN) 🇬🇧
           </button>
           
           <button 
@@ -249,8 +250,8 @@
             class="btn btn-premium-save" 
             :disabled="isSaving"
           >
-            <i v-if="isSaving" class="spinner-border spinner-border-sm me-1"></i>
-            <i v-else class="fas fa-save me-1"></i> Simpan
+            <i v-if="isSaving" class="spinner-border spinner-border-sm me-1.5"></i>
+            <i v-else class="fas fa-save me-1.5"></i> Simpan
           </button>
         </div>
       </div>
@@ -898,91 +899,136 @@ defineExpose({
 }
 
 .btn-premium-save {
-  padding: 0.45rem 1.25rem;
+  height: 36px;
+  padding: 0 1.25rem;
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 600;
+  font-size: 0.82rem;
   border: none;
   border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.2);
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .btn-premium-save:hover:not(:disabled) {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(29, 78, 216, 0.3);
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+  filter: brightness(1.06);
 }
 
 .btn-premium-print-id {
-  padding: 0.45rem 1.1rem;
+  height: 36px;
+  padding: 0 1rem;
   background: linear-gradient(135deg, #0284c7, #0369a1);
   color: white;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.82rem;
   border: none;
   border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(3, 105, 161, 0.2);
+  box-shadow: 0 2px 8px rgba(3, 105, 161, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .btn-premium-print-id:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(3, 105, 161, 0.3);
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(3, 105, 161, 0.3);
+  filter: brightness(1.06);
 }
 
 .btn-premium-print-en {
-  padding: 0.45rem 1.1rem;
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  height: 36px;
+  padding: 0 1rem;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
   color: white;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.82rem;
   border: none;
   border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.25);
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .btn-premium-print-en:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(30, 58, 138, 0.35);
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.35);
+  filter: brightness(1.06);
 }
 
 .btn-premium-danger {
-  padding: 0.45rem 1rem;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
+  height: 36px;
+  padding: 0 0.9rem;
+  background: #fef2f2;
+  color: #dc2626;
   font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
+  font-size: 0.82rem;
+  border: 1.5px solid #fecaca;
   border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .btn-premium-danger:hover:not(:disabled) {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
-  filter: brightness(1.05);
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #b91c1c;
+  transform: translateY(-1px);
 }
 
 .btn-premium-secondary {
-  padding: 0.45rem 1rem;
-  background: #f1f5f9;
+  height: 36px;
+  padding: 0 1rem;
+  background: #f8fafc;
   color: #475569;
   font-weight: 600;
-  font-size: 0.85rem;
-  border: 1px solid #e2e8f0;
+  font-size: 0.82rem;
+  border: 1.5px solid #e2e8f0;
   border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .btn-premium-secondary:hover {
-  background: #e2e8f0;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
   color: #1e293b;
+}
+
+@media (max-width: 576px) {
+  .modal-footer-custom {
+    flex-direction: column-reverse !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+  .modal-footer-custom > div {
+    width: 100% !important;
+  }
+  .modal-footer-custom .d-flex {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .modal-footer-custom button {
+    width: 100% !important;
+  }
 }
 
 .modal-body-custom .form-control-custom,

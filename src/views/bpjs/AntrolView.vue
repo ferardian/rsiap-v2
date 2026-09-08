@@ -539,23 +539,26 @@
              <div class="adj-item mb-4">
                 <label class="small-label text-success mb-2 d-block">
                     Task 4: Estimasi Poli
-                    <span v-if="!adjData.task4" class="badge bg-warning text-dark ms-2" style="font-size: 0.65rem;">Belum Ada Data</span>
+                    <span v-if="isTaskEmpty(adjData.task4)" class="badge bg-warning text-dark ms-2" style="font-size: 0.65rem;">Belum Ada Data</span>
                 </label>
-                <div class="d-flex gap-2">
-                  <input type="datetime-local" v-model="adjData.task4_raw" class="form-control premium-input-sm" placeholder="Pilih estimasi waktu selesai poli">
-                  <button class="btn btn-sm btn-success fw-bold" @click="updateLocalTask(4)" :disabled="!adjData.task4_raw">Simpan</button>
+                <div class="row g-2">
+                  <div class="col-7"><input type="date" v-model="adjData.task4.tgl" class="form-control premium-input-sm"></div>
+                  <div class="col-5"><input type="time" step="1" v-model="adjData.task4.jam" class="form-control premium-input-sm"></div>
                 </div>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(4)" :disabled="isTaskEmpty(adjData.task4)">Simpan & Sync Task 4</button>
              </div>
 
              <!-- Task 5 -->
-             <div class="adj-item mb-4" v-if="adjData.task5">
-                <label class="small-label text-success mb-2 d-block">Task 5: {{ adjData.has_resep ? 'Peresepan Obat' : 'Selesai Poli' }}</label>
-                <div v-if="adjData.has_resep" class="row g-2">
+             <div class="adj-item mb-4">
+                <label class="small-label text-success mb-2 d-block">
+                    Task 5: {{ adjData.has_resep ? 'Peresepan Obat' : 'Selesai Poli' }}
+                    <span v-if="isTaskEmpty(adjData.task5)" class="badge bg-warning text-dark ms-2" style="font-size: 0.65rem;">Belum Ada Data</span>
+                </label>
+                <div class="row g-2">
                   <div class="col-7"><input type="date" v-model="adjData.task5.tgl" class="form-control premium-input-sm"></div>
                   <div class="col-5"><input type="time" step="1" v-model="adjData.task5.jam" class="form-control premium-input-sm"></div>
                 </div>
-                <input v-else type="datetime-local" v-model="adjData.task5_raw" class="form-control premium-input-sm">
-                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(5)" :disabled="adjData.has_resep ? isTaskEmpty(adjData.task5) : !adjData.task5_raw">Simpan & Sync Task 5</button>
+                <button class="btn btn-sm btn-outline-success mt-2 w-100 fw-bold" @click="updateLocalTask(5)" :disabled="isTaskEmpty(adjData.task5)">Simpan & Sync Task 5</button>
              </div>
 
              <!-- Task 6 & 7 (Only if Resep) -->
@@ -698,10 +701,8 @@ const adjData = reactive({
   task1: { tgl: '', jam: '' },
   task2: { tgl: '', jam: '' },
   task3: { tgl: '', jam: '' },
-  task4: null,
-  task4_raw: '',
+  task4: { tgl: '', jam: '' },
   task5: { tgl: '', jam: '' },
-  task5_raw: '',
   task6: { tgl: '', jam: '' },
   task7: { tgl: '', jam: '' },
   has_resep: false
@@ -995,13 +996,29 @@ const showAdjustmentModal = async (item) => {
       adjData.task1 = res.task1 || { tgl: '', jam: '' }
       adjData.task2 = res.task2 || { tgl: '', jam: '' }
       adjData.task3 = res.task3 || { tgl: '', jam: '' }
-      adjData.task4 = res.task4
-      adjData.task4_raw = res.task4 ? res.task4.replace(' ', 'T') : ''
-      adjData.task5 = res.task5 || { tgl: '', jam: '' }
-      if (typeof res.task5 === 'string' && res.task5) {
-        adjData.task5_raw = res.task5.replace(' ', 'T')
+      if (res.task4) {
+        if (typeof res.task4 === 'object' && res.task4.tgl) {
+          adjData.task4 = { tgl: res.task4.tgl || '', jam: res.task4.jam || '' }
+        } else if (typeof res.task4 === 'string') {
+          const parts = res.task4.split(' ')
+          adjData.task4 = { tgl: parts[0] || '', jam: parts[1] || '' }
+        } else {
+          adjData.task4 = { tgl: '', jam: '' }
+        }
       } else {
-        adjData.task5_raw = ''
+        adjData.task4 = { tgl: '', jam: '' }
+      }
+      if (res.task5) {
+        if (typeof res.task5 === 'object' && res.task5.tgl) {
+          adjData.task5 = { tgl: res.task5.tgl || '', jam: res.task5.jam || '' }
+        } else if (typeof res.task5 === 'string') {
+          const parts = res.task5.split(' ')
+          adjData.task5 = { tgl: parts[0] || '', jam: parts[1] || '' }
+        } else {
+          adjData.task5 = { tgl: '', jam: '' }
+        }
+      } else {
+        adjData.task5 = { tgl: '', jam: '' }
       }
       adjData.task6 = res.task6 || { tgl: '', jam: '' }
       adjData.task7 = res.task7 || { tgl: '', jam: '' }
@@ -1161,10 +1178,8 @@ const updateLocalTask = async (taskId) => {
   if (taskId === 1) waktuValue = adjData.task1
   else if (taskId === 2) waktuValue = adjData.task2
   else if (taskId === 3) waktuValue = adjData.task3
-  else if (taskId === 4) waktuValue = adjData.task4_raw.replace('T', ' ')
-  else if (taskId === 5) {
-    waktuValue = adjData.has_resep ? adjData.task5 : (adjData.task5_raw ? adjData.task5_raw.replace('T', ' ') : null)
-  }
+  else if (taskId === 4) waktuValue = adjData.task4
+  else if (taskId === 5) waktuValue = adjData.task5
   else if (taskId === 6) waktuValue = adjData.task6
   else if (taskId === 7) waktuValue = adjData.task7
 
