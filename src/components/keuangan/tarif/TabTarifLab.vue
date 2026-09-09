@@ -2,24 +2,62 @@
   <div class="tab-tarif-lab">
     <div class="card glass-card border-0 shadow-sm mt-2">
       <div class="card-body p-4">
-        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4">
-          <h5 class="m-0 fw-bold d-flex align-items-center">
-            <div class="icon-box bg-info-subtle text-info rounded-3 p-2 me-3">
-              <i class="fas fa-flask"></i>
+        <!-- 1. Clean Header Row: Title on Left, Action on Right -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tab-header-icon bg-info-subtle text-info shadow-2xs">
+              <i class="fas fa-flask fa-lg"></i>
             </div>
-            Tarif Laboratorium
-          </h5>
-          <div class="d-flex flex-wrap gap-2 align-items-center">
-            <button class="btn btn-success premium-btn-sm me-2" @click="openModal('add')">
-              <i class="fas fa-plus me-1"></i> Tambah Data
+            <div>
+              <h5 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                Tarif Laboratorium
+                <span class="badge bg-light text-secondary border px-2 py-0.5 fs-xs fw-semibold">
+                  {{ pagination.total || 0 }} Pemeriksaan
+                </span>
+              </h5>
+              <p class="text-muted small m-0">Kelola master tarif pemeriksaan dan template hasil laboratorium</p>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-primary premium-action-btn shadow-sm" @click="openModal('add')">
+              <i class="fas fa-plus-circle me-1.5"></i> Tambah Data
             </button>
-            <select v-model="filters.kategori" class="form-select premium-input-sm" style="min-width: 150px;">
+          </div>
+        </div>
+
+        <!-- 2. Clean Dedicated Filter Toolbar -->
+        <div class="filter-toolbar mb-4 p-2.5 rounded-3 border d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
+            <!-- Search Box -->
+            <div class="filter-search-box">
+              <i class="fas fa-search search-icon"></i>
+              <input 
+                v-model="filters.keyword" 
+                type="text" 
+                class="form-control filter-input" 
+                placeholder="Cari nama pemeriksaan / kode..."
+                @keyup.enter="fetchData"
+              >
+              <button 
+                v-if="filters.keyword" 
+                class="btn-clear-search" 
+                @click="filters.keyword = ''; fetchData()"
+                title="Hapus pencarian"
+              >
+                <i class="fas fa-times-circle"></i>
+              </button>
+            </div>
+
+            <!-- Filter Kategori -->
+            <select v-model="filters.kategori" class="form-select filter-select" @change="fetchData">
               <option value="">Semua Kategori</option>
               <option value="PK">Patologi Klinik (PK)</option>
               <option value="PA">Patologi Anatomi (PA)</option>
               <option value="MB">Mikrobiologi (MB)</option>
             </select>
-            <select v-model="filters.kelas" class="form-select premium-input-sm" style="min-width: 150px;">
+
+            <!-- Filter Kelas -->
+            <select v-model="filters.kelas" class="form-select filter-select" @change="fetchData">
               <option value="">Semua Kelas</option>
               <option value="Rawat Jalan">Rawat Jalan</option>
               <option value="Kelas 1">Kelas 1</option>
@@ -28,17 +66,28 @@
               <option value="Kelas VIP">Kelas VIP</option>
               <option value="Kelas VVIP">Kelas VVIP</option>
             </select>
-            <div class="search-box">
-              <input 
-                v-model="filters.keyword" 
-                type="text" 
-                class="form-control premium-input-sm" 
-                placeholder="Cari nama pemeriksaan / kode..."
-                @keyup.enter="fetchData"
-              >
-            </div>
-            <button class="btn btn-primary premium-btn-sm" @click="fetchData" :disabled="loading">
-              <i class="fas fa-search me-1"></i> Cari
+
+            <!-- Reset Filter Button -->
+            <button 
+              v-if="filters.keyword || filters.kategori || filters.kelas" 
+              class="btn btn-light btn-sm filter-reset-btn" 
+              @click="resetFilters"
+              title="Reset Filter"
+            >
+              <i class="fas fa-undo me-1"></i> Reset
+            </button>
+          </div>
+
+          <!-- Right Action: Refresh -->
+          <div class="d-flex align-items-center gap-2">
+            <button 
+              class="btn btn-outline-secondary btn-sm px-3 filter-refresh-btn" 
+              @click="fetchData" 
+              :disabled="loading" 
+              title="Segarkan Data"
+            >
+              <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+              <span class="d-none d-sm-inline ms-1.5">Refresh</span>
             </button>
           </div>
         </div>
@@ -415,6 +464,14 @@ const filters = reactive({
   kelas: ''
 })
 
+const resetFilters = () => {
+  filters.keyword = ''
+  filters.kategori = ''
+  filters.kelas = ''
+  filters.page = 1
+  fetchData()
+}
+
 const pagination = reactive({
   current_page: 1,
   last_page: 1,
@@ -748,9 +805,131 @@ onMounted(() => {
 
 <style scoped>
 .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 16px; min-height: 500px; }
-.icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
-.premium-input-sm { border-radius: 8px; border: 1px solid #e2e8f0; padding: 0.45rem 0.8rem; font-size: 0.85rem; }
-.premium-btn-sm { border-radius: 8px; padding: 0.45rem 1.2rem; font-size: 0.85rem; font-weight: 600; }
+
+.tab-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.premium-action-btn {
+  height: 38px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+.premium-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Dedicated Filter Toolbar */
+.filter-toolbar {
+  background-color: #f8fafc;
+  border-color: #e2e8f0 !important;
+}
+.filter-search-box {
+  position: relative;
+  min-width: 240px;
+  max-width: 320px;
+  flex-grow: 1;
+}
+.filter-search-box .search-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+.filter-input {
+  height: 38px;
+  border-radius: 10px;
+  padding-left: 2.35rem;
+  padding-right: 2.2rem;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  background-color: #ffffff;
+  transition: all 0.2s;
+}
+.filter-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  background-color: #ffffff;
+  outline: none;
+}
+.btn-clear-search {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+}
+.btn-clear-search:hover { color: #64748b; }
+
+.filter-select {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  background-color: #ffffff;
+  width: auto;
+  min-width: 140px;
+}
+.filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  outline: none;
+}
+
+.filter-reset-btn {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0 0.85rem;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+}
+.filter-reset-btn:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.filter-refresh-btn {
+  height: 38px;
+  border-radius: 10px;
+  border-color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+}
+.filter-refresh-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
 .premium-table { background: white; border-radius: 12px; border: 1px solid #f1f5f9; overflow: visible; }
 .premium-table thead th { background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; border-bottom: 2px solid #e2e8f0; }
 .premium-table tbody td { padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }

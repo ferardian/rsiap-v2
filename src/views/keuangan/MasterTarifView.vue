@@ -2,21 +2,35 @@
   <div class="master-tarif-wrapper">
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
       <div class="header-text">
-        <h1 class="page-title">💳 Master Tarif</h1>
-        <p class="page-subtitle">Kelola master data tarif perawatan rumah sakit</p>
+        <div class="d-flex align-items-center gap-2">
+          <span class="header-badge-icon">
+            <i class="fas fa-file-invoice-dollar text-primary"></i>
+          </span>
+          <h1 class="page-title m-0">Master Tarif Perawatan</h1>
+        </div>
+        <p class="page-subtitle mt-1">Konfigurasi dan kelola seluruh master data tarif rawat jalan, rawat inap, paket operasi, laboratorium, dan radiologi</p>
       </div>
     </div>
 
     <!-- Modern Capsule Tabs -->
     <div class="capsule-tabs modern-capsule-tabs mb-4">
       <div class="tabs-container custom-scrollbar">
-        <button v-for="tab in tabs" :key="tab.id" class="capsule-tab" :class="{ 'active': activeTab === tab.id }" @click="activeTab = tab.id">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id" 
+          class="capsule-tab" 
+          :class="[
+            { 'active': activeTab === tab.id },
+            `tab-${tab.id}`
+          ]" 
+          @click="activeTab = tab.id"
+        >
           <i :class="tab.icon" class="me-2"></i> {{ tab.label }}
         </button>
       </div>
     </div>
 
-    <!-- Tab Contents -->
+    <!-- Tab Contents with Smooth Fade Transition -->
     <div class="tab-content transition-all">
       <transition name="fade" mode="out-in">
         <component :is="activeTabComponent"></component>
@@ -28,7 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-// Import tab components (will be created next)
+// Import tab components
 import TabTarifRalan from '@/components/keuangan/tarif/TabTarifRalan.vue'
 import TabTarifRanap from '@/components/keuangan/tarif/TabTarifRanap.vue'
 import TabTarifOperasi from '@/components/keuangan/tarif/TabTarifOperasi.vue'
@@ -40,7 +54,7 @@ const activeTab = ref('ralan')
 const tabs = [
   { id: 'ralan', label: 'Rawat Jalan', icon: 'fas fa-stethoscope' },
   { id: 'ranap', label: 'Rawat Inap', icon: 'fas fa-bed' },
-  { id: 'operasi', label: 'Operasi', icon: 'fas fa-procedures' },
+  { id: 'operasi', label: 'Paket Operasi', icon: 'fas fa-procedures' },
   { id: 'lab', label: 'Laboratorium', icon: 'fas fa-flask' },
   { id: 'rad', label: 'Radiologi', icon: 'fas fa-x-ray' }
 ]
@@ -62,25 +76,37 @@ const activeTabComponent = computed(() => componentsMap[activeTab.value])
   background-color: transparent;
 }
 
+.header-badge-icon {
+  width: 40px;
+  height: 40px;
+  background: #eff6ff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.1);
+}
+
 .page-title {
   font-weight: 800;
   letter-spacing: -0.025em;
   color: #0f172a;
-  margin-bottom: 0.25rem;
+  font-size: 1.75rem;
 }
 
 .page-subtitle {
   color: #64748b;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.925rem;
 }
 
 /* Modern Capsule Tabs Styling */
 .modern-capsule-tabs {
   background: white;
-  padding: 0.5rem;
+  padding: 0.4rem;
   border-radius: 100px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
@@ -89,44 +115,67 @@ const activeTabComponent = computed(() => componentsMap[activeTab.value])
 
 .tabs-container {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.35rem;
   overflow-x: auto;
   white-space: nowrap;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 .tabs-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  display: none;
 }
 
 .capsule-tab {
   background: transparent;
   border: none;
-  padding: 0.6rem 1.25rem;
+  padding: 0.6rem 1.35rem;
   border-radius: 100px;
   font-weight: 600;
   font-size: 0.9rem;
   color: #64748b;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
 }
 
 .capsule-tab:hover:not(.active) {
   background: #f1f5f9;
-  color: #334155;
+  color: #1e293b;
   transform: translateY(-1px);
 }
 
 .capsule-tab.active {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
   transform: scale(1.02);
 }
 
+.capsule-tab.active.tab-ralan {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.capsule-tab.active.tab-ranap {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.capsule-tab.active.tab-operasi {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.capsule-tab.active.tab-lab {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+}
+
+.capsule-tab.active.tab-rad {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
 .capsule-tab.active i {
-  color: #e0f2fe;
+  color: #ffffff;
 }
 
 /* Transitions for Tab Content */
@@ -137,12 +186,12 @@ const activeTabComponent = computed(() => componentsMap[activeTab.value])
 
 .fade-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(8px);
 }
 
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-8px);
 }
 
 @media (max-width: 768px) {

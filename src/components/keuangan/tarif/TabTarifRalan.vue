@@ -2,27 +2,73 @@
   <div class="tab-tarif-ralan">
     <div class="card glass-card border-0 shadow-sm mt-2">
       <div class="card-body p-4">
-        <!-- Toolbar -->
-        <div class="d-flex flex-column flex-md-row gap-3 align-items-start align-items-md-center justify-content-between mb-4">
-          <h5 class="m-0 fw-bold d-flex align-items-center">
-            <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3">
-              <i class="fas fa-stethoscope"></i>
+        <!-- 1. Clean Header Row: Title on Left, Action on Right -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tab-header-icon bg-primary-subtle text-primary shadow-2xs">
+              <i class="fas fa-stethoscope fa-lg"></i>
             </div>
-            Tarif Rawat Jalan
-          </h5>
-          <div class="d-flex flex-wrap gap-2 align-items-center w-100-mobile">
-            <div class="premium-search-wrapper">
+            <div>
+              <h5 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                Tarif Rawat Jalan
+                <span class="badge bg-light text-secondary border px-2 py-0.5 fs-xs fw-semibold">
+                  {{ pagination.total || 0 }} Tindakan
+                </span>
+              </h5>
+              <p class="text-muted small m-0">Kelola master data tarif tindakan dan perawatan rawat jalan</p>
+            </div>
+          </div>
+          <div>
+            <button class="btn btn-primary premium-action-btn shadow-sm" @click="openModal('add')">
+              <i class="fas fa-plus-circle me-1.5"></i> Tambah Tarif
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Clean Dedicated Filter Toolbar -->
+        <div class="filter-toolbar mb-4 p-2.5 rounded-3 border d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
+            <!-- Search Box -->
+            <div class="filter-search-box">
               <i class="fas fa-search search-icon"></i>
               <input 
                 v-model="filters.keyword" 
                 type="text" 
-                class="form-control premium-search-input" 
-                placeholder="Cari nama perawatan / kode..."
+                class="form-control filter-input" 
+                placeholder="Cari nama tindakan atau kode..."
                 @keyup.enter="fetchData"
               >
+              <button 
+                v-if="filters.keyword" 
+                class="btn-clear-search" 
+                @click="filters.keyword = ''; fetchData()"
+                title="Hapus pencarian"
+              >
+                <i class="fas fa-times-circle"></i>
+              </button>
             </div>
-            <button class="btn btn-success premium-add-btn" @click="openModal('add')">
-              <i class="fas fa-plus me-2"></i> Tambah
+
+            <!-- Reset Filter Button -->
+            <button 
+              v-if="filters.keyword" 
+              class="btn btn-light btn-sm filter-reset-btn" 
+              @click="filters.keyword = ''; fetchData()"
+              title="Reset Filter"
+            >
+              <i class="fas fa-undo me-1"></i> Reset
+            </button>
+          </div>
+
+          <!-- Right Action: Refresh -->
+          <div class="d-flex align-items-center gap-2">
+            <button 
+              class="btn btn-outline-secondary btn-sm px-3 filter-refresh-btn" 
+              @click="fetchData" 
+              :disabled="loading" 
+              title="Segarkan Data"
+            >
+              <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+              <span class="d-none d-sm-inline ms-1.5">Refresh</span>
             </button>
           </div>
         </div>
@@ -475,58 +521,113 @@ onMounted(() => {
   backdrop-filter: blur(10px);
   border-radius: 16px;
 }
-.icon-box {
-  width: 36px;
-  height: 36px;
+.tab-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.premium-search-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 320px;
+
+.premium-action-btn {
+  height: 38px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
 }
-.premium-search-wrapper .search-icon {
+.premium-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Dedicated Filter Toolbar */
+.filter-toolbar {
+  background-color: #f8fafc;
+  border-color: #e2e8f0 !important;
+}
+.filter-search-box {
+  position: relative;
+  min-width: 240px;
+  max-width: 340px;
+  flex-grow: 1;
+}
+.filter-search-box .search-icon {
   position: absolute;
-  left: 1.25rem;
+  left: 0.9rem;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+  font-size: 0.85rem;
   pointer-events: none;
 }
-.premium-search-input {
-  border-radius: 50px;
-  padding-left: 3rem;
-  padding-right: 1.25rem;
-  border: 1px solid #e2e8f0;
-  height: 42px;
-  font-size: 0.875rem;
+.filter-input {
+  height: 38px;
+  border-radius: 10px;
+  padding-left: 2.35rem;
+  padding-right: 2.2rem;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  background-color: #ffffff;
   transition: all 0.2s;
-  background-color: #f8fafc;
 }
-.premium-search-input:focus {
+.filter-input:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  background-color: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  background-color: #ffffff;
   outline: none;
 }
-.premium-add-btn {
-  border-radius: 50px;
-  padding: 0 1.5rem;
-  height: 42px;
-  font-weight: 600;
-  font-size: 0.875rem;
+.btn-clear-search {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+}
+.btn-clear-search:hover { color: #64748b; }
+
+.filter-reset-btn {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0 0.85rem;
+  color: #64748b;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  border: none;
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
 }
-.premium-add-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px -2px rgba(16, 185, 129, 0.2);
+.filter-reset-btn:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.filter-refresh-btn {
+  height: 38px;
+  border-radius: 10px;
+  border-color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+}
+.filter-refresh-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #1e293b;
 }
 /* Table Styles */
 .premium-table {
