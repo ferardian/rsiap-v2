@@ -74,6 +74,15 @@ const activeTabComponent = computed(() => componentsMap[activeTab.value])
 .master-tarif-wrapper {
   padding: 1.5rem;
   background-color: transparent;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.tab-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .header-badge-icon {

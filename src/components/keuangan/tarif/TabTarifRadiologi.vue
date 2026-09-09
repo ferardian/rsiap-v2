@@ -342,11 +342,45 @@ onMounted(() => {
   color: #1e293b;
 }
 
-.premium-table { background: white; border-radius: 12px; border: 1px solid #f1f5f9; }
-.premium-table table { margin-bottom: 0; }
+.tab-tarif-radiologi {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.table-responsive.premium-table { 
+  background: white; 
+  border-radius: 12px; 
+  border: 1px solid #f1f5f9; 
+  overflow-x: auto !important; 
+  overflow-y: hidden; 
+  -webkit-overflow-scrolling: touch; 
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+.table-responsive.premium-table::-webkit-scrollbar {
+  height: 8px;
+}
+.table-responsive.premium-table::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.table-responsive.premium-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.table-responsive.premium-table::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.premium-table table { 
+  margin-bottom: 0; 
+  width: 100%;
+  min-width: 780px;
+}
 .premium-table thead th { background: #f8fafc; color: #64748b; font-size: 0.70rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
 .premium-table tbody td { padding: 0.75rem 1rem; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: nowrap; }
-.table-responsive.premium-table { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
 .hover-row:hover { background-color: #f8fafc; }
 .numeric-text { font-family: inherit; font-weight: 500; }
 .badge { padding: 0.4em 0.8em; font-weight: 700; }
