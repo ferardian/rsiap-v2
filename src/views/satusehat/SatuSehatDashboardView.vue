@@ -170,6 +170,9 @@ export default {
         { title: 'SR. Radiologi', subtitle: 'Permintaan Radiologi', path: '/satusehat/servicerequest-radiology', icon: 'fa-x-ray', colorClass: 'bg-primary-soft text-primary' },
         { title: 'Obs. Lab', subtitle: 'Hasil Lab PK', path: '/satusehat/observation-lab', icon: 'fa-microscope', colorClass: 'bg-purple-soft text-purple' },
         { title: 'DR. Lab', subtitle: 'Report Lab PK', path: '/satusehat/diagnosticreport-lab', icon: 'fa-file-medical', colorClass: 'bg-success-soft text-success' },
+        { title: 'Diet Pasien', subtitle: 'Discharge Diet / Gizi', path: '/satusehat/diet', icon: 'fa-utensils', colorClass: 'bg-success-soft text-success' },
+        { title: 'Alergi Pasien', subtitle: 'AllergyIntolerance', path: '/satusehat/allergy', icon: 'fa-allergies', colorClass: 'bg-danger-soft text-danger' },
+        { title: 'Imunisasi Pasien', subtitle: 'Immunization / Vaksin', path: '/satusehat/immunization', icon: 'fa-syringe', colorClass: 'bg-info-soft text-info', style: 'background-color: rgba(13, 148, 136, 0.1); color: #0d9488;' },
         { title: 'Patient', subtitle: 'Registrasi Pasien', path: '/satusehat/patient', icon: 'fa-user-injured', colorClass: 'bg-warning-soft text-warning' }
       ]
     }

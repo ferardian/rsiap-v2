@@ -638,6 +638,24 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/satusehat/diet',
+    name: 'SatuSehatDiet',
+    component: () => import('../views/satusehat/SatuSehatDietView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/allergy',
+    name: 'SatuSehatAllergy',
+    component: () => import('../views/satusehat/SatuSehatAllergyView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/satusehat/immunization',
+    name: 'SatuSehatImmunization',
+    component: () => import('../views/satusehat/SatuSehatImmunizationView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/satusehat/specimen-radiology',
     name: 'SatuSehatSpecimenRadiology',
     component: () => import('../views/satusehat/SatuSehatSpecimenRadiologyView.vue'),

@@ -92,6 +92,17 @@ export const satuSehatService = {
     return api.post('/satusehat/careplan/sync', data)
   },
 
+  // Diet Pasien (Composition)
+  getDiets(params) {
+    return api.get('/satusehat/diet', { params })
+  },
+  syncDiet(data) {
+    return api.post('/satusehat/diet/sync', data)
+  },
+  sendSingleDiet(data) {
+    return api.post('/satusehat/diet/send', data)
+  },
+
   // Specimen Radiology
   getSpecimenRadiology(params) {
     return api.get('/satusehat/specimen-radiology', { params })
@@ -242,7 +253,51 @@ export const satuSehatService = {
   },
   syncDiagnosticReportLab(data) {
     return api.post('/satusehat/diagnosticreport-lab/sync', data)
+  },
+
+  // Alergi Pasien (AllergyIntolerance)
+  getAllergies(params) {
+    return api.get('/satusehat/allergy', { params })
+  },
+  sendSingleAllergy(data) {
+    return api.post('/satusehat/allergy/send', data)
+  },
+  syncAllergy(data) {
+    return api.post('/satusehat/allergy/sync', data)
+  },
+  getAllergyMappings(params) {
+    return api.get('/satusehat/allergy/mapping', { params })
+  },
+  saveAllergyMapping(data) {
+    return api.post('/satusehat/allergy/mapping', data)
+  },
+  deleteAllergyMapping(id) {
+    return api.delete('/satusehat/allergy/mapping/' + id)
+  },
+
+  // Imunisasi Pasien (Immunization)
+  getImmunizations(params) {
+    return api.get('/satusehat/immunization', { params })
+  },
+  sendSingleImmunization(data) {
+    return api.post('/satusehat/immunization/send', data)
+  },
+  syncImmunization(data) {
+    return api.post('/satusehat/immunization/sync', data)
+  },
+  getImmunizationMappings(params) {
+    return api.get('/satusehat/immunization/mapping', { params })
+  },
+  saveImmunizationMapping(data) {
+    return api.post('/satusehat/immunization/mapping', data)
+  },
+  deleteImmunizationMapping(kodeBrng) {
+    return api.delete('/satusehat/immunization/mapping/' + kodeBrng)
+  },
+  getAvailableVaccineItems(params) {
+    return api.get('/satusehat/immunization/available-items', { params })
   }
 }
 
 export default satuSehatService
+
