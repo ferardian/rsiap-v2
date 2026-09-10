@@ -665,9 +665,9 @@
     <!-- MODAL 1: Buat / Edit Program -->
     <div class="modal fade" id="modalProgram" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-visible">
           <!-- Clean Modal Header -->
-          <div class="modal-header bg-white border-bottom px-4 py-3 d-flex align-items-center justify-content-between">
+          <div class="modal-header bg-white border-bottom px-4 py-3 d-flex align-items-center justify-content-between rounded-top-4">
             <div class="d-flex align-items-center gap-2.5">
               <div class="modal-header-icon bg-primary-subtle text-primary">
                 <i class="fas fa-bullseye"></i>
@@ -919,7 +919,7 @@
             </div>
 
             <!-- Clean Compact Modal Footer -->
-            <div class="modal-footer bg-slate-50 border-top px-4 py-2.5 d-flex justify-content-end gap-2">
+            <div class="modal-footer bg-slate-50 border-top px-4 py-2.5 d-flex justify-content-end gap-2 rounded-bottom-4">
               <button type="button" class="btn btn-sm btn-modal-cancel" data-bs-dismiss="modal">
                 Batal
               </button>
@@ -937,9 +937,9 @@
     <!-- MODAL 2: Tambah Tahapan Milestone Baru -->
     <div class="modal fade" id="modalMilestone" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-visible">
           <!-- Clean Modal Header -->
-          <div class="modal-header bg-white border-bottom px-4 py-3 d-flex align-items-center justify-content-between">
+          <div class="modal-header bg-white border-bottom px-4 py-3 d-flex align-items-center justify-content-between rounded-top-4">
             <div class="d-flex align-items-center gap-2.5">
               <div class="modal-header-icon bg-primary-subtle text-primary">
                 <i class="fas fa-layer-group"></i>
@@ -953,7 +953,7 @@
           </div>
 
           <form @submit.prevent="saveMilestone">
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 overflow-visible">
               <div class="mb-3">
                 <label class="form-label-custom">Program Terpilih</label>
                 <input 
@@ -1088,7 +1088,7 @@
             </div>
 
             <!-- Clean Compact Modal Footer -->
-            <div class="modal-footer bg-slate-50 border-top px-4 py-2.5 d-flex justify-content-end gap-2">
+            <div class="modal-footer bg-slate-50 border-top px-4 py-2.5 d-flex justify-content-end gap-2 rounded-bottom-4">
               <button type="button" class="btn btn-sm btn-modal-cancel" data-bs-dismiss="modal">
                 Batal
               </button>
@@ -2500,10 +2500,10 @@ onMounted(() => {
 }
 .v-select-custom :deep(.vs__dropdown-menu) {
   font-size: 0.825rem;
-  z-index: 1060;
+  z-index: 1070;
   max-height: 250px;
   border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
 }
 .v-select-custom :deep(.vs__dropdown-option--highlight) {
