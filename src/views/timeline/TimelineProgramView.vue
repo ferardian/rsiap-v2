@@ -1795,21 +1795,34 @@ const getMilestoneNormalizedDates = (milestone, program) => {
   }
 
   let startDate = null
-  if (milestone.tanggal_mulai) {
-    startDate = parseValidDate(milestone.tanggal_mulai)
-    if (startDate) {
-      startDate.setHours(0, 0, 0, 0)
-    }
-  }
 
-  if (!startDate && milestone.periode_bulan) {
+  // 1. Prioritaskan periode_bulan (Bulan Mulai yang dipilih user)
+  if (milestone.periode_bulan) {
     const parts = milestone.periode_bulan.split('-')
     if (parts.length >= 2) {
       const y = parseInt(parts[0], 10)
       const mo = parseInt(parts[1], 10) - 1
       if (!isNaN(y) && !isNaN(mo)) {
-        startDate = new Date(y, mo, 1, 0, 0, 0)
+        // Jika ada tanggal_mulai spesifik yang berada di bulan & tahun yang sama, gunakan tanggal tersebut
+        if (milestone.tanggal_mulai) {
+          const tMulai = parseValidDate(milestone.tanggal_mulai)
+          if (tMulai && tMulai.getFullYear() === y && tMulai.getMonth() === mo) {
+            startDate = tMulai
+            startDate.setHours(0, 0, 0, 0)
+          }
+        }
+        if (!startDate) {
+          startDate = new Date(y, mo, 1, 0, 0, 0)
+        }
       }
+    }
+  }
+
+  // 2. Fallback ke tanggal_mulai jika periode_bulan belum terisi
+  if (!startDate && milestone.tanggal_mulai) {
+    startDate = parseValidDate(milestone.tanggal_mulai)
+    if (startDate) {
+      startDate.setHours(0, 0, 0, 0)
     }
   }
 
