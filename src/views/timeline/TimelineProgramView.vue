@@ -1010,14 +1010,19 @@
 
               <!-- PIC Selection -->
               <div class="mb-3">
-                <label class="form-label-custom">Pilih Koordinator / PIC Tahap Ini</label>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label-custom mb-0">Pilih Koordinator / PIC Tahap Ini</label>
+                  <span v-if="programTeamMembers.length > 0 && !showAllPegawaiForMilestone" class="badge bg-primary-subtle text-primary border border-primary-subtle fs-xxs">
+                    Tim Program ({{ programTeamMembers.length }} personil)
+                  </span>
+                </div>
                 <v-select
                   v-model="formMilestone.pic_nik"
-                  :options="listPegawai"
+                  :options="milestoneMemberOptions"
                   label="nama"
                   :reduce="p => p.nik"
                   :filter-by="filterPegawaiBy"
-                  placeholder="Cari & pilih koordinator..."
+                  placeholder="Cari & pilih koordinator dari tim program..."
                   class="v-select-custom"
                 >
                   <template #option="option">
@@ -1031,7 +1036,7 @@
                   </template>
                   <template #no-options="{ search }">
                     <div class="text-muted p-2 fs-xxs text-center">
-                      Tidak ditemukan pegawai dengan kata kunci "{{ search }}"
+                      Tidak ditemukan personil dengan kata kunci "{{ search }}"
                     </div>
                   </template>
                 </v-select>
@@ -1039,17 +1044,29 @@
 
               <!-- Anggota Tim Tahap (Multi-Select) -->
               <div class="mb-2">
-                <label class="form-label-custom">
-                  <i class="fas fa-users text-primary me-1"></i> Anggota Tim Tambahan Tahap Ini (Opsional)
-                </label>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label-custom mb-0">
+                    <i class="fas fa-users text-primary me-1"></i> Anggota Tim Tambahan Tahap Ini (Opsional)
+                  </label>
+                  <a 
+                    v-if="programTeamMembers.length > 0"
+                    href="javascript:void(0)" 
+                    class="fs-xxs text-primary text-decoration-none fw-medium"
+                    @click="showAllPegawaiForMilestone = !showAllPegawaiForMilestone"
+                    :title="showAllPegawaiForMilestone ? 'Batasi opsi hanya tim program' : 'Buka pencarian untuk seluruh pegawai rumah sakit'"
+                  >
+                    <i class="fas me-1" :class="showAllPegawaiForMilestone ? 'fa-filter' : 'fa-globe'"></i>
+                    {{ showAllPegawaiForMilestone ? 'Hanya Tim Program' : 'Cari dari seluruh pegawai RS' }}
+                  </a>
+                </div>
                 <v-select
                   v-model="formMilestone.anggota_tim"
-                  :options="listPegawai"
+                  :options="milestoneMemberOptions"
                   label="nama"
                   :reduce="p => p.nik"
                   :filter-by="filterPegawaiBy"
                   multiple
-                  placeholder="Ketik & pilih anggota tim tambahan tahap ini..."
+                  placeholder="Pilih anggota tim yang bertugas pada tahap ini..."
                   class="v-select-custom"
                 >
                   <template #option="option">
@@ -1063,7 +1080,7 @@
                   </template>
                   <template #no-options="{ search }">
                     <div class="text-muted p-2 fs-xxs text-center">
-                      Tidak ditemukan pegawai dengan kata kunci "{{ search }}"
+                      Tidak ditemukan personil dengan kata kunci "{{ search }}"
                     </div>
                   </template>
                 </v-select>
@@ -1164,7 +1181,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import timelineService from '@/services/timelineService'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
@@ -1213,6 +1230,7 @@ const formProgram = reactive({
 const activeProgram = ref(null)
 let modalMilestoneInstance = null
 const savingMilestone = ref(false)
+const showAllPegawaiForMilestone = ref(false)
 const formMilestone = reactive({
   judul_tahapan: '',
   periode_bulan: '',
@@ -1220,6 +1238,68 @@ const formMilestone = reactive({
   indikator_keberhasilan: '',
   pic_nik: '',
   anggota_tim: []
+})
+
+// Program Team Members pool (PIC + Anggota Tim yang didaftarkan saat buat program)
+const programTeamMembers = computed(() => {
+  if (!activeProgram.value) return []
+
+  const members = []
+  const seenNiks = new Set()
+
+  // 1. PIC Utama Program
+  if (activeProgram.value.pic && activeProgram.value.pic.nik) {
+    members.push({
+      nik: activeProgram.value.pic.nik,
+      nama: activeProgram.value.pic.nama,
+      departemen: 'PIC Utama Program'
+    })
+    seenNiks.add(activeProgram.value.pic.nik)
+  } else if (activeProgram.value.pic_utama) {
+    const found = listPegawai.value.find(p => p.nik === activeProgram.value.pic_utama)
+    if (found) {
+      members.push({
+        nik: found.nik,
+        nama: found.nama,
+        departemen: found.departemen || 'PIC Utama Program'
+      })
+      seenNiks.add(found.nik)
+    }
+  }
+
+  // 2. Program Assignees (Tim yang dimasukkan saat membuat target program)
+  if (activeProgram.value.assignees && Array.isArray(activeProgram.value.assignees)) {
+    activeProgram.value.assignees.forEach(a => {
+      const nik = a.nik || (a.pegawai ? a.pegawai.nik : null)
+      if (nik && !seenNiks.has(nik)) {
+        seenNiks.add(nik)
+        if (a.pegawai) {
+          members.push({
+            nik: a.pegawai.nik,
+            nama: a.pegawai.nama,
+            departemen: a.pegawai.departemen || 'Tim Program'
+          })
+        } else {
+          const found = listPegawai.value.find(p => p.nik === nik)
+          members.push({
+            nik: nik,
+            nama: found ? found.nama : (a.team ? a.team.nama_tim : nik),
+            departemen: found ? found.departemen : 'Tim Program'
+          })
+        }
+      }
+    })
+  }
+
+  return members
+})
+
+// Options for Milestone Select: default to program team, fallback or toggle to all employees
+const milestoneMemberOptions = computed(() => {
+  if (showAllPegawaiForMilestone.value || programTeamMembers.value.length === 0) {
+    return listPegawai.value
+  }
+  return programTeamMembers.value
 })
 
 // Modal Progress
@@ -1400,6 +1480,7 @@ const editingMilestoneId = ref(null)
 
 const openModalAddMilestone = (program) => {
   fetchPegawai()
+  showAllPegawaiForMilestone.value = false
   modalMilestoneMode.value = 'add'
   editingMilestoneId.value = null
   activeProgram.value = program
@@ -1420,6 +1501,7 @@ const openModalAddMilestone = (program) => {
 
 const openModalEditMilestone = (milestone, program) => {
   fetchPegawai()
+  showAllPegawaiForMilestone.value = false
   modalMilestoneMode.value = 'edit'
   editingMilestoneId.value = milestone.id
   activeProgram.value = program
