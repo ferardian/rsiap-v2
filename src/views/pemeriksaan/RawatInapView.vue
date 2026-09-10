@@ -2154,6 +2154,7 @@ const serverGrandTotal = ref(0)
 const penunjangData = ref(null)
 const isLoadingRme = ref(false)
 const isLoadingBilling = ref(false)
+const billingError = ref(null)
 const rmeError = ref(null)
 // SKU Modal State
 const showSkuModal = ref(false)

@@ -505,6 +505,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/timeline',
+    name: 'TimelineProgram',
+    component: () => import('../views/timeline/TimelineProgramView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/keuangan/hutang-vendor-farmasi',
     name: 'HutangVendorFarmasi',
     component: () => import('../views/keuangan/HutangVendorFarmasiView.vue'),

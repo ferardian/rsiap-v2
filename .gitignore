@@ -11,6 +11,10 @@ dist
 dist-ssr
 *.local
 
+# Research / temporary docs
+generate_documents.py
+dokumen_penelitian/
+
 # Environment files
 .env
 .env.local
