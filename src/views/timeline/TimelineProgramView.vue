@@ -178,6 +178,7 @@
         v-for="program in programs" 
         :key="program.id" 
         class="card program-card border shadow-2xs rounded-3 mb-3 bg-white"
+        :class="{ 'is-expanded': isExpanded(program.id) }"
       >
         <!-- Card Header / Summary -->
         <div class="program-card-header">
@@ -2137,7 +2138,7 @@ onMounted(() => {
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -2155,6 +2156,19 @@ onMounted(() => {
   text-align: left !important;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
+}
+
+.timeline-program-wrapper .program-card:not(.is-expanded) .program-card-header {
+  border-bottom-left-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
+  border-bottom: none !important;
+}
+
+.timeline-program-wrapper .dropdown-menu {
+  z-index: 1050 !important;
+  min-width: 175px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Expand / Collapse Button */
