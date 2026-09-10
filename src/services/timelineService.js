@@ -19,6 +19,12 @@ const timelineService = {
   addMilestone: (programId, data) => {
     return api.post(`/timeline/programs/${programId}/milestones`, data)
   },
+  updateMilestone: (milestoneId, data) => {
+    return api.put(`/timeline/milestones/${milestoneId}`, data)
+  },
+  deleteMilestone: (milestoneId) => {
+    return api.delete(`/timeline/milestones/${milestoneId}`)
+  },
   updateMilestoneProgress: (milestoneId, data) => {
     return api.post(`/timeline/milestones/${milestoneId}/progress`, data)
   },

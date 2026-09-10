@@ -439,6 +439,14 @@
                           <div class="gantt-row-actions d-flex align-items-center gap-1 flex-shrink-0" @click.stop>
                             <button 
                               type="button"
+                              class="btn-gantt-action text-warning" 
+                              @click="openModalEditMilestone(m, program)" 
+                              title="Edit Tahapan & Tanggal"
+                            >
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button 
+                              type="button"
                               class="btn-gantt-action text-success" 
                               @click="handleSendWhatsApp(m)" 
                               title="Kirim WA ke Tim"
@@ -569,8 +577,24 @@
                           <i v-if="a.peran === 'koordinator'" class="fas fa-crown text-warning me-1"></i>
                           {{ a.pegawai ? a.pegawai.nama : (a.team ? a.team.nama_tim : a.nik) }}
                         </span>
+                        <button 
+                          type="button"
+                          class="btn btn-link text-primary p-0 ms-1 fs-xxs text-decoration-none"
+                          @click="openModalEditMilestone(m, program)"
+                          title="Edit Penugasan Tim"
+                        >
+                          <i class="fas fa-pen fs-xxs"></i>
+                        </button>
                       </div>
-                      <span v-else class="text-muted fst-italic fs-xxs">- Belum ada penugasan -</span>
+                      <a 
+                        v-else 
+                        href="javascript:void(0)" 
+                        class="text-primary text-decoration-none fs-xxs fw-medium d-inline-flex align-items-center gap-1"
+                        @click="openModalEditMilestone(m, program)"
+                        title="Klik untuk menugaskan tim"
+                      >
+                        <i class="fas fa-user-plus"></i> + Tugaskan Tim
+                      </a>
                     </td>
 
                     <!-- Progres Capaian -->
@@ -592,6 +616,15 @@
                     <!-- Aksi Cepat -->
                     <td class="text-center pe-3">
                       <div class="d-flex align-items-center justify-content-center gap-1">
+                        <!-- Tombol Edit Milestone & Tanggal -->
+                        <button 
+                          class="btn btn-sm btn-icon-sm btn-outline-warning rounded-circle"
+                          @click="openModalEditMilestone(m, program)"
+                          title="Edit Tahapan & Tanggal"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+
                         <!-- Tombol Notifikasi WA -->
                         <button 
                           class="btn btn-sm btn-icon-sm btn-outline-success rounded-circle"
@@ -608,6 +641,15 @@
                           title="Update Progres & Catatan"
                         >
                           <i class="fas fa-tasks"></i>
+                        </button>
+
+                        <!-- Tombol Hapus Milestone -->
+                        <button 
+                          class="btn btn-sm btn-icon-sm btn-outline-danger rounded-circle"
+                          @click="handleDeleteMilestone(m)"
+                          title="Hapus Tahapan"
+                        >
+                          <i class="fas fa-trash"></i>
                         </button>
                       </div>
                     </td>
@@ -903,8 +945,8 @@
                 <i class="fas fa-layer-group"></i>
               </div>
               <div>
-                <h6 class="modal-title fw-bold text-dark fs-6 mb-0">Tambah Tahapan Milestone</h6>
-                <p class="text-muted fs-xxs mb-0">Tambahkan target tahapan baru ke dalam program kerja</p>
+                <h6 class="modal-title fw-bold text-dark fs-6 mb-0">{{ modalMilestoneMode === 'add' ? 'Tambah Tahapan Milestone' : 'Edit Tahapan & Penugasan Tim' }}</h6>
+                <p class="text-muted fs-xxs mb-0">{{ modalMilestoneMode === 'add' ? 'Tambahkan target tahapan baru ke dalam program kerja' : 'Perbarui target bulan, tenggat selesai, indikator, dan personil terkait' }}</p>
               </div>
             </div>
             <button type="button" class="btn-close modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1036,7 +1078,7 @@
               <button type="submit" class="btn btn-sm btn-modal-submit" :disabled="savingMilestone">
                 <i v-if="savingMilestone" class="fas fa-spinner fa-spin me-1.5"></i>
                 <i v-else class="fas fa-check me-1.5"></i>
-                Simpan Tahapan
+                {{ modalMilestoneMode === 'add' ? 'Simpan Tahapan' : 'Perbarui Tahapan' }}
               </button>
             </div>
           </form>
@@ -1353,8 +1395,13 @@ const handleDeleteProgram = (program) => {
 }
 
 // Modal Milestone Methods
+const modalMilestoneMode = ref('add')
+const editingMilestoneId = ref(null)
+
 const openModalAddMilestone = (program) => {
   fetchPegawai()
+  modalMilestoneMode.value = 'add'
+  editingMilestoneId.value = null
   activeProgram.value = program
   Object.assign(formMilestone, {
     judul_tahapan: `Tahap ${(program.milestones ? program.milestones.length : 0) + 1}`,
@@ -1363,6 +1410,46 @@ const openModalAddMilestone = (program) => {
     indikator_keberhasilan: '',
     pic_nik: program.pic_utama || '',
     anggota_tim: program.assignees ? program.assignees.map(a => a.nik) : []
+  })
+
+  if (!modalMilestoneInstance) {
+    modalMilestoneInstance = new window.bootstrap.Modal(document.getElementById('modalMilestone'))
+  }
+  modalMilestoneInstance.show()
+}
+
+const openModalEditMilestone = (milestone, program) => {
+  fetchPegawai()
+  modalMilestoneMode.value = 'edit'
+  editingMilestoneId.value = milestone.id
+  activeProgram.value = program
+
+  // Find coordinator and team members from milestone.assignees
+  let picNik = ''
+  const anggotaList = []
+
+  if (milestone.assignees && Array.isArray(milestone.assignees)) {
+    milestone.assignees.forEach(a => {
+      if (a.peran === 'koordinator') {
+        picNik = a.nik
+      } else {
+        if (a.nik) anggotaList.push(a.nik)
+      }
+    })
+  }
+
+  // Fallback to program PIC if milestone has no coordinator set
+  if (!picNik && program && program.pic_utama) {
+    picNik = program.pic_utama
+  }
+
+  Object.assign(formMilestone, {
+    judul_tahapan: milestone.judul_tahapan || '',
+    periode_bulan: milestone.periode_bulan || '',
+    target_selesai: milestone.target_selesai || '',
+    indikator_keberhasilan: milestone.indikator_keberhasilan || '',
+    pic_nik: picNik,
+    anggota_tim: anggotaList
   })
 
   if (!modalMilestoneInstance) {
@@ -1397,17 +1484,47 @@ const saveMilestone = async () => {
       assignees: assigneesList
     }
 
-    const res = await timelineService.addMilestone(activeProgram.value.id, payload)
+    let res
+    if (modalMilestoneMode.value === 'edit' && editingMilestoneId.value) {
+      res = await timelineService.updateMilestone(editingMilestoneId.value, payload)
+    } else {
+      res = await timelineService.addMilestone(activeProgram.value.id, payload)
+    }
+
     if (res.data.success) {
       toast.success(res.data.message)
       modalMilestoneInstance.hide()
       fetchData()
     }
   } catch (error) {
-    toast.error(error.response?.data?.message || 'Gagal menambahkan tahapan')
+    toast.error(error.response?.data?.message || 'Gagal menyimpan tahapan')
   } finally {
     savingMilestone.value = false
   }
+}
+
+const handleDeleteMilestone = (milestone) => {
+  Swal.fire({
+    title: 'Hapus Tahapan Ini?',
+    text: `Tahapan "${milestone.judul_tahapan}" dan seluruh penugasan tim di dalamnya akan dihapus.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const res = await timelineService.deleteMilestone(milestone.id)
+        if (res.data.success) {
+          toast.success(res.data.message)
+          fetchData()
+        }
+      } catch (error) {
+        toast.error('Gagal menghapus tahapan')
+      }
+    }
+  })
 }
 
 // Modal Progress Methods
