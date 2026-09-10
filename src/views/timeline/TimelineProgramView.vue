@@ -377,7 +377,7 @@
               <div class="gantt-scroll-wrapper">
                 <div 
                   class="gantt-layout" 
-                  :style="{ minWidth: (260 + (getGanttTimelineData(program).months.length * 120)) + 'px' }"
+                  :style="{ minWidth: (280 + (getGanttTimelineData(program).months.length * 120)) + 'px' }"
                 >
                   <!-- Gantt Header -->
                   <div class="gantt-header-row">
@@ -436,40 +436,44 @@
                             {{ m.progress_percent }}%
                           </span>
 
-                          <!-- Inline Actions in Gantt -->
-                          <div class="gantt-row-actions d-flex align-items-center gap-1 flex-shrink-0" @click.stop>
+                          <!-- Inline Actions in Gantt: Single Kebab Dropdown to save space -->
+                          <div class="dropdown flex-shrink-0" @click.stop>
                             <button 
-                              type="button"
-                              class="btn-gantt-action btn-action-edit" 
-                              @click="openModalEditMilestone(m, program)" 
-                              title="Edit Tahapan & Tanggal"
+                              type="button" 
+                              class="btn-gantt-action text-slate-500" 
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false"
+                              title="Menu Aksi Tahapan"
                             >
-                              <i class="fas fa-edit"></i>
+                              <i class="fas fa-ellipsis-v"></i>
                             </button>
-                            <button 
-                              type="button"
-                              class="btn-gantt-action btn-action-wa" 
-                              @click="handleSendWhatsApp(m)" 
-                              title="Kirim WA ke Tim"
-                            >
-                              <i class="fab fa-whatsapp"></i>
-                            </button>
-                            <button 
-                              type="button"
-                              class="btn-gantt-action btn-action-progress" 
-                              @click="openModalUpdateProgress(m)" 
-                              title="Update Progres"
-                            >
-                              <i class="fas fa-tasks"></i>
-                            </button>
-                            <button 
-                              type="button"
-                              class="btn-gantt-action btn-action-delete" 
-                              @click="handleDeleteMilestone(m)" 
-                              title="Hapus Tahapan"
-                            >
-                              <i class="far fa-trash-alt"></i>
-                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg fs-xs py-1 border-slate-200" style="min-width: 180px; z-index: 1060;">
+                              <li>
+                                <a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="javascript:void(0)" @click="openModalUpdateProgress(m)">
+                                  <i class="fas fa-tasks text-primary" style="width: 14px;"></i>
+                                  <span>Update Progres</span>
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="javascript:void(0)" @click="openModalEditMilestone(m, program)">
+                                  <i class="fas fa-edit text-warning" style="width: 14px;"></i>
+                                  <span>Edit Tahapan & Tanggal</span>
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="javascript:void(0)" @click="handleSendWhatsApp(m)">
+                                  <i class="fab fa-whatsapp text-success" style="width: 14px;"></i>
+                                  <span>Kirim Pengingat WA</span>
+                                </a>
+                              </li>
+                              <li><hr class="dropdown-divider my-1"></li>
+                              <li>
+                                <a class="dropdown-item py-1.5 d-flex align-items-center gap-2 text-danger" href="javascript:void(0)" @click="handleDeleteMilestone(m)">
+                                  <i class="far fa-trash-alt" style="width: 14px;"></i>
+                                  <span>Hapus Tahapan</span>
+                                </a>
+                              </li>
+                            </ul>
                           </div>
                         </div>
                       </div>
@@ -2752,9 +2756,9 @@ onMounted(() => {
 }
 
 .gantt-left-header {
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
   padding: 0 1rem;
   display: flex;
   align-items: center;
@@ -2818,9 +2822,9 @@ onMounted(() => {
 }
 
 .gantt-left-col {
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
   padding: 0 0.85rem;
   display: flex;
   align-items: center;
@@ -2835,9 +2839,19 @@ onMounted(() => {
   background-color: #f8fafc;
 }
 
+/* Elevate active row stacking context so dropdown menu floats above sticky siblings */
+.gantt-row:has(.show),
+.gantt-row:focus-within {
+  z-index: 20;
+}
+.gantt-row:has(.show) .gantt-left-col,
+.gantt-row:focus-within .gantt-left-col {
+  z-index: 20;
+}
+
 .btn-gantt-action {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
@@ -2845,13 +2859,17 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.btn-gantt-action:hover {
+.btn-gantt-action:hover,
+.btn-gantt-action:focus,
+.btn-gantt-action.show {
   background: #f1f5f9;
   border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .gantt-track-col {
