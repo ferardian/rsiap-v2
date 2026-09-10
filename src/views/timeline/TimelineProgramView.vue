@@ -1787,58 +1787,67 @@ const parseValidDate = (str) => {
   return isNaN(d.getTime()) ? null : d
 }
 
-// Smart Normalizer for milestone start & end dates
+// Smart Normalizer for milestone start & end dates (Supports waterfall chaining from previous stage)
 const getMilestoneNormalizedDates = (milestone, program) => {
   let endDate = parseValidDate(milestone.target_selesai)
   if (endDate) {
     endDate.setHours(23, 59, 59, 999)
   }
 
+  // Cari target selesai tahapan sebelumnya dalam program yang sama
+  let prevEndDate = null
+  if (program && program.milestones && Array.isArray(program.milestones)) {
+    const sorted = [...program.milestones].sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
+    const idx = sorted.findIndex(item => item.id === milestone.id)
+    if (idx > 0 && sorted[idx - 1].target_selesai) {
+      prevEndDate = parseValidDate(sorted[idx - 1].target_selesai)
+      if (prevEndDate) {
+        prevEndDate.setHours(0, 0, 0, 0)
+      }
+    }
+  }
+
   let startDate = null
 
-  // 1. Prioritaskan periode_bulan (Bulan Mulai yang dipilih user)
+  // 1. Tentukan tanggal mulai berdasarkan periode_bulan & tahapan sebelumnya
   if (milestone.periode_bulan) {
     const parts = milestone.periode_bulan.split('-')
     if (parts.length >= 2) {
       const y = parseInt(parts[0], 10)
       const mo = parseInt(parts[1], 10) - 1
       if (!isNaN(y) && !isNaN(mo)) {
-        // Jika ada tanggal_mulai spesifik yang berada di bulan & tahun yang sama, gunakan tanggal tersebut
-        if (milestone.tanggal_mulai) {
-          const tMulai = parseValidDate(milestone.tanggal_mulai)
-          if (tMulai && tMulai.getFullYear() === y && tMulai.getMonth() === mo) {
-            startDate = tMulai
-            startDate.setHours(0, 0, 0, 0)
-          }
-        }
-        if (!startDate) {
-          startDate = new Date(y, mo, 1, 0, 0, 0)
+        const monthStart = new Date(y, mo, 1, 0, 0, 0)
+        const monthEnd = new Date(y, mo + 1, 0, 23, 59, 59, 999)
+
+        // Jika tahapan sebelumnya selesai di bulan yang sama dan sebelum endDate:
+        // Sambungkan mulai tahapan ini tepat setelah tahapan sebelumnya selesai (tanpa overlap/gap)!
+        if (prevEndDate && prevEndDate >= monthStart && prevEndDate <= monthEnd && (!endDate || prevEndDate < endDate)) {
+          startDate = new Date(prevEndDate.getTime())
+        } else if (prevEndDate && prevEndDate > monthEnd && (!endDate || prevEndDate < endDate)) {
+          startDate = new Date(prevEndDate.getTime())
+        } else {
+          startDate = monthStart
         }
       }
     }
   }
 
-  // 2. Fallback ke tanggal_mulai jika periode_bulan belum terisi
-  if (!startDate && milestone.tanggal_mulai) {
-    startDate = parseValidDate(milestone.tanggal_mulai)
-    if (startDate) {
-      startDate.setHours(0, 0, 0, 0)
-    }
-  }
-
-  // If start date is after end date, start at beginning of end date's month
-  if (startDate && endDate && startDate > endDate) {
-    startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1, 0, 0, 0)
-  }
-
+  // 2. Fallback jika periode_bulan belum terisi: gunakan prevEndDate
   if (!startDate) {
-    if (endDate) {
+    if (prevEndDate && (!endDate || prevEndDate < endDate)) {
+      startDate = new Date(prevEndDate.getTime())
+    } else if (endDate) {
       startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1, 0, 0, 0)
     } else if (program && program.tanggal_mulai) {
       startDate = parseValidDate(program.tanggal_mulai) || new Date()
     } else {
       startDate = new Date()
     }
+  }
+
+  // Jika start date setelah end date, sesuaikan
+  if (startDate && endDate && startDate > endDate) {
+    startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1, 0, 0, 0)
   }
 
   if (!endDate) {
