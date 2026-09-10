@@ -1656,7 +1656,7 @@ const saveProgress = async () => {
 const handleSendWhatsApp = (milestone) => {
   Swal.fire({
     title: 'Kirim Pengingat WhatsApp?',
-    text: `Pesan pengingat akan dikirimkan ke personil tim penanggung jawab untuk tahapan: "${milestone.judul_tahapan}".`,
+    text: `Pesan pengingat akan dikirimkan ke PIC Utama dan seluruh anggota tim program kerja untuk tahapan: "${milestone.judul_tahapan}".`,
     icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#10b981',
