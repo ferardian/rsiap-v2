@@ -555,7 +555,7 @@
                     <!-- Periode Bulan -->
                     <td>
                       <span class="badge bg-light text-dark border fs-xxs">
-                        <i class="far fa-calendar me-1 text-primary"></i>{{ formatMonth(m.periode_bulan) }}
+                        <i class="far fa-calendar me-1 text-primary"></i>{{ formatMilestonePeriod(m) }}
                       </span>
                     </td>
 
@@ -908,7 +908,7 @@
                       >
                     </div>
                     <div class="col-md-3">
-                      <label class="fs-xxs text-muted fw-semibold mb-0.5 d-block">Bulan Target</label>
+                      <label class="fs-xxs text-muted fw-semibold mb-0.5 d-block">Bulan Mulai</label>
                       <input 
                         v-model="row.periode_bulan" 
                         type="month" 
@@ -991,7 +991,7 @@
 
               <div class="row g-2 mb-3">
                 <div class="col-6">
-                  <label class="form-label-custom">Periode Bulan <span class="text-danger">*</span></label>
+                  <label class="form-label-custom">Bulan Mulai <span class="text-danger">*</span></label>
                   <input 
                     v-model="formMilestone.periode_bulan" 
                     type="month" 
@@ -1009,6 +1009,12 @@
                     @change="syncFormMilestoneDateToMonth"
                     required
                   >
+                </div>
+                <div class="col-12">
+                  <span class="fs-xxs text-muted">
+                    <i class="fas fa-info-circle text-primary me-1"></i>
+                    Bila tahapan berlangsung beberapa bulan, atur <strong>Bulan Mulai</strong> dan tentukan <strong>Tenggat Selesai</strong> di bulan target akhir. Balok Gantt akan memanjang otomatis.
+                  </span>
                 </div>
               </div>
 
@@ -1695,6 +1701,26 @@ const formatMonth = (periodStr) => {
   return `${monthNames[monthIdx] || parts[1]} ${year}`
 }
 
+const formatMilestonePeriod = (m) => {
+  if (!m.periode_bulan && !m.target_selesai) return '-'
+  const startPeriod = m.periode_bulan || (m.tanggal_mulai ? m.tanggal_mulai.substring(0, 7) : null)
+  const endPeriod = m.target_selesai ? m.target_selesai.substring(0, 7) : null
+
+  if (startPeriod && endPeriod && startPeriod !== endPeriod) {
+    const sParts = startPeriod.split('-')
+    const eParts = endPeriod.split('-')
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+    const sName = monthNames[parseInt(sParts[1], 10) - 1] || sParts[1]
+    const eName = monthNames[parseInt(eParts[1], 10) - 1] || eParts[1]
+
+    if (sParts[0] === eParts[0]) {
+      return `${sName} - ${eName} ${sParts[0]}`
+    }
+    return `${sName} ${sParts[0]} - ${eName} ${eParts[0]}`
+  }
+  return formatMonth(startPeriod || endPeriod)
+}
+
 const isOverdue = (milestone) => {
   if (milestone.status === 'completed') return false
   const deadline = new Date(milestone.target_selesai)
@@ -1769,16 +1795,19 @@ const getMilestoneNormalizedDates = (milestone, program) => {
   }
 
   let startDate = null
-  if (milestone.periode_bulan) {
+  if (milestone.tanggal_mulai) {
+    startDate = parseValidDate(milestone.tanggal_mulai)
+    if (startDate) {
+      startDate.setHours(0, 0, 0, 0)
+    }
+  }
+
+  if (!startDate && milestone.periode_bulan) {
     const parts = milestone.periode_bulan.split('-')
     if (parts.length >= 2) {
-      let y = parseInt(parts[0], 10)
-      let mo = parseInt(parts[1], 10) - 1
+      const y = parseInt(parts[0], 10)
+      const mo = parseInt(parts[1], 10) - 1
       if (!isNaN(y) && !isNaN(mo)) {
-        // If year in periode_bulan differs from endDate year, use endDate's year
-        if (endDate && Math.abs(endDate.getFullYear() - y) > 0) {
-          y = endDate.getFullYear()
-        }
         startDate = new Date(y, mo, 1, 0, 0, 0)
       }
     }
@@ -1885,7 +1914,7 @@ const getMilestoneGanttStyle = (milestone, program, timelineData) => {
   }
 }
 
-// Auto-sync Helpers for Modal Inputs
+// Auto-sync Helpers for Modal Inputs (Supports multi-month milestones)
 const syncRowMonthToDate = (row) => {
   if (row.periode_bulan) {
     const parts = row.periode_bulan.split('-')
@@ -1893,8 +1922,10 @@ const syncRowMonthToDate = (row) => {
       const y = parseInt(parts[0], 10)
       const m = parseInt(parts[1], 10)
       const lastDay = new Date(y, m, 0).getDate()
+      const startMonthDate = `${parts[0]}-${parts[1]}-01`
       const endMonthDate = `${parts[0]}-${parts[1]}-${String(lastDay).padStart(2, '0')}`
-      if (!row.target_selesai || row.target_selesai.substring(0, 7) !== row.periode_bulan) {
+      // Only set default if target_selesai is empty or earlier than the start month
+      if (!row.target_selesai || row.target_selesai < startMonthDate) {
         row.target_selesai = endMonthDate
       }
     }
@@ -1902,8 +1933,13 @@ const syncRowMonthToDate = (row) => {
 }
 
 const syncRowDateToMonth = (row) => {
-  if (row.target_selesai) {
+  if (row.target_selesai && !row.periode_bulan) {
     row.periode_bulan = row.target_selesai.substring(0, 7)
+  } else if (row.target_selesai && row.periode_bulan) {
+    // If target_selesai is earlier than start month, adjust start month to match
+    if (row.target_selesai.substring(0, 7) < row.periode_bulan) {
+      row.periode_bulan = row.target_selesai.substring(0, 7)
+    }
   }
 }
 
@@ -1914,8 +1950,10 @@ const syncFormMilestoneMonthToDate = () => {
       const y = parseInt(parts[0], 10)
       const m = parseInt(parts[1], 10)
       const lastDay = new Date(y, m, 0).getDate()
+      const startMonthDate = `${parts[0]}-${parts[1]}-01`
       const endMonthDate = `${parts[0]}-${parts[1]}-${String(lastDay).padStart(2, '0')}`
-      if (!formMilestone.target_selesai || formMilestone.target_selesai.substring(0, 7) !== formMilestone.periode_bulan) {
+      // Only set default if target_selesai is empty or earlier than the start month
+      if (!formMilestone.target_selesai || formMilestone.target_selesai < startMonthDate) {
         formMilestone.target_selesai = endMonthDate
       }
     }
@@ -1923,8 +1961,13 @@ const syncFormMilestoneMonthToDate = () => {
 }
 
 const syncFormMilestoneDateToMonth = () => {
-  if (formMilestone.target_selesai) {
+  if (formMilestone.target_selesai && !formMilestone.periode_bulan) {
     formMilestone.periode_bulan = formMilestone.target_selesai.substring(0, 7)
+  } else if (formMilestone.target_selesai && formMilestone.periode_bulan) {
+    // If target_selesai is earlier than start month, adjust start month to match
+    if (formMilestone.target_selesai.substring(0, 7) < formMilestone.periode_bulan) {
+      formMilestone.periode_bulan = formMilestone.target_selesai.substring(0, 7)
+    }
   }
 }
 
