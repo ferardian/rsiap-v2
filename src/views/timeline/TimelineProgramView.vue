@@ -534,7 +534,7 @@
                     <th style="min-width: 140px;">Tenggat Waktu</th>
                     <th style="min-width: 220px;">Tim / Personil Terkait</th>
                     <th style="min-width: 140px;">Progres Capaian</th>
-                    <th style="width: 145px;" class="text-center pe-3">Aksi</th>
+                    <th style="width: 70px;" class="text-center pe-3">Aksi</th>
                   </tr>
                 </thead>
                 <tbody class="fs-xs">
@@ -626,50 +626,45 @@
                       </div>
                     </td>
 
-                    <!-- Aksi Cepat -->
+                    <!-- Aksi Cepat: Single Kebab Dropdown -->
                     <td class="text-center pe-3">
-                      <div class="table-action-pill">
-                        <!-- Tombol Edit Milestone & Tanggal -->
+                      <div class="dropdown" @click.stop>
                         <button 
-                          type="button"
-                          class="btn-table-action btn-action-edit"
-                          @click="openModalEditMilestone(m, program)"
-                          title="Edit Tahapan & Tanggal"
+                          type="button" 
+                          class="btn-table-kebab text-slate-500" 
+                          data-bs-toggle="dropdown" 
+                          aria-expanded="false"
+                          title="Menu Aksi Tahapan"
                         >
-                          <i class="fas fa-edit"></i>
+                          <i class="fas fa-ellipsis-v"></i>
                         </button>
-
-                        <!-- Tombol Notifikasi WA -->
-                        <button 
-                          type="button"
-                          class="btn-table-action btn-action-wa"
-                          @click="handleSendWhatsApp(m)"
-                          title="Kirim Pengingat WhatsApp ke Tim"
-                        >
-                          <i class="fab fa-whatsapp"></i>
-                        </button>
-
-                        <!-- Tombol Update Progress -->
-                        <button 
-                          type="button"
-                          class="btn-table-action btn-action-progress"
-                          @click="openModalUpdateProgress(m)"
-                          title="Update Progres & Catatan"
-                        >
-                          <i class="fas fa-tasks"></i>
-                        </button>
-
-                        <span class="action-pill-divider"></span>
-
-                        <!-- Tombol Hapus Milestone -->
-                        <button 
-                          type="button"
-                          class="btn-table-action btn-action-delete"
-                          @click="handleDeleteMilestone(m)"
-                          title="Hapus Tahapan"
-                        >
-                          <i class="far fa-trash-alt"></i>
-                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg fs-xs py-1 border-slate-200" style="min-width: 180px; z-index: 1060;">
+                          <li>
+                            <a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="javascript:void(0)" @click="openModalUpdateProgress(m)">
+                              <i class="fas fa-tasks text-primary" style="width: 14px;"></i>
+                              <span>Update Progres & Catatan</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="javascript:void(0)" @click="openModalEditMilestone(m, program)">
+                              <i class="fas fa-edit text-warning" style="width: 14px;"></i>
+                              <span>Edit Tahapan & Tanggal</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="javascript:void(0)" @click="handleSendWhatsApp(m)">
+                              <i class="fab fa-whatsapp text-success" style="width: 14px;"></i>
+                              <span>Kirim Pengingat WA</span>
+                            </a>
+                          </li>
+                          <li><hr class="dropdown-divider my-1"></li>
+                          <li>
+                            <a class="dropdown-item py-1.5 d-flex align-items-center gap-2 text-danger" href="javascript:void(0)" @click="handleDeleteMilestone(m)">
+                              <i class="far fa-trash-alt" style="width: 14px;"></i>
+                              <span>Hapus Tahapan</span>
+                            </a>
+                          </li>
+                        </ul>
                       </div>
                     </td>
                   </tr>
@@ -2422,6 +2417,33 @@ onMounted(() => {
 }
 .milestone-row:hover {
   background-color: #fafbfc;
+}
+.milestone-row:has(.show),
+.milestone-row:focus-within {
+  position: relative;
+  z-index: 20;
+}
+
+.btn-table-kebab {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-table-kebab:hover,
+.btn-table-kebab:focus,
+.btn-table-kebab.show {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 /* Icon Buttons */
