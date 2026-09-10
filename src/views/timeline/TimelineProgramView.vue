@@ -501,8 +501,19 @@
                           class="gantt-bar"
                           :class="getGanttBarColorClass(m)"
                           :style="getMilestoneGanttStyle(m, program, getGanttTimelineData(program))"
-                          :title="`${m.judul_tahapan}\nTenggat: ${formatDate(m.target_selesai)}\nProgres: ${m.progress_percent}%`"
                         >
+                          <!-- Instant Hover Tooltip (muncul instan tanpa jeda browser) -->
+                          <div class="gantt-hover-tooltip">
+                            <div class="fw-bold text-white mb-0.5 text-truncate" style="max-width: 260px;">{{ m.judul_tahapan }}</div>
+                            <div class="d-flex align-items-center gap-2 text-slate-300 fs-xxs">
+                              <span><i class="far fa-calendar-alt me-1 text-info"></i>{{ formatDate(m.target_selesai) }}</span>
+                              <span>•</span>
+                              <span :class="m.progress_percent >= 100 ? 'text-success fw-bold' : 'text-warning'">
+                                <i class="fas fa-chart-line me-1"></i>{{ m.progress_percent }}%
+                              </span>
+                            </div>
+                          </div>
+
                           <!-- Progress Fill Fill -->
                           <div 
                             class="gantt-bar-fill" 
@@ -3004,7 +3015,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   user-select: none;
@@ -3013,7 +3024,63 @@ onMounted(() => {
 .gantt-bar:hover {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-  z-index: 10;
+  z-index: 40;
+}
+
+/* Instant Hover Tooltip (0ms delay, sleek dark badge) */
+.gantt-hover-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.08s ease, transform 0.08s ease;
+  z-index: 100;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+.gantt-hover-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #0f172a transparent transparent transparent;
+}
+
+.gantt-bar:hover .gantt-hover-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Row 1 tooltip points downwards to stay clear of the header */
+.gantt-row:first-child .gantt-hover-tooltip {
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-3px);
+}
+
+.gantt-row:first-child .gantt-hover-tooltip::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent #0f172a transparent;
+}
+
+.gantt-row:first-child .gantt-bar:hover .gantt-hover-tooltip {
+  transform: translateX(-50%) translateY(0);
 }
 
 .gantt-bar-fill {
