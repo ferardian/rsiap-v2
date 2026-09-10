@@ -439,7 +439,7 @@
                           <div class="gantt-row-actions d-flex align-items-center gap-1 flex-shrink-0" @click.stop>
                             <button 
                               type="button"
-                              class="btn-gantt-action text-warning" 
+                              class="btn-gantt-action btn-action-edit" 
                               @click="openModalEditMilestone(m, program)" 
                               title="Edit Tahapan & Tanggal"
                             >
@@ -447,7 +447,7 @@
                             </button>
                             <button 
                               type="button"
-                              class="btn-gantt-action text-success" 
+                              class="btn-gantt-action btn-action-wa" 
                               @click="handleSendWhatsApp(m)" 
                               title="Kirim WA ke Tim"
                             >
@@ -455,11 +455,19 @@
                             </button>
                             <button 
                               type="button"
-                              class="btn-gantt-action text-primary" 
+                              class="btn-gantt-action btn-action-progress" 
                               @click="openModalUpdateProgress(m)" 
                               title="Update Progres"
                             >
                               <i class="fas fa-tasks"></i>
+                            </button>
+                            <button 
+                              type="button"
+                              class="btn-gantt-action btn-action-delete" 
+                              @click="handleDeleteMilestone(m)" 
+                              title="Hapus Tahapan"
+                            >
+                              <i class="far fa-trash-alt"></i>
                             </button>
                           </div>
                         </div>
@@ -521,7 +529,7 @@
                     <th style="min-width: 140px;">Tenggat Waktu</th>
                     <th style="min-width: 220px;">Tim / Personil Terkait</th>
                     <th style="min-width: 140px;">Progres Capaian</th>
-                    <th style="width: 110px;" class="text-center pe-3">Aksi</th>
+                    <th style="width: 145px;" class="text-center pe-3">Aksi</th>
                   </tr>
                 </thead>
                 <tbody class="fs-xs">
@@ -615,10 +623,11 @@
 
                     <!-- Aksi Cepat -->
                     <td class="text-center pe-3">
-                      <div class="d-flex align-items-center justify-content-center gap-1">
+                      <div class="table-action-pill">
                         <!-- Tombol Edit Milestone & Tanggal -->
                         <button 
-                          class="btn btn-sm btn-icon-sm btn-outline-warning rounded-circle"
+                          type="button"
+                          class="btn-table-action btn-action-edit"
                           @click="openModalEditMilestone(m, program)"
                           title="Edit Tahapan & Tanggal"
                         >
@@ -627,7 +636,8 @@
 
                         <!-- Tombol Notifikasi WA -->
                         <button 
-                          class="btn btn-sm btn-icon-sm btn-outline-success rounded-circle"
+                          type="button"
+                          class="btn-table-action btn-action-wa"
                           @click="handleSendWhatsApp(m)"
                           title="Kirim Pengingat WhatsApp ke Tim"
                         >
@@ -636,20 +646,24 @@
 
                         <!-- Tombol Update Progress -->
                         <button 
-                          class="btn btn-sm btn-icon-sm btn-outline-primary rounded-circle"
+                          type="button"
+                          class="btn-table-action btn-action-progress"
                           @click="openModalUpdateProgress(m)"
                           title="Update Progres & Catatan"
                         >
                           <i class="fas fa-tasks"></i>
                         </button>
 
+                        <span class="action-pill-divider"></span>
+
                         <!-- Tombol Hapus Milestone -->
                         <button 
-                          class="btn btn-sm btn-icon-sm btn-outline-danger rounded-circle"
+                          type="button"
+                          class="btn-table-action btn-action-delete"
                           @click="handleDeleteMilestone(m)"
                           title="Hapus Tahapan"
                         >
-                          <i class="fas fa-trash"></i>
+                          <i class="far fa-trash-alt"></i>
                         </button>
                       </div>
                     </td>
@@ -2410,6 +2424,76 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
+}
+
+/* Modern Segmented Table Action Pill */
+.table-action-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 2px 3px;
+  gap: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.btn-table-action {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  padding: 0;
+}
+
+.action-pill-divider {
+  width: 1px;
+  height: 14px;
+  background: #e2e8f0;
+  margin: 0 1px;
+}
+
+.btn-action-edit {
+  color: #d97706;
+}
+.btn-action-edit:hover {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.btn-action-wa {
+  color: #059669;
+}
+.btn-action-wa:hover {
+  background: #d1fae5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.btn-action-progress {
+  color: #2563eb;
+}
+.btn-action-progress:hover {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.btn-action-delete {
+  color: #ef4444;
+}
+.btn-action-delete:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 
 .transition-transform { transition: transform 0.2s ease-in-out; }
