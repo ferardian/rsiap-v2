@@ -479,7 +479,7 @@
                         <div 
                           class="gantt-bar"
                           :class="getGanttBarColorClass(m)"
-                          :style="getMilestoneGanttStyle(m, getGanttTimelineData(program))"
+                          :style="getMilestoneGanttStyle(m, program, getGanttTimelineData(program))"
                           :title="`${m.judul_tahapan}\nTenggat: ${formatDate(m.target_selesai)}\nProgres: ${m.progress_percent}%`"
                         >
                           <!-- Progress Fill Fill -->
@@ -857,6 +857,7 @@
                         v-model="row.periode_bulan" 
                         type="month" 
                         class="form-control form-control-sm form-control-custom fs-xs" 
+                        @change="syncRowMonthToDate(row)"
                         required
                       >
                     </div>
@@ -866,6 +867,7 @@
                         v-model="row.target_selesai" 
                         type="date" 
                         class="form-control form-control-sm form-control-custom fs-xs" 
+                        @change="syncRowDateToMonth(row)"
                         required
                       >
                     </div>
@@ -938,6 +940,7 @@
                     v-model="formMilestone.periode_bulan" 
                     type="month" 
                     class="form-control form-control-custom" 
+                    @change="syncFormMilestoneMonthToDate"
                     required
                   >
                 </div>
@@ -947,6 +950,7 @@
                     v-model="formMilestone.target_selesai" 
                     type="date" 
                     class="form-control form-control-custom" 
+                    @change="syncFormMilestoneDateToMonth"
                     required
                   >
                 </div>
@@ -1537,45 +1541,71 @@ const setProgramViewMode = (programId, mode) => {
 }
 
 // Gantt Timeline calculation
+// Safe date parser
+const parseValidDate = (str) => {
+  if (!str) return null
+  const d = new Date(str)
+  return isNaN(d.getTime()) ? null : d
+}
+
+// Smart Normalizer for milestone start & end dates
+const getMilestoneNormalizedDates = (milestone, program) => {
+  let endDate = parseValidDate(milestone.target_selesai)
+  if (endDate) {
+    endDate.setHours(23, 59, 59, 999)
+  }
+
+  let startDate = null
+  if (milestone.periode_bulan) {
+    const parts = milestone.periode_bulan.split('-')
+    if (parts.length >= 2) {
+      let y = parseInt(parts[0], 10)
+      let mo = parseInt(parts[1], 10) - 1
+      if (!isNaN(y) && !isNaN(mo)) {
+        // If year in periode_bulan differs from endDate year, use endDate's year
+        if (endDate && Math.abs(endDate.getFullYear() - y) > 0) {
+          y = endDate.getFullYear()
+        }
+        startDate = new Date(y, mo, 1, 0, 0, 0)
+      }
+    }
+  }
+
+  // If start date is after end date, start at beginning of end date's month
+  if (startDate && endDate && startDate > endDate) {
+    startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1, 0, 0, 0)
+  }
+
+  if (!startDate) {
+    if (endDate) {
+      startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1, 0, 0, 0)
+    } else if (program && program.tanggal_mulai) {
+      startDate = parseValidDate(program.tanggal_mulai) || new Date()
+    } else {
+      startDate = new Date()
+    }
+  }
+
+  if (!endDate) {
+    endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0, 23, 59, 59, 999)
+  }
+
+  return { startDate, endDate }
+}
+
+// Gantt Timeline calculation
 const getGanttTimelineData = (program) => {
   if (!program.milestones || program.milestones.length === 0) {
     return { months: [], startMs: 0, endMs: 0, totalMs: 1, todayLeftPercent: -1 }
   }
 
-  let minDate = null
-  let maxDate = null
-
-  const parseValidDate = (str) => {
-    if (!str) return null
-    const d = new Date(str)
-    return isNaN(d.getTime()) ? null : d
-  }
-
-  const pStart = parseValidDate(program.tanggal_mulai)
-  const pEnd = parseValidDate(program.target_selesai)
-
-  if (pStart) minDate = new Date(pStart)
-  if (pEnd) maxDate = new Date(pEnd)
+  let minDate = parseValidDate(program.tanggal_mulai)
+  let maxDate = parseValidDate(program.target_selesai)
 
   program.milestones.forEach((m) => {
-    if (m.periode_bulan) {
-      const parts = m.periode_bulan.split('-')
-      if (parts.length >= 2) {
-        const y = parseInt(parts[0], 10)
-        const mo = parseInt(parts[1], 10) - 1
-        if (!isNaN(y) && !isNaN(mo)) {
-          const mStart = new Date(y, mo, 1)
-          if (!minDate || mStart < minDate) minDate = mStart
-          const mEndMonth = new Date(y, mo + 1, 0)
-          if (!maxDate || mEndMonth > maxDate) maxDate = mEndMonth
-        }
-      }
-    }
-    const mEnd = parseValidDate(m.target_selesai)
-    if (mEnd) {
-      if (!maxDate || mEnd > maxDate) maxDate = mEnd
-      if (!minDate || mEnd < minDate) minDate = mEnd
-    }
+    const { startDate, endDate } = getMilestoneNormalizedDates(m, program)
+    if (!minDate || startDate < minDate) minDate = startDate
+    if (!maxDate || endDate > maxDate) maxDate = endDate
   })
 
   if (!minDate) minDate = new Date()
@@ -1583,7 +1613,7 @@ const getGanttTimelineData = (program) => {
 
   // Align start to 1st of month and end to last of month
   const timelineStartDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1, 0, 0, 0)
-  const timelineEndDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0, 23, 59, 59)
+  const timelineEndDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0, 23, 59, 59, 999)
 
   const startMs = timelineStartDate.getTime()
   const endMs = timelineEndDate.getTime()
@@ -1623,38 +1653,12 @@ const getGanttTimelineData = (program) => {
   }
 }
 
-const getMilestoneGanttStyle = (milestone, timelineData) => {
+const getMilestoneGanttStyle = (milestone, program, timelineData) => {
   if (!timelineData || timelineData.totalMs <= 0) return { left: '0%', width: '0%' }
 
-  let mStartMs = null
-  if (milestone.periode_bulan) {
-    const parts = milestone.periode_bulan.split('-')
-    if (parts.length >= 2) {
-      const y = parseInt(parts[0], 10)
-      const mo = parseInt(parts[1], 10) - 1
-      if (!isNaN(y) && !isNaN(mo)) {
-        mStartMs = new Date(y, mo, 1).getTime()
-      }
-    }
-  }
-  if (!mStartMs) {
-    mStartMs = timelineData.startMs
-  }
-
-  let mEndMs = null
-  if (milestone.target_selesai) {
-    const d = new Date(milestone.target_selesai)
-    if (!isNaN(d.getTime())) {
-      d.setHours(23, 59, 59)
-      mEndMs = d.getTime()
-    }
-  }
-  if (!mEndMs) {
-    mEndMs = mStartMs + (30 * 24 * 60 * 60 * 1000)
-  }
-  if (mEndMs < mStartMs) {
-    mEndMs = mStartMs + (7 * 24 * 60 * 60 * 1000)
-  }
+  const { startDate, endDate } = getMilestoneNormalizedDates(milestone, program)
+  const mStartMs = startDate.getTime()
+  const mEndMs = endDate.getTime()
 
   let leftPercent = ((mStartMs - timelineData.startMs) / timelineData.totalMs) * 100
   let widthPercent = ((mEndMs - mStartMs) / timelineData.totalMs) * 100
@@ -1665,6 +1669,49 @@ const getMilestoneGanttStyle = (milestone, timelineData) => {
   return {
     left: `${leftPercent.toFixed(2)}%`,
     width: `${widthPercent.toFixed(2)}%`
+  }
+}
+
+// Auto-sync Helpers for Modal Inputs
+const syncRowMonthToDate = (row) => {
+  if (row.periode_bulan) {
+    const parts = row.periode_bulan.split('-')
+    if (parts.length === 2) {
+      const y = parseInt(parts[0], 10)
+      const m = parseInt(parts[1], 10)
+      const lastDay = new Date(y, m, 0).getDate()
+      const endMonthDate = `${parts[0]}-${parts[1]}-${String(lastDay).padStart(2, '0')}`
+      if (!row.target_selesai || row.target_selesai.substring(0, 7) !== row.periode_bulan) {
+        row.target_selesai = endMonthDate
+      }
+    }
+  }
+}
+
+const syncRowDateToMonth = (row) => {
+  if (row.target_selesai) {
+    row.periode_bulan = row.target_selesai.substring(0, 7)
+  }
+}
+
+const syncFormMilestoneMonthToDate = () => {
+  if (formMilestone.periode_bulan) {
+    const parts = formMilestone.periode_bulan.split('-')
+    if (parts.length === 2) {
+      const y = parseInt(parts[0], 10)
+      const m = parseInt(parts[1], 10)
+      const lastDay = new Date(y, m, 0).getDate()
+      const endMonthDate = `${parts[0]}-${parts[1]}-${String(lastDay).padStart(2, '0')}`
+      if (!formMilestone.target_selesai || formMilestone.target_selesai.substring(0, 7) !== formMilestone.periode_bulan) {
+        formMilestone.target_selesai = endMonthDate
+      }
+    }
+  }
+}
+
+const syncFormMilestoneDateToMonth = () => {
+  if (formMilestone.target_selesai) {
+    formMilestone.periode_bulan = formMilestone.target_selesai.substring(0, 7)
   }
 }
 
