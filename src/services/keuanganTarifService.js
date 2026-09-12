@@ -7,8 +7,20 @@ const keuanganTarifService = {
   getNextKodeRanap: () => {
     return api.get('/keuangan/tarif/ranap/kode')
   },
+  getNextKodeKategori: () => {
+    return api.get('/keuangan/kategori-perawatan/kode')
+  },
   getKategoriPerawatan: (params) => {
     return api.get('/keuangan/kategori-perawatan', { params })
+  },
+  postKategoriPerawatan: (data) => {
+    return api.post('/keuangan/kategori-perawatan', data)
+  },
+  putKategoriPerawatan: (id, data) => {
+    return api.put(`/keuangan/kategori-perawatan/${id}`, data)
+  },
+  deleteKategoriPerawatan: (id) => {
+    return api.delete(`/keuangan/kategori-perawatan/${id}`)
   },
   getPoli: (params) => {
     return api.get('/rawat-jalan/poli', { params })

@@ -10,6 +10,16 @@
         </div>
         <p class="page-subtitle mt-1">Konfigurasi dan kelola seluruh master data tarif rawat jalan, rawat inap, paket operasi, laboratorium, dan radiologi</p>
       </div>
+      <div class="header-action">
+        <button 
+          class="btn btn-outline-primary rounded-pill px-3.5 py-2 shadow-2xs fw-semibold d-inline-flex align-items-center gap-2 bg-white"
+          @click="openKelolaKategori"
+          title="Kelola Master Kategori Perawatan"
+        >
+          <i class="fas fa-tags"></i>
+          <span>Kelola Kategori</span>
+        </button>
+      </div>
     </div>
 
     <!-- Modern Capsule Tabs -->
@@ -36,6 +46,9 @@
         <component :is="activeTabComponent"></component>
       </transition>
     </div>
+
+    <!-- Modal Kelola Kategori Global -->
+    <ModalKelolaKategori ref="modalKelolaKategoriRef" />
   </div>
 </template>
 
@@ -48,8 +61,14 @@ import TabTarifRanap from '@/components/keuangan/tarif/TabTarifRanap.vue'
 import TabTarifOperasi from '@/components/keuangan/tarif/TabTarifOperasi.vue'
 import TabTarifLab from '@/components/keuangan/tarif/TabTarifLab.vue'
 import TabTarifRadiologi from '@/components/keuangan/tarif/TabTarifRadiologi.vue'
+import ModalKelolaKategori from '@/components/keuangan/tarif/ModalKelolaKategori.vue'
 
 const activeTab = ref('ralan')
+const modalKelolaKategoriRef = ref(null)
+
+const openKelolaKategori = () => {
+  modalKelolaKategoriRef.value?.openModal()
+}
 
 const tabs = [
   { id: 'ralan', label: 'Rawat Jalan', icon: 'fas fa-stethoscope' },

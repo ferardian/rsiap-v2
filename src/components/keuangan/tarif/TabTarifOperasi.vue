@@ -506,21 +506,21 @@
     <!-- Modal Form: Modern Layout with Sticky Live Total Calculator -->
     <div class="modal fade" id="modalTarifOperasi" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-          <!-- Header -->
-          <div class="modal-header bg-gradient-header border-0 py-3 px-4 text-white">
-            <div class="d-flex align-items-center gap-3">
-              <div class="modal-icon-badge">
-                <i class="fas fa-procedures fa-lg"></i>
+        <div class="modal-content border shadow-sm rounded-3 overflow-hidden">
+          <!-- Header: Clean White Tone -->
+          <div class="modal-header bg-white border-bottom py-3 px-4">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="header-icon-clean rounded-2">
+                <i class="fas fa-procedures text-secondary"></i>
               </div>
               <div>
-                <h5 class="modal-title fw-bold m-0 text-white">
+                <h6 class="modal-title fw-bold text-dark m-0">
                   {{ modalMode === 'add' ? 'Tambah Paket Tarif Operasi' : 'Edit Paket Tarif Operasi' }}
-                </h5>
-                <p class="mb-0 text-white-50 fs-xs">Lengkapi data master dan rincian nominal tiap komponen</p>
+                </h6>
+                <p class="text-muted fs-xs m-0 mt-0.5">Lengkapi data master dan rincian nominal tiap komponen</p>
               </div>
             </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
 
           <!-- Sticky Live Total Summary Bar -->
@@ -555,7 +555,7 @@
           <div class="modal-body p-4 bg-slate-50">
             <form @submit.prevent="saveData">
               <!-- Bagian 1: Data Identitas Paket Tindakan -->
-              <div class="card border-0 shadow-2xs rounded-3 p-3 mb-3 bg-white">
+              <div class="card border-0 shadow-2xs rounded-3 p-3 mb-3 bg-white position-relative" style="z-index: 15; overflow: visible !important;">
                 <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center gap-2">
                   <i class="fas fa-info-circle text-primary"></i> Identitas Paket Operasi
                 </h6>
@@ -569,40 +569,61 @@
                     <input v-model="form.nm_perawatan" type="text" class="form-control" placeholder="Contoh: SC ELEKTIF KELAS 1 UMUM" required>
                   </div>
                   <div class="col-md-2">
-                    <label class="form-label small fw-bold">Kategori</label>
-                    <select v-model="form.kategori" class="form-select" required>
-                      <option value="" disabled>Pilih Kategori...</option>
-                      <option value="Kebidanan">Kebidanan</option>
-                      <option value="Operasi">Operasi</option>
-                    </select>
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Kategori</label>
+                    <v-select
+                      v-model="form.kategori"
+                      :options="['Kebidanan', 'Operasi']"
+                      :clearable="false"
+                      placeholder="Pilih Kategori..."
+                      class="v-select-custom"
+                    />
                   </div>
                   <div class="col-md-2">
-                    <label class="form-label small fw-bold">Kelas</label>
-                    <select v-model="form.kelas" class="form-select" required>
-                      <option value="" disabled>Pilih Kelas...</option>
-                      <option value="Rawat Jalan">Rawat Jalan</option>
-                      <option value="Kelas 1">Kelas 1</option>
-                      <option value="Kelas 2">Kelas 2</option>
-                      <option value="Kelas 3">Kelas 3</option>
-                      <option value="Kelas VIP">Kelas VIP</option>
-                      <option value="Kelas VVIP">Kelas VVIP</option>
-                    </select>
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Kelas</label>
+                    <v-select
+                      v-model="form.kelas"
+                      :options="['Rawat Jalan', 'Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas VIP', 'Kelas VVIP']"
+                      :clearable="false"
+                      placeholder="Pilih Kelas..."
+                      class="v-select-custom"
+                    />
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label small fw-bold">Penjamin / Cara Bayar</label>
-                    <select v-model="form.kd_pj" class="form-select" required>
-                      <option value="" disabled>Pilih Penjab...</option>
-                      <option v-for="pj in listPenjab" :key="pj.kd_pj" :value="pj.kd_pj">
-                        {{ pj.png_jawab }} ({{ pj.kd_pj }})
-                      </option>
-                    </select>
+                  <div class="col-md-5">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Penjamin / Cara Bayar</label>
+                    <v-select
+                      v-model="form.kd_pj"
+                      :options="listPenjab"
+                      label="png_jawab"
+                      :reduce="pj => pj.kd_pj"
+                      :filter-by="filterPenjab"
+                      :clearable="false"
+                      placeholder="Pilih Penjab..."
+                      class="v-select-custom"
+                    >
+                      <template #option="{ png_jawab, kd_pj }">
+                        <div class="d-flex justify-content-between align-items-center py-0.5">
+                          <span class="fs-xs fw-medium text-dark">{{ png_jawab }}</span>
+                          <span class="badge bg-light text-secondary border font-monospace fs-xxs ms-2">{{ kd_pj }}</span>
+                        </div>
+                      </template>
+                      <template #selected-option="{ png_jawab, kd_pj }">
+                        <span class="fs-xs fw-medium text-dark">{{ png_jawab }} <small class="text-muted">({{ kd_pj }})</small></span>
+                      </template>
+                    </v-select>
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label small fw-bold">Status Tarif</label>
-                    <select v-model="form.status" class="form-select">
-                      <option value="1">Aktif (Digunakan)</option>
-                      <option value="0">Nonaktif</option>
-                    </select>
+                  <div class="col-md-3">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Status Tarif</label>
+                    <v-select
+                      v-model="form.status"
+                      :options="[
+                        { label: 'Aktif', value: '1' },
+                        { label: 'Nonaktif', value: '0' }
+                      ]"
+                      label="label"
+                      :reduce="opt => opt.value"
+                      :clearable="false"
+                      class="v-select-custom"
+                    />
                   </div>
                 </div>
               </div>
@@ -913,6 +934,12 @@ const saving = ref(false)
 const modalMode = ref('add')
 const expandedRow = ref(null)
 let modalInstance = null
+
+const filterPenjab = (option, label, search) => {
+  const s = (search || '').toLowerCase()
+  return (option.png_jawab || '').toLowerCase().includes(s) ||
+         (option.kd_pj || '').toLowerCase().includes(s)
+}
 
 const form = reactive({
   kode_paket: '', nm_perawatan: '', kategori: '', kelas: '', kd_pj: '',

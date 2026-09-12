@@ -175,122 +175,164 @@
     </div>
 
     <!-- Modal Lab -->
+    <!-- Modal Tarif Lab -->
     <div class="modal fade" id="modalTarifLab" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-          <div class="modal-header border-0 pb-0 px-4 pt-4">
-            <h5 class="modal-title fw-bold">
-              {{ modalMode === 'add' ? 'Tambah' : 'Edit' }} Tarif Laboratorium
-            </h5>
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 720px;">
+        <div class="modal-content border shadow-sm rounded-3">
+          <!-- Modal Header: Clean White Tone -->
+          <div class="modal-header bg-white border-bottom py-3 px-4">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="header-icon-clean rounded-2">
+                <i class="fas fa-flask text-secondary"></i>
+              </div>
+              <div>
+                <h6 class="modal-title fw-bold text-dark m-0">
+                  {{ modalMode === 'add' ? 'Tambah Tarif Laboratorium' : 'Edit Tarif Laboratorium' }}
+                </h6>
+                <p class="text-muted fs-xs m-0 mt-0.5">Lengkapi data master pemeriksaan dan rincian biaya paket</p>
+              </div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body p-4">
+          <div class="modal-body p-3.5 bg-slate-50">
             <form @submit.prevent="saveTarif">
-              <div class="row g-3">
-                <!-- Master Data -->
-                <div class="col-md-3">
-                  <label class="form-label small fw-bold text-muted mb-1">Kode Paket</label>
-                  <input v-model="form.kd_jenis_prw" type="text" class="form-control premium-input text-uppercase" required :disabled="modalMode === 'edit'">
+              <!-- Master Data -->
+              <div class="card border rounded-3 p-3 mb-3 bg-white shadow-none position-relative" style="z-index: 15; overflow: visible !important;">
+                <div class="fs-xs fw-bold text-secondary text-uppercase tracking-wider border-bottom pb-1.5 mb-2.5 d-flex align-items-center gap-1.5">
+                  <i class="fas fa-layer-group text-muted"></i> Informasi Pemeriksaan
                 </div>
-                <div class="col-md-9">
-                  <label class="form-label small fw-bold text-muted mb-1">Nama Pemeriksaan</label>
-                  <input v-model="form.nm_perawatan" type="text" class="form-control premium-input" required>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Kategori</label>
-                  <select v-model="form.kategori" class="form-select premium-input" required>
-                    <option value="PK">Patologi Klinik (PK)</option>
-                    <option value="PA">Patologi Anatomi (PA)</option>
-                    <option value="MB">Mikrobiologi (MB)</option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Kelas</label>
-                  <select v-model="form.kelas" class="form-select premium-input" required>
-                    <option value="-">-</option>
-                    <option value="Rawat Jalan">Rawat Jalan</option>
-                    <option value="Kelas 1">Kelas 1</option>
-                    <option value="Kelas 2">Kelas 2</option>
-                    <option value="Kelas 3">Kelas 3</option>
-                    <option value="Kelas Utama">Kelas Utama</option>
-                    <option value="Kelas VIP">Kelas VIP</option>
-                    <option value="Kelas VVIP">Kelas VVIP</option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Penjab / Bayar</label>
-                  <select v-model="form.kd_pj" class="form-select premium-input" required>
-                    <option v-for="pj in penjabList" :key="pj.kd_pj" :value="pj.kd_pj">{{ pj.png_jawab }}</option>
-                  </select>
-                </div>
-
-                <!-- Fees Section -->
-                <div class="col-12 mt-4 mb-2">
-                  <h6 class="fw-bold text-info border-bottom pb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.05em;">Rincian Biaya Paket</h6>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Bagian RS</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.bagian_rs" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
+                <div class="row g-2.5">
+                  <div class="col-md-4">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Kode Paket</label>
+                    <input v-model="form.kd_jenis_prw" type="text" class="form-control form-control-sm font-monospace fw-bold text-uppercase" required :disabled="modalMode === 'edit'">
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">BHP</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.bhp" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
+                  <div class="col-md-8">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Penjab / Jenis Bayar</label>
+                    <v-select
+                      v-model="form.kd_pj"
+                      :options="penjabList"
+                      label="png_jawab"
+                      :reduce="pj => pj.kd_pj"
+                      :filter-by="filterPenjab"
+                      :clearable="false"
+                      placeholder="Pilih Penjab..."
+                      class="v-select-custom"
+                    >
+                      <template #option="{ png_jawab, kd_pj }">
+                        <div class="d-flex justify-content-between align-items-center py-0.5">
+                          <span class="fs-xs fw-medium text-dark">{{ png_jawab }}</span>
+                          <span class="badge bg-light text-secondary border font-monospace fs-xxs ms-2">{{ kd_pj }}</span>
+                        </div>
+                      </template>
+                      <template #selected-option="{ png_jawab, kd_pj }">
+                        <span class="fs-xs fw-medium text-dark">{{ png_jawab }} <small class="text-muted">({{ kd_pj }})</small></span>
+                      </template>
+                    </v-select>
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Tarif Perujuk</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.tarif_perujuk" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
+                  <div class="col-12">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Nama Pemeriksaan</label>
+                    <input v-model="form.nm_perawatan" type="text" class="form-control form-control-sm" placeholder="Contoh: Darah Rutin, SGOT, SGPT..." required>
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Tarif Dokter</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.tarif_tindakan_dokter" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
+                  <div class="col-md-6">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Kategori</label>
+                    <v-select
+                      v-model="form.kategori"
+                      :options="[
+                        { label: 'Patologi Klinik (PK)', value: 'PK' },
+                        { label: 'Patologi Anatomi (PA)', value: 'PA' },
+                        { label: 'Mikrobiologi (MB)', value: 'MB' }
+                      ]"
+                      label="label"
+                      :reduce="opt => opt.value"
+                      :clearable="false"
+                      placeholder="Pilih Kategori..."
+                      class="v-select-custom"
+                    />
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Tarif Petugas</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.tarif_tindakan_petugas" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">KSO</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.kso" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label small fw-bold text-muted mb-1">Menejemen</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">Rp</span>
-                    <input v-model.number="form.menejemen" type="number" class="form-control premium-input border-start-0" @input="calculateTotal">
-                  </div>
-                </div>
-                <div class="col-md-8">
-                  <label class="form-label small fw-bold text-info mb-1">Total Tarif</label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-info-subtle text-info border-end-0 border-info-subtle">Rp</span>
-                    <input v-model.number="form.total_byr" type="number" class="form-control premium-input border-start-0 border-info-subtle fw-bold text-info shadow-none bg-info-subtle">
+                  <div class="col-md-6">
+                    <label class="form-label fs-xs fw-semibold text-secondary mb-1">Kelas</label>
+                    <v-select
+                      v-model="form.kelas"
+                      :options="['-', 'Rawat Jalan', 'Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas Utama', 'Kelas VIP', 'Kelas VVIP']"
+                      :clearable="false"
+                      placeholder="Pilih Kelas..."
+                      class="v-select-custom"
+                    />
                   </div>
                 </div>
               </div>
 
-              <div class="modal-footer border-0 px-0 mt-4">
-                <button type="button" class="btn btn-light premium-btn" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-primary premium-btn" :disabled="loading">
-                  <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
-                  {{ modalMode === 'add' ? 'Simpan Data' : 'Update Data' }}
+              <!-- Fees Section -->
+              <div class="card border rounded-3 p-3 mb-2 bg-white shadow-none position-relative" style="z-index: 5;">
+                <div class="fs-xs fw-bold text-secondary text-uppercase tracking-wider border-bottom pb-1.5 mb-2.5 d-flex align-items-center gap-1.5">
+                  <i class="fas fa-receipt text-muted"></i> Rincian Biaya Paket
+                </div>
+                <div class="row g-2">
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">Bagian RS</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.bagian_rs" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">BHP</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.bhp" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">Tarif Perujuk</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.tarif_perujuk" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">Tarif Dokter</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.tarif_tindakan_dokter" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">Tarif Petugas</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.tarif_tindakan_petugas" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">KSO</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.kso" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label fs-xxs fw-semibold text-muted mb-1">Menejemen</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-muted px-1.5 fs-xxs">Rp</span>
+                      <input v-model.number="form.menejemen" type="number" class="form-control form-control-sm text-end" @input="calculateTotal">
+                    </div>
+                  </div>
+                  <div class="col-8">
+                    <label class="form-label fs-xxs fw-bold text-secondary mb-1">Total Biaya Paket</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-light text-secondary border px-2 fs-xxs fw-bold">Rp</span>
+                      <input v-model.number="form.total_byr" type="number" class="form-control form-control-sm text-end fw-bold text-primary bg-primary-subtle border-primary-subtle">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 pt-2 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-light px-3 border" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-sm btn-primary px-4 fw-semibold shadow-none" :disabled="loading">
+                  <span v-if="loading" class="spinner-border spinner-border-sm me-1.5"></span>
+                  <i v-else class="fas fa-save me-1.5"></i>
+                  Simpan Tarif
                 </button>
               </div>
             </form>
@@ -302,11 +344,16 @@
     <!-- Modal Template Lab -->
     <div class="modal fade" id="modalTemplateLab" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-          <div class="modal-header border-0 pb-0 px-4 pt-4">
-            <div>
-              <h5 class="modal-title fw-bold">Template Pemeriksaan</h5>
-              <p class="small text-muted mb-0">{{ activeTarif?.nm_perawatan || '-' }} ({{ activeTarif?.kd_jenis_prw }})</p>
+        <div class="modal-content border shadow-sm rounded-3">
+          <div class="modal-header bg-white border-bottom py-3 px-4">
+            <div class="d-flex align-items-center gap-2.5">
+              <div class="header-icon-clean rounded-2">
+                <i class="fas fa-list-ul text-secondary"></i>
+              </div>
+              <div>
+                <h6 class="modal-title fw-bold text-dark m-0">Template Item Pemeriksaan</h6>
+                <p class="text-muted fs-xs m-0 mt-0.5">{{ activeTarif?.nm_perawatan || '-' }} ({{ activeTarif?.kd_jenis_prw }})</p>
+              </div>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -456,6 +503,12 @@ const toast = useToast()
 const loading = ref(false)
 const items = ref([])
 const penjabList = ref([])
+
+const filterPenjab = (option, label, search) => {
+  const s = (search || '').toLowerCase()
+  return (option.png_jawab || '').toLowerCase().includes(s) ||
+         (option.kd_pj || '').toLowerCase().includes(s)
+}
 
 const filters = reactive({
   keyword: '',
