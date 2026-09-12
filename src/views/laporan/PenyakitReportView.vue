@@ -309,6 +309,7 @@
                   <th>No. RM</th>
                   <th>Nama Pasien</th>
                   <th>JK</th>
+                  <th>Usia Saat Meninggal</th>
                   <th>Tgl Registrasi</th>
                   <th>Tgl Meninggal</th>
                   <th>Keterangan</th>
@@ -325,6 +326,12 @@
                     <span :class="['badge', item.jk === 'L' ? 'bg-info-soft text-info' : 'bg-pink-soft text-pink']">
                       {{ item.jk === 'L' ? 'L' : 'P' }}
                     </span>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ item.usia_meninggal || calculateAgeAtDeath(item) }}</div>
+                    <small v-if="item.tgl_lahir" class="text-muted d-block" style="font-size: 11px;">
+                      Lahir: {{ formatDate(item.tgl_lahir) }}
+                    </small>
                   </td>
                   <td>{{ formatDate(item.tgl_registrasi) }}</td>
                   <td>
@@ -449,6 +456,41 @@ const formatDate = (dateStr) => {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
   return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const calculateAgeAtDeath = (item) => {
+  if (item.usia_meninggal) return item.usia_meninggal
+  if (!item.tgl_lahir || !item.tgl_meninggal) {
+    return item.umurdaftar && item.sttsumur ? `${item.umurdaftar} ${item.sttsumur}` : '-'
+  }
+
+  const birth = new Date(item.tgl_lahir)
+  const death = new Date(item.tgl_meninggal)
+  if (isNaN(birth.getTime()) || isNaN(death.getTime())) {
+    return '-'
+  }
+
+  let years = death.getFullYear() - birth.getFullYear()
+  let months = death.getMonth() - birth.getMonth()
+  let days = death.getDate() - birth.getDate()
+
+  if (days < 0) {
+    months -= 1
+    const prevMonthDays = new Date(death.getFullYear(), death.getMonth(), 0).getDate()
+    days += prevMonthDays
+  }
+
+  if (months < 0) {
+    years -= 1
+    months += 12
+  }
+
+  const parts = []
+  if (years > 0) parts.push(`${years} Th`)
+  if (months > 0) parts.push(`${months} Bl`)
+  if (days > 0 || parts.length === 0) parts.push(`${days} Hr`)
+
+  return parts.join(' ')
 }
 
 const calculateMortalityRate = (item) => {
@@ -803,7 +845,8 @@ thead th {
 .modal-container {
   background: white;
   border-radius: 16px;
-  max-width: 90vw;
+  width: 1100px;
+  max-width: 95vw;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
