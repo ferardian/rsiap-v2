@@ -433,6 +433,40 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/manajemen-risiko',
+    redirect: '/manajemen-risiko/dashboard'
+  },
+  {
+    path: '/manajemen-risiko/dashboard',
+    name: 'RiskDashboard',
+    component: () => import('../views/manajemen-risiko/RiskDashboardView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/manajemen-risiko/register',
+    name: 'RiskRegister',
+    component: () => import('../views/manajemen-risiko/RiskRegisterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/manajemen-risiko/evaluasi',
+    name: 'RiskEvaluasi',
+    component: () => import('../views/manajemen-risiko/RiskEvaluasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/manajemen-risiko/laporan',
+    name: 'RiskLaporan',
+    component: () => import('../views/manajemen-risiko/RiskLaporanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/manajemen-risiko/master',
+    name: 'RiskMaster',
+    component: () => import('../views/manajemen-risiko/RiskMasterView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/dashboard/monitoring-klaim',
     name: 'MonitoringKlaim',
     component: () => import('../views/dashboard/MonitoringKlaimView.vue'),
@@ -852,6 +886,12 @@ const routes = [
     path: '/laporan/ringkasan-farmasi',
     name: 'RingkasanFarmasi',
     component: () => import('@/views/laporan/RingkasanFarmasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/pelayanan-dokter',
+    name: 'PelayananDokter',
+    component: () => import('@/views/laporan/PelayananDokterView.vue'),
     meta: { requiresAuth: true }
   },
   {
