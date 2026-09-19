@@ -73,6 +73,9 @@
               </td>
               <td>
                 <div class="action-buttons">
+                  <button class="btn-logbook" @click="$router.push(`/laporan/pelayanan-dokter?kd_dokter=${dokter.kd_dokter}`)" title="Lihat Logbook Pelayanan & Kinerja SIP">
+                    <i class="fas fa-stethoscope"></i>
+                  </button>
                   <button v-if="canUpdate" class="btn-edit" @click="openEditModal(dokter)" title="Edit">
                     <i class="fas fa-edit"></i>
                   </button>
@@ -521,7 +524,8 @@ onMounted(() => {
 }
 
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-logbook {
   padding: 0.5rem;
   border: none;
   border-radius: 6px;
@@ -532,6 +536,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.btn-logbook {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.btn-logbook:hover {
+  background: #dcfce7;
 }
 
 .btn-edit {
