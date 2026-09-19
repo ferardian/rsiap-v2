@@ -12,12 +12,20 @@
       </div>
 
       <div class="d-flex align-items-center gap-2">
-        <select v-model="selectedUnit" @change="fetchData" class="form-select form-select-sm shadow-sm" style="width: 220px;">
-          <option value="">Seluruh Unit Kerja (RS)</option>
-          <option v-for="u in departemens" :key="u.dep_id" :value="u.dep_id">
-            {{ u.nama }}
-          </option>
-        </select>
+        <v-select
+          v-model="selectedUnit"
+          :options="departemens"
+          :reduce="u => u.dep_id"
+          label="nama"
+          placeholder="Seluruh Unit Kerja (RS)"
+          class="v-select-custom v-select-filter shadow-sm"
+          style="min-width: 220px;"
+          @update:modelValue="fetchData"
+        >
+          <template #no-options>
+            <div class="text-muted small p-2 text-center">Unit tidak ditemukan</div>
+          </template>
+        </v-select>
 
         <button @click="printReport" class="btn btn-sm btn-primary shadow-sm d-flex align-items-center gap-1.5">
           <i class="fas fa-print"></i>
@@ -140,7 +148,7 @@
           <div>Pekalongan, {{ currentDateFormatted }}</div>
           <div class="fw-bold">Direktur RSIA Aisyiyah Pekajangan</div>
           <div style="height: 60px;"></div>
-          <div class="fw-bold text-decoration-underline">( dr. Himawan Budityastomo, Sp.OG )</div>
+          <div class="fw-bold text-decoration-underline">( {{ direkturNama }} )</div>
           <div class="small text-muted">Direktur RS</div>
         </div>
       </div>
@@ -156,6 +164,7 @@ const items = ref([])
 const departemens = ref([])
 const selectedUnit = ref('')
 const currentYear = ref(2027)
+const direkturNama = ref('dr. Widjdan Kadir')
 
 const selectedUnitName = computed(() => {
   if (!selectedUnit.value) return ''
@@ -200,6 +209,9 @@ const fetchMetadata = async () => {
     const res = await manajemenRisikoService.getMeta()
     if (res.data?.success) {
       departemens.value = res.data.data.departemens || []
+      if (res.data.data.direktur?.nama) {
+        direkturNama.value = res.data.data.direktur.nama
+      }
     }
   } catch (err) {
     console.error('Failed to load metadata', err)
@@ -235,6 +247,35 @@ onMounted(async () => {
 .report-table th, .report-table td {
   padding: 6px 8px;
   vertical-align: middle;
+}
+
+.v-select-filter :deep(.vs__dropdown-toggle) {
+  border-radius: 0.375rem;
+  border-color: #cbd5e1;
+  padding: 0 0.35rem;
+  min-height: 31px;
+  background-color: #ffffff;
+}
+
+.v-select-filter :deep(.vs__selected) {
+  font-size: 0.8125rem;
+  margin: 2px 2px 0 0;
+  padding: 0;
+  color: #1e293b;
+}
+
+.v-select-filter :deep(.vs__search) {
+  font-size: 0.8125rem;
+  margin: 2px 0 0 0;
+  padding: 0;
+}
+
+.v-select-filter :deep(.vs__dropdown-menu) {
+  z-index: 1050 !important;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 @media print {

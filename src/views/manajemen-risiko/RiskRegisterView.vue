@@ -41,12 +41,19 @@
           <!-- Unit / Departemen -->
           <div class="col-12 col-md-3">
             <label class="form-label small text-muted mb-1">Unit Kerja / Ruang</label>
-            <select v-model="filters.kd_departemen" @change="fetchData" class="form-select form-select-sm">
-              <option value="">Semua Unit Kerja</option>
-              <option v-for="u in departemens" :key="u.dep_id" :value="u.dep_id">
-                {{ u.nama }}
-              </option>
-            </select>
+            <v-select
+              v-model="filters.kd_departemen"
+              :options="departemens"
+              :reduce="u => u.dep_id"
+              label="nama"
+              placeholder="Semua Unit Kerja"
+              class="v-select-custom v-select-filter"
+              @update:modelValue="fetchData"
+            >
+              <template #no-options>
+                <div class="text-muted small p-2 text-center">Unit tidak ditemukan</div>
+              </template>
+            </v-select>
           </div>
 
           <!-- Klasifikasi Risiko -->
@@ -266,12 +273,18 @@
                       <span>Nama Unit / Ruang</span>
                       <span class="text-danger">*</span>
                     </label>
-                    <select v-model="form.kd_departemen" class="form-select form-select-clean" required>
-                      <option value="">Pilih Unit Kerja</option>
-                      <option v-for="u in departemens" :key="u.dep_id" :value="u.dep_id">
-                        {{ u.nama }}
-                      </option>
-                    </select>
+                    <v-select
+                      v-model="form.kd_departemen"
+                      :options="departemens"
+                      :reduce="u => u.dep_id"
+                      label="nama"
+                      placeholder="Cari & pilih Unit Kerja..."
+                      class="v-select-custom v-select-clean"
+                    >
+                      <template #no-options>
+                        <div class="text-muted small p-2 text-center">Unit tidak ditemukan</div>
+                      </template>
+                    </v-select>
                   </div>
 
                   <div class="col-12 col-md-4">
@@ -1026,6 +1039,10 @@ const openModalEdit = (item) => {
 }
 
 const saveForm = async () => {
+  if (!form.kd_departemen) {
+    alert('Silakan pilih Nama Unit / Ruang terlebih dahulu.')
+    return
+  }
   isSaving.value = true
   try {
     if (isEditMode.value) {
@@ -1271,6 +1288,36 @@ onMounted(async () => {
 
 .v-select-clean :deep(.vs__search) {
   font-size: 0.83rem;
+}
+
+/* Filter bar v-select styling to match form-select-sm */
+.v-select-filter :deep(.vs__dropdown-toggle) {
+  border-radius: 0.375rem;
+  border-color: #cbd5e1;
+  padding: 0 0.35rem;
+  min-height: 31px;
+  background-color: #ffffff;
+}
+
+.v-select-filter :deep(.vs__selected) {
+  font-size: 0.8125rem;
+  margin: 2px 2px 0 0;
+  padding: 0;
+  color: #1e293b;
+}
+
+.v-select-filter :deep(.vs__search) {
+  font-size: 0.8125rem;
+  margin: 2px 0 0 0;
+  padding: 0;
+}
+
+.v-select-filter :deep(.vs__dropdown-menu) {
+  z-index: 1050 !important;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 /* Grouped Sub-panels */

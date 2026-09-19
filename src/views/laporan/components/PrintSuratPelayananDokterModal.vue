@@ -183,7 +183,7 @@ export default {
         no_surat: `..../SK-PEL/RSIA/${mm}${yy}`,
         tanggal_surat: `${yyyy}-${mm}-${dd}`,
         keperluan: 'Persyaratan Kelengkapan Administrasi Rekomendasi / Perpanjangan Surat Izin Praktik (SIP) Dokter',
-        penandatangan_nama: 'dr. Hj. Himawan Budityastomo, Sp.OG',
+        penandatangan_nama: 'dr. Widjdan Kadir',
         penandatangan_jabatan: 'Direktur RSIA Aisyiyah Pekajangan',
         mode_cetak: 'bulanan'
       }

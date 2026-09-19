@@ -21,12 +21,19 @@
         </select>
 
         <!-- Filter Unit -->
-        <select v-model="selectedUnit" @change="fetchDashboardData" class="form-select form-select-sm header-select shadow-none border-slate-200">
-          <option value="">Semua Unit Kerja</option>
-          <option v-for="u in departemens" :key="u.dep_id" :value="u.dep_id">
-            {{ u.nama }}
-          </option>
-        </select>
+        <v-select
+          v-model="selectedUnit"
+          :options="departemens"
+          :reduce="u => u.dep_id"
+          label="nama"
+          placeholder="Semua Unit Kerja"
+          class="v-select-custom header-v-select"
+          @update:modelValue="fetchDashboardData"
+        >
+          <template #no-options>
+            <div class="text-muted small p-2 text-center">Unit tidak ditemukan</div>
+          </template>
+        </v-select>
 
         <button @click="reloadData" class="btn btn-sm btn-light border shadow-none" title="Refresh">
           <i class="fas fa-sync-alt text-secondary" :class="{ 'fa-spin': isLoading }"></i>
@@ -495,6 +502,39 @@ onMounted(async () => {
   min-width: 180px;
   font-size: 0.85rem;
   border-radius: 8px;
+}
+
+.header-v-select {
+  min-width: 200px;
+}
+
+.header-v-select :deep(.vs__dropdown-toggle) {
+  border-radius: 8px;
+  border-color: #e2e8f0;
+  min-height: 31px;
+  padding: 0 0.35rem;
+  font-size: 0.82rem;
+}
+
+.header-v-select :deep(.vs__selected) {
+  font-size: 0.82rem;
+  margin: 2px 2px 0 0;
+  padding: 0;
+  color: #1e293b;
+}
+
+.header-v-select :deep(.vs__search) {
+  font-size: 0.82rem;
+  margin: 2px 0 0 0;
+  padding: 0;
+}
+
+.header-v-select :deep(.vs__dropdown-menu) {
+  z-index: 1050 !important;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
 /* Stat Cards */

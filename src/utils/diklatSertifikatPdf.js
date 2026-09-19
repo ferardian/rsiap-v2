@@ -299,7 +299,7 @@ function drawCertificateBackground(doc, W, H) {
  */
 export async function generateSertifikatDiklat(diklatItem, pegawai, opts = {}) {
   const {
-    direkturNama = 'dr. Himawan Budityastomo, SpOG',
+    direkturNama = 'dr. Widjdan Kadir',
     ketuaPanitia = 'Ketua Panitia',
     logoRsiaUrl = null,
     logoLarsiUrl = null,
