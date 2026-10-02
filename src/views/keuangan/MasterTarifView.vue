@@ -10,7 +10,15 @@
         </div>
         <p class="page-subtitle mt-1">Konfigurasi dan kelola seluruh master data tarif rawat jalan, rawat inap, paket operasi, laboratorium, dan radiologi</p>
       </div>
-      <div class="header-action">
+      <div class="header-action d-flex align-items-center gap-2">
+        <router-link
+          to="/keuangan/costing-tindakan"
+          class="btn btn-outline-secondary rounded-pill px-3.5 py-2 shadow-2xs fw-semibold d-inline-flex align-items-center gap-2 bg-white"
+          title="Buka Analisis Real Cost Tindakan & Komparasi INA-CBGs"
+        >
+          <i class="fas fa-chart-pie text-primary"></i>
+          <span>Analisis Real Cost</span>
+        </router-link>
         <button 
           class="btn btn-outline-primary rounded-pill px-3.5 py-2 shadow-2xs fw-semibold d-inline-flex align-items-center gap-2 bg-white"
           @click="openKelolaKategori"

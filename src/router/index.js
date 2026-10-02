@@ -539,6 +539,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/keuangan/costing-tindakan',
+    name: 'CostingTindakan',
+    component: () => import('../views/keuangan/CostingTindakanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/timeline',
     name: 'TimelineProgram',
     component: () => import('../views/timeline/TimelineProgramView.vue'),
