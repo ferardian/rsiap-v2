@@ -22,10 +22,13 @@
         </div>
 
         <div class="hero-actions d-flex align-items-center gap-2">
+          <button class="btn btn-hero-solid" @click="openCreateModal">
+            <i class="fas fa-plus-circle me-1.5"></i> Tambah Kamar RS Online
+          </button>
           <button class="btn btn-hero-glass" @click="syncStructure" :disabled="loadingSync">
             <i class="fas fa-download me-1.5" :class="{ 'fa-spin': loadingSync }"></i> Tarik Struktur RS Online
           </button>
-          <button class="btn btn-hero-solid" @click="sendBulkUpdate" :disabled="loadingUpdate">
+          <button class="btn btn-hero-glass" @click="sendBulkUpdate" :disabled="loadingUpdate">
             <i class="fas fa-paper-plane me-1.5" :class="{ 'fa-spin': loadingUpdate }"></i> Kirim Update Ke RS Online
           </button>
         </div>
@@ -167,7 +170,7 @@
                   <th width="95" class="text-center">Terpakai</th>
                   <th width="95" class="text-center">Tersedia</th>
                   <th width="80" class="text-center">Bridging</th>
-                  <th width="120" class="text-center">Aksi</th>
+                  <th width="145" class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,14 +234,24 @@
                     </div>
                   </td>
                   <td class="text-center">
-                    <button 
-                      class="btn btn-action-send" 
-                      title="Kirim Update PUT ke RS Online"
-                      :disabled="!item.kd_bangsal || sendingId === item.id"
-                      @click="sendSingleUpdate(item)"
-                    >
-                      <i class="fas fa-paper-plane me-1.5" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
-                    </button>
+                    <div class="d-flex align-items-center justify-content-center gap-1.5">
+                      <button 
+                        class="btn btn-action-send" 
+                        title="Kirim Update PUT ke RS Online"
+                        :disabled="!item.kd_bangsal || sendingId === item.id"
+                        @click="sendSingleUpdate(item)"
+                      >
+                        <i class="fas fa-paper-plane me-1" :class="{ 'fa-spin': sendingId === item.id }"></i> Update
+                      </button>
+                      <button 
+                        class="btn btn-action-delete" 
+                        title="Hapus Kamar dari RS Online"
+                        :disabled="deletingId === item.id"
+                        @click="confirmDeleteBed(item)"
+                      >
+                        <i class="fas" :class="deletingId === item.id ? 'fa-spinner fa-spin' : 'fa-trash-alt'"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -419,6 +432,127 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL TAMBAH KAMAR RS ONLINE -->
+    <div v-if="showCreateModal" class="modal-overlay-custom" @click.self="closeCreateModal">
+      <div class="modal-card-custom">
+        <div class="modal-header-custom">
+          <div>
+            <h3 class="modal-title-custom">
+              <i class="fas fa-plus-circle me-2 text-emerald-600"></i> Tambah Kamar RS Online
+            </h3>
+            <p class="modal-subtitle-custom">Daftarkan kamar baru ke SIRS Kemenkes dan hubungkan ke SIMRS Khanza</p>
+          </div>
+          <button class="btn-close-modal" @click="closeCreateModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body-custom">
+          <!-- Pilih Jenis TT Kemenkes -->
+          <div class="mb-3">
+            <label class="form-label-custom">Jenis Tempat Tidur Kemenkes (id_tt) <span class="text-rose-600">*</span></label>
+            <select v-model="formCreate.id_tt" class="form-select-custom">
+              <option value="">-- Pilih Jenis Tempat Tidur Kemenkes --</option>
+              <option v-for="ref in refList" :key="ref.kode_tt" :value="ref.kode_tt">
+                {{ ref.kode_tt }} - {{ ref.nama_tt }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Nama Ruangan RS Online -->
+          <div class="mb-3">
+            <label class="form-label-custom">Nama Ruangan RS Online <span class="text-rose-600">*</span></label>
+            <input 
+              v-model="formCreate.ruang" 
+              type="text" 
+              class="form-control-custom" 
+              placeholder="Contoh: SITI KHODIJAH VIP A, SITI AISYAH VIP B1, dll"
+            >
+            <span class="text-xs text-slate-500 mt-1 d-block">Gunakan nama kamar spesifik 1 per 1 agar terdata detail di Kemenkes.</span>
+          </div>
+
+          <!-- Kapasitas TT -->
+          <div class="mb-3">
+            <label class="form-label-custom">Kapasitas Tempat Tidur <span class="text-rose-600">*</span></label>
+            <input 
+              v-model.number="formCreate.kapasitas" 
+              type="number" 
+              min="1" 
+              class="form-control-custom" 
+              placeholder="1"
+            >
+            <span class="text-xs text-emerald-700 mt-1 d-block fw-semibold">
+              <i class="fas fa-info-circle me-1"></i> Disarankan diisi 1 agar tiap tempat tidur terdata detail 1 per 1 di RS Online.
+            </span>
+          </div>
+
+          <!-- Pilih Bangsal SIMRS Khanza -->
+          <div class="mb-3 position-relative">
+            <label class="form-label-custom">Hubungkan Bangsal SIMRS Khanza</label>
+            <div class="search-select-box" :class="{ open: isCreateBangsalDropdownOpen }">
+              <i class="fas fa-search search-select-icon text-slate-400"></i>
+              <input 
+                type="text" 
+                v-model="createBangsalSearchQuery" 
+                @focus="isCreateBangsalDropdownOpen = true"
+                @input="isCreateBangsalDropdownOpen = true"
+                placeholder="Ketik untuk mencari bangsal SIMRS..."
+                class="search-select-input"
+              >
+              <button v-if="formCreate.kd_bangsal || createBangsalSearchQuery" class="btn-clear-select" @click="clearCreateSelectedBangsal">
+                <i class="fas fa-times text-slate-400 hover:text-slate-600"></i>
+              </button>
+              <i class="fas fa-chevron-down select-arrow text-slate-400" @click="isCreateBangsalDropdownOpen = !isCreateBangsalDropdownOpen"></i>
+            </div>
+
+            <!-- Dropdown Options Menu -->
+            <div v-if="isCreateBangsalDropdownOpen" class="search-select-menu">
+              <div 
+                v-if="filteredCreateBangsalOptions.length === 0" 
+                class="select-option-item text-slate-400 text-center py-2 text-xs"
+              >
+                Bangsal tidak ditemukan
+              </div>
+              <div 
+                v-else
+                v-for="b in filteredCreateBangsalOptions" 
+                :key="b.kd_bangsal"
+                class="select-option-item d-flex align-items-center justify-content-between gap-2"
+                :class="{ active: formCreate.kd_bangsal === b.kd_bangsal }"
+                @click="selectCreateBangsalOption(b)"
+              >
+                <div class="fw-bold text-slate-900 text-xs me-1 text-truncate">{{ b.nm_bangsal }}</div>
+                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                  <span v-if="b.kd_bangsal && b.kd_bangsal !== '-'" class="option-badge-code">{{ b.kd_bangsal }}</span>
+                  <span v-if="b.kelas && b.kelas !== '-'" class="option-badge-kelas">{{ b.kelas }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pilih Kelas SIMRS -->
+          <div class="mb-3">
+            <label class="form-label-custom">Kelas Kamar SIMRS</label>
+            <select v-model="formCreate.kelas" class="form-select-custom">
+              <option value="">-- Pilih Kelas SIMRS --</option>
+              <option v-for="k in kelasOptions" :key="k" :value="k">
+                {{ k }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer-custom">
+          <button class="btn btn-secondary btn-sm rounded-lg px-3 fw-bold" @click="closeCreateModal" :disabled="savingCreate">
+            Batal
+          </button>
+          <button class="btn btn-emerald-solid-sm btn-sm rounded-lg px-3.5 fw-bold" @click="saveCreateBed" :disabled="savingCreate">
+            <i class="fas fa-plus-circle me-1.5" :class="{ 'fa-spin': savingCreate }"></i> Daftarkan Ke RS Online
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -454,6 +588,21 @@ const formMapping = ref({
   is_active: true
 })
 
+// Create Bed Modal State
+const showCreateModal = ref(false)
+const savingCreate = ref(false)
+const deletingId = ref(null)
+const isCreateBangsalDropdownOpen = ref(false)
+const createBangsalSearchQuery = ref('')
+
+const formCreate = ref({
+  id_tt: '',
+  ruang: '',
+  kapasitas: 1,
+  kd_bangsal: '',
+  kelas: ''
+})
+
 const filteredRefList = computed(() => {
   if (!refSearch.value.trim()) return refList.value
   const q = refSearch.value.toLowerCase().trim()
@@ -478,6 +627,16 @@ const filteredMappingList = computed(() => {
 const filteredBangsalOptions = computed(() => {
   if (!bangsalSearchQuery.value.trim()) return bangsalOptions.value
   const q = bangsalSearchQuery.value.toLowerCase().trim()
+  return bangsalOptions.value.filter(b => 
+    String(b.nm_bangsal || '').toLowerCase().includes(q) ||
+    String(b.kd_bangsal || '').toLowerCase().includes(q) ||
+    String(b.kelas || '').toLowerCase().includes(q)
+  )
+})
+
+const filteredCreateBangsalOptions = computed(() => {
+  if (!createBangsalSearchQuery.value.trim()) return bangsalOptions.value
+  const q = createBangsalSearchQuery.value.toLowerCase().trim()
   return bangsalOptions.value.filter(b => 
     String(b.nm_bangsal || '').toLowerCase().includes(q) ||
     String(b.kd_bangsal || '').toLowerCase().includes(q) ||
@@ -690,6 +849,103 @@ const copyToClipboard = (code, name) => {
   }).catch(() => {
     Swal.fire('Salin Kode', `Kode TT: ${code}`, 'info')
   })
+}
+
+// Methods for Create Bed Modal
+const openCreateModal = () => {
+  formCreate.value = {
+    id_tt: '',
+    ruang: '',
+    kapasitas: 1,
+    kd_bangsal: '',
+    kelas: ''
+  }
+  createBangsalSearchQuery.value = ''
+  isCreateBangsalDropdownOpen.value = false
+  showCreateModal.value = true
+}
+
+const closeCreateModal = () => {
+  showCreateModal.value = false
+  isCreateBangsalDropdownOpen.value = false
+}
+
+const selectCreateBangsalOption = (b) => {
+  formCreate.value.kd_bangsal = b.kd_bangsal
+  if (b.kelas) {
+    formCreate.value.kelas = b.kelas
+  }
+  createBangsalSearchQuery.value = b.nm_bangsal
+  isCreateBangsalDropdownOpen.value = false
+}
+
+const clearCreateSelectedBangsal = () => {
+  formCreate.value.kd_bangsal = ''
+  createBangsalSearchQuery.value = ''
+  isCreateBangsalDropdownOpen.value = true
+}
+
+const saveCreateBed = async () => {
+  if (!formCreate.value.id_tt) {
+    Swal.fire('Validasi', 'Silakan pilih Jenis Tempat Tidur Kemenkes (id_tt).', 'warning')
+    return
+  }
+  if (!formCreate.value.ruang.trim()) {
+    Swal.fire('Validasi', 'Silakan isi Nama Ruangan RS Online.', 'warning')
+    return
+  }
+
+  savingCreate.value = true
+  try {
+    const res = await rsOnlineService.createBed(formCreate.value)
+    Swal.fire({
+      icon: 'success',
+      title: 'Berhasil!',
+      text: res.data?.message || 'Ruangan berhasil didaftarkan ke RS Online.',
+      timer: 2500
+    })
+    closeCreateModal()
+    fetchMappings()
+  } catch (error) {
+    console.error('Failed to create bed in RS Online:', error)
+    Swal.fire('Error', error.response?.data?.message || 'Gagal mendaftarkan tempat tidur ke RS Online.', 'error')
+  } finally {
+    savingCreate.value = false
+  }
+}
+
+const confirmDeleteBed = async (item) => {
+  const result = await Swal.fire({
+    title: 'Hapus Kamar dari RS Online?',
+    html: `Apakah Anda yakin ingin menghapus ruangan <b>${item.ruang}</b> (Kode TT: <b>${item.id_tt}</b>, ID_T_TT: <code>${item.id_t_tt || '-'}</code>)?<br><br><span class="text-danger small"><i class="fas fa-exclamation-triangle"></i> Data ini akan dihapus dari server SIRS Kemenkes dan tabel lokal.</span>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e11d48',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Ya, Hapus Sekarang',
+    cancelButtonText: 'Batal'
+  })
+
+  if (!result.isConfirmed) return
+
+  deletingId.value = item.id
+  try {
+    const res = await rsOnlineService.deleteBed(item.id)
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: res.data?.message || `Ruangan "${item.ruang}" berhasil dihapus dari RS Online!`,
+      showConfirmButton: false,
+      timer: 2500
+    })
+    fetchMappings()
+  } catch (error) {
+    console.error('Failed to delete bed from RS Online:', error)
+    Swal.fire('Error', error.response?.data?.message || 'Gagal menghapus ruangan dari RS Online.', 'error')
+  } finally {
+    deletingId.value = null
+  }
 }
 
 onMounted(() => {
@@ -1325,6 +1581,29 @@ onMounted(() => {
   display: block;
 }
 
+.btn-action-delete {
+  background-color: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  font-weight: 800;
+  border-radius: 6px;
+  height: 30px;
+  width: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn-action-delete:hover:not(:disabled) {
+  background-color: #e11d48;
+  color: white;
+  border-color: #e11d48;
+}
+
+.form-control-custom,
 .form-select-custom {
   width: 100%;
   padding: 0.5rem 0.85rem;
@@ -1337,6 +1616,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
+.form-control-custom:focus,
 .form-select-custom:focus {
   outline: none;
   background: white;
