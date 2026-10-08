@@ -538,7 +538,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .main-content {
-    padding: 1rem;
+    padding: 0.75rem 0.5rem;
     max-width: 100% !important;
     overflow-x: hidden !important;
   }

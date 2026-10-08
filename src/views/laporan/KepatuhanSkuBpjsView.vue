@@ -1,5 +1,5 @@
 <template>
-  <div class="kepatuhan-sku-bpjs-view animate__animated animate__fadeIn p-4">
+  <div class="kepatuhan-sku-bpjs-view animate__animated animate__fadeIn p-0 p-sm-2 p-md-4">
     <!-- Header Section -->
     <div class="page-header mb-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -1552,7 +1552,29 @@ onMounted(() => {
 /* Mobile responsive */
 @media (max-width: 768px) {
   .kepatuhan-sku-bpjs-view {
-    padding: 16px 10px;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .page-header {
+    padding: 1rem 0.85rem !important;
+    border-radius: 12px !important;
+    margin-bottom: 0.75rem !important;
+  }
+  .page-title {
+    font-size: 1.15rem !important;
+  }
+  .panel-card, .ews-radar-card, .table-card {
+    border-radius: 12px !important;
+    margin-bottom: 0.75rem !important;
+    width: 100% !important;
+  }
+  .panel-card .card-body,
+  .ews-radar-card .card-body,
+  .table-card .card-body {
+    padding: 12px 10px !important;
+  }
+  .ews-radar-card h5 {
+    font-size: 0.95rem !important;
   }
   .w-100-mobile {
     width: 100% !important;
@@ -1560,7 +1582,7 @@ onMounted(() => {
     align-items: stretch !important;
   }
   .premium-input-date, .premium-select-filter, .premium-input-search, .btn-export-excel, .btn-export-pdf {
-    width: 100%;
+    width: 100% !important;
   }
   .pagination-container {
     flex-direction: column;
