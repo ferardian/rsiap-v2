@@ -69,8 +69,12 @@
             <!-- Status Kepatuhan -->
             <select v-model="filters.status" class="form-select form-select-sm premium-select-filter" @change="handleFilterChange">
               <option value="all">Semua Status</option>
-              <option value="patuh">Terbit SKU</option>
-              <option value="tidak_patuh">Belum Terbit SKU</option>
+              <option value="kritis_h1">🔴 Kritis: Batas Akhir Hari Ini (H+1)</option>
+              <option value="warning_h0">🟡 Warning: Belum Terbit Hari Ini (H-0)</option>
+              <option value="expired">⚫ Expired: Melewati H+1 (Hangus)</option>
+              <option value="patuh">🟢 Terbit SKU (Patuh)</option>
+              <option value="tidak_patuh">Belum Terbit SKU (Semua)</option>
+              <option value="tidak_perlu_kontrol">🔵 Bebas Kontrol (Selesai / Sembuh DPJP)</option>
               <option value="rujukan">Rujukan / Rujuk Balik</option>
               <option value="belum_pulang">Belum Pulang (Ranap)</option>
             </select>
@@ -91,6 +95,144 @@
             <button class="btn-export-pdf" @click="exportToPDF" :disabled="loading">
               <i class="fas fa-file-pdf me-1"></i> PDF
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Radar EWS Alert Card (Regulasi Maks H+1) -->
+    <div class="card border-0 shadow-sm ews-radar-card mb-4">
+      <div class="card-body p-3 p-md-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="ews-radar-dot"></span>
+            <h5 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
+              <i class="fas fa-satellite-dish text-danger"></i>
+              Radar Early Warning System (EWS) SKU BPJS
+            </h5>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 ms-1 d-none d-sm-inline" style="font-size: 0.72rem; font-weight: 700;">
+              REGULASI MAKS. H+1
+            </span>
+          </div>
+          <div class="small text-muted">
+            <i class="fas fa-shield-alt text-primary me-1"></i>
+            Batas terbit SKU maksimal <strong>H+1</strong> (Kunjungan Ralan / KRS Ranap) sebelum sistem VClaim mengunci.
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <!-- Widget 1: KRITIS H+1 (Batas Hari Ini) -->
+          <div class="col-lg-4 col-md-6">
+            <div 
+              class="ews-box ews-box-danger p-3 rounded-3"
+              :class="{ 'active-filter': filters.status === 'kritis_h1' }"
+              @click="setQuickEwsFilter('kritis_h1')"
+            >
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-danger text-white fw-bold px-2 py-1 mb-1">
+                    <i class="fas fa-exclamation-triangle me-1 animate-pulse"></i>BATAS AKHIR HARI INI
+                  </span>
+                  <div class="fw-bold text-dark fs-5 mt-1">Fase Kritis (H+1)</div>
+                </div>
+                <div class="ews-count-badge text-danger">
+                  {{ stats?.ews?.kritis_h1?.total || 0 }}
+                </div>
+              </div>
+              <div class="small text-muted mb-2">
+                Pasien kunjungan/pulang kemarin. <strong>Wajib terbit sebelum 23:59 WIB</strong> hari ini!
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="text-secondary small">
+                  Ralan: <strong>{{ stats?.ews?.kritis_h1?.ralan || 0 }}</strong> | Ranap: <strong>{{ stats?.ews?.kritis_h1?.ranap || 0 }}</strong>
+                </span>
+                <button 
+                  class="ews-btn-action ews-btn-kritis"
+                  :class="{ 'is-active': filters.status === 'kritis_h1' }"
+                  @click.stop="setQuickEwsFilter('kritis_h1')"
+                >
+                  <i :class="filters.status === 'kritis_h1' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'"></i>
+                  <span>{{ filters.status === 'kritis_h1' ? 'Sedang Dipantau' : 'Pantau Pasien' }}</span>
+                  <i class="fas fa-arrow-down ms-1 transition-arrow"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 2: WARNING H-0 (Hari Ini) -->
+          <div class="col-lg-4 col-md-6">
+            <div 
+              class="ews-box ews-box-warning p-3 rounded-3"
+              :class="{ 'active-filter': filters.status === 'warning_h0' }"
+              @click="setQuickEwsFilter('warning_h0')"
+            >
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-warning text-dark fw-bold px-2 py-1 mb-1">
+                    <i class="fas fa-clock me-1"></i>HARI INI (H-0)
+                  </span>
+                  <div class="fw-bold text-dark fs-5 mt-1">Perlu Dibuat Segera</div>
+                </div>
+                <div class="ews-count-badge text-warning-emphasis">
+                  {{ stats?.ews?.warning_h0?.total || 0 }}
+                </div>
+              </div>
+              <div class="small text-muted mb-2">
+                Pasien kunjungan/pulang hari ini. Disarankan terbit sebelum pergantian hari.
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="text-secondary small">
+                  Ralan: <strong>{{ stats?.ews?.warning_h0?.ralan || 0 }}</strong> | Ranap: <strong>{{ stats?.ews?.warning_h0?.ranap || 0 }}</strong>
+                </span>
+                <button 
+                  class="ews-btn-action ews-btn-warning"
+                  :class="{ 'is-active': filters.status === 'warning_h0' }"
+                  @click.stop="setQuickEwsFilter('warning_h0')"
+                >
+                  <i :class="filters.status === 'warning_h0' ? 'fas fa-check-circle' : 'fas fa-clock'"></i>
+                  <span>{{ filters.status === 'warning_h0' ? 'Sedang Dipantau' : 'Pantau Pasien' }}</span>
+                  <i class="fas fa-arrow-down ms-1 transition-arrow"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 3: EXPIRED (> H+1) -->
+          <div class="col-lg-4 col-md-12">
+            <div 
+              class="ews-box ews-box-secondary p-3 rounded-3"
+              :class="{ 'active-filter': filters.status === 'expired' }"
+              @click="setQuickEwsFilter('expired')"
+            >
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-secondary text-white fw-bold px-2 py-1 mb-1">
+                    <i class="fas fa-ban me-1"></i>TERKUNCI VCLAIM
+                  </span>
+                  <div class="fw-bold text-dark fs-5 mt-1">Hangus (> H+1)</div>
+                </div>
+                <div class="ews-count-badge text-secondary">
+                  {{ stats?.ews?.expired?.total || 0 }}
+                </div>
+              </div>
+              <div class="small text-muted mb-2">
+                Sudah melewati batas waktu H+1. Tidak dapat diterbitkan lagi di BPJS.
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="text-secondary small">
+                  Periode filter: <strong>{{ stats?.ews?.expired?.total || 0 }} Pasien</strong>
+                </span>
+                <button 
+                  class="ews-btn-action ews-btn-secondary"
+                  :class="{ 'is-active': filters.status === 'expired' }"
+                  @click.stop="setQuickEwsFilter('expired')"
+                >
+                  <i :class="filters.status === 'expired' ? 'fas fa-check-circle' : 'fas fa-table'"></i>
+                  <span>{{ filters.status === 'expired' ? 'Sedang Ditampilkan' : 'Lihat Data' }}</span>
+                  <i class="fas fa-arrow-down ms-1 transition-arrow"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -124,9 +266,12 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Wajib SKU</span>
               <h2 class="kpi-value fw-black text-warning m-0">{{ stats?.overall?.total_eligible || 0 }}</h2>
-              <div class="mt-1">
+              <div class="mt-1 d-flex flex-wrap gap-1">
                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-1 px-2" style="font-size: 0.7rem; font-weight: 600;">
                   <i class="fas fa-info-circle me-1"></i>Excl. {{ stats?.overall?.ranap_belum_pulang || 0 }} Ranap Aktif
+                </span>
+                <span v-if="(stats?.overall?.tidak_perlu_kontrol || 0) > 0" class="badge bg-info-subtle text-cyan border border-info-subtle py-1 px-2" style="font-size: 0.7rem; font-weight: 600;">
+                  Excl. {{ stats?.overall?.tidak_perlu_kontrol || 0 }} Selesai/Sembuh
                 </span>
               </div>
             </div>
@@ -160,7 +305,23 @@
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Belum Terbit SKU</span>
               <h2 class="kpi-value fw-black text-danger m-0">{{ stats?.overall?.tidak_patuh || 0 }}</h2>
-              <small class="text-muted">Belum ada surat kontrol ulang</small>
+              <small class="text-muted">Wajib kontrol belum ada SKU</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selesai / Bebas Kontrol (DPJP) -->
+      <div class="col">
+        <div class="kpi-card kpi-cyan shadow-sm border-0 h-100">
+          <div class="kpi-body p-4 d-flex align-items-center gap-3">
+            <div class="kpi-icon-wrapper bg-cyan-light">
+              <i class="fas fa-user-check text-cyan"></i>
+            </div>
+            <div class="kpi-info">
+              <span class="kpi-title text-muted fw-bold">Bebas Kontrol (DPJP)</span>
+              <h2 class="kpi-value fw-black text-cyan m-0">{{ stats?.overall?.tidak_perlu_kontrol || 0 }}</h2>
+              <small class="text-muted">Disposisi dokter: Selesai/Sembuh</small>
             </div>
           </div>
         </div>
@@ -208,8 +369,8 @@
     <!-- Footnote Info -->
     <div class="mb-4 px-2">
       <small class="text-muted fst-italic">
-        <i class="fas fa-info-circle me-1 text-danger"></i>
-        *Catatan: Khusus Rawat Jalan, <strong>Belum Terbit SKU</strong> dihitung dari data SEP yang tidak memiliki lanjutan rujukan keluar/balik. Sedangkan untuk Rawat Inap, karena SKU belum/tidak diterbitkan.
+        <i class="fas fa-info-circle me-1 text-primary"></i>
+        *Catatan: Pasien Rawat Jalan yang diinstruksikan <strong>Selesai / Sembuh / Rujuk Balik FKTP</strong> oleh DPJP di Rekam Medis (EMR) otomatis <strong>dikecualikan dari kewajiban SKU</strong> dan tidak dibunyikan di Radar EWS.
       </small>
     </div>
 
@@ -328,8 +489,18 @@
           </div>
         </div>
 
-        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
-          <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list text-primary me-2"></i>Rincian Monitoring Kepatuhan SKU</h5>
+        <div id="rincian-kepatuhan-table" class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4 border-bottom pb-3 transition-table-header">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list text-primary me-2"></i>Rincian Monitoring Kepatuhan SKU</h5>
+            <span v-if="['kritis_h1', 'warning_h0', 'expired'].includes(filters.status)" class="badge px-2 py-1" :class="getActiveEwsChipClass()" style="font-size: 0.75rem;">
+              <i class="fas fa-filter me-1"></i>{{ getActiveEwsChipLabel() }}
+            </span>
+          </div>
+          <div v-if="['kritis_h1', 'warning_h0', 'expired'].includes(filters.status)">
+            <button class="btn btn-sm btn-outline-secondary py-1 px-3 rounded-pill small fw-semibold" @click="setQuickEwsFilter(filters.status)">
+              <i class="fas fa-times me-1"></i>Reset Filter Radar
+            </button>
+          </div>
         </div>
 
         <!-- Detail Table -->
@@ -337,26 +508,27 @@
           <table class="table table-hover align-middle">
             <thead>
               <tr class="table-light-header">
-                <th width="45" class="text-center">No</th>
+                <th width="40" class="text-center">No</th>
                 <th style="min-width: 140px;">No. SEP</th>
-                <th style="min-width: 180px;">Nama Pasien</th>
+                <th style="min-width: 170px;">Nama Pasien</th>
                 <th>Jenis Pelayanan</th>
                 <th>Poliklinik</th>
                 <th>Dokter</th>
                 <th style="min-width: 150px;">Rencana Kontrol / Rujukan</th>
-                <th style="min-width: 120px;">Tgl SEP</th>
-                <th width="120" class="text-center">Status</th>
+                <th style="min-width: 130px;">Tgl Acuan / SEP</th>
+                <th style="min-width: 145px;">Batas Akhir (H+1)</th>
+                <th width="125" class="text-center">Status EWS</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="9" class="text-center py-5">
+                <td colspan="10" class="text-center py-5">
                   <div class="spinner-border text-primary spinner-sm mb-2" role="status"></div>
                   <div class="text-muted small">Memuat rincian data kepatuhan SKU BPJS...</div>
                 </td>
               </tr>
               <tr v-else-if="details.length === 0">
-                <td colspan="9" class="text-center py-5 text-muted">
+                <td colspan="10" class="text-center py-5 text-muted">
                   <i class="fas fa-folder-open fa-2x mb-2 text-light"></i>
                   <div>Tidak ada data kepatuhan SKU BPJS yang ditemukan.</div>
                 </td>
@@ -397,6 +569,14 @@
                     <div class="fw-bold text-info"><i class="fas fa-external-link-alt text-info me-1"></i>{{ item.no_rujukan }}</div>
                     <span class="text-muted small">{{ item.nm_ppkDirujuk }}</span>
                   </div>
+                  <div v-else-if="item.status_compliance === 'TIDAK_PERLU_KONTROL'">
+                    <span class="badge bg-info-subtle text-cyan border border-info-subtle py-1 px-2 fw-semibold">
+                      <i class="fas fa-check-double me-1"></i>{{ formatDisposisiLabel(item.status_tindak_lanjut) }}
+                    </span>
+                    <div v-if="item.catatan_dokter" class="text-secondary small mt-1" style="font-size: 0.72rem;">
+                      <i class="fas fa-comment-medical me-1 text-muted"></i>{{ item.catatan_dokter }}
+                    </div>
+                  </div>
                   <div v-else-if="item.status_compliance === 'BELUM_PULANG'" class="text-warning small fw-semibold">
                     <i class="fas fa-bed me-1"></i>Masih Dirawat
                   </div>
@@ -404,13 +584,75 @@
                     <i class="fas fa-exclamation-circle me-1"></i>Belum Terbit SKU
                   </div>
                 </td>
-                <td class="small text-muted">
-                  {{ formatDateOnly(item.tglsep) }}
+                <td class="small">
+                  <div v-if="item.jnspelayanan === '1' && item.tglpulang && item.tglpulang !== '0000-00-00 00:00:00'">
+                    <span class="badge bg-light text-secondary border py-0 px-1">Pulang:</span>
+                    <span class="fw-bold ms-1 text-dark">{{ formatDateOnly(item.tgl_acuan) }}</span>
+                    <div class="text-muted" style="font-size: 0.7rem;">SEP: {{ formatDateOnly(item.tglsep) }}</div>
+                  </div>
+                  <div v-else-if="item.jnspelayanan === '1'">
+                    <span class="badge bg-warning-subtle text-dark border border-warning py-0 px-1">Masih Dirawat</span>
+                    <div class="text-muted" style="font-size: 0.7rem;">SEP: {{ formatDateOnly(item.tglsep) }}</div>
+                  </div>
+                  <div v-else>
+                    <span class="badge bg-light text-secondary border py-0 px-1">Periksa:</span>
+                    <span class="fw-bold ms-1 text-dark">{{ formatDateOnly(item.tglsep) }}</span>
+                  </div>
+                </td>
+                <td class="small">
+                  <div v-if="item.status_compliance === 'PATUH'">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2">
+                      <i class="fas fa-check-circle me-1"></i>Terbit Tepat Waktu
+                    </span>
+                  </div>
+                  <div v-else-if="item.status_compliance === 'RUJUKAN'">
+                    <span class="badge bg-info-subtle text-info border border-info-subtle py-1 px-2">
+                      <i class="fas fa-external-link-alt me-1"></i>Rujukan Keluar
+                    </span>
+                  </div>
+                  <div v-else-if="item.status_compliance === 'TIDAK_PERLU_KONTROL'">
+                    <span class="badge bg-light text-cyan border border-info-subtle py-1 px-2">
+                      <i class="fas fa-user-check me-1"></i>Tidak Wajib SKU
+                    </span>
+                    <div class="text-muted mt-1" style="font-size: 0.7rem;">Selesai Pengobatan</div>
+                  </div>
+                  <div v-else-if="item.status_compliance === 'BELUM_PULANG'">
+                    <span class="text-muted small">
+                      <i class="fas fa-bed me-1 text-secondary"></i>Belum Pulang
+                    </span>
+                  </div>
+                  <div v-else-if="item.status_ews === 'KRITIS_H1'">
+                    <span class="badge bg-danger text-white py-1 px-2 shadow-sm animate-pulse-badge">
+                      <i class="fas fa-exclamation-triangle me-1"></i>HARI INI ({{ formatDateOnly(item.tgl_deadline) }})
+                    </span>
+                    <div class="text-danger fw-bold mt-1" style="font-size: 0.7rem;">
+                      <i class="fas fa-hourglass-half me-1"></i>Maks 23:59 WIB
+                    </div>
+                  </div>
+                  <div v-else-if="item.status_ews === 'WARNING_H0'">
+                    <span class="badge bg-warning text-dark py-1 px-2">
+                      <i class="fas fa-clock me-1"></i>Besok ({{ formatDateOnly(item.tgl_deadline) }})
+                    </span>
+                    <div class="text-secondary mt-1" style="font-size: 0.7rem;">
+                      Sisa 1 Hari
+                    </div>
+                  </div>
+                  <div v-else-if="item.status_ews === 'EXPIRED'">
+                    <span class="badge bg-dark-subtle text-muted border border-secondary py-1 px-2">
+                      <i class="fas fa-ban me-1"></i>Lewat Deadline
+                    </span>
+                    <div class="text-muted mt-1" style="font-size: 0.7rem;">
+                      Deadline: {{ formatDateOnly(item.tgl_deadline) }}
+                    </div>
+                  </div>
+                  <div v-else class="text-muted small">
+                    -
+                  </div>
                 </td>
                 <td class="text-center">
-                  <span :class="['compliance-badge', getComplianceBadgeClass(item.status_compliance)]">
-                    <i :class="getComplianceBadgeIcon(item.status_compliance)"></i>
-                    {{ getComplianceBadgeLabel(item.status_compliance) }}
+                  <span :class="['compliance-badge', getComplianceBadgeClass(item)]">
+                    <i :class="getComplianceBadgeIcon(item)"></i>
+                    {{ getComplianceBadgeLabel(item) }}
                   </span>
                 </td>
               </tr>
@@ -492,6 +734,11 @@ const dokterList = ref([])
 // Stats & Details State
 const stats = ref({
   overall: { total_sep: 0, total_eligible: 0, patuh: 0, tidak_patuh: 0, rujukan: 0, ranap_belum_pulang: 0 },
+  ews: {
+    kritis_h1: { total: 0, ralan: 0, ranap: 0 },
+    warning_h0: { total: 0, ralan: 0, ranap: 0 },
+    expired: { total: 0, ralan: 0, ranap: 0 }
+  },
   daily_trend: [],
   poliklinik: [],
   dokter: []
@@ -529,6 +776,43 @@ const filters = reactive({
   limit: 20
 })
 
+const setQuickEwsFilter = (statusKey) => {
+  if (filters.status === statusKey) {
+    filters.status = 'all'
+  } else {
+    filters.status = statusKey
+  }
+  handleFilterChange()
+
+  // Smooth scroll and focus directly to the detailed list data table
+  if (filters.status !== 'all') {
+    setTimeout(() => {
+      const tableEl = document.getElementById('rincian-kepatuhan-table')
+      if (tableEl) {
+        tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        tableEl.classList.add('table-section-focused')
+        setTimeout(() => {
+          tableEl.classList.remove('table-section-focused')
+        }, 1600)
+      }
+    }, 120)
+  }
+}
+
+const getActiveEwsChipClass = () => {
+  if (filters.status === 'kritis_h1') return 'bg-danger text-white'
+  if (filters.status === 'warning_h0') return 'bg-warning text-dark'
+  if (filters.status === 'expired') return 'bg-secondary text-white'
+  return 'bg-primary text-white'
+}
+
+const getActiveEwsChipLabel = () => {
+  if (filters.status === 'kritis_h1') return 'Fase Kritis H+1 (Batas Hari Ini)'
+  if (filters.status === 'warning_h0') return 'Warning H-0 (Hari Ini)'
+  if (filters.status === 'expired') return 'Terkunci BPJS (> H+1)'
+  return ''
+}
+
 const compliancePercentage = computed(() => {
   if (!stats.value?.overall?.total_eligible) return 0
   return Math.round((stats.value.overall.patuh / stats.value.overall.total_eligible) * 100)
@@ -538,6 +822,7 @@ const compliancePercentage = computed(() => {
 const donutChartSeries = computed(() => [
   Number(stats.value?.overall?.patuh || 0),
   Number(stats.value?.overall?.tidak_patuh || 0),
+  Number(stats.value?.overall?.tidak_perlu_kontrol || 0),
   Number(stats.value?.overall?.rujukan || 0),
   Number(stats.value?.overall?.ranap_belum_pulang || 0)
 ])
@@ -547,8 +832,8 @@ const donutChartOptions = computed(() => ({
     type: 'donut',
     fontFamily: 'Outfit, sans-serif'
   },
-  labels: ['Terbit SKU', 'Belum Terbit SKU', 'Rujukan / Rujuk Balik', 'Belum Pulang (Ranap)'],
-  colors: ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'],
+  labels: ['Terbit SKU', 'Belum Terbit SKU', 'Bebas Kontrol (Selesai/Sembuh)', 'Rujukan / Rujuk Balik', 'Belum Pulang (Ranap)'],
+  colors: ['#10b981', '#ef4444', '#06b6d4', '#3b82f6', '#f59e0b'],
   legend: {
     position: 'bottom',
     fontSize: '12px',
@@ -583,7 +868,7 @@ const trendChartSeries = computed(() => {
     {
       name: 'Kepatuhan (%)',
       data: stats.value.daily_trend.map(item => {
-        const eligible = item.total_sep - item.rujukan
+        const eligible = (item.total_sep || 0) - (item.rujukan || 0) - (item.tidak_perlu_kontrol || 0) - (item.belum_pulang || 0)
         if (!eligible) return 0
         return Math.round((item.patuh / eligible) * 100)
       })
@@ -716,14 +1001,27 @@ const changePage = (page) => {
 }
 
 // Helpers
+const formatDisposisiLabel = (disposisi) => {
+  if (!disposisi) return 'Selesai Pengobatan'
+  const map = {
+    'SEMBUH': 'Selesai / Sembuh',
+    'RUJUK_BALIK': 'Rujuk Balik FKTP',
+    'RUJUK_LANJUT': 'Rujuk Faskes Lain',
+    'RAWAT_INAP': 'Alih Rawat Inap',
+    'KONSUL_SELESAI': 'Konsul Selesai',
+    'KONTROL': 'Perlu Kontrol'
+  }
+  return map[disposisi] || disposisi
+}
+
 const getPoliRate = (poli) => {
-  const eligible = poli.total - poli.rujukan
+  const eligible = (poli.total || 0) - (poli.rujukan || 0) - (poli.tidak_perlu_kontrol || 0) - (poli.belum_pulang || 0)
   if (!eligible) return 0
   return Math.round((poli.patuh / eligible) * 100)
 }
 
 const getDokterRate = (dr) => {
-  const eligible = dr.total - dr.rujukan
+  const eligible = (dr.total || 0) - (dr.rujukan || 0) - (dr.tidak_perlu_kontrol || 0) - (dr.belum_pulang || 0)
   if (!eligible) return 0
   return Math.round((dr.patuh / eligible) * 100)
 }
@@ -745,24 +1043,35 @@ const formatDateShort = (dateStr) => {
   return `${dateObj.getDate()} ${dateObj.toLocaleDateString('id-ID', { month: 'short' })}`
 }
 
-const getComplianceBadgeClass = (status) => {
-  if (status === 'PATUH') return 'success'
-  if (status === 'RUJUKAN') return 'info'
-  if (status === 'BELUM_PULANG') return 'warning'
+const getComplianceBadgeClass = (item) => {
+  if (item.status_compliance === 'PATUH') return 'success'
+  if (item.status_compliance === 'RUJUKAN') return 'info'
+  if (item.status_compliance === 'TIDAK_PERLU_KONTROL') return 'cyan'
+  if (item.status_compliance === 'BELUM_PULANG') return 'warning'
+  if (item.status_ews === 'KRITIS_H1') return 'kritis'
+  if (item.status_ews === 'WARNING_H0') return 'warning-h0'
   return 'danger'
 }
 
-const getComplianceBadgeIcon = (status) => {
-  if (status === 'PATUH') return 'fas fa-check-circle me-1'
-  if (status === 'RUJUKAN') return 'fas fa-external-link-alt me-1'
-  if (status === 'BELUM_PULANG') return 'fas fa-bed me-1'
+const getComplianceBadgeIcon = (item) => {
+  if (item.status_compliance === 'PATUH') return 'fas fa-check-circle me-1'
+  if (item.status_compliance === 'RUJUKAN') return 'fas fa-external-link-alt me-1'
+  if (item.status_compliance === 'TIDAK_PERLU_KONTROL') return 'fas fa-user-check me-1'
+  if (item.status_compliance === 'BELUM_PULANG') return 'fas fa-bed me-1'
+  if (item.status_ews === 'KRITIS_H1') return 'fas fa-exclamation-triangle me-1 animate-pulse'
+  if (item.status_ews === 'WARNING_H0') return 'fas fa-clock me-1'
+  if (item.status_ews === 'EXPIRED') return 'fas fa-ban me-1'
   return 'fas fa-times-circle me-1'
 }
 
-const getComplianceBadgeLabel = (status) => {
-  if (status === 'PATUH') return 'Terbit SKU'
-  if (status === 'RUJUKAN') return 'Rujukan'
-  if (status === 'BELUM_PULANG') return 'Belum Pulang'
+const getComplianceBadgeLabel = (item) => {
+  if (item.status_compliance === 'PATUH') return 'Terbit SKU'
+  if (item.status_compliance === 'RUJUKAN') return 'Rujukan'
+  if (item.status_compliance === 'TIDAK_PERLU_KONTROL') return 'Bebas SKU'
+  if (item.status_compliance === 'BELUM_PULANG') return 'Belum Pulang'
+  if (item.status_ews === 'KRITIS_H1') return 'Kritis (H+1)'
+  if (item.status_ews === 'WARNING_H0') return 'Warning (H-0)'
+  if (item.status_ews === 'EXPIRED') return 'Hangus'
   return 'Belum Terbit'
 }
 
@@ -802,13 +1111,18 @@ const exportToExcel = async () => {
       'Poliklinik': item.nm_poli,
       'Dokter': item.nm_dokter,
       'Tanggal SEP': item.tglsep,
+      'Tanggal Acuan': item.tgl_acuan || item.tglsep,
+      'Batas Akhir (Deadline H+1)': item.tgl_deadline || '-',
+      'Status EWS': item.status_ews === 'KRITIS_H1' ? 'KRITIS H+1 (Deadline Hari Ini)' : (item.status_ews === 'WARNING_H0' ? 'WARNING H-0' : (item.status_ews === 'EXPIRED' ? 'EXPIRED (Hangus)' : (item.status_ews || '-'))),
       'No. SKU / Rujukan': item.no_surat || item.no_rujukan || '-',
+      'Disposisi Dokter (EMR)': formatDisposisiLabel(item.status_tindak_lanjut),
+      'Catatan Dokter': item.catatan_dokter || '-',
       'Detail SKU / Rencana Kontrol / Rujukan': item.status_compliance === 'PATUH' 
         ? `Rencana: ${item.tgl_rencana}` 
-        : (item.status_compliance === 'RUJUKAN' ? item.nm_ppkDirujuk : (item.status_compliance === 'BELUM_PULANG' ? 'Masih Dirawat' : 'Belum Terbit SKU')),
+        : (item.status_compliance === 'RUJUKAN' ? item.nm_ppkDirujuk : (item.status_compliance === 'TIDAK_PERLU_KONTROL' ? formatDisposisiLabel(item.status_tindak_lanjut) : (item.status_compliance === 'BELUM_PULANG' ? 'Masih Dirawat' : 'Belum Terbit SKU'))),
       'Status Kepatuhan': item.status_compliance === 'PATUH' 
         ? 'Terbit SKU (Patuh)' 
-        : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit (Tidak Patuh)'))
+        : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : (item.status_compliance === 'TIDAK_PERLU_KONTROL' ? 'Bebas SKU (Selesai Pengobatan)' : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit (Tidak Patuh)')))
     }))
 
     const ws = XLSX.utils.json_to_sheet(wsData)
@@ -877,26 +1191,28 @@ const exportToPDF = async () => {
       item.nm_dokter,
       item.status_compliance === 'PATUH' 
         ? `${item.no_surat} (${formatDateOnly(item.tgl_rencana)})` 
-        : (item.status_compliance === 'RUJUKAN' ? `Rujukan: ${item.nm_ppkDirujuk}` : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit SKU')),
-      item.status_compliance === 'PATUH' ? 'Terbit' : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit'))
+        : (item.status_compliance === 'RUJUKAN' ? `Rujukan: ${item.nm_ppkDirujuk}` : (item.status_compliance === 'TIDAK_PERLU_KONTROL' ? formatDisposisiLabel(item.status_tindak_lanjut) : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit SKU'))),
+      item.tgl_deadline ? formatDateOnly(item.tgl_deadline) : '-',
+      item.status_ews === 'KRITIS_H1' ? 'KRITIS H+1' : (item.status_ews === 'WARNING_H0' ? 'H-0' : (item.status_compliance === 'PATUH' ? 'Terbit' : (item.status_compliance === 'RUJUKAN' ? 'Rujukan' : (item.status_compliance === 'TIDAK_PERLU_KONTROL' ? 'Bebas SKU' : (item.status_compliance === 'BELUM_PULANG' ? 'Belum Pulang' : 'Belum Terbit')))))
     ])
 
     autoTable(doc, {
       startY: kopH + 22,
-      head: [['No', 'No. SEP', 'Nama Pasien', 'Layanan', 'Poli/Unit', 'Dokter', 'Keterangan SKU / Rujukan', 'Status']],
+      head: [['No', 'No. SEP', 'Nama Pasien', 'Layanan', 'Poli/Unit', 'Dokter', 'Keterangan SKU / Rujukan', 'Batas H+1', 'Status']],
       body: tableData,
       theme: 'striped',
       headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 7.5, textColor: [51, 65, 85] },
+      bodyStyles: { fontSize: 7, textColor: [51, 65, 85] },
       columnStyles: {
-        0: { cellWidth: 8 },
-        1: { cellWidth: 32 },
-        2: { cellWidth: 32 },
-        3: { cellWidth: 15 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 28 },
-        6: { cellWidth: 40 },
-        7: { cellWidth: 18 }
+        0: { cellWidth: 7 },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 14 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 35 },
+        7: { cellWidth: 20 },
+        8: { cellWidth: 17 }
       },
       margin: { top: kopH + 22, bottom: 20 },
       didDrawPage: (data) => {
@@ -1046,6 +1362,7 @@ onMounted(() => {
 .kpi-warning { border-left: 5px solid #f59e0b !important; }
 .kpi-success { border-left: 5px solid #10b981 !important; }
 .kpi-danger { border-left: 5px solid #ef4444 !important; }
+.kpi-cyan { border-left: 5px solid #06b6d4 !important; }
 .kpi-sky { border-left: 5px solid #0ea5e9 !important; }
 .kpi-teal { border-left: 5px solid #0d9488 !important; }
 
@@ -1053,6 +1370,7 @@ onMounted(() => {
 .kpi-warning:hover { box-shadow: 0 12px 24px rgba(245, 158, 11, 0.1) !important; }
 .kpi-success:hover { box-shadow: 0 12px 24px rgba(16, 185, 129, 0.1) !important; }
 .kpi-danger:hover { box-shadow: 0 12px 24px rgba(239, 68, 68, 0.1) !important; }
+.kpi-cyan:hover { box-shadow: 0 12px 24px rgba(6, 182, 212, 0.1) !important; }
 .kpi-sky:hover { box-shadow: 0 12px 24px rgba(14, 165, 233, 0.1) !important; }
 .kpi-teal:hover { box-shadow: 0 12px 24px rgba(13, 148, 136, 0.1) !important; }
 
@@ -1072,8 +1390,10 @@ onMounted(() => {
 .bg-warning-light { background-color: #fffbeb; }
 .bg-success-light { background-color: #ecfdf5; }
 .bg-danger-light { background-color: #fef2f2; }
+.bg-cyan-light { background-color: #ecfeff; }
 .bg-info-light { background-color: #f0f9ff; }
 .bg-teal-light { background-color: #f0fdfa; }
+.text-cyan { color: #0891b2 !important; }
 .text-teal { color: #0d9488; }
 .bg-teal { background-color: #0d9488; }
 
@@ -1149,6 +1469,10 @@ onMounted(() => {
 .compliance-badge.info {
   background-color: #dbeafe;
   color: #1e40af;
+}
+.compliance-badge.cyan {
+  background-color: #cffafe;
+  color: #0e7490;
 }
 .compliance-badge.danger {
   background-color: #fee2e2;
@@ -1241,6 +1565,234 @@ onMounted(() => {
   .pagination-container {
     flex-direction: column;
     align-items: center;
+  }
+}
+
+/* EWS Radar Card Styles */
+.ews-radar-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fff7f7 100%);
+  border: 1px solid #fee2e2 !important;
+  border-radius: 14px;
+}
+
+.ews-radar-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.ews-box {
+  background-color: #ffffff;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ews-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.ews-box-danger {
+  border-color: #fecaca;
+  background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+}
+
+.ews-box-danger.active-filter {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.ews-box-warning {
+  border-color: #fef08a;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.ews-box-warning.active-filter {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.ews-box-secondary {
+  border-color: #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.ews-box-secondary.active-filter {
+  border-color: #64748b;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.2);
+}
+
+.ews-count-badge {
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.animate-pulse {
+  animation: pulse-icon 1.2s infinite ease-in-out;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+.animate-pulse-badge {
+  animation: badge-glow 1.5s infinite alternate;
+}
+
+@keyframes badge-glow {
+  0% { box-shadow: 0 0 3px rgba(239, 68, 68, 0.5); }
+  100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.85); }
+}
+
+.compliance-badge.kritis {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  font-weight: 700;
+}
+
+.compliance-badge.warning-h0 {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-weight: 600;
+}
+
+/* EWS Card Action Buttons */
+.ews-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.ews-btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.ews-btn-action:active {
+  transform: translateY(0);
+}
+
+.ews-btn-action .transition-arrow {
+  transition: transform 0.2s ease;
+}
+
+.ews-btn-action:hover .transition-arrow {
+  transform: translateY(2px);
+}
+
+/* Kritis button styling */
+.ews-btn-kritis {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.ews-btn-kritis:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #ef4444;
+}
+
+.ews-btn-kritis.is-active {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border-color: #dc2626;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+}
+
+/* Warning button styling */
+.ews-btn-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
+}
+
+.ews-btn-warning:hover {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.ews-btn-warning.is-active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border-color: #d97706;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+}
+
+/* Secondary button styling */
+.ews-btn-secondary {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.ews-btn-secondary:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+
+.ews-btn-secondary.is-active {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  color: #ffffff;
+  border-color: #475569;
+  box-shadow: 0 4px 14px rgba(71, 85, 105, 0.4);
+}
+
+/* Highlight animation when table is focused */
+.transition-table-header {
+  transition: all 0.3s ease;
+  scroll-margin-top: 24px;
+}
+
+.table-section-focused {
+  animation: tableGlow 1.4s ease-in-out;
+}
+
+@keyframes tableGlow {
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgba(37, 99, 235, 0.08);
+    border-radius: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  100% {
+    background-color: transparent;
   }
 }
 </style>

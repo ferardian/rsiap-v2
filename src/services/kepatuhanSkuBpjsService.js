@@ -13,5 +13,12 @@ export const kepatuhanSkuBpjsService = {
      */
     getDetails(params) {
         return api.get('/laporan/kepatuhan-sku-bpjs/detail', { params })
+    },
+
+    /**
+     * Get real-time EWS metrics summary
+     */
+    getEwsSummary(params) {
+        return api.get('/laporan/kepatuhan-sku-bpjs/ews-summary', { params })
     }
 }
