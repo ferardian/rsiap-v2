@@ -148,6 +148,14 @@
               </select>
             </div>
             <div class="col-6 col-md-3 col-lg-2" v-if="activeTab === 'total_obat_keluar' || activeTab === 'pemberian_obat' || activeTab === 'resep_pulang' || activeTab === 'biaya_pasien'">
+              <label class="form-label text-muted small fw-bold mb-1">Jenis Pelayanan</label>
+              <select class="form-select form-select-sm rounded-3 shadow-none" v-model="filters.status_lanjut" @change="fetchCurrentTabData">
+                <option value="all">Semua Layanan</option>
+                <option value="Ralan">Rawat Jalan</option>
+                <option value="Ranap">Rawat Inap</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2" v-if="activeTab === 'total_obat_keluar' || activeTab === 'pemberian_obat' || activeTab === 'resep_pulang' || activeTab === 'biaya_pasien'">
               <label class="form-label text-muted small fw-bold mb-1">Cara Bayar</label>
               <select class="form-select form-select-sm rounded-3 shadow-none" v-model="filters.kd_pj" @change="fetchCurrentTabData">
                 <option value="all">Semua Penjab</option>
@@ -165,7 +173,7 @@
                 </option>
               </select>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 ms-auto">
+            <div class="col-12 col-md-6 col-lg ms-auto">
               <label class="form-label text-muted small fw-bold mb-1">Cari Data</label>
               <div class="input-group input-group-sm">
                 <span class="input-group-text bg-white border-end-0 rounded-start-3 text-muted">
@@ -255,9 +263,14 @@
 
         <!-- Section Title & Ekspor Button -->
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
             <h6 class="fw-bold text-dark m-0">{{ currentTabTitle }}</h6>
             <span class="badge bg-soft-primary text-primary px-2 py-1 fs-7 fw-bold">{{ pagination.total }} data</span>
+            <span v-if="filters.status_lanjut !== 'all' && ['total_obat_keluar', 'pemberian_obat', 'resep_pulang', 'biaya_pasien'].includes(activeTab)" 
+                  class="badge px-2 py-1 fs-7 fw-bold" 
+                  :class="filters.status_lanjut === 'Ranap' ? 'bg-soft-success text-success' : 'bg-soft-info text-info'">
+              <i class="fas fa-filter me-1"></i>{{ filters.status_lanjut === 'Ranap' ? 'Rawat Inap' : 'Rawat Jalan' }}
+            </span>
           </div>
           <div>
             <button class="btn btn-sm btn-success text-white rounded-3 text-nowrap px-3 shadow-sm fw-bold" style="width: auto !important; max-width: fit-content;" @click="exportExcel">
@@ -332,6 +345,7 @@
                 <th>No. Rawat</th>
                 <th>No. RM</th>
                 <th>Nama Pasien</th>
+                <th>Layanan</th>
                 <th>Penjab</th>
                 <th>Unit / Poli</th>
                 <th class="text-end">Qty Obat</th>
@@ -345,6 +359,11 @@
                 <td><code class="text-dark font-monospace">{{ item.no_rawat }}</code></td>
                 <td><span class="badge bg-soft-primary text-primary font-monospace">{{ item.no_rkm_medis }}</span></td>
                 <td class="fw-bold text-dark">{{ item.nm_pasien }}</td>
+                <td>
+                  <span class="badge" :class="item.status_lanjut === 'Ranap' ? 'bg-soft-success text-success' : 'bg-soft-primary text-primary'">
+                    {{ item.status_lanjut === 'Ranap' ? 'Rawat Inap' : 'Rawat Jalan' }}
+                  </span>
+                </td>
                 <td><span class="badge bg-light text-secondary border">{{ item.png_jawab }}</span></td>
                 <td><span class="badge bg-soft-info text-info">{{ item.nm_unit }}</span></td>
                 <td class="text-end fw-bold text-primary">{{ formatNumber(item.total_qty) }}</td>
@@ -353,7 +372,7 @@
             </tbody>
             <tfoot class="table-light fw-bold border-top border-2">
               <tr>
-                <td colspan="7" class="text-end text-uppercase">Total Subtotal Halaman Ini:</td>
+                <td colspan="8" class="text-end text-uppercase">Total Subtotal Halaman Ini:</td>
                 <td class="text-end text-primary fs-6">{{ formatNumber(pageSummaryQty) }}</td>
                 <td class="text-end text-dark fs-6">{{ formatRupiah(pageSummaryNominal) }}</td>
               </tr>
@@ -423,6 +442,7 @@ export default {
         tgl_awal: `${yyyy}-${mm}-01`,
         tgl_akhir: `${yyyy}-${mm}-${dd}`,
         kd_bangsal: 'all',
+        status_lanjut: 'all',
         kd_pj: 'all',
         kode_suplier: 'all',
         search: ''
@@ -431,7 +451,8 @@ export default {
         bangsal: [],
         jenis: [],
         supplier: [],
-        penjab: []
+        penjab: [],
+        layanan: []
       },
       items: [],
       summary: {
@@ -564,6 +585,7 @@ export default {
           tgl_awal: this.filters.tgl_awal,
           tgl_akhir: this.filters.tgl_akhir,
           kd_bangsal: this.filters.kd_bangsal,
+          status_lanjut: this.filters.status_lanjut,
           kd_pj: this.filters.kd_pj,
           kode_suplier: this.filters.kode_suplier,
           search: this.filters.search,
@@ -606,6 +628,7 @@ export default {
         tgl_awal: `${yyyy}-${mm}-01`,
         tgl_akhir: `${yyyy}-${mm}-${dd}`,
         kd_bangsal: 'all',
+        status_lanjut: 'all',
         kd_pj: 'all',
         kode_suplier: 'all',
         search: ''
@@ -635,8 +658,62 @@ export default {
       }
       return icons[key] || '📋'
     },
-    exportExcel() {
-      window.alert('Fitur ekspor excel sedang memproses data ' + this.currentTabTitle)
+    async exportExcel() {
+      if (!this.items || this.items.length === 0) {
+        window.alert('Tidak ada data untuk diekspor')
+        return
+      }
+
+      try {
+        const XLSX = await import('xlsx')
+        let exportData = []
+
+        if (this.activeTab === 'biaya_pasien') {
+          exportData = this.items.map((item, idx) => ({
+            'No': idx + 1,
+            'Tanggal': item.tgl_perawatan,
+            'No. Rawat': item.no_rawat,
+            'No. RM': item.no_rkm_medis,
+            'Nama Pasien': item.nm_pasien,
+            'Jenis Pelayanan': item.status_lanjut === 'Ranap' ? 'Rawat Inap' : 'Rawat Jalan',
+            'Penjab': item.png_jawab,
+            'Unit / Poli': item.nm_unit,
+            'Qty Obat': parseFloat(item.total_qty || 0),
+            'Total Biaya Obat (Rp)': parseFloat(item.total_nominal || 0)
+          }))
+        } else {
+          exportData = this.items.map((item, idx) => {
+            const row = {
+              'No': idx + 1,
+              'Kode Barang': item.kode_brng,
+              'Nama Barang / Obat': item.nama_brng,
+              'Kategori / Jenis': item.namajenis || '-',
+              'Satuan': item.satuan || '-'
+            }
+            if (item.keterangan !== undefined) {
+              row['Keterangan'] = item.keterangan || '-'
+            }
+            row['Jumlah (Qty)'] = parseFloat(item.total_qty || item.jumlah || 0)
+            row['Total Nominal (Rp)'] = parseFloat(item.total_nominal || item.total || 0)
+            if (item.total_beli !== undefined) {
+              row['Total HPP Beli (Rp)'] = parseFloat(item.total_beli || 0)
+            }
+            return row
+          })
+        }
+
+        const ws = XLSX.utils.json_to_sheet(exportData)
+        const wb = XLSX.utils.book_new()
+        const sheetName = this.activeTab.substring(0, 31)
+        XLSX.utils.book_append_sheet(wb, ws, sheetName)
+
+        const layananSuffix = this.filters.status_lanjut !== 'all' ? `_${this.filters.status_lanjut}` : ''
+        const fileName = `Ringkasan_${this.activeTab}${layananSuffix}_${this.filters.tgl_awal}_sd_${this.filters.tgl_akhir}.xlsx`
+        XLSX.writeFile(wb, fileName)
+      } catch (err) {
+        console.error('Error export excel:', err)
+        window.alert('Gagal mengekspor data ke Excel')
+      }
     }
   }
 }
