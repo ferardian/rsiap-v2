@@ -116,7 +116,7 @@
           </div>
           <div class="small text-muted">
             <i class="fas fa-shield-alt text-primary me-1"></i>
-            Batas terbit SKU maksimal <strong>H+1</strong> (Kunjungan Ralan / KRS Ranap) sebelum sistem VClaim mengunci.
+            Batas terbit SKU maksimal <strong>H+1</strong> (Kunjungan Poli / Pasien Pulang Ranap) sebelum sistem VClaim mengunci.
           </div>
         </div>
 
