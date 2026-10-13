@@ -201,18 +201,44 @@
           <h5 class="card-title-sm mb-0">BOR per Bangsal <span v-if="filters.isYearlyMode" class="text-primary fw-normal small">(Rerata Tahunan)</span></h5>
         </div>
         <div class="row g-3 custom-scrollbar" style="overflow-x: auto; flex-wrap: nowrap; padding-bottom: 1rem;">
-          <div v-for="w in currentData.ward_occupancy" :key="w.label" class="col-lg-3 col-md-4 col-sm-6" style="flex: 0 0 auto; width: 280px;">
-            <div class="ward-card card border-0 shadow-sm rounded-4 p-3 h-100">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h6 class="text-dark small fw-bold mb-0 text-truncate me-2" :title="w.label">{{ w.label }}</h6>
-                <span class="badge x-small fw-bold" :style="getBorBadgeStyle(w.bor)">{{ w.bor }}%</span>
+          <div v-for="w in currentData.ward_occupancy" :key="w.label" class="col-lg-3 col-md-4 col-sm-6" style="flex: 0 0 auto; width: 310px;">
+            <div class="ward-card card border-0 shadow-sm rounded-4 p-3 h-100 d-flex flex-column justify-content-between">
+              <div>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h6 class="text-dark small fw-bold mb-0 text-truncate me-2" :title="w.label">{{ w.label }}</h6>
+                  <span class="badge x-small fw-bold" :style="getBorBadgeStyle(w.bor)">{{ w.bor }}%</span>
+                </div>
+                <div class="bor-mini-progress mt-2 mb-3">
+                  <div class="progress-bar" :style="{ width: w.bor + '%', backgroundColor: getBorColor(w.bor) }"></div>
+                </div>
+                <div class="mt-2 d-flex justify-content-between text-xs text-muted">
+                  <span>Bed: <strong class="text-dark">{{ w.A }}</strong></span>
+                  <span>HP: <strong class="text-dark">{{ w.HP }}</strong></span>
+                </div>
               </div>
-              <div class="bor-mini-progress mt-2 mb-3">
-                <div class="progress-bar" :style="{ width: w.bor + '%', backgroundColor: getBorColor(w.bor) }"></div>
-              </div>
-              <div class="mt-2 d-flex justify-content-between text-xs text-muted">
-                <span>Bed: {{ w.A }}</span>
-                <span>HP: {{ w.HP }}</span>
+
+              <!-- Breakdown per Kelas -->
+              <div v-if="w.kelas && w.kelas.length > 0" class="ward-kelas-container mt-3 pt-2 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted fw-bold text-uppercase" style="font-size: 0.62rem; letter-spacing: 0.5px;">Rincian Kelas</span>
+                  <span class="badge rounded-pill bg-light text-secondary border px-1" style="font-size: 0.6rem;">{{ w.kelas.length }} Kelas</span>
+                </div>
+                <div class="d-flex flex-column gap-1">
+                  <div 
+                    v-for="k in w.kelas" 
+                    :key="k.kelas" 
+                    class="ward-kelas-item d-flex justify-content-between align-items-center py-1 px-2 rounded-2"
+                  >
+                    <span class="fw-semibold text-secondary text-xs text-truncate me-2" :title="k.kelas">{{ k.kelas }}</span>
+                    <div class="d-flex align-items-center gap-2 text-xs flex-shrink-0">
+                      <span class="text-muted"><strong class="text-dark">{{ k.A }}</strong> Bed</span>
+                      <span class="text-muted">HP: {{ k.HP }}</span>
+                      <span class="badge px-1 py-0 rounded fw-bold" :style="getBorBadgeStyle(k.bor)" style="font-size: 0.65rem;">
+                        {{ k.bor }}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -821,6 +847,31 @@ onMounted(() => {
   height: 100%;
   border-radius: 10px;
   transition: width 1s ease;
+}
+
+/* Ward Cards & Breakdown */
+.ward-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  background-color: #ffffff;
+}
+
+.ward-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ward-kelas-container {
+  border-top: 1px dashed #e2e8f0 !important;
+}
+
+.ward-kelas-item {
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.ward-kelas-item:hover {
+  background-color: #f1f5f9;
 }
 
 /* Chart SVG */
