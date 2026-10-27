@@ -11,7 +11,13 @@
       <div class="modal-body" v-if="pegawai">
         <div class="employee-header mb-4">
           <div class="avatar-large">
-            <img v-if="pegawai.photo && pegawai.photo !== '-'" :src="getPhotoUrl(pegawai.photo)" :alt="pegawai.nama" class="avatar-img" />
+            <img 
+              v-if="pegawai.photo && pegawai.photo !== '-' && !imageError" 
+              :src="getPhotoUrl(pegawai.photo)" 
+              :alt="pegawai.nama" 
+              class="avatar-img" 
+              @error="imageError = true"
+            />
             <span v-else class="initials">{{ getInitials(pegawai.nama) }}</span>
           </div>
           <div class="employee-title">
@@ -272,13 +278,19 @@ const previewSK = (berkas) => {
   window.open(url, '_blank')
 }
 
+const imageError = ref(false)
+
 watch(() => props.show, (newVal) => {
-  if (newVal && props.pegawai) {
-    fetchKredensial()
+  if (newVal) {
+    imageError.value = false
+    if (props.pegawai) {
+      fetchKredensial()
+    }
   }
 })
 
 watch(() => props.pegawai, (newVal) => {
+  imageError.value = false
   if (props.show && newVal) {
     fetchKredensial()
   }
