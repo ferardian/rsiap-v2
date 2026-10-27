@@ -1061,11 +1061,12 @@ const closePreview = () => {
   previewFileState.isPdf = false
 }
 
-// Utility Methods
 const getFileUrl = (path_file) => {
+  if (!path_file) return ''
   const baseUrl = apiConfig.public.API_V2_URL || ''
-  const domain = baseUrl.replace(/\/api\/v2\/?$/, '').replace(/\/api\/?$/, '')
-  return `${domain}/${path_file}`
+  const domain = baseUrl.replace(/\/api\/v2\/?$/, '').replace(/\/api\/?$/, '').replace(/\/+$/, '')
+  const cleanPath = path_file.replace(/^\/+/, '')
+  return `${domain}/${cleanPath}`
 }
 
 const getFileIconClass = (ext) => {
