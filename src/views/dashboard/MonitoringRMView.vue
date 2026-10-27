@@ -91,47 +91,88 @@
       </div>
 
       <!-- Filter & Search Bar -->
-      <div class="filter-bar card shadow-sm">
-        <div class="search-wrapper">
-          <i class="fas fa-search search-icon"></i>
-          <input 
-            v-model="filters.search" 
-            type="text" 
-            placeholder="Cari kode, nama berkas, atau departemen..." 
-            class="search-input"
-          >
-        </div>
-        <div class="filter-controls">
-          <select v-model="filters.unit" class="select-input">
-            <option value="Semua Unit">Semua Unit</option>
-            <option v-for="dept in departemenList" :key="dept.dep_id" :value="dept.dep_id">{{ dept.nama }}</option>
-          </select>
-          <select v-model="filters.prioritas" class="select-input">
-            <option value="Semua">Semua Prioritas</option>
-            <option value="Kritis">Kritis</option>
-            <option value="Tinggi">Tinggi</option>
-            <option value="Sedang">Sedang</option>
-            <option value="Rendah">Rendah</option>
-          </select>
-          <select v-model="filters.assigned_to_nik" class="select-input">
-            <option value="Semua">Semua Programmer</option>
-            <option v-for="p in pegawaiList" :key="p.nik" :value="p.nik">{{ p.nama }}</option>
-          </select>
-          <div class="status-tabs">
-            <button 
-              v-for="s in statusOptions" 
-              :key="s" 
-              @click="filters.status = s"
-              :class="['tab-btn', { active: filters.status === s }, s.toLowerCase().replace(' ', '-')] "
+      <div class="filter-card">
+        <!-- Row 1: Search & Main Actions -->
+        <div class="filter-row-top">
+          <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              v-model="filters.search" 
+              type="text" 
+              placeholder="Cari kode, nama berkas, atau departemen..." 
+              class="search-input"
             >
-              {{ s }}
+            <button 
+              v-if="filters.search" 
+              type="button" 
+              class="btn-clear-search" 
+              @click="filters.search = ''"
+              title="Hapus pencarian"
+            >
+              <i class="fas fa-times"></i>
             </button>
           </div>
-          <button @click="openModal()" class="btn-add">
-            <i class="fas fa-plus"></i> Tambah Berkas
-          </button>
-          <div class="result-count">
-            <i class="fas fa-file-alt"></i> {{ filteredData.length }} Berkas
+          <div class="filter-actions">
+            <button @click="openModal()" class="btn-add">
+              <i class="fas fa-plus"></i>
+              <span>Tambah Berkas</span>
+            </button>
+            <div class="result-count">
+              <i class="fas fa-file-alt"></i>
+              <span>{{ filteredData.length }} Berkas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Dropdowns & Status Tabs -->
+        <div class="filter-row-bottom">
+          <div class="filter-dropdowns">
+            <div class="select-wrapper">
+              <i class="fas fa-hospital-user select-icon"></i>
+              <select v-model="filters.unit" class="select-input">
+                <option value="Semua Unit">Semua Unit</option>
+                <option v-for="dept in departemenList" :key="dept.dep_id" :value="dept.dep_id">{{ dept.nama }}</option>
+              </select>
+            </div>
+            <div class="select-wrapper">
+              <i class="fas fa-flag select-icon"></i>
+              <select v-model="filters.prioritas" class="select-input">
+                <option value="Semua">Semua Prioritas</option>
+                <option value="Kritis">Kritis</option>
+                <option value="Tinggi">Tinggi</option>
+                <option value="Sedang">Sedang</option>
+                <option value="Rendah">Rendah</option>
+              </select>
+            </div>
+            <div class="select-wrapper">
+              <i class="fas fa-user-cog select-icon"></i>
+              <select v-model="filters.assigned_to_nik" class="select-input">
+                <option value="Semua">Semua Programmer</option>
+                <option v-for="p in pegawaiList" :key="p.nik" :value="p.nik">{{ p.nama }}</option>
+              </select>
+            </div>
+            <button 
+              v-if="isFilterActive" 
+              @click="resetFilters" 
+              class="btn-reset-filters"
+              title="Reset semua filter"
+            >
+              <i class="fas fa-undo-alt"></i>
+              <span>Reset</span>
+            </button>
+          </div>
+
+          <div class="status-tabs-wrapper">
+            <div class="status-tabs">
+              <button 
+                v-for="s in statusOptions" 
+                :key="s" 
+                @click="filters.status = s"
+                :class="['tab-btn', { active: filters.status === s }, s.toLowerCase().replace(' ', '-')] "
+              >
+                {{ s }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -646,6 +687,22 @@ const filters = reactive({
   prioritas: 'Semua',
   assigned_to_nik: 'Semua'
 })
+
+const isFilterActive = computed(() => {
+  return filters.search !== '' ||
+    filters.unit !== 'Semua Unit' ||
+    filters.status !== 'Semua' ||
+    filters.prioritas !== 'Semua' ||
+    filters.assigned_to_nik !== 'Semua'
+})
+
+const resetFilters = () => {
+  filters.search = ''
+  filters.unit = 'Semua Unit'
+  filters.status = 'Semua'
+  filters.prioritas = 'Semua'
+  filters.assigned_to_nik = 'Semua'
+}
 
 const sort = reactive({
   column: 'id',
@@ -1529,22 +1586,34 @@ onMounted(() => {
   transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.filter-bar {
-  background: white;
-  padding: 1.5rem 2rem;
-  border-radius: 1.25rem;
+/* Filter Card Container */
+.filter-card {
+  background: #ffffff;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
   display: flex;
-  gap: 2rem;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Row 1: Search and Actions */
+.filter-row-top {
+  display: flex;
   align-items: center;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .search-wrapper {
-  flex: 2;
+  flex: 1;
+  min-width: 280px;
   position: relative;
-  min-width: 300px;
+  display: flex;
+  align-items: center;
 }
 
 .search-icon {
@@ -1553,101 +1622,198 @@ onMounted(() => {
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+  font-size: 0.875rem;
+  pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  transition: border-color 0.2s;
+  padding: 0.65rem 2.25rem 0.65rem 2.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.625rem;
+  font-size: 0.85rem;
+  color: #1e293b;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
 }
 
 .search-input:focus {
   outline: none;
+  background-color: #ffffff;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-.filter-controls {
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
   display: flex;
-  gap: 1.25rem;
   align-items: center;
-  flex: 3;
-  justify-content: flex-end;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.btn-clear-search:hover {
+  color: #ef4444;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.result-count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 0.95rem;
+  border-radius: 0.625rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Row 2: Dropdown Filters & Status Tabs */
+.filter-row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 0.85rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.filter-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 160px;
+  flex: 1 1 160px;
+  max-width: 220px;
+}
+
+.select-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  pointer-events: none;
 }
 
 .select-input {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
+  width: 100%;
+  padding: 0.55rem 0.85rem 0.55rem 2.1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
   background-color: #f8fafc;
-  min-width: 180px;
   cursor: pointer;
-  color: #475569;
+  color: #334155;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .select-input:hover {
-  border-color: #cbd5e1;
-  background-color: white;
+  border-color: #94a3b8;
+  background-color: #ffffff;
 }
 
 .select-input:focus {
   outline: none;
   border-color: #3b82f6;
-  background-color: white;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-reset-filters {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.625rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-reset-filters:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.status-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .status-tabs {
-  display: flex;
+  display: inline-flex;
   background: #f1f5f9;
-  padding: 0.35rem;
-  border-radius: 0.875rem;
+  padding: 0.3rem;
+  border-radius: 0.75rem;
   gap: 0.25rem;
 }
 
 .tab-btn {
-  padding: 0.5rem 1.25rem;
+  padding: 0.45rem 1rem;
   border: none;
   background: transparent;
-  border-radius: 0.625rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border-radius: 0.5rem;
+  font-size: 0.775rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: #64748b;
   white-space: nowrap;
 }
 
-.tab-btn.active {
-  background: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.tab-btn:hover {
   color: #1e293b;
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .tab-btn.active.erm { color: #10b981; }
 .tab-btn.active.on-progress { color: #f59e0b; }
 .tab-btn.active.manual { color: #ef4444; }
-
-.result-count {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #475569;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 0.55rem 0.85rem;
-  border-radius: 0.625rem;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  transition: all 0.2s;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
-}
 
 .table-card {
   background: white;
@@ -2314,44 +2480,70 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
 
-  .filter-bar {
-    padding: 1.25rem;
-    flex-direction: column;
-    gap: 1.25rem;
-    align-items: stretch;
+  .filter-card {
+    padding: 1rem;
+    gap: 0.85rem;
     margin-bottom: 1.25rem;
   }
 
-  .search-wrapper {
-    min-width: auto;
-    width: 100%;
-  }
-
-  .filter-controls {
+  .filter-row-top {
     flex-direction: column;
     align-items: stretch;
-    width: 100%;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
-  .select-input {
+  .search-wrapper {
     width: 100%;
-    min-width: auto;
-    font-size: 0.8rem;
+    min-width: 100%;
+  }
+
+  .filter-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .btn-add {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .filter-row-bottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+    padding-top: 0.75rem;
+  }
+
+  .filter-dropdowns {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .select-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+  }
+
+  .btn-reset-filters {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .status-tabs-wrapper {
+    width: 100%;
+    overflow-x: auto;
   }
 
   .status-tabs {
     width: 100%;
-    overflow-x: auto;
-    padding: 0.25rem;
-    justify-content: flex-start;
+    justify-content: space-between;
   }
 
   .tab-btn {
     flex: 1;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.7rem;
     text-align: center;
+    padding: 0.45rem 0.5rem;
   }
 
   .btn-add {
