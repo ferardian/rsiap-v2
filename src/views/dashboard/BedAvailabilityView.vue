@@ -1,20 +1,297 @@
 <template>
-  <div class="bed-availability-page" :class="{ 'display-mode': isDisplayMode }">
-    <div v-if="isBackgroundUpdating" class="auto-refresh-indicator">
-      <div class="refresh-spinner"></div>
-      <span>Memperbarui data...</span>
+  <!-- ========================================================================= -->
+  <!-- MODE 1: DISPLAY LAYAR INFORMASI (DIGITAL SIGNAGE / TV RUANG TUNGGU)       -->
+  <!-- ========================================================================= -->
+  <div v-if="isDisplayMode" class="signage-screen" :class="{ 'is-fullscreen': isFullScreen }">
+    <!-- Header Display TV -->
+    <header class="signage-header">
+      <!-- Logo & Hospital Identity -->
+      <div class="signage-brand">
+        <img src="@/assets/logo-rsia.png" alt="RSIA Logo" class="brand-logo" />
+        <div class="brand-meta">
+          <h1 class="brand-title">RSIA AISYIYAH PEKAJANGAN</h1>
+          <p class="brand-subtitle">INFORMASI KETERSEDIAAN TEMPAT TIDUR RAWAT INAP</p>
+        </div>
+      </div>
+
+      <!-- Center Controls & Navigation -->
+      <div class="signage-controls">
+        <div class="view-mode-pill">
+          <button 
+            class="mode-btn" 
+            :class="{ active: displayViewMode === 'carousel' }"
+            @click="displayViewMode = 'carousel'"
+          >
+            <i class="fas fa-clone"></i> Mode Slide
+          </button>
+          <button 
+            class="mode-btn" 
+            :class="{ active: displayViewMode === 'matrix' }"
+            @click="displayViewMode = 'matrix'"
+          >
+            <i class="fas fa-table"></i> Rekap Semua Ruang
+          </button>
+        </div>
+
+        <!-- Slide Navigation Controls (Only on carousel mode) -->
+        <div v-if="displayViewMode === 'carousel' && displaySlides.length > 0" class="slide-nav-group">
+          <button class="nav-btn" @click="prevSlide" title="Slide Sebelumnya">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="slide-indicator">
+            Hal {{ currentSlideIndex + 1 }} / {{ displaySlides.length }}
+          </span>
+          <button class="nav-btn" @click="nextSlide" title="Slide Berikutnya">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <button 
+            class="nav-btn pause-toggle" 
+            :class="{ paused: isCarouselPaused }"
+            @click="togglePauseCarousel" 
+            :title="isCarouselPaused ? 'Lanjutkan Auto-Slide' : 'Jeda Auto-Slide'"
+          >
+            <i :class="isCarouselPaused ? 'fas fa-play' : 'fas fa-pause'"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Meta: Clock & Sync Status -->
+      <div class="signage-meta">
+        <div class="clock-box">
+          <div class="clock-time">{{ currentTime }}</div>
+          <div class="clock-date">{{ currentDate }}</div>
+        </div>
+        <div class="live-pill" :class="{ updating: isBackgroundUpdating }">
+          <span class="live-indicator-dot"></span>
+          <span class="live-label">{{ isBackgroundUpdating ? 'SYNC...' : 'LIVE SIMRS' }}</span>
+        </div>
+        <button class="fullscreen-toggle-btn" @click="toggleFullScreen" title="Layar Penuh (F11)">
+          <i :class="isFullScreen ? 'fas fa-compress' : 'fas fa-expand'"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Slide Timer Progress Bar -->
+    <div v-if="displayViewMode === 'carousel'" class="slide-progress-track">
+      <div class="slide-progress-fill" :style="{ width: `${slideProgress}%` }"></div>
     </div>
 
-    <!-- Header -->
+    <!-- Top KPI Summary Bar (Solid Hospital Colors) -->
+    <section class="signage-kpi-bar">
+      <div class="kpi-box total">
+        <div class="kpi-header">
+          <span class="kpi-icon"><i class="fas fa-hospital-alt"></i></span>
+          <span class="kpi-label">TOTAL KAPASITAS</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number">{{ totalBeds }}</span>
+          <span class="kpi-unit">Tempat Tidur</span>
+        </div>
+      </div>
+
+      <div class="kpi-box available">
+        <div class="kpi-header">
+          <span class="kpi-icon"><i class="fas fa-check-circle"></i></span>
+          <span class="kpi-label">TEMPAT TIDUR TERSEDIA</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number highlight-green">{{ availableBeds }}</span>
+          <span class="kpi-unit">Siap Pakai</span>
+        </div>
+      </div>
+
+      <div class="kpi-box occupied">
+        <div class="kpi-header">
+          <span class="kpi-icon"><i class="fas fa-user-injured"></i></span>
+          <span class="kpi-label">TEMPAT TIDUR TERISI</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number highlight-red">{{ occupiedBeds }}</span>
+          <span class="kpi-unit">Pasien Dirawat</span>
+        </div>
+      </div>
+
+      <div class="kpi-box cleaning">
+        <div class="kpi-header">
+          <span class="kpi-icon"><i class="fas fa-broom"></i></span>
+          <span class="kpi-label">DIBERSIHKAN / BOOKING</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-number highlight-amber">{{ cleaningBeds + bookingBeds }}</span>
+          <span class="kpi-unit">Sterilisasi/Reservasi</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Display -->
+    <main class="signage-main-area">
+      <!-- Loading State -->
+      <div v-if="loading" class="signage-loading">
+        <div class="signage-spinner"></div>
+        <p>Memuat data tempat tidur dari SIMRS...</p>
+      </div>
+
+      <!-- VIEW A: CAROUSEL SLIDE MODE -->
+      <div v-else-if="displayViewMode === 'carousel'" class="carousel-container">
+        <transition name="signage-slide" mode="out-in">
+          <div :key="currentSlideIndex" class="slide-content-grid">
+            <div 
+              v-for="(classGroups, wardName) in currentSlideData" 
+              :key="wardName" 
+              class="signage-ward-card"
+            >
+              <!-- Ward Header -->
+              <div class="ward-card-header">
+                <div class="ward-title-group">
+                  <span class="ward-badge-icon"><i class="fas fa-door-open"></i></span>
+                  <h2 class="ward-name-text">{{ wardName }}</h2>
+                </div>
+                <div class="ward-pill-stats">
+                  <span class="stat-pill total">
+                    Kapasitas: <strong>{{ getCategoryTotal(classGroups) }}</strong>
+                  </span>
+                  <span class="stat-pill empty">
+                    Kosong: <strong>{{ getCategoryEmpty(classGroups) }}</strong>
+                  </span>
+                  <span class="stat-pill filled">
+                    Terisi: <strong>{{ getCategoryFilled(classGroups) }}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Ward Classes Grid -->
+              <div class="ward-class-cards-container">
+                <div 
+                  v-for="group in classGroups" 
+                  :key="group.kelas" 
+                  class="signage-class-card"
+                >
+                  <div class="class-card-topbar">
+                    <span class="class-name-badge">{{ group.kelas }}</span>
+                    <span class="class-rooms-badge">
+                      {{ getGroupRoomCodes(group) }}
+                    </span>
+                  </div>
+
+                  <div class="class-card-kpi-row">
+                    <!-- Angka Kosong / Tersedia (Fokus Utama) -->
+                    <div class="card-kpi-cell available-cell">
+                      <span class="cell-tag">TERSEDIA</span>
+                      <span class="cell-number text-emerald">{{ getClassEmpty(group) }}</span>
+                    </div>
+                    <!-- Angka Terisi -->
+                    <div class="card-kpi-cell occupied-cell">
+                      <span class="cell-tag">TERISI</span>
+                      <span class="cell-number text-red">{{ getClassFilled(group) }}</span>
+                    </div>
+                    <!-- Total Kapasitas -->
+                    <div class="card-kpi-cell total-cell">
+                      <span class="cell-tag">KAPASITAS</span>
+                      <span class="cell-number text-dark">{{ getClassTotal(group) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Mini Occupancy Track -->
+                  <div class="class-occupancy-track">
+                    <div 
+                      class="occupancy-fill-bar" 
+                      :style="{ width: `${getClassOccupancyRate(group)}%` }"
+                      :class="getOccupancyLevelClass(getClassOccupancyRate(group))"
+                    ></div>
+                  </div>
+                  <div class="occupancy-caption">
+                    <span>Okupansi: {{ getClassOccupancyRate(group) }}%</span>
+                    <span v-if="getClassEmpty(group) === 0" class="badge-full">PENUH</span>
+                    <span v-else class="badge-avail">TERSEDIA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+
+      <!-- VIEW B: MATRIX ALL WARDS TABLE MODE -->
+      <div v-else class="matrix-container">
+        <div class="matrix-two-columns">
+          <div 
+            v-for="(columnList, colIdx) in matrixColumns" 
+            :key="colIdx" 
+            class="matrix-column-card"
+          >
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="col-ward">RUANGAN / BANGSAL</th>
+                  <th class="col-class">KELAS</th>
+                  <th class="col-num">TOTAL</th>
+                  <th class="col-num">TERISI</th>
+                  <th class="col-num col-highlight">TERSEDIA</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  v-for="item in columnList" 
+                  :key="item.kd_bangsal + item.kelas" 
+                  class="matrix-row"
+                  :class="{ 'row-available': item.tersedia > 0 }"
+                >
+                  <td class="col-ward-name">
+                    <span class="status-marker-dot" :class="item.tersedia > 0 ? 'bg-emerald' : 'bg-red'"></span>
+                    {{ item.nm_bangsal }}
+                  </td>
+                  <td class="col-class-name">
+                    <span class="matrix-class-tag">{{ item.kelas }}</span>
+                  </td>
+                  <td class="col-num font-mono">{{ item.kapasitas }}</td>
+                  <td class="col-num font-mono text-red">{{ item.terisi }}</td>
+                  <td class="col-num col-highlight font-mono">
+                    <span class="avail-badge" :class="item.tersedia > 0 ? 'badge-green' : 'badge-dim'">
+                      {{ item.tersedia }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Marquee / Running Text -->
+    <footer class="signage-footer">
+      <div class="marquee-tag">
+        <i class="fas fa-info-circle"></i>
+        <span>INFORMASI</span>
+      </div>
+      <div class="marquee-viewport">
+        <div class="marquee-track">
+          Selamat Datang di RSIA Aisyiyah Pekajangan • Layanan Informasi Ketersediaan Tempat Tidur Rawat Inap Real-time Terintegrasi SIMRS • Jam Kunjung Pasien: Siang 11.00 - 13.00 WIB, Sore 17.00 - 19.00 WIB • Mohon menjaga ketertiban, ketenangan, dan kebersihan lingkungan rumah sakit • Untuk konsultasi dan pendaftaran kamar rawat inap, silakan hubungi petugas Admisi.
+        </div>
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODE 2: DASHBOARD STAF OPERASIONAL (/dashboard/bed)                       -->
+  <!-- ========================================================================= -->
+  <div v-else class="bed-availability-page">
+    <div v-if="isBackgroundUpdating" class="auto-refresh-indicator">
+      <div class="refresh-spinner"></div>
+      <span>Memperbarui data SIMRS...</span>
+    </div>
+
+    <!-- Header Dashboard -->
     <div class="page-header">
       <div class="header-content">
         <div class="header-text">
           <h1 class="page-title">🛏️ Ketersediaan Tempat Tidur</h1>
-          <p class="page-subtitle">Monitor ketersediaan tempat tidur secara real-time</p>
+          <p class="page-subtitle">Pantau dan kelola ketersediaan tempat tidur rawat inap secara real-time</p>
         </div>
         <div class="header-actions">
-          <button v-if="!isDisplayMode" class="btn btn-primary" @click="openDisplayMode">
-            <i class="fas fa-desktop"></i> Full Screen
+          <button class="btn btn-primary" @click="openDisplayMode">
+            <i class="fas fa-desktop"></i> Mode Layar TV (Display)
           </button>
           <button class="btn btn-secondary" @click="refreshData">
             <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Refresh
@@ -37,31 +314,31 @@
           <div class="card-icon">✅</div>
           <div class="card-content">
             <h3>{{ availableBeds }}</h3>
-            <p>Tersedia</p>
+            <p>Tersedia (Kosong)</p>
           </div>
         </div>
         <div class="summary-card occupied">
           <div class="card-icon">🔴</div>
           <div class="card-content">
             <h3>{{ occupiedBeds }}</h3>
-            <p>Terisi</p>
+            <p>Terisi (Pasien)</p>
           </div>
         </div>
         <div class="summary-card cleaning">
           <div class="card-icon">🧹</div>
           <div class="card-content">
-            <h3>{{ cleaningBeds }}</h3>
-            <p>Dibersihkan</p>
+            <h3>{{ cleaningBeds + bookingBeds }}</h3>
+            <p>Dibersihkan / Booking</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Filters Section -->
     <div class="filter-section">
       <div class="filter-group">
         <label class="filter-label">
-          <i class="fas fa-hospital"></i> Pilih Bangsal
+          <i class="fas fa-hospital"></i> Kategori Bangsal
         </label>
         <SearchableSelect 
           v-model="selectedCategory" 
@@ -74,7 +351,7 @@
 
       <div class="filter-group">
         <label class="filter-label">
-          <i class="fas fa-star"></i> Pilih Kelas
+          <i class="fas fa-layer-group"></i> Pilih Kelas
         </label>
         <SearchableSelect 
           v-model="selectedClass" 
@@ -88,7 +365,7 @@
 
       <div class="filter-group">
         <label class="filter-label">
-          <i class="fas fa-filter"></i> Status
+          <i class="fas fa-filter"></i> Filter Status
         </label>
         <SearchableSelect 
           v-model="selectedStatus" 
@@ -124,24 +401,31 @@
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Memuat data...</p>
+      <p>Memuat data tempat tidur...</p>
     </div>
 
     <!-- Bed Grid Display -->
-    <div v-else-if="beds.length > 0" ref="bedGridSection" class="bed-grid-section">
+    <div v-else-if="filteredBedsList.length > 0" class="bed-grid-section">
       <div v-for="(bedGroup, wardName) in groupedBeds" :key="wardName" class="ward-section">
-        <h3 class="ward-title">
-          {{ wardName }} 
-          <span class="category-total-badge">{{ getCategoryTotal(bedGroup) }} Bed</span>
-        </h3>
+        <div class="ward-title">
+          <div class="ward-title-left">
+            <i class="fas fa-procedures"></i>
+            <span>{{ wardName }}</span>
+          </div>
+          <div class="ward-title-badges">
+            <span class="category-total-badge">{{ getCategoryTotal(bedGroup) }} Bed</span>
+            <span class="category-total-badge badge-green">Kosong: {{ getCategoryEmpty(bedGroup) }}</span>
+            <span class="category-total-badge badge-red">Isi: {{ getCategoryFilled(bedGroup) }}</span>
+          </div>
+        </div>
         
         <div v-for="group in bedGroup" :key="group.kelas" class="class-section">
-          <h4 class="class-title">
-            {{ group.kelas }}
+          <div class="class-title">
+            <span class="class-name-tag">{{ group.kelas }}</span>
             <span class="class-total-badge">{{ getClassTotal(group) }} Bed</span>
             <span class="class-total-badge status-available">Kosong: {{ getClassEmpty(group) }}</span>
             <span class="class-total-badge status-occupied">Isi: {{ getClassFilled(group) }}</span>
-          </h4>
+          </div>
           
           <div class="availability-cards">
             <div
@@ -155,79 +439,100 @@
                 <div class="class-badge">{{ bed.kelas }}</div>
               </div>
               
-              
-              <!-- Removed Capacity Info -->
-              
-              <div class="availability-stats">
-                <!-- Single Dynamic Status Box -->
-                <div 
-                  class="stat-item" 
-                  :class="getBedStatusClass(bed)"
-                >
-                  <div class="stat-icon">
-                    {{ getBedStatusIcon(bed) }}
-                  </div>
-                  <div class="stat-content">
-                    <div class="stat-number">
-                      {{ getBedStatusText(bed) }}
-                    </div>
-                    <div class="stat-label">
-                      Status Kamar
-                    </div>
-                  </div>
+              <!-- Metrics Grid per Card -->
+              <div class="staff-card-stats">
+                <div class="stat-metric empty">
+                  <span class="stat-title">Tersedia</span>
+                  <span class="stat-val">{{ bed.tersedia }}</span>
+                </div>
+                <div class="stat-metric filled">
+                  <span class="stat-title">Terisi</span>
+                  <span class="stat-val">{{ bed.terisi }}</span>
+                </div>
+                <div class="stat-metric total">
+                  <span class="stat-title">Kapasitas</span>
+                  <span class="stat-val">{{ bed.kapasitas }}</span>
                 </div>
               </div>
-              
-              <!-- Removed Progress Bar and Gender Info -->
+
+              <!-- Progress bar terisi -->
+              <div class="occupancy-track-staff">
+                <div 
+                  class="occupancy-bar-fill" 
+                  :style="{ width: `${bed.persentase_terisi}%` }"
+                  :class="getOccupancyLevelClass(bed.persentase_terisi)"
+                ></div>
+              </div>
+              <div class="staff-card-footer">
+                <span>Terisi: {{ bed.persentase_terisi }}%</span>
+                <span v-if="bed.tersedia > 0" class="badge-status-green">TERSEDIA</span>
+                <span v-else class="badge-status-red">PENUH</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-
-
     <!-- Empty State -->
     <div v-else class="empty-state">
       <i class="fas fa-bed fa-3x"></i>
-      <p>Tidak ada data tempat tidur</p>
+      <p>Tidak ada data tempat tidur ditemukan</p>
     </div>
 
     <!-- Bed Detail Modal -->
     <div v-if="showDetailModal" class="modal-overlay" @click="showDetailModal = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>Detail Tempat Tidur</h3>
+          <h3>Detail Ruangan & Tempat Tidur</h3>
           <button class="close-btn" @click="showDetailModal = false">×</button>
         </div>
         <div class="modal-body" v-if="selectedBed">
           <div class="detail-row">
-            <span class="detail-label">Bangsal:</span>
-            <span class="detail-value">{{ selectedBed.nm_bangsal }}</span>
+            <span class="detail-label">Bangsal / Ruang:</span>
+            <span class="detail-value font-semibold">{{ selectedBed.nm_bangsal }}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Kelas:</span>
-            <span class="detail-value">{{ selectedBed.kelas }}</span>
+            <span class="detail-label">Kode Kamar / Bangsal:</span>
+            <span class="detail-value font-mono">{{ selectedBed.kd_kamar || selectedBed.kd_bangsal }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Kelas Pelayanan:</span>
+            <span class="detail-value">
+              <span class="class-badge-modal">{{ selectedBed.kelas }}</span>
+            </span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Total Kapasitas:</span>
-            <span class="detail-value">{{ selectedBed.kapasitas }} tempat tidur</span>
+            <span class="detail-value font-semibold">{{ selectedBed.kapasitas }} Tempat Tidur</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Tersedia:</span>
+            <span class="detail-label">Tempat Tidur Tersedia:</span>
             <span class="detail-value">
-              <span class="status-badge available">{{ selectedBed.tersedia }} tempat tidur</span>
+              <span class="status-badge available">{{ selectedBed.tersedia }} Kosong</span>
             </span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Terisi:</span>
+            <span class="detail-label">Tempat Tidur Terisi:</span>
             <span class="detail-value">
-              <span class="status-badge occupied">{{ selectedBed.terisi }} tempat tidur</span>
+              <span class="status-badge occupied">{{ selectedBed.terisi }} Pasien</span>
+            </span>
+          </div>
+          <div class="detail-row" v-if="selectedBed.dibersihkan > 0">
+            <span class="detail-label">Sedang Dibersihkan:</span>
+            <span class="detail-value">
+              <span class="status-badge cleaning">{{ selectedBed.dibersihkan }} Bed</span>
+            </span>
+          </div>
+          <div class="detail-row" v-if="selectedBed.dibooking > 0">
+            <span class="detail-label">Dalam Reservasi / Booking:</span>
+            <span class="detail-value">
+              <span class="status-badge booked">{{ selectedBed.dibooking }} Bed</span>
             </span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Persentase Terisi:</span>
-            <span class="detail-value">{{ selectedBed.persentase_terisi }}%</span>
+            <span class="detail-label">Persentase Keterisian (BOR):</span>
+            <span class="detail-value font-semibold">{{ selectedBed.persentase_terisi }}%</span>
           </div>
         </div>
       </div>
@@ -242,27 +547,43 @@ import bedAvailabilityService from '../../services/bedAvailabilityService'
 import { showToast } from '../../utils/notification'
 import SearchableSelect from '../../components/ui/SearchableSelect.vue'
 
-// State
+// Routing & Display Mode Detection
+const route = useRoute()
+const router = useRouter()
+const isDisplayMode = computed(() => route.meta.layout === 'empty' || route.path.endsWith('/display'))
+
+// Core Data State
 const loading = ref(false)
 const isBackgroundUpdating = ref(false)
 const beds = ref([])
 const wards = ref([])
 const classes = ref([])
+
+// Filters (for staff dashboard)
 const selectedCategory = ref('')
 const selectedClass = ref('')
 const selectedStatus = ref('')
+
+// Modal state
 const showDetailModal = ref(false)
 const selectedBed = ref(null)
-const refreshInterval = ref(null)
 
-const route = useRoute()
-const router = useRouter()
-const isDisplayMode = computed(() => route.meta.layout === 'empty')
+// Signage Display States
+const displayViewMode = ref('carousel') // 'carousel' | 'matrix'
+const currentSlideIndex = ref(0)
+const isCarouselPaused = ref(false)
+const slideDuration = 12 // seconds per slide
+const slideProgress = ref(0)
+const isFullScreen = ref(false)
 
-const openDisplayMode = () => {
-  const displayUrl = router.resolve({ name: 'BedAvailabilityDisplay' }).href
-  window.open(displayUrl, '_blank')
-}
+// Clock State
+const currentTime = ref('')
+const currentDate = ref('')
+
+// Timers
+let refreshTimer = null
+let clockTimer = null
+let progressTimer = null
 
 // Options for SearchableSelect
 const categoryOptions = [
@@ -290,62 +611,27 @@ const classOptions = computed(() => {
   return options
 })
 
-// Helper for Categorization (Single Source of Truth)
+// Helper for Categorization
 const getBedCategory = (bed) => {
-  const searchString = (bed.kd_kamar || '').toUpperCase()
-  const defaultCategory = (bed.nm_bangsal || bed.kd_bangsal).replace(/\s*\d+\s*$/, '').trim()
+  const searchString = ((bed.kd_kamar || '') + ' ' + (bed.nm_bangsal || '')).toUpperCase()
+  const defaultCategory = (bed.nm_bangsal || bed.kd_bangsal).replace(/\s*\d+(\.\d+)?\s*$/, '').trim()
   
-  // Check Critical Units First
-  // Check ISOLASI first (catches VKISO)
   if (searchString.includes('ISOLASI') || searchString.includes('ISO')) {
     return 'ISOLASI'
-  }
-  else if (searchString.includes('ICU') || searchString.includes('ICCU') || searchString.includes('PICU') || searchString.includes('NICU')) {
+  } else if (searchString.includes('ICU') || searchString.includes('ICCU') || searchString.includes('PICU') || searchString.includes('NICU')) {
     return 'ICU'
-  }
-  else if (searchString.includes('VK') || searchString.includes('BERSALIN')) {
+  } else if (searchString.includes('VK') || searchString.includes('BERSALIN')) {
     return 'KAMAR BERSALIN'
-  }
-  // Check General Wards
-  else if (searchString.includes('ANAK') || searchString.includes('BAYI') || searchString.includes('PERINA')) {
+  } else if (searchString.includes('ANAK') || searchString.includes('BAYI') || searchString.includes('PERINA')) {
     return 'ANAK'
-  } 
-  else if (searchString.includes('KANDUNGAN') || searchString.includes('KEBIDANAN')) {
+  } else if (searchString.includes('KANDUNGAN') || searchString.includes('KEBIDANAN')) {
     return 'KANDUNGAN'
   }
   
-  return defaultCategory
+  return defaultCategory || 'LAINNYA'
 }
 
-// Computed
-const summaryByCategory = computed(() => {
-  const categories = ['ANAK', 'KANDUNGAN', 'KAMAR BERSALIN', 'ICU', 'ISOLASI']
-  const results = {}
-  
-  // Initialize result categories
-  categories.forEach(cat => {
-    results[cat] = {
-      name: cat,
-      capacity: 0,
-      occupied: 0,
-      available: 0
-    }
-  })
-  
-  beds.value.forEach(bed => {
-    const category = getBedCategory(bed)
-    // Only count if it matches one of our main categories
-    if (results[category]) {
-      results[category].capacity += bed.kapasitas
-      results[category].occupied += bed.terisi
-      results[category].available += bed.tersedia
-    }
-  })
-  
-  return Object.values(results)
-})
-
-// Filtered Beds Computed
+// Filtered beds list
 const filteredBedsList = computed(() => {
   let result = beds.value
   
@@ -359,12 +645,13 @@ const filteredBedsList = computed(() => {
   return result
 })
 
+// Grouped beds by Category -> Classes
 const groupedBeds = computed(() => {
   const grouped = {}
   
   filteredBedsList.value.forEach(bed => {
     const category = getBedCategory(bed)
-    const kelas = bed.kelas || 'Tidak ada kelas'
+    const kelas = bed.kelas || 'Umum'
     
     if (!grouped[category]) {
       grouped[category] = {}
@@ -377,14 +664,13 @@ const groupedBeds = computed(() => {
     grouped[category][kelas].push(bed)
   })
   
-  // Custom Sort Order
   const sortWeights = {
-    'VIP': 10,
     'VVIP': 5,
+    'VIP': 10,
+    'Utama': 15,
     'Kelas 1': 20,
     'Kelas 2': 30,
-    'Kelas 3': 40,
-    'Utama': 50,
+    'Kelas 3': 40
   }
   
   const getWeight = (className) => {
@@ -393,7 +679,6 @@ const groupedBeds = computed(() => {
     if (className.includes('Kelas 1')) return 20
     if (className.includes('Kelas 2')) return 30
     if (className.includes('Kelas 3')) return 40
-    if (className.includes('Utama')) return 50
     return 100 
   }
   
@@ -417,171 +702,111 @@ const groupedBeds = computed(() => {
   return finalGrouped
 })
 
-const totalBeds = computed(() => {
-  const source = filteredBedsList.value
-  if (selectedStatus.value === 'KOSONG') return availableBeds.value
-  if (selectedStatus.value === 'ISI') return occupiedBeds.value
-  if (selectedStatus.value === 'DIBERSIHKAN') return cleaningBeds.value
-  if (selectedStatus.value === 'DIBOOKING') return source.reduce((sum, bed) => sum + (bed.dibooking || 0), 0)
+// Slides for Carousel Mode (Dinamis dan proporsional untuk TV)
+const displaySlides = computed(() => {
+  const wardNames = Object.keys(groupedBeds.value)
+  if (!wardNames.length) return []
   
-  return source.reduce((sum, bed) => sum + bed.kapasitas, 0)
+  const slides = []
+  let currentChunk = {}
+  let currentCardCount = 0
+  let currentWardCount = 0
+
+  wardNames.forEach((name) => {
+    const wardGroups = groupedBeds.value[name] || []
+    const classCount = wardGroups.length || 1
+
+    // Jika melebihi 6 kartu atau sudah 3 bangsal, buat slide baru
+    if (currentWardCount > 0 && (currentCardCount + classCount > 6 || currentWardCount >= 3)) {
+      slides.push(currentChunk)
+      currentChunk = {}
+      currentCardCount = 0
+      currentWardCount = 0
+    }
+
+    currentChunk[name] = wardGroups
+    currentCardCount += classCount
+    currentWardCount += 1
+  })
+
+  if (Object.keys(currentChunk).length > 0) {
+    // Jika slide terakhir hanya berisi 1 bangsal kecil dan slide sebelumnya masih longgar, gabungkan
+    if (slides.length > 0 && currentCardCount <= 2 && Object.keys(currentChunk).length === 1) {
+      const lastSlide = slides[slides.length - 1]
+      const lastSlideCardCount = Object.values(lastSlide).reduce((sum, g) => sum + g.length, 0)
+      if (lastSlideCardCount + currentCardCount <= 6) {
+        Object.assign(lastSlide, currentChunk)
+      } else {
+        slides.push(currentChunk)
+      }
+    } else {
+      slides.push(currentChunk)
+    }
+  }
+
+  return slides
+})
+
+// Current Slide Data
+const currentSlideData = computed(() => {
+  if (!displaySlides.value.length) return {}
+  const safeIndex = currentSlideIndex.value % displaySlides.value.length
+  return displaySlides.value[safeIndex] || {}
+})
+
+// Matrix View Columns (2 balanced columns)
+const matrixColumns = computed(() => {
+  const list = filteredBedsList.value
+  const mid = Math.ceil(list.length / 2)
+  return [list.slice(0, mid), list.slice(mid)]
+})
+
+// KPI Aggregations
+const totalBeds = computed(() => {
+  return filteredBedsList.value.reduce((sum, bed) => sum + (bed.kapasitas || 0), 0)
 })
 
 const availableBeds = computed(() => {
-  if (selectedStatus.value && selectedStatus.value !== 'KOSONG') return 0
-  return filteredBedsList.value.reduce((sum, bed) => sum + bed.tersedia, 0)
+  return filteredBedsList.value.reduce((sum, bed) => sum + (bed.tersedia || 0), 0)
 })
 
 const occupiedBeds = computed(() => {
-  if (selectedStatus.value && selectedStatus.value !== 'ISI') return 0
-  return filteredBedsList.value.reduce((sum, bed) => sum + bed.terisi, 0)
+  return filteredBedsList.value.reduce((sum, bed) => sum + (bed.terisi || 0), 0)
 })
 
 const cleaningBeds = computed(() => {
-  if (selectedStatus.value && selectedStatus.value !== 'DIBERSIHKAN') return 0
   return filteredBedsList.value.reduce((sum, bed) => sum + (bed.dibersihkan || 0), 0)
 })
 
-// Helper methods for bed status
-const getBedStatusClass = (bed) => {
-  const status = bed.status_kamar || 'KOSONG'
-  switch (status) {
-    case 'ISI': return 'occupied'
-    case 'KOSONG': return 'available'
-    case 'DIBERSIHKAN': return 'cleaning'
-    case 'DIBOOKING': return 'booked'
-    default: return 'occupied'
-  }
-}
+const bookingBeds = computed(() => {
+  return filteredBedsList.value.reduce((sum, bed) => sum + (bed.dibooking || 0), 0)
+})
 
-const getBedStatusIcon = (bed) => {
-  const status = bed.status_kamar || 'KOSONG'
-  switch (status) {
-    case 'ISI': return '✕'
-    case 'KOSONG': return '✓'
-    case 'DIBERSIHKAN': return '🧹'
-    case 'DIBOOKING': return '📅'
-    default: return '?'
-  }
-}
-
-const getBedStatusText = (bed) => {
-  const status = bed.status_kamar || 'KOSONG'
-  switch (status) {
-    case 'ISI': return 'TERISI'
-    case 'KOSONG': return 'TERSEDIA'
-    case 'DIBERSIHKAN': return 'DIBERSIHKAN'
-    case 'DIBOOKING': return 'DIBOOKING'
-    default: return status
-  }
-}
-
-
-
-// Methods
-const loadBeds = async (preserveScroll = false) => {
-  try {
-    // Save current scroll position if preserving
-    const scrollPosition = preserveScroll ? window.scrollY : 0
-    
-    // Only show loading spinner on manual refresh, not auto-refresh
-    if (!preserveScroll) {
-      loading.value = true
-    } else {
-      isBackgroundUpdating.value = true
-    }
-    
-    const params = {}
-    // kd_bangsal filter removed as we use category filter on frontend
-    if (selectedClass.value) params.kelas = selectedClass.value
-    if (selectedStatus.value) params.status = selectedStatus.value
-    
-    const response = await bedAvailabilityService.getAllBeds(params)
-    
-    if (response.success) {
-      beds.value = response.data
-      
-      // Restore scroll position after data is loaded
-      if (preserveScroll && scrollPosition > 0) {
-        // Use requestAnimationFrame for smoother scroll restoration
-        await nextTick()
-        requestAnimationFrame(() => {
-          window.scrollTo({
-            top: scrollPosition,
-            behavior: 'instant'
-          })
-        })
-      }
-    } else {
-      showToast('Gagal memuat data tempat tidur', 'error')
-    }
-  } catch (error) {
-    console.error('Error loading beds:', error)
-    showToast('Terjadi kesalahan saat memuat data', 'error')
-  } finally {
-    if (!preserveScroll) {
-      loading.value = false
-    } else {
-      // Add a small delay so the user can see the update indicator
-      setTimeout(() => {
-        isBackgroundUpdating.value = false
-      }, 1000)
-    }
-  }
-}
-
-const loadWards = async () => {
-  try {
-    const response = await bedAvailabilityService.getWards()
-    if (response.success) {
-      wards.value = response.data
-    }
-  } catch (error) {
-    console.error('Error loading wards:', error)
-  }
-}
-
-const loadClasses = async () => {
-  try {
-    const response = await bedAvailabilityService.getClasses()
-    if (response.success) {
-      classes.value = response.data
-    }
-  } catch (error) {
-    console.error('Error loading classes:', error)
-  }
-}
-
-const refreshData = async () => {
-  await Promise.all([loadBeds(), loadWards(), loadClasses()])
-  showToast('Data berhasil diperbarui', 'success')
-}
-
-const getWardName = (kd_bangsal) => {
-  const ward = wards.value.find(w => w.kd_bangsal === kd_bangsal)
-  return ward ? ward.nm_bangsal : kd_bangsal
-}
-
-const showBedDetail = (bed) => {
-  selectedBed.value = bed
-  showDetailModal.value = true
-}
-
-const formatCurrency = (value) => {
-  if (!value) return '0'
-  return new Intl.NumberFormat('id-ID').format(value)
-}
-
+// Statistics Helper Methods
 const getCategoryTotal = (groups) => {
   if (!groups || !Array.isArray(groups)) return 0
   return groups.reduce((total, group) => {
-    return total + group.beds.reduce((sum, bed) => sum + bed.kapasitas, 0)
+    return total + (group.beds ? group.beds.reduce((sum, bed) => sum + (bed.kapasitas || 0), 0) : 0)
+  }, 0)
+}
+
+const getCategoryEmpty = (groups) => {
+  if (!groups || !Array.isArray(groups)) return 0
+  return groups.reduce((total, group) => {
+    return total + (group.beds ? group.beds.reduce((sum, bed) => sum + (bed.tersedia || 0), 0) : 0)
+  }, 0)
+}
+
+const getCategoryFilled = (groups) => {
+  if (!groups || !Array.isArray(groups)) return 0
+  return groups.reduce((total, group) => {
+    return total + (group.beds ? group.beds.reduce((sum, bed) => sum + (bed.terisi || 0), 0) : 0)
   }, 0)
 }
 
 const getClassTotal = (group) => {
   if (!group || !group.beds) return 0
-  return group.beds.reduce((sum, bed) => sum + bed.kapasitas, 0)
+  return group.beds.reduce((sum, bed) => sum + (bed.kapasitas || 0), 0)
 }
 
 const getClassEmpty = (group) => {
@@ -594,89 +819,950 @@ const getClassFilled = (group) => {
   return group.beds.reduce((sum, bed) => sum + (bed.terisi || 0), 0)
 }
 
-// Lifecycle
+const getClassOccupancyRate = (group) => {
+  const total = getClassTotal(group)
+  if (total <= 0) return 0
+  const filled = getClassFilled(group)
+  return Math.min(100, Math.round((filled / total) * 100))
+}
+
+const getOccupancyLevelClass = (rate) => {
+  if (rate >= 90) return 'occ-critical'
+  if (rate >= 75) return 'occ-warning'
+  if (rate >= 50) return 'occ-moderate'
+  return 'occ-low'
+}
+
+const getGroupRoomCodes = (group) => {
+  if (!group || !group.beds) return ''
+  const codes = group.beds.map(b => b.kd_kamar || b.kd_bangsal).filter(Boolean)
+  if (codes.length <= 3) return codes.join(', ')
+  return `${codes.slice(0, 3).join(', ')} (+${codes.length - 3})`
+}
+
+// Carousel Controls
+const nextSlide = () => {
+  if (!displaySlides.value.length) return
+  currentSlideIndex.value = (currentSlideIndex.value + 1) % displaySlides.value.length
+  slideProgress.value = 0
+}
+
+const prevSlide = () => {
+  if (!displaySlides.value.length) return
+  currentSlideIndex.value = (currentSlideIndex.value - 1 + displaySlides.value.length) % displaySlides.value.length
+  slideProgress.value = 0
+}
+
+const togglePauseCarousel = () => {
+  isCarouselPaused.value = !isCarouselPaused.value
+}
+
+const startCarouselLoop = () => {
+  stopCarouselLoop()
+  slideProgress.value = 0
+  
+  const step = 100 / (slideDuration * 10)
+  progressTimer = setInterval(() => {
+    if (!isCarouselPaused.value && displayViewMode.value === 'carousel' && displaySlides.value.length > 1) {
+      slideProgress.value += step
+      if (slideProgress.value >= 100) {
+        slideProgress.value = 0
+        nextSlide()
+      }
+    }
+  }, 100)
+}
+
+const stopCarouselLoop = () => {
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+}
+
+// Realtime Clock Updater
+const updateClock = () => {
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  currentTime.value = `${hours}:${minutes}:${seconds} WIB`
+  
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+  currentDate.value = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
+}
+
+// Fullscreen Toggle
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().then(() => {
+      isFullScreen.value = true
+    }).catch(err => {
+      console.warn('Fullscreen tidak diizinkan:', err)
+    })
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().then(() => {
+        isFullScreen.value = false
+      })
+    }
+  }
+}
+
+// Data Fetching
+const loadBeds = async (preserveScroll = false) => {
+  try {
+    if (!preserveScroll) {
+      loading.value = true
+    } else {
+      isBackgroundUpdating.value = true
+    }
+    
+    const params = {}
+    if (selectedClass.value) params.kelas = selectedClass.value
+    if (selectedStatus.value) params.status = selectedStatus.value
+    
+    const response = await bedAvailabilityService.getAllBeds(params)
+    if (response.success) {
+      beds.value = response.data
+    } else if (!preserveScroll) {
+      showToast('Gagal memuat data tempat tidur', 'error')
+    }
+  } catch (error) {
+    console.error('Error loading beds:', error)
+    if (!preserveScroll) {
+      showToast('Terjadi kendala koneksi ke SIMRS', 'error')
+    }
+  } finally {
+    if (!preserveScroll) {
+      loading.value = false
+    } else {
+      setTimeout(() => {
+        isBackgroundUpdating.value = false
+      }, 1200)
+    }
+  }
+}
+
+const loadWards = async () => {
+  try {
+    const response = await bedAvailabilityService.getWards()
+    if (response.success) wards.value = response.data
+  } catch (error) {
+    console.error('Error loading wards:', error)
+  }
+}
+
+const loadClasses = async () => {
+  try {
+    const response = await bedAvailabilityService.getClasses()
+    if (response.success) classes.value = response.data
+  } catch (error) {
+    console.error('Error loading classes:', error)
+  }
+}
+
+const refreshData = async () => {
+  await Promise.all([loadBeds(), loadWards(), loadClasses()])
+  showToast('Data tempat tidur berhasil diperbarui', 'success')
+}
+
+const openDisplayMode = () => {
+  const displayUrl = router.resolve({ name: 'BedAvailabilityDisplay' }).href
+  window.open(displayUrl, '_blank')
+}
+
+const showBedDetail = (bed) => {
+  selectedBed.value = bed
+  showDetailModal.value = true
+}
+
+// Lifecycle Hooks
 onMounted(async () => {
+  updateClock()
+  clockTimer = setInterval(updateClock, 1000)
+  
   await Promise.all([loadBeds(), loadWards(), loadClasses()])
   
-  // Auto refresh every 30 seconds (preserve scroll position)
-  refreshInterval.value = setInterval(() => {
+  // Background sync every 30s
+  refreshTimer = setInterval(() => {
     loadBeds(true)
   }, 30000)
-
+  
   if (isDisplayMode.value) {
-    // Wait for data to load then start auto scroll flow
-    const checkDataLoaded = setInterval(() => {
-      if (!loading.value && beds.value.length > 0) {
-        clearInterval(checkDataLoaded)
-        startAutoScrollFlow()
-      }
-    }, 1000)
+    startCarouselLoop()
   }
+
+  // Listen for native fullscreen change
+  document.addEventListener('fullscreenchange', () => {
+    isFullScreen.value = !!document.fullscreenElement
+  })
 })
 
 onUnmounted(() => {
-  if (refreshInterval.value) {
-    clearInterval(refreshInterval.value)
-  }
-  stopAutoScroll()
+  if (clockTimer) clearInterval(clockTimer)
+  if (refreshTimer) clearInterval(refreshTimer)
+  stopCarouselLoop()
 })
-
-// Auto Scroll Logic
-const bedGridSection = ref(null)
-const autoScrollTimer = ref(null)
-const scrollSpeed = 1 // pixels per tick
-const scrollIntervalRate = 50 // ms per tick
-
-const startAutoScrollFlow = async () => {
-  await nextTick()
-  
-  // 1. Initial Focus: Scroll to bed grid
-  if (bedGridSection.value) {
-    bedGridSection.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  // 2. Start scrolling loop after delay
-  setTimeout(() => {
-    startScrolling()
-  }, 5000) 
-}
-
-const startScrolling = () => {
-  stopAutoScroll()
-  
-  autoScrollTimer.value = setInterval(() => {
-    // Check if we reached bottom
-    const scrollHeight = document.documentElement.scrollHeight
-    const scrollTop = window.scrollY
-    const clientHeight = document.documentElement.clientHeight
-
-    if (scrollTop + clientHeight >= scrollHeight - 5) {
-      // Reached bottom
-      stopAutoScroll()
-      // Wait at bottom then reset
-      setTimeout(() => {
-         window.scrollTo({ top: 0, behavior: 'smooth' })
-         // Wait at top then restart flow (re-focus on grid)
-         setTimeout(() => {
-            startAutoScrollFlow()
-         }, 5000)
-      }, 5000)
-    } else {
-      // Scroll down
-      window.scrollBy(0, scrollSpeed)
-    }
-  }, scrollIntervalRate)
-}
-
-const stopAutoScroll = () => {
-  if (autoScrollTimer.value) {
-    clearInterval(autoScrollTimer.value)
-    autoScrollTimer.value = null
-  }
-}
 </script>
 
 <style scoped>
+/* =========================================================================
+   STYLE MODE 1: DIGITAL SIGNAGE / DISPLAY TV (CLEAN WHITE HOSPITAL THEME)
+   ========================================================================= */
+.signage-screen {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header Signage */
+.signage-header {
+  height: 80px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  gap: 1.5rem;
+  flex-shrink: 0;
+}
+
+.signage-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-logo {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.05em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  margin: 0;
+  margin-top: 2px;
+}
+
+/* Controls Pill */
+.signage-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-mode-pill {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+.slide-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.nav-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.nav-btn.pause-toggle.paused {
+  background: #f59e0b;
+  border-color: #d97706;
+  color: #ffffff;
+}
+
+.slide-indicator {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  padding: 0 0.5rem;
+  min-width: 85px;
+  text-align: center;
+}
+
+/* Right Meta: Clock & Sync */
+.signage-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.clock-box {
+  text-align: right;
+}
+
+.clock-time {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e40af;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.clock-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.live-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  border: 1px solid #10b981;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.live-indicator-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.live-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #065f46;
+  letter-spacing: 0.05em;
+}
+
+.live-pill.updating {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.live-pill.updating .live-indicator-dot {
+  background-color: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+}
+
+.live-pill.updating .live-label {
+  color: #1d4ed8;
+}
+
+.fullscreen-toggle-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.fullscreen-toggle-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Slide Progress Track */
+.slide-progress-track {
+  height: 3px;
+  width: 100%;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.slide-progress-fill {
+  height: 100%;
+  background: #2563eb;
+  transition: width 0.1s linear;
+}
+
+/* KPI Bar (4 Box Grid) */
+.signage-kpi-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+}
+
+.kpi-box {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+}
+
+.kpi-box.total::before { background: #3b82f6; }
+.kpi-box.available::before { background: #10b981; }
+.kpi-box.occupied::before { background: #ef4444; }
+.kpi-box.cleaning::before { background: #f59e0b; }
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.kpi-icon {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.kpi-body {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.kpi-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-number.highlight-green {
+  color: #059669;
+}
+
+.kpi-number.highlight-red {
+  color: #dc2626;
+}
+
+.kpi-number.highlight-amber {
+  color: #d97706;
+}
+
+.kpi-unit {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Main Display Area */
+.signage-main-area {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 1.5rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Loading State */
+.signage-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #64748b;
+}
+
+.signage-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Carousel Layout */
+.carousel-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.slide-content-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.signage-ward-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.ward-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.6rem;
+}
+
+.ward-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ward-badge-icon {
+  width: 32px;
+  height: 32px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  font-size: 0.9rem;
+}
+
+.ward-name-text {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+.ward-pill-stats {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.stat-pill {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.stat-pill.total {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-pill.empty {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.stat-pill.filled {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Ward Class Cards Container */
+.ward-class-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.signage-class-card {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.class-card-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.class-name-badge {
+  background: #1e40af;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.class-rooms-badge {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.class-card-kpi-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.card-kpi-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cell-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.cell-number {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-emerald { color: #059669; }
+.text-red { color: #dc2626; }
+.text-dark { color: #0f172a !important; }
+.text-white { color: #0f172a !important; }
+
+.class-occupancy-track {
+  height: 6px;
+  width: 100%;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.occupancy-fill-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.occupancy-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.badge-full {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.badge-avail {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* Matrix Table View */
+.matrix-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.matrix-two-columns {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+
+.matrix-column-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow-y: auto;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.825rem;
+}
+
+.matrix-table thead th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.matrix-table th.col-num,
+.matrix-table td.col-num {
+  text-align: center;
+}
+
+.matrix-table th.col-highlight,
+.matrix-table td.col-highlight {
+  text-align: center;
+  background-color: rgba(16, 185, 129, 0.06);
+}
+
+.matrix-row {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+
+.matrix-row:hover {
+  background-color: #f8fafc;
+}
+
+.matrix-table td {
+  padding: 0.5rem 0.9rem;
+  color: #334155;
+}
+
+.col-ward-name {
+  font-weight: 600;
+  color: #0f172a !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-marker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.bg-emerald { background-color: #10b981; }
+.bg-red { background-color: #ef4444; }
+
+.matrix-class-tag {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.avail-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.avail-badge.badge-green {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.avail-badge.badge-dim {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+}
+
+/* Footer Running Text */
+.signage-footer {
+  height: 44px;
+  background-color: #ffffff;
+  border-top: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.marquee-tag {
+  background-color: #1e40af;
+  color: #ffffff;
+  height: 100%;
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.marquee-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.marquee-track {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: marquee-scroll 32s linear infinite;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Transitions */
+.signage-slide-enter-active,
+.signage-slide-leave-active {
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.signage-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.signage-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+
+/* =========================================================================
+   STYLE MODE 2: DASHBOARD STAF (CLEAN WHITE HOSPITAL THEME)
+   ========================================================================= */
+.bed-availability-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
 .auto-refresh-indicator {
   position: fixed;
   top: 1.5rem;
@@ -694,13 +1780,6 @@ const stopAutoScroll = () => {
   font-size: 0.875rem;
   z-index: 100;
   backdrop-filter: blur(4px);
-  animation: slideDown 0.3s ease-out;
-  pointer-events: none;
-}
-
-@keyframes slideDown {
-  from { transform: translate(50%, -100%); opacity: 0; }
-  to { transform: translate(50%, 0); opacity: 1; }
 }
 
 .refresh-spinner {
@@ -712,26 +1791,12 @@ const stopAutoScroll = () => {
   animation: spin 1s linear infinite;
 }
 
-.bed-availability-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.bed-availability-page.display-mode {
-  height: auto;
-  overflow-y: visible;
-}
-
-/* Header */
 .page-header {
   background: white;
   padding: 1.5rem;
   border-radius: 0.75rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
@@ -746,16 +1811,16 @@ const stopAutoScroll = () => {
 }
 
 .page-title {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .page-subtitle {
   color: #64748b;
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-size: 0.925rem;
 }
 
 .header-actions {
@@ -766,27 +1831,37 @@ const stopAutoScroll = () => {
 .btn {
   padding: 0.625rem 1.25rem;
   border-radius: 0.5rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  transition: all 0.2s ease;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
 }
 
 .btn-secondary {
-  background: #6b7280;
+  background: #64748b;
   color: white;
 }
 
 .btn-secondary:hover {
-  background: #4b5563;
+  background: #475569;
 }
 
-/* Summary Cards */
+/* Summary Grid */
 .summary-section {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .summary-grid {
@@ -798,12 +1873,13 @@ const stopAutoScroll = () => {
 .summary-card {
   background: white;
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
 }
 
 .summary-card:hover {
@@ -811,92 +1887,70 @@ const stopAutoScroll = () => {
 }
 
 .card-icon {
-  font-size: 2.5rem;
-  width: 60px;
-  height: 60px;
+  font-size: 2.2rem;
+  width: 54px;
+  height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
 }
 
-.summary-card.total .card-icon {
-  background: #dbeafe;
-}
-
-.summary-card.available .card-icon {
-  background: #d1fae5;
-}
-
-.summary-card.occupied .card-icon {
-  background: #fee2e2;
-}
-
-.summary-card.cleaning .card-icon {
-  background: #fef3c7;
-}
+.summary-card.total .card-icon { background: #dbeafe; }
+.summary-card.available .card-icon { background: #d1fae5; }
+.summary-card.occupied .card-icon { background: #fee2e2; }
+.summary-card.cleaning .card-icon { background: #fef3c7; }
 
 .card-content h3 {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.85rem;
+  font-weight: 800;
   color: #1e293b;
   margin: 0;
+  line-height: 1.1;
 }
 
 .card-content p {
   color: #64748b;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 /* Filters */
 .filter-section {
   background: white;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .filter-label {
   font-weight: 600;
   color: #475569;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.filter-select {
-  padding: 0.625rem 1rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
-  background: white;
-  color: #1e293b;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
 /* Legend */
 .legend-section {
   background: white;
-  padding: 1rem 1.5rem;
+  padding: 0.9rem 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   gap: 2rem;
   flex-wrap: wrap;
@@ -906,116 +1960,84 @@ const stopAutoScroll = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: #475569;
+  font-weight: 500;
 }
 
 .legend-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 0.375rem;
-  border: 2px solid #e2e8f0;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
 }
 
-.legend-box.available {
-  background: #10b981;
-}
-
-.legend-box.occupied {
-  background: #ef4444;
-}
-
-.legend-box.cleaning {
-  background: #f59e0b;
-}
-
-.legend-box.booked {
-  background: #3b82f6;
-}
-
-/* Loading State */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem;
-  background: white;
-  border-radius: 0.75rem;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+.legend-box.available { background: #10b981; }
+.legend-box.occupied { background: #ef4444; }
+.legend-box.cleaning { background: #f59e0b; }
+.legend-box.booked { background: #3b82f6; }
 
 /* Bed Grid */
 .bed-grid-section {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .ward-section {
   background: white;
-  padding: 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  padding-bottom: 1.5rem;
 }
 
 .ward-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white; /* White text for contrast */
-  margin-bottom: 1.5rem;
-  padding: 1rem 1.5rem; /* Internal padding */
-  
-  /* Sticky Header Styles */
-  position: sticky;
-  top: 0;
-  z-index: 20;
-
-  /* New Visual Style */
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); /* Blue Sidebar Gradient */
-  
-  /* Dimensions relative to parent (undoing parent padding) */
-  margin-top: -1.5rem; 
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
-  
-  /* Visual separation */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border-bottom: 1px solid #1e40af;
-  
-  /* Layout */
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  color: white;
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.ward-title-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.ward-title-badges {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .category-total-badge {
-  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
-  color: #f8fafc; /* Very light gray/white */
-  font-size: 0.875rem;
-  padding: 0.35rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.8rem;
   border-radius: 9999px;
   font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: none;
+}
 
-  margin-bottom: 0; /* Removing margin-bottom from original */
+.category-total-badge.badge-green {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: #10b981;
+}
+
+.category-total-badge.badge-red {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
 }
 
 .class-section {
-  margin-bottom: 2rem;
+  padding: 0 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .class-section:last-child {
@@ -1023,22 +2045,25 @@ const stopAutoScroll = () => {
 }
 
 .class-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.class-name-tag {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .class-total-badge {
-  background: #f8fafc;
-  color: #64748b;
+  background: #f1f5f9;
+  color: #475569;
   font-size: 0.75rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 9999px; /* Pill shape */
-  font-weight: 500;
+  border-radius: 9999px;
+  font-weight: 600;
   border: 1px solid #e2e8f0;
 }
 
@@ -1054,199 +2079,129 @@ const stopAutoScroll = () => {
   border-color: #fecdd3;
 }
 
-.class-title::before {
-  content: '';
-  width: 4px;
-  height: 20px;
-  background: #3b82f6;
-  border-radius: 2px;
-}
-
 .availability-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .availability-card {
   background: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .availability-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
   border-color: #3b82f6;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
 .card-header-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid #f1f5f9;
 }
 
 .bangsal-name {
   font-weight: 700;
   color: #1e293b;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .class-badge {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: #2563eb;
   color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
-.capacity-info {
+.staff-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  background: #f8fafc;
+  padding: 0.6rem;
+  border-radius: 6px;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.capacity-number {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #3b82f6;
-  line-height: 1;
+.stat-metric {
+  display: flex;
+  flex-direction: column;
 }
 
-.capacity-label {
+.stat-metric .stat-title {
+  font-size: 0.7rem;
   color: #64748b;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+  font-weight: 600;
 }
 
-.availability-stats {
-  display: block; /* Full width */
-  margin-bottom: 0; /* Remove bottom margin as it's the last item */
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-}
-
-.stat-item.available {
-  background: #d1fae5;
-}
-
-.stat-item.occupied {
-  background: #fee2e2;
-}
-
-.stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.stat-metric .stat-val {
   font-size: 1.25rem;
-  font-weight: 700;
-  background: white;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.stat-item.available .stat-icon {
-  color: #10b981;
-}
+.stat-metric.empty .stat-val { color: #059669; }
+.stat-metric.filled .stat-val { color: #dc2626; }
+.stat-metric.total .stat-val { color: #1e293b; }
 
-.stat-item.occupied .stat-icon {
-  color: #ef4444;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 0.125rem;
-}
-
-.progress-bar {
-  height: 8px;
+.occupancy-track-staff {
+  height: 6px;
+  width: 100%;
   background: #e2e8f0;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
   margin-bottom: 0.5rem;
 }
 
-.progress-fill {
+.occupancy-bar-fill {
   height: 100%;
-  transition: width 0.3s ease;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.occ-low { background: #10b981; }
+.occ-moderate { background: #3b82f6; }
+.occ-warning { background: #f59e0b; }
+.occ-critical { background: #ef4444; }
+
+.staff-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.badge-status-green {
+  color: #059669;
+  background: #d1fae5;
+  padding: 2px 8px;
   border-radius: 4px;
 }
 
-.progress-fill.low {
-  background: #10b981;
+.badge-status-red {
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
-.progress-fill.moderate {
-  background: #f59e0b;
-}
-
-.progress-fill.warning {
-  background: #f97316;
-}
-
-.progress-fill.critical {
-  background: #ef4444;
-}
-
-.occupancy-text {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #64748b;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.gender-info {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
-}
-
-.gender-item {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  background: #f8fafc;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #475569;
-}
-
-.gender-icon {
-  font-size: 1rem;
-}
-
-
-/* Empty State */
+/* Loading & Empty */
+.loading-state,
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1255,11 +2210,22 @@ const stopAutoScroll = () => {
   padding: 4rem;
   background: white;
   border-radius: 0.75rem;
-  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
 }
 
-.empty-state i {
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
   margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Modal */
@@ -1269,7 +2235,7 @@ const stopAutoScroll = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1279,28 +2245,16 @@ const stopAutoScroll = () => {
 
 .modal-content {
   background: white;
-  border-radius: 1rem;
-  max-width: 500px;
+  border-radius: 0.75rem;
+  max-width: 480px;
   width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
 .modal-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -1309,7 +2263,7 @@ const stopAutoScroll = () => {
 
 .modal-header h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #1e293b;
 }
@@ -1317,23 +2271,10 @@ const stopAutoScroll = () => {
 .close-btn {
   background: none;
   border: none;
-  font-size: 2rem;
-  color: #94a3b8;
+  font-size: 1.5rem;
+  color: #64748b;
   cursor: pointer;
   line-height: 1;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-  background: #f1f5f9;
-  color: #475569;
 }
 
 .modal-body {
@@ -1343,6 +2284,7 @@ const stopAutoScroll = () => {
 .detail-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 0.75rem 0;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -1352,139 +2294,34 @@ const stopAutoScroll = () => {
 }
 
 .detail-label {
-  font-weight: 600;
-  color: #475569;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .detail-value {
+  font-size: 0.925rem;
   color: #1e293b;
 }
 
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+.class-badge-modal {
+  background: #2563eb;
   color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.status-badge.available {
-  background: #10b981;
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-.status-badge.occupied {
-  background: #ef4444;
-}
-
-.status-badge.cleaning {
-  background: #f59e0b;
-}
-
-.status-badge.booked {
-  background: #3b82f6;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .page-header {
-    padding: 1rem !important;
-  }
-
-  .header-content {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 1rem !important;
-  }
-
-  .header-actions {
-    width: 100% !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important;
-  }
-
-  .header-actions .btn {
-    width: 100% !important;
-    justify-content: center !important;
-  }
-
-  /* Room Cards - 2 per row on mobile */
-  .availability-cards {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.5rem !important;
-  }
-
-  .availability-card {
-    padding: 0.75rem !important;
-  }
-
-  .bangsal-name,
-  .room-name {
-    font-size: 0.7rem !important;
-    line-height: 1.2 !important;
-    font-weight: 600 !important;
-  }
-
-  .class-badge {
-    font-size: 0.6rem !important;
-    padding: 0.2rem 0.4rem !important;
-  }
-
-  .stat-number {
-    font-size: 0.75rem !important;
-    font-weight: 700 !important;
-  }
-
-  /* Smaller font for "TERSEDIA" status specifically */
-  .stat-item.available .stat-number {
-    font-size: 0.65rem !important;
-  }
-
-  /* Smaller icon for "TERSEDIA" status */
-  .stat-item.available .stat-icon {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 1rem !important;
-  }
-
-  /* Smaller icon for "TERISI" status - same as available */
-  .stat-item.occupied .stat-icon {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 1rem !important;
-  }
-
-  .stat-label {
-    font-size: 0.6rem !important;
-  }
-
-  .status-info {
-    font-size: 0.65rem !important;
-  }
-
-  .card-header-info {
-    margin-bottom: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-  }
-
-  .availability-stats {
-    gap: 0.4rem !important;
-  }
-
-  .stat-item {
-    padding: 0.5rem !important;
-  }
-
-  .bed-grid {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 0.75rem;
-  }
-  
-  .filter-section {
-    grid-template-columns: 1fr;
-  }
-  
-  .legend-section {
-    gap: 1rem;
-  }
-}
+.status-badge.available { background: #d1fae5; color: #065f46; }
+.status-badge.occupied { background: #fee2e2; color: #991b1b; }
+.status-badge.cleaning { background: #fef3c7; color: #92400e; }
+.status-badge.booked { background: #dbeafe; color: #1e40af; }
 </style>
