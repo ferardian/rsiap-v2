@@ -109,8 +109,20 @@ const keuanganTarifService = {
   },
   
   // 5. Tarif Radiologi
+  getNextKodeRadiologi: (params) => {
+    return api.get('/keuangan/tarif/radiologi/kode', { params })
+  },
   getTarifRadiologi: (params) => {
     return api.get('/keuangan/tarif/radiologi', { params })
+  },
+  postTarifRadiologi: (data) => {
+    return api.post('/keuangan/tarif/radiologi', data)
+  },
+  putTarifRadiologi: (id, data) => {
+    return api.post(`/keuangan/tarif/radiologi/${id}`, data)
+  },
+  deleteTarifRadiologi: (id) => {
+    return api.delete(`/keuangan/tarif/radiologi/${id}`)
   }
 }
 
