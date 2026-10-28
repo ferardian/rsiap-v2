@@ -557,6 +557,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/keuangan/rekap-radiologi',
+    name: 'RekapRadiologi',
+    component: () => import('../views/keuangan/RekapRadiologiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/helpdesk/tiket-masuk',
     name: 'TiketMasukHelpdesk',
     component: () => import('../views/helpdesk/TiketMasukView.vue'),
