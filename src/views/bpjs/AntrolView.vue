@@ -107,13 +107,33 @@
     
     <!-- Alerts for Missing Queues -->
     <div v-if="missingQueues.length > 0" class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 animate__animated animate__headShake">
-      <div class="d-flex align-items-center gap-3 mb-3">
-        <div class="bg-warning bg-opacity-25 rounded-circle p-2 px-3">
-           <i class="fas fa-exclamation-triangle text-warning fa-lg"></i>
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="bg-warning bg-opacity-25 rounded-circle p-2 px-3">
+             <i class="fas fa-exclamation-triangle text-warning fa-lg"></i>
+          </div>
+          <div>
+            <h6 class="m-0 fw-bold text-dark">Peringatan Antrean Online</h6>
+            <p class="mb-0 small text-muted">Ditemukan {{ missingQueues.length }} pasien yang sudah memiliki SEP tapi belum masuk ke data antrean online.</p>
+          </div>
         </div>
-        <div>
-          <h6 class="m-0 fw-bold text-dark">Peringatan Antrean Online</h6>
-          <p class="mb-0 small text-muted">Ditemukan {{ missingQueues.length }} pasien yang sudah memiliki SEP tapi belum masuk ke data antrean online.</p>
+        <div v-if="canUpdate">
+          <button 
+            v-if="isFilterToday"
+            class="btn btn-sm btn-primary rounded-pill px-3 py-1 shadow-sm fw-bold"
+            :disabled="isRegisteringBatch || loading"
+            @click="registerAllMissingQueues"
+          >
+            <i class="fas me-1" :class="isRegisteringBatch ? 'fa-spinner fa-spin' : 'fa-plus-circle'"></i>
+            Daftarkan Semua ({{ missingQueues.length }})
+          </button>
+          <span 
+            v-else 
+            class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill fw-medium"
+            title="Antrean tanggal lampau tidak dapat didaftarkan susulan ke sistem BPJS"
+          >
+            <i class="fas fa-history me-1"></i> Data Lampau (Mode Audit)
+          </span>
         </div>
       </div>
       <div class="table-responsive bg-white rounded-3 shadow-sm">
@@ -125,6 +145,7 @@
               <th class="py-1">No. Rawat</th>
               <th class="py-1">No. SEP</th>
               <th class="text-center py-2">Info</th>
+              <th v-if="canUpdate" class="text-center py-2" style="width: 150px;">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -134,6 +155,27 @@
               <td class="text-muted">{{ sep.no_rawat }}</td>
               <td class="small">{{ sep.no_sep }}</td>
               <td class="text-center"><span class="badge bg-danger-subtle text-danger rounded-pill px-3">Belum Antrean</span></td>
+              <td v-if="canUpdate" class="text-center">
+                <button 
+                  v-if="isFilterToday"
+                  class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold"
+                  style="font-size: 0.75rem;"
+                  :disabled="registeringRawat === sep.no_rawat || isRegisteringBatch"
+                  @click="registerSingleQueue(sep)"
+                  title="Daftarkan antrean ini ke BPJS Online (Hari ini)"
+                >
+                  <i class="fas me-1" :class="registeringRawat === sep.no_rawat ? 'fa-spinner fa-spin' : 'fa-plus-circle'"></i>
+                  Daftarkan
+                </button>
+                <span 
+                  v-else 
+                  class="badge bg-secondary-subtle text-muted rounded-pill px-2 py-1"
+                  style="font-size: 0.72rem;"
+                  title="Antrean tanggal lampau tidak dapat disusulkan ke BPJS"
+                >
+                  <i class="fas fa-lock me-1"></i>Tanggal Lampau
+                </span>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -687,6 +729,8 @@ const taskLoading = ref(null)
 const syncLoading = ref(null)
 const bulkSyncLoading = ref(null)
 const isBulkingAll = ref(false)
+const registeringRawat = ref(null)
+const isRegisteringBatch = ref(false)
 const showBulkSyncModal = ref(false)
 const selectedBulkSyncItem = ref(null)
 const taskList = ref([])
@@ -724,6 +768,11 @@ const filters = reactive({
   status: '',
   poli: '',
   dokter: ''
+})
+
+const todayDateStr = computed(() => new Date().toISOString().split('T')[0])
+const isFilterToday = computed(() => {
+  return filters.tanggal === todayDateStr.value && filters.tgl_akhir === todayDateStr.value
 })
 
 // Reset dokter filter when poli changes (dokter list is poli-scoped)
@@ -1170,6 +1219,116 @@ const bulkSyncAllShown = async () => {
     } finally {
       isBulkingAll.value = false
     }
+  }
+}
+
+const registerSingleQueue = async (sep) => {
+  if (!isFilterToday.value) {
+    return toast.warning('Penambahan antrean ke BPJS hanya dapat dilakukan untuk data pelayanan hari ini.')
+  }
+
+  const result = await Swal.fire({
+    title: 'Daftarkan ke Antrean Online?',
+    html: `Daftarkan antrean BPJS untuk pasien <b>${sep.nama_pasien}</b> (No. Rawat: <code>${sep.no_rawat}</code>)?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#aaa',
+    confirmButtonText: 'Ya, Daftarkan!',
+    cancelButtonText: 'Batal'
+  })
+
+  if (!result.isConfirmed) return
+
+  registeringRawat.value = sep.no_rawat
+  try {
+    const res = await bpjsAntrolService.addAntreanByNoRawat(sep.no_rawat)
+    if (res.data.metadata.code === 200 || res.data.metadata.code === 208) {
+      toast.success(res.data.metadata.message || 'Antrean berhasil didaftarkan ke BPJS!')
+      await fetchAntrolData()
+    } else {
+      Swal.fire({
+        title: 'Ditolak BPJS',
+        html: `<div class="text-start">
+          <p class="mb-2">BPJS Antrol menolak penambahan antrean untuk pasien ini:</p>
+          <div class="alert alert-danger py-2 px-3 small font-monospace">${res.data.metadata.message || 'Respons tidak valid dari BPJS'}</div>
+          <small class="text-muted">Catatan: Hal ini biasanya terjadi jika rujukan/SKDP sudah terkunci oleh penerbitan SEP sebelumnya, atau jadwal praktek dokter di HFIS BPJS sudah lewat.</small>
+        </div>`,
+        icon: 'warning'
+      })
+    }
+  } catch (error) {
+    console.error(error)
+    const errMsg = error.response?.data?.metadata?.message || error.message || 'Gagal menghubungi server BPJS'
+    Swal.fire({
+      title: 'Ditolak BPJS',
+      html: `<div class="text-start">
+        <p class="mb-2">Gagal mendaftarkan antrean ke BPJS:</p>
+        <div class="alert alert-danger py-2 px-3 small font-monospace">${errMsg}</div>
+        <small class="text-muted">Kemungkinan nomor rujukan/SKDP telah digunakan pada SEP atau kuota/jam dokter sudah lewat.</small>
+      </div>`,
+      icon: 'error'
+    })
+  } finally {
+    registeringRawat.value = null
+  }
+}
+
+const registerAllMissingQueues = async () => {
+  if (!isFilterToday.value) {
+    return toast.warning('Penambahan antrean ke BPJS hanya dapat dilakukan untuk data pelayanan hari ini.')
+  }
+
+  if (missingQueues.value.length === 0) return
+
+  const result = await Swal.fire({
+    title: 'Daftarkan Semua Antrean Hari Ini?',
+    html: `Anda akan mendaftarkan <b>${missingQueues.value.length} antrean</b> ke BPJS Online sekaligus. Lanjutkan?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#aaa',
+    confirmButtonText: 'Ya, Daftarkan Semua!',
+    cancelButtonText: 'Batal'
+  })
+
+  if (!result.isConfirmed) return
+
+  isRegisteringBatch.value = true
+  let successCount = 0
+  let failCount = 0
+  const errors = []
+
+  try {
+    for (const sep of missingQueues.value) {
+      try {
+        const res = await bpjsAntrolService.addAntreanByNoRawat(sep.no_rawat)
+        if (res.data.metadata.code === 200 || res.data.metadata.code === 208) {
+          successCount++
+        } else {
+          failCount++
+          errors.push(`• <b>${sep.nama_pasien}</b>: ${res.data.metadata.message}`)
+        }
+      } catch (err) {
+        failCount++
+        const msg = err.response?.data?.metadata?.message || err.message
+        errors.push(`• <b>${sep.nama_pasien}</b>: ${msg}`)
+      }
+    }
+
+    await fetchAntrolData()
+
+    if (failCount === 0) {
+      Swal.fire('Sukses', `Berhasil mendaftarkan seluruh ${successCount} antrean ke BPJS Online!`, 'success')
+    } else {
+      Swal.fire({
+        title: 'Selesai Sebagian',
+        html: `Berhasil: <b class="text-success">${successCount}</b> | Gagal: <b class="text-danger">${failCount}</b><br><div class="text-start mt-3 small text-muted p-2 bg-light rounded" style="max-height: 180px; overflow-y: auto;">${errors.join('<br>')}</div>`,
+        icon: 'info'
+      })
+    }
+  } finally {
+    isRegisteringBatch.value = false
   }
 }
 

@@ -62,6 +62,12 @@ const bpjsAntrolService = {
      * @param {object} payload { kodebooking, keterangan }
      */
     cancelAntrean: (payload) => api.post('/bpjs/antrol/antrean/batal', payload),
+
+    /**
+     * Daftarkan antrean ke BPJS online langsung berdasarkan no_rawat
+     * @param {string} no_rawat
+     */
+    addAntreanByNoRawat: (no_rawat) => api.post('/bpjs/antrol/antrean/add-by-norawat', { no_rawat }),
 };
 
 export default bpjsAntrolService;
