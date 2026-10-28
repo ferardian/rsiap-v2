@@ -665,13 +665,29 @@ const formatTimeRange = (start, end) => {
 }
 
 const formatDateOnly = (dateStr) => {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+  if (!dateStr || dateStr === '0000-00-00 00:00:00' || dateStr === '0000-00-00') return '-'
+  const dStr = dateStr.includes(' ') ? dateStr.split(' ')[0] : dateStr
+  const parts = dStr.split('-')
+  if (parts.length === 3) {
+    const year = parts[0]
+    const monthIdx = parseInt(parts[1], 10) - 1
+    const day = parts[2]
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+    return `${day} ${months[monthIdx] || parts[1]} ${year}`
+  }
+  return dateStr
 }
 
 const formatTimeOnly = (dateStr) => {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  if (!dateStr || dateStr === '0000-00-00 00:00:00') return '-'
+  if (dateStr.includes(' ')) {
+    const timePart = dateStr.split(' ')[1]
+    return timePart.substring(0, 5)
+  }
+  if (dateStr.includes(':')) {
+    return dateStr.substring(0, 5)
+  }
+  return '-'
 }
 
 const formatDateTime = (dateStr) => {
