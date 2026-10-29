@@ -36,6 +36,9 @@
         <div v-else-if="activeTab === 'mapping-jabatan'" key="mapping-jabatan">
           <MappingJabatanModule />
         </div>
+        <div v-else-if="activeTab === 'pendidikan'" key="pendidikan">
+          <PendidikanModule />
+        </div>
       </transition>
     </div>
   </div>
@@ -46,6 +49,7 @@ import { ref } from 'vue';
 import DepartemenModule from './components/DepartemenModule.vue';
 import JabatanModule from './components/JabatanModule.vue';
 import MappingJabatanModule from './components/MappingJabatanModule.vue';
+import PendidikanModule from './components/PendidikanModule.vue';
 
 const activeTab = ref('departemen');
 
@@ -53,6 +57,7 @@ const tabs = [
   { id: 'departemen', label: 'Departemen', icon: 'fas fa-building' },
   { id: 'jabatan', label: 'Jabatan', icon: 'fas fa-user-tie' },
   { id: 'mapping-jabatan', label: 'Mapping Jabatan', icon: 'fas fa-sitemap' },
+  { id: 'pendidikan', label: 'Pendidikan', icon: 'fas fa-graduation-cap' },
 ];
 </script>
 
