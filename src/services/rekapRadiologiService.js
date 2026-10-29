@@ -9,6 +9,9 @@ const rekapRadiologiService = {
   },
   getDokterRadiologi: () => {
     return api.get('/keuangan/radiologi/rekap/dokter')
+  },
+  getPenjab: () => {
+    return api.get('/keuangan/radiologi/rekap/penjab')
   }
 }
 
