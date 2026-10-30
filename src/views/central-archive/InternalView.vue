@@ -566,6 +566,7 @@ const openAddModal = () => {
   isEdit.value = false
   withUndangan.value = false
   formRecipients.value = []
+  recipients.value = []
   formData.value = {
     id: null,
     perihal: '',
@@ -586,6 +587,7 @@ const openEditModal = (item) => {
   isEdit.value = true
   withUndangan.value = !!item.undangan
   formRecipients.value = []
+  recipients.value = []
   
   // If invitation exists, load recipients for preview
   if (item.undangan) {
@@ -615,7 +617,9 @@ const openEditModal = (item) => {
 const loadFormRecipients = async (undanganId) => {
   try {
     const response = await suratInternalService.getPenerima(undanganId)
-    formRecipients.value = (response.data.data || []).map(r => r.penerima)
+    const data = response.data.data || []
+    recipients.value = data
+    formRecipients.value = data.map(r => r.penerima)
   } catch (err) {
     console.error('Error loading form recipients:', err)
   }
@@ -708,22 +712,36 @@ const saveSurat = async () => {
 
 const openFormRecipientModal = () => {
   isFormRecipient.value = true
-  // Mock recipients for modal preview
-  recipients.value = formRecipients.value.map(nik => ({
-    penerima: nik,
-    pegawai: pegawaiList.value.find(p => p.nik === nik)
-  }))
+  // Sync recipients array with formRecipients while preserving existing details
+  recipients.value = formRecipients.value.map(nik => {
+    const existing = recipients.value.find(r => (r.penerima === nik || r.nik === nik))
+    if (existing) return existing
+    const fromPegawai = pegawaiList.value.find(p => p.nik === nik)
+    return {
+      penerima: nik,
+      nik: nik,
+      nama: fromPegawai?.nama || nik,
+      detail: fromPegawai ? { nama: fromPegawai.nama } : null
+    }
+  })
   showRecipientModal.value = true
 }
 
 const getPegawaiName = (nik) => {
   if (!nik) return '-'
-  const p = pegawaiList.value.find(p => p.nik === nik)
-  if (p) return p.nama
   
-  // Fallback find in current recipients
+  // 1. Look in recipients first (contains full details from API or selection modal)
   const rec = recipients.value.find(r => (r.penerima === nik || r.nik === nik))
-  return rec?.detail?.nama || rec?.pegawai?.nama || rec?.nama || nik
+  const nameFromRec = rec?.detail?.nama || rec?.pegawai?.nama || rec?.nama
+  if (nameFromRec && nameFromRec !== nik) {
+    return nameFromRec
+  }
+
+  // 2. Look in pegawaiList
+  const p = pegawaiList.value.find(p => p.nik === nik)
+  if (p?.nama) return p.nama
+  
+  return nameFromRec || nik
 }
 
 const confirmDelete = (item) => {
@@ -784,9 +802,17 @@ const openRecipientModal = () => {
   showRecipientModal.value = true
 }
 
-const saveBulkRecipients = async (nikList) => {
+const saveBulkRecipients = async (nikList, fullList = []) => {
   if (isFormRecipient.value) {
     formRecipients.value = nikList
+    if (fullList && fullList.length > 0) {
+      recipients.value = fullList.map(e => ({
+        penerima: e.nik,
+        nik: e.nik,
+        nama: e.nama,
+        detail: { nama: e.nama }
+      }))
+    }
     showRecipientModal.value = false
     isFormRecipient.value = false
     return

@@ -295,7 +295,7 @@ const changePage = (page) => {
 }
 
 const handleSave = () => {
-  emit('save', selectedEmployees.value.map(e => e.nik))
+  emit('save', selectedEmployees.value.map(e => e.nik), selectedEmployees.value)
 }
 
 // Watchers
@@ -306,7 +306,7 @@ watch(() => props.show, (newVal) => {
       if (typeof rec === 'string') return { nik: rec, nama: rec }
       return {
         nik: rec.penerima || rec.nik,
-        nama: rec.pegawai?.nama || rec.detail?.nama || rec.nama || rec.nik
+        nama: rec.detail?.nama || rec.pegawai?.nama || rec.nama || rec.penerima || rec.nik
       }
     })
     
