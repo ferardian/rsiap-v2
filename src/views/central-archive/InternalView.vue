@@ -583,6 +583,14 @@ const openAddModal = () => {
   showModal.value = true
 }
 
+const toDatetimeLocal = (dateStr) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 const openEditModal = (item) => {
   isEdit.value = true
   withUndangan.value = !!item.undangan
@@ -602,7 +610,7 @@ const openEditModal = (item) => {
     status: item.status,
     catatan: item.catatan,
     undangan: item.undangan ? {
-      tanggal: item.undangan.tanggal.replace(' ', 'T').substring(0, 16),
+      tanggal: toDatetimeLocal(item.undangan.tanggal),
       lokasi: item.undangan.lokasi,
       deskripsi: item.undangan.deskripsi
     } : {
