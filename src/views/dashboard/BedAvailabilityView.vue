@@ -22,7 +22,7 @@
             :class="{ active: displayViewMode === 'carousel' }"
             @click="displayViewMode = 'carousel'"
           >
-            <i class="fas fa-clone"></i> Mode Slide
+            <i class="fas fa-map-marked-alt"></i> Denah Spasial (Slide)
           </button>
           <button 
             class="mode-btn" 
@@ -131,78 +131,144 @@
         <p>Memuat data tempat tidur dari SIMRS...</p>
       </div>
 
-      <!-- VIEW A: CAROUSEL SLIDE MODE -->
+      <!-- VIEW A: CAROUSEL SLIDE MODE (DENAH SPASIAL PUBLIK TV - TANPA IDENTITAS PASIEN) -->
       <div v-else-if="displayViewMode === 'carousel'" class="carousel-container">
         <transition name="signage-slide" mode="out-in">
-          <div :key="currentSlideIndex" class="slide-content-grid">
+          <div :key="currentSlideIndex" class="tv-slide-content-grid">
             <div 
-              v-for="(classGroups, wardName) in currentSlideData" 
-              :key="wardName" 
-              class="signage-ward-card"
+              v-for="pavilion in currentSlideData" 
+              :key="pavilion.name" 
+              class="tv-pavilion-card"
             >
-              <!-- Ward Header -->
-              <div class="ward-card-header">
-                <div class="ward-title-group">
-                  <span class="ward-badge-icon"><i class="fas fa-door-open"></i></span>
-                  <h2 class="ward-name-text">{{ wardName }}</h2>
+              <!-- TV Pavilion Header -->
+              <div class="tv-pavilion-header">
+                <div class="tv-pavilion-title-group">
+                  <div class="tv-pavilion-icon">
+                    <i :class="['fas', pavilion.icon || 'fa-hospital']"></i>
+                  </div>
+                  <div>
+                    <h2 class="tv-pavilion-name">{{ pavilion.name }}</h2>
+                    <span class="tv-pavilion-tag">{{ pavilion.tag }} • {{ pavilion.beds.length }} Tempat Tidur</span>
+                  </div>
                 </div>
-                <div class="ward-pill-stats">
-                  <span class="stat-pill total">
-                    Kapasitas: <strong>{{ getCategoryTotal(classGroups) }}</strong>
-                  </span>
-                  <span class="stat-pill empty">
-                    Kosong: <strong>{{ getCategoryEmpty(classGroups) }}</strong>
-                  </span>
-                  <span class="stat-pill filled">
-                    Terisi: <strong>{{ getCategoryFilled(classGroups) }}</strong>
-                  </span>
+
+                <div class="tv-pavilion-stats-group">
+                  <div class="tv-stat-pill available">
+                    <span class="tv-stat-dot green"></span>
+                    <span class="tv-stat-val">{{ pavilion.stats.tersedia }}</span>
+                    <span class="tv-stat-lbl">Tersedia</span>
+                  </div>
+                  <div class="tv-stat-pill occupied">
+                    <span class="tv-stat-dot red"></span>
+                    <span class="tv-stat-val">{{ pavilion.stats.terisi }}</span>
+                    <span class="tv-stat-lbl">Terisi</span>
+                  </div>
+                  <div class="tv-occupancy-gauge">
+                    <div class="tv-gauge-track">
+                      <div 
+                        class="tv-gauge-fill" 
+                        :style="{ width: getOccupancyPercent(pavilion.stats) + '%' }"
+                      ></div>
+                    </div>
+                    <span class="tv-gauge-text">{{ getOccupancyPercent(pavilion.stats) }}% Okupansi</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Ward Classes Grid -->
-              <div class="ward-class-cards-container">
+              <!-- TV Beds Grid (High Visibility Spatial Grid - STRICTLY ANONYMOUS) -->
+              <div class="tv-beds-grid">
                 <div 
-                  v-for="group in classGroups" 
-                  :key="group.kelas" 
-                  class="signage-class-card"
+                  v-for="bed in pavilion.beds" 
+                  :key="bed.kd_kamar"
+                  class="tv-bed-tile"
+                  :class="getBedStatusClass(bed)"
                 >
-                  <div class="class-card-topbar">
-                    <span class="class-name-badge">{{ group.kelas }}</span>
-                    <span class="class-rooms-badge">
-                      {{ getGroupRoomCodes(group) }}
+                  <!-- Tile Top: Bed Label & Kelas -->
+                  <div class="tv-tile-head">
+                    <span class="tv-tile-number">
+                      <i class="fas fa-bed"></i> {{ bed.bed_label || bed.kd_kamar }}
+                    </span>
+                    <span class="tv-class-pill" :class="getClassClass(bed.kelas)">
+                      {{ bed.kelas }}
                     </span>
                   </div>
 
-                  <div class="class-card-kpi-row">
-                    <!-- Angka Kosong / Tersedia (Fokus Utama) -->
-                    <div class="card-kpi-cell available-cell">
-                      <span class="cell-tag">TERSEDIA</span>
-                      <span class="cell-number text-emerald">{{ getClassEmpty(group) }}</span>
-                    </div>
-                    <!-- Angka Terisi -->
-                    <div class="card-kpi-cell occupied-cell">
-                      <span class="cell-tag">TERISI</span>
-                      <span class="cell-number text-red">{{ getClassFilled(group) }}</span>
-                    </div>
-                    <!-- Total Kapasitas -->
-                    <div class="card-kpi-cell total-cell">
-                      <span class="cell-tag">KAPASITAS</span>
-                      <span class="cell-number text-dark">{{ getClassTotal(group) }}</span>
-                    </div>
+                  <!-- Tile Body: Big Status Visual (NO PATIENT INFO) -->
+                  <div class="tv-tile-body">
+                    <!-- TERISI -->
+                    <template v-if="bed.effective_status === 'ISI'">
+                      <div class="tv-status-state occupied">
+                        <div class="tv-status-icon-circle occupied">
+                          <i class="fas fa-user-lock"></i>
+                        </div>
+                        <div class="tv-status-texts">
+                          <span class="tv-status-title">TERISI</span>
+                          <span class="tv-status-subtitle">Sedang Digunakan</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- TERSEDIA / KOSONG -->
+                    <template v-else-if="bed.effective_status === 'KOSONG'">
+                      <div class="tv-status-state available">
+                        <div class="tv-status-icon-circle available">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <div class="tv-status-texts">
+                          <span class="tv-status-title">SIAP PAKAI</span>
+                          <span class="tv-status-subtitle" v-if="bed.trf_kamar > 0">
+                            {{ formatRupiah(bed.trf_kamar) }}/hr
+                          </span>
+                          <span class="tv-status-subtitle" v-else>Tersedia</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- RENCANA PULANG -->
+                    <template v-else-if="bed.effective_status === 'RENCANA_PULANG'">
+                      <div class="tv-status-state discharge">
+                        <div class="tv-status-icon-circle discharge">
+                          <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="tv-status-texts">
+                          <span class="tv-status-title">RENCANA PLG</span>
+                          <span class="tv-status-subtitle">Persiapan Pulang</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- STERILISASI -->
+                    <template v-else-if="bed.effective_status === 'DIBERSIHKAN'">
+                      <div class="tv-status-state cleaning">
+                        <div class="tv-status-icon-circle cleaning">
+                          <i class="fas fa-broom"></i>
+                        </div>
+                        <div class="tv-status-texts">
+                          <span class="tv-status-title">STERILISASI</span>
+                          <span class="tv-status-subtitle">Pembersihan Ruang</span>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- BOOKING -->
+                    <template v-else-if="bed.effective_status === 'DIBOOKING'">
+                      <div class="tv-status-state booking">
+                        <div class="tv-status-icon-circle booking">
+                          <i class="fas fa-bookmark"></i>
+                        </div>
+                        <div class="tv-status-texts">
+                          <span class="tv-status-title">RESERVASI</span>
+                          <span class="tv-status-subtitle">Telah Dibooking</span>
+                        </div>
+                      </div>
+                    </template>
                   </div>
 
-                  <!-- Mini Occupancy Track -->
-                  <div class="class-occupancy-track">
-                    <div 
-                      class="occupancy-fill-bar" 
-                      :style="{ width: `${getClassOccupancyRate(group)}%` }"
-                      :class="getOccupancyLevelClass(getClassOccupancyRate(group))"
-                    ></div>
-                  </div>
-                  <div class="occupancy-caption">
-                    <span>Okupansi: {{ getClassOccupancyRate(group) }}%</span>
-                    <span v-if="getClassEmpty(group) === 0" class="badge-full">PENUH</span>
-                    <span v-else class="badge-avail">TERSEDIA</span>
+                  <!-- Tile Footer -->
+                  <div class="tv-tile-foot">
+                    <span class="tv-foot-status-badge" :class="getBedStatusClass(bed)">
+                      {{ getStatusLabel(bed.effective_status) }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -752,57 +818,85 @@ const groupedBeds = computed(() => {
   return finalGrouped
 })
 
-// Slides for Carousel Mode (Dinamis dan proporsional untuk TV)
+// Slides for Carousel Mode (Denah Spasial Paviliun TV Publik - Bersih & Proporsional)
 const displaySlides = computed(() => {
-  const wardNames = Object.keys(groupedBeds.value)
-  if (!wardNames.length) return []
+  const pavs = bedMapData.value.pavilions || []
+  if (!pavs.length) return []
   
   const slides = []
-  let currentChunk = {}
-  let currentCardCount = 0
-  let currentWardCount = 0
+  let currentGroup = []
+  let currentBedCount = 0
 
-  wardNames.forEach((name) => {
-    const wardGroups = groupedBeds.value[name] || []
-    const classCount = wardGroups.length || 1
+  pavs.forEach((pav) => {
+    const bedCount = pav.beds?.length || 0
 
-    // Jika melebihi 6 kartu atau sudah 3 bangsal, buat slide baru
-    if (currentWardCount > 0 && (currentCardCount + classCount > 6 || currentWardCount >= 3)) {
-      slides.push(currentChunk)
-      currentChunk = {}
-      currentCardCount = 0
-      currentWardCount = 0
+    // Jika paviliun banyak bed (>14) buat slide tersendiri, atau gabung maks 2 paviliun / 16 bed
+    if (currentGroup.length > 0 && (currentBedCount + bedCount > 15 || currentGroup.length >= 2)) {
+      slides.push(currentGroup)
+      currentGroup = []
+      currentBedCount = 0
     }
 
-    currentChunk[name] = wardGroups
-    currentCardCount += classCount
-    currentWardCount += 1
+    currentGroup.push(pav)
+    currentBedCount += bedCount
   })
 
-  if (Object.keys(currentChunk).length > 0) {
-    // Jika slide terakhir hanya berisi 1 bangsal kecil dan slide sebelumnya masih longgar, gabungkan
-    if (slides.length > 0 && currentCardCount <= 2 && Object.keys(currentChunk).length === 1) {
-      const lastSlide = slides[slides.length - 1]
-      const lastSlideCardCount = Object.values(lastSlide).reduce((sum, g) => sum + g.length, 0)
-      if (lastSlideCardCount + currentCardCount <= 6) {
-        Object.assign(lastSlide, currentChunk)
-      } else {
-        slides.push(currentChunk)
-      }
-    } else {
-      slides.push(currentChunk)
-    }
+  if (currentGroup.length > 0) {
+    slides.push(currentGroup)
   }
 
   return slides
 })
 
-// Current Slide Data
+// Current Slide Data (Array of Pavilions)
 const currentSlideData = computed(() => {
-  if (!displaySlides.value.length) return {}
+  if (!displaySlides.value.length) return []
   const safeIndex = currentSlideIndex.value % displaySlides.value.length
-  return displaySlides.value[safeIndex] || {}
+  return displaySlides.value[safeIndex] || []
 })
+
+// Helpers for Spatial Bed Display
+const getOccupancyPercent = (stats) => {
+  if (!stats || !stats.total || stats.total === 0) return 0
+  return Math.round((stats.terisi / stats.total) * 100)
+}
+
+const formatRupiah = (val) => {
+  if (!val || val === 0) return 'Rp 0'
+  return 'Rp ' + Number(val).toLocaleString('id-ID')
+}
+
+const getBedStatusClass = (bed) => {
+  if (!bed) return ''
+  if (bed.effective_status === 'RENCANA_PULANG') return 'status-discharge'
+  if (bed.status === 'ISI') return 'status-occupied'
+  if (bed.status === 'KOSONG') return 'status-available'
+  if (bed.status === 'DIBOOKING') return 'status-booking'
+  if (bed.status === 'DIBERSIHKAN') return 'status-cleaning'
+  return 'status-available'
+}
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'KOSONG': return 'Tersedia'
+    case 'ISI': return 'Terisi'
+    case 'RENCANA_PULANG': return 'Rencana Pulang'
+    case 'DIBOOKING': return 'Dibooking'
+    case 'DIBERSIHKAN': return 'Sterilisasi'
+    default: return status || 'Tersedia'
+  }
+}
+
+const getClassClass = (kelas) => {
+  if (!kelas) return 'class-general'
+  const k = kelas.toLowerCase()
+  if (k.includes('vip')) return 'class-vip'
+  if (k.includes('1')) return 'class-1'
+  if (k.includes('2')) return 'class-2'
+  if (k.includes('3')) return 'class-3'
+  if (k.includes('utama')) return 'class-utama'
+  return 'class-general'
+}
 
 // Matrix View Columns (2 balanced columns)
 const matrixColumns = computed(() => {
@@ -1427,7 +1521,15 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.slide-content-grid {
+/* TV Carousel Layout */
+.carousel-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tv-slide-content-grid {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1436,190 +1538,285 @@ onUnmounted(() => {
   align-items: stretch;
 }
 
-.signage-ward-card {
+.tv-pavilion-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  gap: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
-.ward-card-header {
+.tv-pavilion-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 0.6rem;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 1rem;
 }
 
-.ward-title-group {
+.tv-pavilion-title-group {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.ward-badge-icon {
-  width: 32px;
-  height: 32px;
+.tv-pavilion-icon {
+  width: 48px;
+  height: 48px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  border-radius: 6px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #2563eb;
-  font-size: 0.9rem;
+  font-size: 1.35rem;
 }
 
-.ward-name-text {
-  font-size: 1.15rem;
+.tv-pavilion-name {
+  font-size: 1.5rem;
   font-weight: 800;
   color: #0f172a;
   margin: 0;
-  letter-spacing: 0.03em;
+  letter-spacing: -0.01em;
 }
 
-.ward-pill-stats {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.stat-pill {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 6px;
+.tv-pavilion-tag {
+  font-size: 0.9rem;
+  color: #64748b;
   font-weight: 600;
 }
 
-.stat-pill.total {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+.tv-pavilion-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.stat-pill.empty {
+.tv-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.tv-stat-pill.available {
   background: #ecfdf5;
-  color: #047857;
+  color: #065f46;
   border: 1px solid #a7f3d0;
 }
 
-.stat-pill.filled {
+.tv-stat-pill.occupied {
   background: #fef2f2;
-  color: #b91c1c;
+  color: #991b1b;
   border: 1px solid #fecaca;
 }
 
-/* Ward Class Cards Container */
-.ward-class-cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
-  gap: 1rem;
-  justify-content: flex-start;
+.tv-stat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
+.tv-stat-dot.green { background: #10b981; }
+.tv-stat-dot.red { background: #ef4444; }
 
-.signage-class-card {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
+.tv-occupancy-gauge {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 4px;
+  min-width: 130px;
 }
 
-.class-card-topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.class-name-badge {
-  background: #1e40af;
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-.class-rooms-badge {
-  font-size: 0.7rem;
-  color: #64748b;
-  font-family: monospace;
-  font-weight: 600;
-}
-
-.class-card-kpi-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.card-kpi-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cell-tag {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.04em;
-}
-
-.cell-number {
-  font-size: 1.4rem;
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.text-emerald { color: #059669; }
-.text-red { color: #dc2626; }
-.text-dark { color: #0f172a !important; }
-.text-white { color: #0f172a !important; }
-
-.class-occupancy-track {
-  height: 6px;
-  width: 100%;
+.tv-gauge-track {
+  height: 8px;
   background: #e2e8f0;
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
-.occupancy-fill-bar {
+.tv-gauge-fill {
   height: 100%;
-  border-radius: 3px;
+  background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+  border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-.occupancy-caption {
+.tv-gauge-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-align: right;
+}
+
+/* TV Beds Matrix Grid */
+.tv-beds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 1280px) {
+  .tv-beds-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.tv-bed-tile {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 145px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Status Colors for TV Tiles */
+.tv-bed-tile.status-available {
+  border-color: #86efac;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 60%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+}
+
+.tv-bed-tile.status-occupied {
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 60%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+}
+
+.tv-bed-tile.status-discharge {
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 60%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
+}
+
+.tv-bed-tile.status-cleaning {
+  border-color: #fed7aa;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 60%);
+}
+
+.tv-bed-tile.status-booking {
+  border-color: #d8b4fe;
+  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 60%);
+}
+
+.tv-tile-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.tv-tile-number {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tv-class-pill {
+  font-size: 0.725rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.tv-class-pill.class-vip { background: #fef08a; color: #854d0e; }
+.tv-class-pill.class-utama { background: #fbcfe8; color: #9d174d; }
+.tv-class-pill.class-1 { background: #dbeafe; color: #1e40af; }
+.tv-class-pill.class-2 { background: #e0e7ff; color: #3730a3; }
+.tv-class-pill.class-3 { background: #f1f5f9; color: #475569; }
+.tv-class-pill.class-general { background: #f1f5f9; color: #475569; }
+
+.tv-tile-body {
+  padding: 10px 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.tv-status-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.tv-status-icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.tv-status-icon-circle.available { background: #10b981; }
+.tv-status-icon-circle.occupied { background: #ef4444; }
+.tv-status-icon-circle.discharge { background: #f59e0b; }
+.tv-status-icon-circle.cleaning { background: #ea580c; }
+.tv-status-icon-circle.booking { background: #8b5cf6; }
+
+.tv-status-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+.tv-status-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.tv-status-state.available .tv-status-title { color: #15803d; }
+.tv-status-state.occupied .tv-status-title { color: #b91c1c; }
+.tv-status-state.discharge .tv-status-title { color: #b45309; }
+.tv-status-state.cleaning .tv-status-title { color: #c2410c; }
+.tv-status-state.booking .tv-status-title { color: #6b21a8; }
+
+.tv-status-subtitle {
+  font-size: 0.8rem;
   color: #64748b;
   font-weight: 600;
 }
 
-.badge-full {
-  color: #dc2626;
-  font-weight: 700;
+.tv-tile-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
 }
 
-.badge-avail {
-  color: #059669;
+.tv-foot-status-badge {
+  font-size: 0.725rem;
   font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
 }
+
+.tv-foot-status-badge.status-available { background: #dcfce7; color: #15803d; }
+.tv-foot-status-badge.status-occupied { background: #fee2e2; color: #b91c1c; }
+.tv-foot-status-badge.status-discharge { background: #fef3c7; color: #b45309; }
+.tv-foot-status-badge.status-cleaning { background: #ffedd5; color: #c2410c; }
+.tv-foot-status-badge.status-booking { background: #f3e8ff; color: #6b21a8; }
 
 /* Matrix Table View */
 .matrix-container {
