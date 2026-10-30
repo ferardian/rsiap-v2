@@ -1,13 +1,13 @@
 <template>
   <div class="bed-map-container">
-    <!-- Quick Search & Status Highlight Bar -->
+    <!-- Top Toolbar: Search & Status Filters -->
     <div class="map-toolbar">
-      <div class="toolbar-search">
+      <div class="search-box">
         <i class="fas fa-search search-icon"></i>
         <input 
           v-model="searchQuery" 
           type="text" 
-          placeholder="Cari bed, ruangan, atau nama/RM pasien..."
+          placeholder="Cari nomor bed, kamar, nama pasien, RM, atau DPJP..." 
           class="search-input"
         />
         <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">
@@ -15,103 +15,98 @@
         </button>
       </div>
 
-      <!-- Quick Interactive Legend / Status Filter -->
-      <div class="legend-pills">
+      <!-- Quick Status Filters (Legend) -->
+      <div class="status-legend-bar">
         <button 
-          class="legend-pill" 
+          class="legend-btn" 
           :class="{ active: activeStatusFilter === 'ALL' }"
           @click="activeStatusFilter = 'ALL'"
         >
-          <span class="dot all"></span>
-          <span class="label">Semua</span>
-          <span class="count">{{ totalStats.total }}</span>
+          <span class="legend-dot all"></span>
+          <span class="legend-label">Semua</span>
+          <span class="legend-badge">{{ totalStats.total }}</span>
         </button>
 
         <button 
-          class="legend-pill available" 
+          class="legend-btn available" 
           :class="{ active: activeStatusFilter === 'KOSONG' }"
-          @click="activeStatusFilter = activeStatusFilter === 'KOSONG' ? 'ALL' : 'KOSONG'"
+          @click="activeStatusFilter = 'KOSONG'"
         >
-          <span class="dot green"></span>
-          <span class="label">Tersedia</span>
-          <span class="count">{{ totalStats.tersedia }}</span>
+          <span class="legend-dot available"></span>
+          <span class="legend-label">Tersedia</span>
+          <span class="legend-badge">{{ totalStats.tersedia }}</span>
         </button>
 
         <button 
-          class="legend-pill occupied" 
+          class="legend-btn occupied" 
           :class="{ active: activeStatusFilter === 'ISI' }"
-          @click="activeStatusFilter = activeStatusFilter === 'ISI' ? 'ALL' : 'ISI'"
+          @click="activeStatusFilter = 'ISI'"
         >
-          <span class="dot red"></span>
-          <span class="label">Terisi</span>
-          <span class="count">{{ totalStats.terisi }}</span>
+          <span class="legend-dot occupied"></span>
+          <span class="legend-label">Terisi</span>
+          <span class="legend-badge">{{ totalStats.terisi }}</span>
         </button>
 
         <button 
           v-if="totalStats.rencana_pulang > 0"
-          class="legend-pill discharge" 
+          class="legend-btn discharge" 
           :class="{ active: activeStatusFilter === 'RENCANA_PULANG' }"
-          @click="activeStatusFilter = activeStatusFilter === 'RENCANA_PULANG' ? 'ALL' : 'RENCANA_PULANG'"
+          @click="activeStatusFilter = 'RENCANA_PULANG'"
         >
-          <span class="dot yellow pulse"></span>
-          <span class="label">Rencana Pulang</span>
-          <span class="count">{{ totalStats.rencana_pulang }}</span>
+          <span class="legend-dot discharge"></span>
+          <span class="legend-label">Rencana Plg</span>
+          <span class="legend-badge">{{ totalStats.rencana_pulang }}</span>
         </button>
 
         <button 
           v-if="totalStats.dibooking > 0"
-          class="legend-pill booking" 
+          class="legend-btn booking" 
           :class="{ active: activeStatusFilter === 'DIBOOKING' }"
-          @click="activeStatusFilter = activeStatusFilter === 'DIBOOKING' ? 'ALL' : 'DIBOOKING'"
+          @click="activeStatusFilter = 'DIBOOKING'"
         >
-          <span class="dot orange"></span>
-          <span class="label">Dibooking</span>
-          <span class="count">{{ totalStats.dibooking }}</span>
+          <span class="legend-dot booking"></span>
+          <span class="legend-label">Booking</span>
+          <span class="legend-badge">{{ totalStats.dibooking }}</span>
         </button>
 
         <button 
           v-if="totalStats.dibersihkan > 0"
-          class="legend-pill cleaning" 
+          class="legend-btn cleaning" 
           :class="{ active: activeStatusFilter === 'DIBERSIHKAN' }"
-          @click="activeStatusFilter = activeStatusFilter === 'DIBERSIHKAN' ? 'ALL' : 'DIBERSIHKAN'"
+          @click="activeStatusFilter = 'DIBERSIHKAN'"
         >
-          <span class="dot blue"></span>
-          <span class="label">Sterilisasi</span>
-          <span class="count">{{ totalStats.dibersihkan }}</span>
+          <span class="legend-dot cleaning"></span>
+          <span class="legend-label">Sterilisasi</span>
+          <span class="legend-badge">{{ totalStats.dibersihkan }}</span>
         </button>
       </div>
     </div>
 
-    <!-- Pavilion / Gedung Tabs (Cinema Screen / Train Wagon Navigator) -->
-    <div class="pavilion-navigator">
-      <div class="navigator-scroll">
-        <button 
-          class="nav-tab" 
-          :class="{ active: selectedPavilion === 'ALL' }"
-          @click="selectedPavilion = 'ALL'"
-        >
-          <i class="fas fa-hospital-alt"></i>
-          <span class="nav-title">Semua Bangsal</span>
-          <span class="nav-badge">{{ totalStats.total }}</span>
-        </button>
-
-        <button 
-          v-for="p in pavilions" 
-          :key="p.name"
-          class="nav-tab"
-          :class="{ active: selectedPavilion === p.name }"
-          @click="selectedPavilion = p.name"
-        >
-          <i :class="['fas', p.icon || 'fa-procedures']"></i>
-          <span class="nav-title">{{ p.name }}</span>
-          <span class="nav-badge" :class="{ 'has-empty': p.stats.tersedia > 0 }">
-            {{ p.stats.tersedia }} Kosong
-          </span>
-        </button>
-      </div>
+    <!-- Pavilion Quick Navigation Tabs -->
+    <div class="pavilion-nav-tabs">
+      <button 
+        class="pavilion-tab-btn" 
+        :class="{ active: selectedPavilion === 'ALL' }"
+        @click="selectedPavilion = 'ALL'"
+      >
+        <i class="fas fa-layer-group"></i> Semua Paviliun ({{ pavilions.length }})
+      </button>
+      <button 
+        v-for="pav in pavilions" 
+        :key="pav.name"
+        class="pavilion-tab-btn"
+        :class="{ active: selectedPavilion === pav.name }"
+        @click="selectedPavilion = pav.name"
+      >
+        <i :class="['fas', pav.icon || 'fa-hospital']"></i>
+        <span>{{ pav.name }}</span>
+        <span class="tab-stat-pill" :class="{ 'has-available': pav.stats.tersedia > 0 }">
+          {{ pav.stats.tersedia }} Kosong
+        </span>
+      </button>
     </div>
 
-    <!-- Floor Plan Map Display -->
+    <!-- Floor Plan Area -->
     <div v-if="filteredPavilions.length === 0" class="empty-map-state">
       <i class="fas fa-search-minus empty-icon"></i>
       <h3>Tidak ada tempat tidur yang cocok</h3>
@@ -136,7 +131,7 @@
             </div>
             <div>
               <h2 class="pavilion-name">{{ pavilion.name }}</h2>
-              <span class="pavilion-tag">{{ pavilion.tag }} • {{ pavilion.rooms.length }} Ruangan</span>
+              <span class="pavilion-tag">{{ pavilion.tag }} • {{ pavilion.beds.length }} Tempat Tidur</span>
             </div>
           </div>
 
@@ -153,82 +148,102 @@
           </div>
         </div>
 
-        <!-- Rooms Grid (Like Cinema Row / Train Compartment Clusters) -->
-        <div class="rooms-grid">
+        <!-- Spasial Bed Matrix (Denah Bed Utuh) -->
+        <div class="beds-matrix">
           <div 
-            v-for="room in pavilion.rooms" 
-            :key="room.room_name" 
-            class="room-card"
+            v-for="bed in pavilion.beds" 
+            :key="bed.kd_kamar"
+            class="bed-card"
+            :class="[
+              getBedStatusClass(bed),
+              { 'is-dimmed': isBedDimmed(bed) }
+            ]"
+            @click="onBedClick(bed)"
+            @mouseenter="showHoverTooltip($event, bed)"
+            @mouseleave="hideHoverTooltip"
           >
-            <!-- Room Top Bar -->
-            <div class="room-top">
-              <div class="room-identity">
-                <span class="room-label">RUANG</span>
-                <h4 class="room-title" :title="room.room_name">{{ room.room_name }}</h4>
+            <!-- Bed Card Header -->
+            <div class="bed-card-head">
+              <div class="bed-identity">
+                <i class="fas fa-bed bed-icon-svg"></i>
+                <span class="bed-label-text">{{ bed.bed_label || bed.kd_kamar }}</span>
               </div>
-              <div class="room-meta">
-                <span class="class-pill" :class="getClassClass(room.kelas)">{{ room.kelas }}</span>
-                <span class="capacity-pill">{{ getRoomOccupancy(room) }}</span>
-              </div>
+              <span class="class-pill" :class="getClassClass(bed.kelas)">{{ bed.kelas }}</span>
             </div>
 
-            <!-- Cinema / Seat Style Bed Layout -->
-            <div class="beds-seat-grid">
-              <div 
-                v-for="bed in room.beds" 
-                :key="bed.kd_kamar"
-                class="bed-seat"
-                :class="[
-                  getBedStatusClass(bed),
-                  { 'is-dimmed': isBedDimmed(bed) }
-                ]"
-                @click="onBedClick(bed)"
-                @mouseenter="showHoverTooltip($event, bed)"
-                @mouseleave="hideHoverTooltip"
-              >
-                <!-- Bed Seat Visual -->
-                <div class="seat-top-notch"></div>
-                <div class="seat-main">
-                  <div class="seat-icon-wrapper">
-                    <i class="fas fa-bed bed-icon"></i>
-                    <!-- Status Indicator Badge -->
-                    <span v-if="bed.effective_status === 'ISI'" class="gender-mini-badge" :class="bed.patient?.jk === 'L' ? 'male' : 'female'">
-                      {{ bed.patient?.jk === 'L' ? 'L' : 'P' }}
-                    </span>
-                    <span v-else-if="bed.effective_status === 'RENCANA_PULANG'" class="pulse-ring"></span>
-                    <span v-else-if="bed.effective_status === 'DIBOOKING'" class="booking-mini-badge">
-                      <i class="fas fa-bookmark"></i>
-                    </span>
-                    <span v-else-if="bed.effective_status === 'DIBERSIHKAN'" class="clean-mini-badge">
-                      <i class="fas fa-broom"></i>
-                    </span>
+            <!-- Bed Main Body -->
+            <div class="bed-card-body">
+              <!-- Terisi / Pasien -->
+              <template v-if="bed.effective_status === 'ISI' || bed.effective_status === 'RENCANA_PULANG'">
+                <div class="patient-line">
+                  <span class="gender-mini-badge" :class="bed.patient?.jk === 'L' ? 'male' : 'female'">
+                    {{ bed.patient?.jk === 'L' ? '👨 L' : '👩 P' }}
+                  </span>
+                  <span class="patient-name-display" :title="bed.patient?.nm_pasien">
+                    {{ bed.patient?.nm_pasien_masked || 'Pasien Terisi' }}
+                  </span>
+                </div>
+                <div class="patient-doctor" v-if="bed.patient?.dpjp">
+                  <i class="fas fa-user-md"></i> {{ bed.patient.dpjp }}
+                </div>
+                <div class="bed-meta-sub">
+                  <span class="los-pill" v-if="bed.patient?.lama_rawat">
+                    <i class="far fa-clock"></i> {{ bed.patient.lama_rawat }} Hari
+                  </span>
+                  <span v-if="bed.effective_status === 'RENCANA_PULANG'" class="badge-discharge">
+                    <i class="fas fa-sign-out-alt"></i> Plg Hari Ini
+                  </span>
+                </div>
+              </template>
+
+              <!-- Kosong / Siap Pakai -->
+              <template v-else-if="bed.effective_status === 'KOSONG'">
+                <div class="available-state">
+                  <div class="state-icon green-icon">
+                    <i class="fas fa-check-circle"></i>
                   </div>
-
-                  <!-- Bed Code / Seat Number -->
-                  <div class="seat-code">{{ formatBedCode(bed.kd_kamar) }}</div>
-
-                  <!-- Patient Inisial or Status Text -->
-                  <div class="seat-status-text">
-                    <template v-if="bed.effective_status === 'ISI'">
-                      <span class="patient-short-name" :title="bed.patient?.nm_pasien">
-                        {{ bed.patient?.nm_pasien_masked || 'Terisi' }}
-                      </span>
-                    </template>
-                    <template v-else-if="bed.effective_status === 'RENCANA_PULANG'">
-                      <span class="text-discharge">Plg Hari Ini</span>
-                    </template>
-                    <template v-else-if="bed.effective_status === 'DIBOOKING'">
-                      <span class="text-booking">Booking</span>
-                    </template>
-                    <template v-else-if="bed.effective_status === 'DIBERSIHKAN'">
-                      <span class="text-cleaning">Sterilisasi</span>
-                    </template>
-                    <template v-else>
-                      <span class="text-available">Siap Pakai</span>
-                    </template>
+                  <div class="state-texts">
+                    <span class="available-title">Siap Pakai</span>
+                    <span class="available-price">{{ formatRupiah(bed.trf_kamar) }}/hr</span>
                   </div>
                 </div>
-              </div>
+              </template>
+
+              <!-- Dibersihkan -->
+              <template v-else-if="bed.effective_status === 'DIBERSIHKAN'">
+                <div class="cleaning-state">
+                  <div class="state-icon amber-icon">
+                    <i class="fas fa-broom"></i>
+                  </div>
+                  <div class="state-texts">
+                    <span class="cleaning-title">Sterilisasi</span>
+                    <span class="cleaning-desc">Pembersihan</span>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Booking -->
+              <template v-else-if="bed.effective_status === 'DIBOOKING'">
+                <div class="booking-state">
+                  <div class="state-icon purple-icon">
+                    <i class="fas fa-bookmark"></i>
+                  </div>
+                  <div class="state-texts">
+                    <span class="booking-title">Dibooking</span>
+                    <span class="booking-desc">Menunggu</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Bed Card Footer -->
+            <div class="bed-card-footer">
+              <span class="status-tag-pill" :class="getBedStatusClass(bed)">
+                {{ getStatusLabel(bed.effective_status) }}
+              </span>
+              <span class="detail-hint">
+                <i class="fas fa-info-circle"></i>
+              </span>
             </div>
           </div>
         </div>
@@ -244,7 +259,7 @@
       <div class="tooltip-header" :class="getBedStatusClass(hoveredBed)">
         <div class="tooltip-title">
           <i class="fas fa-bed"></i>
-          <span>{{ hoveredBed.kd_kamar }}</span>
+          <span>{{ hoveredBed.bed_label || hoveredBed.kd_kamar }}</span>
         </div>
         <span class="tooltip-status-badge">
           {{ getStatusLabel(hoveredBed.effective_status) }}
@@ -253,63 +268,52 @@
 
       <div class="tooltip-body">
         <div class="tooltip-row">
-          <span class="t-label">Ruang / Kelas:</span>
-          <span class="t-val">{{ hoveredBed.nm_bangsal }} ({{ hoveredBed.kelas }})</span>
+          <span class="label">Bangsal / Ruang:</span>
+          <span class="value">{{ hoveredBed.nm_bangsal }} ({{ hoveredBed.kelas }})</span>
+        </div>
+        <div class="tooltip-row" v-if="hoveredBed.trf_kamar > 0">
+          <span class="label">Tarif:</span>
+          <span class="value font-semibold">{{ formatRupiah(hoveredBed.trf_kamar) }} / hari</span>
         </div>
 
         <template v-if="hoveredBed.patient">
-          <div class="tooltip-divider"></div>
-          <div class="tooltip-row highlight">
-            <span class="t-label">Pasien:</span>
-            <span class="t-val font-bold">
-              {{ hoveredBed.patient.nm_pasien }} 
-              <span class="t-gender" :class="hoveredBed.patient.jk === 'L' ? 'male' : 'female'">
-                ({{ hoveredBed.patient.jk === 'L' ? 'Laki-laki' : 'Perempuan' }}, {{ hoveredBed.patient.umur }})
-              </span>
-            </span>
+          <hr class="tooltip-divider" />
+          <div class="tooltip-row">
+            <span class="label">Pasien:</span>
+            <span class="value font-bold text-dark">{{ hoveredBed.patient.nm_pasien }}</span>
           </div>
           <div class="tooltip-row">
-            <span class="t-label">No. RM / Rawat:</span>
-            <span class="t-val font-mono">{{ hoveredBed.patient.no_rkm_medis }} • {{ hoveredBed.patient.no_rawat }}</span>
+            <span class="label">No. RM:</span>
+            <span class="value font-mono">{{ hoveredBed.patient.no_rkm_medis }}</span>
           </div>
           <div class="tooltip-row">
-            <span class="t-label">DPJP:</span>
-            <span class="t-val text-primary-doctor">{{ hoveredBed.patient.dpjp || '-' }}</span>
+            <span class="label">DPJP:</span>
+            <span class="value text-primary font-semibold">{{ hoveredBed.patient.dpjp || '-' }}</span>
           </div>
           <div class="tooltip-row">
-            <span class="t-label">Masuk / LOS:</span>
-            <span class="t-val">{{ hoveredBed.patient.tgl_masuk }} ({{ hoveredBed.patient.lama_rawat }} Hari)</span>
-          </div>
-          <div v-if="hoveredBed.patient.diagnosa_awal" class="tooltip-row">
-            <span class="t-label">Diagnosa Awal:</span>
-            <span class="t-val font-italic">{{ hoveredBed.patient.diagnosa_awal }}</span>
-          </div>
-        </template>
-
-        <template v-else>
-          <div class="tooltip-divider"></div>
-          <div class="tooltip-row">
-            <span class="t-label">Tarif Kamar:</span>
-            <span class="t-val font-semibold text-success">{{ formatRupiah(hoveredBed.trf_kamar) }} / hari</span>
-          </div>
-          <div class="tooltip-hint">
-            <i class="fas fa-info-circle"></i> Klik untuk melihat detail atau pilih bed
+            <span class="label">Masuk:</span>
+            <span class="value">{{ hoveredBed.patient.tgl_masuk }} ({{ hoveredBed.patient.lama_rawat }} hari)</span>
           </div>
         </template>
       </div>
+      <div class="tooltip-footer">
+        <i class="fas fa-mouse-pointer"></i> Klik kartu untuk detail lengkap
+      </div>
     </div>
 
-    <!-- Bed Detail Modal (Click Drawer/Modal) -->
-    <div v-if="selectedBed" class="bed-detail-modal-overlay" @click.self="selectedBed = null">
-      <div class="bed-detail-modal animate-scale-up">
-        <div class="modal-top" :class="getBedStatusClass(selectedBed)">
-          <div class="modal-top-left">
-            <div class="modal-bed-icon">
-              <i class="fas fa-bed"></i>
-            </div>
+    <!-- Bed Detail Full Modal -->
+    <div 
+      v-if="selectedBed" 
+      class="bed-detail-modal-overlay" 
+      @click="selectedBed = null"
+    >
+      <div class="bed-detail-modal-card" @click.stop>
+        <div class="modal-card-header">
+          <div class="modal-title-wrap">
+            <i class="fas fa-bed title-icon"></i>
             <div>
-              <h3 class="modal-bed-title">{{ selectedBed.kd_kamar }}</h3>
-              <p class="modal-bed-sub">{{ selectedBed.nm_bangsal }} • {{ selectedBed.kelas }}</p>
+              <h3>{{ selectedBed.bed_label || selectedBed.kd_kamar }}</h3>
+              <p class="subtitle">{{ selectedBed.nm_bangsal }} • {{ selectedBed.kelas }}</p>
             </div>
           </div>
           <button class="modal-close-btn" @click="selectedBed = null">
@@ -389,31 +393,21 @@
             </div>
           </div>
 
-          <!-- If Empty Bed -->
-          <div v-else class="empty-bed-card">
-            <div class="empty-illustration">
-              <i class="fas fa-check-circle text-success"></i>
-              <h4>Tempat Tidur Tersedia</h4>
-              <p>Tempat tidur ini dalam kondisi kosong, bersih, dan siap ditempati oleh pasien baru.</p>
+          <!-- Empty Bed State in Modal -->
+          <div v-else class="empty-bed-modal-state">
+            <div class="empty-bed-icon">
+              <i class="fas fa-check-circle"></i>
             </div>
-            <div class="empty-specs">
-              <div class="spec-item">
-                <span class="spec-label">Kelas</span>
-                <span class="spec-val font-bold">{{ selectedBed.kelas }}</span>
-              </div>
-              <div class="spec-item">
-                <span class="spec-label">Tarif</span>
-                <span class="spec-val text-success font-bold">{{ formatRupiah(selectedBed.trf_kamar) }}</span>
-              </div>
-              <div class="spec-item">
-                <span class="spec-label">Bangsal</span>
-                <span class="spec-val">{{ selectedBed.nm_bangsal }}</span>
-              </div>
+            <h4>Tempat Tidur Siap Digunakan</h4>
+            <p>Bed ini dalam kondisi bersih, steril, dan dapat langsung dialokasikan untuk pasien rawat inap baru.</p>
+            <div class="rate-box">
+              <span>Tarif Kamar:</span>
+              <strong class="rate-amount">{{ formatRupiah(selectedBed.trf_kamar) }} / hari</strong>
             </div>
           </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-card-footer">
           <button class="btn btn-secondary" @click="selectedBed = null">
             Tutup
           </button>
@@ -425,12 +419,14 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { showToast } from '../../../utils/notification'
 
 const props = defineProps({
   mapData: {
     type: Object,
-    default: () => ({ stats: {}, pavilions: [] })
+    default: () => ({
+      pavilions: [],
+      stats: {}
+    })
   },
   loading: {
     type: Boolean,
@@ -440,7 +436,7 @@ const props = defineProps({
 
 // Filters State
 const searchQuery = ref('')
-const activeStatusFilter = ref('ALL') // 'ALL' | 'KOSONG' | 'ISI' | 'RENCANA_PULANG' | 'DIBOOKING' | 'DIBERSIHKAN'
+const activeStatusFilter = ref('ALL')
 const selectedPavilion = ref('ALL')
 
 // Tooltip State
@@ -478,82 +474,55 @@ const filteredPavilions = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   const statusFilter = activeStatusFilter.value
 
-  // If no search and no status filter, return list as is
-  if (!query && statusFilter === 'ALL') {
-    return list
-  }
-
-  // Filter pavilions and rooms
   return list.map(p => {
-    // Filter rooms inside
-    const matchedRooms = p.rooms.map(room => {
-      const matchedBeds = room.beds.filter(bed => {
-        // Status filter
-        let matchStatus = true
-        if (statusFilter !== 'ALL') {
-          if (statusFilter === 'KOSONG') matchStatus = bed.status === 'KOSONG'
-          else if (statusFilter === 'ISI') matchStatus = bed.status === 'ISI'
-          else if (statusFilter === 'RENCANA_PULANG') matchStatus = bed.effective_status === 'RENCANA_PULANG'
-          else if (statusFilter === 'DIBOOKING') matchStatus = bed.status === 'DIBOOKING'
-          else if (statusFilter === 'DIBERSIHKAN') matchStatus = bed.status === 'DIBERSIHKAN'
-        }
-
-        if (!matchStatus) return false
-
-        // Search query filter
-        if (query) {
-          const bedCode = (bed.kd_kamar || '').toLowerCase()
-          const roomName = (bed.nm_bangsal || '').toLowerCase()
-          const patientName = (bed.patient?.nm_pasien || '').toLowerCase()
-          const patientRm = (bed.patient?.no_rkm_medis || '').toLowerCase()
-          const dpjp = (bed.patient?.dpjp || '').toLowerCase()
-
-          return (
-            bedCode.includes(query) ||
-            roomName.includes(query) ||
-            patientName.includes(query) ||
-            patientRm.includes(query) ||
-            dpjp.includes(query)
-          )
-        }
-
-        return true
-      })
-
-      return {
-        ...room,
-        beds: matchedBeds
+    // Direct beds array
+    const allBeds = p.beds || (p.rooms ? p.rooms.flatMap(r => r.beds) : [])
+    const matchedBeds = allBeds.filter(bed => {
+      // Status filter
+      let matchStatus = true
+      if (statusFilter !== 'ALL') {
+        if (statusFilter === 'KOSONG') matchStatus = bed.status === 'KOSONG'
+        else if (statusFilter === 'ISI') matchStatus = bed.status === 'ISI'
+        else if (statusFilter === 'RENCANA_PULANG') matchStatus = bed.effective_status === 'RENCANA_PULANG'
+        else if (statusFilter === 'DIBOOKING') matchStatus = bed.status === 'DIBOOKING'
+        else if (statusFilter === 'DIBERSIHKAN') matchStatus = bed.status === 'DIBERSIHKAN'
       }
-    }).filter(r => r.beds.length > 0)
+
+      if (!matchStatus) return false
+
+      // Search query filter
+      if (query) {
+        const bedCode = (bed.kd_kamar || '').toLowerCase()
+        const bedLabel = (bed.bed_label || '').toLowerCase()
+        const roomName = (bed.nm_bangsal || '').toLowerCase()
+        const patientName = (bed.patient?.nm_pasien || '').toLowerCase()
+        const patientRm = (bed.patient?.no_rkm_medis || '').toLowerCase()
+        const dpjp = (bed.patient?.dpjp || '').toLowerCase()
+
+        return (
+          bedCode.includes(query) ||
+          bedLabel.includes(query) ||
+          roomName.includes(query) ||
+          patientName.includes(query) ||
+          patientRm.includes(query) ||
+          dpjp.includes(query)
+        )
+      }
+
+      return true
+    })
 
     return {
       ...p,
-      rooms: matchedRooms
+      beds: matchedBeds
     }
-  }).filter(p => p.rooms.length > 0)
+  }).filter(p => p.beds.length > 0)
 })
 
 // Helpers
 const getOccupancyPercent = (stats) => {
   if (!stats || !stats.total || stats.total === 0) return 0
   return Math.round((stats.terisi / stats.total) * 100)
-}
-
-const getRoomOccupancy = (room) => {
-  const total = room.beds.length
-  const occupied = room.beds.filter(b => b.status === 'ISI').length
-  return `${occupied}/${total} Terisi`
-}
-
-const formatBedCode = (kdKamar) => {
-  if (!kdKamar) return '-'
-  // Strip long prefix for compact seat look
-  let clean = kdKamar.trim()
-  if (clean.includes('.')) {
-    const parts = clean.split('.')
-    return parts[parts.length - 1]
-  }
-  return clean
 }
 
 const getClassClass = (kelas) => {
@@ -590,10 +559,10 @@ const isBedDimmed = (bed) => {
 const getStatusLabel = (status) => {
   switch (status) {
     case 'KOSONG': return 'Tersedia'
-    case 'ISI': return 'Terisi Pasien'
-    case 'RENCANA_PULANG': return 'Rencana Pulang (Hari Ini)'
-    case 'DIBOOKING': return 'Dibooking / Indent'
-    case 'DIBERSIHKAN': return 'Sedang Disterilisasi'
+    case 'ISI': return 'Terisi'
+    case 'RENCANA_PULANG': return 'Rencana Pulang'
+    case 'DIBOOKING': return 'Dibooking'
+    case 'DIBERSIHKAN': return 'Sterilisasi'
     default: return status || 'Tersedia'
   }
 }
@@ -602,40 +571,24 @@ const getStatusIcon = (status) => {
   switch (status) {
     case 'KOSONG': return 'fas fa-check-circle'
     case 'ISI': return 'fas fa-user-injured'
-    case 'RENCANA_PULANG': return 'fas fa-walking'
+    case 'RENCANA_PULANG': return 'fas fa-sign-out-alt'
     case 'DIBOOKING': return 'fas fa-bookmark'
     case 'DIBERSIHKAN': return 'fas fa-broom'
-    default: return 'fas fa-info-circle'
+    default: return 'fas fa-bed'
   }
 }
 
 const formatRupiah = (val) => {
-  if (!val) return 'Rp 0'
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(val)
+  if (!val || val === 0) return 'Rp 0'
+  return 'Rp ' + Number(val).toLocaleString('id-ID')
 }
 
-// Tooltip Handlers
+// Tooltip Logic
 const showHoverTooltip = (event, bed) => {
   hoveredBed.value = bed
   const rect = event.currentTarget.getBoundingClientRect()
-  
-  // Position tooltip safely above or below
-  const tooltipWidth = 320
-  let left = rect.left + rect.width / 2 - tooltipWidth / 2
-  if (left < 16) left = 16
-  if (left + tooltipWidth > window.innerWidth - 16) left = window.innerWidth - tooltipWidth - 16
-
-  let top = rect.top - 180
-  if (top < 80) {
-    top = rect.bottom + 12
-  }
-
-  tooltipX.value = left
-  tooltipY.value = top
+  tooltipX.value = rect.left + rect.width / 2
+  tooltipY.value = rect.top - 10
 }
 
 const hideHoverTooltip = () => {
@@ -644,21 +597,15 @@ const hideHoverTooltip = () => {
 
 const tooltipStyle = computed(() => {
   return {
-    top: `${tooltipY.value}px`,
-    left: `${tooltipX.value}px`
+    left: `${tooltipX.value}px`,
+    top: `${tooltipY.value}px`
   }
 })
 
-// Modal / Click Handlers
+// Modal Logic
 const onBedClick = (bed) => {
   hideHoverTooltip()
   selectedBed.value = bed
-}
-
-const copyText = (text, label) => {
-  if (!text) return
-  navigator.clipboard.writeText(text)
-  showToast(`${label} disalin ke papan klip`, 'success')
 }
 
 const resetFilters = () => {
@@ -666,65 +613,66 @@ const resetFilters = () => {
   activeStatusFilter.value = 'ALL'
   selectedPavilion.value = 'ALL'
 }
+
+const copyText = (text, label) => {
+  if (!text) return
+  navigator.clipboard.writeText(text)
+  alert(`${label} (${text}) berhasil disalin!`)
+}
 </script>
 
 <style scoped>
-/* =========================================================================
-   BED MAP CONTAINER & CINEMA SEAT STYLING
-   ========================================================================= */
 .bed-map-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  position: relative;
+  gap: 1.25rem;
+  font-family: inherit;
 }
 
-/* Map Toolbar: Search & Status Pills */
+/* Toolbar & Filter Bar */
 .map-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 1rem;
   background: white;
-  padding: 16px 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
 }
 
-.toolbar-search {
+.search-box {
   position: relative;
   flex: 1;
   min-width: 280px;
-  max-width: 480px;
 }
 
-.toolbar-search .search-icon {
+.search-icon {
   position: absolute;
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
-.toolbar-search .search-input {
+.search-input {
   width: 100%;
-  padding: 10px 38px 10px 38px;
-  border-radius: 12px;
+  padding: 0.625rem 2.25rem 0.625rem 2.5rem;
+  border-radius: 10px;
   border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
   background: #f8fafc;
-  font-size: 13.5px;
-  color: #1e293b;
-  transition: all 0.2s;
 }
 
-.toolbar-search .search-input:focus {
-  outline: none;
-  border-color: #0284c7;
+.search-input:focus {
   background: white;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .clear-search-btn {
@@ -739,211 +687,178 @@ const resetFilters = () => {
   padding: 4px;
 }
 
-.legend-pills {
+.clear-search-btn:hover {
+  color: #475569;
+}
+
+/* Legend Status Buttons */
+.status-legend-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0.5rem;
   align-items: center;
 }
 
-.legend-pill {
+.legend-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.825rem;
+  font-weight: 600;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
-  cursor: pointer;
-  font-size: 12.5px;
-  font-weight: 500;
   color: #475569;
+  cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.legend-pill:hover {
+.legend-btn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  transform: translateY(-1px);
 }
 
-.legend-pill.active {
+.legend-btn.active {
   background: #0f172a;
   color: white;
   border-color: #0f172a;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
 }
 
-.legend-pill.active .count {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.legend-pill .dot {
-  width: 8px;
-  height: 8px;
+.legend-dot {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
 }
 
-.legend-pill .dot.all { background: #64748b; }
-.legend-pill .dot.green { background: #10b981; }
-.legend-pill .dot.red { background: #ef4444; }
-.legend-pill .dot.yellow { background: #f59e0b; }
-.legend-pill .dot.orange { background: #f97316; }
-.legend-pill .dot.blue { background: #0ea5e9; }
+.legend-dot.all { background: #64748b; }
+.legend-dot.available { background: #10b981; }
+.legend-dot.occupied { background: #ef4444; }
+.legend-dot.discharge { background: #f59e0b; }
+.legend-dot.booking { background: #8b5cf6; }
+.legend-dot.cleaning { background: #f97316; }
 
-.legend-pill .count {
-  font-size: 11px;
+.legend-badge {
+  background: rgba(0, 0, 0, 0.08);
   padding: 2px 7px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  color: #334155;
-  font-weight: 700;
+  border-radius: 12px;
+  font-size: 0.75rem;
 }
 
-.pulse {
-  animation: pulse-ring 1.5s infinite;
+.legend-btn.active .legend-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
 }
 
-@keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
-}
-
-/* Pavilion / Floor Navigator (Tabs) */
-.pavilion-navigator {
-  background: white;
-  border-radius: 16px;
-  padding: 8px 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-}
-
-.navigator-scroll {
+/* Pavilion Nav Tabs */
+.pavilion-nav-tabs {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: thin;
 }
 
-.navigator-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.navigator-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.nav-tab {
+.pavilion-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: 1px solid transparent;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 13px;
+  padding: 8px 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
   font-weight: 600;
+  color: #475569;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
-.nav-tab:hover {
+.pavilion-tab-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.pavilion-tab-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.tab-stat-pill {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
   background: #f1f5f9;
-  color: #0284c7;
+  color: #64748b;
 }
 
-.nav-tab.active {
-  background: #0284c7;
-  color: white;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-}
-
-.nav-tab .nav-badge {
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  color: #475569;
-}
-
-.nav-tab.active .nav-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-}
-
-.nav-badge.has-empty {
+.tab-stat-pill.has-available {
   background: #dcfce7;
   color: #15803d;
-  font-weight: 700;
 }
 
-.nav-tab.active .nav-badge.has-empty {
-  background: #10b981;
+.pavilion-tab-btn.active .tab-stat-pill {
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
-/* Floor Plan Area */
+/* Floor Plan & Pavilion Block */
 .floor-plan-area {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1.5rem;
 }
 
 .pavilion-block {
   background: white;
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 16px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  padding: 1.25rem;
 }
 
 .pavilion-header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 20px;
-  border-bottom: 1px dashed #e2e8f0;
-  margin-bottom: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .pavilion-icon-bubble {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #e0f2fe;
-  color: #0284c7;
+  background: #eff6ff;
+  color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .pavilion-name {
-  font-size: 18px;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
 }
 
 .pavilion-tag {
-  font-size: 12.5px;
+  font-size: 0.8rem;
   color: #64748b;
-  font-weight: 500;
 }
 
 .header-occupancy {
@@ -956,529 +871,488 @@ const resetFilters = () => {
   width: 120px;
   height: 8px;
   background: #e2e8f0;
-  border-radius: 999px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .occupancy-fill {
   height: 100%;
   background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
-  border-radius: 999px;
+  border-radius: 6px;
   transition: width 0.4s ease;
 }
 
 .occupancy-text {
-  font-size: 12.5px;
+  font-size: 0.85rem;
   color: #475569;
 }
 
-/* Rooms Grid */
-.rooms-grid {
+/* BEDS MATRIX (Modern Spatial Bed Cards) */
+.beds-matrix {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
 }
 
-.room-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 16px;
+@media (min-width: 1280px) {
+  .beds-matrix {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.bed-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  transition: all 0.2s;
-}
-
-.room-card:hover {
-  border-color: #cbd5e1;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-}
-
-.room-top {
-  display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 10px;
-}
-
-.room-identity .room-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #94a3b8;
-}
-
-.room-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.room-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.class-pill {
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-}
-
-.class-vip { background: #fef3c7; color: #b45309; }
-.class-1 { background: #dbeafe; color: #1e40af; }
-.class-2 { background: #e0e7ff; color: #4338ca; }
-.class-3 { background: #f1f5f9; color: #475569; }
-.class-utama { background: #fae8ff; color: #86198f; }
-.class-general { background: #e2e8f0; color: #334155; }
-
-.capacity-pill {
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 600;
-}
-
-/* Beds Cinema Seat Grid */
-.beds-seat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 12px;
-}
-
-/* Cinema / Train Seat Visual Card */
-.bed-seat {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 8px 8px 8px;
-  border-radius: 12px;
-  cursor: pointer;
+  min-height: 140px;
   background: white;
-  border: 2px solid transparent;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  padding: 10px 12px;
+  cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
+  position: relative;
+  overflow: hidden;
 }
 
-.bed-seat:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  z-index: 5;
+.bed-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-.bed-seat.is-dimmed {
-  opacity: 0.25;
+.bed-card.is-dimmed {
+  opacity: 0.3;
   filter: grayscale(80%);
 }
 
-.seat-top-notch {
-  width: 32px;
-  height: 4px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  opacity: 0.6;
+/* Status Variations */
+.bed-card.status-available {
+  border-color: #86efac;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 50%);
+}
+.bed-card.status-available:hover {
+  border-color: #22c55e;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.15);
 }
 
-.seat-main {
-  width: 100%;
+.bed-card.status-occupied {
+  border-color: #fca5a5;
+  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 50%);
+}
+.bed-card.status-occupied:hover {
+  border-color: #ef4444;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+}
+
+.bed-card.status-discharge {
+  border-color: #fde68a;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 50%);
+}
+.bed-card.status-discharge:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
+}
+
+.bed-card.status-booking {
+  border-color: #d8b4fe;
+  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 50%);
+}
+
+.bed-card.status-cleaning {
+  border-color: #fed7aa;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 50%);
+}
+
+/* Bed Card Header */
+.bed-card-head {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
 }
 
-.seat-icon-wrapper {
-  position: relative;
-  width: 34px;
-  height: 34px;
+.bed-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bed-icon-svg {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.bed-label-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.class-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.class-pill.class-vip { background: #fef08a; color: #854d0e; }
+.class-pill.class-utama { background: #fbcfe8; color: #9d174d; }
+.class-pill.class-1 { background: #dbeafe; color: #1e40af; }
+.class-pill.class-2 { background: #e0e7ff; color: #3730a3; }
+.class-pill.class-3 { background: #f1f5f9; color: #475569; }
+.class-pill.class-general { background: #f1f5f9; color: #475569; }
+
+/* Bed Card Body */
+.bed-card-body {
+  padding: 8px 0;
+  flex: 1;
+}
+
+.patient-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.gender-mini-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.gender-mini-badge.male {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.gender-mini-badge.female {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.patient-name-display {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-doctor {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+.bed-meta-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.los-pill {
+  font-size: 0.7rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-discharge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Empty State in Body */
+.available-state,
+.cleaning-state,
+.booking-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  padding: 4px 0;
+}
+
+.state-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
-.seat-code {
-  font-size: 11px;
-  font-weight: 700;
-  color: #1e293b;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
+.green-icon { background: #dcfce7; color: #16a34a; }
+.amber-icon { background: #fff7ed; color: #ea580c; }
+.purple-icon { background: #f3e8ff; color: #9333ea; }
 
-.seat-status-text {
-  font-size: 10px;
-  text-align: center;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Status: AVAILABLE (KOSONG) */
-.bed-seat.status-available {
-  border-color: #a7f3d0;
-  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
-}
-.bed-seat.status-available .seat-top-notch { background: #10b981; }
-.bed-seat.status-available .seat-icon-wrapper {
-  background: #d1fae5;
-  color: #059669;
-}
-.bed-seat.status-available .text-available {
-  color: #059669;
-  font-weight: 600;
-}
-
-/* Status: OCCUPIED (TERISI) */
-.bed-seat.status-occupied {
-  border-color: #fecaca;
-  background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%);
-}
-.bed-seat.status-occupied .seat-top-notch { background: #f43f5e; }
-.bed-seat.status-occupied .seat-icon-wrapper {
-  background: #ffe4e6;
-  color: #e11d48;
-}
-.bed-seat.status-occupied .patient-short-name {
-  color: #9f1239;
-  font-weight: 600;
-}
-
-.gender-mini-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  font-size: 9px;
-  font-weight: bold;
+.state-texts {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  border: 1px solid white;
+  flex-direction: column;
 }
-.gender-mini-badge.male { background: #0284c7; }
-.gender-mini-badge.female { background: #db2777; }
 
-/* Status: RENCANA PULANG (YELLOW / AMBER) */
-.bed-seat.status-discharge {
-  border-color: #fde68a;
-  background: linear-gradient(180deg, #fefce8 0%, #ffffff 100%);
-}
-.bed-seat.status-discharge .seat-top-notch { background: #eab308; }
-.bed-seat.status-discharge .seat-icon-wrapper {
-  background: #fef9c3;
-  color: #ca8a04;
-}
-.bed-seat.status-discharge .text-discharge {
-  color: #a16207;
+.available-title {
   font-weight: 700;
+  font-size: 0.85rem;
+  color: #166534;
 }
 
-/* Status: DIBOOKING (ORANGE) */
-.bed-seat.status-booking {
-  border-color: #fed7aa;
-  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+.available-price {
+  font-size: 0.75rem;
+  color: #64748b;
 }
-.bed-seat.status-booking .seat-top-notch { background: #f97316; }
-.bed-seat.status-booking .seat-icon-wrapper {
-  background: #ffedd5;
-  color: #ea580c;
+
+.cleaning-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #9a3412;
 }
-.bed-seat.status-booking .text-booking {
-  color: #c2410c;
+
+.cleaning-desc,
+.booking-desc {
+  font-size: 0.725rem;
+  color: #64748b;
+}
+
+.booking-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #6b21a8;
+}
+
+/* Bed Card Footer */
+.bed-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.06);
+}
+
+.status-tag-pill {
+  font-size: 0.7rem;
   font-weight: 600;
-}
-
-/* Status: DIBERSIHKAN (CYAN/BLUE) */
-.bed-seat.status-cleaning {
-  border-color: #bae6fd;
-  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
-}
-.bed-seat.status-cleaning .seat-top-notch { background: #0ea5e9; }
-.bed-seat.status-cleaning .seat-icon-wrapper {
-  background: #e0f2fe;
-  color: #0284c7;
-}
-.bed-seat.status-cleaning .text-cleaning {
-  color: #0369a1;
-  font-weight: 600;
-}
-
-/* Empty State */
-.empty-map-state {
-  text-align: center;
-  padding: 60px 20px;
-  background: white;
-  border-radius: 20px;
-  border: 1px dashed #cbd5e1;
-}
-
-.empty-icon {
-  font-size: 48px;
-  color: #94a3b8;
-  margin-bottom: 16px;
-}
-
-.reset-filter-btn {
-  margin-top: 16px;
-  padding: 8px 18px;
+  padding: 2px 8px;
   border-radius: 10px;
-  background: #0284c7;
-  color: white;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
 }
 
-/* =========================================================================
-   FLOATING HOVER TOOLTIP (QUICK PEEK)
-   ========================================================================= */
+.status-tag-pill.status-available { background: #dcfce7; color: #15803d; }
+.status-tag-pill.status-occupied { background: #fee2e2; color: #b91c1c; }
+.status-tag-pill.status-discharge { background: #fef3c7; color: #b45309; }
+.status-tag-pill.status-booking { background: #f3e8ff; color: #7e22ce; }
+.status-tag-pill.status-cleaning { background: #ffedd5; color: #c2410c; }
+
+.detail-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Tooltip Quick Peek */
 .bed-hover-tooltip {
   position: fixed;
-  z-index: 1000;
-  width: 320px;
-  background: #0f172a;
-  color: white;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -100%);
+  width: 260px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
   pointer-events: none;
+  z-index: 9999;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   animation: fadeIn 0.15s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translate(-50%, -95%); }
+  to { opacity: 1; transform: translate(-50%, -100%); }
 }
 
 .tooltip-header {
-  padding: 10px 14px;
+  padding: 8px 12px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-.tooltip-header.status-available { background: rgba(16, 185, 129, 0.2); }
-.tooltip-header.status-occupied { background: rgba(239, 68, 68, 0.2); }
-.tooltip-header.status-discharge { background: rgba(245, 158, 11, 0.2); }
-.tooltip-header.status-booking { background: rgba(249, 115, 22, 0.2); }
-.tooltip-header.status-cleaning { background: rgba(14, 165, 233, 0.2); }
+.tooltip-header.status-available { background: #dcfce7; color: #15803d; }
+.tooltip-header.status-occupied { background: #fee2e2; color: #b91c1c; }
+.tooltip-header.status-discharge { background: #fef3c7; color: #b45309; }
+.tooltip-header.status-booking { background: #f3e8ff; color: #7e22ce; }
+.tooltip-header.status-cleaning { background: #ffedd5; color: #c2410c; }
 
 .tooltip-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 13.5px;
+  gap: 6px;
 }
 
 .tooltip-status-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: 600;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
 }
 
 .tooltip-body {
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
+  padding: 10px 12px;
 }
 
 .tooltip-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
+  font-size: 0.775rem;
+  margin-bottom: 4px;
 }
 
-.tooltip-row .t-label {
-  color: #94a3b8;
-  flex-shrink: 0;
+.tooltip-row .label {
+  color: #64748b;
 }
 
-.tooltip-row .t-val {
-  color: #f1f5f9;
+.tooltip-row .value {
+  color: #1e293b;
   text-align: right;
+  max-width: 160px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tooltip-row.highlight .t-val {
-  color: #38bdf8;
-}
-
-.t-gender.male { color: #60a5fa; }
-.t-gender.female { color: #f472b6; }
-
-.text-primary-doctor {
-  color: #a78bfa;
-}
-
 .tooltip-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 4px 0;
+  border: none;
+  border-top: 1px dashed #e2e8f0;
+  margin: 6px 0;
 }
 
-.tooltip-hint {
-  margin-top: 6px;
-  font-size: 11px;
-  color: #64748b;
+.tooltip-footer {
+  background: #f8fafc;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  color: #94a3b8;
   text-align: center;
+  border-top: 1px solid #f1f5f9;
 }
 
-/* =========================================================================
-   BED DETAIL MODAL OVERLAY
-   ========================================================================= */
+/* Modal Overlay & Card */
 .bed-detail-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(4px);
-  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  z-index: 10000;
+  padding: 1rem;
 }
 
-.bed-detail-modal {
+.bed-detail-modal-card {
   width: 100%;
-  max-width: 580px;
+  max-width: 540px;
   background: white;
-  border-radius: 20px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
 }
 
-.modal-top {
-  padding: 20px 24px;
+.modal-card-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.modal-top.status-available { background: linear-gradient(135deg, #ecfdf5, #d1fae5); }
-.modal-top.status-occupied { background: linear-gradient(135deg, #fff1f2, #ffe4e6); }
-.modal-top.status-discharge { background: linear-gradient(135deg, #fefce8, #fef9c3); }
-.modal-top.status-booking { background: linear-gradient(135deg, #fff7ed, #ffedd5); }
-.modal-top.status-cleaning { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
-
-.modal-top-left {
+.modal-title-wrap {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
-.modal-bed-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+.modal-title-wrap .title-icon {
+  font-size: 1.5rem;
+  color: #2563eb;
 }
 
-.modal-bed-title {
+.modal-title-wrap h3 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #0f172a;
 }
 
-.modal-bed-sub {
+.modal-title-wrap .subtitle {
   margin: 0;
-  font-size: 13px;
-  color: #475569;
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
 .modal-close-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  background: none;
   border: none;
-  background: rgba(0, 0, 0, 0.06);
+  font-size: 1.25rem;
+  color: #94a3b8;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #475569;
-  transition: all 0.2s;
-}
-
-.modal-close-btn:hover {
-  background: rgba(0, 0, 0, 0.12);
-  color: #0f172a;
 }
 
 .modal-content-body {
-  padding: 24px;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-height: 70vh;
-  overflow-y: auto;
+  gap: 1.25rem;
 }
 
 .modal-status-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 14px;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.875rem;
 }
 
 .modal-status-banner.status-available { background: #dcfce7; color: #15803d; }
 .modal-status-banner.status-occupied { background: #fee2e2; color: #b91c1c; }
 .modal-status-banner.status-discharge { background: #fef3c7; color: #b45309; }
-.modal-status-banner.status-booking { background: #ffedd5; color: #c2410c; }
-.modal-status-banner.status-cleaning { background: #e0f2fe; color: #0369a1; }
+.modal-status-banner.status-booking { background: #f3e8ff; color: #7e22ce; }
+.modal-status-banner.status-cleaning { background: #ffedd5; color: #c2410c; }
 
 .patient-detail-card {
   background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.25rem;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 20px;
 }
 
 .card-section-title {
-  margin: 0 0 16px 0;
-  font-size: 15px;
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #334155;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1487,7 +1361,7 @@ const resetFilters = () => {
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 .col-span-2 {
@@ -1497,29 +1371,27 @@ const resetFilters = () => {
 .info-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .info-label {
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 0.75rem;
   color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-weight: 500;
 }
 
 .info-value {
-  font-size: 13.5px;
-  color: #1e293b;
+  font-size: 0.9rem;
+  color: #0f172a;
 }
 
 .copyable-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: white;
-  padding: 4px 10px;
-  border-radius: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
   border: 1px solid #cbd5e1;
   width: fit-content;
 }
@@ -1527,67 +1399,68 @@ const resetFilters = () => {
 .copy-btn {
   background: none;
   border: none;
-  color: #0284c7;
-  cursor: pointer;
-  padding: 2px;
-}
-
-.empty-bed-card {
-  padding: 24px;
-  border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  text-align: center;
-}
-
-.empty-illustration i {
-  font-size: 40px;
-  margin-bottom: 12px;
-}
-
-.empty-illustration h4 {
-  margin: 0 0 6px 0;
-  font-size: 17px;
-  color: #0f172a;
-}
-
-.empty-illustration p {
-  margin: 0 0 20px 0;
-  font-size: 13px;
   color: #64748b;
+  cursor: pointer;
+  padding: 0;
 }
 
-.empty-specs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  background: white;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+.copy-btn:hover {
+  color: #2563eb;
 }
 
-.spec-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.empty-bed-modal-state {
+  text-align: center;
+  padding: 1.5rem 1rem;
 }
 
-.spec-label {
-  font-size: 11px;
-  color: #94a3b8;
+.empty-bed-icon {
+  font-size: 3rem;
+  color: #10b981;
+  margin-bottom: 0.75rem;
 }
 
-.spec-val {
-  font-size: 13px;
-  color: #1e293b;
+.rate-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
 }
 
-.modal-footer {
-  padding: 16px 24px;
+.modal-card-footer {
+  padding: 1rem 1.5rem;
   background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #f1f5f9;
   display: flex;
   justify-content: flex-end;
+}
+
+/* Empty State */
+.empty-map-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: white;
+  border-radius: 16px;
+  border: 1px dashed #cbd5e1;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.reset-filter-btn {
+  margin-top: 1rem;
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
 }
 </style>
