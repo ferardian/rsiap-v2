@@ -290,18 +290,47 @@
           <p class="page-subtitle">Pantau dan kelola ketersediaan tempat tidur rawat inap secara real-time</p>
         </div>
         <div class="header-actions">
+          <!-- View Switcher (Denah Map vs Ringkasan Kartu) -->
+          <div class="view-mode-toggle">
+            <button 
+              class="btn-toggle" 
+              :class="{ active: operationalViewMode === 'map' }"
+              @click="operationalViewMode = 'map'"
+            >
+              <i class="fas fa-map-marked-alt"></i> Denah Spasial (Map)
+            </button>
+            <button 
+              class="btn-toggle" 
+              :class="{ active: operationalViewMode === 'cards' }"
+              @click="operationalViewMode = 'cards'"
+            >
+              <i class="fas fa-th-large"></i> Ringkasan Kartu
+            </button>
+          </div>
+
           <button class="btn btn-primary" @click="openDisplayMode">
             <i class="fas fa-desktop"></i> Mode Layar TV (Display)
           </button>
           <button class="btn btn-secondary" @click="refreshData">
-            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i> Refresh
+            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading || loadingMap }"></i> Refresh
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="summary-section">
+    <!-- MODE 1: DENAH SPASIAL (BED MAP LAYOUT) -->
+    <template v-if="operationalViewMode === 'map'">
+      <div v-if="loadingMap && !bedMapData.pavilions?.length" class="loading-state">
+        <div class="spinner"></div>
+        <p>Memuat denah dan status tempat tidur...</p>
+      </div>
+      <BedMapLayout v-else :mapData="bedMapData" :loading="loadingMap" />
+    </template>
+
+    <!-- MODE 2: RINGKASAN KARTU (LEGACY VIEW) -->
+    <template v-else>
+      <!-- Summary Cards -->
+      <div class="summary-section">
       <div class="summary-grid">
         <div class="summary-card total">
           <div class="card-icon">🏥</div>
@@ -479,6 +508,7 @@
       <i class="fas fa-bed fa-3x"></i>
       <p>Tidak ada data tempat tidur ditemukan</p>
     </div>
+    </template>
 
     <!-- Bed Detail Modal -->
     <div v-if="showDetailModal" class="modal-overlay" @click="showDetailModal = false">
@@ -546,11 +576,31 @@ import { useRoute, useRouter } from 'vue-router'
 import bedAvailabilityService from '../../services/bedAvailabilityService'
 import { showToast } from '../../utils/notification'
 import SearchableSelect from '../../components/ui/SearchableSelect.vue'
+import BedMapLayout from './components/BedMapLayout.vue'
 
 // Routing & Display Mode Detection
 const route = useRoute()
 const router = useRouter()
 const isDisplayMode = computed(() => route.meta.layout === 'empty' || route.path.endsWith('/display'))
+
+// View Mode (Spasial Map vs Ringkasan Kartu)
+const operationalViewMode = ref('map')
+const bedMapData = ref({ stats: {}, pavilions: [] })
+const loadingMap = ref(false)
+
+const loadBedMap = async (isBackground = false) => {
+  try {
+    if (!isBackground) loadingMap.value = true
+    const response = await bedAvailabilityService.getBedMap()
+    if (response.success && response.data) {
+      bedMapData.value = response.data
+    }
+  } catch (error) {
+    console.error('Error loading bed map:', error)
+  } finally {
+    loadingMap.value = false
+  }
+}
 
 // Core Data State
 const loading = ref(false)
@@ -964,7 +1014,7 @@ const loadClasses = async () => {
 }
 
 const refreshData = async () => {
-  await Promise.all([loadBeds(), loadWards(), loadClasses()])
+  await Promise.all([loadBeds(), loadWards(), loadClasses(), loadBedMap()])
   showToast('Data tempat tidur berhasil diperbarui', 'success')
 }
 
@@ -983,11 +1033,12 @@ onMounted(async () => {
   updateClock()
   clockTimer = setInterval(updateClock, 1000)
   
-  await Promise.all([loadBeds(), loadWards(), loadClasses()])
+  await Promise.all([loadBeds(), loadWards(), loadClasses(), loadBedMap()])
   
   // Background sync every 30s
   refreshTimer = setInterval(() => {
     loadBeds(true)
+    loadBedMap(true)
   }, 30000)
   
   if (isDisplayMode.value) {
@@ -1825,7 +1876,43 @@ onUnmounted(() => {
 
 .header-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  gap: 4px;
+}
+
+.btn-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-toggle:hover {
+  color: #0f172a;
+}
+
+.btn-toggle.active {
+  background: white;
+  color: #0284c7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .btn {

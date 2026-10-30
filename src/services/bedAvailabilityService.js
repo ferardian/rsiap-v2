@@ -11,6 +11,14 @@ const bedAvailabilityService = {
     },
 
     /**
+     * Get visual bed map with pavilion, rooms, and patient details
+     */
+    async getBedMap(params = {}) {
+        const response = await api.get('/bed-availability/map', { params })
+        return response.data
+    },
+
+    /**
      * Get bed availability summary
      */
     async getSummary(params = {}) {
