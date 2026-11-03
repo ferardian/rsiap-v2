@@ -15,6 +15,25 @@
 
         <!-- Action Header Buttons -->
         <div class="d-flex align-items-center gap-2">
+          <!-- Tombol Khusus Tab Tindakan -->
+          <template v-if="activeTab === 'tindakan'">
+            <button 
+              class="btn btn-sm btn-outline-success rounded-3 px-3 fw-bold shadow-sm d-flex align-items-center btn-action-header"
+              @click="exportRekapTindakanToExcel"
+              :disabled="loading || filteredRekapTindakan.length === 0"
+            >
+              <i class="fas fa-file-excel me-2"></i> Export Excel Rekap
+            </button>
+
+            <button 
+              class="btn btn-sm btn-primary rounded-3 px-3 fw-bold shadow-sm d-flex align-items-center btn-action-header"
+              @click="printRekapTindakanPdf"
+              :disabled="loading || filteredRekapTindakan.length === 0"
+            >
+              <i class="fas fa-file-pdf me-2"></i> Preview / Cetak PDF
+            </button>
+          </template>
+
           <button 
             v-if="activeTab === 'internal'"
             class="btn btn-sm btn-outline-success rounded-3 px-3 fw-bold shadow-sm d-flex align-items-center btn-action-header"
@@ -48,22 +67,22 @@
     <!-- Filters Section -->
     <div class="filters-card card border-0 shadow-sm rounded-4 mb-4 glass-card">
       <div class="card-body p-3 p-md-4">
-        <!-- Row 1: Periode, Dokter, Cara Bayar, Status Pasien -->
+        <!-- Filters Row 1 & 2 -->
         <div class="row g-3 align-items-end">
           
-          <!-- Periode Tanggal -->
-          <div class="col-lg-3 col-md-6">
+          <!-- Periode Tanggal (Row 1, 50% width) -->
+          <div class="col-12 col-lg-6">
             <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center">
               <i class="fas fa-calendar-alt text-primary me-2"></i> Periode Pemeriksaan
             </label>
-            <div class="d-flex align-items-center gap-2">
+            <div class="date-range-group">
               <input 
                 type="date" 
                 v-model="filters.tgl_awal" 
                 class="form-control form-control-filter" 
                 @change="fetchData"
               />
-              <span class="text-muted small fw-bold">s/d</span>
+              <span class="text-muted small fw-bold text-nowrap px-1">s/d</span>
               <input 
                 type="date" 
                 v-model="filters.tgl_akhir" 
@@ -73,8 +92,8 @@
             </div>
           </div>
 
-          <!-- Dokter Spesialis Radiologi -->
-          <div class="col-lg-3 col-md-6">
+          <!-- Dokter Spesialis Radiologi (Row 1, 50% width) -->
+          <div class="col-12 col-lg-6">
             <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center">
               <i class="fas fa-user-md text-primary me-2"></i> Dokter Spesialis Radiologi
             </label>
@@ -90,8 +109,8 @@
             </select>
           </div>
 
-          <!-- Cara Bayar / Pembiayaan -->
-          <div class="col-lg-3 col-md-6">
+          <!-- Cara Bayar / Pembiayaan (Row 2, 25% width) -->
+          <div class="col-12 col-sm-6 col-lg-3">
             <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center">
               <i class="fas fa-credit-card text-primary me-2"></i> Cara Bayar / Pembiayaan
             </label>
@@ -107,8 +126,8 @@
             </select>
           </div>
 
-          <!-- Status Pasien -->
-          <div class="col-lg-3 col-md-6">
+          <!-- Status Pasien (Row 2, 25% width) -->
+          <div class="col-12 col-sm-6 col-lg-3">
             <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center">
               <i class="fas fa-hospital-user text-primary me-2"></i> Status Pasien
             </label>
@@ -123,12 +142,8 @@
             </select>
           </div>
 
-        </div>
-
-        <!-- Row 2: Filter Shift / Jam Pelayanan & Custom Range -->
-        <div class="row g-3 mt-1 align-items-end pt-2 border-top">
-          <!-- Filter Shift -->
-          <div class="col-lg-5 col-md-7">
+          <!-- Filter Waktu (Shift) (Row 2, 50% width) -->
+          <div class="col-12 col-lg-6">
             <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center">
               <i class="fas fa-clock text-primary me-2"></i> Filter Waktu (Shift)
             </label>
@@ -171,29 +186,30 @@
           </div>
 
           <!-- Custom Jam Controls (Muncul Jika Mode Custom Dipilih) -->
-          <div v-if="shiftMode === 'custom'" class="col-lg-7 col-md-5">
-            <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center">
-              <i class="fas fa-business-time text-primary me-2"></i> Jam Kustom
-            </label>
-            <div class="d-flex align-items-center gap-2">
+          <div v-if="shiftMode === 'custom'" class="col-12 pt-2 border-top">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <label class="form-label small fw-bold text-muted mb-0 d-flex align-items-center me-2">
+                <i class="fas fa-business-time text-primary me-2"></i> Jam Pelayanan Kustom:
+              </label>
               <input 
                 type="time" 
                 v-model="filters.jam_mulai" 
                 class="form-control form-control-filter" 
-                style="width: 140px;"
+                style="width: 130px;"
               />
               <span class="text-muted small fw-bold">s/d</span>
               <input 
                 type="time" 
                 v-model="filters.jam_selesai" 
                 class="form-control form-control-filter" 
-                style="width: 140px;"
+                style="width: 130px;"
               />
               <button class="btn btn-sm btn-primary rounded-3 px-3 fw-bold d-flex align-items-center" style="height: 38px;" @click="fetchData">
                 <i class="fas fa-check me-1"></i> Terapkan
               </button>
             </div>
           </div>
+
         </div>
 
       </div>
@@ -279,6 +295,17 @@
             @click="activeTab = 'eksternal'"
           >
             <i class="fas fa-file-invoice me-2"></i> Data Eksternal
+          </button>
+          <button 
+            type="button" 
+            class="tab-btn" 
+            :class="{ active: activeTab === 'tindakan' }"
+            @click="activeTab = 'tindakan'"
+          >
+            <i class="fas fa-chart-pie me-2"></i> Rekap per Tindakan
+            <span v-if="rekapPerTindakan.length > 0" class="badge bg-primary-subtle text-primary ms-2 rounded-pill">
+              {{ rekapPerTindakan.length }}
+            </span>
           </button>
         </div>
       </div>
@@ -451,6 +478,137 @@
 
         </div>
 
+        <!-- ========================================== -->
+        <!-- TAB 3: REKAPITULASI PER TINDAKAN          -->
+        <!-- ========================================== -->
+        <div v-else-if="activeTab === 'tindakan'">
+          <!-- Top Toolbar & Highlights -->
+          <div class="row g-3 align-items-center mb-3">
+            <div class="col-md-5">
+              <div class="input-group" style="height: 38px;">
+                <span class="input-group-text bg-light border-secondary-subtle">
+                  <i class="fas fa-search text-muted"></i>
+                </span>
+                <input 
+                  type="text" 
+                  v-model="searchTindakan" 
+                  class="form-control"
+                  placeholder="Cari kode atau nama pemeriksaan..." 
+                />
+                <button v-if="searchTindakan" class="btn btn-outline-secondary" @click="searchTindakan = ''">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="col-md-7 text-md-end">
+              <span class="badge bg-light text-dark border px-3 py-2 rounded-pill me-2">
+                <i class="fas fa-layer-group text-primary me-1"></i>
+                <b>{{ rekapPerTindakan.length }}</b> Jenis Tindakan
+              </span>
+              <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                <i class="fas fa-procedures text-success me-1"></i>
+                <b>{{ filteredList.length }}</b> Total Pelayanan
+              </span>
+            </div>
+          </div>
+
+          <!-- Table Rekap per Tindakan -->
+          <div class="table-responsive bg-white rounded-3 shadow-sm border">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4 py-3 text-center" style="width: 60px;">No.</th>
+                  <th class="py-3" style="width: 130px;">Kode Tindakan</th>
+                  <th class="py-3">Nama Pemeriksaan / Tindakan Radiologi</th>
+                  <th class="py-3 text-center" style="width: 140px;">Jumlah Dilakukan</th>
+                  <th class="py-3 text-center" style="width: 150px;">Proporsi (%)</th>
+                  <th class="py-3 text-center" style="width: 160px;">Ralan / Ranap</th>
+                  <th class="py-3 text-end" style="width: 170px;">Total Jasa Medis</th>
+                  <th class="pe-4 py-3 text-end" style="width: 150px;">Rata-rata Jasa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="loading">
+                  <td colspan="8" class="text-center py-5 text-muted">
+                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                    Memuat rekapan per tindakan radiologi...
+                  </td>
+                </tr>
+                <tr v-else-if="filteredRekapTindakan.length === 0">
+                  <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-3x mb-2 d-block text-secondary opacity-50"></i>
+                    Tidak ada tindakan yang sesuai dengan pencarian atau filter.
+                  </td>
+                </tr>
+                <tr v-else v-for="(t, idx) in filteredRekapTindakan" :key="t.kd_jenis_prw">
+                  <td class="ps-4 text-center text-muted fw-bold">{{ idx + 1 }}</td>
+                  <td>
+                    <span class="badge bg-secondary-subtle text-dark font-monospace px-2 py-1">
+                      {{ t.kd_jenis_prw }}
+                    </span>
+                  </td>
+                  <td class="fw-bold text-dark">
+                    {{ t.nm_perawatan }}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-primary rounded-pill px-3 py-1 fw-bold fs-7">
+                      {{ t.jumlah }}x
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="progress flex-grow-1" style="height: 6px;">
+                        <div 
+                          class="progress-bar bg-info" 
+                          role="progressbar" 
+                          :style="{ width: `${t.persentase}%` }"
+                        ></div>
+                      </div>
+                      <span class="small fw-bold text-muted font-monospace" style="min-width: 45px;">
+                        {{ t.persentase }}%
+                      </span>
+                    </div>
+                  </td>
+                  <td class="text-center small">
+                    <span class="badge bg-success-subtle text-success me-1">{{ t.ralan }} Ralan</span>
+                    <span class="badge bg-info-subtle text-info">{{ t.ranap }} Ranap</span>
+                  </td>
+                  <td class="text-end fw-bold text-success font-monospace">
+                    Rp {{ Number(t.total_jasa || 0).toLocaleString('id-ID') }}
+                  </td>
+                  <td class="pe-4 text-end text-muted font-monospace">
+                    Rp {{ Number(t.rata_jasa || 0).toLocaleString('id-ID') }}
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot v-if="filteredRekapTindakan.length > 0" class="table-light">
+                <tr class="fw-bold">
+                  <td colspan="3" class="ps-4 py-3 text-end text-uppercase">
+                    Total ({{ filteredRekapTindakan.length }} Tindakan):
+                  </td>
+                  <td class="py-3 text-center text-primary fs-6">
+                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.jumlah, 0) }}x
+                  </td>
+                  <td class="py-3 text-center text-muted font-monospace">
+                    {{ Math.min(100, filteredRekapTindakan.reduce((sum, item) => sum + item.persentase, 0).toFixed(1)) }}%
+                  </td>
+                  <td class="py-3 text-center small text-muted">
+                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.ralan, 0) }} Ralan / 
+                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.ranap, 0) }} Ranap
+                  </td>
+                  <td class="py-3 text-end text-success fs-6 font-monospace">
+                    Rp {{ filteredRekapTindakan.reduce((sum, item) => sum + item.total_jasa, 0).toLocaleString('id-ID') }}
+                  </td>
+                  <td class="pe-4 py-3 text-end text-muted font-monospace">
+                    -
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -461,6 +619,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
 import rekapRadiologiService from '@/services/rekapRadiologiService'
 import logoRsia from '@/assets/logo.png'
 
@@ -475,9 +634,10 @@ const loadImage = (src) => {
 
 const toast = useToast()
 const loading = ref(false)
-const activeTab = ref('internal') // 'internal' | 'eksternal'
+const activeTab = ref('internal') // 'internal' | 'eksternal' | 'tindakan'
 const shiftMode = ref('all') // 'all' | 'pagi' | 'luar_pagi' | 'custom'
 const searchKeyword = ref('')
+const searchTindakan = ref('')
 const dokterList = ref([])
 const penjabList = ref([])
 const rawData = ref([])
@@ -553,6 +713,56 @@ const filteredList = computed(() => {
 // Total jasa medis yang difilter
 const totalFilteredJasa = computed(() => {
   return filteredList.value.reduce((acc, curr) => acc + Number(curr.jasa_dokter || 0), 0)
+})
+
+// ==========================================
+// REKAPITULASI PER TINDAKAN
+// ==========================================
+const rekapPerTindakan = computed(() => {
+  const map = new Map()
+  
+  filteredList.value.forEach((item) => {
+    const key = (item.kd_jenis_prw || item.nm_perawatan || 'LAINNYA').trim()
+    if (!map.has(key)) {
+      map.set(key, {
+        kd_jenis_prw: item.kd_jenis_prw || '-',
+        nm_perawatan: item.nm_perawatan || '-',
+        jumlah: 0,
+        total_jasa: 0,
+        ralan: 0,
+        ranap: 0
+      })
+    }
+    const row = map.get(key)
+    row.jumlah += 1
+    row.total_jasa += Number(item.jasa_dokter || 0)
+    if (item.status_rawat === 'Ralan') {
+      row.ralan += 1
+    } else if (item.status_rawat === 'Ranap') {
+      row.ranap += 1
+    }
+  })
+
+  const totalAll = filteredList.value.length || 1
+
+  const list = Array.from(map.values()).map((row) => ({
+    ...row,
+    persentase: Math.round((row.jumlah / totalAll) * 1000) / 10,
+    rata_jasa: row.jumlah > 0 ? Math.round(row.total_jasa / row.jumlah) : 0
+  }))
+
+  // Urutkan dari jumlah terbanyak
+  return list.sort((a, b) => b.jumlah - a.jumlah)
+})
+
+// Filter data rekap tindakan berdasarkan pencarian
+const filteredRekapTindakan = computed(() => {
+  if (!searchTindakan.value) return rekapPerTindakan.value
+  const kw = searchTindakan.value.toLowerCase()
+  return rekapPerTindakan.value.filter((t) => 
+    (t.nm_perawatan && t.nm_perawatan.toLowerCase().includes(kw)) || 
+    (t.kd_jenis_prw && t.kd_jenis_prw.toLowerCase().includes(kw))
+  )
 })
 
 // Format Tanggal Indonesia
@@ -653,7 +863,7 @@ const fetchData = async () => {
 }
 
 // ==========================================
-// EXPORT EXCEL (CSV UTF-8)
+// EXPORT DIRECT TO EXCEL (.XLSX)
 // ==========================================
 const exportToExcel = (mode) => {
   if (filteredList.value.length === 0) {
@@ -662,72 +872,116 @@ const exportToExcel = (mode) => {
 
   const docName = selectedDoctorName.value ? selectedDoctorName.value.replace(/[^a-zA-Z0-9]/g, '_') : 'SemuaDokter'
   const filename = mode === 'internal'
-    ? `Rekap_Radiologi_Internal_${filters.tgl_awal}_sd_${filters.tgl_akhir}.csv`
-    : `Rekap_Radiologi_Eksternal_${docName}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.csv`
+    ? `Rekap_Radiologi_Internal_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`
+    : `Rekap_Radiologi_Eksternal_${docName}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`
 
-  let csvContent = '\uFEFF' // BOM UTF-8
+  const wsData = []
 
   if (mode === 'internal') {
     // Header Kolom Internal
-    csvContent += 'No,Tanggal Periksa,Jam,No Rawat,No RM,Nama Pasien,Penanggung Jawab,Status Rawat,Kode Tindakan,Nama Pemeriksaan,Dokter Radiologi,Dokter Perujuk,Jasa Medis\n'
+    wsData.push([
+      'No',
+      'Tanggal Periksa',
+      'Jam',
+      'No. Rawat',
+      'No. RM',
+      'Nama Pasien',
+      'Penanggung Jawab',
+      'Status Rawat',
+      'Kode Tindakan',
+      'Nama Pemeriksaan',
+      'Dokter Radiologi',
+      'Dokter Perujuk',
+      'Jasa Medis'
+    ])
     
     filteredList.value.forEach((item, idx) => {
-      const row = [
+      wsData.push([
         idx + 1,
-        `"${item.tgl_periksa}"`,
-        `"${item.jam}"`,
-        `"${item.no_rawat}"`,
-        `"'${item.no_rkm_medis}"`,
-        `"${(item.nm_pasien || '').replace(/"/g, '""')}"`,
-        `"${(item.png_jawab || '').replace(/"/g, '""')}"`,
-        `"${item.status_rawat || ''}"`,
-        `"${item.kd_jenis_prw}"`,
-        `"${(item.nm_perawatan || '').replace(/"/g, '""')}"`,
-        `"${(item.dokter_radiologi || '').replace(/"/g, '""')}"`,
-        `"${(item.dokter_perujuk || '').replace(/"/g, '""')}"`,
-        item.jasa_dokter || 0
-      ]
-      csvContent += row.join(',') + '\n'
+        item.tgl_periksa || '',
+        item.jam || '',
+        item.no_rawat || '',
+        item.no_rkm_medis || '',
+        item.nm_pasien || '',
+        item.png_jawab || '',
+        item.status_rawat || '',
+        item.kd_jenis_prw || '',
+        item.nm_perawatan || '',
+        item.dokter_radiologi || '',
+        item.dokter_perujuk || '',
+        Number(item.jasa_dokter || 0)
+      ])
+    })
+
+    // Footer Total Jasa Medis
+    wsData.push([])
+    wsData.push([
+      '', '', '', '', '', '', '', '', '', '', '',
+      'Total Jasa Medis',
+      totalFilteredJasa.value
+    ])
+  } else {
+    // Header Info Eksternal
+    wsData.push(['LAPORAN REKAPITULASI PEMERIKSAAN RADIOLOGI (EKSTERNAL)'])
+    wsData.push(['Dokter Spesialis Radiologi', selectedDoctorName.value || 'Semua Dokter'])
+    wsData.push(['Periode Pemeriksaan', `${formatDateIndo(filters.tgl_awal)} s.d. ${formatDateIndo(filters.tgl_akhir)}`])
+    if (selectedPenjabName.value) {
+      wsData.push(['Cara Bayar', selectedPenjabName.value])
+    }
+    wsData.push(['Total Tindakan', `${filteredList.value.length} Tindakan`])
+    wsData.push([]) // baris kosong pemisah
+
+    // Header Kolom Tabel Eksternal
+    wsData.push(['No', 'Tanggal Pemeriksaan', 'Jam Pemeriksaan', 'Nama Pemeriksaan / Tindakan'])
+
+    filteredList.value.forEach((item, idx) => {
+      wsData.push([
+        idx + 1,
+        item.tgl_periksa || '',
+        item.jam || '',
+        item.nm_perawatan || ''
+      ])
     })
 
     // Footer Total
-    csvContent += `,,,,,,,,,,,,Total Jasa Medis,${totalFilteredJasa.value}\n`
-  } else {
-    // Header Kolom Eksternal (Hanya Tanggal, Jam, Nama Tindakan)
-    csvContent += `Laporan Rekap Pemeriksaan Radiologi (Eksternal)\n`
-    csvContent += `Dokter Spesialis Radiologi: "${selectedDoctorName.value || 'Semua Dokter'}"\n`
-    csvContent += `Periode: "${filters.tgl_awal} s.d. ${filters.tgl_akhir}"\n`
-    csvContent += `Shift Waktu: "${shiftLabel.value}"\n`
-    if (selectedPenjabName.value) {
-      csvContent += `Cara Bayar: "${selectedPenjabName.value}"\n`
-    }
-    csvContent += '\n'
-    csvContent += 'No,Tanggal Pemeriksaan,Jam Pemeriksaan,Nama Pemeriksaan / Tindakan\n'
-
-    filteredList.value.forEach((item, idx) => {
-      const row = [
-        idx + 1,
-        `"${item.tgl_periksa}"`,
-        `"${item.jam}"`,
-        `"${(item.nm_perawatan || '').replace(/"/g, '""')}"`
-      ]
-      csvContent += row.join(',') + '\n'
-    })
-
-    csvContent += `,,,Total Tindakan,${filteredList.value.length}\n`
+    wsData.push([])
+    wsData.push(['', '', 'Total Tindakan', filteredList.value.length])
   }
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.setAttribute('href', url)
-  link.setAttribute('download', filename)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
 
-  toast.success('File berhasil diexport')
+  // Auto-size lebar kolom agar rapi saat dibuka di Excel
+  if (mode === 'internal') {
+    ws['!cols'] = [
+      { wch: 5 },  // No
+      { wch: 15 }, // Tanggal
+      { wch: 10 }, // Jam
+      { wch: 20 }, // No Rawat
+      { wch: 12 }, // No RM
+      { wch: 28 }, // Nama Pasien
+      { wch: 22 }, // Penanggung Jawab
+      { wch: 14 }, // Status Rawat
+      { wch: 14 }, // Kode Tindakan
+      { wch: 32 }, // Nama Pemeriksaan
+      { wch: 28 }, // Dokter Radiologi
+      { wch: 28 }, // Dokter Perujuk
+      { wch: 16 }  // Jasa Medis
+    ]
+  } else {
+    ws['!cols'] = [
+      { wch: 6 },  // No
+      { wch: 20 }, // Tanggal
+      { wch: 16 }, // Jam
+      { wch: 45 }  // Tindakan
+    ]
+  }
+
+  const wb = XLSX.utils.book_new()
+  const sheetName = mode === 'internal' ? 'Rekap Internal' : 'Rekap Eksternal'
+  XLSX.utils.book_append_sheet(wb, ws, sheetName)
+
+  XLSX.writeFile(wb, filename)
+  toast.success('File Excel (.xlsx) berhasil diexport')
 }
 
 // ==========================================
@@ -798,8 +1052,7 @@ const printEksternalReport = async () => {
 
     const metaItems = [
       { label: 'Nama Dokter Spesialis', value: docName, bold: true },
-      { label: 'Periode Pelayanan', value: periodeText },
-      { label: 'Waktu / Shift', value: shiftLabel.value }
+      { label: 'Periode Pelayanan', value: periodeText }
     ]
 
     if (selectedPenjabName.value) {
@@ -884,6 +1137,237 @@ const printEksternalReport = async () => {
   }
 }
 
+// ==========================================
+// EXPORT EXCEL REKAP PER TINDAKAN (.XLSX)
+// ==========================================
+const exportRekapTindakanToExcel = () => {
+  if (rekapPerTindakan.value.length === 0) {
+    return toast.warning('Tidak ada data tindakan untuk diexport')
+  }
+
+  const docName = selectedDoctorName.value ? selectedDoctorName.value.replace(/[^a-zA-Z0-9]/g, '_') : 'SemuaDokter'
+  const filename = `Rekap_Tindakan_Radiologi_${docName}_${filters.tgl_awal}_sd_${filters.tgl_akhir}.xlsx`
+
+  const wsData = [
+    ['LAPORAN REKAPITULASI PEMERIKSAAN RADIOLOGI PER TINDAKAN'],
+    ['RSIA AISYIYAH PEKAJANGAN'],
+    ['Dokter Spesialis Radiologi', selectedDoctorName.value || 'Semua Dokter Spesialis Radiologi'],
+    ['Periode Pelayanan', `${formatDateIndo(filters.tgl_awal)} s/d ${formatDateIndo(filters.tgl_akhir)}`],
+    ['Total Tindakan Dilakukan', `${filteredList.value.length} Tindakan`],
+    ['Total Variasi Tindakan', `${rekapPerTindakan.value.length} Jenis Tindakan`],
+    ['Total Jasa Medis', totalFilteredJasa.value],
+    [],
+    [
+      'No',
+      'Kode Tindakan',
+      'Nama Pemeriksaan Radiologi',
+      'Jumlah Tindakan',
+      'Proporsi (%)',
+      'Rawat Jalan (Ralan)',
+      'Rawat Inap (Ranap)',
+      'Total Jasa Medis (Rp)',
+      'Rata-rata Jasa (Rp)'
+    ]
+  ]
+
+  rekapPerTindakan.value.forEach((item, idx) => {
+    wsData.push([
+      idx + 1,
+      item.kd_jenis_prw,
+      item.nm_perawatan,
+      item.jumlah,
+      `${item.persentase}%`,
+      item.ralan,
+      item.ranap,
+      item.total_jasa,
+      item.rata_jasa
+    ])
+  })
+
+  // Footer Total
+  wsData.push([])
+  wsData.push([
+    '', '', 'TOTAL KESELURUHAN',
+    filteredList.value.length,
+    '100%',
+    rekapPerTindakan.value.reduce((s, i) => s + i.ralan, 0),
+    rekapPerTindakan.value.reduce((s, i) => s + i.ranap, 0),
+    totalFilteredJasa.value,
+    ''
+  ])
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
+  ws['!cols'] = [
+    { wch: 6 },  // No
+    { wch: 15 }, // Kode Tindakan
+    { wch: 38 }, // Nama Pemeriksaan
+    { wch: 18 }, // Jumlah Tindakan
+    { wch: 14 }, // Proporsi
+    { wch: 18 }, // Ralan
+    { wch: 18 }, // Ranap
+    { wch: 22 }, // Total Jasa
+    { wch: 18 }  // Rata-rata Jasa
+  ]
+
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap per Tindakan')
+  XLSX.writeFile(wb, filename)
+  toast.success('File Excel (.xlsx) Rekap per Tindakan berhasil diexport')
+}
+
+// ==========================================
+// CETAK PDF REKAP PER TINDAKAN
+// ==========================================
+const printRekapTindakanPdf = async () => {
+  if (rekapPerTindakan.value.length === 0) {
+    return toast.warning('Tidak ada data tindakan untuk dicetak')
+  }
+
+  try {
+    toast.info('Menyiapkan berkas PDF rekap per tindakan...')
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    })
+    
+    const pageWidth = 210
+    const pageHeight = 297
+    const marginX = 14
+
+    // Kop Surat RSIA
+    const logoImg = await loadImage(logoRsia)
+    if (logoImg) {
+      doc.addImage(logoImg, 'PNG', marginX, 10, 16, 16)
+    }
+
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(13)
+    doc.setTextColor(15, 23, 42)
+    doc.text('RSIA AISYIYAH PEKAJANGAN', pageWidth / 2, 14, { align: 'center' })
+
+    doc.setFont('Helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(51, 65, 85)
+    doc.text('Jl. Raya Pekajangan No. 610, Pekalongan, Jawa Tengah 51172', pageWidth / 2, 19, { align: 'center' })
+    doc.text('Telp. (0285) 785909 | Email: rsiap_pkj@yahoo.co.id', pageWidth / 2, 23.5, { align: 'center' })
+
+    // Garis Kop Ganda
+    doc.setDrawColor(0, 0, 0)
+    doc.setLineWidth(0.6)
+    doc.line(marginX, 28, pageWidth - marginX, 28)
+    doc.setLineWidth(0.2)
+    doc.line(marginX, 29, pageWidth - marginX, 29)
+
+    // Judul Laporan
+    doc.setFont('Helvetica', 'bold')
+    doc.setFontSize(11)
+    doc.setTextColor(0, 0, 0)
+    doc.text('REKAPITULASI PELAYANAN RADIOLOGI PER TINDAKAN', pageWidth / 2, 36, { align: 'center' })
+
+    const docName = selectedDoctorName.value || 'Semua Dokter Spesialis Radiologi'
+    const periodeText = `${formatDateIndo(filters.tgl_awal)} s/d ${formatDateIndo(filters.tgl_akhir)}`
+
+    let currentY = 44
+    const lineSpacing = 4.2
+    const labelX = marginX
+    const colonX = marginX + 38
+    const valX = colonX + 3
+
+    const meta = [
+      { label: 'Dokter Spesialis', value: docName, bold: true },
+      { label: 'Periode Pelayanan', value: periodeText },
+      { label: 'Total Pelayanan', value: `${filteredList.value.length} Tindakan (${rekapPerTindakan.value.length} Jenis Tindakan)`, bold: true }
+    ]
+
+    doc.setFontSize(8.5)
+    doc.setTextColor(30, 41, 59)
+    meta.forEach((item) => {
+      doc.setFont('Helvetica', 'normal')
+      doc.text(item.label, labelX, currentY)
+      doc.text(':', colonX, currentY)
+      doc.setFont('Helvetica', item.bold ? 'bold' : 'normal')
+      doc.text(item.value, valX, currentY)
+      currentY += lineSpacing
+    })
+
+    const tableHead = [['No.', 'Kode', 'Nama Tindakan / Pemeriksaan', 'Jumlah', 'Proporsi', 'Total Jasa (Rp)']]
+    const tableBody = rekapPerTindakan.value.map((t, idx) => [
+      idx + 1,
+      t.kd_jenis_prw,
+      t.nm_perawatan,
+      `${t.jumlah}x`,
+      `${t.persentase}%`,
+      `Rp ${Number(t.total_jasa || 0).toLocaleString('id-ID')}`
+    ])
+
+    // Footer Total
+    tableBody.push([
+      '',
+      '',
+      'TOTAL KESELURUHAN',
+      `${filteredList.value.length}x`,
+      '100%',
+      `Rp ${Number(totalFilteredJasa.value || 0).toLocaleString('id-ID')}`
+    ])
+
+    autoTable(doc, {
+      startY: currentY + 3,
+      head: tableHead,
+      body: tableBody,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [241, 245, 249],
+        textColor: [15, 23, 42],
+        fontStyle: 'bold',
+        fontSize: 8,
+        halign: 'center',
+        lineColor: [71, 85, 105],
+        lineWidth: 0.2
+      },
+      bodyStyles: {
+        fontSize: 7.5,
+        textColor: [30, 41, 59],
+        lineColor: [203, 213, 225],
+        lineWidth: 0.15
+      },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 22, halign: 'center' },
+        2: { fontStyle: 'bold' },
+        3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+        4: { cellWidth: 20, halign: 'center' },
+        5: { cellWidth: 32, halign: 'right', fontStyle: 'bold' }
+      },
+      margin: {
+        left: marginX,
+        right: marginX,
+        top: 15,
+        bottom: 16
+      },
+      didDrawPage: (data) => {
+        doc.setFont('Helvetica', 'normal')
+        doc.setFontSize(7.5)
+        doc.setTextColor(148, 163, 184)
+        doc.text(
+          `Halaman ${data.pageNumber} dari ${doc.internal.getNumberOfPages()}`,
+          pageWidth - marginX,
+          pageHeight - 8,
+          { align: 'right' }
+        )
+      }
+    })
+
+    const pdfBlob = doc.output('blob')
+    const blobUrl = URL.createObjectURL(pdfBlob)
+    window.open(blobUrl, '_blank')
+    toast.success('Preview PDF Rekap per Tindakan dibuka!')
+  } catch (err) {
+    console.error('Error print rekap tindakan PDF:', err)
+    toast.error('Gagal mencetak PDF rekap tindakan')
+  }
+}
+
 onMounted(async () => {
   await Promise.all([
     fetchDokterRadiologi(),
@@ -917,6 +1401,21 @@ onMounted(async () => {
   border-radius: 8px !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: none !important;
+}
+
+.date-range-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.date-range-group .form-control-filter {
+  flex: 1 1 0;
+  min-width: 0 !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  font-size: 0.85rem !important;
 }
 
 .form-control-filter:focus {

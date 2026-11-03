@@ -96,7 +96,7 @@
         </div>
         <div class="kpi-body">
           <span class="kpi-number highlight-green">{{ availableBeds }}</span>
-          <span class="kpi-unit">Siap Pakai</span>
+          <span class="kpi-unit">Siap Ditempati</span>
         </div>
       </div>
 
@@ -147,8 +147,8 @@
                     <i :class="['fas', pavilion.icon || 'fa-hospital']"></i>
                   </div>
                   <div>
-                    <h2 class="tv-pavilion-name">{{ pavilion.name }}</h2>
-                    <span class="tv-pavilion-tag">{{ pavilion.tag }} • {{ pavilion.beds.length }} Tempat Tidur</span>
+                    <h2 class="tv-pavilion-name">{{ pavilion.displayName || pavilion.name }}</h2>
+                    <span class="tv-pavilion-tag">{{ pavilion.tag }} • {{ pavilion.bedsCount }} Tempat Tidur</span>
                   </div>
                 </div>
 
@@ -175,100 +175,129 @@
                 </div>
               </div>
 
-              <!-- TV Beds Grid (High Visibility Spatial Grid - STRICTLY ANONYMOUS) -->
-              <div class="tv-beds-grid">
+              <!-- TV Class Groups Container (Separated per class) -->
+              <div class="tv-class-groups-container">
                 <div 
-                  v-for="bed in pavilion.beds" 
-                  :key="bed.kd_kamar"
-                  class="tv-bed-tile"
-                  :class="getBedStatusClass(bed)"
+                  v-for="grp in pavilion.classGroups" 
+                  :key="grp.kelas" 
+                  class="tv-class-block"
                 >
-                  <!-- Tile Top: Bed Label & Kelas -->
-                  <div class="tv-tile-head">
-                    <span class="tv-tile-number">
-                      <i class="fas fa-bed"></i> {{ bed.bed_label || bed.kd_kamar }}
-                    </span>
-                    <span class="tv-class-pill" :class="getClassClass(bed.kelas)">
-                      {{ bed.kelas }}
-                    </span>
+                  <!-- Class Group Header -->
+                  <div class="tv-class-block-header">
+                    <div class="tv-class-block-title">
+                      <span class="tv-class-pill" :class="getClassClass(grp.kelas)">
+                        <i class="fas fa-layer-group"></i> {{ grp.kelas }}
+                      </span>
+                      <span class="tv-class-block-meta">
+                        {{ grp.beds.length }} Tempat Tidur
+                      </span>
+                    </div>
+                    <div class="tv-class-block-stats">
+                      <span class="tv-mini-stat green">
+                        <i class="fas fa-check-circle"></i> <strong>{{ grp.stats.tersedia }}</strong> Tersedia
+                      </span>
+                      <span class="tv-mini-stat red">
+                        <i class="fas fa-user-injured"></i> <strong>{{ grp.stats.terisi }}</strong> Terisi
+                      </span>
+                    </div>
                   </div>
 
-                  <!-- Tile Body: Big Status Visual (NO PATIENT INFO) -->
-                  <div class="tv-tile-body">
-                    <!-- TERISI -->
-                    <template v-if="bed.effective_status === 'ISI'">
-                      <div class="tv-status-state occupied">
-                        <div class="tv-status-icon-circle occupied">
-                          <i class="fas fa-user-lock"></i>
-                        </div>
-                        <div class="tv-status-texts">
-                          <span class="tv-status-title">TERISI</span>
-                          <span class="tv-status-subtitle">Sedang Digunakan</span>
-                        </div>
+                  <!-- TV Beds Grid -->
+                  <div class="tv-beds-grid">
+                    <div 
+                      v-for="bed in grp.beds" 
+                      :key="bed.kd_kamar"
+                      class="tv-bed-tile"
+                      :class="getBedStatusClass(bed)"
+                    >
+                      <!-- Tile Top: Bed Label & Kelas -->
+                      <div class="tv-tile-head">
+                        <span class="tv-tile-number">
+                          <i class="fas fa-bed"></i> {{ bed.bed_label || bed.kd_kamar }}
+                        </span>
+                        <span class="tv-class-pill-sm" :class="getClassClass(bed.kelas)">
+                          {{ bed.kelas }}
+                        </span>
                       </div>
-                    </template>
 
-                    <!-- TERSEDIA / KOSONG -->
-                    <template v-else-if="bed.effective_status === 'KOSONG'">
-                      <div class="tv-status-state available">
-                        <div class="tv-status-icon-circle available">
-                          <i class="fas fa-check"></i>
-                        </div>
-                        <div class="tv-status-texts">
-                          <span class="tv-status-title">SIAP PAKAI</span>
-                          <span class="tv-status-subtitle" v-if="bed.trf_kamar > 0">
-                            {{ formatRupiah(bed.trf_kamar) }}/hr
-                          </span>
-                          <span class="tv-status-subtitle" v-else>Tersedia</span>
-                        </div>
+                      <!-- Tile Body: Big Status Visual (NO PATIENT INFO) -->
+                      <div class="tv-tile-body">
+                        <!-- TERISI -->
+                        <template v-if="bed.effective_status === 'ISI'">
+                          <div class="tv-status-state occupied">
+                            <div class="tv-status-icon-circle occupied">
+                              <i class="fas fa-user-lock"></i>
+                            </div>
+                            <div class="tv-status-texts">
+                              <span class="tv-status-title">TERISI</span>
+                              <span class="tv-status-subtitle">Sedang Digunakan</span>
+                            </div>
+                          </div>
+                        </template>
+
+                        <!-- TERSEDIA / KOSONG -->
+                        <template v-else-if="bed.effective_status === 'KOSONG'">
+                          <div class="tv-status-state available">
+                            <div class="tv-status-icon-circle available">
+                              <i class="fas fa-check"></i>
+                            </div>
+                            <div class="tv-status-texts">
+                              <span class="tv-status-title">TERSEDIA</span>
+                              <span class="tv-status-subtitle">Siap Ditempati</span>
+                            </div>
+                          </div>
+                        </template>
+
+                        <!-- RENCANA PULANG -->
+                        <template v-else-if="bed.effective_status === 'RENCANA_PULANG'">
+                          <div class="tv-status-state discharge">
+                            <div class="tv-status-icon-circle discharge">
+                              <i class="fas fa-sign-out-alt"></i>
+                            </div>
+                            <div class="tv-status-texts">
+                              <span class="tv-status-title">RENCANA PLG</span>
+                              <span class="tv-status-subtitle">Persiapan Pulang</span>
+                            </div>
+                          </div>
+                        </template>
+
+                        <!-- STERILISASI -->
+                        <template v-else-if="bed.effective_status === 'DIBERSIHKAN'">
+                          <div class="tv-status-state cleaning">
+                            <div class="tv-status-icon-circle cleaning">
+                              <i class="fas fa-broom"></i>
+                            </div>
+                            <div class="tv-status-texts">
+                              <span class="tv-status-title">STERILISASI</span>
+                              <span class="tv-status-subtitle">Pembersihan Ruang</span>
+                            </div>
+                          </div>
+                        </template>
+
+                        <!-- BOOKING -->
+                        <template v-else-if="bed.effective_status === 'DIBOOKING'">
+                          <div class="tv-status-state booking">
+                            <div class="tv-status-icon-circle booking">
+                              <i class="fas fa-bookmark"></i>
+                            </div>
+                            <div class="tv-status-texts">
+                              <span class="tv-status-title">RESERVASI</span>
+                              <span class="tv-status-subtitle">Telah Dibooking</span>
+                            </div>
+                          </div>
+                        </template>
                       </div>
-                    </template>
 
-                    <!-- RENCANA PULANG -->
-                    <template v-else-if="bed.effective_status === 'RENCANA_PULANG'">
-                      <div class="tv-status-state discharge">
-                        <div class="tv-status-icon-circle discharge">
-                          <i class="fas fa-sign-out-alt"></i>
-                        </div>
-                        <div class="tv-status-texts">
-                          <span class="tv-status-title">RENCANA PLG</span>
-                          <span class="tv-status-subtitle">Persiapan Pulang</span>
-                        </div>
+                      <!-- Tile Footer: Room Name & Status Badge -->
+                      <div class="tv-tile-foot">
+                        <span class="tv-foot-room" :title="bed.nm_bangsal || bed.kd_bangsal">
+                          <i class="fas fa-door-open"></i> {{ bed.nm_bangsal || bed.kd_bangsal }}
+                        </span>
+                        <span class="tv-foot-status-badge" :class="getBedStatusClass(bed)">
+                          {{ getStatusLabel(bed.effective_status) }}
+                        </span>
                       </div>
-                    </template>
-
-                    <!-- STERILISASI -->
-                    <template v-else-if="bed.effective_status === 'DIBERSIHKAN'">
-                      <div class="tv-status-state cleaning">
-                        <div class="tv-status-icon-circle cleaning">
-                          <i class="fas fa-broom"></i>
-                        </div>
-                        <div class="tv-status-texts">
-                          <span class="tv-status-title">STERILISASI</span>
-                          <span class="tv-status-subtitle">Pembersihan Ruang</span>
-                        </div>
-                      </div>
-                    </template>
-
-                    <!-- BOOKING -->
-                    <template v-else-if="bed.effective_status === 'DIBOOKING'">
-                      <div class="tv-status-state booking">
-                        <div class="tv-status-icon-circle booking">
-                          <i class="fas fa-bookmark"></i>
-                        </div>
-                        <div class="tv-status-texts">
-                          <span class="tv-status-title">RESERVASI</span>
-                          <span class="tv-status-subtitle">Telah Dibooking</span>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-
-                  <!-- Tile Footer -->
-                  <div class="tv-tile-foot">
-                    <span class="tv-foot-status-badge" :class="getBedStatusClass(bed)">
-                      {{ getStatusLabel(bed.effective_status) }}
-                    </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -384,19 +413,8 @@
       </div>
     </div>
 
-    <!-- MODE 1: DENAH SPASIAL (BED MAP LAYOUT) -->
-    <template v-if="operationalViewMode === 'map'">
-      <div v-if="loadingMap && !bedMapData.pavilions?.length" class="loading-state">
-        <div class="spinner"></div>
-        <p>Memuat denah dan status tempat tidur...</p>
-      </div>
-      <BedMapLayout v-else :mapData="bedMapData" :loading="loadingMap" />
-    </template>
-
-    <!-- MODE 2: RINGKASAN KARTU (LEGACY VIEW) -->
-    <template v-else>
-      <!-- Summary Cards -->
-      <div class="summary-section">
+    <!-- Summary KPI Cards (Visible across both views) -->
+    <div class="summary-section">
       <div class="summary-grid">
         <div class="summary-card total">
           <div class="card-icon">🏥</div>
@@ -428,6 +446,18 @@
         </div>
       </div>
     </div>
+
+    <!-- MODE 1: DENAH SPASIAL (BED MAP LAYOUT) -->
+    <template v-if="operationalViewMode === 'map'">
+      <div v-if="loadingMap && !bedMapData.pavilions?.length" class="loading-state">
+        <div class="spinner"></div>
+        <p>Memuat denah dan status tempat tidur...</p>
+      </div>
+      <BedMapLayout v-else :mapData="bedMapData" :loading="loadingMap" />
+    </template>
+
+    <!-- MODE 2: RINGKASAN KARTU (LEGACY VIEW) -->
+    <template v-else>
 
     <!-- Filters Section -->
     <div class="filter-section">
@@ -729,22 +759,36 @@ const classOptions = computed(() => {
 
 // Helper for Categorization
 const getBedCategory = (bed) => {
-  const searchString = ((bed.kd_kamar || '') + ' ' + (bed.nm_bangsal || '')).toUpperCase()
-  const defaultCategory = (bed.nm_bangsal || bed.kd_bangsal).replace(/\s*\d+(\.\d+)?\s*$/, '').trim()
+  const kd = (bed.kd_kamar || '').trim().toUpperCase()
+  const searchString = (kd + ' ' + (bed.nm_bangsal || '')).toUpperCase()
   
   if (searchString.includes('ISOLASI') || searchString.includes('ISO')) {
     return 'ISOLASI'
-  } else if (searchString.includes('ICU') || searchString.includes('ICCU') || searchString.includes('PICU') || searchString.includes('NICU')) {
+  } else if (searchString.includes('ICU') || searchString.includes('NICU') || searchString.includes('PICU') || searchString.includes('INTENSIF')) {
     return 'ICU'
-  } else if (searchString.includes('VK') || searchString.includes('BERSALIN')) {
+  } else if (kd.startsWith('VK') || searchString.includes(' VK') || searchString.includes('BERSALIN')) {
     return 'KAMAR BERSALIN'
-  } else if (searchString.includes('ANAK') || searchString.includes('BAYI') || searchString.includes('PERINA')) {
+  } else if (
+    searchString.includes('ANAK') || 
+    searchString.includes('BAYI') || 
+    searchString.includes('PERINA') || 
+    searchString.includes('HALIMATUS') ||
+    kd.startsWith('BK') || 
+    kd.startsWith('BY') || 
+    kd.startsWith('RG')
+  ) {
     return 'ANAK'
-  } else if (searchString.includes('KANDUNGAN') || searchString.includes('KEBIDANAN')) {
+  } else if (
+    searchString.includes('KANDUNGAN') || 
+    searchString.includes('KEBIDANAN') || 
+    searchString.includes('WALIDAH') || 
+    searchString.includes('BAROROH') || 
+    searchString.includes('KHADIJAH')
+  ) {
     return 'KANDUNGAN'
   }
   
-  return defaultCategory || 'LAINNYA'
+  return 'LAINNYA'
 }
 
 // Filtered beds list
@@ -818,32 +862,134 @@ const groupedBeds = computed(() => {
   return finalGrouped
 })
 
-// Slides for Carousel Mode (Denah Spasial Paviliun TV Publik - Bersih & Proporsional)
+// Helper for class priority
+const getKelasWeight = (k) => {
+  const upper = (k || '').toUpperCase()
+  if (upper.includes('VIP')) return 1
+  if (upper.includes('UTAMA')) return 2
+  if (upper.includes('1') || upper.includes('SATU')) return 3
+  if (upper.includes('2') || upper.includes('DUA')) return 4
+  if (upper.includes('3') || upper.includes('TIGA')) return 5
+  return 10
+}
+
+const sortBedsNaturally = (list) => {
+  return [...list].sort((a, b) => {
+    const labelA = a.bed_label || a.kd_kamar || ''
+    const labelB = b.bed_label || b.kd_kamar || ''
+    return labelA.localeCompare(labelB, undefined, { numeric: true, sensitivity: 'base' })
+  })
+}
+
+// Slides for Carousel Mode (Grouped cleanly by Pavilion & Class with Natural Sort)
 const displaySlides = computed(() => {
   const pavs = bedMapData.value.pavilions || []
   if (!pavs.length) return []
   
   const slides = []
-  let currentGroup = []
-  let currentBedCount = 0
+  const MAX_BEDS_PER_SLIDE = 15
 
   pavs.forEach((pav) => {
-    const bedCount = pav.beds?.length || 0
+    const rawBeds = pav.beds || []
+    if (!rawBeds.length) return
 
-    // Jika paviliun banyak bed (>14) buat slide tersendiri, atau gabung maks 2 paviliun / 16 bed
-    if (currentGroup.length > 0 && (currentBedCount + bedCount > 15 || currentGroup.length >= 2)) {
-      slides.push(currentGroup)
-      currentGroup = []
-      currentBedCount = 0
+    // Group beds by class
+    const classMap = new Map()
+    rawBeds.forEach((b) => {
+      const k = (b.kelas || 'Umum').trim()
+      if (!classMap.has(k)) classMap.set(k, [])
+      classMap.get(k).push(b)
+    })
+
+    // Sort classes: VIP -> Utama -> Kelas 1 -> Kelas 2 -> Kelas 3
+    const sortedClasses = Array.from(classMap.keys()).sort((a, b) => getKelasWeight(a) - getKelasWeight(b))
+
+    const classGroups = sortedClasses.map((k) => {
+      const sortedBeds = sortBedsNaturally(classMap.get(k))
+      const grpStats = {
+        total: sortedBeds.length,
+        tersedia: sortedBeds.filter(b => b.effective_status === 'KOSONG').length,
+        terisi: sortedBeds.filter(b => b.effective_status === 'ISI' || b.effective_status === 'RENCANA_PULANG').length,
+        rencana_pulang: sortedBeds.filter(b => b.effective_status === 'RENCANA_PULANG').length,
+        dibersihkan: sortedBeds.filter(b => b.effective_status === 'DIBERSIHKAN').length,
+        dibooking: sortedBeds.filter(b => b.effective_status === 'DIBOOKING').length,
+      }
+      return {
+        kelas: k,
+        beds: sortedBeds,
+        stats: grpStats
+      }
+    })
+
+    // Group classGroups into slides so that classes are NOT split awkwardly
+    let currentSlideClasses = []
+    let currentBedCount = 0
+    const MAX_BEDS_PER_SLIDE = 12
+    const MAX_CLASSES_PER_SLIDE = 2
+
+    const pushSlide = (cGroups) => {
+      const allBeds = cGroups.flatMap(g => g.beds)
+      const slideStats = {
+        total: allBeds.length,
+        tersedia: allBeds.filter(b => b.effective_status === 'KOSONG').length,
+        terisi: allBeds.filter(b => b.effective_status === 'ISI' || b.effective_status === 'RENCANA_PULANG').length,
+        rencana_pulang: allBeds.filter(b => b.effective_status === 'RENCANA_PULANG').length,
+        dibersihkan: allBeds.filter(b => b.effective_status === 'DIBERSIHKAN').length,
+        dibooking: allBeds.filter(b => b.effective_status === 'DIBOOKING').length,
+      }
+
+      const classNames = cGroups.map(g => g.kelas).join(', ')
+
+      slides.push([{
+        slideKey: `${pav.name}-${classNames}-${slides.length}`,
+        name: pav.name,
+        displayName: `${pav.name} (${classNames})`,
+        icon: pav.icon,
+        tag: pav.tag,
+        bedsCount: allBeds.length,
+        stats: slideStats,
+        classGroups: cGroups
+      }])
     }
 
-    currentGroup.push(pav)
-    currentBedCount += bedCount
-  })
+    classGroups.forEach((cg) => {
+      // If a single class has more than MAX_BEDS_PER_SLIDE, chunk it
+      if (cg.beds.length > MAX_BEDS_PER_SLIDE) {
+        if (currentSlideClasses.length > 0) {
+          pushSlide(currentSlideClasses)
+          currentSlideClasses = []
+          currentBedCount = 0
+        }
+        for (let i = 0; i < cg.beds.length; i += MAX_BEDS_PER_SLIDE) {
+          const chunkBeds = cg.beds.slice(i, i + MAX_BEDS_PER_SLIDE)
+          const partNum = Math.floor(i / MAX_BEDS_PER_SLIDE) + 1
+          const totalParts = Math.ceil(cg.beds.length / MAX_BEDS_PER_SLIDE)
+          const chunkGroup = [{
+            kelas: `${cg.kelas}${totalParts > 1 ? ` (${partNum}/${totalParts})` : ''}`,
+            beds: chunkBeds,
+            stats: {
+              total: chunkBeds.length,
+              tersedia: chunkBeds.filter(b => b.effective_status === 'KOSONG').length,
+              terisi: chunkBeds.filter(b => b.effective_status === 'ISI' || b.effective_status === 'RENCANA_PULANG').length,
+            }
+          }]
+          pushSlide(chunkGroup)
+        }
+      } else {
+        if ((currentBedCount + cg.beds.length > MAX_BEDS_PER_SLIDE || currentSlideClasses.length >= MAX_CLASSES_PER_SLIDE) && currentSlideClasses.length > 0) {
+          pushSlide(currentSlideClasses)
+          currentSlideClasses = []
+          currentBedCount = 0
+        }
+        currentSlideClasses.push(cg)
+        currentBedCount += cg.beds.length
+      }
+    })
 
-  if (currentGroup.length > 0) {
-    slides.push(currentGroup)
-  }
+    if (currentSlideClasses.length > 0) {
+      pushSlide(currentSlideClasses)
+    }
+  })
 
   return slides
 })
@@ -1541,11 +1687,11 @@ onUnmounted(() => {
 .tv-pavilion-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  padding: 0.85rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.75rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
@@ -1554,7 +1700,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .tv-pavilion-title-group {
@@ -1657,8 +1803,8 @@ onUnmounted(() => {
 /* TV Beds Matrix Grid */
 .tv-beds-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px 10px;
 }
 
 @media (min-width: 1280px) {
@@ -1670,12 +1816,12 @@ onUnmounted(() => {
 .tv-bed-tile {
   background: #ffffff;
   border: 2px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 145px;
+  min-height: 105px;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
@@ -1742,8 +1888,77 @@ onUnmounted(() => {
 .tv-class-pill.class-3 { background: #f1f5f9; color: #475569; }
 .tv-class-pill.class-general { background: #f1f5f9; color: #475569; }
 
+.tv-class-groups-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.tv-class-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tv-class-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+  border-top: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tv-class-block-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tv-class-block-meta {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.tv-class-block-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.775rem;
+}
+
+.tv-mini-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tv-mini-stat.green { color: #15803d; }
+.tv-mini-stat.red { color: #b91c1c; }
+
+.tv-class-pill-sm {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tv-class-pill-sm.class-vip { background: #fef08a; color: #854d0e; }
+.tv-class-pill-sm.class-utama { background: #fbcfe8; color: #9d174d; }
+.tv-class-pill-sm.class-1 { background: #dbeafe; color: #1e40af; }
+.tv-class-pill-sm.class-2 { background: #e0e7ff; color: #3730a3; }
+.tv-class-pill-sm.class-3 { background: #f1f5f9; color: #475569; }
+.tv-class-pill-sm.class-general { background: #f1f5f9; color: #475569; }
+
 .tv-tile-body {
-  padding: 10px 0;
+  padding: 6px 0;
   flex: 1;
   display: flex;
   align-items: center;
@@ -1752,18 +1967,18 @@ onUnmounted(() => {
 .tv-status-state {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
 
 .tv-status-icon-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   color: white;
   flex-shrink: 0;
 }
@@ -1799,10 +2014,29 @@ onUnmounted(() => {
 
 .tv-tile-foot {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding-top: 6px;
   border-top: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.tv-foot-room {
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.tv-foot-room i {
+  color: #94a3b8;
+  font-size: 0.7rem;
 }
 
 .tv-foot-status-badge {

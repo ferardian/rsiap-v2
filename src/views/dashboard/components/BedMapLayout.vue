@@ -106,6 +106,31 @@
       </button>
     </div>
 
+    <!-- Class Filter Navigation Tabs / Pills -->
+    <div class="class-filter-bar" v-if="availableClasses.length > 0">
+      <span class="class-filter-title">
+        <i class="fas fa-layer-group"></i> Filter Kelas:
+      </span>
+      <div class="class-pills-list">
+        <button 
+          class="class-pill-btn" 
+          :class="{ active: selectedClass === 'ALL' }"
+          @click="selectedClass = 'ALL'"
+        >
+          Semua Kelas
+        </button>
+        <button 
+          v-for="cls in availableClasses" 
+          :key="cls"
+          class="class-pill-btn"
+          :class="[getClassClass(cls), { active: selectedClass === cls }]"
+          @click="selectedClass = selectedClass === cls ? 'ALL' : cls"
+        >
+          {{ cls }}
+        </button>
+      </div>
+    </div>
+
     <!-- Floor Plan Area -->
     <div v-if="filteredPavilions.length === 0" class="empty-map-state">
       <i class="fas fa-search-minus empty-icon"></i>
@@ -148,102 +173,93 @@
           </div>
         </div>
 
-        <!-- Spasial Bed Matrix (Denah Bed Utuh) -->
-        <div class="beds-matrix">
+        <!-- Grouped by Kelas Sub-Sections -->
+        <div class="pavilion-kelas-container">
           <div 
-            v-for="bed in pavilion.beds" 
-            :key="bed.kd_kamar"
-            class="bed-card"
-            :class="[
-              getBedStatusClass(bed),
-              { 'is-dimmed': isBedDimmed(bed) }
-            ]"
-            @click="onBedClick(bed)"
-            @mouseenter="showHoverTooltip($event, bed)"
-            @mouseleave="hideHoverTooltip"
+            v-for="group in pavilion.kelasGroups" 
+            :key="group.kelas"
+            class="kelas-group-card"
           >
-            <!-- Bed Card Header -->
-            <div class="bed-card-head">
-              <div class="bed-identity">
-                <i class="fas fa-bed bed-icon-svg"></i>
-                <span class="bed-label-text">{{ bed.bed_label || bed.kd_kamar }}</span>
+            <!-- Kelas Group Header -->
+            <div class="kelas-group-head">
+              <div class="kelas-title-side">
+                <span class="kelas-pill-label" :class="getClassClass(group.kelas)">
+                  <i class="fas fa-door-open"></i> {{ group.kelas }}
+                </span>
+                <span class="kelas-count-sub">
+                  {{ group.beds.length }} Tempat Tidur
+                </span>
               </div>
-              <span class="class-pill" :class="getClassClass(bed.kelas)">{{ bed.kelas }}</span>
+
+              <div class="kelas-stats-side">
+                <span class="mini-stat available" v-if="group.stats.tersedia > 0">
+                  <span class="status-indicator green"></span>
+                  <strong>{{ group.stats.tersedia }}</strong> Tersedia
+                </span>
+                <span class="mini-stat occupied" v-if="group.stats.terisi > 0">
+                  <span class="status-indicator red"></span>
+                  <strong>{{ group.stats.terisi }}</strong> Terisi
+                </span>
+                <span class="mini-stat discharge" v-if="group.stats.rencana_pulang > 0">
+                  <span class="status-indicator orange"></span>
+                  <strong>{{ group.stats.rencana_pulang }}</strong> Plg Hari Ini
+                </span>
+                <span class="mini-stat booking" v-if="group.stats.dibooking > 0">
+                  <span class="status-indicator purple"></span>
+                  <strong>{{ group.stats.dibooking }}</strong> Booking
+                </span>
+                <span class="mini-stat cleaning" v-if="group.stats.dibersihkan > 0">
+                  <span class="status-indicator amber"></span>
+                  <strong>{{ group.stats.dibersihkan }}</strong> Sterilisasi
+                </span>
+              </div>
             </div>
 
-            <!-- Bed Main Body -->
-            <div class="bed-card-body">
-              <!-- Terisi / Pasien -->
-              <template v-if="bed.effective_status === 'ISI' || bed.effective_status === 'RENCANA_PULANG'">
-                <div class="patient-line">
-                  <span class="gender-mini-badge" :class="bed.patient?.jk === 'L' ? 'male' : 'female'">
+            <!-- Spasial Bed Matrix (Denah Bed Utuh per Kelas) -->
+            <div class="beds-matrix">
+              <div 
+                v-for="bed in group.beds" 
+                :key="bed.kd_kamar"
+                class="bed-card"
+                :class="[
+                  getBedStatusClass(bed),
+                  { 'is-dimmed': isBedDimmed(bed) }
+                ]"
+                @click="onBedClick(bed)"
+                @mouseenter="showHoverTooltip($event, bed)"
+                @mouseleave="hideHoverTooltip"
+              >
+                <!-- Bed Card Header (Compact) -->
+                <div class="bed-card-head">
+                  <div class="bed-identity">
+                    <i class="fas fa-bed bed-icon-svg"></i>
+                    <span class="bed-label-text">{{ bed.bed_label || bed.kd_kamar }}</span>
+                  </div>
+                  <span v-if="bed.effective_status === 'RENCANA_PULANG'" class="badge-discharge-sm" title="Rencana Pulang Hari Ini">
+                    <i class="fas fa-sign-out-alt"></i> Plg
+                  </span>
+                  <span v-else-if="bed.patient?.jk" class="gender-mini-badge" :class="bed.patient?.jk === 'L' ? 'male' : 'female'">
                     {{ bed.patient?.jk === 'L' ? '👨 L' : '👩 P' }}
                   </span>
-                  <span class="patient-name-display" :title="bed.patient?.nm_pasien">
-                    {{ bed.patient?.nm_pasien_masked || 'Pasien Terisi' }}
+                </div>
+
+                <!-- Room / Bangsal Name -->
+                <div class="bed-card-room" :title="bed.nm_bangsal || bed.kd_bangsal">
+                  <i class="fas fa-door-open room-icon"></i>
+                  <span class="room-name-text">{{ bed.nm_bangsal || bed.kd_bangsal }}</span>
+                </div>
+
+                <!-- Bed Card Compact Footer (Status Badge Only) -->
+                <div class="bed-card-compact-footer">
+                  <span class="status-tag-pill" :class="getBedStatusClass(bed)">
+                    <i :class="getStatusIcon(bed.effective_status)"></i>
+                    {{ getStatusLabel(bed.effective_status) }}
+                  </span>
+                  <span class="detail-hint" title="Lihat detail">
+                    <i class="fas fa-info-circle"></i>
                   </span>
                 </div>
-                <div class="patient-doctor" v-if="bed.patient?.dpjp">
-                  <i class="fas fa-user-md"></i> {{ bed.patient.dpjp }}
-                </div>
-                <div class="bed-meta-sub">
-                  <span class="los-pill" v-if="bed.patient?.lama_rawat">
-                    <i class="far fa-clock"></i> {{ bed.patient.lama_rawat }} Hari
-                  </span>
-                  <span v-if="bed.effective_status === 'RENCANA_PULANG'" class="badge-discharge">
-                    <i class="fas fa-sign-out-alt"></i> Plg Hari Ini
-                  </span>
-                </div>
-              </template>
-
-              <!-- Kosong / Siap Pakai -->
-              <template v-else-if="bed.effective_status === 'KOSONG'">
-                <div class="available-state">
-                  <div class="state-icon green-icon">
-                    <i class="fas fa-check-circle"></i>
-                  </div>
-                  <div class="state-texts">
-                    <span class="available-title">Siap Pakai</span>
-                    <span class="available-price">{{ formatRupiah(bed.trf_kamar) }}/hr</span>
-                  </div>
-                </div>
-              </template>
-
-              <!-- Dibersihkan -->
-              <template v-else-if="bed.effective_status === 'DIBERSIHKAN'">
-                <div class="cleaning-state">
-                  <div class="state-icon amber-icon">
-                    <i class="fas fa-broom"></i>
-                  </div>
-                  <div class="state-texts">
-                    <span class="cleaning-title">Sterilisasi</span>
-                    <span class="cleaning-desc">Pembersihan</span>
-                  </div>
-                </div>
-              </template>
-
-              <!-- Booking -->
-              <template v-else-if="bed.effective_status === 'DIBOOKING'">
-                <div class="booking-state">
-                  <div class="state-icon purple-icon">
-                    <i class="fas fa-bookmark"></i>
-                  </div>
-                  <div class="state-texts">
-                    <span class="booking-title">Dibooking</span>
-                    <span class="booking-desc">Menunggu</span>
-                  </div>
-                </div>
-              </template>
-            </div>
-
-            <!-- Bed Card Footer -->
-            <div class="bed-card-footer">
-              <span class="status-tag-pill" :class="getBedStatusClass(bed)">
-                {{ getStatusLabel(bed.effective_status) }}
-              </span>
-              <span class="detail-hint">
-                <i class="fas fa-info-circle"></i>
-              </span>
+              </div>
             </div>
           </div>
         </div>
@@ -438,6 +454,7 @@ const props = defineProps({
 const searchQuery = ref('')
 const activeStatusFilter = ref('ALL')
 const selectedPavilion = ref('ALL')
+const selectedClass = ref('ALL')
 
 // Tooltip State
 const hoveredBed = ref(null)
@@ -446,6 +463,19 @@ const tooltipY = ref(0)
 
 // Modal State
 const selectedBed = ref(null)
+
+// Class Hierarchy Sorter
+const classSortIndex = (kelasName) => {
+  if (!kelasName) return 99
+  const upper = kelasName.toUpperCase()
+  if (upper.includes('VVIP')) return 1
+  if (upper.includes('VIP')) return 2
+  if (upper.includes('UTAMA')) return 3
+  if (upper.includes('1') || upper.includes('SATU')) return 4
+  if (upper.includes('2') || upper.includes('DUA')) return 5
+  if (upper.includes('3') || upper.includes('TIGA')) return 6
+  return 10
+}
 
 // Computed
 const totalStats = computed(() => {
@@ -463,6 +493,22 @@ const pavilions = computed(() => {
   return props.mapData.pavilions || []
 })
 
+// Available Classes for the Filter Pills
+const availableClasses = computed(() => {
+  const classesSet = new Set()
+  pavilions.value.forEach(p => {
+    if (selectedPavilion.value !== 'ALL' && p.name !== selectedPavilion.value) {
+      return
+    }
+    const allBeds = p.beds || (p.rooms ? p.rooms.flatMap(r => r.beds) : [])
+    allBeds.forEach(b => {
+      if (b.kelas) classesSet.add(b.kelas.trim())
+    })
+  })
+
+  return Array.from(classesSet).sort((a, b) => classSortIndex(a) - classSortIndex(b))
+})
+
 const filteredPavilions = computed(() => {
   let list = pavilions.value
 
@@ -473,11 +519,17 @@ const filteredPavilions = computed(() => {
 
   const query = searchQuery.value.trim().toLowerCase()
   const statusFilter = activeStatusFilter.value
+  const classFilter = selectedClass.value
 
   return list.map(p => {
     // Direct beds array
     const allBeds = p.beds || (p.rooms ? p.rooms.flatMap(r => r.beds) : [])
     const matchedBeds = allBeds.filter(bed => {
+      // Class filter
+      if (classFilter !== 'ALL' && bed.kelas?.trim().toUpperCase() !== classFilter.toUpperCase()) {
+        return false
+      }
+
       // Status filter
       let matchStatus = true
       if (statusFilter !== 'ALL') {
@@ -512,9 +564,51 @@ const filteredPavilions = computed(() => {
       return true
     })
 
+    // Group matched beds by Kelas
+    const groupsMap = {}
+    matchedBeds.forEach(bed => {
+      const k = bed.kelas ? bed.kelas.trim() : 'Lainnya'
+      if (!groupsMap[k]) {
+        groupsMap[k] = {
+          kelas: k,
+          beds: [],
+          stats: {
+            total: 0,
+            tersedia: 0,
+            terisi: 0,
+            rencana_pulang: 0,
+            dibooking: 0,
+            dibersihkan: 0
+          }
+        }
+      }
+      groupsMap[k].beds.push(bed)
+      groupsMap[k].stats.total++
+      if (bed.status === 'KOSONG') groupsMap[k].stats.tersedia++
+      if (bed.status === 'ISI') groupsMap[k].stats.terisi++
+      if (bed.effective_status === 'RENCANA_PULANG') groupsMap[k].stats.rencana_pulang++
+      if (bed.status === 'DIBOOKING') groupsMap[k].stats.dibooking++
+      if (bed.status === 'DIBERSIHKAN') groupsMap[k].stats.dibersihkan++
+    })
+
+    // Sort beds inside each group numerically (e.g. Bed 1.1, Bed 1.2, ..., Bed 1.10)
+    Object.values(groupsMap).forEach(g => {
+      g.beds.sort((a, b) => {
+        const labelA = a.bed_label || a.kd_kamar || ''
+        const labelB = b.bed_label || b.kd_kamar || ''
+        return labelA.localeCompare(labelB, undefined, { numeric: true, sensitivity: 'base' })
+      })
+    })
+
+    // Sort groups in hierarchy order (VIP, UTAMA, KELAS 1, KELAS 2, KELAS 3, etc.)
+    const sortedKelasGroups = Object.values(groupsMap).sort((a, b) => {
+      return classSortIndex(a.kelas) - classSortIndex(b.kelas)
+    })
+
     return {
       ...p,
-      beds: matchedBeds
+      beds: matchedBeds,
+      kelasGroups: sortedKelasGroups
     }
   }).filter(p => p.beds.length > 0)
 })
@@ -612,6 +706,7 @@ const resetFilters = () => {
   searchQuery.value = ''
   activeStatusFilter.value = 'ALL'
   selectedPavilion.value = 'ALL'
+  selectedClass.value = 'ALL'
 }
 
 const copyText = (text, label) => {
@@ -805,6 +900,67 @@ const copyText = (text, label) => {
   color: white;
 }
 
+/* Class Filter Bar */
+.class-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.class-filter-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.class-pills-list {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.class-pill-btn {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.class-pill-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.class-pill-btn.active {
+  background: #0f172a;
+  color: white;
+  border-color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+.class-pill-btn.class-vip.active { background: #ca8a04; color: white; border-color: #ca8a04; }
+.class-pill-btn.class-utama.active { background: #db2777; color: white; border-color: #db2777; }
+.class-pill-btn.class-1.active { background: #2563eb; color: white; border-color: #2563eb; }
+.class-pill-btn.class-2.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+.class-pill-btn.class-3.active { background: #64748b; color: white; border-color: #64748b; }
+
 /* Floor Plan & Pavilion Block */
 .floor-plan-area {
   display: flex;
@@ -887,16 +1043,112 @@ const copyText = (text, label) => {
   color: #475569;
 }
 
-/* BEDS MATRIX (Modern Spatial Bed Cards) */
-.beds-matrix {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 14px;
+/* KELAS GROUPS CONTAINER */
+.pavilion-kelas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-@media (min-width: 1280px) {
+.kelas-group-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.15rem;
+  transition: all 0.2s ease;
+}
+
+.kelas-group-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+.kelas-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed #cbd5e1;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.kelas-title-side {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.kelas-pill-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-transform: uppercase;
+}
+
+.kelas-pill-label.class-vip { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+.kelas-pill-label.class-utama { background: #fbcfe8; color: #9d174d; border: 1px solid #f9a8d4; }
+.kelas-pill-label.class-1 { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.kelas-pill-label.class-2 { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.kelas-pill-label.class-3 { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.kelas-pill-label.class-general { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+.kelas-count-sub {
+  font-size: 0.825rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.kelas-stats-side {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.mini-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #475569;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-indicator.green { background: #22c55e; }
+.status-indicator.red { background: #ef4444; }
+.status-indicator.orange { background: #f97316; }
+.status-indicator.purple { background: #8b5cf6; }
+.status-indicator.amber { background: #f59e0b; }
+
+/* BEDS MATRIX (Dense & Compact Grid) */
+.beds-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 1024px) {
   .beds-matrix {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .beds-matrix {
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    gap: 12px;
   }
 }
 
@@ -904,11 +1156,11 @@ const copyText = (text, label) => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 140px;
+  min-height: 68px;
   background: white;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1.5px solid #e2e8f0;
-  padding: 10px 12px;
+  padding: 8px 10px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -916,112 +1168,85 @@ const copyText = (text, label) => {
 }
 
 .bed-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
 }
 
 .bed-card.is-dimmed {
-  opacity: 0.3;
+  opacity: 0.25;
   filter: grayscale(80%);
 }
 
 /* Status Variations */
 .bed-card.status-available {
   border-color: #86efac;
-  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 50%);
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 70%);
 }
 .bed-card.status-available:hover {
   border-color: #22c55e;
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.15);
 }
 
 .bed-card.status-occupied {
   border-color: #fca5a5;
-  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 50%);
+  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 70%);
 }
 .bed-card.status-occupied:hover {
   border-color: #ef4444;
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.15);
 }
 
 .bed-card.status-discharge {
   border-color: #fde68a;
-  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 50%);
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 70%);
 }
 .bed-card.status-discharge:hover {
   border-color: #f59e0b;
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15);
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.15);
 }
 
 .bed-card.status-booking {
   border-color: #d8b4fe;
-  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 50%);
+  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 70%);
 }
 
 .bed-card.status-cleaning {
   border-color: #fed7aa;
-  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 50%);
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 70%);
 }
 
-/* Bed Card Header */
+/* Bed Card Header (Compact) */
 .bed-card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+  margin-bottom: 6px;
 }
 
 .bed-identity {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .bed-icon-svg {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: #64748b;
 }
 
 .bed-label-text {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   color: #0f172a;
-}
-
-.class-pill {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-.class-pill.class-vip { background: #fef08a; color: #854d0e; }
-.class-pill.class-utama { background: #fbcfe8; color: #9d174d; }
-.class-pill.class-1 { background: #dbeafe; color: #1e40af; }
-.class-pill.class-2 { background: #e0e7ff; color: #3730a3; }
-.class-pill.class-3 { background: #f1f5f9; color: #475569; }
-.class-pill.class-general { background: #f1f5f9; color: #475569; }
-
-/* Bed Card Body */
-.bed-card-body {
-  padding: 8px 0;
-  flex: 1;
-}
-
-.patient-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  white-space: nowrap;
 }
 
 .gender-mini-badge {
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 1px 5px;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .gender-mini-badge.male {
@@ -1034,46 +1259,16 @@ const copyText = (text, label) => {
   color: #be185d;
 }
 
-.patient-name-display {
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: #1e293b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.patient-doctor {
-  font-size: 0.75rem;
-  color: #64748b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 6px;
-}
-
-.bed-meta-sub {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.los-pill {
-  font-size: 0.7rem;
-  color: #475569;
-  background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.badge-discharge {
-  font-size: 0.7rem;
+.badge-discharge-sm {
+  font-size: 0.65rem;
   font-weight: 700;
   color: #b45309;
   background: #fef3c7;
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   animation: pulse 2s infinite;
 }
 
@@ -1082,79 +1277,49 @@ const copyText = (text, label) => {
   50% { opacity: 0.6; }
 }
 
-/* Empty State in Body */
-.available-state,
-.cleaning-state,
-.booking-state {
+/* Room / Bangsal Name */
+.bed-card-room {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 100%;
-  padding: 4px 0;
-}
-
-.state-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-}
-
-.green-icon { background: #dcfce7; color: #16a34a; }
-.amber-icon { background: #fff7ed; color: #ea580c; }
-.purple-icon { background: #f3e8ff; color: #9333ea; }
-
-.state-texts {
-  display: flex;
-  flex-direction: column;
-}
-
-.available-title {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #166534;
-}
-
-.available-price {
-  font-size: 0.75rem;
+  gap: 4px;
+  font-size: 0.72rem;
   color: #64748b;
+  margin: 2px 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.cleaning-title {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #9a3412;
+.room-icon {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  flex-shrink: 0;
 }
 
-.cleaning-desc,
-.booking-desc {
-  font-size: 0.725rem;
-  color: #64748b;
+.room-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
-.booking-title {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #6b21a8;
-}
-
-/* Bed Card Footer */
-.bed-card-footer {
+/* Bed Card Compact Footer */
+.bed-card-compact-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.06);
+  gap: 4px;
 }
 
 .status-tag-pill {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .status-tag-pill.status-available { background: #dcfce7; color: #15803d; }
@@ -1164,8 +1329,15 @@ const copyText = (text, label) => {
 .status-tag-pill.status-cleaning { background: #ffedd5; color: #c2410c; }
 
 .detail-hint {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #94a3b8;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.bed-card:hover .detail-hint {
+  opacity: 1;
+  color: #3b82f6;
 }
 
 /* Tooltip Quick Peek */
