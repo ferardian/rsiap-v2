@@ -518,32 +518,28 @@
             <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
               <thead class="table-light">
                 <tr>
-                  <th class="ps-4 py-3 text-center" style="width: 60px;">No.</th>
-                  <th class="py-3" style="width: 130px;">Kode Tindakan</th>
+                  <th class="ps-4 py-3 text-center" style="width: 70px;">No.</th>
+                  <th class="py-3 text-center" style="width: 150px;">Kode Tindakan</th>
                   <th class="py-3">Nama Pemeriksaan / Tindakan Radiologi</th>
-                  <th class="py-3 text-center" style="width: 140px;">Jumlah Dilakukan</th>
-                  <th class="py-3 text-center" style="width: 150px;">Proporsi (%)</th>
-                  <th class="py-3 text-center" style="width: 160px;">Ralan / Ranap</th>
-                  <th class="py-3 text-end" style="width: 170px;">Total Jasa Medis</th>
-                  <th class="pe-4 py-3 text-end" style="width: 150px;">Rata-rata Jasa</th>
+                  <th class="pe-4 py-3 text-center" style="width: 180px;">Jumlah Dilakukan</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="loading">
-                  <td colspan="8" class="text-center py-5 text-muted">
+                  <td colspan="4" class="text-center py-5 text-muted">
                     <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                     Memuat rekapan per tindakan radiologi...
                   </td>
                 </tr>
                 <tr v-else-if="filteredRekapTindakan.length === 0">
-                  <td colspan="8" class="text-center py-5 text-muted">
+                  <td colspan="4" class="text-center py-5 text-muted">
                     <i class="fas fa-inbox fa-3x mb-2 d-block text-secondary opacity-50"></i>
                     Tidak ada tindakan yang sesuai dengan pencarian atau filter.
                   </td>
                 </tr>
                 <tr v-else v-for="(t, idx) in filteredRekapTindakan" :key="t.kd_jenis_prw">
                   <td class="ps-4 text-center text-muted fw-bold">{{ idx + 1 }}</td>
-                  <td>
+                  <td class="text-center">
                     <span class="badge bg-secondary-subtle text-dark font-monospace px-2 py-1">
                       {{ t.kd_jenis_prw }}
                     </span>
@@ -551,57 +547,20 @@
                   <td class="fw-bold text-dark">
                     {{ t.nm_perawatan }}
                   </td>
-                  <td class="text-center">
+                  <td class="pe-4 text-center">
                     <span class="badge bg-primary rounded-pill px-3 py-1 fw-bold fs-7">
-                      {{ t.jumlah }}x
+                      {{ t.jumlah }}
                     </span>
-                  </td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="progress flex-grow-1" style="height: 6px;">
-                        <div 
-                          class="progress-bar bg-info" 
-                          role="progressbar" 
-                          :style="{ width: `${t.persentase}%` }"
-                        ></div>
-                      </div>
-                      <span class="small fw-bold text-muted font-monospace" style="min-width: 45px;">
-                        {{ t.persentase }}%
-                      </span>
-                    </div>
-                  </td>
-                  <td class="text-center small">
-                    <span class="badge bg-success-subtle text-success me-1">{{ t.ralan }} Ralan</span>
-                    <span class="badge bg-info-subtle text-info">{{ t.ranap }} Ranap</span>
-                  </td>
-                  <td class="text-end fw-bold text-success font-monospace">
-                    Rp {{ Number(t.total_jasa || 0).toLocaleString('id-ID') }}
-                  </td>
-                  <td class="pe-4 text-end text-muted font-monospace">
-                    Rp {{ Number(t.rata_jasa || 0).toLocaleString('id-ID') }}
                   </td>
                 </tr>
               </tbody>
               <tfoot v-if="filteredRekapTindakan.length > 0" class="table-light">
                 <tr class="fw-bold">
                   <td colspan="3" class="ps-4 py-3 text-end text-uppercase">
-                    Total ({{ filteredRekapTindakan.length }} Tindakan):
+                    Total ({{ filteredRekapTindakan.length }} Jenis Tindakan):
                   </td>
-                  <td class="py-3 text-center text-primary fs-6">
-                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.jumlah, 0) }}x
-                  </td>
-                  <td class="py-3 text-center text-muted font-monospace">
-                    {{ Math.min(100, filteredRekapTindakan.reduce((sum, item) => sum + item.persentase, 0).toFixed(1)) }}%
-                  </td>
-                  <td class="py-3 text-center small text-muted">
-                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.ralan, 0) }} Ralan / 
-                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.ranap, 0) }} Ranap
-                  </td>
-                  <td class="py-3 text-end text-success fs-6 font-monospace">
-                    Rp {{ filteredRekapTindakan.reduce((sum, item) => sum + item.total_jasa, 0).toLocaleString('id-ID') }}
-                  </td>
-                  <td class="pe-4 py-3 text-end text-muted font-monospace">
-                    -
+                  <td class="pe-4 py-3 text-center text-primary fs-6">
+                    {{ filteredRekapTindakan.reduce((sum, item) => sum + item.jumlah, 0) }}
                   </td>
                 </tr>
               </tfoot>
@@ -1155,18 +1114,12 @@ const exportRekapTindakanToExcel = () => {
     ['Periode Pelayanan', `${formatDateIndo(filters.tgl_awal)} s/d ${formatDateIndo(filters.tgl_akhir)}`],
     ['Total Tindakan Dilakukan', `${filteredList.value.length} Tindakan`],
     ['Total Variasi Tindakan', `${rekapPerTindakan.value.length} Jenis Tindakan`],
-    ['Total Jasa Medis', totalFilteredJasa.value],
     [],
     [
       'No',
       'Kode Tindakan',
       'Nama Pemeriksaan Radiologi',
-      'Jumlah Tindakan',
-      'Proporsi (%)',
-      'Rawat Jalan (Ralan)',
-      'Rawat Inap (Ranap)',
-      'Total Jasa Medis (Rp)',
-      'Rata-rata Jasa (Rp)'
+      'Jumlah Tindakan'
     ]
   ]
 
@@ -1175,12 +1128,7 @@ const exportRekapTindakanToExcel = () => {
       idx + 1,
       item.kd_jenis_prw,
       item.nm_perawatan,
-      item.jumlah,
-      `${item.persentase}%`,
-      item.ralan,
-      item.ranap,
-      item.total_jasa,
-      item.rata_jasa
+      item.jumlah
     ])
   })
 
@@ -1188,25 +1136,15 @@ const exportRekapTindakanToExcel = () => {
   wsData.push([])
   wsData.push([
     '', '', 'TOTAL KESELURUHAN',
-    filteredList.value.length,
-    '100%',
-    rekapPerTindakan.value.reduce((s, i) => s + i.ralan, 0),
-    rekapPerTindakan.value.reduce((s, i) => s + i.ranap, 0),
-    totalFilteredJasa.value,
-    ''
+    filteredList.value.length
   ])
 
   const ws = XLSX.utils.aoa_to_sheet(wsData)
   ws['!cols'] = [
     { wch: 6 },  // No
-    { wch: 15 }, // Kode Tindakan
-    { wch: 38 }, // Nama Pemeriksaan
-    { wch: 18 }, // Jumlah Tindakan
-    { wch: 14 }, // Proporsi
-    { wch: 18 }, // Ralan
-    { wch: 18 }, // Ranap
-    { wch: 22 }, // Total Jasa
-    { wch: 18 }  // Rata-rata Jasa
+    { wch: 18 }, // Kode Tindakan
+    { wch: 45 }, // Nama Pemeriksaan
+    { wch: 18 }  // Jumlah Tindakan
   ]
 
   const wb = XLSX.utils.book_new()
@@ -1291,14 +1229,12 @@ const printRekapTindakanPdf = async () => {
       currentY += lineSpacing
     })
 
-    const tableHead = [['No.', 'Kode', 'Nama Tindakan / Pemeriksaan', 'Jumlah', 'Proporsi', 'Total Jasa (Rp)']]
+    const tableHead = [['No.', 'Kode', 'Nama Tindakan / Pemeriksaan', 'Jumlah']]
     const tableBody = rekapPerTindakan.value.map((t, idx) => [
       idx + 1,
       t.kd_jenis_prw,
       t.nm_perawatan,
-      `${t.jumlah}x`,
-      `${t.persentase}%`,
-      `Rp ${Number(t.total_jasa || 0).toLocaleString('id-ID')}`
+      t.jumlah
     ])
 
     // Footer Total
@@ -1306,9 +1242,7 @@ const printRekapTindakanPdf = async () => {
       '',
       '',
       'TOTAL KESELURUHAN',
-      `${filteredList.value.length}x`,
-      '100%',
-      `Rp ${Number(totalFilteredJasa.value || 0).toLocaleString('id-ID')}`
+      filteredList.value.length
     ])
 
     autoTable(doc, {
@@ -1320,24 +1254,22 @@ const printRekapTindakanPdf = async () => {
         fillColor: [241, 245, 249],
         textColor: [15, 23, 42],
         fontStyle: 'bold',
-        fontSize: 8,
+        fontSize: 8.5,
         halign: 'center',
         lineColor: [71, 85, 105],
         lineWidth: 0.2
       },
       bodyStyles: {
-        fontSize: 7.5,
+        fontSize: 8,
         textColor: [30, 41, 59],
         lineColor: [203, 213, 225],
         lineWidth: 0.15
       },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center' },
-        1: { cellWidth: 22, halign: 'center' },
+        0: { cellWidth: 12, halign: 'center' },
+        1: { cellWidth: 28, halign: 'center' },
         2: { fontStyle: 'bold' },
-        3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-        4: { cellWidth: 20, halign: 'center' },
-        5: { cellWidth: 32, halign: 'right', fontStyle: 'bold' }
+        3: { cellWidth: 32, halign: 'center', fontStyle: 'bold' }
       },
       margin: {
         left: marginX,
