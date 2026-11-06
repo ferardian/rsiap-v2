@@ -385,6 +385,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/farmasi/darurat-stok',
+    name: 'DaruratStok',
+    component: () => import('../views/farmasi/DaruratStokView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/pemeriksaan/rawat-jalan',
     name: 'RawatJalan',
     component: () => import('../views/pemeriksaan/RawatJalanView.vue'),
