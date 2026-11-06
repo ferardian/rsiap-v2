@@ -181,9 +181,12 @@
               <span class="kpi-title text-muted fw-bold">
                 {{ filters.mode === 'first_patient' ? 'Total Jadwal Praktek' : 'Total Pasien Dilayani' }}
               </span>
-              <h2 class="kpi-value fw-black text-dark m-0">{{ stats?.overall?.total || 0 }}</h2>
+              <h2 class="kpi-value fw-black text-dark m-0">
+                {{ stats?.overall?.total || 0 }}
+                <span class="fs-6 fw-semibold text-muted ms-1">{{ unitLabel }}</span>
+              </h2>
               <small class="text-muted">
-                {{ filters.mode === 'first_patient' ? 'Jadwal praktek dokter dievaluasi' : 'Kunjungan pasien dengan Task ID 4' }}
+                {{ filters.mode === 'first_patient' ? 'Total jadwal praktek yang dievaluasi' : 'Total kunjungan pasien Task ID 4' }}
               </small>
             </div>
           </div>
@@ -199,8 +202,13 @@
             </div>
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Patuh (≤ 60 Menit)</span>
-              <h2 class="kpi-value fw-black text-success m-0">{{ stats?.overall?.patuh || 0 }}</h2>
-              <small class="text-muted">Mulai tepat waktu / toleransi ≤60 mnt</small>
+              <h2 class="kpi-value fw-black text-success m-0">
+                {{ stats?.overall?.patuh || 0 }}
+                <span class="fs-6 fw-semibold text-muted ms-1">{{ unitLabel }}</span>
+              </h2>
+              <small class="text-muted">
+                {{ filters.mode === 'first_patient' ? 'Jadwal dokter mulai tepat waktu' : 'Pasien dilayani tepat waktu' }}
+              </small>
             </div>
           </div>
         </div>
@@ -215,8 +223,13 @@
             </div>
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">Tidak Patuh (> 60 Menit)</span>
-              <h2 class="kpi-value fw-black text-danger m-0">{{ stats?.overall?.tidak_patuh || 0 }}</h2>
-              <small class="text-muted">Terlambat mulai melebihi 60 mnt</small>
+              <h2 class="kpi-value fw-black text-danger m-0">
+                {{ stats?.overall?.tidak_patuh || 0 }}
+                <span class="fs-6 fw-semibold text-muted ms-1">{{ unitLabel }}</span>
+              </h2>
+              <small class="text-muted">
+                {{ filters.mode === 'first_patient' ? 'Jadwal dokter mulai terlambat' : 'Pasien dilayani terlambat' }}
+              </small>
             </div>
           </div>
         </div>
