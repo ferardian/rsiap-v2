@@ -34,25 +34,36 @@
           
           <div class="d-flex flex-wrap align-items-center gap-2">
             <!-- Mode Switcher Pill -->
-            <div class="segmented-pill-wrapper">
-              <button 
-                type="button" 
-                class="segmented-pill-btn" 
-                :class="{ active: filters.mode === 'first_patient' }"
-                @click="setMode('first_patient')"
-                title="Hanya hitung pasien pertama per sesi dokter (indikator jam buka praktek)"
-              >
-                <i class="fas fa-door-open me-1"></i> Jam Buka (Pasien 1)
-              </button>
-              <button 
-                type="button" 
-                class="segmented-pill-btn" 
-                :class="{ active: filters.mode === 'all' }"
-                @click="setMode('all')"
-                title="Hitung seluruh pasien yang dilayani dokter"
-              >
-                <i class="fas fa-users me-1"></i> Semua Pasien
-              </button>
+            <div class="d-flex flex-column align-items-end">
+              <div class="segmented-pill-wrapper">
+                <button 
+                  type="button" 
+                  class="segmented-pill-btn" 
+                  :class="{ active: filters.mode === 'first_patient' }"
+                  @click="setMode('first_patient')"
+                  title="Evaluasi jam mulai buka praktek dokter berdasarkan pasien yang dilayani paling awal di hari tersebut"
+                >
+                  <i class="fas fa-user-clock me-1"></i> Pasien Pertama Dilayani
+                </button>
+                <button 
+                  type="button" 
+                  class="segmented-pill-btn" 
+                  :class="{ active: filters.mode === 'all' }"
+                  @click="setMode('all')"
+                  title="Evaluasi seluruh kunjungan pasien rawat jalan yang dilayani dokter"
+                >
+                  <i class="fas fa-users me-1"></i> Seluruh Pasien
+                </button>
+              </div>
+              <small class="text-muted mt-1 d-none d-md-block" style="font-size: 0.72rem;">
+                <i class="fas fa-info-circle text-primary me-1"></i>
+                <span v-if="filters.mode === 'first_patient'">
+                  Menilai jam buka praktek dari pasien yang diperiksa paling awal (Task ID 4 pertama).
+                </span>
+                <span v-else>
+                  Menilai ketepatan waktu pelayanan terhadap seluruh antrean pasien yang dilayani.
+                </span>
+              </small>
             </div>
 
             <div class="vr mx-1 d-none d-md-block" style="height: 24px;"></div>
@@ -159,7 +170,7 @@
 
     <!-- Overview Stats Block -->
     <div class="row g-4 mb-4">
-      <!-- Total Pelayanan / Sesi -->
+      <!-- Total Pelayanan / Jadwal -->
       <div class="col-xl-3 col-md-6">
         <div class="kpi-card shadow-sm border-0 h-100">
           <div class="kpi-body p-4 d-flex align-items-center gap-3">
@@ -168,11 +179,11 @@
             </div>
             <div class="kpi-info">
               <span class="kpi-title text-muted fw-bold">
-                {{ filters.mode === 'first_patient' ? 'Total Sesi Praktek' : 'Total Pasien Dilayani' }}
+                {{ filters.mode === 'first_patient' ? 'Total Jadwal Praktek' : 'Total Pasien Dilayani' }}
               </span>
               <h2 class="kpi-value fw-black text-dark m-0">{{ stats?.overall?.total || 0 }}</h2>
               <small class="text-muted">
-                {{ filters.mode === 'first_patient' ? 'Sesi buka poli dokter' : 'Pasien dengan Task ID 4' }}
+                {{ filters.mode === 'first_patient' ? 'Jadwal praktek dokter dievaluasi' : 'Kunjungan pasien dengan Task ID 4' }}
               </small>
             </div>
           </div>
@@ -323,7 +334,7 @@
                       <span class="small fw-semibold text-secondary">{{ poli.nm_poli }}</span>
                       <span class="small fw-bold text-dark">
                         {{ getPoliRate(poli) }}% 
-                        <small class="text-muted">({{ poli.patuh }}/{{ poli.total }} Sesi | Rata-rata: {{ poli.avg_selisih_menit }} mnt)</small>
+                        <small class="text-muted">({{ poli.patuh }}/{{ poli.total }} {{ unitLabel }} | Rata-rata: {{ poli.avg_selisih_menit }} mnt)</small>
                       </span>
                     </div>
                     <div class="progress" style="height: 6px;">
@@ -355,7 +366,7 @@
                       <span class="small fw-semibold text-secondary">{{ dr.nm_dokter }}</span>
                       <span class="small fw-bold text-dark">
                         {{ getDokterRate(dr) }}% 
-                        <small class="text-muted">({{ dr.patuh }}/{{ dr.total }} Sesi | Rata-rata: {{ dr.avg_selisih_menit }} mnt)</small>
+                        <small class="text-muted">({{ dr.patuh }}/{{ dr.total }} {{ unitLabel }} | Rata-rata: {{ dr.avg_selisih_menit }} mnt)</small>
                       </span>
                     </div>
                     <div class="progress" style="height: 6px;">
@@ -384,14 +395,13 @@
                 <th style="min-width: 130px;">Poliklinik</th>
                 <th style="min-width: 175px;">Dokter Spesialis</th>
                 <th style="min-width: 110px;">Jadwal Dokter</th>
-                <th style="min-width: 105px;">Jam Registrasi</th>
-                <th style="min-width: 120px;">Mulai Layanan (Task 4)</th>
+                <th style="min-width: 125px;">Mulai Layanan (Task 4)</th>
                 <th style="min-width: 175px;" class="text-center">Kepatuhan & Selisih</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="loading">
-                <td colspan="9" class="text-center py-5">
+                <td colspan="8" class="text-center py-5">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Memuat...</span>
                   </div>
@@ -399,7 +409,7 @@
                 </td>
               </tr>
               <tr v-else-if="details.length === 0">
-                <td colspan="9" class="text-center py-5 text-muted">
+                <td colspan="8" class="text-center py-5 text-muted">
                   <i class="fas fa-calendar-times fa-3x mb-3 text-secondary opacity-50"></i>
                   <p class="m-0 fw-semibold">Tidak ada data ditemukan untuk kriteria filter ini.</p>
                 </td>
@@ -422,16 +432,12 @@
                 <td>
                   <div class="fw-semibold text-dark row-title">{{ item.nm_dokter }}</div>
                   <span v-if="item.is_first_patient" class="badge bg-primary-subtle text-primary border border-primary-subtle compact-tag mt-1">
-                    <i class="fas fa-star text-warning me-1"></i>Pasien Pertama
+                    <i class="fas fa-star text-warning me-1"></i>Pasien Pertama Dilayani
                   </span>
                 </td>
                 <td>
                   <div class="fw-semibold text-dark row-title">{{ formatTimeRange(item.jam_mulai, item.jam_selesai) }}</div>
                   <span class="text-muted row-sub">{{ item.hari_kerja }}</span>
-                </td>
-                <td>
-                  <div class="fw-semibold text-dark row-title">{{ item.jam_reg }}</div>
-                  <span class="text-muted row-sub">{{ formatDateOnly(item.tgl_registrasi) }}</span>
                 </td>
                 <td>
                   <div class="fw-bold text-primary row-title">{{ formatTimeOnly(item.task4_waktu) }}</div>
@@ -579,6 +585,8 @@ const compliancePercentage = computed(() => {
   return Math.round((patuh / total) * 100)
 })
 
+const unitLabel = computed(() => filters.mode === 'first_patient' ? 'Jadwal Praktek' : 'Pasien')
+
 // Chart configurations: Donut
 const donutChartSeries = computed(() => {
   const patuh = Number(stats.value?.overall?.patuh) || 0
@@ -606,7 +614,7 @@ const donutChartOptions = computed(() => ({
           show: true,
           total: {
             show: true,
-            label: 'Total Sesi',
+            label: filters.mode === 'first_patient' ? 'Total Jadwal' : 'Total Pasien',
             formatter: () => stats.value?.overall?.total || 0
           }
         }
@@ -886,10 +894,9 @@ const exportToExcel = async () => {
       'Hari': item.hari_kerja,
       'Jadwal Mulai': item.jam_mulai,
       'Jadwal Selesai': item.jam_selesai,
-      'Jam Registrasi': `${item.tgl_registrasi} ${item.jam_reg}`,
       'Mulai Layanan (Task 4)': item.task4_waktu || '-',
       'Selisih (Menit)': item.selisih_menit,
-      'Kategori Pasien': item.is_first_patient ? 'Pasien Pertama (Jam Buka)' : 'Pasien Kunjungan',
+      'Kategori Pasien': item.is_first_patient ? 'Pasien Pertama Dilayani (Buka Praktek)' : 'Pasien Kunjungan',
       'Status Kepatuhan': item.is_patuh ? 'Patuh (≤ 60 Menit)' : 'Tidak Patuh (> 60 Menit)'
     }))
 
@@ -960,14 +967,14 @@ const exportToPDF = async () => {
     currentY += 6
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
-    const modeLabel = filters.mode === 'first_patient' ? 'Pasien Pertama (Jam Buka Praktek)' : 'Semua Pasien'
+    const modeLabel = filters.mode === 'first_patient' ? 'Pasien Pertama Dilayani (Buka Praktek)' : 'Seluruh Pasien'
     doc.text(`Periode: ${formatDateOnly(filters.start_date)} s/d ${formatDateOnly(filters.end_date)} | Mode: ${modeLabel}`, pageWidth / 2, currentY, { align: 'center' })
 
     // Summary Box
     currentY += 6
     doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
-    const summaryText = `Total: ${stats.value?.overall?.total || 0} Sesi | Patuh: ${stats.value?.overall?.patuh || 0} (${compliancePercentage.value}%) | Terlambat: ${stats.value?.overall?.tidak_patuh || 0} | Rata-rata Mulai: ${stats.value?.overall?.avg_selisih_menit || 0} menit`
+    const summaryText = `Total: ${stats.value?.overall?.total || 0} ${unitLabel.value} | Patuh: ${stats.value?.overall?.patuh || 0} (${compliancePercentage.value}%) | Terlambat: ${stats.value?.overall?.tidak_patuh || 0} | Rata-rata Mulai: ${stats.value?.overall?.avg_selisih_menit || 0} menit`
     doc.text(summaryText, pageWidth / 2, currentY, { align: 'center' })
 
     const tableColumns = [
