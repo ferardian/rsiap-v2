@@ -563,6 +563,16 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/proker-anggaran',
+    name: 'ProkerAnggaran',
+    component: () => import('../views/keuangan/ProkerAnggaranView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/keuangan/proker-anggaran',
+    redirect: '/proker-anggaran'
+  },
+  {
     path: '/helpdesk/tiket-masuk',
     name: 'TiketMasukHelpdesk',
     component: () => import('../views/helpdesk/TiketMasukView.vue'),
@@ -877,10 +887,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/laporan/kepatuhan-penerbitan-sep',
-    name: 'KepatuhanPenerbitanSep',
-    component: () => import('@/views/laporan/KepatuhanSepView.vue'),
+    path: '/laporan/kepatuhan-pelayanan-dokter',
+    name: 'KepatuhanPelayananDokter',
+    component: () => import('@/views/laporan/KepatuhanPelayananDokterView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/kepatuhan-penerbitan-sep',
+    redirect: '/laporan/kepatuhan-pelayanan-dokter'
   },
   {
     path: '/laporan/kepatuhan-sku-bpjs',

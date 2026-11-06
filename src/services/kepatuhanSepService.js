@@ -1,17 +1,13 @@
 import api from './api'
 
 export const kepatuhanSepService = {
-    /**
-     * Get statistical summaries, daily trends, clinic stats, and doctor stats
-     */
-    getStats(params) {
-        return api.get('/laporan/kepatuhan-sep', { params })
-    },
+  getStats(params) {
+    return api.get('/laporan/kepatuhan-pelayanan-dokter', { params })
+  },
 
-    /**
-     * Get paginated detailed compliance data
-     */
-    getDetails(params) {
-        return api.get('/laporan/kepatuhan-sep/detail', { params })
-    }
+  getDetails(params) {
+    return api.get('/laporan/kepatuhan-pelayanan-dokter/detail', { params })
+  }
 }
+
+export default kepatuhanSepService
