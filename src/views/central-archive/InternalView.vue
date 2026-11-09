@@ -103,7 +103,18 @@
             <tbody>
               <tr v-for="item in suratList" :key="item.id" @click="viewDetail(item)">
                 <td class="text-mono">{{ item.no_surat || '(Belum Terbit)' }}</td>
-                <td class="fw-bold">{{ item.perihal }}</td>
+                <td>
+                  <div class="perihal-wrapper">
+                    <span class="fw-bold">{{ item.perihal }}</span>
+                    <div v-if="item.undangan" class="undangan-pill-badge" :title="'Undangan: ' + (item.undangan.lokasi || item.undangan.tempat || '-')">
+                      <span class="pill-tag"><i class="fas fa-calendar-check"></i> Disertai Undangan</span>
+                      <span class="pill-meta"><i class="far fa-clock"></i> {{ formatDateTime(item.undangan.tanggal) }}</span>
+                      <span v-if="item.undangan.lokasi || item.undangan.tempat" class="pill-meta">
+                        <i class="fas fa-map-marker-alt"></i> {{ item.undangan.lokasi || item.undangan.tempat }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
                 <td>{{ formatDate(item.tgl_terbit) }}</td>
                 <td>
                   <div class="pj-info">
@@ -140,6 +151,13 @@
             </div>
             <div class="mobile-card-body">
               <h3 class="mobile-card-perihal">{{ item.perihal }}</h3>
+              <div v-if="item.undangan" class="undangan-pill-badge mobile" :title="'Undangan: ' + (item.undangan.lokasi || item.undangan.tempat || '-')">
+                <span class="pill-tag"><i class="fas fa-calendar-check"></i> Disertai Undangan</span>
+                <span class="pill-meta"><i class="far fa-clock"></i> {{ formatDateTime(item.undangan.tanggal) }}</span>
+                <span v-if="item.undangan.lokasi || item.undangan.tempat" class="pill-meta">
+                  <i class="fas fa-map-marker-alt"></i> {{ item.undangan.lokasi || item.undangan.tempat }}
+                </span>
+              </div>
               <div class="mobile-card-meta">
                 <div class="meta-item">
                   <i class="far fa-calendar-alt"></i>
@@ -643,12 +661,15 @@ const saveSurat = async () => {
     const payload = { ...formData.value }
     if (!withUndangan.value) {
       delete payload.undangan
-    } else if (payload.undangan?.tanggal) {
-      // datetime-local gives "YYYY-MM-DDTHH:mm", Laravel needs "YYYY-MM-DD HH:mm:ss"
-      const raw = payload.undangan.tanggal
-      payload.undangan = {
-        ...payload.undangan,
-        tanggal: raw.replace('T', ' ') + (raw.length === 16 ? ':00' : '')
+    } else {
+      payload.penerima = formRecipients.value
+      if (payload.undangan?.tanggal) {
+        // datetime-local gives "YYYY-MM-DDTHH:mm", Laravel needs "YYYY-MM-DD HH:mm:ss"
+        const raw = payload.undangan.tanggal
+        payload.undangan = {
+          ...payload.undangan,
+          tanggal: raw.replace('T', ' ') + (raw.length === 16 ? ':00' : '')
+        }
       }
     }
 
@@ -1188,6 +1209,47 @@ onMounted(() => {
 
 .modern-table tbody tr:hover {
   background: #fbfdff;
+}
+
+.perihal-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.undangan-pill-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  width: fit-content;
+  box-shadow: 0 1px 2px rgba(22, 101, 52, 0.05);
+}
+
+.undangan-pill-badge .pill-tag {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #15803d;
+}
+
+.undangan-pill-badge .pill-meta {
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.undangan-pill-badge.mobile {
+  margin-top: 0.35rem;
+  margin-bottom: 0.5rem;
 }
 
 .text-mono {
