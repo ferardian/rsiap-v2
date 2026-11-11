@@ -123,9 +123,20 @@
                   </div>
                 </td>
                 <td>
-                  <span :class="['status-badge', item.status]">
-                    {{ capitalize(item.status) }}
-                  </span>
+                  <div class="d-flex flex-column gap-1">
+                    <span :class="['status-badge', item.status]">
+                      {{ capitalize(item.status) }}
+                    </span>
+                    <span v-if="item.status === 'pengajuan' && item.pj_approved_at" class="pj-approval-badge approved" :title="'Disetujui PJ: ' + (item.pj_approved_by?.nama || item.pj_approved_by || '') + ' (' + formatDateTime(item.pj_approved_at) + ')'">
+                      <i class="fas fa-check-circle"></i> PJ Disetujui
+                    </span>
+                    <span v-else-if="item.status === 'pengajuan' && !item.pj_approved_at" class="pj-approval-badge pending" title="Menunggu persetujuan PJ (bisa di-bypass saat urgent)">
+                      <i class="fas fa-clock"></i> Tunggu PJ
+                    </span>
+                    <span v-else-if="item.status === 'ditolak' && item.catatan_penolakan" class="pj-approval-badge rejected" :title="item.catatan_penolakan">
+                      <i class="fas fa-times-circle"></i> Ditolak
+                    </span>
+                  </div>
                 </td>
                 <td @click.stop>
                   <div class="action-buttons">
@@ -147,7 +158,15 @@
           <div v-for="item in suratList" :key="item.id" class="mobile-card" @click="viewDetail(item)">
             <div class="mobile-card-header">
               <span class="mobile-card-no text-mono">{{ item.no_surat || 'Draft' }}</span>
-              <span :class="['status-badge-mini', item.status]">{{ capitalize(item.status) }}</span>
+              <div class="d-flex align-items-center gap-1.5">
+                <span v-if="item.status === 'pengajuan' && item.pj_approved_at" class="pj-approval-badge-mini approved" title="Disetujui PJ">
+                  <i class="fas fa-check-circle"></i> PJ OK
+                </span>
+                <span v-else-if="item.status === 'pengajuan' && !item.pj_approved_at" class="pj-approval-badge-mini pending" title="Menunggu PJ">
+                  <i class="fas fa-clock"></i> Tunggu PJ
+                </span>
+                <span :class="['status-badge-mini', item.status]">{{ capitalize(item.status) }}</span>
+              </div>
             </div>
             <div class="mobile-card-body">
               <h3 class="mobile-card-perihal">{{ item.perihal }}</h3>
@@ -202,7 +221,7 @@
     </div>
 
     <!-- Modal Form (Create/Edit) -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-container main-modal">
         <div class="modal-header">
           <h2>{{ isEdit ? 'Edit Surat Internal' : 'Tambah Surat Internal' }}</h2>
@@ -333,10 +352,27 @@
                 <div class="info-value text-mono">{{ selectedItem?.no_surat || '(Belum Terbit)' }}</div>
               </div>
               <div class="info-item">
-                <label>Status</label>
+                <label>Status Surat</label>
                 <div class="info-value">
                   <span :class="['status-badge', selectedItem?.status]">
                     {{ capitalize(selectedItem?.status) }}
+                  </span>
+                </div>
+              </div>
+              <div class="info-item">
+                <label>Persetujuan PJ</label>
+                <div class="info-value">
+                  <span v-if="selectedItem?.pj_approved_at" class="text-success fw-bold fs-xs">
+                    <i class="fas fa-check-circle me-1"></i> Disetujui PJ ({{ formatDateTime(selectedItem.pj_approved_at) }})
+                    <div class="text-muted fs-xxs" v-if="selectedItem.pj_approved_by">Oleh: {{ selectedItem.pj_approved_by?.nama || selectedItem.pj_approved_by }}</div>
+                  </span>
+                  <span v-else-if="selectedItem?.status === 'ditolak'" class="text-danger fw-bold fs-xs">
+                    <i class="fas fa-times-circle me-1"></i> Ditolak
+                    <div class="text-muted fs-xxs" v-if="selectedItem.catatan_penolakan">{{ selectedItem.catatan_penolakan }}</div>
+                  </span>
+                  <span v-else class="text-warning fw-bold fs-xs">
+                    <i class="fas fa-clock me-1"></i> Menunggu Persetujuan PJ
+                    <div class="text-muted fs-xxs">Bisa langsung disetujui Diklat jika urgent</div>
                   </span>
                 </div>
               </div>
@@ -558,11 +594,7 @@ const fetchStats = async () => {
 
 const loadPegawai = async () => {
   try {
-    const params = { status: 'AKTIF' }
-    const userDept = authStore.userDepartment
-    if (!isKoordinator.value && userDept && userDept !== '-') {
-      params.departemen = userDept
-    }
+    const params = { status: 'AKTIF', limit: 1000 }
     const response = await pegawaiService.getKaryawanList(params)
     pegawaiList.value = response.data.data
   } catch (error) {
@@ -1283,6 +1315,33 @@ onMounted(() => {
 .status-badge.pengajuan { background: #fee2e2; color: #991b1b; }
 .status-badge.disetujui { background: #dcfce7; color: #166534; }
 .status-badge.ditolak { background: #f1f5f9; color: #475569; }
+
+.pj-approval-badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+}
+.pj-approval-badge.approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.pj-approval-badge.pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.pj-approval-badge.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+.pj-approval-badge-mini {
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.pj-approval-badge-mini.approved { background: #ecfdf5; color: #047857; }
+.pj-approval-badge-mini.pending { background: #fffbeb; color: #b45309; }
+.pj-approval-badge-mini.rejected { background: #fef2f2; color: #b91c1c; }
 
 .action-buttons {
   display: flex;

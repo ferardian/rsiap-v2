@@ -1,43 +1,93 @@
 <template>
   <div class="sdi-view pks-view">
-    <!-- Hero Header -->
-    <div class="hero-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);">
+    <!-- Hero Header with Multi-Metrics -->
+    <div class="hero-header">
       <div class="hero-content">
         <div class="title-section">
           <div class="icon-box">
-            <i class="fas fa-envelope-open-text"></i>
+            <i class="fas fa-calendar-alt"></i>
           </div>
           <div class="title-text">
-            <h1>Undangan</h1>
-            <p>Data Undangan / Pertemuan Terdaftar RSIA Aisyiyah Pekajangan</p>
+            <h1>Undangan & Pertemuan</h1>
+            <p>Agenda resmi, E-Notulensi rapat, dan monitoring tindak lanjut RSIA Aisyiyah Pekajangan</p>
           </div>
         </div>
+
+        <!-- Quick Stats Metric Cards -->
         <div class="stats-section">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="stat-card" :class="{ 'active': activeTab === 'all' }" @click="setTab('all')">
+            <div class="stat-icon bg-blue-500/20 text-blue-200"><i class="fas fa-layer-group"></i></div>
             <div class="stat-info">
               <span class="stat-value">{{ pagination.total || 0 }}</span>
-              <span class="stat-label">Total Undangan</span>
+              <span class="stat-label">Total Agenda</span>
+            </div>
+          </div>
+
+          <div class="stat-card" :class="{ 'active': activeTab === 'upcoming' }" @click="setTab('upcoming')">
+            <div class="stat-icon bg-emerald-500/20 text-emerald-200"><i class="fas fa-clock"></i></div>
+            <div class="stat-info">
+              <span class="stat-value">{{ upcomingCount }}</span>
+              <span class="stat-label">Akan Datang</span>
+            </div>
+          </div>
+
+          <div class="stat-card" :class="{ 'active': activeTab === 'today' }" @click="setTab('today')">
+            <div class="stat-icon bg-amber-500/20 text-amber-200"><i class="fas fa-calendar-day"></i></div>
+            <div class="stat-info">
+              <span class="stat-value">{{ todayCount }}</span>
+              <span class="stat-label">Hari Ini</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Action Bar -->
+    <!-- Filter & Action Bar Modern -->
     <div class="action-bar-modern">
       <div class="action-bar-row">
-        <!-- Search & Filter Left -->
+        <!-- Filter Tabs on Left -->
+        <div class="filter-tabs-wrapper">
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeTab === 'all' }" 
+            @click="setTab('all')"
+          >
+            <i class="fas fa-list mr-1.5"></i> Semua
+          </button>
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeTab === 'upcoming' }" 
+            @click="setTab('upcoming')"
+          >
+            <i class="fas fa-calendar-check mr-1.5 text-blue-500"></i> Akan Datang
+          </button>
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeTab === 'today' }" 
+            @click="setTab('today')"
+          >
+            <i class="fas fa-sun mr-1.5 text-emerald-500"></i> Hari Ini
+          </button>
+          <button 
+            class="tab-btn" 
+            :class="{ active: activeTab === 'past' }" 
+            @click="setTab('past')"
+          >
+            <i class="fas fa-history mr-1.5 text-slate-400"></i> Selesai
+          </button>
+        </div>
+
+        <!-- Search & Date Controls on Right -->
         <div class="search-filter-group">
           <div class="search-box">
             <i class="fas fa-search search-icon"></i>
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Cari berdasarkan Perihal atau Lokasi..." 
+              placeholder="Cari perihal, lokasi, atau penanggung jawab..." 
               @input="handleSearch"
             >
-            <button v-if="searchQuery" class="clear-search" @click="clearSearch">
+            <button v-if="searchQuery" class="clear-search" @click="clearSearch" title="Hapus Pencarian">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -54,73 +104,117 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
-        </div>
 
-        <!-- Add Button Right (If needed, though current service is read-only) -->
-        <div class="action-buttons">
-          <!-- Button placeholder if crud is added later -->
-          <div class="text-xs text-muted font-medium italic">
-            <i class="fas fa-info-circle mr-1"></i> Terhubung dengan Manajemen Surat
-          </div>
+          <button class="btn-refresh" @click="loadData(pagination.current_page)" title="Muat Ulang Data">
+            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Data Table -->
+    <!-- Data Table Card -->
     <div class="card-modern">
       <div class="table-container">
         <!-- Loading State -->
         <div v-if="loading" class="loading-state">
           <div class="spinner"></div>
-          <p>Memuat data undangan...</p>
+          <p class="mt-3 font-semibold text-slate-600">Memuat data agenda & pertemuan...</p>
         </div>
 
         <table v-else-if="undanganList.length > 0" class="modern-table">
           <thead>
             <tr>
-              <th width="5%">No</th>
-              <th width="15%">Tanggal</th>
-              <th width="35%">Perihal</th>
-              <th width="20%">Lokasi</th>
-              <th width="15%">Tipe</th>
-              <th width="10%" class="text-center">Aksi</th>
+              <th width="4%">No</th>
+              <th width="16%">Waktu & Jadwal</th>
+              <th width="38%">Agenda & Pertemuan</th>
+              <th width="17%">Lokasi / Ruang</th>
+              <th width="13%">Peserta</th>
+              <th width="12%" class="text-center">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(undangan, index) in undanganList" :key="index" class="table-row-hover">
-              <td class="text-muted">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+            <tr 
+              v-for="(undangan, index) in undanganList" 
+              :key="undangan.id || index" 
+              class="table-row-hover"
+              @click="openDetailModal(undangan)"
+            >
+              <td class="text-muted font-bold text-xs">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
+              
+              <!-- Kolom Waktu & Status -->
               <td>
-                <div class="date-calendar-card">
-                  <div class="card-header">{{ formatMonth(undangan.tanggal) }}</div>
-                  <div class="card-body">
-                    <span class="day">{{ formatDayCell(undangan.tanggal) }}</span>
-                    <span class="year">{{ formatYear(undangan.tanggal) }}</span>
+                <div class="schedule-cell">
+                  <div class="date-calendar-card" :class="getDateCardClass(undangan.tanggal)">
+                    <div class="card-header">{{ formatMonth(undangan.tanggal) }}</div>
+                    <div class="card-body">
+                      <span class="day">{{ formatDayCell(undangan.tanggal) }}</span>
+                      <span class="year">{{ formatYear(undangan.tanggal) }}</span>
+                    </div>
+                  </div>
+                  <div class="time-status-info">
+                    <span class="time-clock"><i class="far fa-clock mr-1"></i> {{ formatTimeCell(undangan.tanggal) }}</span>
+                    <span class="status-pill" :class="getMeetingStatusClass(undangan.tanggal)">
+                      {{ getMeetingStatusLabel(undangan.tanggal) }}
+                    </span>
                   </div>
                 </div>
               </td>
+
+              <!-- Kolom Agenda & Pertemuan -->
               <td>
-                <div class="fw-bold text-dark mb-1">{{ undangan.perihal }}</div>
-                <div class="text-xs text-muted" v-if="undangan.pj">
-                  <i class="fas fa-user-tie mr-1"></i> PJ: {{ getPjName(undangan) }}
+                <div class="perihal-cell">
+                  <div class="perihal-title-text">{{ undangan.perihal }}</div>
+                  
+                  <div class="perihal-meta-row">
+                    <span class="badge-type" :class="getTypeClass(undangan.tipe)">
+                      {{ undangan.tipe || 'Umum' }}
+                    </span>
+
+                    <span class="no-surat-pill" v-if="undangan.no_surat || undangan.surat?.no_surat">
+                      <i class="fas fa-file-signature text-slate-400 mr-1"></i>
+                      {{ undangan.no_surat || undangan.surat?.no_surat }}
+                    </span>
+                  </div>
+
+                  <div class="pj-info-row" v-if="undangan.pj">
+                    <i class="fas fa-user-circle text-blue-500 mr-1"></i>
+                    <span class="pj-name-label">PJ: {{ getPjName(undangan) }}</span>
+                  </div>
                 </div>
               </td>
+
+              <!-- Kolom Lokasi -->
               <td>
                 <div class="location-cell">
-                  <i class="fas fa-map-marker-alt text-danger"></i>
-                  <span>{{ undangan.lokasi || '-' }}</span>
+                  <div class="location-pin-circle">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </div>
+                  <div class="location-details">
+                    <span class="location-name">{{ undangan.lokasi || '-' }}</span>
+                  </div>
                 </div>
               </td>
+
+              <!-- Kolom Peserta -->
               <td>
-                <span class="badge-type" :class="getTypeClass(undangan.tipe)">
-                  {{ undangan.tipe || 'Umum' }}
-                </span>
-              </td>
-              <td class="text-center">
-                <div class="action-buttons-cell justify-content-center">
-                  <button class="btn-action btn-view" @click="openDetailModal(undangan)" title="Detail">
-                    <i class="fas fa-eye"></i>
-                  </button>
+                <div class="participants-cell">
+                  <div class="participants-pill">
+                    <i class="fas fa-users text-slate-500 mr-1"></i>
+                    <span>{{ getParticipantsCount(undangan) }} Peserta</span>
+                  </div>
                 </div>
+              </td>
+
+              <!-- Kolom Aksi -->
+              <td class="text-center" @click.stop>
+                <button 
+                  class="btn-open-detail" 
+                  @click="openDetailModal(undangan)" 
+                  title="Lihat Detail, Presensi, Notulen, & Tindak Lanjut"
+                >
+                  <i class="fas fa-eye mr-1.5"></i>
+                  <span>Detail</span>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -131,10 +225,10 @@
           <div class="empty-icon">
             <i class="fas fa-calendar-times"></i>
           </div>
-          <h3>Undangan Tidak Ditemukan</h3>
-          <p>Belum ada data undangan yang terdaftar atau sesuai kriteria pencarian.</p>
-          <button v-if="searchQuery || filterDate" class="btn-outline-primary mt-3" @click="resetFilters">
-            <i class="fas fa-sync-alt mr-2"></i>Reset Pencarian
+          <h3>Agenda Tidak Ditemukan</h3>
+          <p>Belum ada data undangan atau pertemuan yang sesuai dengan kriteria filter saat ini.</p>
+          <button class="btn-outline-primary mt-3" @click="resetFilters">
+            <i class="fas fa-sync-alt mr-2"></i>Reset Filter & Tampilkan Semua
           </button>
         </div>
       </div>
@@ -144,7 +238,7 @@
         <div class="pagination-info">
           Menampilkan {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
           {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} 
-          dari {{ pagination.total }} data
+          dari {{ pagination.total }} agenda
         </div>
         <div class="pagination-controls">
           <button class="btn-page" :disabled="pagination.current_page === 1" @click="changePage(pagination.current_page - 1)">
@@ -189,6 +283,9 @@ const undanganList = ref([])
 const loading = ref(true)
 const searchQuery = ref('')
 const filterDate = ref('')
+const activeTab = ref('all') // 'all', 'upcoming', 'today', 'past'
+const upcomingCount = ref(0)
+const todayCount = ref(0)
 
 const pagination = ref({
   current_page: 1,
@@ -203,12 +300,60 @@ const selectedUndangan = ref(null)
 
 onMounted(() => {
   loadData()
+  loadStats()
 })
+
+const getTodayString = () => {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+const loadStats = async () => {
+  try {
+    const todayStr = getTodayString()
+    // Upcoming count
+    const upcomingRes = await undanganService.search('', 1, 1, [
+      { field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` }
+    ])
+    upcomingCount.value = upcomingRes.data?.meta?.total || 0
+
+    // Today count
+    const todayRes = await undanganService.search('', 1, 1, [
+      { field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` },
+      { field: 'tanggal', operator: '<=', value: `${todayStr} 23:59:59` }
+    ])
+    todayCount.value = todayRes.data?.meta?.total || 0
+  } catch (e) {
+    console.error('Failed to load stats:', e)
+  }
+}
+
+const setTab = (tab) => {
+  if (activeTab.value === tab) return
+  activeTab.value = tab
+  pagination.value.current_page = 1
+  loadData(1)
+}
 
 const loadData = async (page = 1) => {
   loading.value = true
   try {
     const filters = []
+    const todayStr = getTodayString()
+
+    // Status tab filters
+    if (activeTab.value === 'upcoming') {
+      filters.push({ field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` })
+    } else if (activeTab.value === 'today') {
+      filters.push({ field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` })
+      filters.push({ field: 'tanggal', operator: '<=', value: `${todayStr} 23:59:59` })
+    } else if (activeTab.value === 'past') {
+      filters.push({ field: 'tanggal', operator: '<', value: `${todayStr} 00:00:00` })
+    }
+
     if (filterDate.value) {
       filters.push({ field: 'tanggal', operator: '>=', value: `${filterDate.value} 00:00:00` })
       filters.push({ field: 'tanggal', operator: '<=', value: `${filterDate.value} 23:59:59` })
@@ -227,7 +372,7 @@ const loadData = async (page = 1) => {
     }
   } catch (error) {
     console.error('Error loading Undangan:', error)
-    toast.error('Gagal memuat data undangan')
+    toast.error('Gagal memuat data agenda')
   } finally {
     loading.value = false
   }
@@ -251,6 +396,7 @@ const clearDateFilter = () => {
 const resetFilters = () => {
   searchQuery.value = ''
   filterDate.value = ''
+  activeTab.value = 'all'
   handleSearch()
 }
 
@@ -279,6 +425,43 @@ const formatMonth = (dateString) => {
 const formatYear = (dateString) => {
   const d = parseDate(dateString)
   return d ? d.getFullYear() : '----'
+}
+
+const formatTimeCell = (dateString) => {
+  const d = parseDate(dateString)
+  return d ? d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : '--:--'
+}
+
+const getMeetingStatusLabel = (dateStr) => {
+  if (!dateStr) return '-'
+  const d = parseDate(dateStr)
+  if (!d) return '-'
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const meetingDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  
+  if (meetingDate.getTime() === today.getTime()) return 'Hari Ini'
+  if (meetingDate.getTime() > today.getTime()) return 'Akan Datang'
+  return 'Selesai'
+}
+
+const getMeetingStatusClass = (dateStr) => {
+  const label = getMeetingStatusLabel(dateStr)
+  if (label === 'Hari Ini') return 'status-pill-today'
+  if (label === 'Akan Datang') return 'status-pill-upcoming'
+  return 'status-pill-past'
+}
+
+const getDateCardClass = (dateStr) => {
+  const label = getMeetingStatusLabel(dateStr)
+  if (label === 'Hari Ini') return 'card-theme-today'
+  if (label === 'Akan Datang') return 'card-theme-upcoming'
+  return 'card-theme-past'
+}
+
+const getParticipantsCount = (undangan) => {
+  if (Array.isArray(undangan.peserta)) return undangan.peserta.length
+  return 0
 }
 
 const getPjName = (undangan) => {
@@ -328,11 +511,12 @@ const displayedPages = computed(() => {
 
 /* Hero Header */
 .hero-header {
-  border-radius: 16px;
-  padding: 2.5rem;
+  border-radius: 20px;
+  padding: 2rem 2.5rem;
   margin-bottom: 1.5rem;
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(30, 64, 175, 0.2);
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -340,10 +524,11 @@ const displayedPages = computed(() => {
 .hero-header::before {
   content: '';
   position: absolute;
-  top: -20%; right: -10%;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  top: -30%; right: -10%;
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
   border-radius: 50%;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -352,128 +537,186 @@ const displayedPages = computed(() => {
   align-items: center;
   position: relative;
   z-index: 1;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .title-section { display: flex; align-items: center; gap: 1.5rem; }
 
 .icon-box {
-  width: 64px; height: 64px;
+  width: 60px; height: 60px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.75rem;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-.title-text h1 { font-size: 1.75rem; font-weight: 800; margin: 0 0 0.35rem 0; letter-spacing: -0.02em; }
-.title-text p { color: #dbeafe; margin: 0; font-size: 1rem; opacity: 0.9; }
+.title-text h1 { font-size: 1.65rem; font-weight: 800; margin: 0 0 0.25rem 0; letter-spacing: -0.02em; }
+.title-text p { color: #dbeafe; margin: 0; font-size: 0.9rem; opacity: 0.95; }
 
-.stats-section { display: flex; gap: 1.5rem; }
+.stats-section { display: flex; gap: 1rem; flex-wrap: wrap; }
 
 .stat-card {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
-  padding: 1.25rem 1.75rem;
-  display: flex; align-items: center; gap: 1.25rem;
-  min-width: 180px;
+  padding: 0.85rem 1.25rem;
+  display: flex; align-items: center; gap: 1rem;
+  min-width: 150px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.stat-card:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+.stat-card.active {
+  background: white;
+  border-color: white;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+.stat-card.active .stat-value { color: #1e3a8a; }
+.stat-card.active .stat-label { color: #64748b; }
 
 .stat-icon {
-  width: 44px; height: 44px;
-  background: rgba(255, 255, 255, 0.2);
+  width: 38px; height: 38px;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .stat-info { display: flex; flex-direction: column; }
-.stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
-.stat-label { font-size: 0.7rem; color: #dbeafe; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+.stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 0.2rem; }
+.stat-label { font-size: 0.65rem; color: #dbeafe; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
 
-/* Action Bar */
-.action-bar-modern { margin-bottom: 1.5rem; }
-.action-bar-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.search-filter-group { display: flex; gap: 1rem; flex: 1; }
+/* Filter & Action Bar */
+.action-bar-modern { margin-bottom: 1.25rem; }
+.action-bar-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
-.search-box { position: relative; flex: 1; max-width: 400px; }
-.search-icon { position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: #64748b; }
-.search-box input {
-  width: 100%; padding: 0.75rem 3rem 0.75rem 3rem;
-  border: 1px solid #e2e8f0; border-radius: 12px;
-  font-size: 0.9rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+.filter-tabs-wrapper {
+  display: flex;
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 14px;
+  gap: 4px;
 }
 
-.search-box input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+.tab-btn {
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+.tab-btn:hover { color: #0f172a; }
+.tab-btn.active {
+  background: white;
+  color: #1e3a8a;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.search-filter-group { display: flex; gap: 0.75rem; align-items: center; flex: 1; justify-content: flex-end; }
+
+.search-box { position: relative; flex: 1; max-width: 360px; }
+.search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem; }
+.search-box input {
+  width: 100%; padding: 0.65rem 2.5rem 0.65rem 2.4rem;
+  border: 1px solid #e2e8f0; border-radius: 12px;
+  font-size: 0.85rem; transition: all 0.2s;
+  background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.search-box input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12); }
 
 .clear-search, .clear-filter {
-  position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%);
+  position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%);
   background: transparent; border: none; color: #94a3b8; cursor: pointer;
-  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
 }
 .clear-search:hover, .clear-filter:hover { background: #fee2e2; color: #ef4444; }
 
-.filter-box { position: relative; min-width: 200px; }
-.filter-icon { position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: #64748b; z-index: 1; }
+.filter-box { position: relative; width: 170px; }
+.filter-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1; font-size: 0.85rem; }
 .filter-box input {
-  width: 100%; padding: 0.75rem 2.5rem 0.75rem 3rem;
+  width: 100%; padding: 0.65rem 2.2rem 0.65rem 2.2rem;
   border: 1px solid #e2e8f0; border-radius: 12px;
-  font-size: 0.9rem; background: white; color: #1e293b; cursor: pointer;
+  font-size: 0.82rem; background: white; color: #1e293b; cursor: pointer;
 }
 
-/* Card & Table */
+.btn-refresh {
+  width: 38px; height: 38px; border-radius: 12px; border: 1px solid #e2e8f0;
+  background: white; color: #475569; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-refresh:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+
+/* Table Container & Modern Table */
 .card-modern {
   background: white; border-radius: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  overflow: hidden; border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+  overflow: hidden; border: 1px solid #e2e8f0;
 }
 
 .table-container { overflow-x: auto; position: relative; min-height: 400px; }
 
 .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .modern-table th {
-  background: #f8fafc; color: #475569; font-weight: 700; font-size: 0.75rem;
-  text-transform: uppercase; letter-spacing: 0.08em; padding: 1.25rem 1.5rem;
-  text-align: left; border-bottom: 2px solid #f1f5f9;
+  background: #f8fafc; color: #475569; font-weight: 800; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.08em; padding: 1.1rem 1.25rem;
+  text-align: left; border-bottom: 2px solid #e2e8f0;
 }
 
-.modern-table td { padding: 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.table-row-hover:hover { background-color: #fbfcfe; cursor: pointer; }
+.modern-table td { padding: 1.15rem 1.25rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.table-row-hover:hover { background-color: #f8fafc; cursor: pointer; }
 
-/* Date Cell */
-.date-cell .date-calendar-card {
-  width: 70px;
+/* Schedule Cell */
+.schedule-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.date-calendar-card {
+  width: 64px;
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   transition: transform 0.2s;
 }
-
 .table-row-hover:hover .date-calendar-card {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
-  border-color: #bfdbfe;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
 }
 
 .date-calendar-card .card-header {
-  background: #3b82f6;
   color: white;
   font-size: 0.65rem;
   font-weight: 800;
-  padding: 0.25rem;
+  padding: 0.2rem;
   text-align: center;
   letter-spacing: 0.05em;
 }
 
+.card-theme-today .card-header { background: #10b981; }
+.card-theme-upcoming .card-header { background: #3b82f6; }
+.card-theme-past .card-header { background: #64748b; }
+
 .date-calendar-card .card-body {
-  padding: 0.4rem 0;
+  padding: 0.35rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -488,53 +731,185 @@ const displayedPages = computed(() => {
 }
 
 .date-calendar-card .year {
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: #64748b;
-  margin-top: 0.1rem;
+  margin-top: 1px;
 }
 
-.location-cell { display: flex; align-items: start; gap: 0.75rem; color: #475569; font-weight: 500; font-size: 0.9rem; line-height: 1.4; }
+.time-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.time-clock {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+}
+
+.status-pill {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  width: fit-content;
+  letter-spacing: 0.04em;
+}
+
+.status-pill-today {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.status-pill-upcoming {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.status-pill-past {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Perihal Cell */
+.perihal-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.perihal-title-text {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.perihal-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.no-surat-pill {
+  font-size: 0.7rem;
+  font-family: monospace;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.pj-info-row {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+.pj-name-label { font-weight: 600; color: #334155; }
+
+/* Location Cell */
+.location-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.location-pin-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.location-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #334155;
+  line-height: 1.3;
+}
+
+/* Participants Cell */
+.participants-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+/* Action Button */
+.btn-open-detail {
+  padding: 0.5rem 1rem;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-open-detail:hover {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
 
 /* Badges */
 .badge-type {
-  display: inline-block; padding: 0.35rem 0.85rem; border-radius: 20px;
-  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 99px;
+  font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
 }
 .badge-umum { background: #f1f5f9; color: #64748b; }
 .badge-rapat { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
 .badge-sosial { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
 .badge-bimtek { background: #fefce8; color: #ca8a04; border: 1px solid #fef9c3; }
 
-/* Action Buttons */
-.action-buttons-cell { display: flex; align-items: center; gap: 0.75rem; }
-.btn-action {
-  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-  border-radius: 10px; border: none; background: #f8fafc; color: #64748b;
-  cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #f1f5f9;
-}
-.btn-view:hover { background: #eff6ff; color: #2563eb; border-color: #dbeafe; transform: translateY(-2px); }
-
 /* Pagination */
 .pagination-container {
-  padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center;
-  background: #fff; border-top: 2px solid #f8fafc;
+  padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center;
+  background: #fff; border-top: 1px solid #f1f5f9;
 }
-.pagination-info { font-size: 0.875rem; color: #64748b; font-weight: 500; }
-.pagination-controls { display: flex; align-items: center; gap: 0.75rem; }
+.pagination-info { font-size: 0.85rem; color: #64748b; font-weight: 600; }
+.pagination-controls { display: flex; align-items: center; gap: 0.5rem; }
 .btn-page {
-  width: 40px; height: 40px; border-radius: 12px; border: 1px solid #e2e8f0;
+  width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e8f0;
   background: #fff; color: #64748b; cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
 }
 .btn-page:hover:not(:disabled) { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
 .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.page-numbers { display: flex; gap: 0.5rem; }
+.page-numbers { display: flex; gap: 0.35rem; }
 .btn-page-number {
-  min-width: 40px; height: 40px; border-radius: 12px; border: 1px solid transparent;
-  background: transparent; color: #64748b; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  min-width: 36px; height: 36px; border-radius: 10px; border: 1px solid transparent;
+  background: transparent; color: #64748b; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
 }
 .btn-page-number:hover { background: #f1f5f9; }
 .btn-page-number.active { background: #3b82f6; color: white; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3); }
@@ -545,12 +920,12 @@ const displayedPages = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 6rem 2rem;
+  padding: 5rem 2rem;
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border: 4px solid #f1f5f9;
   border-top-color: #3b82f6;
   border-radius: 50%;
@@ -568,112 +943,27 @@ const displayedPages = computed(() => {
   justify-content: center;
   padding: 5rem 2rem;
   text-align: center;
-  background: radial-gradient(circle at center, rgba(248, 250, 252, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
-  border-radius: 16px;
 }
 
 .empty-icon {
-  width: 90px;
-  height: 90px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 28px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.75rem;
-  color: #3b82f6;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.8);
-  position: relative;
-  animation: floatEmptyIcon 4s ease-in-out infinite;
+  font-size: 2rem;
+  margin-bottom: 1rem;
 }
 
-.empty-icon::after {
-  content: '';
-  position: absolute;
-  width: 60px;
-  height: 6px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 50%;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  filter: blur(2px);
-  animation: shadowScale 4s ease-in-out infinite;
-}
+.empty-state h3 { font-size: 1.15rem; font-weight: 800; color: #1e293b; margin-bottom: 0.35rem; }
+.empty-state p { font-size: 0.85rem; color: #64748b; max-width: 380px; margin: 0 auto; }
 
-@keyframes floatEmptyIcon {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
-}
-
-@keyframes shadowScale {
-  0% { transform: translateX(-50%) scale(1); opacity: 0.6; }
-  50% { transform: translateX(-50%) scale(0.8); opacity: 0.3; }
-  100% { transform: translateX(-50%) scale(1); opacity: 0.6; }
-}
-
-.empty-state h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #1e293b;
-  margin: 0.5rem 0 0.5rem 0;
-  letter-spacing: -0.02em;
-}
-
-.empty-state p {
-  color: #64748b;
-  font-size: 0.925rem;
-  margin-bottom: 2rem;
-  max-width: 320px;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.btn-outline-primary {
-  padding: 0.75rem 1.75rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-weight: 700;
-  color: #3b82f6;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.875rem;
-}
-
-.btn-outline-primary:hover {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  color: #2563eb;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  transform: translateY(-1px);
-}
-
-.btn-outline-primary:active {
-  transform: translateY(0);
-}
-
-.btn-outline-primary i {
-  font-size: 0.85rem;
-  transition: transform 0.4s ease;
-}
-
-.btn-outline-primary:hover i {
-  transform: rotate(180deg);
-}
-
-@media (max-width: 1024px) {
-  .hero-content { flex-direction: column; align-items: flex-start; gap: 2rem; }
-  .stats-section { width: 100%; }
-  .stat-card { flex: 1; }
+@media (max-width: 900px) {
+  .hero-content { flex-direction: column; align-items: flex-start; }
   .action-bar-row { flex-direction: column; align-items: stretch; }
-  .search-filter-group { flex-direction: column; }
+  .search-filter-group { flex-wrap: wrap; }
 }
 </style>

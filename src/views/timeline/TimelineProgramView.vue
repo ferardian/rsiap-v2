@@ -104,6 +104,7 @@
           <option value="Fasilitas & Sarpras">Fasilitas & Sarpras</option>
           <option value="SDI & Diklat">SDI & Diklat</option>
           <option value="IT & Digitalisasi">IT & Digitalisasi</option>
+          <option value="Hasil Rapat">Hasil Rapat</option>
           <option value="Keuangan">Keuangan</option>
           <option value="Lainnya">Lainnya</option>
         </select>
@@ -201,6 +202,10 @@
                 <div class="d-flex flex-wrap align-items-center gap-1.5 mb-1.5">
                   <span class="clean-badge badge-code">{{ program.kode_program }}</span>
                   <span class="clean-badge badge-category">{{ program.kategori }}</span>
+                  <span v-if="program.undangan || program.dasar_terbit" class="clean-badge bg-indigo-50 text-indigo-700 border border-indigo-200" :title="program.dasar_terbit || (program.undangan ? program.undangan.perihal : '')">
+                    <i class="fas fa-file-signature me-1"></i>
+                    Terbit dari: {{ program.undangan ? (program.undangan.perihal.length > 30 ? program.undangan.perihal.substring(0, 30) + '...' : program.undangan.perihal) : (program.dasar_terbit.length > 30 ? program.dasar_terbit.substring(0, 30) + '...' : program.dasar_terbit) }}
+                  </span>
                   <span v-if="program.unit_pj" class="clean-badge badge-unit">
                     <i class="fas fa-building me-1 opacity-60"></i>{{ program.unit_pj }}
                   </span>
@@ -535,7 +540,7 @@
             </div>
 
             <!-- VIEW 2: DETAIL TABLE -->
-            <div v-else class="table-responsive">
+            <div v-else class="table-responsive table-milestone-responsive">
               <table class="table table-sm align-middle mb-0 bg-white table-milestone">
                 <thead class="bg-slate-100 text-muted fs-xxs text-uppercase">
                   <tr>
@@ -1213,10 +1218,12 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import timelineService from '@/services/timelineService'
 import { useToast } from 'vue-toastification'
 import Swal from 'sweetalert2'
 
+const route = useRoute()
 const toast = useToast()
 
 // State
@@ -1362,8 +1369,14 @@ const fetchData = async () => {
       programs.value = res.data.data || []
       Object.assign(summary, res.data.summary || {})
 
-      // Auto expand first 3 programs by default
-      if (expandedProgramIds.value.length === 0 && programs.value.length > 0) {
+      // If query programId is passed, make sure it is expanded
+      if (route.query.programId) {
+        const targetId = parseInt(route.query.programId)
+        if (!expandedProgramIds.value.includes(targetId)) {
+          expandedProgramIds.value.push(targetId)
+        }
+      } else if (expandedProgramIds.value.length === 0 && programs.value.length > 0) {
+        // Auto expand first 3 programs by default
         expandedProgramIds.value = programs.value.slice(0, 3).map(p => p.id)
       }
     }
@@ -2487,6 +2500,17 @@ onMounted(() => {
   padding: 0.65rem 0.75rem;
   border-bottom: 1px solid #e2e8f0;
 }
+.table-milestone-responsive {
+  min-height: 220px;
+  overflow-y: visible !important;
+}
+
+@media (min-width: 992px) {
+  .table-milestone-responsive {
+    overflow-x: visible !important;
+  }
+}
+
 .table-milestone tbody td {
   padding: 0.75rem 0.75rem;
   border-bottom: 1px solid #f1f5f9;
@@ -2831,6 +2855,8 @@ onMounted(() => {
   width: 100%;
   overflow-x: auto;
   position: relative;
+  min-height: 200px;
+  padding-bottom: 75px;
 }
 
 .gantt-layout {
@@ -2838,6 +2864,7 @@ onMounted(() => {
   flex-direction: column;
   position: relative;
   min-width: 700px;
+  min-height: 180px;
 }
 
 /* Header Row */
@@ -2905,6 +2932,7 @@ onMounted(() => {
 /* Body Rows */
 .gantt-body {
   position: relative;
+  min-height: 140px;
 }
 
 .gantt-row {

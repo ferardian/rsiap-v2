@@ -191,7 +191,7 @@
     </div>
 
     <!-- Modal Form (Create/Edit) -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-container main-modal">
         <div class="modal-header">
           <h2>{{ isEdit ? 'Edit Surat Eksternal' : 'Tambah Surat Eksternal' }}</h2>
@@ -443,11 +443,7 @@ const fetchStats = async () => {
 
 const loadPegawai = async () => {
   try {
-    const params = { status: 'AKTIF' }
-    const userDept = authStore.userDepartment
-    if (!isKoordinator.value && userDept && userDept !== '-') {
-      params.departemen = userDept
-    }
+    const params = { status: 'AKTIF', limit: 1000 }
     const response = await pegawaiService.getKaryawanList(params)
     pegawaiList.value = response.data.data
   } catch (error) {

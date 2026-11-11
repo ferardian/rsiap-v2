@@ -206,7 +206,7 @@
     </div>
 
     <!-- Modal Form (Create/Edit) -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-container main-modal">
         <div class="modal-header">
           <h2>{{ isEdit ? 'Edit Surat Masuk' : 'Tambah Surat Masuk' }}</h2>

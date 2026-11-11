@@ -30,6 +30,10 @@ export const undanganService = {
         return api.get(`/undangan/${id}/notulen`)
     },
 
+    saveNotulen(id, data) {
+        return api.post(`/undangan/${id}/notulen`, data)
+    },
+
     download(id) {
         return api.get(`/undangan/${id}/download`, { responseType: 'blob' })
     },
@@ -43,5 +47,32 @@ export const undanganService = {
             undangan_id: undanganId,
             penerima: recipients
         })
+    },
+
+    getAttendance(id) {
+        return api.get(`/undangan/kehadiran/${id}`)
+    },
+
+    markAttendance(undanganId, niks) {
+        return api.post('/undangan/kehadiran', {
+            undangan_id: undanganId,
+            nik: Array.isArray(niks) ? niks : [niks]
+        })
+    },
+
+    getTindakLanjut(undanganId) {
+        return api.get(`/undangan/${undanganId}/tindak-lanjut`)
+    },
+
+    addTindakLanjut(undanganId, data) {
+        return api.post(`/undangan/${undanganId}/tindak-lanjut`, data)
+    },
+
+    updateTindakLanjut(id, data) {
+        return api.put(`/undangan/tindak-lanjut/${id}`, data)
+    },
+
+    deleteTindakLanjut(id) {
+        return api.delete(`/undangan/tindak-lanjut/${id}`)
     }
 }

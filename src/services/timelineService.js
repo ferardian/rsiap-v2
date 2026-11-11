@@ -7,6 +7,9 @@ const timelineService = {
   getProgramDetail: (id) => {
     return api.get(`/timeline/programs/${id}`)
   },
+  getProgramsByUndangan: (undanganId) => {
+    return api.get(`/timeline/programs/by-undangan/${undanganId}`)
+  },
   createProgram: (data) => {
     return api.post('/timeline/programs', data)
   },

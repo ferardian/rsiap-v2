@@ -128,11 +128,23 @@
                     </td>
                     <td>
                       <div class="user-chip">
-                        <div class="avatar">{{ getInitials(surat.penanggung_jawab?.nama || surat.pj) }}</div>
+                        <div class="avatar">{{ getInitials(surat.penanggung_jawab?.nama || surat.penanggungJawab?.nama || surat.pj) }}</div>
                         <div class="user-details">
-                          <span class="name">{{ surat.penanggung_jawab?.nama || '-' }}</span>
+                          <span class="name">{{ surat.penanggung_jawab?.nama || surat.penanggungJawab?.nama || '-' }}</span>
                           <span class="nik">{{ surat.pj }}</span>
                         </div>
+                      </div>
+                      <!-- PJ Approval Status for Surat Internal -->
+                      <div v-if="activeTab === 'internal'" class="pj-approval-badge-wrap">
+                        <span v-if="surat.pj_approved_at" class="pj-badge approved" :title="'Disetujui PJ pada ' + formatDateShort(surat.pj_approved_at)">
+                          <i class="fas fa-check-circle"></i> PJ Disetujui
+                        </span>
+                        <span v-else-if="surat.catatan_penolakan" class="pj-badge rejected" :title="'Ditolak PJ: ' + surat.catatan_penolakan">
+                          <i class="fas fa-times-circle"></i> Ditolak PJ
+                        </span>
+                        <span v-else class="pj-badge pending" title="Menunggu persetujuan Penanggung Jawab">
+                          <i class="fas fa-hourglass-half"></i> Tunggu Approval PJ
+                        </span>
                       </div>
                     </td>
                     <td class="text-center">
@@ -175,7 +187,18 @@
                   <div class="m-perihal">{{ surat.perihal }}</div>
                   <div v-if="activeTab === 'eksternal'" class="m-alamat">{{ surat.alamat }}</div>
                   <div class="m-pj">
-                    <i class="far fa-user-circle"></i> {{ surat.penanggung_jawab?.nama || surat.pj }}
+                    <i class="far fa-user-circle"></i> {{ surat.penanggung_jawab?.nama || surat.penanggungJawab?.nama || surat.pj }}
+                  </div>
+                  <div v-if="activeTab === 'internal'" class="m-pj-approval mt-2">
+                    <span v-if="surat.pj_approved_at" class="pj-badge approved">
+                      <i class="fas fa-check-circle"></i> PJ Disetujui
+                    </span>
+                    <span v-else-if="surat.catatan_penolakan" class="pj-badge rejected">
+                      <i class="fas fa-times-circle"></i> Ditolak PJ
+                    </span>
+                    <span v-else class="pj-badge pending">
+                      <i class="fas fa-hourglass-half"></i> Tunggu Approval PJ
+                    </span>
                   </div>
                 </div>
                 <div v-if="surat.status === 'pengajuan'" class="m-card-footer">
@@ -460,10 +483,36 @@ const loadData = async () => {
 const handleAction = async (surat, status) => {
   const actionLabel = status === 'disetujui' ? 'menyetujui' : 'menolak'
   
+  let warningHtml = ''
+  if (activeTab.value === 'internal' && status === 'disetujui') {
+    if (surat.catatan_penolakan) {
+      warningHtml = `
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; margin-top: 14px; text-align: left; font-size: 13px; color: #991b1b;">
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <i class="fas fa-exclamation-triangle"></i> Perhatian: Ditolak oleh PJ
+          </div>
+          <div>Penanggung Jawab (<b>${surat.penanggung_jawab?.nama || surat.penanggungJawab?.nama || surat.pj}</b>) menolak pengajuan ini dengan alasan: <i>"${surat.catatan_penolakan}"</i>.<br>Apakah Anda tetap ingin menyetujui penomoran ini (override)?</div>
+        </div>
+      `
+    } else if (!surat.pj_approved_at) {
+      warningHtml = `
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px; margin-top: 14px; text-align: left; font-size: 13px; color: #92400e;">
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <i class="fas fa-info-circle"></i> Info: Belum Disetujui PJ
+          </div>
+          <div>Pengajuan ini <b>belum disetujui oleh Penanggung Jawab</b> (<b>${surat.penanggung_jawab?.nama || surat.penanggungJawab?.nama || surat.pj}</b>).<br>Anda tetap dapat menyetujui langsung jika mendesak/urgent (bypass).</div>
+        </div>
+      `
+    }
+  }
+
   const result = await Swal.fire({
     title: `<span class="text-xl font-bold">${status === 'disetujui' ? 'Setujui' : 'Tolak'} Pengajuan?</span>`,
-    html: `<p class="text-gray-500">Apakah Anda yakin ingin ${actionLabel} perihal: <br><b>"${surat.perihal}"</b>?</p>`,
-    icon: status === 'disetujui' ? 'success' : 'warning',
+    html: `
+      <p class="text-gray-500 mb-0">Apakah Anda yakin ingin ${actionLabel} perihal: <br><b>"${surat.perihal}"</b>?</p>
+      ${warningHtml}
+    `,
+    icon: status === 'disetujui' ? (warningHtml ? 'warning' : 'success') : 'warning',
     showCancelButton: true,
     confirmButtonColor: status === 'disetujui' ? '#10b981' : '#ef4444',
     confirmButtonText: status === 'disetujui' ? 'Ya, Setujui!' : 'Ya, Tolak',
@@ -972,6 +1021,34 @@ const getTabPendingCount = (tabId) => {
 .user-details { display: flex; flex-direction: column; }
 .user-details .name { font-size: 0.85rem; font-weight: 700; color: #1e293b; }
 .user-details .nik { font-size: 0.7rem; color: #94a3b8; }
+
+.pj-approval-badge-wrap { margin-top: 0.35rem; }
+.pj-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  line-height: 1.2;
+}
+.pj-badge.approved {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.pj-badge.pending {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+.pj-badge.rejected {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.m-pj-approval { display: flex; }
 
 .action-group { display: flex; justify-content: center; gap: 0.75rem; }
 .act-btn {
