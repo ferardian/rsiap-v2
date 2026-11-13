@@ -47,7 +47,7 @@
       <div class="action-bar-row">
         <!-- Left Filter Controls: Scope & Time Tabs -->
         <div class="action-left-controls">
-          <!-- Scope Toggle (For Super Admin / Administrator / Direktur / Wadir) -->
+          <!-- Scope Toggle (For Super Admin / Administrator / Direktur / Wadir / Diklat) -->
           <div v-if="isPrivileged" class="scope-toggle-group">
             <button 
               class="scope-btn" 
@@ -338,18 +338,19 @@ const pagination = ref({
 const showDetailModal = ref(false)
 const selectedUndangan = ref(null)
 
-// Privileges & Scopes
+// Privileges & Scopes (Super Admin, Administrator, Direktur, Wakil Direktur, Diklat)
 const isPrivileged = computed(() => {
-  const role = authStore.userRole || ''
-  const activeRole = authStore.activeRole?.nama_role || ''
+  const role = (authStore.userRole || '').toLowerCase()
+  const activeRole = (authStore.activeRole?.nama_role || '').toLowerCase()
   const jbtn = (authStore.user?.detail?.jbtn || '').toLowerCase()
   const jnj = (authStore.user?.detail?.jnj_jabatan || '').toUpperCase()
+  const dept = (authStore.userDepartment || authStore.user?.detail?.departemen || '').toLowerCase()
 
-  const privilegedRoles = ['super admin', 'administrator', 'direktur', 'wakil direktur']
-  const isRolePrivileged = privilegedRoles.some(r => 
-    role.toLowerCase().includes(r) || activeRole.toLowerCase().includes(r)
+  const privilegedKeywords = ['super admin', 'administrator', 'direktur', 'wakil direktur', 'diklat']
+  const isRolePrivileged = privilegedKeywords.some(r => 
+    role.includes(r) || activeRole.includes(r)
   )
-  const isPositionPrivileged = jbtn.includes('direktur') || ['RS1', 'WD'].includes(jnj)
+  const isPositionPrivileged = jbtn.includes('direktur') || jbtn.includes('diklat') || dept.includes('diklat') || ['RS1', 'WD'].includes(jnj)
   return isRolePrivileged || isPositionPrivileged
 })
 
