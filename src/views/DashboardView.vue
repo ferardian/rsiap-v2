@@ -76,7 +76,7 @@
               >
                 <div class="activity-badge-time">
                   <span class="badge-day">{{ formatMeetingDay(item.tanggal) }}</span>
-                  <span class="badge-hour">{{ item.jam_mulai ? item.jam_mulai.substring(0, 5) : '-' }}</span>
+                  <span class="badge-hour">{{ formatMeetingHour(item) }}</span>
                 </div>
                 <div class="activity-info">
                   <div class="activity-subject">{{ item.perihal }}</div>
@@ -1769,6 +1769,15 @@ const formatMeetingDay = (dateStr) => {
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 }
 
+const formatMeetingHour = (item) => {
+  if (!item) return '-'
+  if (item.jam_mulai) return item.jam_mulai.substring(0, 5)
+  if (item.tanggal && typeof item.tanggal === 'string' && item.tanggal.includes(' ')) {
+    return item.tanggal.split(' ')[1].substring(0, 5)
+  }
+  return '-'
+}
+
 const formatTaskDate = (dateStr) => {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
@@ -1809,7 +1818,10 @@ const fetchUserAgendaAndTasks = async () => {
       1,
       [{ field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` }],
       [{ name: 'filterByInvolved', parameters: [nik] }],
-      { sort: [{ field: 'tanggal', direction: 'asc' }, { field: 'jam_mulai', direction: 'asc' }] }
+      { 
+        view_scope: 'mine',
+        sort: [{ field: 'tanggal', direction: 'asc' }] 
+      }
     ).catch(err => {
       console.error('Error fetching dashboard meetings:', err)
       return { data: { data: [] } }
