@@ -96,7 +96,7 @@
             </div>
           </div>
 
-          <!-- Card 2: Tugas Tindak Lanjut Rapat -->
+          <!-- Card 2: RTL Rapat -->
           <div v-if="loadingAlerts || userActiveTasks.length > 0" class="activity-card task-card">
             <div class="activity-card-header">
               <div class="header-title-box">
@@ -104,12 +104,12 @@
                   <i class="fas fa-clipboard-check text-emerald"></i>
                 </div>
                 <div>
-                  <h3 class="activity-title">Tugas Tindak Lanjut Rapat</h3>
-                  <p class="activity-subtitle">Delegasi hasil rapat yang perlu Anda selesaikan</p>
+                  <h3 class="activity-title">RTL Rapat (Tindak Lanjut)</h3>
+                  <p class="activity-subtitle">Rencana tindak lanjut rapat yang perlu Anda selesaikan</p>
                 </div>
               </div>
               <router-link to="/tindak-lanjut" class="btn-activity-action">
-                <span>Kelola Tugas</span>
+                <span>Kelola RTL</span>
                 <i class="fas fa-arrow-right"></i>
               </router-link>
             </div>

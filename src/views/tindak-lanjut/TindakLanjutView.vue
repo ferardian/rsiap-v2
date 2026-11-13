@@ -8,8 +8,8 @@
             <i class="fas fa-clipboard-check"></i>
           </div>
           <div class="title-text">
-            <h1>Tindak Lanjut Rapat</h1>
-            <p>Monitoring realisasi tugas, progres capaian, dan evaluasi hasil pertemuan RSIA Aisyiyah Pekajangan</p>
+            <h1>RTL Rapat</h1>
+            <p>Monitoring rencana tindak lanjut (action items), progres capaian, dan evaluasi hasil pertemuan RSIA Aisyiyah Pekajangan</p>
           </div>
         </div>
 
@@ -71,7 +71,7 @@
               @click="setViewScope('all')"
               title="Tampilkan seluruh tindak lanjut rapat rumah sakit"
             >
-              <i class="fas fa-layer-group mr-1.5"></i> Semua Tugas RS
+              <i class="fas fa-layer-group mr-1.5"></i> Semua RTL RS
             </button>
           </div>
 
@@ -299,7 +299,7 @@
               <i class="fas fa-tasks text-emerald-600"></i>
             </div>
             <div>
-              <h3 class="modal-title">Detail Tindak Lanjut Rapat</h3>
+              <h3 class="modal-title">Detail RTL Rapat</h3>
               <p class="modal-subtitle" v-if="activeTask?.undangan?.perihal">
                 {{ activeTask.undangan.perihal }}
               </p>
