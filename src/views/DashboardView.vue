@@ -41,6 +41,113 @@
         </div>
       </section>
 
+      <!-- User Agenda & Tindak Lanjut Action Cards -->
+      <section v-if="loadingAlerts || userUpcomingMeetings.length > 0 || userActiveTasks.length > 0" class="user-activities-section animate-fade-in-down">
+        <div class="user-activities-grid">
+          <!-- Card 1: Agenda Rapat Terdekat -->
+          <div v-if="loadingAlerts || userUpcomingMeetings.length > 0" class="activity-card meeting-card">
+            <div class="activity-card-header">
+              <div class="header-title-box">
+                <div class="activity-icon-wrapper bg-blue-subtle">
+                  <i class="fas fa-calendar-check text-blue"></i>
+                </div>
+                <div>
+                  <h3 class="activity-title">Agenda Rapat Terdekat</h3>
+                  <p class="activity-subtitle">Jadwal pertemuan yang melibatkan Anda</p>
+                </div>
+              </div>
+              <router-link to="/central-archive/undangan" class="btn-activity-action">
+                <span>Lihat Agenda</span>
+                <i class="fas fa-arrow-right"></i>
+              </router-link>
+            </div>
+
+            <div v-if="loadingAlerts" class="activity-loading">
+              <div class="loading-pulse-item"></div>
+              <div class="loading-pulse-item"></div>
+            </div>
+
+            <div v-else class="activity-list">
+              <div 
+                v-for="item in userUpcomingMeetings" 
+                :key="item.id" 
+                class="activity-item cursor-pointer"
+                @click="router.push('/central-archive/undangan')"
+              >
+                <div class="activity-badge-time">
+                  <span class="badge-day">{{ formatMeetingDay(item.tanggal) }}</span>
+                  <span class="badge-hour">{{ item.jam_mulai ? item.jam_mulai.substring(0, 5) : '-' }}</span>
+                </div>
+                <div class="activity-info">
+                  <div class="activity-subject">{{ item.perihal }}</div>
+                  <div class="activity-meta">
+                    <span class="meta-tag">
+                      <i class="fas fa-map-marker-alt"></i> {{ item.tempat || 'RSIA Aisyiyah' }}
+                    </span>
+                    <span v-if="item.pj === getCurrentUserNik()" class="meta-badge-pj">
+                      <i class="fas fa-user-shield"></i> PJ
+                    </span>
+                    <span v-else class="meta-badge-peserta">
+                      <i class="fas fa-user"></i> Peserta
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Tugas Tindak Lanjut Rapat -->
+          <div v-if="loadingAlerts || userActiveTasks.length > 0" class="activity-card task-card">
+            <div class="activity-card-header">
+              <div class="header-title-box">
+                <div class="activity-icon-wrapper bg-emerald-subtle">
+                  <i class="fas fa-clipboard-check text-emerald"></i>
+                </div>
+                <div>
+                  <h3 class="activity-title">Tugas Tindak Lanjut Rapat</h3>
+                  <p class="activity-subtitle">Delegasi hasil rapat yang perlu Anda selesaikan</p>
+                </div>
+              </div>
+              <router-link to="/tindak-lanjut" class="btn-activity-action">
+                <span>Kelola Tugas</span>
+                <i class="fas fa-arrow-right"></i>
+              </router-link>
+            </div>
+
+            <div v-if="loadingAlerts" class="activity-loading">
+              <div class="loading-pulse-item"></div>
+              <div class="loading-pulse-item"></div>
+            </div>
+
+            <div v-else class="activity-list">
+              <div 
+                v-for="task in userActiveTasks" 
+                :key="task.id" 
+                class="activity-item task-item cursor-pointer"
+                @click="router.push('/tindak-lanjut')"
+              >
+                <div class="task-progress-mini">
+                  <span class="task-percent-tag" :class="getTaskPercentClass(task.progress_percent)">
+                    {{ task.progress_percent || 0 }}%
+                  </span>
+                </div>
+                <div class="activity-info">
+                  <div class="activity-subject">{{ stripHtml(task.tugas) }}</div>
+                  <div class="activity-meta">
+                    <span v-if="task.undangan?.perihal" class="meta-tag text-truncate max-w-200" :title="task.undangan.perihal">
+                      <i class="fas fa-file-signature"></i> {{ task.undangan.perihal }}
+                    </span>
+                    <span v-if="task.deadline" class="meta-tag" :class="{ 'meta-overdue': isTaskDeadlinePassed(task.deadline) }">
+                      <i class="far fa-clock"></i> {{ isTaskDeadlinePassed(task.deadline) ? 'Terlambat:' : 'Deadline:' }} {{ formatTaskDate(task.deadline) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Statistics Cards -->
       <section class="stats-section">
         <!-- Filter Section -->
@@ -984,6 +1091,8 @@ import dashboardService from '../services/dashboardService'
 import { pegawaiService } from '../services/pegawaiService'
 import MoodSlider from '../components/MoodSlider.vue'
 import api from '../services/api'
+import { undanganService } from '../services/undanganService'
+import { tindakLanjutService } from '../services/tindakLanjutService'
 
 
 const router = useRouter()
@@ -1640,6 +1749,96 @@ const toggleAutoReload = () => {
   }
 }
 
+// User Notifications & Active Work (Undangan & Tindak Lanjut)
+const loadingAlerts = ref(false)
+const userUpcomingMeetings = ref([])
+const userActiveTasks = ref([])
+
+const getCurrentUserNik = () => {
+  return authStore.user?.detail?.nik || authStore.user?.data?.detail?.nik || authStore.user?.id_user || authStore.user?.nik || ''
+}
+
+const formatMeetingDay = (dateStr) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  const today = new Date()
+  if (d.toDateString() === today.toDateString()) return 'Hari Ini'
+  const tomorrow = new Date()
+  tomorrow.setDate(today.getDate() + 1)
+  if (d.toDateString() === tomorrow.toDateString()) return 'Besok'
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+}
+
+const formatTaskDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const isTaskDeadlinePassed = (dateStr) => {
+  if (!dateStr) return false
+  const due = new Date(dateStr)
+  due.setHours(23, 59, 59, 999)
+  return due < new Date()
+}
+
+const getTaskPercentClass = (p) => {
+  const percent = p || 0
+  if (percent >= 80) return 'high'
+  if (percent >= 40) return 'mid'
+  return 'low'
+}
+
+const stripHtml = (html) => {
+  if (!html) return ''
+  return html.replace(/<[^>]*>?/gm, '').trim()
+}
+
+const fetchUserAgendaAndTasks = async () => {
+  const nik = getCurrentUserNik()
+  if (!nik) return
+
+  loadingAlerts.value = true
+  try {
+    const today = new Date()
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+    const meetingPromise = undanganService.search(
+      '',
+      3,
+      1,
+      [{ field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` }],
+      [{ name: 'filterByInvolved', parameters: [nik] }],
+      { sort: [{ field: 'tanggal', direction: 'asc' }, { field: 'jam_mulai', direction: 'asc' }] }
+    ).catch(err => {
+      console.error('Error fetching dashboard meetings:', err)
+      return { data: { data: [] } }
+    })
+
+    const taskPromise = tindakLanjutService.getMine('active').catch(err => {
+      console.error('Error fetching dashboard tasks:', err)
+      return { data: { data: [] } }
+    })
+
+    const [meetingRes, taskRes] = await Promise.all([meetingPromise, taskPromise])
+    const mData = meetingRes?.data?.data || []
+    userUpcomingMeetings.value = Array.isArray(mData) ? mData.slice(0, 3) : []
+
+    const tData = taskRes?.data?.data || []
+    userActiveTasks.value = Array.isArray(tData) ? tData.slice(0, 4) : []
+  } catch (e) {
+    console.error('Error loading agenda and tasks on dashboard:', e)
+  } finally {
+    loadingAlerts.value = false
+  }
+}
+
+watch(() => authStore.user, (newVal) => {
+  if (newVal) {
+    fetchUserAgendaAndTasks()
+  }
+})
+
 // Lifecycle hooks
 onMounted(() => {
   authStore.refreshUserData()
@@ -1650,6 +1849,7 @@ onMounted(() => {
   fetchDepartmentName() // Fetch real department name
   fetchReviews() // Fetch Google Reviews
   fetchBedCinemaData() // Fetch bed cinema map data
+  fetchUserAgendaAndTasks() // Fetch user agenda & tindak lanjut
   startAutoReload() // Start auto reload
 })
 
@@ -4553,5 +4753,296 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* User Activities Section: Agenda & Tindak Lanjut */
+.user-activities-section {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-activities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.25rem;
+}
+
+.activity-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.activity-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.activity-card.meeting-card::before {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.activity-card.task-card::before {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.activity-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.header-title-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.activity-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.bg-blue-subtle {
+  background: #eff6ff;
+}
+
+.text-blue {
+  color: #2563eb;
+}
+
+.bg-emerald-subtle {
+  background: #ecfdf5;
+}
+
+.text-emerald {
+  color: #059669;
+}
+
+.activity-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.activity-subtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0.2rem 0 0 0;
+}
+
+.btn-activity-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-activity-action:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+.activity-badge-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+  min-width: 62px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.badge-day {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1.1;
+}
+
+.badge-hour {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.task-progress-mini {
+  flex-shrink: 0;
+}
+
+.task-percent-tag {
+  display: inline-block;
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 52px;
+  text-align: center;
+}
+
+.task-percent-tag.high {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.task-percent-tag.mid {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.task-percent-tag.low {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.activity-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-subject {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+}
+
+.meta-tag {
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.meta-tag.meta-overdue {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.max-w-200 {
+  max-width: 200px;
+}
+
+.meta-badge-pj {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.meta-badge-peserta {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.activity-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.loading-pulse-item {
+  height: 52px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: pulse-loading 1.5s infinite;
+}
+
+@keyframes pulse-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 </style>

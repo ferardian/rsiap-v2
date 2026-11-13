@@ -1118,6 +1118,12 @@ const routes = [
     name: 'CentralArchiveUndangan',
     component: () => import('../views/central-archive/UndanganView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/tindak-lanjut',
+    name: 'TindakLanjut',
+    component: () => import('../views/tindak-lanjut/TindakLanjutView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
