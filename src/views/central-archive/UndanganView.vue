@@ -45,36 +45,66 @@
     <!-- Filter & Action Bar Modern -->
     <div class="action-bar-modern">
       <div class="action-bar-row">
-        <!-- Filter Tabs on Left -->
-        <div class="filter-tabs-wrapper">
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'all' }" 
-            @click="setTab('all')"
-          >
-            <i class="fas fa-list mr-1.5"></i> Semua
-          </button>
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'upcoming' }" 
-            @click="setTab('upcoming')"
-          >
-            <i class="fas fa-calendar-check mr-1.5 text-blue-500"></i> Akan Datang
-          </button>
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'today' }" 
-            @click="setTab('today')"
-          >
-            <i class="fas fa-sun mr-1.5 text-emerald-500"></i> Hari Ini
-          </button>
-          <button 
-            class="tab-btn" 
-            :class="{ active: activeTab === 'past' }" 
-            @click="setTab('past')"
-          >
-            <i class="fas fa-history mr-1.5 text-slate-400"></i> Selesai
-          </button>
+        <!-- Left Filter Controls: Scope & Time Tabs -->
+        <div class="action-left-controls">
+          <!-- Scope Toggle (For Super Admin / Administrator / Direktur / Wadir) -->
+          <div v-if="isPrivileged" class="scope-toggle-group">
+            <button 
+              class="scope-btn" 
+              :class="{ active: viewScope === 'all' }" 
+              @click="setViewScope('all')"
+              title="Tampilkan seluruh agenda rapat rumah sakit"
+            >
+              <i class="fas fa-layer-group mr-1.5"></i> Semua Agenda
+            </button>
+            <button 
+              class="scope-btn" 
+              :class="{ active: viewScope === 'mine' }" 
+              @click="setViewScope('mine')"
+              title="Tampilkan hanya agenda yang melibatkan Anda (sebagai PJ atau Peserta)"
+            >
+              <i class="fas fa-user-check mr-1.5"></i> Agenda Saya
+            </button>
+          </div>
+
+          <!-- Scope Badge (For Regular Employees) -->
+          <div v-else class="scope-badge-regular" title="Menampilkan agenda di mana Anda terdaftar sebagai Penanggung Jawab atau Peserta Undangan">
+            <i class="fas fa-user-shield text-blue-600 mr-1.5"></i>
+            <span class="font-bold text-slate-700">Agenda Saya</span>
+            <span class="scope-subtext hidden sm:inline">(PJ & Peserta)</span>
+          </div>
+
+          <!-- Time Filter Tabs -->
+          <div class="filter-tabs-wrapper">
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'all' }" 
+              @click="setTab('all')"
+            >
+              <i class="fas fa-list mr-1.5"></i> Semua
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'upcoming' }" 
+              @click="setTab('upcoming')"
+            >
+              <i class="fas fa-calendar-check mr-1.5 text-blue-500"></i> Akan Datang
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'today' }" 
+              @click="setTab('today')"
+            >
+              <i class="fas fa-sun mr-1.5 text-emerald-500"></i> Hari Ini
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'past' }" 
+              @click="setTab('past')"
+            >
+              <i class="fas fa-history mr-1.5 text-slate-400"></i> Selesai
+            </button>
+          </div>
         </div>
 
         <!-- Search & Date Controls on Right -->
@@ -174,6 +204,14 @@
                       <i class="fas fa-file-signature text-slate-400 mr-1"></i>
                       {{ undangan.no_surat || undangan.surat?.no_surat }}
                     </span>
+
+                    <!-- Status Keterlibatan User -->
+                    <span v-if="isUserPj(undangan)" class="my-role-pill pj-pill" title="Anda bertindak sebagai Penanggung Jawab agenda ini">
+                      <i class="fas fa-crown text-amber-500 mr-1"></i> Penanggung Jawab
+                    </span>
+                    <span v-else-if="isUserAttendee(undangan)" class="my-role-pill attendee-pill" title="Anda diundang sebagai Peserta agenda ini">
+                      <i class="fas fa-user-check text-blue-500 mr-1"></i> Peserta Undangan
+                    </span>
                   </div>
 
                   <div class="pj-info-row" v-if="undangan.pj">
@@ -270,6 +308,7 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '@/stores/auth'
 import { undanganService } from '@/services/undanganService'
 import debounce from 'lodash/debounce'
 
@@ -277,6 +316,7 @@ import debounce from 'lodash/debounce'
 import UndanganDetailModal from './components/UndanganDetailModal.vue'
 
 const toast = useToast()
+const authStore = useAuthStore()
 
 // State
 const undanganList = ref([])
@@ -298,7 +338,67 @@ const pagination = ref({
 const showDetailModal = ref(false)
 const selectedUndangan = ref(null)
 
+// Privileges & Scopes
+const isPrivileged = computed(() => {
+  const role = authStore.userRole || ''
+  const activeRole = authStore.activeRole?.nama_role || ''
+  const jbtn = (authStore.user?.detail?.jbtn || '').toLowerCase()
+  const jnj = (authStore.user?.detail?.jnj_jabatan || '').toUpperCase()
+
+  const privilegedRoles = ['super admin', 'administrator', 'direktur', 'wakil direktur']
+  const isRolePrivileged = privilegedRoles.some(r => 
+    role.toLowerCase().includes(r) || activeRole.toLowerCase().includes(r)
+  )
+  const isPositionPrivileged = jbtn.includes('direktur') || ['RS1', 'WD'].includes(jnj)
+  return isRolePrivileged || isPositionPrivileged
+})
+
+// 'all' for privileged users by default, 'mine' for non-privileged
+const viewScope = ref('all')
+
+const getCurrentUserNik = () => {
+  return authStore.user?.detail?.nik || authStore.user?.data?.detail?.nik || authStore.user?.id_user || authStore.user?.nik || ''
+}
+
+const isUserPj = (undangan) => {
+  const nik = getCurrentUserNik()
+  return !!(nik && undangan.pj === nik)
+}
+
+const isUserAttendee = (undangan) => {
+  const nik = getCurrentUserNik()
+  if (!nik || !Array.isArray(undangan.peserta)) return false
+  return undangan.peserta.some(p => p.penerima === nik || p.pegawai?.nik === nik)
+}
+
+const getRequestScopeParams = () => {
+  const scopes = []
+  const extraParams = {}
+  
+  if (viewScope.value === 'mine' || !isPrivileged.value) {
+    extraParams.view_scope = 'mine'
+    const userNik = getCurrentUserNik()
+    if (userNik) {
+      scopes.push({ name: 'filterByInvolved', parameters: [userNik] })
+    }
+  }
+
+  return { scopes, extraParams }
+}
+
+const setViewScope = (scope) => {
+  if (viewScope.value === scope) return
+  viewScope.value = scope
+  pagination.value.current_page = 1
+  loadData(1)
+  loadStats()
+}
+
 onMounted(() => {
+  if (!authStore.user) {
+    authStore.initAuth()
+  }
+  viewScope.value = isPrivileged.value ? 'all' : 'mine'
   loadData()
   loadStats()
 })
@@ -314,17 +414,19 @@ const getTodayString = () => {
 const loadStats = async () => {
   try {
     const todayStr = getTodayString()
+    const { scopes, extraParams } = getRequestScopeParams()
+
     // Upcoming count
     const upcomingRes = await undanganService.search('', 1, 1, [
       { field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` }
-    ])
+    ], scopes, extraParams)
     upcomingCount.value = upcomingRes.data?.meta?.total || 0
 
     // Today count
     const todayRes = await undanganService.search('', 1, 1, [
       { field: 'tanggal', operator: '>=', value: `${todayStr} 00:00:00` },
       { field: 'tanggal', operator: '<=', value: `${todayStr} 23:59:59` }
-    ])
+    ], scopes, extraParams)
     todayCount.value = todayRes.data?.meta?.total || 0
   } catch (e) {
     console.error('Failed to load stats:', e)
@@ -359,7 +461,8 @@ const loadData = async (page = 1) => {
       filters.push({ field: 'tanggal', operator: '<=', value: `${filterDate.value} 23:59:59` })
     }
     
-    const response = await undanganService.search(searchQuery.value, pagination.value.per_page, page, filters)
+    const { scopes, extraParams } = getRequestScopeParams()
+    const response = await undanganService.search(searchQuery.value, pagination.value.per_page, page, filters, scopes, extraParams)
     
     if (response.data) {
       undanganList.value = response.data.data || []
@@ -367,7 +470,7 @@ const loadData = async (page = 1) => {
         current_page: 1,
         last_page: 1,
         per_page: 10,
-        total: undanganList.value.length
+        total: response.data.meta?.total || undanganList.value.length
       }
     }
   } catch (error) {
@@ -596,6 +699,68 @@ const displayedPages = computed(() => {
 .action-bar-modern { margin-bottom: 1.25rem; }
 .action-bar-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
+.action-left-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.scope-toggle-group {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+  gap: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+.scope-btn {
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scope-btn:hover {
+  color: #0f172a;
+}
+
+.scope-btn.active {
+  background: #1e40af;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(30, 64, 175, 0.25);
+}
+
+.scope-btn.active i {
+  color: #93c5fd !important;
+}
+
+.scope-badge-regular {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #1e40af;
+}
+
+.scope-subtext {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-left: 2px;
+}
+
 .filter-tabs-wrapper {
   display: flex;
   background: #e2e8f0;
@@ -622,6 +787,29 @@ const displayedPages = computed(() => {
   background: white;
   color: #1e3a8a;
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* User Role Badges in Table Row */
+.my-role-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+.pj-pill {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.attendee-pill {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 .search-filter-group { display: flex; gap: 0.75rem; align-items: center; flex: 1; justify-content: flex-end; }

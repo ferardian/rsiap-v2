@@ -1,8 +1,8 @@
 import api from './api'
 
 export const undanganService = {
-    search(keyword, limit = 10, page = 1, filters = []) {
-        return api.post('/undangan/search?include=penanggungJawab', {
+    search(keyword, limit = 10, page = 1, filters = [], scopes = [], extraParams = {}) {
+        const payload = {
             search: { value: keyword },
             limit: limit,
             page: page,
@@ -10,8 +10,15 @@ export const undanganService = {
             sort: [
                 { field: 'tanggal', direction: 'desc' },
                 { field: 'created_at', direction: 'desc' }
-            ]
-        })
+            ],
+            ...extraParams
+        }
+
+        if (scopes && scopes.length > 0) {
+            payload.scopes = scopes
+        }
+
+        return api.post('/undangan/search?include=penanggungJawab', payload)
     },
 
     show(identifier) {
