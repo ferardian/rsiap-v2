@@ -344,12 +344,13 @@
             <div class="section-card progress-controller-card">
               <div class="flex justify-between items-center mb-2">
                 <span class="font-bold text-sm text-slate-800 flex items-center">
-                  <i class="fas fa-chart-line text-emerald-600 mr-2"></i>
+                  <i class="fas fa-chart-line text-blue-600 mr-2"></i>
                   Capaian Progres Saat Ini
                 </span>
-                <span class="progress-big-number" :class="getProgressBarClass(activeTask.progress_percent)">
-                  {{ activeTask.progress_percent || 0 }}%
-                </span>
+                <div class="progress-pill-badge" :class="getProgressPillClass(currentProgressValue)">
+                  <i v-if="currentProgressValue >= 100" class="fas fa-check-circle text-xs mr-1"></i>
+                  <span class="pill-number">{{ currentProgressValue }}%</span>
+                </div>
               </div>
 
               <!-- Visual Slider for PIC / Privileged -->
@@ -854,6 +855,21 @@ const getProgressBarClass = (percent) => {
   return 'bg-slate-300'
 }
 
+const currentProgressValue = computed(() => {
+  if (canEditProgress.value && replyForm.value.progress_percent !== undefined) {
+    return replyForm.value.progress_percent
+  }
+  return activeTask.value?.progress_percent || 0
+})
+
+const getProgressPillClass = (percent) => {
+  const p = percent || 0
+  if (p >= 100) return 'pill-done'
+  if (p >= 50) return 'pill-blue'
+  if (p > 0) return 'pill-amber'
+  return 'pill-neutral'
+}
+
 const getFeedbackTypeLabel = (type) => {
   if (type === 'approval') return 'Verifikasi / Selesai'
   if (type === 'komentar') return 'Catatan'
@@ -1228,7 +1244,37 @@ const displayedPages = computed(() => {
 .meta-card-label { font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem; }
 .meta-card-val { font-size: 0.88rem; }
 
-.progress-big-number { font-size: 1.35rem; font-weight: 900; }
+.progress-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.85rem;
+  border-radius: 99px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.progress-pill-badge.pill-amber {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fef3c7;
+}
+.progress-pill-badge.pill-blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+}
+.progress-pill-badge.pill-done {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.progress-pill-badge.pill-neutral {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
 .progress-range-slider {
   width: 100%; height: 8px; border-radius: 5px; background: #e2e8f0;
   outline: none; -webkit-appearance: none; cursor: pointer;
