@@ -386,9 +386,7 @@ const routes = [
   },
   {
     path: '/farmasi/darurat-stok',
-    name: 'DaruratStok',
-    component: () => import('../views/farmasi/DaruratStokView.vue'),
-    meta: { requiresAuth: true }
+    redirect: '/laporan/darurat-stok'
   },
   {
     path: '/pemeriksaan/rawat-jalan',
@@ -918,6 +916,12 @@ const routes = [
     path: '/laporan/ringkasan-farmasi',
     name: 'RingkasanFarmasi',
     component: () => import('@/views/laporan/RingkasanFarmasiView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/laporan/darurat-stok',
+    name: 'DaruratStok',
+    component: () => import('@/views/laporan/DaruratStokView.vue'),
     meta: { requiresAuth: true }
   },
   {
