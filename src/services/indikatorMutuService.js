@@ -65,9 +65,13 @@ const service = {
     updatePicValidator: (dep_id, data) => api.put(`/indikator-mutu/pic-validators/${dep_id}`, data),
     deletePicValidator: (dep_id) => api.delete(`/indikator-mutu/pic-validators/${dep_id}`),
 
-    // Validasi Bulanan
+    // Validasi Bulanan & Audit Workflow
     getValidasiBulanan: (params) => api.get('/indikator-mutu/validasi', { params }),
     storeValidasiBulanan: (data) => api.post('/indikator-mutu/validasi', data),
+    getMyUnits: (params) => api.get('/indikator-mutu/my-units', { params }),
+    requestValidation: (data) => api.post('/indikator-mutu/request-validation', data),
+    cancelValidation: (data) => api.post('/indikator-mutu/cancel-validation', data),
+    returnRevision: (data) => api.post('/indikator-mutu/return-revision', data),
 };
 
 // Export service for Indikator Mutu operations

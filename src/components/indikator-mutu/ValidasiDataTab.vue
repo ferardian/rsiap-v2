@@ -1,5 +1,77 @@
 <template>
   <div class="validasi-data-tab">
+    <!-- Unit Submission & Audit Workflow Banner -->
+    <div v-if="unitAudit" class="unit-status-banner mb-4" :class="'status-' + unitAudit.submission_status">
+      <div class="banner-body d-flex align-items-center justify-content-between flex-wrap gap-3 p-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="banner-icon-wrap" :class="'icon-' + unitAudit.submission_status">
+            <i class="fas" :class="getBannerIcon(unitAudit.submission_status)"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <h6 class="banner-title mb-0">{{ getBannerTitle(unitAudit) }}</h6>
+              <span class="badge rounded-pill banner-badge" :class="'badge-' + unitAudit.submission_status">
+                {{ getBannerBadgeText(unitAudit.submission_status) }}
+              </span>
+            </div>
+            <p class="banner-desc mb-0 text-muted small">
+              {{ getBannerDesc(unitAudit) }}
+            </p>
+          </div>
+        </div>
+
+        <div class="banner-actions d-flex align-items-center gap-2 flex-wrap">
+          <!-- PIC Actions -->
+          <template v-if="isPicUser">
+            <!-- Ready to Request Validation -->
+            <button 
+              v-if="unitAudit.can_request" 
+              class="btn btn-sm btn-primary fw-bold px-3 shadow-sm d-inline-flex align-items-center gap-2"
+              @click="openRequestValidationModal"
+              :disabled="actionLoading"
+            >
+              <i class="fas fa-paper-plane"></i> Minta Validasi
+            </button>
+
+            <!-- Recall / Cancel Validation -->
+            <button 
+              v-if="unitAudit.can_cancel" 
+              class="btn btn-sm btn-outline-warning fw-bold px-3 d-inline-flex align-items-center gap-2"
+              @click="handleCancelValidation"
+              :disabled="actionLoading"
+              title="Tarik pengajuan untuk memperbaiki entri data"
+            >
+              <i class="fas fa-undo"></i> Batal Kirim / Tarik Pengajuan
+            </button>
+
+            <!-- Resubmit Revision -->
+            <button 
+              v-if="unitAudit.submission_status === 'revision'" 
+              class="btn btn-sm btn-danger fw-bold px-3 shadow-sm d-inline-flex align-items-center gap-2"
+              @click="openRequestValidationModal"
+              :disabled="actionLoading"
+            >
+              <i class="fas fa-redo"></i> Ajukan Ulang Validasi
+            </button>
+          </template>
+
+          <!-- Validator Actions -->
+          <template v-if="isValidatorUser">
+            <!-- Return for Revision -->
+            <button 
+              v-if="unitAudit.submission_status === 'requested'" 
+              class="btn btn-sm btn-outline-danger fw-bold px-3 d-inline-flex align-items-center gap-2"
+              @click="openReturnRevisionModal"
+              :disabled="actionLoading"
+              title="Kembalikan data ke PIC untuk diperbaiki"
+            >
+              <i class="fas fa-reply"></i> Minta Revisi ke PIC
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
     <!-- Validation Summary Bar -->
     <div class="row g-3 mb-4">
       <div class="col-sm-4">
@@ -344,6 +416,8 @@ const props = defineProps({
 // State
 const items = ref([])
 const loading = ref(false)
+const unitAudit = ref(null)
+const actionLoading = ref(false)
 
 // Modal Reject State
 const showRejectModal = ref(false)
@@ -547,6 +621,24 @@ onBeforeUnmount(() => {
 // Check if user has permission to edit/validate
 const canEdit = computed(() => {
   if (props.isCommitteeMember) return true;
+  if (unitAudit.value && unitAudit.value.is_validator) return true;
+  if (props.activeUnitInfo && props.activeUnitInfo.nik_validator) {
+    return props.activeUnitInfo.nik_validator === props.userNik;
+  }
+  return false;
+})
+
+const isPicUser = computed(() => {
+  if (unitAudit.value && unitAudit.value.is_pic) return true;
+  if (props.activeUnitInfo && props.activeUnitInfo.nik_pic) {
+    return props.activeUnitInfo.nik_pic === props.userNik;
+  }
+  return false;
+})
+
+const isValidatorUser = computed(() => {
+  if (props.isCommitteeMember) return true;
+  if (unitAudit.value && unitAudit.value.is_validator) return true;
   if (props.activeUnitInfo && props.activeUnitInfo.nik_validator) {
     return props.activeUnitInfo.nik_validator === props.userNik;
   }
@@ -562,6 +654,281 @@ const parsedPeriod = computed(() => {
     tahun: parseInt(parts[0], 10)
   }
 })
+
+// Banner Helpers
+const getBannerIcon = (status) => {
+  switch (status) {
+    case 'verified': return 'fa-check-circle';
+    case 'requested': return 'fa-hourglass-half';
+    case 'revision': return 'fa-exclamation-triangle';
+    default: return 'fa-edit';
+  }
+}
+
+const getBannerTitle = (audit) => {
+  if (!audit) return '';
+  switch (audit.submission_status) {
+    case 'verified':
+      return 'Tervalidasi Penuh (100%)';
+    case 'requested':
+      return 'Menunggu Respon Validator';
+    case 'revision':
+      return 'Perlu Revisi / Perbaikan Data';
+    default:
+      if (!audit.is_all_filled) return 'Entri Belum Lengkap';
+      if (audit.is_premature) return 'Pengajuan Buka Mulai Tanggal 25';
+      return 'Data Siap Divalidasi';
+  }
+}
+
+const getBannerBadgeText = (status) => {
+  switch (status) {
+    case 'verified': return 'Disahkan';
+    case 'requested': return 'Menunggu Validator';
+    case 'revision': return 'Perlu Revisi';
+    default: return 'Draft Entri';
+  }
+}
+
+const getBannerDesc = (audit) => {
+  if (!audit) return '';
+  switch (audit.submission_status) {
+    case 'verified':
+      return `Seluruh indikator telah disahkan oleh validator unit (${audit.nama_validator || 'Validator'}).`;
+    case 'requested': {
+      let desc = `Diajukan pada ${audit.requested_at || '-'} oleh ${audit.requester_name || audit.nama_pic || 'PIC'}.`;
+      if (audit.request_note) desc += ` Catatan: "${audit.request_note}"`;
+      return desc;
+    }
+    case 'revision':
+      return `Validator meminta perbaikan data: "${audit.revision_note || 'Mohon cek kembali kelengkapan data'}".`;
+    default:
+      if (isPicUser.value) {
+        if (!audit.is_all_filled) {
+          return `${audit.filled_indicators || 0} dari ${audit.total_indicators || 0} indikator terisi. Harap lengkapi seluruh indikator sebelum meminta validasi.`;
+        }
+        if (audit.is_premature) {
+          return `Pengajuan validasi untuk bulan berjalan baru dapat dilakukan mulai tanggal 25 (hari ini tanggal ${new Date().getDate()}). Selesaikan entri data harian terlebih dahulu.`;
+        }
+        return `Seluruh data indikator bulan ini sudah lengkap. Kirimkan permintaan validasi ke ${audit.nama_validator || 'Validator Unit'}.`;
+      }
+      return `PIC (${audit.nama_pic || 'PIC'}) masih dalam proses pengumpulan data harian bulan ini.`;
+  }
+}
+
+// Fetch Unit Audit Status
+const fetchUnitAudit = async () => {
+  if (!props.depId || !parsedPeriod.value.bulan) return;
+  try {
+    const res = await inmutService.getMyUnits({
+      dep_id: props.depId,
+      bulan: parsedPeriod.value.bulan,
+      tahun: parsedPeriod.value.tahun
+    });
+    if (res.data?.success && res.data.data?.length) {
+      unitAudit.value = res.data.data.find(u => u.dep_id === props.depId) || res.data.data[0] || null;
+    }
+  } catch (err) {
+    console.error('Error fetching unit audit status:', err);
+  }
+}
+
+// Workflow Actions
+const openRequestValidationModal = async () => {
+  if (!unitAudit.value) return;
+  const audit = unitAudit.value;
+  const { value: formValues } = await Swal.fire({
+    title: 'Konfirmasi Pengajuan Validasi',
+    html: `
+      <div style="text-align: left; font-size: 0.88rem; line-height: 1.5; color: #334155;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Unit / Ruang:</span>
+            <strong>${audit.nama_ruang || props.depId}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Periode:</span>
+            <strong>${props.monthlyDate}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Kelengkapan:</span>
+            <strong style="color: #16a34a;">${audit.filled_indicators}/${audit.total_indicators} Indikator (100% Lengkap)</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #64748b;">Validator Tujuan:</span>
+            <strong>${audit.nama_validator || 'Validator Unit'}</strong>
+          </div>
+        </div>
+
+        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Catatan untuk Validator (Opsional):</label>
+        <textarea id="swal-req-note" class="swal2-textarea" placeholder="Tuliskan catatan tambahan jika ada..." style="width: 100%; margin: 0 0 14px 0; font-size: 0.85rem; height: 70px; border-radius: 8px;"></textarea>
+
+        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="swal-req-agree" style="margin-top: 3px; accent-color: #2563eb;">
+          <span style="font-size: 0.82rem; color: #1e293b;">
+            Saya menyatakan seluruh data mutu harian bulan ini sudah lengkap dan siap divalidasi oleh validator.
+          </span>
+        </label>
+      </div>
+    `,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Kirim Validasi &rarr;',
+    cancelButtonText: 'Batal',
+    preConfirm: () => {
+      const agree = document.getElementById('swal-req-agree')?.checked;
+      if (!agree) {
+        Swal.showValidationMessage('Harap centang konfirmasi pernyataan kelengkapan data terlebih dahulu.');
+        return false;
+      }
+      return {
+        note: document.getElementById('swal-req-note')?.value || ''
+      };
+    }
+  });
+
+  if (formValues) {
+    actionLoading.value = true;
+    const { bulan, tahun } = parsedPeriod.value;
+    try {
+      const res = await inmutService.requestValidation({
+        dep_id: props.depId,
+        bulan,
+        tahun,
+        catatan: formValues.note
+      });
+      if (res.data?.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Notifikasi Terkirim',
+          text: res.data.message || 'Permintaan validasi berhasil diajukan ke validator unit.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        await fetchUnitAudit();
+        await fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Mengajukan Validasi',
+        text: err.response?.data?.message || 'Terjadi kesalahan sistem.'
+      });
+    } finally {
+      actionLoading.value = false;
+    }
+  }
+}
+
+const handleCancelValidation = async () => {
+  const result = await Swal.fire({
+    title: 'Tarik Pengajuan?',
+    text: 'Status akan dikembalikan ke Draft sehingga Anda dapat mengoreksi data sebelum diajukan kembali ke Validator.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d97706',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Ya, Tarik Pengajuan',
+    cancelButtonText: 'Batal'
+  });
+
+  if (result.isConfirmed) {
+    actionLoading.value = true;
+    const { bulan, tahun } = parsedPeriod.value;
+    try {
+      const res = await inmutService.cancelValidation({
+        dep_id: props.depId,
+        bulan,
+        tahun
+      });
+      if (res.data?.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Pengajuan Dibatalkan',
+          text: res.data.message || 'Status dikembalikan ke Draft.',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        await fetchUnitAudit();
+        await fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Membatalkan',
+        text: err.response?.data?.message || 'Terjadi kesalahan.'
+      });
+    } finally {
+      actionLoading.value = false;
+    }
+  }
+}
+
+const openReturnRevisionModal = async () => {
+  const { value: revNote } = await Swal.fire({
+    title: 'Kembalikan ke PIC untuk Revisi',
+    html: `
+      <div style="text-align: left; font-size: 0.88rem; color: #334155;">
+        <p style="margin-bottom: 10px;">
+          Kembalikan data mutu unit <strong>${unitAudit.value?.nama_ruang || props.depId}</strong> ke PIC (${unitAudit.value?.nama_pic || 'PIC'}) untuk perbaikan.
+        </p>
+        <label style="font-weight: 600; display: block; margin-bottom: 4px;">Alasan / Catatan Perbaikan (Wajib minimal 5 karakter):</label>
+        <textarea id="swal-rev-note" class="swal2-textarea" placeholder="Contoh: Mohon periksa tanggal 14, denominator masih 0..." style="width: 100%; margin: 0; font-size: 0.85rem; height: 80px; border-radius: 8px;"></textarea>
+      </div>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Kembalikan Data',
+    cancelButtonText: 'Batal',
+    preConfirm: () => {
+      const note = document.getElementById('swal-rev-note')?.value?.trim() || '';
+      if (note.length < 5) {
+        Swal.showValidationMessage('Harap masukkan alasan perbaikan minimal 5 karakter.');
+        return false;
+      }
+      return note;
+    }
+  });
+
+  if (revNote) {
+    actionLoading.value = true;
+    const { bulan, tahun } = parsedPeriod.value;
+    try {
+      const res = await inmutService.returnRevision({
+        dep_id: props.depId,
+        bulan,
+        tahun,
+        catatan: revNote
+      });
+      if (res.data?.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Data Dikembalikan',
+          text: res.data.message || 'Catatan perbaikan telah dikirim ke PIC.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        await fetchUnitAudit();
+        await fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Mengembalikan',
+        text: err.response?.data?.message || 'Terjadi kesalahan.'
+      });
+    } finally {
+      actionLoading.value = false;
+    }
+  }
+}
 
 // Fetch data validation list
 const fetchData = async () => {
@@ -597,10 +964,12 @@ const fetchData = async () => {
 // Watchers
 watch(() => [props.depId, props.monthlyDate], () => {
   fetchData()
+  fetchUnitAudit()
 })
 
 onMounted(() => {
   fetchData()
+  fetchUnitAudit()
 })
 
 // Calculations & Helpers
@@ -1106,5 +1475,83 @@ const submitRejection = async () => {
   color: #475569 !important;
   border: 1px solid #e2e8f0 !important;
   font-weight: 700 !important;
+}
+
+/* Unit Status Banner */
+.unit-status-banner {
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.unit-status-banner.status-verified {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-color: #a7f3d0;
+}
+.unit-status-banner.status-requested {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fde68a;
+}
+.unit-status-banner.status-revision {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fecaca;
+}
+.unit-status-banner.status-draft {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color: #e2e8f0;
+}
+
+.banner-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.icon-verified {
+  background-color: #d1fae5;
+  color: #059669;
+}
+.icon-requested {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+.icon-revision {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+.icon-draft {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.banner-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+.banner-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+.badge-verified {
+  background-color: #059669;
+  color: #fff;
+}
+.badge-requested {
+  background-color: #d97706;
+  color: #fff;
+}
+.badge-revision {
+  background-color: #dc2626;
+  color: #fff;
+}
+.badge-draft {
+  background-color: #64748b;
+  color: #fff;
 }
 </style>

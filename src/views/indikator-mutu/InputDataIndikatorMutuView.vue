@@ -445,7 +445,10 @@
                      </div>
 
                      <!-- Right: all action buttons in ONE horizontal row -->
-                     <div class="monthly-actions-row">
+                     <div class="monthly-actions-row d-flex align-items-center gap-2">
+                         <button class="btn btn-sm btn-outline-primary fw-bold d-inline-flex align-items-center gap-1 px-3" style="border-radius: 8px; font-size: 0.78rem; height: 34px;" @click="viewMode = 'validasi'" title="Buka ringkasan validasi bulanan unit">
+                             <i class="fas fa-check-circle"></i> Ringkasan Validasi
+                         </button>
                          <!-- Save all -->
                          <button class="monthly-save-btn" @click="saveBulk" :disabled="bulkSaving || isRowLockedForUser(selectedIndicator)">
                              <i class="fas" :class="bulkSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
