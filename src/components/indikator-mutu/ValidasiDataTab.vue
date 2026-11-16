@@ -198,9 +198,12 @@
                     P2: {{ calculateP2(item) }}{{ needsDenominator(item) ? '%' : '' }}
                   </div>
                   <div class="mt-2">
-                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)} / ${calculateP1(item)}) * 100`">
+                    <span v-if="calculateAgreementRate(item) !== null" :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)} / ${calculateP1(item)}) * 100`">
                       <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
                       AR (P2/P1): {{ calculateAgreementRate(item) }}%
+                    </span>
+                    <span v-else class="badge bg-light text-muted border py-1 px-2" style="font-size: 0.72rem;">
+                      AR: N/A (Nihil)
                     </span>
                   </div>
                 </div>
@@ -233,9 +236,12 @@
                       P2: <span class="text-primary fw-bold">{{ calculateP2(item) }}{{ needsDenominator(item) ? '%' : '' }}</span>
                     </div>
                     <div class="mt-1">
-                      <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)} / ${calculateP1(item)}) * 100`">
+                      <span v-if="calculateAgreementRate(item) !== null" :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)} / ${calculateP1(item)}) * 100`">
                         <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
-                        AR (P2/P1): {{ calculateAgreementRate(item) }}%
+                        AR: {{ calculateAgreementRate(item) }}%
+                      </span>
+                      <span v-else class="badge bg-light text-muted border py-1 px-2" style="font-size: 0.72rem;">
+                        AR: -
                       </span>
                     </div>
                   </div>
@@ -243,19 +249,14 @@
 
                 <div v-else class="validated-scores text-muted">
                   <div class="fraction">
-                    <span class="num">{{ item.num_validasi }}</span>
-                    <template v-if="needsDenominator(item)">
-                      <span class="divider">/</span>
-                      <span class="denum">{{ item.denum_validasi }}</span>
-                    </template>
+                    <span class="num">-</span>
                   </div>
-                  <div class="percentage small mt-1 font-monospace fw-bold">
-                    P2: {{ calculateP2(item) }}{{ needsDenominator(item) ? '%' : '' }}
+                  <div class="percentage small mt-1 font-monospace fw-bold text-muted">
+                    P2: -
                   </div>
                   <div class="mt-2">
-                    <span :class="calculateAgreementRate(item) >= 90 ? 'badge-ar-valid' : 'badge-ar-invalid'" :title="`Rasio P2/P1: (${calculateP2(item)} / ${calculateP1(item)}) * 100`">
-                      <i class="fas me-1" :class="calculateAgreementRate(item) >= 90 ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
-                      AR (P2/P1): {{ calculateAgreementRate(item) }}%
+                    <span class="badge bg-light text-muted border py-1 px-2" style="font-size: 0.72rem;">
+                      <i class="fas fa-clock me-1"></i> Belum Divalidasi
                     </span>
                   </div>
                 </div>
@@ -999,10 +1000,17 @@ const calculateP2 = (item) => {
 }
 
 const calculateAgreementRate = (item) => {
+  if (!item) return null
+  const denum1 = item.sum_denum !== undefined ? item.sum_denum : (item.denum_awal || 0)
+  const denum2 = item.denum_validasi !== undefined ? item.denum_validasi : denum1
+
+  // If no sample at all (0/0)
+  if (denum1 === 0 && denum2 === 0) return null
+
   const p1 = calculateP1(item)
   const p2 = calculateP2(item)
 
-  // If both P1 and P2 are 0%, they are in 100% agreement!
+  // If both P1 and P2 are 0% with actual sample (e.g. 0/100 and 0/10)
   if (p1 === 0 && p2 === 0) return 100
 
   const minP = Math.min(p1, p2)
