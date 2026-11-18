@@ -496,8 +496,8 @@
                   </div>
 
                   <!-- Text Comment -->
-                  <div class="thread-text" v-if="feed.komentar">
-                    {{ feed.komentar }}
+                  <div class="thread-text" v-if="feed.pesan || feed.komentar">
+                    {{ feed.pesan || feed.komentar }}
                   </div>
 
                   <!-- File Download Badge if exists -->
@@ -715,9 +715,13 @@ const submitReply = async () => {
     const formData = new FormData()
     formData.append('tipe', replyForm.value.tipe)
     if (replyForm.value.komentar) {
+      formData.append('pesan', replyForm.value.komentar)
       formData.append('komentar', replyForm.value.komentar)
     }
-    if (replyForm.value.progress_percent !== undefined) {
+    if (replyForm.value.tipe === 'approval') {
+      formData.append('status', 'completed')
+      formData.append('progress_percent', 100)
+    } else if (replyForm.value.progress_percent !== undefined) {
       formData.append('progress_percent', replyForm.value.progress_percent)
     }
     if (selectedFile.value) {
