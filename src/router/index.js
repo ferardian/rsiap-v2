@@ -619,6 +619,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/bpjs/katalog-trustmark',
+    name: 'BpjsKatalogTrustmark',
+    component: () => import('../views/bpjs/KatalogTrustmarkView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/rs-online/ref-tempat-tidur',
     alias: '/rs-online/ketersediaan-kamar',
     name: 'RsOnlineRefTempatTidur',
