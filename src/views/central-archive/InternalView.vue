@@ -281,18 +281,119 @@
             </div>
 
             <div v-if="withUndangan" class="undangan-section animate-slide-down">
-              <div class="form-row flex-row">
-                <div class="form-group flex-1">
-                  <label>Waktu Pertemuan <span class="required">*</span></label>
-                  <input v-model="formData.undangan.tanggal" type="datetime-local" :required="withUndangan">
-                </div>
-                <div class="form-group flex-1">
-                  <label>Lokasi <span class="required">*</span></label>
-                  <input v-model="formData.undangan.lokasi" type="text" placeholder="Ruang Pertemuan" :required="withUndangan">
+              <!-- Location Type Selector: Ruang RS vs Luar RS -->
+              <div class="location-type-toggle mb-3">
+                <label class="info-label-mini mb-1">Pilihan Tempat Pertemuan</label>
+                <div class="d-flex gap-2">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm"
+                    :class="formData.undangan.tipe_lokasi === 'ruang_rs' ? 'btn-primary' : 'btn-outline-secondary'"
+                    @click="setTipeLokasi('ruang_rs')"
+                  >
+                    <i class="fas fa-door-open me-1"></i> Ruang Rapat RSIA
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm"
+                    :class="formData.undangan.tipe_lokasi === 'luar_rs' ? 'btn-primary' : 'btn-outline-secondary'"
+                    @click="setTipeLokasi('luar_rs')"
+                  >
+                    <i class="fas fa-globe me-1"></i> Luar RS / Online (Zoom)
+                  </button>
                 </div>
               </div>
+
+              <!-- IF RUANG RS: Dropdown Master Ruang Rapat -->
+              <div v-if="formData.undangan.tipe_lokasi === 'ruang_rs'" class="form-group mb-3">
+                <label>Pilih Ruang Rapat <span class="required">*</span></label>
+                <select 
+                  v-model="formData.undangan.ruang_id" 
+                  class="form-select" 
+                  :required="withUndangan && formData.undangan.tipe_lokasi === 'ruang_rs'"
+                  @change="onRuangChange"
+                >
+                  <option :value="null" disabled>-- Pilih Ruang Rapat --</option>
+                  <option v-for="r in ruangRapatList" :key="r.id" :value="r.id">
+                    {{ r.nama_ruang }} (Kapasitas: {{ r.kapasitas }} org) - {{ r.lokasi_lantai }}
+                  </option>
+                </select>
+
+                <!-- Room Capacity Warning -->
+                <div v-if="isCapacityExceeded" class="alert alert-warning py-2 px-3 mt-2 small d-flex align-items-center gap-2 mb-0">
+                  <i class="fas fa-exclamation-triangle text-warning"></i>
+                  <span>Jumlah penerima undangan ({{ formRecipients.length }} orang) melebihi kapasitas ruangan ({{ selectedRoom?.kapasitas }} kursi).</span>
+                </div>
+              </div>
+
+              <!-- IF LUAR RS: Input Lokasi Bebas -->
+              <div v-else class="form-group mb-3">
+                <label>Lokasi / Tautan Online <span class="required">*</span></label>
+                <input 
+                  v-model="formData.undangan.lokasi" 
+                  type="text" 
+                  placeholder="Contoh: Ruang Zoom Meeting ID: 812-xxx / Hotel Grand Dian" 
+                  :required="withUndangan && formData.undangan.tipe_lokasi === 'luar_rs'"
+                >
+              </div>
+
+              <!-- Waktu Pertemuan: Mulai & Estimasi Selesai -->
+              <div class="form-row flex-row mb-3">
+                <div class="form-group flex-1">
+                  <label>Waktu Mulai <span class="required">*</span></label>
+                  <input 
+                    v-model="formData.undangan.tanggal" 
+                    type="datetime-local" 
+                    :required="withUndangan"
+                    @change="onWaktuMulaiChange"
+                  >
+                </div>
+                <div class="form-group flex-1">
+                  <label>Estimasi Selesai</label>
+                  <input 
+                    v-model="formData.undangan.jam_selesai" 
+                    type="datetime-local"
+                    @change="checkRoomConflict"
+                  >
+                </div>
+              </div>
+
+              <!-- REAL-TIME CONFLICT WARNING -->
+              <div v-if="roomConflictWarning" class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-start gap-2">
+                <i class="fas fa-ban text-danger fa-lg mt-1"></i>
+                <div>
+                  <strong>Jadwal Bentrok! Ruangan Sedang Dipesan</strong>
+                  <div>
+                    Ruangan ini sudah dipesan pada rentang jam tersebut oleh:
+                    <strong>{{ roomConflictWarning.perihal }}</strong> (PJ: {{ roomConflictWarning.pj_nama }}).
+                  </div>
+                  <div class="mt-1 small text-muted">Silakan pilih ruangan lain atau sesuaikan jam pertemuan.</div>
+                </div>
+              </div>
+
+              <!-- Permintaan Fasilitas Tambahan -->
+              <div class="form-group mb-3">
+                <label class="info-label-mini mb-1">Permintaan Fasilitas Tambahan (Opsional)</label>
+                <div class="d-flex flex-wrap gap-2">
+                  <div 
+                    v-for="fac in extraFacilitiesPreset" 
+                    :key="fac"
+                    class="form-check form-check-inline p-2 border rounded-2 bg-light small"
+                  >
+                    <input 
+                      :id="'modal_fac_' + fac" 
+                      v-model="formData.undangan.fasilitas_tambahan" 
+                      type="checkbox" 
+                      :value="fac"
+                      class="form-check-input ms-0 me-2"
+                    >
+                    <label :for="'modal_fac_' + fac" class="form-check-label cursor-pointer">{{ fac }}</label>
+                  </div>
+                </div>
+              </div>
+
               <div class="form-group col-full">
-                <label>Deskripsi Acara</label>
+                <label>Deskripsi / Agenda Acara</label>
                 <textarea v-model="formData.undangan.deskripsi" rows="2" placeholder="Agenda singkat pertemuan..."></textarea>
               </div>
 
@@ -462,6 +563,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { suratInternalService } from '@/services/suratInternalService'
 import { pegawaiService } from '@/services/pegawaiService'
 import { useAuthStore } from '@/stores/auth'
+import ruangRapatService from '@/services/ruangRapatService'
 import SearchableSelect from '@/components/ui/SearchableSelect.vue'
 import InternalRecipientModal from './components/InternalRecipientModal.vue'
 import Swal from 'sweetalert2'
@@ -489,6 +591,17 @@ const stats = ref({
   ditolak: 0
 })
 
+// Ruang Rapat States
+const ruangRapatList = ref([])
+const roomConflictWarning = ref(null)
+const checkingConflict = ref(false)
+const extraFacilitiesPreset = [
+  'Sound System & Mic',
+  'Proyektor & Layar',
+  'Layanan Zoom (Hybrid)',
+  'Konsumsi / Snack'
+]
+
 // Modal & Form State
 const showModal = ref(false)
 const isEdit = ref(false)
@@ -502,7 +615,11 @@ const formData = ref({
   catatan: '',
   undangan: {
     tanggal: '',
+    jam_selesai: '',
+    tipe_lokasi: 'ruang_rs',
+    ruang_id: null,
     lokasi: '',
+    fasilitas_tambahan: [],
     deskripsi: ''
   }
 })
@@ -612,11 +729,93 @@ const changePage = (page) => {
   fetchData(page)
 }
 
+// Ruang Rapat Helpers
+const selectedRoom = computed(() => {
+  if (!formData.value.undangan.ruang_id) return null
+  return ruangRapatList.value.find(r => r.id === formData.value.undangan.ruang_id) || null
+})
+
+const isCapacityExceeded = computed(() => {
+  if (!selectedRoom.value) return false
+  return formRecipients.value.length > selectedRoom.value.kapasitas
+})
+
+const setTipeLokasi = (tipe) => {
+  formData.value.undangan.tipe_lokasi = tipe
+  if (tipe === 'ruang_rs') {
+    if (ruangRapatList.value.length > 0 && !formData.value.undangan.ruang_id) {
+      formData.value.undangan.ruang_id = ruangRapatList.value[0].id
+      formData.value.undangan.lokasi = ruangRapatList.value[0].nama_ruang
+    }
+    checkRoomConflict()
+  } else {
+    formData.value.undangan.ruang_id = null
+    roomConflictWarning.value = null
+  }
+}
+
+const onRuangChange = () => {
+  const room = selectedRoom.value
+  if (room) {
+    formData.value.undangan.lokasi = room.nama_ruang
+  }
+  checkRoomConflict()
+}
+
+const onWaktuMulaiChange = () => {
+  if (formData.value.undangan.tanggal && !formData.value.undangan.jam_selesai) {
+    const start = new Date(formData.value.undangan.tanggal)
+    start.setHours(start.getHours() + 2)
+    formData.value.undangan.jam_selesai = toDatetimeLocal(start.toISOString())
+  }
+  checkRoomConflict()
+}
+
+const checkRoomConflict = async () => {
+  if (formData.value.undangan.tipe_lokasi !== 'ruang_rs' || !formData.value.undangan.ruang_id || !formData.value.undangan.tanggal) {
+    roomConflictWarning.value = null
+    return
+  }
+  checkingConflict.value = true
+  try {
+    const res = await ruangRapatService.checkAvailability({
+      ruang_id: formData.value.undangan.ruang_id,
+      tanggal: formData.value.undangan.tanggal,
+      jam_selesai: formData.value.undangan.jam_selesai || null,
+      undangan_id: formData.value.undangan.id || null
+    })
+    if (res.data && !res.data.available) {
+      roomConflictWarning.value = res.data.conflict
+    } else {
+      roomConflictWarning.value = null
+    }
+  } catch (err) {
+    console.error('Error checking room availability:', err)
+  } finally {
+    checkingConflict.value = false
+  }
+}
+
+const loadRuangRapat = async () => {
+  try {
+    const res = await ruangRapatService.getRooms({ status: 'aktif' })
+    if (res.data && res.data.data) {
+      ruangRapatList.value = res.data.data
+    }
+  } catch (err) {
+    console.error('Error loading ruang rapat:', err)
+  }
+}
+
 const openAddModal = () => {
   isEdit.value = false
   withUndangan.value = false
   formRecipients.value = []
   recipients.value = []
+  roomConflictWarning.value = null
+
+  const defaultRoom = ruangRapatList.value[0] || null
+
   formData.value = {
     id: null,
     perihal: '',
@@ -626,7 +825,11 @@ const openAddModal = () => {
     catatan: '',
     undangan: {
       tanggal: '',
-      lokasi: '',
+      jam_selesai: '',
+      tipe_lokasi: 'ruang_rs',
+      ruang_id: defaultRoom ? defaultRoom.id : null,
+      lokasi: defaultRoom ? defaultRoom.nama_ruang : '',
+      fasilitas_tambahan: [],
       deskripsi: ''
     }
   }
@@ -646,11 +849,14 @@ const openEditModal = (item) => {
   withUndangan.value = !!item.undangan
   formRecipients.value = []
   recipients.value = []
+  roomConflictWarning.value = null
   
-  // If invitation exists, load recipients for preview
   if (item.undangan) {
     loadFormRecipients(item.undangan.id)
   }
+
+  const u = item.undangan
+  const hasRoom = u?.ruang_id ? true : false
 
   formData.value = {
     id: item.id,
@@ -659,17 +865,30 @@ const openEditModal = (item) => {
     pj: item.pj,
     status: item.status,
     catatan: item.catatan,
-    undangan: item.undangan ? {
-      tanggal: toDatetimeLocal(item.undangan.tanggal),
-      lokasi: item.undangan.lokasi,
-      deskripsi: item.undangan.deskripsi
+    undangan: u ? {
+      id: u.id,
+      tanggal: toDatetimeLocal(u.tanggal),
+      jam_selesai: toDatetimeLocal(u.jam_selesai),
+      tipe_lokasi: hasRoom || !u.lokasi ? 'ruang_rs' : 'luar_rs',
+      ruang_id: u.ruang_id || (ruangRapatList.value[0]?.id || null),
+      lokasi: u.lokasi || (ruangRapatList.value[0]?.nama_ruang || ''),
+      fasilitas_tambahan: u.fasilitas_tambahan || [],
+      deskripsi: u.deskripsi || ''
     } : {
       tanggal: '',
-      lokasi: '',
+      jam_selesai: '',
+      tipe_lokasi: 'ruang_rs',
+      ruang_id: ruangRapatList.value[0]?.id || null,
+      lokasi: ruangRapatList.value[0]?.nama_ruang || '',
+      fasilitas_tambahan: [],
       deskripsi: ''
     }
   }
   showModal.value = true
+
+  if (formData.value.undangan.tanggal && formData.value.undangan.ruang_id) {
+    checkRoomConflict()
+  }
 }
 
 const loadFormRecipients = async (undanganId) => {
@@ -688,6 +907,23 @@ const closeModal = () => {
 }
 
 const saveSurat = async () => {
+  // If room conflict detected, alert user
+  if (withUndangan.value && roomConflictWarning.value) {
+    const confirm = await Swal.fire({
+      title: 'Perhatian: Jadwal Bentrok!',
+      html: `Ruangan ini sedang dipesan pada rentang jam tersebut oleh:<br><strong>${roomConflictWarning.value.perihal}</strong> (PJ: ${roomConflictWarning.value.pj_nama})<br><br>Apakah Anda yakin tetap ingin menyimpan?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Tetap Simpan',
+      cancelButtonText: 'Batalkan & Ubah Jadwal',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    })
+    if (!confirm.isConfirmed) {
+      return
+    }
+  }
+
   submitting.value = true
   try {
     const payload = { ...formData.value }
@@ -696,11 +932,17 @@ const saveSurat = async () => {
     } else {
       payload.penerima = formRecipients.value
       if (payload.undangan?.tanggal) {
-        // datetime-local gives "YYYY-MM-DDTHH:mm", Laravel needs "YYYY-MM-DD HH:mm:ss"
         const raw = payload.undangan.tanggal
         payload.undangan = {
           ...payload.undangan,
           tanggal: raw.replace('T', ' ') + (raw.length === 16 ? ':00' : '')
+        }
+      }
+      if (payload.undangan?.jam_selesai) {
+        const rawEnd = payload.undangan.jam_selesai
+        payload.undangan = {
+          ...payload.undangan,
+          jam_selesai: rawEnd.replace('T', ' ') + (rawEnd.length === 16 ? ':00' : '')
         }
       }
     }
@@ -712,19 +954,11 @@ const saveSurat = async () => {
       response = await suratInternalService.storeSuratInternal(payload)
     }
 
-    // Handle Recipients after Surat/Undangan saved
-    // We need to re-fetch the item to get the invitation ID if it's new
     if (withUndangan.value && formRecipients.value.length > 0) {
-      // For Orion/v2 updateOrCreate logic, we might need a moment to let the hook finish
-      // or directly use the response if it includes the created undagan
       const savedItem = response.data.data
       let invitationId = savedItem.undangan?.id
       
-      // If invitation ID not present (hooks are async sometimes), we might need to search for it
-      // But usually Orion returns the saved entity with relations if requested?
-      // Let's try to get it from the item
       if (!invitationId) {
-        // Fallback: search for the surat again to get invitation
         const detailRes = await suratInternalService.getSuratInternalById(savedItem.id)
         invitationId = detailRes.data.data.undangan?.id
       }
@@ -950,6 +1184,7 @@ onMounted(() => {
   fetchData()
   fetchStats()
   loadPegawai()
+  loadRuangRapat()
 })
 </script>
 

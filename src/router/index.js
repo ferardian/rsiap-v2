@@ -1136,6 +1136,22 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/central-archive/ruang-rapat',
+    name: 'RuangRapatManagement',
+    component: () => import('../views/ruang-rapat/RuangRapatView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ruang-rapat',
+    redirect: '/central-archive/ruang-rapat'
+  },
+  {
+    path: '/ruang-rapat/display/:id?',
+    name: 'RuangRapatDisplay',
+    component: () => import('../views/ruang-rapat/RuangRapatDisplayView.vue'),
+    meta: { requiresAuth: false, layout: 'empty' }
+  },
+  {
     path: '/tindak-lanjut',
     name: 'TindakLanjut',
     component: () => import('../views/tindak-lanjut/TindakLanjutView.vue'),
