@@ -1,29 +1,49 @@
 <template>
-  <div class="ruang-rapat-wrapper">
-    <!-- Header Page -->
-    <div class="page-header mb-4">
+  <div class="ruang-rapat-container">
+    <!-- TOP HEADER BAR -->
+    <header class="app-header mb-4">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
-          <h1 class="page-title d-flex align-items-center gap-2 mb-1">
-            <span>🏢</span> Manajemen & Jadwal Ruang Rapat
-          </h1>
-          <p class="page-subtitle mb-0 text-muted">
-            Pantau ketersediaan, reservasi jadwal pertemuan terintegrasi surat undangan, dan kelola fasilitas ruang rapat RSIA.
-          </p>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="header-icon-box bg-primary text-white rounded-3 shadow-sm d-flex align-items-center justify-content-center">
+              <i class="fas fa-building fa-lg"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0 text-dark">Manajemen & Reservasi Ruang Rapat</h4>
+              <div class="text-muted small">
+                Kalender terintegrasi surat undangan, kontrol okupansi live, dan display pintu RSIA.
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="d-flex align-items-center gap-2">
+
+        <!-- Right Quick Controls -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <!-- Live Room Pulse Badge -->
+          <div class="live-pill px-3 py-2 rounded-pill bg-white border shadow-sm d-flex align-items-center gap-2 small">
+            <span class="live-dot" :class="inUseRoomsCount > 0 ? 'bg-danger' : 'bg-success'"></span>
+            <span class="fw-semibold text-dark">
+              {{ availableRoomsCount }}/{{ rooms.length }} Ruangan Tersedia
+            </span>
+            <span class="text-muted opacity-50">|</span>
+            <span class="text-muted font-monospace">{{ currentTime }}</span>
+          </div>
+
           <button 
             type="button" 
-            class="btn btn-outline-primary fw-semibold shadow-sm d-flex align-items-center gap-2"
+            class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold shadow-sm"
             @click="refreshData"
             :disabled="loading"
+            title="Muat Ulang Data"
           >
-            <i class="fas fa-sync-alt" :class="{ 'fa-spin': loading }"></i>
+            <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': loading }"></i>
             <span>Refresh</span>
           </button>
+
           <button 
+            v-if="activeTab === 'master'"
             type="button" 
-            class="btn btn-primary fw-bold shadow-sm d-flex align-items-center gap-2"
+            class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center gap-2"
             @click="openRoomModal()"
           >
             <i class="fas fa-plus"></i>
@@ -31,488 +51,533 @@
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Main Navigation Tabs -->
-    <div class="card glass-card border-0 shadow-sm mb-4">
-      <div class="card-body p-2">
-        <ul class="nav nav-pills gap-2" role="tablist">
-          <li class="nav-item">
-            <button 
-              type="button" 
-              class="nav-link fw-bold px-4 py-2 d-flex align-items-center gap-2"
-              :class="{ 'active shadow': activeTab === 'jadwal' }"
-              @click="activeTab = 'jadwal'"
-            >
-              <i class="fas fa-calendar-alt"></i>
-              <span>Jadwal & Okupansi Ruang</span>
-            </button>
-          </li>
-          <li class="nav-item">
-            <button 
-              type="button" 
-              class="nav-link fw-bold px-4 py-2 d-flex align-items-center gap-2"
-              :class="{ 'active shadow': activeTab === 'master' }"
-              @click="activeTab = 'master'"
-            >
-              <i class="fas fa-door-open"></i>
-              <span>Master Ruangan</span>
-              <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-1">{{ rooms.length }}</span>
-            </button>
-          </li>
-          <li class="nav-item">
-            <button 
-              type="button" 
-              class="nav-link fw-bold px-4 py-2 d-flex align-items-center gap-2"
-              :class="{ 'active shadow': activeTab === 'signage' }"
-              @click="activeTab = 'signage'"
-            >
-              <i class="fas fa-tv"></i>
-              <span>Display Pintu (Signage)</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 1: JADWAL & OKUPANSI RUANG             -->
-    <!-- ========================================== -->
-    <div v-if="activeTab === 'jadwal'">
-      <!-- Date Filter Bar -->
-      <div class="card glass-card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-          <div class="row g-3 align-items-center">
-            <div class="col-lg-5 col-md-6">
-              <label class="form-label small fw-bold text-muted mb-1">Pilih Tanggal Jadwal</label>
-              <div class="d-flex align-items-center gap-2">
-                <button 
-                  type="button" 
-                  class="btn btn-outline-secondary btn-sm px-3"
-                  @click="shiftDate(-1)"
-                  title="Hari Sebelumnya"
-                >
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <input 
-                  v-model="selectedDate" 
-                  type="date" 
-                  class="form-control form-control-sm fw-bold text-primary"
-                  @change="loadJadwal"
-                >
-                <button 
-                  type="button" 
-                  class="btn btn-outline-secondary btn-sm px-3"
-                  @click="shiftDate(1)"
-                  title="Hari Berikutnya"
-                >
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-                <button 
-                  type="button" 
-                  class="btn btn-sm btn-outline-primary text-nowrap fw-semibold"
-                  @click="goToToday"
-                >
-                  Hari Ini
-                </button>
-              </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-              <label class="form-label small fw-bold text-muted mb-1">Filter Ruangan</label>
-              <select v-model="filterRuangId" class="form-select form-select-sm" @change="loadJadwal">
-                <option value="all">Semua Ruangan ({{ rooms.length }})</option>
-                <option v-for="r in rooms" :key="r.id" :value="r.id">
-                  {{ r.nama_ruang }} (Kapasitas: {{ r.kapasitas }} org)
-                </option>
-              </select>
-            </div>
-
-            <div class="col-lg-3 col-md-12 text-lg-end">
-              <div class="text-muted small">
-                Tanggal Terpilih:
-              </div>
-              <div class="fw-bold text-dark fs-6">
-                {{ formatSelectedDateHuman }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- INTERACTIVE WEEK STRIP (Navigasi Kalender 7 Hari) -->
-      <div class="card glass-card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="small fw-bold text-muted text-uppercase">
-              <i class="fas fa-calendar-week text-primary me-1"></i> Kalender Sepekan (Klik Hari Untuk Berpindah)
-            </span>
-            <span class="badge bg-primary-subtle text-primary fw-bold">
-              {{ weekTotalMeetings }} Rapat Minggu Ini
-            </span>
-          </div>
-
-          <div class="row g-2">
-            <div 
-              v-for="day in currentWeekDays" 
-              :key="day.dateStr"
-              class="col"
-            >
-              <div 
-                class="week-day-pill p-2 text-center rounded-3 cursor-pointer transition-all border"
-                :class="{
-                  'active-day shadow-sm border-primary bg-primary text-white': day.isSelected,
-                  'bg-white text-dark hover-light': !day.isSelected,
-                  'is-today-marker': day.isToday
-                }"
-                @click="selectDateDirectly(day.dateStr)"
-              >
-                <div class="small fw-semibold text-uppercase opacity-75">{{ day.dayNameShort }}</div>
-                <div class="fs-5 fw-bold font-monospace">{{ day.dayNum }}</div>
-                <div class="mt-1">
-                  <span 
-                    v-if="day.count > 0" 
-                    class="badge rounded-pill"
-                    :class="day.isSelected ? 'bg-white text-primary' : 'bg-danger text-white'"
-                  >
-                    {{ day.count }} Rapat
-                  </span>
-                  <span v-else class="small opacity-50 fst-italic" style="font-size: 0.7rem;">
-                    Kosong
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-            <span class="pulse-indicator"></span> Status Ruangan Saat Ini (Live)
-          </h5>
-          <span class="text-muted small">Diperbarui realtime otomatis</span>
-        </div>
-
-        <div class="row g-3">
-          <div 
-            v-for="room in filteredRooms" 
-            :key="room.id" 
-            class="col-xl-4 col-md-6"
+      <!-- MAIN NAVIGATION PILLS -->
+      <div class="mt-3">
+        <div class="segmented-control p-1 bg-white border rounded-pill shadow-sm d-inline-flex">
+          <button 
+            type="button" 
+            class="segment-btn rounded-pill px-4 py-2 small fw-bold"
+            :class="{ active: activeTab === 'jadwal' }"
+            @click="activeTab = 'jadwal'"
           >
-            <div class="card room-card border-0 shadow-sm h-100 transition-hover">
-              <div class="card-header bg-white border-0 pb-0 pt-3 px-3 d-flex justify-content-between align-items-start">
-                <div>
-                  <span class="badge mb-1 text-uppercase font-monospace" :style="{ backgroundColor: room.warna_label + '20', color: room.warna_label }">
-                    {{ room.kode_ruang }}
-                  </span>
-                  <h6 class="fw-bold text-dark mb-1 fs-6">{{ room.nama_ruang }}</h6>
-                  <div class="text-muted small">
-                    <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ room.lokasi_lantai || 'Gedung RSIA' }}
-                  </div>
-                </div>
-                <!-- Status Badge -->
-                <div>
-                  <span v-if="room.live_status === 'in_use'" class="badge bg-danger shadow-sm py-2 px-3">
-                    <i class="fas fa-users me-1"></i> Sedang Digunakan
-                  </span>
-                  <span v-else-if="room.live_status === 'upcoming'" class="badge bg-warning text-dark shadow-sm py-2 px-3">
-                    <i class="fas fa-clock me-1"></i> Segera Dimulai
-                  </span>
-                  <span v-else-if="room.status === 'maintenance'" class="badge bg-secondary shadow-sm py-2 px-3">
-                    <i class="fas fa-tools me-1"></i> Perbaikan
-                  </span>
-                  <span v-else class="badge bg-success shadow-sm py-2 px-3">
-                    <i class="fas fa-check-circle me-1"></i> Tersedia (Kosong)
-                  </span>
-                </div>
-              </div>
-
-              <div class="card-body px-3 py-3">
-                <!-- In Use Info -->
-                <div v-if="room.live_status === 'in_use' && room.active_meeting" class="active-meeting-box p-3 rounded-3 mb-3 bg-danger-subtle border border-danger-subtle">
-                  <div class="small fw-bold text-danger text-uppercase mb-1">
-                    <i class="fas fa-play-circle me-1"></i> Rapat Berlangsung:
-                  </div>
-                  <div class="fw-bold text-dark text-truncate mb-1" :title="room.active_meeting.perihal">
-                    {{ room.active_meeting.perihal || 'Rapat Koordinasi' }}
-                  </div>
-                  <div class="d-flex justify-content-between small text-muted">
-                    <span><i class="fas fa-user-tie me-1"></i> {{ room.active_meeting.penanggung_jawab?.nama || room.active_meeting.pj }}</span>
-                    <span class="fw-bold text-danger font-monospace">
-                      Sampai {{ formatTime(room.active_meeting.jam_selesai || room.active_meeting.tanggal) }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Upcoming Info -->
-                <div v-else-if="room.live_status === 'upcoming' && room.upcoming_meeting" class="upcoming-meeting-box p-3 rounded-3 mb-3 bg-warning-subtle border border-warning-subtle">
-                  <div class="small fw-bold text-warning-emphasis text-uppercase mb-1">
-                    <i class="fas fa-hourglass-start me-1"></i> Rapat Selanjutnya (< 1 Jam):
-                  </div>
-                  <div class="fw-bold text-dark text-truncate mb-1" :title="room.upcoming_meeting.perihal">
-                    {{ room.upcoming_meeting.perihal || 'Rapat' }}
-                  </div>
-                  <div class="d-flex justify-content-between small text-muted">
-                    <span><i class="fas fa-user-tie me-1"></i> {{ room.upcoming_meeting.penanggung_jawab?.nama || room.upcoming_meeting.pj }}</span>
-                    <span class="fw-bold text-warning-emphasis font-monospace">
-                      Mulai {{ formatTime(room.upcoming_meeting.tanggal) }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Available Empty State -->
-                <div v-else class="p-3 rounded-3 mb-3 bg-success-subtle border border-success-subtle text-success small d-flex align-items-center gap-2">
-                  <i class="fas fa-door-open fa-lg"></i>
-                  <span>Ruangan siap dipakai untuk rapat atau koordinasi.</span>
-                </div>
-
-                <!-- Room Meta info: Kapasitas & Fasilitas -->
-                <div class="d-flex align-items-center justify-content-between border-top pt-2 mt-auto small">
-                  <div class="d-flex align-items-center gap-1 text-muted">
-                    <i class="fas fa-chair text-primary"></i>
-                    <span>Kapasitas: <strong class="text-dark">{{ room.kapasitas }}</strong> kursi</span>
-                  </div>
-                  <div class="facility-icons d-flex align-items-center gap-1 text-muted" title="Fasilitas Ruangan">
-                    <i v-if="hasFacility(room, 'proyektor')" class="fas fa-video" title="Proyektor"></i>
-                    <i v-if="hasFacility(room, 'sound')" class="fas fa-volume-up" title="Sound System & Mic"></i>
-                    <i v-if="hasFacility(room, 'ac')" class="fas fa-snowflake" title="AC"></i>
-                    <i v-if="hasFacility(room, 'tv')" class="fas fa-tv" title="Smart TV / Display"></i>
-                    <i v-if="hasFacility(room, 'wifi')" class="fas fa-wifi" title="WiFi"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <i class="fas fa-calendar-alt me-2"></i> Okupansi & Timeline
+          </button>
+          <button 
+            type="button" 
+            class="segment-btn rounded-pill px-4 py-2 small fw-bold"
+            :class="{ active: activeTab === 'master' }"
+            @click="activeTab = 'master'"
+          >
+            <i class="fas fa-door-open me-2"></i> Master Ruang Rapat
+            <span class="badge rounded-pill bg-light text-dark ms-1">{{ rooms.length }}</span>
+          </button>
+          <button 
+            type="button" 
+            class="segment-btn rounded-pill px-4 py-2 small fw-bold"
+            :class="{ active: activeTab === 'signage' }"
+            @click="activeTab = 'signage'"
+          >
+            <i class="fas fa-tv me-2"></i> Display Pintu (Signage)
+          </button>
         </div>
       </div>
+    </header>
 
-      <!-- VISUAL TIMELINE SCHEDULE (Gantt Chart Per Jam) -->
-      <div class="card glass-card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-stream text-primary me-2"></i> Timeline Okupansi Ruang Rapat ({{ formatSelectedDateHuman }})
-            </h5>
-            <div class="text-muted small mt-1">
-              Petunjuk visual durasi pemakaian ruangan dari jam 07:00 hingga 21:00. Klik agenda rapat untuk melihat detail.
-            </div>
-          </div>
-          <div class="d-flex align-items-center gap-3 small">
-            <span class="d-flex align-items-center gap-1">
-              <span class="legend-color-box bg-primary"></span> Terjadwal
-            </span>
-            <span class="d-flex align-items-center gap-1">
-              <span class="legend-color-box bg-danger"></span> Sedang Berlangsung
-            </span>
-          </div>
-        </div>
-
-        <div class="card-body p-0">
-          <div class="table-responsive timeline-table-wrapper">
-            <table class="table table-bordered align-middle mb-0 timeline-table">
-              <thead>
-                <tr class="bg-light text-center small text-muted">
-                  <th class="timeline-room-col bg-white">Ruang Rapat</th>
-                  <th v-for="hour in timeHours" :key="hour" class="timeline-hour-col">
-                    {{ String(hour).padStart(2, '0') }}:00
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="room in filteredRooms" :key="room.id">
-                  <!-- Kolom Nama Ruangan -->
-                  <td class="timeline-room-col bg-white p-3">
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="room-color-dot" :style="{ backgroundColor: room.warna_label }"></span>
-                      <div>
-                        <div class="fw-bold text-dark fs-6">{{ room.nama_ruang }}</div>
-                        <div class="text-muted small"><i class="fas fa-chair me-1"></i>{{ room.kapasitas }} org</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <!-- Kolom Timeline Bar Grid -->
-                  <td :colspan="timeHours.length" class="p-0 position-relative timeline-grid-cell">
-                    <!-- Background Grid Lines -->
-                    <div class="timeline-grid-lines">
-                      <div v-for="h in timeHours" :key="h" class="grid-line"></div>
-                    </div>
-
-                    <!-- Agenda Bars for this Room -->
-                    <div 
-                      v-for="item in getMeetingsForRoom(room.id)" 
-                      :key="item.id"
-                      class="timeline-agenda-bar shadow-sm"
-                      :style="getAgendaBarStyle(item, room)"
-                      @click="showMeetingDetail(item)"
-                      :title="`${item.perihal} (${item.jam_mulai} - ${item.jam_selesai})`"
-                    >
-                      <div class="agenda-bar-content">
-                        <strong class="agenda-title text-truncate">{{ item.perihal }}</strong>
-                        <span class="agenda-time font-monospace small">({{ item.jam_mulai }} - {{ item.jam_selesai }})</span>
-                      </div>
-                    </div>
-
-                    <!-- Empty state text if no meetings -->
-                    <div v-if="getMeetingsForRoom(room.id).length === 0" class="timeline-empty-notice text-muted small">
-                      <i class="fas fa-check-circle text-success me-1"></i> Kosong sepanjang hari
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- DAFTAR RAPAT (Agenda List with Scope Filter) -->
-      <div class="card glass-card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-          <div>
-            <h5 class="fw-bold mb-0 text-dark">
-              <i class="fas fa-list-ul text-primary me-2"></i> Daftar Agenda Rapat & Reservasi ({{ displayedSchedules.length }} Agenda)
-            </h5>
-            <div class="text-muted small mt-1">
-              <span v-if="agendaScope === 'day'">Menampilkan jadwal khusus tanggal: <strong>{{ formatSelectedDateHuman }}</strong></span>
-              <span v-else-if="agendaScope === 'week'">Menampilkan seluruh agenda sepekan ini</span>
-              <span v-else>Menampilkan seluruh agenda bulan terpilih</span>
-            </div>
-          </div>
-
-          <!-- Scope Switcher Buttons -->
-          <div class="btn-group shadow-sm p-1 bg-light rounded-pill border" role="group">
-            <button 
-              type="button" 
-              class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
-              :class="agendaScope === 'day' ? 'btn-primary text-white' : 'btn-light text-muted'"
-              @click="agendaScope = 'day'"
-            >
-              <i class="fas fa-calendar-day me-1"></i> Hari Terpilih ({{ daySchedules.length }})
-            </button>
-            <button 
-              type="button" 
-              class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
-              :class="agendaScope === 'week' ? 'btn-primary text-white' : 'btn-light text-muted'"
-              @click="agendaScope = 'week'"
-            >
-              <i class="fas fa-calendar-week me-1"></i> Minggu Ini ({{ weekSchedules.length }})
-            </button>
-            <button 
-              type="button" 
-              class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
-              :class="agendaScope === 'month' ? 'btn-primary text-white' : 'btn-light text-muted'"
-              @click="agendaScope = 'month'"
-            >
-              <i class="fas fa-calendar-alt me-1"></i> Bulan Ini ({{ allSchedules.length }})
-            </button>
-          </div>
-        </div>
-
-        <div class="card-body p-0">
-          <div v-if="displayedSchedules.length > 0" class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light small">
-                <tr>
-                  <th v-if="agendaScope !== 'day'" width="140px">Tanggal</th>
-                  <th width="120px">Waktu</th>
-                  <th width="220px">Ruang Rapat</th>
-                  <th>Perihal Rapat</th>
-                  <th width="200px">Penanggung Jawab</th>
-                  <th width="150px">No. Surat</th>
-                  <th width="100px" class="text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in displayedSchedules" :key="item.id">
-                  <td v-if="agendaScope !== 'day'">
-                    <div class="fw-bold text-dark small">{{ formatDateShort(item.tanggal) }}</div>
-                    <span 
-                      v-if="item.tanggal && item.tanggal.split(' ')[0] === selectedDate"
-                      class="badge bg-primary-subtle text-primary"
-                    >
-                      Hari Terpilih
-                    </span>
-                  </td>
-                  <td>
-                    <div class="fw-bold font-monospace text-primary fs-6">{{ item.jam_mulai }} - {{ item.jam_selesai }}</div>
-                    <div class="text-muted small">{{ item.durasi_menit }} menit</div>
-                  </td>
-                  <td>
-                    <span class="badge mb-1 text-white" :style="{ backgroundColor: item.warna_label }">
-                      {{ item.nama_ruang }}
-                    </span>
-                    <div class="text-muted small text-truncate">{{ item.lokasi }}</div>
-                  </td>
-                  <td>
-                    <div class="fw-bold text-dark">{{ item.perihal }}</div>
-                    <div v-if="item.fasilitas_tambahan && item.fasilitas_tambahan.length > 0" class="mt-1 d-flex flex-wrap gap-1">
-                      <span v-for="f in item.fasilitas_tambahan" :key="f" class="badge bg-light text-dark border extra-facility-badge">
-                        <i class="fas fa-check text-success me-1"></i>{{ f }}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="fw-semibold text-dark">{{ item.pj_nama }}</div>
-                    <div class="text-muted small">{{ item.pj_jabatan || item.pj_nik }}</div>
-                  </td>
-                  <td>
-                    <span class="badge bg-light text-dark font-monospace border">
-                      {{ item.no_surat || '-' }}
-                    </span>
-                  </td>
-                  <td class="text-center">
+    <!-- ======================================================== -->
+    <!-- TAB 1: SPLIT-SCREEN WORKSPACE (CALENDAR & TIMELINE)     -->
+    <!-- ======================================================== -->
+    <main v-if="activeTab === 'jadwal'">
+      <div class="row g-4 align-items-start">
+        
+        <!-- ======================================== -->
+        <!-- LEFT PANEL: MINI CALENDAR & FILTERS      -->
+        <!-- ======================================== -->
+        <aside class="col-xl-3 col-lg-4">
+          <div class="d-flex flex-column gap-3">
+            
+            <!-- 1. INTERACTIVE MINI MONTH CALENDAR -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+              <div class="card-body p-3">
+                <!-- Month Header Nav -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="fw-bold text-dark fs-6">
+                    {{ currentCalMonthName }}
+                  </span>
+                  <div class="d-flex align-items-center gap-1">
                     <button 
                       type="button" 
-                      class="btn btn-sm btn-outline-primary"
-                      @click="showMeetingDetail(item)"
-                      title="Lihat Detail Rapat"
+                      class="btn btn-sm btn-light rounded-circle icon-nav-btn"
+                      @click="calPrevMonth"
+                      title="Bulan Sebelumnya"
                     >
-                      <i class="fas fa-eye"></i> Detail
+                      <i class="fas fa-chevron-left fa-xs"></i>
                     </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-light rounded-pill px-2 py-0 small fw-semibold text-primary"
+                      @click="calGoToToday"
+                      title="Kembali ke Hari Ini"
+                    >
+                      Hari Ini
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-light rounded-circle icon-nav-btn"
+                      @click="calNextMonth"
+                      title="Bulan Berikutnya"
+                    >
+                      <i class="fas fa-chevron-right fa-xs"></i>
+                    </button>
+                  </div>
+                </div>
 
-          <div v-else class="text-center py-5 text-muted">
-            <div class="mb-3">
-              <i class="fas fa-calendar-check fa-3x text-success opacity-50"></i>
+                <!-- Days of Week Headers -->
+                <div class="calendar-grid text-center small text-muted fw-semibold mb-1">
+                  <div class="cal-header text-danger">Min</div>
+                  <div class="cal-header">Sen</div>
+                  <div class="cal-header">Sel</div>
+                  <div class="cal-header">Rab</div>
+                  <div class="cal-header">Kam</div>
+                  <div class="cal-header">Jum</div>
+                  <div class="cal-header">Sab</div>
+                </div>
+
+                <!-- Calendar Days Matrix -->
+                <div class="calendar-grid text-center">
+                  <div 
+                    v-for="d in miniCalendarDays" 
+                    :key="d.dateStr"
+                    class="cal-day-cell position-relative"
+                    :class="{
+                      'diff-month': !d.isCurrentMonth,
+                      'is-selected': d.isSelected,
+                      'is-today': d.isToday,
+                      'has-meetings': d.count > 0
+                    }"
+                    @click="onSelectDate(d.dateStr)"
+                    :title="`${d.dateStr}: ${d.count} Rapat`"
+                  >
+                    <span class="day-number">{{ d.dayNum }}</span>
+                    <!-- Meeting Dot Indicator -->
+                    <span 
+                      v-if="d.count > 0" 
+                      class="meeting-dot" 
+                      :class="d.isSelected ? 'bg-white' : 'bg-primary'"
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                  <span><i class="fas fa-circle text-primary fa-2xs me-1"></i> Ada Agenda Rapat</span>
+                  <span class="badge bg-light text-dark font-monospace">{{ selectedMonthTotalMeetings }} Rapat Bulan Ini</span>
+                </div>
+              </div>
             </div>
-            <h6 class="fw-bold text-dark">Tidak Ada Agenda Rapat</h6>
-            <p class="small mb-0">
-              <span v-if="agendaScope === 'day'">Pada tanggal {{ formatSelectedDateHuman }}, semua ruang rapat berstatus kosong dan tersedia.</span>
-              <span v-else-if="agendaScope === 'week'">Tidak ada agenda rapat yang terjadwal di minggu ini.</span>
-              <span v-else>Tidak ada agenda rapat yang terjadwal di bulan ini.</span>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- ========================================== -->
-    <!-- TAB 2: MASTER DATA RUANGAN                 -->
-    <!-- ========================================== -->
-    <div v-else-if="activeTab === 'master'">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- 2. QUICK DAY STATS SUMMARY -->
+            <div class="card border-0 shadow-sm rounded-4 bg-gradient-blue text-white p-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <div class="small text-white-50 text-uppercase fw-semibold">Agenda Terpilih</div>
+                  <div class="fs-4 fw-bold font-monospace">{{ daySchedules.length }} <span class="fs-6 fw-normal text-white-70">Rapat</span></div>
+                </div>
+                <div class="p-2 bg-white bg-opacity-20 rounded-3">
+                  <i class="fas fa-calendar-check fa-lg text-white"></i>
+                </div>
+              </div>
+              <div class="small text-white-80 border-top border-white-20 pt-2 d-flex justify-content-between">
+                <span>{{ formatSelectedDateHumanShort }}</span>
+                <span class="fw-bold">{{ isViewingToday ? 'Hari Ini' : '' }}</span>
+              </div>
+            </div>
+
+            <!-- 3. ROOM FILTER ACCORDION / PILLS -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-dark text-uppercase">
+                  <i class="fas fa-filter text-primary me-1"></i> Ruang Rapat
+                </span>
+                <button 
+                  type="button" 
+                  class="btn btn-link p-0 small text-decoration-none fw-semibold"
+                  @click="filterRuangId = 'all'"
+                >
+                  Semua ({{ rooms.length }})
+                </button>
+              </div>
+
+              <div class="d-flex flex-column gap-1">
+                <!-- All Rooms Option -->
+                <div 
+                  class="room-filter-item p-2 rounded-3 d-flex align-items-center justify-content-between cursor-pointer transition-all"
+                  :class="{ active: filterRuangId === 'all' }"
+                  @click="filterRuangId = 'all'"
+                >
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="room-color-dot bg-primary"></span>
+                    <span class="small fw-semibold text-dark">Tampilkan Semua Ruang</span>
+                  </div>
+                  <span class="badge bg-light text-dark small">{{ rooms.length }}</span>
+                </div>
+
+                <!-- Individual Room Items -->
+                <div 
+                  v-for="r in rooms" 
+                  :key="r.id"
+                  class="room-filter-item p-2 rounded-3 d-flex align-items-center justify-content-between cursor-pointer transition-all"
+                  :class="{ active: filterRuangId === r.id }"
+                  @click="filterRuangId = r.id"
+                >
+                  <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                    <span class="room-color-dot" :style="{ backgroundColor: r.warna_label }"></span>
+                    <div class="text-truncate">
+                      <div class="small fw-semibold text-dark text-truncate">{{ r.nama_ruang }}</div>
+                      <div class="text-muted" style="font-size: 0.72rem;">{{ r.kapasitas }} Kursi • {{ r.lokasi_lantai || 'RSIA' }}</div>
+                    </div>
+                  </div>
+                  <span 
+                    class="live-status-badge badge rounded-pill"
+                    :class="r.live_status === 'in_use' ? 'bg-danger text-white' : 'bg-success-subtle text-success'"
+                  >
+                    {{ r.live_status === 'in_use' ? 'Dipakai' : 'Kosong' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. QUICK HELP / INTEGRATION NOTE -->
+            <div class="p-3 rounded-4 bg-light text-muted small border">
+              <div class="fw-semibold text-dark mb-1">
+                <i class="fas fa-info-circle text-primary me-1"></i> Terintegrasi Undangan
+              </div>
+              Jadwal otomatis tersinkronisasi saat membuat Surat Undangan Internal dan menentukan ruang rapat.
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- ======================================== -->
+        <!-- RIGHT PANEL: TIMELINE & AGENDA STAGE     -->
+        <!-- ======================================== -->
+        <main class="col-xl-9 col-lg-8">
+          <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            
+            <!-- CONTROL TOOLBAR: Date Navigator + View Mode Switcher -->
+            <div class="card-header bg-white border-bottom p-3 p-md-4">
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <!-- Date Stepper -->
+                <div class="d-flex align-items-center gap-2">
+                  <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-white px-3"
+                      @click="shiftDate(-1)"
+                      title="Hari Sebelumnya"
+                    >
+                      <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-white px-3 fw-semibold text-primary"
+                      @click="goToToday"
+                    >
+                      Hari Ini
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-white px-3"
+                      @click="shiftDate(1)"
+                      title="Hari Berikutnya"
+                    >
+                      <i class="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+
+                  <div>
+                    <h5 class="fw-bold mb-0 text-dark">
+                      {{ formatSelectedDateHuman }}
+                    </h5>
+                    <div class="text-muted small">
+                      <span v-if="isViewingToday" class="badge bg-success-subtle text-success me-1">Sedang Melihat Hari Ini</span>
+                      <span>{{ daySchedules.length }} Agenda Rapat Terjadwal</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Mode Switcher (Timeline Gantt vs List Feed) -->
+                <div class="d-flex align-items-center gap-2">
+                  <div class="btn-group bg-light p-1 rounded-pill border shadow-sm">
+                    <button 
+                      type="button" 
+                      class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
+                      :class="stageViewMode === 'timeline' ? 'btn-primary text-white shadow-sm' : 'text-muted'"
+                      @click="stageViewMode = 'timeline'"
+                    >
+                      <i class="fas fa-stream me-1"></i> Timeline Jam
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
+                      :class="stageViewMode === 'agenda' ? 'btn-primary text-white shadow-sm' : 'text-muted'"
+                      @click="stageViewMode = 'agenda'"
+                    >
+                      <i class="fas fa-list-ul me-1"></i> Daftar Agenda ({{ displayedSchedules.length }})
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 1: TIMELINE GANTT OKUPANSI PER JAM -->
+            <div v-if="stageViewMode === 'timeline'" class="card-body p-0">
+              <!-- Timeline Legend & Notice Bar -->
+              <div class="p-3 bg-light-subtle border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2 small">
+                <div class="text-muted">
+                  <i class="fas fa-clock text-primary me-1"></i> Rentang waktu operasional: <strong>07:00 — 21:00 WIB</strong>. Klik kartu rapat untuk melihat detail.
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <span class="d-flex align-items-center gap-1 text-muted">
+                    <span class="legend-box bg-primary"></span> Terjadwal
+                  </span>
+                  <span class="d-flex align-items-center gap-1 text-muted">
+                    <span class="legend-box bg-danger"></span> Berlangsung Sekarang
+                  </span>
+                  <span v-if="isViewingToday" class="d-flex align-items-center gap-1 text-danger fw-semibold">
+                    <span class="current-time-marker-dot"></span> Waktu Sekarang
+                  </span>
+                </div>
+              </div>
+
+              <!-- Visual Gantt Table -->
+              <div class="table-responsive gantt-wrapper">
+                <table class="table table-bordered mb-0 gantt-table align-middle">
+                  <thead>
+                    <tr class="bg-light text-center small text-muted">
+                      <th class="gantt-room-th bg-white">Ruang Rapat</th>
+                      <th v-for="h in timeHours" :key="h" class="gantt-hour-th">
+                        {{ String(h).padStart(2, '0') }}:00
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="room in filteredRooms" :key="room.id">
+                      <!-- Room Header Cell (Sticky Left) -->
+                      <td class="gantt-room-td bg-white p-3">
+                        <div class="d-flex align-items-start gap-2">
+                          <span class="room-color-dot mt-1" :style="{ backgroundColor: room.warna_label }"></span>
+                          <div class="text-truncate">
+                            <div class="fw-bold text-dark text-truncate fs-6" :title="room.nama_ruang">
+                              {{ room.nama_ruang }}
+                            </div>
+                            <div class="text-muted small d-flex align-items-center gap-2 mt-1">
+                              <span><i class="fas fa-chair me-1"></i>{{ room.kapasitas }} Kursi</span>
+                              <span class="badge bg-light text-dark font-monospace">{{ room.kode_ruang }}</span>
+                            </div>
+                            <!-- Amenities -->
+                            <div class="amenities-row d-flex gap-1 text-muted mt-1 opacity-75">
+                              <i v-if="hasFacility(room, 'proyektor')" class="fas fa-video fa-xs" title="Proyektor"></i>
+                              <i v-if="hasFacility(room, 'sound')" class="fas fa-volume-up fa-xs" title="Sound System"></i>
+                              <i v-if="hasFacility(room, 'ac')" class="fas fa-snowflake fa-xs" title="AC"></i>
+                              <i v-if="hasFacility(room, 'wifi')" class="fas fa-wifi fa-xs" title="WiFi"></i>
+                              <i v-if="hasFacility(room, 'tv')" class="fas fa-tv fa-xs" title="Smart TV"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Gantt Timeline Track Cell -->
+                      <td :colspan="timeHours.length" class="gantt-track-cell p-0 position-relative">
+                        <!-- Hour Column Grid Lines -->
+                        <div class="gantt-grid-lines">
+                          <div v-for="h in timeHours" :key="h" class="gantt-line"></div>
+                        </div>
+
+                        <!-- Current Time Needle (if viewing today) -->
+                        <div 
+                          v-if="isViewingToday && currentTimeNeedlePercent >= 0 && currentTimeNeedlePercent <= 100"
+                          class="current-time-needle"
+                          :style="{ left: currentTimeNeedlePercent + '%' }"
+                          :title="`Sekarang: ${currentTime}`"
+                        >
+                          <div class="needle-badge">{{ currentTime.slice(0, 5) }}</div>
+                        </div>
+
+                        <!-- Scheduled Meeting Chips for this Room on Selected Date -->
+                        <div 
+                          v-for="item in getMeetingsForRoom(room.id)"
+                          :key="item.id"
+                          class="meeting-chip shadow-sm"
+                          :style="getMeetingChipStyle(item, room)"
+                          @click="showMeetingDetail(item)"
+                          :title="`${item.perihal} (${item.jam_mulai} - ${item.jam_selesai})`"
+                        >
+                          <div class="chip-content">
+                            <div class="chip-title fw-bold text-truncate">
+                              {{ item.perihal }}
+                            </div>
+                            <div class="chip-meta small opacity-90 d-flex align-items-center gap-1 font-monospace">
+                              <i class="fas fa-clock fa-xs"></i> {{ item.jam_mulai }} - {{ item.jam_selesai }}
+                              <span class="opacity-75">• {{ item.pj_nama }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Empty Placeholder Notice -->
+                        <div 
+                          v-if="getMeetingsForRoom(room.id).length === 0" 
+                          class="gantt-empty-state text-muted small"
+                        >
+                          <i class="fas fa-check-circle text-success opacity-75 me-1"></i> Tersedia & kosong sepanjang hari
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- VIEW 2: AGENDA FEED / TABLE LIST -->
+            <div v-else class="card-body p-0">
+              <!-- Scope switcher inside agenda tab -->
+              <div class="p-3 bg-light-subtle border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="btn-group btn-group-sm rounded-pill p-1 bg-white border shadow-sm">
+                  <button 
+                    type="button" 
+                    class="btn rounded-pill px-3 fw-semibold"
+                    :class="agendaScope === 'day' ? 'btn-primary text-white' : 'btn-light text-muted'"
+                    @click="agendaScope = 'day'"
+                  >
+                    Hari Terpilih ({{ daySchedules.length }})
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn rounded-pill px-3 fw-semibold"
+                    :class="agendaScope === 'week' ? 'btn-primary text-white' : 'btn-light text-muted'"
+                    @click="agendaScope = 'week'"
+                  >
+                    Minggu Ini ({{ weekSchedules.length }})
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn rounded-pill px-3 fw-semibold"
+                    :class="agendaScope === 'month' ? 'btn-primary text-white' : 'btn-light text-muted'"
+                    @click="agendaScope = 'month'"
+                  >
+                    Bulan Ini ({{ allSchedules.length }})
+                  </button>
+                </div>
+
+                <div class="text-muted small">
+                  Menampilkan <strong>{{ displayedSchedules.length }}</strong> agenda pertemuan
+                </div>
+              </div>
+
+              <!-- Table of Schedules -->
+              <div v-if="displayedSchedules.length > 0" class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light small text-muted">
+                    <tr>
+                      <th v-if="agendaScope !== 'day'" width="150px">Tanggal</th>
+                      <th width="140px">Jam Pelaksanaan</th>
+                      <th width="240px">Ruang Rapat</th>
+                      <th>Perihal Agenda</th>
+                      <th width="200px">Penanggung Jawab</th>
+                      <th width="140px">No. Surat</th>
+                      <th width="90px" class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in displayedSchedules" :key="item.id">
+                      <td v-if="agendaScope !== 'day'">
+                        <div class="fw-bold text-dark small">{{ formatDateShort(item.tanggal) }}</div>
+                        <span 
+                          v-if="item.tgl_only === selectedDate" 
+                          class="badge bg-primary-subtle text-primary"
+                        >
+                          Hari Terpilih
+                        </span>
+                      </td>
+                      <td>
+                        <div class="fw-bold font-monospace text-primary fs-6">{{ item.jam_mulai }} - {{ item.jam_selesai }}</div>
+                        <div class="text-muted small">{{ item.durasi_menit }} menit</div>
+                      </td>
+                      <td>
+                        <span class="badge mb-1 text-white shadow-xs" :style="{ backgroundColor: item.warna_label }">
+                          {{ item.nama_ruang }}
+                        </span>
+                        <div class="text-muted small text-truncate">{{ item.lokasi }}</div>
+                      </td>
+                      <td>
+                        <div class="fw-bold text-dark">{{ item.perihal }}</div>
+                        <div v-if="item.fasilitas_tambahan && item.fasilitas_tambahan.length > 0" class="mt-1 d-flex flex-wrap gap-1">
+                          <span v-for="f in item.fasilitas_tambahan" :key="f" class="badge bg-light text-dark border extra-facility-badge">
+                            <i class="fas fa-check text-success me-1"></i>{{ f }}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="fw-semibold text-dark">{{ item.pj_nama }}</div>
+                        <div class="text-muted small">{{ item.pj_jabatan || item.pj_nik }}</div>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark font-monospace border">
+                          {{ item.no_surat || '-' }}
+                        </span>
+                      </td>
+                      <td class="text-center">
+                        <button 
+                          type="button" 
+                          class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                          @click="showMeetingDetail(item)"
+                          title="Lihat Detail Rapat"
+                        >
+                          Detail
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Empty state for Agenda List -->
+              <div v-else class="text-center py-5 text-muted">
+                <div class="mb-3">
+                  <i class="fas fa-calendar-check fa-3x text-success opacity-50"></i>
+                </div>
+                <h6 class="fw-bold text-dark">Tidak Ada Agenda Terjadwal</h6>
+                <p class="small mb-0">Semua ruangan rapat berstatus kosong dan tersedia pada periode ini.</p>
+              </div>
+            </div>
+
+          </div>
+        </main>
+
+      </div>
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: MASTER DATA RUANGAN                               -->
+    <!-- ======================================================== -->
+    <section v-else-if="activeTab === 'master'">
+      <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h5 class="fw-bold text-dark mb-0">Master Data Ruang Rapat RSIA</h5>
+          <h5 class="fw-bold text-dark mb-1">Master Data Ruang Rapat RSIA</h5>
           <p class="text-muted small mb-0">Kelola spesifikasi, kapasitas peserta, dan fasilitas tiap ruangan</p>
         </div>
         <button 
           type="button" 
-          class="btn btn-primary fw-bold shadow-sm d-flex align-items-center gap-2"
+          class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm d-flex align-items-center gap-2"
           @click="openRoomModal()"
         >
           <i class="fas fa-plus"></i>
-          <span>Tambah Ruang Rapat Baru</span>
+          <span>Tambah Ruangan Baru</span>
         </button>
       </div>
 
       <div class="row g-4">
         <div v-for="r in rooms" :key="r.id" class="col-lg-4 col-md-6">
-          <div class="card master-room-card border-0 shadow-sm h-100">
+          <div class="card master-room-card border-0 shadow-sm rounded-4 h-100 overflow-hidden bg-white">
             <div class="room-color-strip" :style="{ backgroundColor: r.warna_label }"></div>
             <div class="card-body p-4 d-flex flex-column">
               <div class="d-flex justify-content-between align-items-start mb-2">
@@ -558,14 +623,14 @@
               <div class="border-top pt-3 d-flex justify-content-end gap-2 mt-auto">
                 <button 
                   type="button" 
-                  class="btn btn-sm btn-outline-secondary"
+                  class="btn btn-sm btn-outline-secondary rounded-pill px-3"
                   @click="openRoomModal(r)"
                 >
                   <i class="fas fa-edit me-1"></i> Edit
                 </button>
                 <button 
                   type="button" 
-                  class="btn btn-sm btn-outline-danger"
+                  class="btn btn-sm btn-outline-danger rounded-pill px-3"
                   @click="confirmDeleteRoom(r)"
                 >
                   <i class="fas fa-trash-alt me-1"></i> Hapus
@@ -575,13 +640,13 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- ========================================== -->
-    <!-- TAB 3: DISPLAY PINTU SIGNAGE KIOSK         -->
-    <!-- ========================================== -->
-    <div v-else-if="activeTab === 'signage'">
-      <div class="card glass-card border-0 shadow-sm p-4 mb-4">
+    <!-- ======================================================== -->
+    <!-- TAB 3: DISPLAY PINTU SIGNAGE KIOSK                       -->
+    <!-- ======================================================== -->
+    <section v-else-if="activeTab === 'signage'">
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
           <div>
             <h5 class="fw-bold text-dark mb-1">
@@ -592,14 +657,14 @@
             </p>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <select v-model="selectedSignageRoomId" class="form-select form-select-sm" style="min-width: 220px;">
+            <select v-model="selectedSignageRoomId" class="form-select form-select-sm rounded-pill" style="min-width: 220px;">
               <option v-for="r in rooms" :key="r.id" :value="r.id">
                 {{ r.nama_ruang }}
               </option>
             </select>
             <button 
               type="button" 
-              class="btn btn-success fw-bold text-nowrap d-flex align-items-center gap-2"
+              class="btn btn-success fw-bold rounded-pill text-nowrap d-flex align-items-center gap-2 px-4 shadow-sm"
               @click="openSignageWindow"
             >
               <i class="fas fa-external-link-alt"></i>
@@ -664,11 +729,11 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- ========================================== -->
-    <!-- MODAL FORM TAMBAH / EDIT RUANGAN           -->
-    <!-- ========================================== -->
+    <!-- ======================================================== -->
+    <!-- MODAL FORM TAMBAH / EDIT RUANGAN                         -->
+    <!-- ======================================================== -->
     <div v-if="showRoomModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6);">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -787,8 +852,8 @@
               </div>
             </div>
             <div class="modal-footer border-top py-3 px-4 bg-light">
-              <button type="button" class="btn btn-secondary" @click="showRoomModal = false">Batal</button>
-              <button type="submit" class="btn btn-primary fw-bold px-4" :disabled="savingRoom">
+              <button type="button" class="btn btn-secondary rounded-pill px-4" @click="showRoomModal = false">Batal</button>
+              <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4" :disabled="savingRoom">
                 <i v-if="savingRoom" class="fas fa-spinner fa-spin me-1"></i>
                 <span>{{ editingRoomId ? 'Simpan Perubahan' : 'Tambah Ruangan' }}</span>
               </button>
@@ -798,9 +863,9 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL DETAIL RAPAT TERPILIH                -->
-    <!-- ========================================== -->
+    <!-- ======================================================== -->
+    <!-- MODAL DETAIL RAPAT TERPILIH                              -->
+    <!-- ======================================================== -->
     <div v-if="selectedMeetingDetail" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6);">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -858,12 +923,12 @@
             <button 
               v-if="selectedMeetingDetail.surat_id" 
               type="button" 
-              class="btn btn-sm btn-outline-primary"
+              class="btn btn-sm btn-outline-primary rounded-pill px-3"
               @click="openSuratDetail(selectedMeetingDetail.surat_id)"
             >
               <i class="fas fa-envelope-open-text me-1"></i> Buka Surat Internal
             </button>
-            <button type="button" class="btn btn-sm btn-secondary ms-auto" @click="selectedMeetingDetail = null">
+            <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3 ms-auto" @click="selectedMeetingDetail = null">
               Tutup
             </button>
           </div>
@@ -884,17 +949,27 @@ export default {
   setup() {
     const router = useRouter()
 
-    // State
+    // Tab state: 'jadwal' | 'master' | 'signage'
     const activeTab = ref('jadwal')
+    // Stage view mode: 'timeline' (Gantt) | 'agenda' (Feed)
+    const stageViewMode = ref('timeline')
+    // Agenda scope: 'day' | 'week' | 'month'
+    const agendaScope = ref('day')
+
     const loading = ref(false)
     const savingRoom = ref(false)
     const rooms = ref([])
     const allSchedules = ref([])
     const dateCounts = ref({})
+
+    // Selected Date & Filter
     const selectedDate = ref(new Date().toISOString().split('T')[0])
     const filterRuangId = ref('all')
     const selectedMeetingDetail = ref(null)
-    const agendaScope = ref('day') // 'day' | 'week' | 'month'
+
+    // Mini Calendar Navigation State
+    const calYear = ref(new Date().getFullYear())
+    const calMonth = ref(new Date().getMonth()) // 0-indexed
 
     // Signage
     const selectedSignageRoomId = ref(null)
@@ -928,13 +1003,26 @@ export default {
       'Meja Rapat Oval'
     ]
 
-    // Hours range for timeline Gantt: 07:00 to 21:00
+    // Hours range for timeline Gantt: 07:00 to 21:00 (14 hours = 840 minutes)
     const timeHours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
-    // Computed
+    // ----------------------------------------------------
+    // COMPUTED PROPERTIES
+    // ----------------------------------------------------
+    const todayStr = computed(() => new Date().toISOString().split('T')[0])
+    const isViewingToday = computed(() => selectedDate.value === todayStr.value)
+
     const filteredRooms = computed(() => {
       if (filterRuangId.value === 'all') return rooms.value
       return rooms.value.filter(r => r.id === parseInt(filterRuangId.value))
+    })
+
+    const availableRoomsCount = computed(() => {
+      return rooms.value.filter(r => r.live_status === 'available').length
+    })
+
+    const inUseRoomsCount = computed(() => {
+      return rooms.value.filter(r => r.live_status === 'in_use').length
     })
 
     const selectedSignageRoom = computed(() => {
@@ -957,47 +1045,104 @@ export default {
       })
     })
 
-    // 7-day week calendar strip calculation based on selectedDate
-    const currentWeekDays = computed(() => {
-      const curr = new Date(selectedDate.value + 'T00:00:00')
-      const dayOfWeek = curr.getDay() // 0 is Sunday, 1 is Monday...
-      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-      const monday = new Date(curr)
-      monday.setDate(curr.getDate() + diffToMonday)
+    const formatSelectedDateHumanShort = computed(() => {
+      if (!selectedDate.value) return ''
+      const d = new Date(selectedDate.value + 'T00:00:00')
+      return d.toLocaleDateString('id-ID', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    })
+
+    // Mini Calendar Computed
+    const currentCalMonthName = computed(() => {
+      const d = new Date(calYear.value, calMonth.value, 1)
+      return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+    })
+
+    const miniCalendarDays = computed(() => {
+      const year = calYear.value
+      const month = calMonth.value
+
+      const firstDayOfMonth = new Date(year, month, 1).getDay() // 0 = Sunday
+      const daysInCurrentMonth = new Date(year, month + 1, 0).getDate()
+      const daysInPrevMonth = new Date(year, month, 0).getDate()
 
       const days = []
-      const todayStr = new Date().toISOString().split('T')[0]
 
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday)
-        d.setDate(monday.getDate() + i)
-        const dateStr = d.toISOString().split('T')[0]
-        const dayNum = d.getDate()
-        const dayNameShort = d.toLocaleDateString('id-ID', { weekday: 'short' })
-        
-        // Count meetings on this date
-        const count = dateCounts.value[dateStr] || allSchedules.value.filter(s => {
-          const tgl = s.tgl_only || (s.tanggal ? s.tanggal.split(' ')[0] : '')
-          return tgl === dateStr
-        }).length
-
+      // 1. Padding days from previous month
+      for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+        const pDay = daysInPrevMonth - i
+        const prevDate = new Date(year, month - 1, pDay)
+        const dateStr = prevDate.toISOString().split('T')[0]
         days.push({
           dateStr,
-          dayNum,
-          dayNameShort,
-          count,
+          dayNum: pDay,
+          isCurrentMonth: false,
           isSelected: dateStr === selectedDate.value,
-          isToday: dateStr === todayStr
+          isToday: dateStr === todayStr.value,
+          count: dateCounts.value[dateStr] || 0
         })
       }
+
+      // 2. Days of current month
+      for (let day = 1; day <= daysInCurrentMonth; day++) {
+        const m = String(month + 1).padStart(2, '0')
+        const d = String(day).padStart(2, '0')
+        const dateStr = `${year}-${m}-${d}`
+        days.push({
+          dateStr,
+          dayNum: day,
+          isCurrentMonth: true,
+          isSelected: dateStr === selectedDate.value,
+          isToday: dateStr === todayStr.value,
+          count: dateCounts.value[dateStr] || 0
+        })
+      }
+
+      // 3. Padding days for next month to complete 35 or 42 grid cells
+      const totalCells = days.length <= 35 ? 35 : 42
+      const remaining = totalCells - days.length
+      for (let day = 1; day <= remaining; day++) {
+        const nextDate = new Date(year, month + 1, day)
+        const dateStr = nextDate.toISOString().split('T')[0]
+        days.push({
+          dateStr,
+          dayNum: day,
+          isCurrentMonth: false,
+          isSelected: dateStr === selectedDate.value,
+          isToday: dateStr === todayStr.value,
+          count: dateCounts.value[dateStr] || 0
+        })
+      }
+
       return days
     })
 
-    const weekTotalMeetings = computed(() => {
-      return currentWeekDays.value.reduce((acc, d) => acc + d.count, 0)
+    const selectedMonthTotalMeetings = computed(() => {
+      let total = 0
+      const prefix = `${calYear.value}-${String(calMonth.value + 1).padStart(2, '0')}`
+      for (const [key, val] of Object.entries(dateCounts.value)) {
+        if (key.startsWith(prefix)) {
+          total += Number(val)
+        }
+      }
+      return total
     })
 
-    // Schedules filtered specifically for the selected date (used for Timeline Gantt & Day view)
+    // Current Time Needle position on 07:00-21:00 timeline (840 minutes)
+    const currentTimeNeedlePercent = computed(() => {
+      const now = new Date()
+      const currentH = now.getHours()
+      const currentM = now.getMinutes()
+      const minutesFrom7 = (currentH * 60 + currentM) - (7 * 60)
+      const totalMinutes = 14 * 60 // 840
+      return Math.max(0, Math.min(100, (minutesFrom7 / totalMinutes) * 100))
+    })
+
+    // Schedules filtered specifically for selected date
     const daySchedules = computed(() => {
       return allSchedules.value.filter(s => {
         const tgl = s.tgl_only || (s.tanggal ? s.tanggal.split(' ')[0] : '')
@@ -1005,23 +1150,36 @@ export default {
       })
     })
 
-    // Schedules filtered for the current 7-day week
+    // Schedules filtered for the current 7-day week of selectedDate
     const weekSchedules = computed(() => {
-      const weekDateSet = new Set(currentWeekDays.value.map(d => d.dateStr))
+      const curr = new Date(selectedDate.value + 'T00:00:00')
+      const dayOfWeek = curr.getDay()
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const monday = new Date(curr)
+      monday.setDate(curr.getDate() + diffToMonday)
+
+      const weekDates = new Set()
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday)
+        d.setDate(monday.getDate() + i)
+        weekDates.add(d.toISOString().split('T')[0])
+      }
+
       return allSchedules.value.filter(s => {
         const tgl = s.tgl_only || (s.tanggal ? s.tanggal.split(' ')[0] : '')
-        return weekDateSet.has(tgl)
+        return weekDates.has(tgl)
       })
     })
 
-    // Schedules displayed in the table below based on user's active scope
     const displayedSchedules = computed(() => {
       if (agendaScope.value === 'month') return allSchedules.value
       if (agendaScope.value === 'week') return weekSchedules.value
       return daySchedules.value
     })
 
-    // Methods
+    // ----------------------------------------------------
+    // METHODS
+    // ----------------------------------------------------
     const updateClock = () => {
       const now = new Date()
       currentTime.value = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -1045,13 +1203,12 @@ export default {
     const loadJadwal = async () => {
       loading.value = true
       try {
-        const curr = new Date(selectedDate.value + 'T00:00:00')
-        const year = curr.getFullYear()
-        const month = curr.getMonth()
-        // Query full month range (e.g. 2026-11-01 s/d 2026-11-30)
-        const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
-        const lastDay = new Date(year, month + 1, 0).getDate()
-        const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+        // Query full month range based on calYear & calMonth
+        const y = calYear.value
+        const m = calMonth.value
+        const monthStart = `${y}-${String(m + 1).padStart(2, '0')}-01`
+        const lastDay = new Date(y, m + 1, 0).getDate()
+        const monthEnd = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
 
         const res = await ruangRapatService.getJadwal({
           start: monthStart,
@@ -1081,11 +1238,41 @@ export default {
       })
     }
 
-    const selectDateDirectly = (dateStr) => {
-      const oldMonth = selectedDate.value.slice(0, 7)
-      const newMonth = dateStr.slice(0, 7)
+    // Mini Calendar Navigation
+    const calPrevMonth = () => {
+      if (calMonth.value === 0) {
+        calMonth.value = 11
+        calYear.value -= 1
+      } else {
+        calMonth.value -= 1
+      }
+      loadJadwal()
+    }
+
+    const calNextMonth = () => {
+      if (calMonth.value === 11) {
+        calMonth.value = 0
+        calYear.value += 1
+      } else {
+        calMonth.value += 1
+      }
+      loadJadwal()
+    }
+
+    const calGoToToday = () => {
+      const now = new Date()
+      calYear.value = now.getFullYear()
+      calMonth.value = now.getMonth()
+      selectedDate.value = now.toISOString().split('T')[0]
+      loadJadwal()
+    }
+
+    const onSelectDate = (dateStr) => {
       selectedDate.value = dateStr
-      if (oldMonth !== newMonth) {
+      const targetDate = new Date(dateStr + 'T00:00:00')
+      if (targetDate.getMonth() !== calMonth.value || targetDate.getFullYear() !== calYear.value) {
+        calMonth.value = targetDate.getMonth()
+        calYear.value = targetDate.getFullYear()
         loadJadwal()
       }
     }
@@ -1093,23 +1280,21 @@ export default {
     const shiftDate = (days) => {
       const d = new Date(selectedDate.value + 'T00:00:00')
       d.setDate(d.getDate() + days)
-      const newDate = d.toISOString().split('T')[0]
-      selectDateDirectly(newDate)
+      const newStr = d.toISOString().split('T')[0]
+      onSelectDate(newStr)
     }
 
     const goToToday = () => {
-      const today = new Date().toISOString().split('T')[0]
-      selectDateDirectly(today)
+      calGoToToday()
     }
 
-    // In timeline, only show meetings for the selected single day
+    // Timeline Meetings for a specific room on the selected single day
     const getMeetingsForRoom = (roomId) => {
       return daySchedules.value.filter(s => s.ruang_id === roomId)
     }
 
-    // Calculate position and width of agenda bar in the timeline
-    // Timeline spans from 07:00 (minute 420) to 21:00 (minute 1260), total 14 hours = 840 minutes
-    const getAgendaBarStyle = (item, room) => {
+    // Gantt Chip Calculation: 07:00 (420 min) to 21:00 (1260 min) = 840 minutes total
+    const getMeetingChipStyle = (item, room) => {
       const [startH, startM] = (item.jam_mulai || '08:00').split(':').map(Number)
       const [endH, endM] = (item.jam_selesai || '10:00').split(':').map(Number)
 
@@ -1118,7 +1303,7 @@ export default {
       const totalMinutes = 14 * 60 // 840 minutes
 
       const leftPercent = Math.max(0, Math.min(100, (startMinute / totalMinutes) * 100))
-      const widthPercent = Math.max(4, Math.min(100 - leftPercent, ((endMinute - startMinute) / totalMinutes) * 100))
+      const widthPercent = Math.max(5, Math.min(100 - leftPercent, ((endMinute - startMinute) / totalMinutes) * 100))
 
       return {
         left: `${leftPercent}%`,
@@ -1241,9 +1426,16 @@ export default {
       window.open(url, '_blank')
     }
 
+    // Lifecycle
     onMounted(() => {
       updateClock()
       clockInterval = setInterval(updateClock, 1000)
+      
+      // Initialize calYear and calMonth from selectedDate
+      const d = new Date(selectedDate.value + 'T00:00:00')
+      calYear.value = d.getFullYear()
+      calMonth.value = d.getMonth()
+
       loadRooms()
       loadJadwal()
     })
@@ -1254,38 +1446,51 @@ export default {
 
     return {
       activeTab,
+      stageViewMode,
+      agendaScope,
       loading,
       savingRoom,
       rooms,
       allSchedules,
       dateCounts,
+      selectedDate,
+      filterRuangId,
+      selectedMeetingDetail,
+      calYear,
+      calMonth,
+      currentCalMonthName,
+      miniCalendarDays,
+      selectedMonthTotalMeetings,
+      todayStr,
+      isViewingToday,
+      filteredRooms,
+      availableRoomsCount,
+      inUseRoomsCount,
+      currentTimeNeedlePercent,
       daySchedules,
       weekSchedules,
       displayedSchedules,
-      filteredRooms,
-      selectedDate,
-      filterRuangId,
-      agendaScope,
-      currentWeekDays,
-      weekTotalMeetings,
-      selectedMeetingDetail,
       selectedSignageRoomId,
       selectedSignageRoom,
       signageRoomLiveStatus,
       currentTime,
       currentFormattedDate,
       formatSelectedDateHuman,
+      formatSelectedDateHumanShort,
       timeHours,
       showRoomModal,
       editingRoomId,
       roomForm,
       availableFacilitiesPreset,
       refreshData,
-      selectDateDirectly,
+      calPrevMonth,
+      calNextMonth,
+      calGoToToday,
+      onSelectDate,
       shiftDate,
       goToToday,
       getMeetingsForRoom,
-      getAgendaBarStyle,
+      getMeetingChipStyle,
       hasFacility,
       formatTime,
       formatDate,
@@ -1302,146 +1507,190 @@ export default {
 </script>
 
 <style scoped>
-.ruang-rapat-wrapper {
-  padding-bottom: 2rem;
+.ruang-rapat-container {
+  padding-bottom: 3rem;
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-radius: 1rem;
+/* Header & Segmented Controls */
+.header-icon-box {
+  width: 44px;
+  height: 44px;
 }
 
-.room-card {
-  border-radius: 1rem;
-  background: #ffffff;
-  transition: all 0.25s ease;
+.live-pill {
+  font-size: 0.85rem;
 }
 
-.room-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-ring 1.8s infinite;
 }
 
-.master-room-card {
-  border-radius: 1rem;
-  background: #ffffff;
-  overflow: hidden;
-  position: relative;
-  transition: all 0.25s ease;
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 
-.master-room-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.09) !important;
+.segmented-control {
+  background: #f8fafc;
 }
 
-.room-color-strip {
-  height: 6px;
-  width: 100%;
+.segment-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.segment-btn:hover {
+  color: #0f172a;
+}
+
+.segment-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+/* Mini Month Calendar Widget */
+.icon-nav-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cal-header {
+  font-size: 0.72rem;
+  padding: 4px 0;
+}
+
+.cal-day-cell {
+  height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1e293b;
+  transition: all 0.15s ease;
+}
+
+.cal-day-cell:hover:not(.is-selected) {
+  background-color: #f1f5f9;
+  transform: scale(1.05);
+}
+
+.cal-day-cell.diff-month {
+  color: #94a3b8;
+  opacity: 0.5;
+}
+
+.cal-day-cell.is-selected {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.cal-day-cell.is-today:not(.is-selected) {
+  border: 1.5px solid #2563eb;
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.meeting-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 2px;
+}
+
+/* Background Gradients */
+.bg-gradient-blue {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+}
+
+.text-white-70 { color: rgba(255, 255, 255, 0.7); }
+.text-white-80 { color: rgba(255, 255, 255, 0.8); }
+.border-white-20 { border-color: rgba(255, 255, 255, 0.2) !important; }
+
+/* Room Filter Items */
+.room-filter-item {
+  border: 1px solid transparent;
+}
+
+.room-filter-item:hover:not(.active) {
+  background-color: #f8fafc;
+}
+
+.room-filter-item.active {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .room-color-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
 }
 
-.pulse-indicator {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #22c55e;
-  box-shadow: 0 0 0 rgba(34, 197, 94, 0.7);
-  animation: pulse 1.8s infinite;
+.live-status-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-  }
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.transition-all {
-  transition: all 0.2s ease;
-}
-
-.week-day-pill {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-
-.week-day-pill:hover:not(.active-day) {
-  background-color: #f1f5f9 !important;
-  transform: translateY(-2px);
-  border-color: #cbd5e1 !important;
-}
-
-.week-day-pill.active-day {
-  transform: scale(1.03);
-}
-
-.is-today-marker {
-  position: relative;
-}
-
-.is-today-marker::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #ef4444;
-}
-
-/* Timeline Gantt Styling */
-.timeline-table-wrapper {
-  min-height: 250px;
+/* Gantt Chart Table */
+.gantt-wrapper {
   overflow-x: auto;
+  min-height: 380px;
 }
 
-.timeline-table {
-  min-width: 1100px;
+.gantt-table {
+  min-width: 1150px;
 }
 
-.timeline-room-col {
-  width: 240px;
-  min-width: 240px;
+.gantt-room-th,
+.gantt-room-td {
+  width: 250px;
+  min-width: 250px;
   position: sticky;
   left: 0;
-  z-index: 2;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.04);
+  z-index: 5;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
 }
 
-.timeline-hour-col {
+.gantt-hour-th {
   width: 70px;
   min-width: 70px;
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
-.timeline-grid-cell {
-  height: 65px;
-  position: relative;
-  background: #fafafa;
+.gantt-track-cell {
+  height: 72px;
+  background-color: #ffffff;
 }
 
-.timeline-grid-lines {
+.gantt-grid-lines {
   display: flex;
   position: absolute;
   top: 0;
@@ -1451,65 +1700,121 @@ export default {
   pointer-events: none;
 }
 
-.grid-line {
+.gantt-line {
   flex: 1;
-  border-right: 1px dashed #e5e7eb;
+  border-right: 1px dashed #e2e8f0;
 }
 
-.timeline-agenda-bar {
+/* Current Time Needle */
+.current-time-needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #ef4444;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.needle-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: bold;
+  font-family: monospace;
+  padding: 1px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.current-time-marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  display: inline-block;
+}
+
+/* Meeting Chips in Gantt */
+.meeting-chip {
   position: absolute;
   top: 8px;
   bottom: 8px;
   border-radius: 8px;
   color: #ffffff;
-  padding: 4px 10px;
+  padding: 6px 10px;
   cursor: pointer;
-  z-index: 3;
+  z-index: 6;
   display: flex;
   align-items: center;
   transition: all 0.2s ease;
-}
-
-.timeline-agenda-bar:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  z-index: 5;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2) !important;
-}
-
-.agenda-bar-content {
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.meeting-chip:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  z-index: 9;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.chip-content {
+  overflow: hidden;
   width: 100%;
 }
 
-.agenda-title {
-  font-size: 0.85rem;
-  margin-right: 4px;
+.chip-title {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.agenda-time {
-  opacity: 0.9;
+.chip-meta {
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.timeline-empty-notice {
+.gantt-empty-state {
   position: absolute;
   left: 20px;
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
+  font-style: italic;
 }
 
-.legend-color-box {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
   display: inline-block;
 }
 
 .extra-facility-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+}
+
+/* Master Room Styling */
+.master-room-card {
+  transition: all 0.25s ease;
+}
+
+.master-room-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.room-color-strip {
+  height: 6px;
+  width: 100%;
 }
 
 /* Signage Preview */
@@ -1531,5 +1836,13 @@ export default {
 
 @keyframes blinker {
   50% { opacity: 0.3; }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
 }
 </style>
