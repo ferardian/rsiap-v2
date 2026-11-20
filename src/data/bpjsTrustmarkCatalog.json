@@ -1,55 +1,5 @@
 {
   "total_endpoints": 196,
-  "base_urls": [
-    {
-      "layanan": "VClaim (FKRTL)",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev",
-      "target": "FKRTL (Rumah Sakit)"
-    },
-    {
-      "layanan": "Antrean RS",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev",
-      "target": "FKRTL (Rumah Sakit)"
-    },
-    {
-      "layanan": "Aplicares (Kamar)",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws",
-      "target": "FKRTL (Rumah Sakit)"
-    },
-    {
-      "layanan": "Apotek (Pelayanan Obat)",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev",
-      "target": "Apotek / Farmasi"
-    },
-    {
-      "layanan": "PCare (FKTP)",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev",
-      "target": "FKTP (Puskesmas/Klinik)"
-    },
-    {
-      "layanan": "Antrean FKTP",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev",
-      "target": "FKTP (Puskesmas/Klinik)"
-    },
-    {
-      "layanan": "i-Care JKN (IHS)",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev",
-      "target": "FKRTL & FKTP"
-    },
-    {
-      "layanan": "e-Rekam Medis (FHIR)",
-      "env": "Development",
-      "url": "https://apijkn-dev.bpjs-kesehatan.go.id/erekammedis_dev",
-      "target": "FKRTL & FKTP"
-    }
-  ],
   "endpoints": [
     {
       "id": "2.1",
@@ -65,7 +15,8 @@
       "response": "{\n\n  \"metadata\": { \"code\": 1, \"message\": \"OK\", \"totalitems\": 16 },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      { \"kodekelas\": \"NON\", \"namakelas\": \"-\" },\n\n      { \"kodekelas\": \"VVP\", \"namakelas\": \"VVIP\" }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Aplicares"
+      "mainCategory": "Aplicares",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws/aplicaresws/rest/ref/kelas"
     },
     {
       "id": "2.2",
@@ -76,12 +27,21 @@
       "url": "{Base URL}/aplicaresws/rest/bed/update/{kodeppk}",
       "function": "Update Ketersediaan Tempat Tidur",
       "header": "`Content-Type: application/json`",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "kodeppk",
+          "placeholder": "{kodeppk}",
+          "description": "Parameter kodeppk pada URL",
+          "type": "URL Path",
+          "example": "0166R001"
+        }
+      ],
       "request": "{\n\n  \"kodekelas\": \"VIP\",\n\n  \"koderuang\": \"RG01\",\n\n  \"namaruang\": \"Ruang Anggrek VIP\",\n\n  \"kapasitas\": \"20\",\n\n  \"tersedia\": \"10\",\n\n  \"tersediapria\": \"0\",\n\n  \"tersediawanita\": \"0\",\n\n  \"tersediapriawanita\": \"0\"\n\n}",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Aplicares"
+      "mainCategory": "Aplicares",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws/aplicaresws/rest/bed/update/0166R001"
     },
     {
       "id": "2.3",
@@ -93,13 +53,27 @@
       "function": "Insert Ruangan Baru",
       "header": "`Content-Type: application/json`",
       "parameters": [
-        "sama dengan Update Ketersediaan Tempat Tidur (lihat 2.2)"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "sama dengan Update Ketersediaan Tempat Tidur (lihat 2.2)",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "kodeppk",
+          "placeholder": "{kodeppk}",
+          "description": "Parameter kodeppk pada URL",
+          "type": "URL Path",
+          "example": "0166R001"
+        }
       ],
       "request": "{\n\n  \"kodekelas\": \"VIP\",\n\n  \"koderuang\": \"RG01\",\n\n  \"namaruang\": \"Ruang Anggrek VIP\",\n\n  \"kapasitas\": \"20\",\n\n  \"tersedia\": \"10\",\n\n  \"tersediapria\": \"0\",\n\n  \"tersediawanita\": \"0\",\n\n  \"tersediapriawanita\": \"0\"\n\n}",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Aplicares"
+      "mainCategory": "Aplicares",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws/aplicaresws/rest/bed/create/0166R001"
     },
     {
       "id": "2.4",
@@ -111,13 +85,41 @@
       "function": "Melihat Data Ketersediaan Kamar RS",
       "header": "`Accept: application/json`",
       "parameters": [
-        "nama atau kode faskes"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "nama atau kode faskes",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "kodeppk",
+          "placeholder": "{kodeppk}",
+          "description": "Parameter kodeppk pada URL",
+          "type": "URL Path",
+          "example": "0166R001"
+        },
+        {
+          "name": "start",
+          "placeholder": "{start}",
+          "description": "Parameter start pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "limit",
+          "placeholder": "{limit}",
+          "description": "Parameter limit pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "`start` dan `limit` berfungsi untuk paging. Jika Rumah Sakit ingin menampilkan data dari baris pertama sampai baris kesepuluh maka `start = 1` dan `limit = 1`; nilai `start` dimulai dari 1\\.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Aplicares"
+      "mainCategory": "Aplicares",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws/aplicaresws/rest/bed/read/0166R001/123/123"
     },
     {
       "id": "2.5",
@@ -128,12 +130,21 @@
       "url": "{Base URL}/aplicaresws/rest/bed/delete/{kodeppk}",
       "function": "Hapus Ruangan",
       "header": "`Content-Type: application/json`",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "kodeppk",
+          "placeholder": "{kodeppk}",
+          "description": "Parameter kodeppk pada URL",
+          "type": "URL Path",
+          "example": "0166R001"
+        }
+      ],
       "request": "{ \"kodekelas\": \"VIP\", \"koderuang\": \"RG01\" }",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Aplicares"
+      "mainCategory": "Aplicares",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws/aplicaresws/rest/bed/delete/0166R001"
     },
     {
       "id": "3.3.1",
@@ -145,14 +156,27 @@
       "function": "Pencarian data peserta BPJS Kesehatan",
       "header": "",
       "parameters": [
-        "Nomor Kartu",
-        "Tanggal Pelayanan/SEP — format `yyyy-MM-dd`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kartu",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Pelayanan/SEP — format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"peserta\": {\n\n      \"cob\": { \"nmAsuransi\": null, \"noAsuransi\": null, \"tglTAT\": null, \"tglTMT\": null },\n\n      \"hakKelas\": { \"keterangan\": \"KELAS I\", \"kode\": \"1\" },\n\n      \"informasi\": { \"dinsos\": null, \"noSKTM\": null, \"prolanisPRB\": null },\n\n      \"jenisPeserta\": { \"keterangan\": \"PEGAWAI SWASTA\", \"kode\": \"13\" },\n\n      \"mr\": { \"noMR\": null, \"noTelepon\": null },\n\n      \"nama\": \"TRI M\",\n\n      \"nik\": \"3319022010810007\",\n\n      \"noKartu\": \"0011336526592\",\n\n      \"pisa\": \"1\",\n\n      \"provUmum\": { \"kdProvider\": \"0138U020\", \"nmProvider\": \"KPRJ PALA MEDIKA\" },\n\n      \"sex\": \"L\",\n\n      \"statusPeserta\": { \"keterangan\": \"AKTIF\", \"kode\": \"0\" },\n\n      \"tglCetakKartu\": \"2016-02-12\",\n\n      \"tglLahir\": \"1981-10-10\",\n\n      \"tglTAT\": \"2014-12-31\",\n\n      \"tglTMT\": \"2008-10-01\",\n\n      \"umur\": {\n\n        \"umurSaatPelayanan\": \"35 tahun ,1 bulan ,11 hari\",\n\n        \"umurSekarang\": \"35 tahun ,2 bulan ,10 hari\"\n\n      }\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Peserta/nokartu/0001234567890/tglSEP/0166R0011126V000500"
     },
     {
       "id": "3.3.2",
@@ -164,14 +188,27 @@
       "function": "Pencarian data peserta berdasarkan NIK Kependudukan",
       "header": "",
       "parameters": [
-        "NIK KTP",
-        "Tanggal Pelayanan/SEP — format `yyyy-MM-dd`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "NIK KTP",
+          "type": "URL Path",
+          "example": "3372012345678901"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Pelayanan/SEP — format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Peserta/nik/3372012345678901/tglSEP/0166R0011126V000500"
     },
     {
       "id": "3.4.1",
@@ -183,14 +220,27 @@
       "function": "Data Kunjungan",
       "header": "",
       "parameters": [
-        "Tanggal SEP, format `yyyy-mm-dd`",
-        "Jenis Pelayanan (1. Inap, 2\\. Jalan)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tanggal SEP, format `yyyy-mm-dd`",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Jenis Pelayanan (1. Inap, 2\\. Jalan)",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"sep\": \\[\n\n      {\n\n        \"diagnosa\": \"K65.0\",\n\n        \"jnsPelayanan\": \"R.Inap\",\n\n        \"kelasRawat\": \"2\",\n\n        \"nama\": \"HANIF ABDURRAHMAN\",\n\n        \"noKartu\": \"0001819122189\",\n\n        \"noSep\": \"0301R00110170000004\",\n\n        \"noRujukan\": \"0301U01108180200084\",\n\n        \"poli\": null,\n\n        \"tglPlgSep\": \"2017-10-03\",\n\n        \"tglSep\": \"2017-10-01\"\n\n      },\n\n      {\n\n        \"diagnosa\": \"I50.0\",\n\n        \"jnsPelayanan\": \"R.Inap\",\n\n        \"kelasRawat\": \"3\",\n\n        \"nama\": \"ASRIZAL\",\n\n        \"noKartu\": \"0002283324674\",\n\n        \"noSep\": \"0301R00110170000005\",\n\n        \"noRujukan\": \"0301U01108180200184\",\n\n        \"poli\": null,\n\n        \"tglPlgSep\": \"2017-10-10\",\n\n        \"tglSep\": \"2017-10-01\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Monitoring/Kunjungan/Tanggal/0166R0011126V000500/JnsPelayanan/123"
     },
     {
       "id": "3.4.2",
@@ -202,15 +252,34 @@
       "function": "Data Klaim",
       "header": "",
       "parameters": [
-        "Tanggal Pulang, format `yyyy-mm-dd`",
-        "Jenis Pelayanan (1. Inap, 2\\. Jalan)",
-        "Status Klaim (1. Proses Verifikasi, 2\\. Pending Verifikasi, 3\\. Klaim)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tanggal Pulang, format `yyyy-mm-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Jenis Pelayanan (1. Inap, 2\\. Jalan)",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Status Klaim (1. Proses Verifikasi, 2\\. Pending Verifikasi, 3\\. Klaim)",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"klaim\": \\[\n\n      {\n\n        \"Inacbg\": { \"kode\": \"N-3-15-0\", \"nama\": \"DIALYSIS\" },\n\n        \"biaya\": {\n\n          \"byPengajuan\": \"991200\",\n\n          \"bySetujui\": \"0\",\n\n          \"byTarifGruper\": \"991200\",\n\n          \"byTarifRS\": \"1170689\",\n\n          \"byTopup\": \"0\"\n\n        },\n\n        \"kelasRawat\": \"3\",\n\n        \"noFPK\": \"\",\n\n        \"noSEP\": \"0301R00109170001280\",\n\n        \"peserta\": { \"nama\": \"NUR\", \"noKartu\": \"0033681422715\", \"noMR\": \"974956\" },\n\n        \"poli\": \"Hemodialisa\",\n\n        \"status\": \"Proses Verifikasi\",\n\n        \"tglPulang\": \"2017-09-02\",\n\n        \"tglSep\": \"2017-09-02\"\n\n      },\n\n      {\n\n        \"Inacbg\": { \"kode\": \"N-3-15-0\", \"nama\": \"DIALYSIS\" },\n\n        \"biaya\": {\n\n          \"byPengajuan\": \"991200\",\n\n          \"bySetujui\": \"0\",\n\n          \"byTarifGruper\": \"991200\",\n\n          \"byTarifRS\": \"1015000\",\n\n          \"byTopup\": \"0\"\n\n        },\n\n        \"kelasRawat\": \"3\",\n\n        \"noFPK\": \"\",\n\n        \"noSEP\": \"0301R00109170000094\",\n\n        \"peserta\": { \"nama\": \"YUH\", \"noKartu\": \"0223416974628\", \"noMR\": \"878410\" },\n\n        \"poli\": \"Hemodialisa\",\n\n        \"status\": \"Proses Verifikasi\",\n\n        \"tglPulang\": \"2017-09-02\",\n\n        \"tglSep\": \"2017-09-02\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Monitoring/Klaim/Tanggal/2026-11-20/JnsPelayanan/123/Status/123"
     },
     {
       "id": "3.4.3",
@@ -222,15 +291,34 @@
       "function": "Histori Pelayanan Per Peserta",
       "header": "",
       "parameters": [
-        "No. Kartu Peserta",
-        "Tgl Mulai Pencarian (`yyyy-mm-dd`)",
-        "Tgl Akhir Pencarian (`yyyy-mm-dd`)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "No. Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl Mulai Pencarian (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Tgl Akhir Pencarian (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"histori\": \\[\n\n      {\n\n        \"diagnosa\": \"A00.1 \\- Cholera due to Vibrio cholerae 01, biovar eltor\",\n\n        \"jnsPelayanan\": \"1\",\n\n        \"kelasRawat\": \"Kelas 1\",\n\n        \"namaPeserta\": \"STAMI\",\n\n        \"noKartu\": \"0001160271256\",\n\n        \"noSep\": \"0301R0110818V200084\",\n\n        \"noRujukan\": \"0301U01108180200084\",\n\n        \"poli\": \"\",\n\n        \"ppkPelayanan\": \"RS YOS SUDARSO\",\n\n        \"tglPlgSep\": \"2018-07-11\",\n\n        \"tglSep\": \"2018-07-09\"\n\n      },\n\n      {\n\n        \"diagnosa\": \"A00.1 \\- Cholera due to Vibrio cholerae 01, biovar eltor\",\n\n        \"jnsPelayanan\": \"2\",\n\n        \"kelasRawat\": null,\n\n        \"namaPeserta\": \"STAMI\",\n\n        \"noKartu\": \"0001160271256\",\n\n        \"noSep\": \"0301R0110818V100085\",\n\n        \"noRujukan\": \"0301U01108180201084\",\n\n        \"poli\": \"\",\n\n        \"ppkPelayanan\": \"RS YOS SUDARSO\",\n\n        \"tglPlgSep\": \"2018-08-09\",\n\n        \"tglSep\": \"2018-08-09\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/monitoring/HistoriPelayanan/NoKartu/0001234567890/tglMulai/2026-11-20/tglAkhir/2026-11-20"
     },
     {
       "id": "3.4.4",
@@ -242,15 +330,34 @@
       "function": "Monitoring Klaim Jasa Raharja",
       "header": "",
       "parameters": [
-        "Jenis Pelayanan (1. Rawat Inap, 2\\. Rawat Jalan)",
-        "Tgl Mulai Pencarian (`yyyy-mm-dd`)",
-        "Tgl Akhir Pencarian (`yyyy-mm-dd`)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis Pelayanan (1. Rawat Inap, 2\\. Rawat Jalan)",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl Mulai Pencarian (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Tgl Akhir Pencarian (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"jaminan\": \\[\n\n      {\n\n        \"sep\": {\n\n          \"noSEP\": \"0301R0110818V100085\",\n\n          \"tglSEP\": \"2018-08-09\",\n\n          \"tglPlgSEP\": \"2018-08-09\",\n\n          \"noMr\": \"AA-01-11\",\n\n          \"jnsPelayanan\": \"2\",\n\n          \"poli\": \"INT\",\n\n          \"diagnosa\": \"A00.1\",\n\n          \"peserta\": {\n\n            \"noKartu\": \"0001161271256\",\n\n            \"nama\": \"JASA RAHARJA\",\n\n            \"noMR\": \"AA-01-11\"\n\n          }\n\n        },\n\n        \"jasaRaharja\": {\n\n          \"tglKejadian\": \"2018-08-09\",\n\n          \"noRegister\": \"AA-JR-0801\",\n\n          \"ketStatusDijamin\": \"Dijamin\",\n\n          \"ketStatusDikirim\": \"Sukses\",\n\n          \"biayaDijamin\": \"100000\",\n\n          \"plafon\": \"20000000\",\n\n          \"jmlDibayar\": \"10000\",\n\n          \"resultsJasaRaharja\": \"Sukses\"\n\n        }\n\n      },\n\n      {\n\n        \"sep\": {\n\n          \"noSEP\": \"0301R0110818V100185\",\n\n          \"tglSEP\": \"2018-08-09\",\n\n          \"tglPlgSEP\": \"2018-08-09\",\n\n          \"noMr\": \"AA-01-11\",\n\n          \"jnsPelayanan\": \"2\",\n\n          \"poli\": \"INT\",\n\n          \"diagnosa\": \"A00.1\",\n\n          \"peserta\": {\n\n            \"noKartu\": \"0003361271256\",\n\n            \"nama\": \"JASA RAHARJA\",\n\n            \"noMR\": \"AA-01-11\"\n\n          }\n\n        },\n\n        \"jasaRaharja\": {\n\n          \"tglKejadian\": \"2018-08-09\",\n\n          \"noRegister\": \"AA-JR-0801\",\n\n          \"ketStatusDijamin\": \"Dijamin\",\n\n          \"ketStatusDikirim\": \"Sukses\",\n\n          \"biayaDijamin\": \"100000\",\n\n          \"plafon\": \"20000000\",\n\n          \"jmlDibayar\": \"10000\",\n\n          \"resultsJasaRaharja\": \"Sukses\"\n\n        }\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/monitoring/JasaRaharja/JnsPelayanan/123/tglMulai/2026-11-20/tglAkhir/2026-11-20"
     },
     {
       "id": "3.5.1",
@@ -266,7 +373,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": \"0301R0011017V000015\"\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/LPK/insert"
     },
     {
       "id": "3.5.2",
@@ -282,7 +390,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": \"0301R0011017V000015\"\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/LPK/update"
     },
     {
       "id": "3.5.3",
@@ -298,7 +407,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": \"0301R0011017V000015\"\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/LPK/delete"
     },
     {
       "id": "3.5.4",
@@ -310,14 +420,27 @@
       "function": "(sesuai teks katalog) Pencarian data LPK",
       "header": "",
       "parameters": [
-        "Tanggal Masuk — format `yyyy-MM-dd`",
-        "Jenis Pelayanan (1. Inap, 2\\. Jalan)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tanggal Masuk — format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Jenis Pelayanan (1. Inap, 2\\. Jalan)",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"lpk\": {\n\n      \"list\": \\[\n\n        {\n\n          \"DPJP\": { \"dokter\": { \"kode\": \"3\", \"nama\": \"Satro Jadhit, dr\" } },\n\n          \"diagnosa\": {\n\n            \"list\": \\[\n\n              { \"level\": \"1\", \"list\": { \"kode\": \"N88.1\", \"nama\": \"Old laceration of cervix uteri\" } },\n\n              { \"level\": \"2\", \"list\": { \"kode\": \"A00.1\", \"nama\": \"Cholera due to Vibrio cholerae 01, biovar eltor\" } }\n\n            \\]\n\n          },\n\n          \"jnsPelayanan\": \"1\",\n\n          \"noSep\": \"0301R0011017V000014\",\n\n          \"perawatan\": {\n\n            \"caraKeluar\": { \"kode\": \"1\", \"nama\": \"Atas Persetujuan Dokter\" },\n\n            \"kelasRawat\": { \"kode\": \"1\", \"nama\": \"VVIP\" },\n\n            \"kondisiPulang\": { \"kode\": \"1\", \"nama\": \"Sembuh\" },\n\n            \"ruangRawat\": { \"kode\": \"3\", \"nama\": \"Ruang Melati I\" },\n\n            \"spesialistik\": { \"kode\": \"1\", \"nama\": \"Spesialis Penyakit dalam\" }\n\n          },\n\n          \"peserta\": {\n\n            \"kelamin\": \"L\",\n\n            \"nama\": \"123456\",\n\n            \"noKartu\": \"0000000001231\",\n\n            \"noMR\": \"123456\",\n\n            \"tglLahir\": \"2008-02-05\"\n\n          },\n\n          \"poli\": { \"eksekutif\": \"0\", \"poli\": { \"kode\": \"INT\" } },\n\n          \"procedure\": {\n\n            \"list\": \\[\n\n              { \"list\": { \"kode\": \"00.82\", \"nama\": \"Revision of knee replacement, femoral component\" } },\n\n              { \"list\": { \"kode\": \"00.83\", \"nama\": \"Revision of knee replacement, patellar component\" } }\n\n            \\]\n\n          },\n\n          \"rencanaTL\": null,\n\n          \"tglKeluar\": \"2017-10-30\",\n\n          \"tglMasuk\": \"2017-10-30\"\n\n        }\n\n      \\]\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/LPK/TglMasuk/2026-11-20/JnsPelayanan/123"
     },
     {
       "id": "3.6.1",
@@ -333,7 +456,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"DPJP\": { \"kode\": \"27510\", \"nama\": \"Suwito, dr. Sp.PD\" },\n\n    \"keterangan\": \"Capek Kerja\",\n\n    \"noSRB\": \"94111924\",\n\n    \"obat\": {\n\n      \"list\": \\[\n\n        { \"jmlObat\": \"1\", \"nmObat\": \"Vitamin B1 (Thiamin HCl) tab 50 mg\", \"signa\": \"1 x 1\" },\n\n        { \"jmlObat\": \"1\", \"nmObat\": \"Analog Insulin Mix Acting Inj 100 UI/ml\", \"signa\": \"1 x 1\" }\n\n      \\]\n\n    },\n\n    \"peserta\": {\n\n      \"alamat\": \"Jl. Medan Merdekah\",\n\n      \"asalFaskes\": { \"kode\": \"01691101\", \"nama\": \"Klinik KALIGANGSAS\" },\n\n      \"email\": \"email@gmail.com\",\n\n      \"kelamin\": \"P\",\n\n      \"nama\": \"SITI JUBAEDAH\",\n\n      \"noKartu\": \"000999979951\",\n\n      \"noTelepon\": \"081234567890\",\n\n      \"tglLahir\": \"1945-09-06\"\n\n    },\n\n    \"programPRB\": \"Systemic Lupus Erythematosus\",\n\n    \"saran\": \"Pasien harus cuti setiap minggu, edukasi agar jangan disuruh kerja terus, lama lama stress..\",\n\n    \"tglSRB\": \"2018-01-08\"\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/PRB/insert"
     },
     {
       "id": "3.6.2",
@@ -349,7 +473,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": \"9111924\"\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/PRB/Update"
     },
     {
       "id": "3.6.3",
@@ -365,7 +490,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": \"941111924\"\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/PRB/Delete"
     },
     {
       "id": "3.6.4",
@@ -377,14 +503,27 @@
       "function": "Pencarian data PRB (Rujuk Balik) berdasarkan Nomor SRB",
       "header": "",
       "parameters": [
-        "No. SRB Peserta",
-        "No. SEP"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "No. SRB Peserta",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "No. SEP",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"prb\": {\n\n      \"DPJP\": { \"kode\": \"275190\", \"nama\": \"Marwoto, dr. Sp.PD\" },\n\n      \"noSEP\": \"1101R0070118V999996\",\n\n      \"noSRB\": \"9419118\",\n\n      \"obat\": {\n\n        \"obat\": \\[\n\n          { \"jmlObat\": \"5\", \"kdObat\": \"00019990017\",\n\n            \"nmObat\": \"Analog Insulin Long Acting inj 100 UI/ml\",\n\n            \"signa1\": \"3\", \"signa2\": \"1\" },\n\n          { \"jmlObat\": \"10\", \"kdObat\": \"00078990062\",\n\n            \"nmObat\": \"Human Insulin Long Acting penfill 3 ml\",\n\n            \"signa1\": \"3\", \"signa2\": \"1\" }\n\n        \\]\n\n      },\n\n      \"peserta\": {\n\n        \"alamat\": \"Jl. Merdekah\",\n\n        \"asalFaskes\": { \"kode\": \"016999901\", \"nama\": \"Klinik KALI ADEM\" },\n\n        \"email\": \"emailkudisadap@gmail.com\",\n\n        \"kelamin\": \"P\",\n\n        \"nama\": \"SITI RONALDO\",\n\n        \"noKartu\": \"0054679979951\",\n\n        \"noTelepon\": \"089101999101\",\n\n        \"tglLahir\": \"1949-09-06\"\n\n      },\n\n      \"programPRB\": { \"kode\": \"01 \", \"nama\": \"Diabetes Mellitus\" },\n\n      \"keterangan\": \"Kecapekan Kerja\",\n\n      \"saran\": \"Pasien Harus Cuti, Kebanyakan Kerja\",\n\n      \"tglSRB\": \"2018-01-08\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/prb/123/nosep/0166R0011126V000500"
     },
     {
       "id": "3.6.5",
@@ -396,14 +535,27 @@
       "function": "Pencarian data PRB (Rujuk Balik) berdasarkan Tanggal SRB",
       "header": "",
       "parameters": [
-        "Tgl. Mulai (`yyyy-mm-dd`)",
-        "Tgl. Akhir (`yyyy-mm-dd`)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tgl. Mulai (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl. Akhir (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"prb\": {\n\n      \"list\": \\[\n\n        {\n\n          \"DPJP\": { \"kode\": \"2759111\", \"nama\": \"Marwoto, dr. Sp.PD\" },\n\n          \"noSEP\": \"1101R0070118V110086\",\n\n          \"noSRB\": \"9419118\",\n\n          \"peserta\": {\n\n            \"alamat\": \"Jl. Merdekah\",\n\n            \"email\": \"emailkudisadap@gmail.com\",\n\n            \"nama\": \"SITI RONALD\",\n\n            \"noKartu\": \"0011079979951\",\n\n            \"noTelepon\": \"081728191919191\"\n\n          },\n\n          \"programPRB\": { \"kode\": \"01 \", \"nama\": \"Diabetes Mellitus\" },\n\n          \"keterangan\": \"Alergi Cuti\",\n\n          \"saran\": \"Pasien Wajib Berlibur, Jangan Disuruh Kerja\",\n\n          \"tglSRB\": \"2018-01-08\"\n\n        }\n\n      \\]\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/prb/tglMulai2026-11-20/tglAkhir2026-11-20"
     },
     {
       "id": "3.6.6",
@@ -415,14 +567,27 @@
       "function": "Menyediakan data rekap klaim yang diajukan oleh Rumah Sakit (RS), di mana dalam klaim tersebut terdapat peserta dengan flagging Potensi PRB",
       "header": "",
       "parameters": [
-        "Tahun",
-        "Bulan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tahun",
+          "type": "URL Path",
+          "example": "2026"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Bulan",
+          "type": "URL Path",
+          "example": "11"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"NamaPeserta\": \"UJI COBA\",\n\n        \"NomorKartu\": \"0001731124168\",\n\n        \"NOSEP\": \"0112R0270125V002761\",\n\n        \"TanggalPelayanan\": \"07/01/2025\",\n\n        \"DiagnosaPotensiPRB\": \"E11 \\- Non-insulin-dependent diabetes mellitus\",\n\n        \"KategoriPenyakitPRB\": \"Diabetes Mellitus\"\n\n      }\n\n    \\]\n\n  },\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/prbpotensi/tahun/2026/bulan/11"
     },
     {
       "id": "3.7.1",
@@ -434,13 +599,20 @@
       "function": "Pencarian data diagnosa (ICD-10)",
       "header": "",
       "parameters": [
-        "Kode atau Nama Diagnosa"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Kode atau Nama Diagnosa",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/diagnosa/123"
     },
     {
       "id": "3.7.2",
@@ -452,13 +624,20 @@
       "function": "Pencarian data poli",
       "header": "",
       "parameters": [
-        "Kode atau Nama Poli"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Kode atau Nama Poli",
+          "type": "URL Path",
+          "example": "INT"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/poli/INT"
     },
     {
       "id": "3.7.3",
@@ -470,14 +649,27 @@
       "function": "Pencarian data fasilitas kesehatan",
       "header": "",
       "parameters": [
-        "nama atau kode faskes",
-        "Jenis Faskes (1. Faskes 1, 2\\. Faskes 2/RS)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "nama atau kode faskes",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Jenis Faskes (1. Faskes 1, 2\\. Faskes 2/RS)",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/faskes/123/123"
     },
     {
       "id": "3.7.4",
@@ -489,15 +681,34 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Jenis Pelayanan (1. Rawat Inap, 2\\. Rawat Jalan)",
-        "Tgl. Pelayanan/SEP (`yyyy-mm-dd`)",
-        "Kode Spesialis/Subspesialis"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis Pelayanan (1. Rawat Inap, 2\\. Rawat Jalan)",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl. Pelayanan/SEP (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Kode Spesialis/Subspesialis",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/dokter/pelayanan/123/tglPelayanan/0166R0011126V000500/Spesialis/123"
     },
     {
       "id": "3.7.5",
@@ -513,7 +724,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/propinsi"
     },
     {
       "id": "3.7.6",
@@ -525,13 +737,20 @@
       "function": "Pencarian data kabupaten",
       "header": "",
       "parameters": [
-        "Kode Propinsi"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Propinsi",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/kabupaten/propinsi/123"
     },
     {
       "id": "3.7.7",
@@ -543,13 +762,20 @@
       "function": "Pencarian data kecamatan",
       "header": "",
       "parameters": [
-        "Kode Kabupaten"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Kabupaten",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/kecamatan/kabupaten/123"
     },
     {
       "id": "3.7.8",
@@ -565,7 +791,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/diagnosaprb"
     },
     {
       "id": "3.7.9",
@@ -577,13 +804,20 @@
       "function": "Pencarian data obat generik PRB",
       "header": "",
       "parameters": [
-        "nama obat generik"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "nama obat generik",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/obatprb/123"
     },
     {
       "id": "3.7.10",
@@ -595,13 +829,20 @@
       "function": "",
       "header": "",
       "parameters": [
-        "nama atau kode procedure"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "nama atau kode procedure",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/procedure/123"
     },
     {
       "id": "3.7.11",
@@ -617,7 +858,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/kelasrawat"
     },
     {
       "id": "3.7.12",
@@ -629,13 +871,20 @@
       "function": "",
       "header": "",
       "parameters": [
-        "nama dokter/DPJP"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "nama dokter/DPJP",
+          "type": "URL Path",
+          "example": "284199"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/dokter/284199"
     },
     {
       "id": "3.7.13",
@@ -651,7 +900,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/spesialistik"
     },
     {
       "id": "3.7.14",
@@ -667,7 +917,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/ruangrawat"
     },
     {
       "id": "3.7.15",
@@ -683,7 +934,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/carakeluar"
     },
     {
       "id": "3.7.16",
@@ -699,7 +951,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/referensi/pascapulang"
     },
     {
       "id": "3.8.1",
@@ -715,7 +968,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"noSuratKontrol\": \"0301R0110520K000013\",\n\n    \"tglRencanaKontrol\": \"2020-05-15\",\n\n    \"namaDokter\": \"Dr. John Wick\",\n\n    \"noKartu\": \"0001328186441\",\n\n    \"nama\": \"ARIS\",\n\n    \"kelamin\": \"Laki-laki\",\n\n    \"tglLahir\": \"1947-12-31\"\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/insert"
     },
     {
       "id": "3.8.2",
@@ -731,7 +985,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/Update"
     },
     {
       "id": "3.8.3",
@@ -747,7 +1002,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"noSuratKontrol\": \"0301R0110520K000013\",\n\n    \"tglRencanaKontrol\": \"2020-05-15\",\n\n    \"namaDokter\": \"Dr. John Wick\",\n\n    \"noKartu\": \"0001328186441\",\n\n    \"nama\": \"ARIS\",\n\n    \"kelamin\": \"Laki-laki\",\n\n    \"tglLahir\": \"1947-12-31\",\n\n    \"namaDiagnosa\": \"I60 \\- Subarachnoid haemorrhage\",\n\n    \"formPRB\": { \"kdStatusPRB\": \"07\", \"data\": { \"...\": \"seluruh field formPRB\" } }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/v2/Insert"
     },
     {
       "id": "3.8.4",
@@ -763,7 +1019,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/v2/Update"
     },
     {
       "id": "3.8.5",
@@ -779,7 +1036,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" }, \"response\": null }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/Delete"
     },
     {
       "id": "3.8.6",
@@ -795,7 +1053,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"noSPRI\": \"0301R0110421K000002\",\n\n    \"tglRencanaKontrol\": \"2021-04-20\",\n\n    \"namaDokter\": \"Dr.Yahya Marpaung,SpB, FINACS\",\n\n    \"noKartu\": \"0001116500714\",\n\n    \"nama\": \"M AMRU\",\n\n    \"kelamin\": \"Laki-Laki\",\n\n    \"tglLahir\": \"1997-12-16\",\n\n    \"namaDiagnosa\": null\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/InsertSPRI"
     },
     {
       "id": "3.8.7",
@@ -811,7 +1070,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/UpdateSPRI"
     },
     {
       "id": "3.8.8",
@@ -823,13 +1083,20 @@
       "function": "Melihat data SEP untuk keperluan rencana kontrol",
       "header": "",
       "parameters": [
-        "Nomor SEP Peserta"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Nomor SEP Peserta",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"noSep\": \"0301R0010819V006059\",\n\n    \"tglSep\": \"2019-10-17\",\n\n    \"jnsPelayanan\": \"Rawat Jalan\",\n\n    \"poli\": \"HDL \\- HEMODIALISA\",\n\n    \"diagnosa\": \"Z49.1 \\- Extracorporeal dialysis\",\n\n    \"peserta\": {\n\n      \"noKartu\": \"0000018965349\",\n\n      \"nama\": \"RASBEN\",\n\n      \"tglLahir\": \"1957-11-10\",\n\n      \"kelamin\": \"L\",\n\n      \"hakKelas\": \"-\"\n\n    },\n\n    \"provUmum\": { \"kdProvider\": \"03100202\", \"nmProvider\": \"KAMPUNG TELENG\" },\n\n    \"provPerujuk\": {\n\n      \"kdProviderPerujuk\": \"03100202\",\n\n      \"nmProviderPerujuk\": \"KAMPUNG TELENG\",\n\n      \"asalRujukan\": \"1\",\n\n      \"noRujukan\": \"031002020619P000413\",\n\n      \"tglRujukan\": \"2019-10-17\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/nosep/0166R0011126V000500"
     },
     {
       "id": "3.8.9",
@@ -841,13 +1108,20 @@
       "function": "Melihat data SEP untuk keperluan rencana kontrol",
       "header": "",
       "parameters": [
-        "Nomor Surat Kontrol Peserta"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Nomor Surat Kontrol Peserta",
+          "type": "URL Path",
+          "example": "0166R0011126K000742"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"noSuratKontrol\": \"0301R0111125K000002\",\n\n    \"tglRencanaKontrol\": \"2025-11-25\",\n\n    \"tglTerbit\": \"2025-11-18\",\n\n    \"jnsKontrol\": \"2\",\n\n    \"poliTujuan\": \"BED\",\n\n    \"namaPoliTujuan\": \"BEDAH\",\n\n    \"kodeDokter\": \"31348\",\n\n    \"namaDokter\": \"CIiNatXXAXSkrIrPId,ManFs.SDDMe\",\n\n    \"flagKontrol\": \"False\",\n\n    \"kodeDokterPembuat\": \"31348\",\n\n    \"namaDokterPembuat\": \"CIiNatXXAXSkrIrPId,ManFs.SDDMe\",\n\n    \"namaJnsKontrol\": \"Kontrol\",\n\n    \"sep\": {\n\n      \"noSep\": \"0301R0110725V000006\",\n\n      \"tglSep\": \"2025-07-30\",\n\n      \"jnsPelayanan\": \"Rawat Jalan\",\n\n      \"poli\": \"BED \\- BEDAH\",\n\n      \"diagnosa\": \"E10 \\- Insulin-dependent diabetes mellitus\",\n\n      \"peserta\": {\n\n        \"noKartu\": \"0002482505324\",\n\n        \"nama\": \"ARMSTIOFIALR\",\n\n        \"tglLahir\": \"1983-09-07\",\n\n        \"kelamin\": \"P\",\n\n        \"hakKelas\": \"-\"\n\n      },\n\n      \"provUmum\": { \"kdProvider\": \"10210901\", \"nmProvider\": \"KERTASEMAYA\" },\n\n      \"provPerujuk\": {\n\n        \"kdProviderPerujuk\": \"0050B107\",\n\n        \"nmProviderPerujuk\": \"Klinik Sehat Gajah Mada\",\n\n        \"asalRujukan\": \"1\",\n\n        \"noRujukan\": \"0050B1070924P000001\",\n\n        \"tglRujukan\": \"2025-10-01\"\n\n      }\n\n    },\n\n    \"formPRB\": { \"kdStatusPRB\": null, \"data\": { \"...\": \"seluruh field formPRB bernilai null\" } }\n\n  },\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" }\n\n}",
       "notes": "Ketika pembuatan SPRI atau jenis kontrol `1`, tidak ada referensi nomor SEP asalnya, jadi field response `sep` kosong/null. Sedangkan jika pembuatan surat kontrol atau jenis kontrol `2`, field response `sep` akan terisi karena terdapat referensi nomor SEP asal ketika pembuatan surat kontrol tersebut.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/noSuratKontrol/0166R0011126K000742"
     },
     {
       "id": "3.8.10",
@@ -859,16 +1133,41 @@
       "function": "Data Rencana Kontrol By No Kartu",
       "header": "",
       "parameters": [
-        "Bulan (contoh: Januari \\=\\> `01`)",
-        "Tahun",
-        "Nomor Kartu",
-        "Filter — `1`: tanggal entri, `2`: tanggal rencana kontrol"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Bulan (contoh: Januari \\=\\> `01`)",
+          "type": "URL Path",
+          "example": "11"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tahun",
+          "type": "URL Path",
+          "example": "2026"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Nomor Kartu",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 4",
+          "placeholder": "{Parameter 4}",
+          "description": "Filter — `1`: tanggal entri, `2`: tanggal rencana kontrol",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"noSuratKontrol\": \"0117R0770122K000004\",\n\n        \"jnsPelayanan\": \"Rawat Inap\",\n\n        \"jnsKontrol\": \"2\",\n\n        \"namaJnsKontrol\": \"Surat Kontrol\",\n\n        \"tglRencanaKontrol\": \"2022-01-06\",\n\n        \"tglTerbitKontrol\": \"2022-01-05\",\n\n        \"noSepAsalKontrol\": \"0117R0770122V000003\",\n\n        \"poliAsal\": \"INT\",\n\n        \"namaPoliAsal\": \"-\",\n\n        \"poliTujuan\": \"INT\",\n\n        \"namaPoliTujuan\": \"PENYAKIT DALAM\",\n\n        \"tglSEP\": \"2022-01-04\",\n\n        \"kodeDokter\": \"296676\",\n\n        \"namaDokter\": \"ABD KADIR\",\n\n        \"noKartu\": \"0002035874204\",\n\n        \"nama\": \"ANI AZKIA\",\n\n        \"terbitSEP\": \"Belum\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/ListRencanaKontrol/Bulan/11/Tahun/2026/Nokartu/0001234567890/filter/2026-11-20"
     },
     {
       "id": "3.8.11",
@@ -880,15 +1179,34 @@
       "function": "Data Rencana Kontrol",
       "header": "",
       "parameters": [
-        "Tanggal awal, format `yyyy-MM-dd`",
-        "Tanggal akhir, format `yyyy-MM-dd`",
-        "Filter — `1`: tanggal entri, `2`: tanggal rencana kontrol"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tanggal awal, format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal akhir, format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Filter — `1`: tanggal entri, `2`: tanggal rencana kontrol",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"noSuratKontrol\": \"0301R0110321K000002\",\n\n        \"jnsPelayanan\": \"Rawat Jalan\",\n\n        \"jnsKontrol\": \"2\",\n\n        \"namaJnsKontrol\": \"Surat Kontrol\",\n\n        \"tglRencanaKontrol\": \"2021-03-18\",\n\n        \"tglTerbitKontrol\": \"2021-03-16\",\n\n        \"noSepAsalKontrol\": \"0301R0111018V000006\",\n\n        \"poliAsal\": \"INT\",\n\n        \"namaPoliAsal\": \"PENYAKIT DALAM\",\n\n        \"poliTujuan\": \"INT\",\n\n        \"namaPoliTujuan\": \"PENYAKIT DALAM\",\n\n        \"tglSEP\": \"2021-03-16\",\n\n        \"kodeDokter\": \"31479\",\n\n        \"namaDokter\": \"Prof.dr.Yulius,SpPD, KGEH\",\n\n        \"noKartu\": \"0001882053808\",\n\n        \"nama\": \"mela handayani\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/ListRencanaKontrol/tglAwal/2026-11-20/tglAkhir/2026-11-20/filter/2026-11-20"
     },
     {
       "id": "3.8.12",
@@ -900,15 +1218,34 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Jenis kontrol — `1`: SPRI, `2`: Rencana Kontrol",
-        "Nomor — jika jenis kontrol `1` diisi nomor kartu; jika `2` diisi nomor SEP",
-        "Tanggal rencana kontrol, format `yyyy-MM-dd`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis kontrol — `1`: SPRI, `2`: Rencana Kontrol",
+          "type": "URL Path",
+          "example": "0166R0011126K000742"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor — jika jenis kontrol `1` diisi nomor kartu; jika `2` diisi nomor SEP",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Tanggal rencana kontrol, format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      { \"kodePoli\": \"004\", \"namaPoli\": \"Alergi-Immunologi Klinik \", \"kapasitas\": \"30\", \"jmlRencanaKontroldanRujukan\": \"0\", \"persentase\": \"0.00\" },\n\n      { \"kodePoli\": \"005\", \"namaPoli\": \"Gastroenterologi-Hepatologi \", \"kapasitas\": \"12\", \"jmlRencanaKontroldanRujukan\": \"0\", \"persentase\": \"0.00\" },\n\n      { \"kodePoli\": \"008\", \"namaPoli\": \"Hematologi \\- Onkologi Medik \", \"kapasitas\": \"24\", \"jmlRencanaKontroldanRujukan\": \"0\", \"persentase\": \"0.00\" },\n\n      { \"kodePoli\": \"013\", \"namaPoli\": \"Reumatologi \", \"kapasitas\": \"24\", \"jmlRencanaKontroldanRujukan\": \"0\", \"persentase\": \"0.00\" },\n\n      { \"kodePoli\": \"015\", \"namaPoli\": \"Kardiovaskular \", \"kapasitas\": \"24\", \"jmlRencanaKontroldanRujukan\": \"0\", \"persentase\": \"0.00\" },\n\n      { \"kodePoli\": \"023\", \"namaPoli\": \"obstetri ginekologi sosial\", \"kapasitas\": \"12\", \"jmlRencanaKontroldanRujukan\": \"0\", \"persentase\": \"0.00\" }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/ListSpesialistik/JnsKontrol/0166R0011126K000742/nomor/0001234567890/TglRencanaKontrol/2026-11-20"
     },
     {
       "id": "3.8.13",
@@ -920,15 +1257,34 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Jenis kontrol — `1`: SPRI, `2`: Rencana Kontrol",
-        "Kode poli",
-        "Tanggal rencana kontrol, format `yyyy-MM-dd`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis kontrol — `1`: SPRI, `2`: Rencana Kontrol",
+          "type": "URL Path",
+          "example": "0166R0011126K000742"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Kode poli",
+          "type": "URL Path",
+          "example": "INT"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Tanggal rencana kontrol, format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      { \"kodeDokter\": \"31528\", \"namaDokter\": \"Dr.John Wick\", \"jadwalPraktek\": \"16:00 \\- 18:00\", \"kapasitas\": \"12\" },\n\n      { \"kodeDokter\": \"31348\", \"namaDokter\": \"Dr. Luffy\", \"jadwalPraktek\": \"10:00 \\- 12:00\", \"kapasitas\": \"12\" }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/RencanaKontrol/JadwalPraktekDokter/JnsKontrol/0166R0011126K000742/KdPoli/INT/TglRencanaKontrol/2026-11-20"
     },
     {
       "id": "3.9.4",
@@ -944,7 +1300,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"rujukan\": {\n\n      \"AsalRujukan\": { \"kode\": \"0301R001\", \"nama\": \"RSUP DR M JAMIL PADANG\" },\n\n      \"diagnosa\": { \"kode\": \"A00.1\", \"nama\": \"A00.1 \\- Cholera due to Vibrio cholerae 01, biovar eltor\" },\n\n      \"noRujukan\": \"0301R0011117B001126\",\n\n      \"peserta\": {\n\n        \"asuransi\": \"-\",\n\n        \"hakKelas\": null,\n\n        \"jnsPeserta\": \"PNS PUSAT\",\n\n        \"kelamin\": \"Laki-Laki\",\n\n        \"nama\": \"ZIYADUL\",\n\n        \"noKartu\": \"0000000110156\",\n\n        \"noMr\": \"123456\",\n\n        \"tglLahir\": \"2008-02-05\"\n\n      },\n\n      \"poliTujuan\": { \"kode\": \"INT\", \"nama\": \"Poli Penyakit Dalam\" },\n\n      \"tglRujukan\": \"2017-11-08\",\n\n      \"tujuanRujukan\": { \"kode\": \"0301R002\", \"nama\": \"RS JIWA ULU GADUT\" }\n\n    }\n\n  }\n\n}",
       "notes": "untuk tipe rujukan `1` maka response adalah `null`.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/insert"
     },
     {
       "id": "3.9.5",
@@ -960,7 +1317,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R0011117B000014\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/update"
     },
     {
       "id": "3.9.6",
@@ -976,7 +1334,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R0011117B000014\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/delete"
     },
     {
       "id": "3.9.7",
@@ -992,7 +1351,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"rujukan\": {\n\n      \"norujukan\": \"0301U0331019P003283\",\n\n      \"nokapst\": \"0000016553957\",\n\n      \"nmpst\": \"MUZNI MUKHTAR\",\n\n      \"diagppk\": \"Z49.1\",\n\n      \"tglrujukan\\_awal\": \"2021-06-20\",\n\n      \"tglrujukan\\_berakhir\": \"2021-09-17\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/Khusus/insert"
     },
     {
       "id": "3.9.8",
@@ -1008,7 +1368,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"98865\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/Khusus/delete"
     },
     {
       "id": "3.9.9",
@@ -1020,14 +1381,27 @@
       "function": "Data Khusus",
       "header": "",
       "parameters": [
-        "Bulan (1–12)",
-        "Tahun (4 digit)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Bulan (1–12)",
+          "type": "URL Path",
+          "example": "11"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tahun (4 digit)",
+          "type": "URL Path",
+          "example": "2026"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"rujukan\": \\[\n\n      {\n\n        \"idrujukan\": \"98866\",\n\n        \"norujukan\": \"0301U0331019P003283\",\n\n        \"nokapst\": \"0000016553957\",\n\n        \"nmpst\": \"MUZNI MUKHTAR\",\n\n        \"diagppk\": \"N18\",\n\n        \"tglrujukan\\_awal\": \"2021-03-22\",\n\n        \"tglrujukan\\_berakhir\": \"2021-06-19\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/Khusus/List/Bulan/11/Tahun/2026"
     },
     {
       "id": "3.9.10",
@@ -1043,7 +1417,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"rujukan\": {\n\n      \"AsalRujukan\": { \"kode\": \"0301R001d\", \"nama\": \"RSUP DR M JAMIL PADANG\" },\n\n      \"diagnosa\": {\n\n        \"kode\": \"A15\",\n\n        \"nama\": \"A15 \\- Respiratory tuberculosis, bacteriologically and histologically confirmed\"\n\n      },\n\n      \"noRujukan\": \"0301R0010321B000012\",\n\n      \"peserta\": {\n\n        \"asuransi\": \"-\",\n\n        \"hakKelas\": null,\n\n        \"jnsPeserta\": \"PBI (APBD)\",\n\n        \"kelamin\": \"Laki-Laki\",\n\n        \"nama\": \"FADLAN LISMI AZIZ\",\n\n        \"noKartu\": \"0001329783085\",\n\n        \"noMr\": \"00754610\",\n\n        \"tglLahir\": \"2006-02-20\"\n\n      },\n\n      \"poliTujuan\": { \"kode\": \"\", \"nama\": \"\" },\n\n      \"tglBerlakuKunjungan\": \"2021-06-16\",\n\n      \"tglRencanaKunjungan\": \"2021-03-19\",\n\n      \"tglRujukan\": \"2021-03-18\",\n\n      \"tujuanRujukan\": { \"kode\": \"03010402\", \"nama\": \"PEGAMBIRAN\" }\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/2.0/insert"
     },
     {
       "id": "3.9.11",
@@ -1059,7 +1434,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R0011117B000014\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/2.0/Update"
     },
     {
       "id": "3.9.12",
@@ -1071,14 +1447,27 @@
       "function": "Data Spesialistik",
       "header": "",
       "parameters": [
-        "Kode PPK Rujukan (8 digit)",
-        "Tanggal rujukan, format `yyyy-MM-dd`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode PPK Rujukan (8 digit)",
+          "type": "URL Path",
+          "example": "0166R001"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal rujukan, format `yyyy-MM-dd`",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      { \"kodeSpesialis\": \"005\", \"namaSpesialis\": \"Gastroenterologi-Hepatologi \", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"006\", \"namaSpesialis\": \"Geriatri \", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"007\", \"namaSpesialis\": \"Ginjal-Hipertensi \", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"008\", \"namaSpesialis\": \"Hematologi \\- Onkologi Medik \", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"010\", \"namaSpesialis\": \"Endokrin-Metabolik-Diabetes\", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"017\", \"namaSpesialis\": \"Bedah Onkologi \", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"018\", \"namaSpesialis\": \"Bedah Digestif \", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"020\", \"namaSpesialis\": \"fetomaternal\", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" },\n\n      { \"kodeSpesialis\": \"021\", \"namaSpesialis\": \"onkologi ginekologi\", \"kapasitas\": \"0\", \"jumlahRujukan\": \"0\", \"persentase\": \"0,00\" }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/ListSpesialistik/PPKRujukan/0166R001/TglRujukan/2026-11-20"
     },
     {
       "id": "3.9.13",
@@ -1090,13 +1479,20 @@
       "function": "Data Sarana",
       "header": "",
       "parameters": [
-        "Kode PPK Rujukan (8 digit)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode PPK Rujukan (8 digit)",
+          "type": "URL Path",
+          "example": "0166R001"
+        }
       ],
       "request": "",
       "response": "| kodeSarana | namaSarana |\n| :---- | :---- |\n| 1 | Rekam Medik |\n| 2 | Laboratorium |\n| 3 | Radiologi |\n| 4 | CT Scan |\n| 12 | CT Scan Kepala leher |\n| 5 | MRI/Magnetic Resonance Imaging |\n| 25 | Venografi |\n| 6 | Hemodialisa |\n| 7 | Farmasi |\n| 8 | Pelayanan Darah |\n| 10 | Pemulasaran Jenasah |\n| 13 | MRI Kepala leher |\n| 15 | USG (Doppler) daerah leher |\n| 58 | BNO IVP |\n| 9 | Ambulan |\n| 11 | Radiografi konvensional |\n| 14 | Dakriosistografi (kelenjar air mata) |",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/ListSarana/PPKRujukan/0166R001"
     },
     {
       "id": "3.9.14",
@@ -1108,14 +1504,27 @@
       "function": "List Data Rujukan Keluar RS",
       "header": "",
       "parameters": [
-        "Tanggal Mulai",
-        "Tanggal Akhir"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tanggal Mulai",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Akhir",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"noRujukan\": \"1828R0011221B000001\",\n\n        \"tglRujukan\": \"2021-12-06\",\n\n        \"jnsPelayanan\": \"2\",\n\n        \"noSep\": \"1828r0011221v000001\",\n\n        \"noKartu\": \"0002035020396\",\n\n        \"nama\": \"SUSANTI\",\n\n        \"ppkDirujuk\": \"1820R001\",\n\n        \"namaPpkDirujuk\": \"RSUD SAWERIGADING PALOPO\"\n\n      },\n\n      {\n\n        \"noRujukan\": \"1828R0011221B000006\",\n\n        \"tglRujukan\": \"2021-12-08\",\n\n        \"jnsPelayanan\": \"2\",\n\n        \"noSep\": \"1828R0011221V000013\",\n\n        \"noKartu\": \"0002059334728\",\n\n        \"nama\": \"MARINGAN HALOMOAN NAPITUPULU\",\n\n        \"ppkDirujuk\": \"0345R001\",\n\n        \"namaPpkDirujuk\": \"RSU INCO SOROWAKO\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/Keluar/List/tglMulai/2026-11-20/tglAkhir/2026-11-20"
     },
     {
       "id": "3.9.15",
@@ -1127,13 +1536,20 @@
       "function": "Get Data Detail Rujukan Keluar RS Berdasarkan Nomor Rujukan",
       "header": "",
       "parameters": [
-        "Nomor Rujukan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Rujukan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"rujukan\": {\n\n      \"noRujukan\": \"1828R0011221B000001\",\n\n      \"noSep\": \"1828r0011221v000001\",\n\n      \"noKartu\": \"0002035020396\",\n\n      \"nama\": \"SUSANTI\",\n\n      \"kelasRawat\": \"3\",\n\n      \"kelamin\": \"P\",\n\n      \"tglLahir\": \"1988-04-08\",\n\n      \"tglSep\": \"2021-12-06\",\n\n      \"tglRujukan\": \"2021-12-06\",\n\n      \"tglRencanaKunjungan\": \"2021-12-06\",\n\n      \"ppkDirujuk\": \"1820R001\",\n\n      \"namaPpkDirujuk\": \"RSUD SAWERIGADING PALOPO\",\n\n      \"jnsPelayanan\": \"2\",\n\n      \"catatan\": \"TES DEVELOPMENT\",\n\n      \"diagRujukan\": \"C46.0\",\n\n      \"namaDiagRujukan\": \"Kaposi's sarcoma of skin\",\n\n      \"tipeRujukan\": \"0\",\n\n      \"namaTipeRujukan\": \"Rujukan Penuh\",\n\n      \"poliRujukan\": \"OBG\",\n\n      \"namaPoliRujukan\": \"OBGYN\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/Keluar/123"
     },
     {
       "id": "3.9.16",
@@ -1145,14 +1561,27 @@
       "function": "Get Data Jumlah SEP yang terbentuk berdasarkan No Rujukan yang masuk ke RS",
       "header": "",
       "parameters": [
-        "Jenis Rujukan — `1`: FKTP, `2`: FKRTL",
-        "No Rujukan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis Rujukan — `1`: FKTP, `2`: FKRTL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "No Rujukan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": { \"jumlahSEP\": \"1\" } }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/JumlahSEP/123/123"
     },
     {
       "id": "3.10.1",
@@ -1168,7 +1597,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"sep\": {\n\n      \"catatan\": \"test\",\n\n      \"diagnosa\": \"A00.1 \\- Cholera due to Vibrio cholerae 01, biovar eltor\",\n\n      \"jnsPelayanan\": \"R.Inap\",\n\n      \"kelasRawat\": \"1\",\n\n      \"noSep\": \"0301R0011117V000008\",\n\n      \"penjamin\": \"-\",\n\n      \"peserta\": {\n\n        \"asuransi\": \"-\",\n\n        \"hakKelas\": \"Kelas 1\",\n\n        \"jnsPeserta\": \"PNS PUSAT\",\n\n        \"kelamin\": \"Laki-Laki\",\n\n        \"nama\": \"ZIYADUL\",\n\n        \"noKartu\": \"0001112230666\",\n\n        \"noMr\": \"123456\",\n\n        \"tglLahir\": \"2008-02-05\"\n\n      },\n\n      \"informasi:\": { \"Dinsos\": null, \"prolanisPRB\": null, \"noSKTM\": null },\n\n      \"poli\": \"-\",\n\n      \"poliEksekutif\": \"-\",\n\n      \"tglSep\": \"2017-10-12\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/1.1/insert"
     },
     {
       "id": "3.10.2",
@@ -1184,7 +1614,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" }, \"response\": \"0301R0011117V000008\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/1.1/Update"
     },
     {
       "id": "3.10.3",
@@ -1200,7 +1631,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R0011017V000007\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/Delete"
     },
     {
       "id": "3.10.4",
@@ -1212,13 +1644,20 @@
       "function": "Melihat data detail SEP Peserta",
       "header": "",
       "parameters": [
-        "Nomor SEP Peserta"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Nomor SEP Peserta",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"assestmenPel\": { \"kode\": \"1\", \"nama\": \"Poli spesialis tidak tersedia pada hari sebelumnya\" },\n\n    \"catatan\": \"testinsert RJ\",\n\n    \"cob\": \"0\",\n\n    \"diagnosa\": \"Insulin-dependent diabetes mellitus\",\n\n    \"dpjp\": { \"kdDPJP\": \"31348\", \"nmDPJP\": \"CIiNatXXAXSkrIrPId,ManFs.SDDMe\" },\n\n    \"eSEP\": \"False\",\n\n    \"flagProcedure\": { \"kode\": \"0\", \"nama\": \"Prosedur tidak berkelanjutan\" },\n\n    \"informasi\": null,\n\n    \"jnsPelayanan\": \"Rawat Jalan\",\n\n    \"katarak\": \"0\",\n\n    \"kdPenunjang\": { \"kode\": \"0\", \"nama\": \"\" },\n\n    \"kdStatusKecelakaan\": \"0\",\n\n    \"kelasRawat\": \"Kelas 3\",\n\n    \"klsRawat\": {\n\n      \"klsRawatHak\": \"3\", \"klsRawatNaik\": null,\n\n      \"pembiayaan\": null, \"penanggungJawab\": null\n\n    },\n\n    \"kontrol\": { \"kdDokter\": null, \"nmDokter\": null, \"noSurat\": null },\n\n    \"lokasiKejadian\": {\n\n      \"kdKab\": null, \"kdKec\": null, \"kdProp\": null,\n\n      \"ketKejadian\": null, \"lokasi\": null, \"tglKejadian\": null\n\n    },\n\n    \"nmstatusKecelakaan\": \"Bukan Kecelakaan\",\n\n    \"noRujukan\": null,\n\n    \"noSep\": \"0301R0111125V000011\",\n\n    \"penjamin\": null,\n\n    \"peserta\": {\n\n      \"asuransi\": null, \"hakKelas\": \"Kelas 3\", \"jnsPeserta\": \"MANDIRI\",\n\n      \"kdStatusPRB\": null, \"kelamin\": \"P\", \"nama\": \"ARMSTIOFIALR\",\n\n      \"noKartu\": \"0002482505324\", \"noMr\": \"MR0652\",\n\n      \"potensiPRB\": null, \"statusPRB\": null, \"tglLahir\": \"1983-09-07\"\n\n    },\n\n    \"poli\": \"INSTALASI GAWAT DARURAT\",\n\n    \"poliEksekutif\": \"0\",\n\n    \"tglSep\": \"2025-11-25\",\n\n    \"tujuanKunj\": { \"kode\": \"0\", \"nama\": \"Normal\" }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/0166R0011126V000500"
     },
     {
       "id": "3.10.5",
@@ -1230,13 +1669,20 @@
       "function": "Melihat data detail SEP terakhir peserta berdasarkan nomor rujukan",
       "header": "",
       "parameters": [
-        "Nomor Rujukan"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Nomor Rujukan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"noSep\": \"0301R0010323V000039\",\n\n    \"tglSep\": \"2023-03-30\",\n\n    \"jnsPelayanan\": \"Rawat Jalan\",\n\n    \"kelasRawat\": \"Kelas 3\",\n\n    \"diagnosa\": \"Respiratory tuberculosis, bacteriologically and histologically confirmed\",\n\n    \"noRujukan\": \"0050B1070223P000004\",\n\n    \"poli\": \"PENYAKIT DALAM\",\n\n    \"poliEksekutif\": \"0\",\n\n    \"catatan\": \"testinsert RJ\",\n\n    \"penjamin\": null,\n\n    \"kdStatusKecelakaan\": \"0\",\n\n    \"nmstatusKecelakaan\": \"Bukan Kecelakaan\",\n\n    \"lokasiKejadian\": { \"kdKab\": null, \"kdKec\": null, \"kdProp\": null, \"ketKejadian\": null, \"lokasi\": null, \"tglKejadian\": null },\n\n    \"dpjp\": { \"kdDPJP\": \"34050\", \"nmDPJP\": \"tapS,XXXryoShR..PaBDd\" },\n\n    \"peserta\": {\n\n      \"asuransi\": null, \"hakKelas\": \"Kelas 3\", \"jnsPeserta\": \"PBI (APBN)\",\n\n      \"kelamin\": \"P\", \"nama\": \"ARSTNUU\", \"noKartu\": \"0002802875185\",\n\n      \"noMr\": \"MR5185\", \"tglLahir\": \"1944-02-24\"\n\n    },\n\n    \"klsRawat\": { \"klsRawatHak\": \"3\", \"klsRawatNaik\": null, \"pembiayaan\": null, \"penanggungJawab\": null },\n\n    \"kontrol\": { \"kdDokter\": \"34050\", \"nmDokter\": \"tapS,XXXryoShR..PaBDd\", \"noSurat\": \"0301R0010323K000008\" },\n\n    \"cob\": \"0\",\n\n    \"katarak\": \"0\",\n\n    \"tujuanKunj\": { \"kode\": \"2\", \"nama\": \"Konsul Dokter\" },\n\n    \"flagProcedure\": { \"kode\": \"0\", \"nama\": \"Prosedur tidak berkelanjutan\" },\n\n    \"kdPenunjang\": { \"kode\": \"0\", \"nama\": \"\" },\n\n    \"assestmenPel\": { \"kode\": \"1\", \"nama\": \"Poli spesialis tidak tersedia pada hari sebelumnya\" },\n\n    \"eSEP\": \"True\"\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Rujukan/lastsep/norujukan/123"
     },
     {
       "id": "3.10.6",
@@ -1252,7 +1698,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"sep\": {\n\n      \"assestmenPel\": \"1\",\n\n      \"catatan\": \"testinsert RJ\",\n\n      \"diagnosa\": \"A15 \\- Respiratory tuberculosis, bacteriologically and histologically confirmed\",\n\n      \"flagProcedure\": \"\",\n\n      \"informasi\": { \"dinsos\": null, \"eSEP\": \"True\", \"noSKTM\": null, \"prolanisPRB\": null },\n\n      \"jnsPelayanan\": \"R.Jalan\",\n\n      \"kdPenunjang\": \"\",\n\n      \"kdPoli\": \"INT\",\n\n      \"kelasRawat\": \"-\",\n\n      \"noRujukan\": \"0050B1070223P000004\",\n\n      \"noSep\": \"0301R0010323V000039\",\n\n      \"penjamin\": \"-\",\n\n      \"peserta\": {\n\n        \"asuransi\": \"-\", \"hakKelas\": \"Kelas 3\", \"jnsPeserta\": \"PBI (APBN)\",\n\n        \"kelamin\": \"Perempuan\", \"nama\": \"ARSTNUU\", \"noKartu\": \"0002802875185\",\n\n        \"noMr\": \"MR5185\", \"tglLahir\": \"1944-02-24\"\n\n      },\n\n      \"poli\": \"PENYAKIT DALAM\",\n\n      \"poliEksekutif\": \"Tidak\",\n\n      \"tglSep\": \"2023-03-30\",\n\n      \"tujuanKunj\": \"2\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/2.0/insert"
     },
     {
       "id": "3.10.7",
@@ -1268,7 +1715,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" }, \"response\": \"1101R0070420V000017\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/2.0/update"
     },
     {
       "id": "3.10.8",
@@ -1284,7 +1732,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R0011017V000007\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/2.0/delete"
     },
     {
       "id": "3.10.9",
@@ -1296,14 +1745,27 @@
       "function": "Pencarian data potensi SEP sebagai Suplesi Jasa Raharja",
       "header": "",
       "parameters": [
-        "No. Kartu Peserta",
-        "Tgl. Pelayanan/SEP (`yyyy-mm-dd`)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "No. Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl. Pelayanan/SEP (`yyyy-mm-dd`)",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"jaminan\": \\[\n\n      {\n\n        \"noRegister\": \"1234\",\n\n        \"noSep\": \"0301R0110818V000008\",\n\n        \"noSepAwal\": \"0301R0110818V000008\",\n\n        \"noSuratJaminan\": \"-\",\n\n        \"tglKejadian\": \"2018-08-06\",\n\n        \"tglSep\": \"2018-08-08\"\n\n      },\n\n      {\n\n        \"noRegister\": \"44222\",\n\n        \"noSep\": \"0301R0110818V000018\",\n\n        \"noSepAwal\": \"0301R0110818V000008\",\n\n        \"noSuratJaminan\": \"-\",\n\n        \"tglKejadian\": \"2018-08-06\",\n\n        \"tglSep\": \"2018-08-08\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/sep/JasaRaharja/Suplesi/0001234567890/tglPelayanan/0166R0011126V000500"
     },
     {
       "id": "3.10.10",
@@ -1315,13 +1777,20 @@
       "function": "Pencarian data SEP Induk Kecelakaan Lalu Lintas",
       "header": "",
       "parameters": [
-        "No. Kartu Peserta"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "No. Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"noSEP\": \"0301R0110421V000439\",\n\n        \"tglKejadian\": \"2021-04-16\",\n\n        \"ppkPelSEP\": \"0301R011\",\n\n        \"kdProp\": \"14\",\n\n        \"kdKab\": \"0200\",\n\n        \"kdKec\": \"6122\",\n\n        \"ketKejadian\": \"kll\",\n\n        \"noSEPSuplesi\": \"0301R0110421V000435, 0301R0110421V000436, 0301R0110421V000437, 0301R0110421V000438\"\n\n      },\n\n      {\n\n        \"noSEP\": \"1111R0010421V001672\",\n\n        \"tglKejadian\": \"2021-04-14\",\n\n        \"ppkPelSEP\": \"1111R001\",\n\n        \"kdProp\": \"10\",\n\n        \"kdKab\": \"0115\",\n\n        \"kdKec\": \"1192\",\n\n        \"ketKejadian\": \"KLL\",\n\n        \"noSEPSuplesi\": null\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/sep/KllInduk/List/0001234567890"
     },
     {
       "id": "3.10.11",
@@ -1337,7 +1806,8 @@
       "response": "{ \"metadata\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0003814312013\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Sep/pengajuanSEP"
     },
     {
       "id": "3.10.12",
@@ -1353,7 +1823,8 @@
       "response": "{ \"metadata\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0003814312013\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Sep/aprovalSEP"
     },
     {
       "id": "3.10.13",
@@ -1365,14 +1836,27 @@
       "function": "Get List Data Persetujuan SEP",
       "header": "",
       "parameters": [
-        "Bulan (1–12)",
-        "Tahun"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Bulan (1–12)",
+          "type": "URL Path",
+          "example": "11"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tahun",
+          "type": "URL Path",
+          "example": "2026"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"noKartu\": \"0002039003212\",\n\n        \"nama\": \"MARTA SENTANA\",\n\n        \"tglsep\": \"2021-11-23\",\n\n        \"jnspelayanan\": \"RJ\",\n\n        \"persetujuan\": \"Pengajuan\",\n\n        \"status\": \"Tgl.SEP Backdate\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Sep/persetujuanSEP/list/bulan/11/tahun/2026"
     },
     {
       "id": "3.10.14",
@@ -1388,7 +1872,8 @@
       "response": "{ \"metadata\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R00105160000569\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Sep/updtglplg"
     },
     {
       "id": "3.10.15",
@@ -1404,7 +1889,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" }, \"response\": null }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/2.0/updtglplg"
     },
     {
       "id": "3.10.16",
@@ -1416,15 +1902,34 @@
       "function": "Get List Data Update Tanggal Pulang",
       "header": "",
       "parameters": [
-        "Bulan (1–12)",
-        "Tahun",
-        "Filter (apabila dikosongkan akan menampilkan semua data pada bulan dan tahun pilihan)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Bulan (1–12)",
+          "type": "URL Path",
+          "example": "11"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tahun",
+          "type": "URL Path",
+          "example": "2026"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Filter (apabila dikosongkan akan menampilkan semua data pada bulan dan tahun pilihan)",
+          "type": "URL Path",
+          "example": "11"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"noSep\": \"0138R0221221V000032\",\n\n        \"noSepUpdating\": \"0112R0761221V000014\",\n\n        \"jnsPelayanan\": \"1\",\n\n        \"ppkTujuan\": \"0138R022\",\n\n        \"noKartu\": \"0002047251712\",\n\n        \"nama\": \"SURIP\",\n\n        \"tglSep\": \"2021-12-13\",\n\n        \"tglPulang\": \"2021-12-15\",\n\n        \"status\": \"\",\n\n        \"tglMeninggal\": \"\",\n\n        \"noSurat\": \"\",\n\n        \"keterangan\": \"3.1.Peserta NoKa 0002047251712 telah mendapat Pelayanan R.Inap pada tgl. 13/12/2021 dan belum dipulangkan di RS CITRA MEDIKA DEPOK Dgn No.SEP 0138R0221221V000032\",\n\n        \"user\": \"AdminUtam\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/Sep/updtglplg/list/bulan/11/tahun/2026/11"
     },
     {
       "id": "3.10.17",
@@ -1436,13 +1941,20 @@
       "function": "Pencarian No. SEP untuk Aplikasi INA-CBG 4.1",
       "header": "",
       "parameters": [
-        "Nomor SEP"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Nomor SEP",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"pesertasep\": {\n\n      \"kelamin\": \"P\",\n\n      \"klsRawat\": \"3\",\n\n      \"nama\": \"ANNA MIKRAD BA.\",\n\n      \"noKartuBpjs\": \"0000001112958\",\n\n      \"noMr\": \"0\",\n\n      \"noRujukan\": \"222\",\n\n      \"tglLahir\": \"1960-01-26\",\n\n      \"tglPelayanan\": \"2016-09-22\",\n\n      \"tktPelayanan\": \"2\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/sep/cbg/0166R0011126V000500"
     },
     {
       "id": "3.10.18",
@@ -1454,13 +1966,27 @@
       "function": "Data SEP Internal",
       "header": "",
       "parameters": [
-        "Nomor SEP (19 digit)"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Nomor SEP (19 digit)",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        },
+        {
+          "name": "parameter 1",
+          "placeholder": "{parameter 1}",
+          "description": "Parameter parameter 1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" },\n\n  \"response\": {\n\n    \"count\": \"3\",\n\n    \"list\": \\[\n\n      {\n\n        \"tujuanrujuk\": \"SAR\",\n\n        \"nmtujuanrujuk\": \"SARAF\",\n\n        \"nmpoliasal\": \"PENYAKIT DALAM\",\n\n        \"tglrujukinternal\": \"2020-11-19\",\n\n        \"nosep\": \"0905R0031020V000397\",\n\n        \"nosepref\": \"0905R0031120V004160\",\n\n        \"ppkpelsep\": \"0905R003\",\n\n        \"nokapst\": \"0000038761391\",\n\n        \"tglsep\": \"2020-10-02\",\n\n        \"nosurat\": \"0905R0031120N000922\",\n\n        \"flaginternal\": \"0\",\n\n        \"kdpoliasal\": \"0000038761391\",\n\n        \"kdpolituj\": \"SAR\",\n\n        \"kdpenunjang\": \"0\",\n\n        \"nmpenunjang\": null,\n\n        \"diagppk\": \"I15\",\n\n        \"kddokter\": \"24271\",\n\n        \"nmdokter\": \"dr. Nurhayana Lubis, Sp.S\",\n\n        \"flagprosedur\": null,\n\n        \"opsikonsul\": \"1\",\n\n        \"flagsep\": \"False\",\n\n        \"fuser\": \"0905R003\\_anhar\",\n\n        \"fdate\": \"2020-11-19\",\n\n        \"nmdiag\": \"Secondary hypertension\"\n\n      }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/Internal/123"
     },
     {
       "id": "3.10.19",
@@ -1476,7 +2002,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": \"0301R0011017V000007\" }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/Internal/delete"
     },
     {
       "id": "3.10.20",
@@ -1488,14 +2015,41 @@
       "function": "Pencarian data fingerprint",
       "header": "",
       "parameters": [
-        "Nomor Kartu Peserta",
-        "Tanggal Pelayanan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Pelayanan",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "parameter1",
+          "placeholder": "{parameter1}",
+          "description": "Parameter parameter1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "parameter2",
+          "placeholder": "{parameter2}",
+          "description": "Parameter parameter2 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/FingerPrint/Peserta/123/TglPelayanan/123"
     },
     {
       "id": "3.10.21",
@@ -1507,13 +2061,20 @@
       "function": "List Finger Print",
       "header": "",
       "parameters": [
-        "Tanggal Pelayanan"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Tanggal Pelayanan",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"list\": \\[\n\n      { \"noKartu\": \"0001244842648\", \"noSEP\": \"0301R0110120V009210\" },\n\n      { \"noKartu\": \"0001244856813\", \"noSEP\": \"0301R0110120V009041\" },\n\n      { \"noKartu\": \"0001244957229\", \"noSEP\": \"0301R0110120V009213\" }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/FingerPrint/List/Peserta/TglPelayanan/2026-11-20"
     },
     {
       "id": "3.10.22",
@@ -1525,14 +2086,41 @@
       "function": "Menampilkan Random Question",
       "header": "",
       "parameters": [
-        "Nomor Kartu Peserta",
-        "Tanggal Pelayanan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Pelayanan",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "parameter1",
+          "placeholder": "{parameter1}",
+          "description": "Parameter parameter1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "parameter2",
+          "placeholder": "{parameter2}",
+          "description": "Parameter parameter2 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" },\n\n  \"response\": {\n\n    \"faskes\": \\[\n\n      { \"kode\": \"0177B030\", \"nama\": \"Klinik Citra Madina\" },\n\n      { \"kode\": \"21061801\", \"nama\": \"DAMAU\" },\n\n      { \"kode\": \"01031201\", \"nama\": \"PEUKAN BADA\" }\n\n    \\]\n\n  }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/FingerPrint/randomquestion/faskesterdaftar/nokapst/123/tglsep/123"
     },
     {
       "id": "3.10.23",
@@ -1548,7 +2136,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"Sukses\" }, \"response\": \"False\" }\n\n> `response`: `True` jika jawaban benar, `False` jika jawaban salah.",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "VClaim"
+      "mainCategory": "VClaim",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev/SEP/FingerPrint/randomanswer"
     },
     {
       "id": "4.1.1",
@@ -1564,7 +2153,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/ref/poli"
     },
     {
       "id": "4.1.2",
@@ -1580,7 +2170,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/ref/dokter"
     },
     {
       "id": "4.1.3",
@@ -1592,14 +2183,41 @@
       "function": "Melihat referensi jadwal dokter yang ada pada Aplikasi HFIS",
       "header": "",
       "parameters": [
-        "kode poli BPJS (contoh `ANA`)",
-        "tanggal (contoh `2021-08-07`)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "kode poli BPJS (contoh `ANA`)",
+          "type": "URL Path",
+          "example": "INT"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "tanggal (contoh `2021-08-07`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter1",
+          "placeholder": "{Parameter1}",
+          "description": "Parameter Parameter1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter2",
+          "placeholder": "{Parameter2}",
+          "description": "Parameter Parameter2 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "`hari` \\= 1 (Senin), 2 (Selasa), 3 (Rabu), 4 (Kamis), 5 (Jumat), 6 (Sabtu), 7 (Minggu), 8 (hari libur nasional).",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/jadwaldokter/kodepoli/123/tanggal/123"
     },
     {
       "id": "4.1.4",
@@ -1615,7 +2233,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/ref/poli/fp"
     },
     {
       "id": "4.1.5",
@@ -1626,12 +2245,28 @@
       "url": "{BASE URL}/{Service Name}/ref/pasien/fp/identitas/{nik/noka}/noidentitas/{noidentitas}",
       "function": "Melihat referensi pasien finger print",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "nik/noka",
+          "placeholder": "{nik/noka}",
+          "description": "Parameter nik/noka pada URL",
+          "type": "URL Path",
+          "example": "3372012345678901"
+        },
+        {
+          "name": "noidentitas",
+          "placeholder": "{noidentitas}",
+          "description": "Parameter noidentitas pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/ref/pasien/fp/identitas/3372012345678901/noidentitas/123"
     },
     {
       "id": "4.1.6",
@@ -1647,7 +2282,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "Data yang berhasil disimpan menunggu approval dari BPJS atau otomatis approve jadwal dokter oleh sistem. Misal pengajuan perubahan jadwal oleh RS antara jam 00.00–20.00, kemudian alokasi approve manual oleh BPJS/cabang di jam 20.01–00.00. Jika pukul 00.00 belum dilakukan approval oleh kantor cabang, maka otomatis approve by sistem akan dilaksanakan setelah jam 00.00 dan perubahannya berlaku esok harinya (H+1).",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/jadwaldokter/updatejadwaldokter"
     },
     {
       "id": "4.1.7",
@@ -1663,7 +2299,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/add"
     },
     {
       "id": "4.1.8",
@@ -1679,7 +2316,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/farmasi/add"
     },
     {
       "id": "4.1.9",
@@ -1695,7 +2333,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "- Alur Task Id Pasien Baru: 1-2-3-4-5 (apabila ada obat tambah 6-7)  \n- Alur Task Id Pasien Lama: 3-4-5 (apabila ada obat tambah 6-7)  \n- Sisa antrean berkurang pada task 5  \n- Pemanggilan antrean poli pasien muncul pada task 4  \n- Check-in / mulai waktu tunggu untuk pasien baru mulai pada task 1  \n- Check-in / mulai waktu tunggu untuk pasien lama mulai pada task 3  \n- Agar terdapat validasi pada sistem RS supaya alur pengiriman Task Id berurutan dari awal, dan waktu Task Id yang kecil lebih dulu daripada Task Id yang besar (misal Task Id 1 \\= 08.00, Task Id 2 \\= 08.05)  \n- `jenisresep`: Tidak ada / Racikan / Non racikan — khusus untuk RS yang sudah implementasi antrean farmasi. Jika belum/tidak, kolom `jenisresep` dapat dihilangkan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/updatewaktu"
     },
     {
       "id": "4.1.10",
@@ -1711,7 +2350,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/batal"
     },
     {
       "id": "4.1.11",
@@ -1727,7 +2367,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"wakturs\": \"16-03-2021 11:32:49 WIB\",\n\n        \"waktu\": \"24-03-2021 12:55:23 WIB\",\n\n        \"taskname\": \"mulai waktu tunggu admisi\",\n\n        \"taskid\": 1,\n\n        \"kodebooking\": \"Y03-20\\#1617068533\"\n\n      }\n\n    \\]\n\n  },\n\n  \"metadata\": { \"code\": 200, \"message\": \"OK\" }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/getlisttask"
     },
     {
       "id": "4.1.12",
@@ -1739,14 +2380,41 @@
       "function": "Dashboard waktu per tanggal",
       "header": "",
       "parameters": [
-        "tanggal (contoh `2021-04-16`)",
-        "waktu → `rs` atau `server`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "tanggal (contoh `2021-04-16`)",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "waktu → `rs` atau `server`",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter1",
+          "placeholder": "{Parameter1}",
+          "description": "Parameter Parameter1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter2",
+          "placeholder": "{Parameter2}",
+          "description": "Parameter Parameter2 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "a) Waktu Task 1 \\= Waktu tunggu admisi (detik) b) Waktu Task 2 \\= Waktu layan admisi (detik) c) Waktu Task 3 \\= Waktu tunggu poli (detik) d) Waktu Task 4 \\= Waktu layan poli (detik) e) Waktu Task 5 \\= Waktu tunggu farmasi (detik) f) Waktu Task 6 \\= Waktu layan farmasi (detik) g) `insertdate` \\= waktu pengambilan data, timestamp dalam milisecond h) Waktu **server** adalah data waktu (task 1-6) yang dicatat oleh server BPJS Kesehatan setelah RS mengirimkan data, sedangkan waktu **rs** adalah data waktu (task 1-6) yang dikirimkan oleh RS.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/dashboard/waktutunggu/tanggal/123/waktu/123"
     },
     {
       "id": "4.1.13",
@@ -1758,15 +2426,55 @@
       "function": "Dashboard waktu per bulan",
       "header": "",
       "parameters": [
-        "bulan (contoh `07`)",
-        "tahun (contoh `2021`)",
-        "waktu → `rs` atau `server`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "bulan (contoh `07`)",
+          "type": "URL Path",
+          "example": "11"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "tahun (contoh `2021`)",
+          "type": "URL Path",
+          "example": "2026"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "waktu → `rs` atau `server`",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter1",
+          "placeholder": "{Parameter1}",
+          "description": "Parameter Parameter1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter2",
+          "placeholder": "{Parameter2}",
+          "description": "Parameter Parameter2 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter3",
+          "placeholder": "{Parameter3}",
+          "description": "Parameter Parameter3 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/dashboard/waktutunggu/bulan/123/tahun/123/waktu/123"
     },
     {
       "id": "4.2.1",
@@ -1782,7 +2490,8 @@
       "response": "{\n\n  \"response\": { \"token\": \"1231242353534645645\" },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "User dan password yang diberikan ke BPJS Kesehatan untuk mengakses WS yang dibuat oleh RS.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.2",
@@ -1798,7 +2507,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"namapoli\": \"Anak\",\n\n    \"namadokter\": \"Dr. Hendra\",\n\n    \"totalantrean\": 25,\n\n    \"sisaantrean\": 4,\n\n    \"antreanpanggil\": \"A-21\",\n\n    \"sisakuotajkn\": 5,\n\n    \"kuotajkn\": 30,\n\n    \"sisakuotanonjkn\": 5,\n\n    \"kuotanonjkn\": 30,\n\n    \"keterangan\": \"\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.3",
@@ -1814,7 +2524,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"nomorantrean\": \"A-12\",\n\n    \"angkaantrean\": 12,\n\n    \"kodebooking\": \"16032021A001\",\n\n    \"norm\": \"123345\",\n\n    \"namapoli\": \"Anak\",\n\n    \"namadokter\": \"Dr. Hendra\",\n\n    \"estimasidilayani\": 1615869169000,\n\n    \"sisakuotajkn\": 5,\n\n    \"kuotajkn\": 30,\n\n    \"sisakuotanonjkn\": 5,\n\n    \"kuotanonjkn\": 30,\n\n    \"keterangan\": \"Peserta harap 60 menit lebih awal guna pencatatan administrasi.\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "- `estimasidilayani` : format dalam milisecond  \n- Metadata code — `200`: Sukses, `201`: Gagal, `202`: Pasien Baru  \n- Ketika RS merespon code `202`, Mobile JKN akan mengirimkan data pasien baru (hit WS Info Pasien Baru).",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.4",
@@ -1830,7 +2541,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"nomorantrean\": \"A20\",\n\n    \"namapoli\": \"Anak\",\n\n    \"namadokter\": \"Dr. Hendra\",\n\n    \"sisaantrean\": 12,\n\n    \"antreanpanggil\": \"A-8\",\n\n    \"waktutunggu\": 9000,\n\n    \"keterangan\": \"\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "- Format waktu dalam detik dengan formula: `SPM * (sisa antrean - 1)`  \n- Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.5",
@@ -1846,7 +2558,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "- Format waktu dalam detik dengan formula: `SPM * (sisa antrean - 1)`  \n- Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev/antrean/batal"
     },
     {
       "id": "4.2.6",
@@ -1862,7 +2575,8 @@
       "response": "\"metadata\": { \"code\": 200, \"message\": \"OK\" }",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.7",
@@ -1878,7 +2592,8 @@
       "response": "{\n\n  \"response\": { \"norm\": \"123456\" },\n\n  \"metadata\": {\n\n    \"message\": \"Harap datang ke admisi untuk melengkapi data rekam medis\",\n\n    \"code\": 200\n\n  }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.8",
@@ -1894,7 +2609,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"kodebooking\": \"123456ZXC\",\n\n        \"tanggaloperasi\": \"2019-12-11\",\n\n        \"jenistindakan\": \"operasi gigi\",\n\n        \"kodepoli\": \"001\",\n\n        \"namapoli\": \"Poli Bedah Mulut\",\n\n        \"terlaksana\": 1,\n\n        \"nopeserta\": \"0000000924782\",\n\n        \"lastupdate\": 1577417743000\n\n      },\n\n      {\n\n        \"kodebooking\": \"67890QWE\",\n\n        \"tanggaloperasi\": \"2019-12-11\",\n\n        \"jenistindakan\": \"operasi mulut\",\n\n        \"kodepoli\": \"001\",\n\n        \"namapoli\": \"Poli Bedah Mulut\",\n\n        \"terlaksana\": 0,\n\n        \"nopeserta\": \"\",\n\n        \"lastupdate\": 1577417743000\n\n      }\n\n    \\]\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "- Kode poli memakai kode subspesialis BPJS  \n- Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.9",
@@ -1910,7 +2626,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"kodebooking\": \"123456ZXC\",\n\n        \"tanggaloperasi\": \"2019-12-11\",\n\n        \"jenistindakan\": \"operasi gigi\",\n\n        \"kodepoli\": \"001\",\n\n        \"namapoli\": \"Poli Bedah Mulut\",\n\n        \"terlaksana\": 0\n\n      }\n\n    \\]\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "- Kode poli memakai kode subspesialis BPJS  \n- Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.10",
@@ -1926,7 +2643,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"jenisresep\": \"Racikan/Non Racikan\",\n\n    \"nomorantrean\": 1,\n\n    \"keterangan\": \"\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "4.2.11",
@@ -1942,7 +2660,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"jenisresep\": \"Racikan/Non Racikan\",\n\n    \"totalantrean\": 10,\n\n    \"sisaantrean\": 8,\n\n    \"antreanpanggil\": 2,\n\n    \"keterangan\": \"\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}\n\n\nSemua service Apotek: Format JSON, `Content-Type: application/json; charset=utf-8` (kecuali disebut lain).",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "Antrean RS"
+      "mainCategory": "Antrean RS",
+      "exampleUrl": ""
     },
     {
       "id": "5.1.1",
@@ -1958,7 +2677,8 @@
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/referensi/dpho"
     },
     {
       "id": "5.1.2",
@@ -1970,13 +2690,20 @@
       "function": "Daftar Poli",
       "header": "",
       "parameters": [
-        "Kode atau Nama Poli"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Kode atau Nama Poli",
+          "type": "URL Path",
+          "example": "INT"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/referensi/poli/INT"
     },
     {
       "id": "5.1.3",
@@ -1988,14 +2715,27 @@
       "function": "Pencarian data fasilitas kesehatan",
       "header": "",
       "parameters": [
-        "Jenis Faskes (1. Faskes 1, 2\\. Faskes 2/RS)",
-        "nama faskes"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis Faskes (1. Faskes 1, 2\\. Faskes 2/RS)",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "nama faskes",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/referensi/ppk/123/123"
     },
     {
       "id": "5.1.4",
@@ -2007,13 +2747,20 @@
       "function": "Pencarian Setting Apotek",
       "header": "",
       "parameters": [
-        "Kode Apotek"
+        {
+          "name": "Parameter",
+          "placeholder": "{parameter}",
+          "description": "Kode Apotek",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/referensi/settingppk/read/123"
     },
     {
       "id": "5.1.5",
@@ -2029,7 +2776,8 @@
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/referensi/spesialistik"
     },
     {
       "id": "5.1.6",
@@ -2041,15 +2789,34 @@
       "function": "Pencarian obat",
       "header": "",
       "parameters": [
-        "Kode Jenis Obat",
-        "Tgl Resep",
-        "Filter Pencarian"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Jenis Obat",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl Resep",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Filter Pencarian",
+          "type": "URL Path",
+          "example": "1"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/referensi/obat/123/0166R0011126V000500/1"
     },
     {
       "id": "5.2.1",
@@ -2065,7 +2832,8 @@
       "response": "{ \"response\": null, \"metaData\": { \"code\": 200, \"message\": \"Ok\" } }",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/obatnonracikan/v3/insert"
     },
     {
       "id": "5.2.2",
@@ -2081,7 +2849,8 @@
       "response": "{ \"response\": null, \"metaData\": { \"code\": 200, \"message\": \"Ok\" } }",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/obatracikan/v3/insert"
     },
     {
       "id": "5.2.3",
@@ -2097,7 +2866,8 @@
       "response": "{\n\n  \"response\": null,\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Stok obat berhasil diperbarui\" }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/UpdateStokObat/updatestok"
     },
     {
       "id": "5.3.1",
@@ -2113,7 +2883,8 @@
       "response": "{\n\n  \"response\": \"Data berhasil dihapus.\",\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/pelayanan/obat/hapus/"
     },
     {
       "id": "5.3.2",
@@ -2125,13 +2896,20 @@
       "function": "Daftar Pelayanan Obat",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan/SEP"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan/SEP",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"detailsep\": {\n\n      \"noSepApotek\": \"1801A00104190000001\",\n\n      \"noSepAsal\": \"1801R0010419V000001\",\n\n      \"noresep\": \"12345\",\n\n      \"nokartu\": \"0000000000044\",\n\n      \"nmpst\": \"AGUSMA\",\n\n      \"kdjnsobat\": \"1\",\n\n      \"nmjnsobat\": \"Obat PRB\",\n\n      \"tglpelayanan\": \"2019-04-04\",\n\n      \"listobat\": {\n\n        \"kodeobat\": \"25180404057\",\n\n        \"namaobat\": \"Amlodipin 10 Plab tab 10 mg\",\n\n        \"tipeobat\": \"N\",\n\n        \"signa1\": \"1.00\",\n\n        \"signa2\": \"1.00\",\n\n        \"hari\": \"23.00\",\n\n        \"permintaan\": null,\n\n        \"jumlah\": \"23.00\",\n\n        \"harga\": \"2797\"\n\n      }\n\n    },\n\n    \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" }\n\n  }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/obat/daftar/0166R0011126V000500"
     },
     {
       "id": "5.3.3",
@@ -2143,15 +2921,34 @@
       "function": "Riwayat Pelayanan Obat",
       "header": "",
       "parameters": [
-        "Tgl Awal",
-        "Tgl Akhir",
-        "No Kartu"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tgl Awal",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tgl Akhir",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "No Kartu",
+          "type": "URL Path",
+          "example": "0001234567890"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"list\": {\n\n      \"nokartu\": \"0000000000044\",\n\n      \"namapeserta\": \"AGUSMA\",\n\n      \"tgllhr\": \"1973-11-03\",\n\n      \"history\": \\[\n\n        {\n\n          \"nosjp\": \"1101A00309180000002\",\n\n          \"tglpelayanan\": \"2018-09-13\",\n\n          \"noresep\": \"00001\",\n\n          \"kodeobat\": \"12180400002\",\n\n          \"namaobat\": \"Akarbose 50 Dexa tab 50 mg\",\n\n          \"jmlobat\": \"46.00\"\n\n        },\n\n        {\n\n          \"nosjp\": \"1101A00309180000003\",\n\n          \"tglpelayanan\": \"2018-09-16\",\n\n          \"noresep\": \"00002\",\n\n          \"kodeobat\": \"12180401313\",\n\n          \"namaobat\": \"Triheksilfenidil 2 Mers tab 2 mg\",\n\n          \"jmlobat\": \"60.00\"\n\n        }\n\n      \\]\n\n    }\n\n  },\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/riwayatobat/2026-11-20/2026-11-20/0001234567890"
     },
     {
       "id": "5.4.1",
@@ -2167,7 +2964,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"noSep\\_Kunjungan\": \"1202R0010318V000092\",\n\n    \"noKartu\": \"0000648450639\",\n\n    \"nama\": \"SITI NAFISAH\",\n\n    \"faskesAsal\": \"1202A002\",\n\n    \"noApotik\": \"1202A00208210000001\",\n\n    \"noResep\": \"12346\",\n\n    \"tglResep\": \"2021-08-05\",\n\n    \"kdJnsObat\": \"3\",\n\n    \"byTagRsp\": \"0\",\n\n    \"byVerRsp\": \"0\",\n\n    \"tglEntry\": \"2021-08-05\"\n\n  },\n\n  \"metaData\": {\n\n    \"code\": \"200\",\n\n    \"message\": \"BERHASIL SIMPAN RESEP DENGAN NOSJP: 1202A00208210000001 No SEP RS sudah dilakukan iterasi sebanyak 1\"\n\n  }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/sjpresep/v3/insert"
     },
     {
       "id": "5.4.2",
@@ -2183,7 +2981,8 @@
       "response": "{ \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }, \"response\": null }",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/hapusresep"
     },
     {
       "id": "5.4.3",
@@ -2199,7 +2998,8 @@
       "response": "{\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"Ok.\" },\n\n  \"response\": {\n\n    \"resep\": {\n\n      \"NORESEP\": \"01236\",\n\n      \"NOAPOTIK\": \"0112A01704190000001\",\n\n      \"NOSEP\\_KUNJUNGAN\": \"0112R0340418V004961\",\n\n      \"NOKARTU\": \"0002338679259\",\n\n      \"NAMA\": \"SITI SULASTRI\",\n\n      \"TGLENTRY\": \"2019-04-02 11:13:33.000+07:00\",\n\n      \"TGLRESEP\": \"2019-03-19 00:00:00.000+07:00\",\n\n      \"TGLPELRSP\": \"2019-03-26 00:00:00.000+07:00\",\n\n      \"BYTAGRSP\": \"0.00\",\n\n      \"BYVERRSP\": \"0.00\",\n\n      \"KDJNSOBAT\": \"2\",\n\n      \"FASKESASAL\": \"0112R034\"\n\n    }\n\n  }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/daftarresep"
     },
     {
       "id": "5.5.1",
@@ -2211,13 +3011,20 @@
       "function": "Data No Kunjungan/SEP",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan/SEP (19 digit)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan/SEP (19 digit)",
+          "type": "URL Path",
+          "example": "0166R0011126V000500"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/sep/0166R0011126V000500"
     },
     {
       "id": "5.6.1",
@@ -2229,16 +3036,41 @@
       "function": "Data Klaim",
       "header": "",
       "parameters": [
-        "Bulan",
-        "Tahun",
-        "Jenis Obat (0. Semua, 1\\. Obat PRB, 2\\. Obat Kronis Blm Stabil, 3\\. Obat Kemoterapi)",
-        "Status (1. Belum diverifikasi, 2\\. Sudah Verifikasi)"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Bulan",
+          "type": "URL Path",
+          "example": "11"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tahun",
+          "type": "URL Path",
+          "example": "2026"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Jenis Obat (0. Semua, 1\\. Obat PRB, 2\\. Obat Kronis Blm Stabil, 3\\. Obat Kemoterapi)",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 4",
+          "placeholder": "{Parameter 4}",
+          "description": "Status (1. Belum diverifikasi, 2\\. Sudah Verifikasi)",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"rekap\": {\n\n      \"jumlahdata\": \"2\",\n\n      \"totalbiayapengajuan\": \"35646930\",\n\n      \"totalbiayasetuju\": \"0\",\n\n      \"listsep\": \\[\n\n        {\n\n          \"nosepapotek\": \"1801A00104190000002\",\n\n          \"nosepaasal\": \"1801R0010419V000001\",\n\n          \"nokartu\": \"0000000000044\",\n\n          \"namapeserta\": \"AGUSMA\",\n\n          \"noresep\": \"00001\",\n\n          \"jnsobat\": \"Obat Kemoterapi\",\n\n          \"tglpelayanan\": \"2019-04-04\",\n\n          \"biayapengajuan\": \"35646930\",\n\n          \"biayasetuju\": \"0\"\n\n        },\n\n        {\n\n          \"nosepapotek\": \"1801A00104190000003\",\n\n          \"nosepaasal\": \"1801R0010419V000001\",\n\n          \"nokartu\": \"0000000000044\",\n\n          \"namapeserta\": \"AGUSMA\",\n\n          \"noresep\": \"00002\",\n\n          \"jnsobat\": \"Obat Kemoterapi\",\n\n          \"tglpelayanan\": \"2019-04-04\",\n\n          \"biayapengajuan\": \"0\",\n\n          \"biayasetuju\": \"0\"\n\n        }\n\n      \\]\n\n    },\n\n    \"metaData\": { \"code\": \"200\", \"message\": \"Ok\" }\n\n  }\n\n}",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/monitoring/klaim/11/2026/123/123"
     },
     {
       "id": "5.7.1",
@@ -2250,14 +3082,27 @@
       "function": "Menyediakan data rekap peserta PRB yang baru dilakukan PRB oleh RS",
       "header": "",
       "parameters": [
-        "Tahun",
-        "Bulan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tahun",
+          "type": "URL Path",
+          "example": "2026"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Bulan",
+          "type": "URL Path",
+          "example": "11"
+        }
       ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"list\": \\[\n\n      {\n\n        \"No\": 1,\n\n        \"NamaPeserta\": \"ZA\\*\\*\\*\\*\\*\",\n\n        \"NomorKaPst\": \"0002078775922\",\n\n        \"Alamat\": \", KELURAHAN, KECAMATAN, KABUPATEN\",\n\n        \"TglSRB\": \"07/02/2025 00:00:00\",\n\n        \"Diagnosa\": \"K30\",\n\n        \"Obat\": \"Analog Insulin Long Acting inj 100 UI/ml, flexpen 3 ml\",\n\n        \"DPJP\": \"Tenaga Medis 11230\",\n\n        \"AsalFaskes\": \"RSU SERENAPITA\"\n\n      },\n\n      {\n\n        \"No\": 3,\n\n        \"NamaPeserta\": \"MUHAMMAD AKBAR\",\n\n        \"NomorKaPst\": \"0002043779758\",\n\n        \"Alamat\": \"PERUM. GRAHA METRO SERANG BLOK C2 NO.11\",\n\n        \"TglSRB\": \"11/02/2025 00:00:00\",\n\n        \"Diagnosa\": \"I12\",\n\n        \"Obat\": \"Amiodaron tab 200 mg\",\n\n        \"DPJP\": \"Tenaga Medis 216825\",\n\n        \"AsalFaskes\": \"RS MITRA JAMBI\"\n\n      }\n\n    \\]\n\n  },\n\n  \"metaData\": { \"code\": \"200\", \"message\": \"OK\" }\n\n}\n\n**Field per item:** `No`, `NamaPeserta`, `NomorKaPst`, `Alamat`, `TglSRB`, `Diagnosa`, `Obat`, `DPJP`, `AsalFaskes`.",
       "notes": "",
       "target": "Apotek / Farmasi",
-      "mainCategory": "Apotek"
+      "mainCategory": "Apotek",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev/Prb/rekappeserta/tahun/2026/bulan/11"
     },
     {
       "id": "6.3.1",
@@ -2269,14 +3114,27 @@
       "function": "Get Data Pendaftaran by Nomor Urut",
       "header": "",
       "parameters": [
-        "Nomor Urut Pendaftaran",
-        "Tanggal Pendaftaran"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Urut Pendaftaran",
+          "type": "URL Path",
+          "example": "A1"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Pendaftaran",
+          "type": "URL Path",
+          "example": "20-11-2026"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/pendaftaran/noUrut/A1/tglDaftar/20-11-2026"
     },
     {
       "id": "6.3.2",
@@ -2288,15 +3146,34 @@
       "function": "Get Data Pendaftaran Provider",
       "header": "",
       "parameters": [
-        "Tanggal Pendaftaran",
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Tanggal Pendaftaran",
+          "type": "URL Path",
+          "example": "20-11-2026"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/pendaftaran/tglDaftar/20-11-2026/123/123"
     },
     {
       "id": "6.3.3",
@@ -2312,7 +3189,8 @@
       "response": "{\n\n  \"response\": { \"field\": \"noUrut\", \"message\": \"A1\" },\n\n  \"metaData\": { \"message\": \"CREATED\", \"code\": 201 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/pendaftaran"
     },
     {
       "id": "6.3.4",
@@ -2324,16 +3202,41 @@
       "function": "Delete Data Pendaftaran",
       "header": "",
       "parameters": [
-        "Nomor Kartu Peserta",
-        "Tanggal Pendaftaran",
-        "Nomor Urut Pendaftaran",
-        "Kode Poli"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Tanggal Pendaftaran",
+          "type": "URL Path",
+          "example": "20-11-2026"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Nomor Urut Pendaftaran",
+          "type": "URL Path",
+          "example": "A1"
+        },
+        {
+          "name": "Parameter 4",
+          "placeholder": "{Parameter 4}",
+          "description": "Kode Poli",
+          "type": "URL Path",
+          "example": "INT"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/pendaftaran/peserta/0001234567890/tglDaftar/20-11-2026/noUrut/A1/kdPoli/INT"
     },
     {
       "id": "6.4.1",
@@ -2345,13 +3248,20 @@
       "function": "Get Data Rujukan",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kunjungan/rujukan/123"
     },
     {
       "id": "6.4.2",
@@ -2363,13 +3273,20 @@
       "function": "Get Data Riwayat Kunjungan",
       "header": "",
       "parameters": [
-        "Nomor kartu peserta"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor kartu peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kunjungan/peserta/0001234567890"
     },
     {
       "id": "6.4.3",
@@ -2385,7 +3302,8 @@
       "response": "{\n\n  \"response\": { \"field\": \"noKunjungan\", \"message\": \"0114U1630316Y000001\" },\n\n  \"metaData\": { \"message\": \"CREATED\", \"code\": 201 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kunjungan"
     },
     {
       "id": "6.4.4",
@@ -2401,7 +3319,8 @@
       "response": "{ \"response\": null, \"metaData\": { \"message\": \"OK\", \"code\": 200 } }",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kunjungan"
     },
     {
       "id": "6.4.5",
@@ -2413,13 +3332,20 @@
       "function": "Delete Data Kunjungan",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kunjungan/123"
     },
     {
       "id": "6.5.1",
@@ -2431,13 +3357,20 @@
       "function": "Get Data Peserta",
       "header": "",
       "parameters": [
-        "Nomor Kartu Peserta"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/peserta/0001234567890"
     },
     {
       "id": "6.5.2",
@@ -2449,14 +3382,27 @@
       "function": "Get Data Peserta",
       "header": "",
       "parameters": [
-        "Jenis Kartu — `nik` / `noka`",
-        "Nomor NIK atau kartu peserta sesuai Parameter 1"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jenis Kartu — `nik` / `noka`",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor NIK atau kartu peserta sesuai Parameter 1",
+          "type": "URL Path",
+          "example": "0001234567890"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/peserta/0001234567890/0001234567890"
     },
     {
       "id": "6.6.1",
@@ -2468,15 +3414,34 @@
       "function": "Get Data DPHO",
       "header": "",
       "parameters": [
-        "Kode atau nama DPHO",
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode atau nama DPHO",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/obat/dpho/123/123/123"
     },
     {
       "id": "6.6.2",
@@ -2488,16 +3453,69 @@
       "function": "Melihat stok obat berdasarkan apotek tujuan yang dipilih",
       "header": "",
       "parameters": [
-        "Kode PPK Apotek Tujuan",
-        "Nama Obat",
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode PPK Apotek Tujuan",
+          "type": "URL Path",
+          "example": "0166R001"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nama Obat",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 4",
+          "placeholder": "{Parameter 4}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "parameter1",
+          "placeholder": "{parameter1}",
+          "description": "Parameter parameter1 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "parameter2",
+          "placeholder": "{parameter2}",
+          "description": "Parameter parameter2 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "parameter3",
+          "placeholder": "{parameter3}",
+          "description": "Parameter parameter3 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "parameter4",
+          "placeholder": "{parameter4}",
+          "description": "Parameter parameter4 pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/dpho/kdppk/123/123/123/123"
     },
     {
       "id": "6.6.3",
@@ -2509,13 +3527,20 @@
       "function": "Get Data Obat by Kunjungan",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/obat/kunjungan/123"
     },
     {
       "id": "6.6.4",
@@ -2531,7 +3556,8 @@
       "response": "{\n\n  \"response\": \\[\n\n    { \"field\": \"kdObatSK\", \"message\": \"37\" },\n\n    { \"field\": \"kdRacikan\", \"message\": \"R.12\" }\n\n  \\],\n\n  \"metaData\": { \"message\": \"CREATED\", \"code\": 201 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/obat/kunjungan"
     },
     {
       "id": "6.6.5",
@@ -2543,14 +3569,27 @@
       "function": "Delete Data Obat",
       "header": "",
       "parameters": [
-        "kodeObatSK",
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "kodeObatSK",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/obat/123/kunjungan/123"
     },
     {
       "id": "6.7.1",
@@ -2562,13 +3601,20 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/tindakan/kunjungan/123"
     },
     {
       "id": "6.7.2",
@@ -2580,15 +3626,34 @@
       "function": "",
       "header": "",
       "parameters": [
-        "kdTkp → `10`: RJTP, `20`: RITP, `50`: Promotif",
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "kdTkp → `10`: RJTP, `20`: RITP, `50`: Promotif",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/tindakan/kdTkp/123/123/123"
     },
     {
       "id": "6.7.3",
@@ -2604,7 +3669,8 @@
       "response": "{\n\n  \"response\": { \"field\": \"kdTindakanSK\", \"message\": \"218\" },\n\n  \"metaData\": { \"message\": \"CREATED\", \"code\": 201 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/tindakan"
     },
     {
       "id": "6.7.4",
@@ -2620,7 +3686,8 @@
       "response": "{\n\n  \"response\": { \"field\": \"kdTindakanSK\", \"message\": \"219\" },\n\n  \"metaData\": { \"message\": \"OK\", \"code\": 200 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/tindakan"
     },
     {
       "id": "6.7.5",
@@ -2632,14 +3699,27 @@
       "function": "",
       "header": "",
       "parameters": [
-        "kdTindakanSK",
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "kdTindakanSK",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/tindakan/123/kunjungan/123"
     },
     {
       "id": "6.8.1",
@@ -2651,13 +3731,20 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/MCU/kunjungan/123"
     },
     {
       "id": "6.8.2",
@@ -2673,7 +3760,8 @@
       "response": "{\n\n  \"response\": { \"field\": \"kdMCU\", \"message\": \"33\" },\n\n  \"metaData\": { \"message\": \"CREATED\", \"code\": 201 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/MCU"
     },
     {
       "id": "6.8.3",
@@ -2689,7 +3777,8 @@
       "response": "{ \"response\": null, \"metaData\": { \"message\": \"OK\", \"code\": 200 } }",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/MCU"
     },
     {
       "id": "6.8.4",
@@ -2701,14 +3790,27 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Kode MCU",
-        "Nomor Kunjungan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode MCU",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor Kunjungan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/MCU/123/kunjungan/123"
     },
     {
       "id": "6.9.1",
@@ -2720,15 +3822,34 @@
       "function": "Get Data Diagnosa",
       "header": "",
       "parameters": [
-        "Kode atau nama diagnosa",
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode atau nama diagnosa",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/diagnosa/123/123/123"
     },
     {
       "id": "6.10.1",
@@ -2740,14 +3861,27 @@
       "function": "Get Data Dokter",
       "header": "",
       "parameters": [
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/dokter/123/123"
     },
     {
       "id": "6.11.1",
@@ -2759,13 +3893,20 @@
       "function": "Get Data Club Prolanis",
       "header": "",
       "parameters": [
-        "Kode Jenis Kelompok → `01`: Diabetes Melitus, `02`: Hipertensi"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Jenis Kelompok → `01`: Diabetes Melitus, `02`: Hipertensi",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/club/123"
     },
     {
       "id": "6.11.2",
@@ -2777,13 +3918,20 @@
       "function": "Get Data Kegiatan Kelompok",
       "header": "",
       "parameters": [
-        "Bulan, format `dd-mm-yyyy`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Bulan, format `dd-mm-yyyy`",
+          "type": "URL Path",
+          "example": "11"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/kegiatan/11"
     },
     {
       "id": "6.11.3",
@@ -2795,13 +3943,20 @@
       "function": "Get Data Peserta Kegiatan Kelompok",
       "header": "",
       "parameters": [
-        "`eduId`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "`eduId`",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/peserta/123"
     },
     {
       "id": "6.11.4",
@@ -2817,7 +3972,8 @@
       "response": "{\n\n  \"response\": { \"field\": \"eduId\", \"message\": \"16030000009\" },\n\n  \"metaData\": { \"message\": \"CREATED\", \"code\": 201 }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/kegiatan"
     },
     {
       "id": "6.11.5",
@@ -2833,7 +3989,8 @@
       "response": "{ \"response\": null, \"metaData\": { \"message\": \"CREATED\", \"code\": 201 } }",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/peserta"
     },
     {
       "id": "6.11.6",
@@ -2845,13 +4002,20 @@
       "function": "",
       "header": "",
       "parameters": [
-        "`eduId`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "`eduId`",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/kegiatan/123"
     },
     {
       "id": "6.11.7",
@@ -2863,14 +4027,27 @@
       "function": "",
       "header": "",
       "parameters": [
-        "`eduId`",
-        "Nomor Kartu Peserta"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "`eduId`",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kelompok/peserta/123/0001234567890"
     },
     {
       "id": "6.12.1",
@@ -2886,7 +4063,8 @@
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/kesadaran"
     },
     {
       "id": "6.13.1",
@@ -2898,14 +4076,27 @@
       "function": "Get Data Poli FKTP",
       "header": "",
       "parameters": [
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/poli/fktp/123/123"
     },
     {
       "id": "6.14.1",
@@ -2917,14 +4108,27 @@
       "function": "Get Data Provider Rayonisasi",
       "header": "",
       "parameters": [
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/provider/123/123"
     },
     {
       "id": "6.15.1",
@@ -2940,7 +4144,8 @@
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis"
     },
     {
       "id": "6.15.2",
@@ -2952,13 +4157,20 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Kode Spesialis"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Spesialis",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis/123/subspesialis"
     },
     {
       "id": "6.15.3",
@@ -2974,7 +4186,8 @@
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis/sarana"
     },
     {
       "id": "6.15.4",
@@ -2990,7 +4203,8 @@
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis/khusus"
     },
     {
       "id": "6.15.5",
@@ -3002,15 +4216,34 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Kode Sub Spesialis",
-        "Kode Sarana",
-        "Tanggal Estimasi Rujuk, format `dd-mm-yyyy`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Sub Spesialis",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Kode Sarana",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Tanggal Estimasi Rujuk, format `dd-mm-yyyy`",
+          "type": "URL Path",
+          "example": "20-11-2026"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis/rujuk/subspesialis/123/sarana/123/tglEstRujuk/20-11-2026"
     },
     {
       "id": "6.15.6",
@@ -3022,15 +4255,34 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Kode Khusus — `kdKhusus = [\"IGD\",\"HDL\",\"JIW\",\"KLT\",\"PAR\",\"KEM\",\"RAT\",\"HIV\"]`",
-        "Nomor Kartu Peserta",
-        "Tanggal Estimasi Rujuk, format `dd-mm-yyyy`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Khusus — `kdKhusus = [\"IGD\",\"HDL\",\"JIW\",\"KLT\",\"PAR\",\"KEM\",\"RAT\",\"HIV\"]`",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Tanggal Estimasi Rujuk, format `dd-mm-yyyy`",
+          "type": "URL Path",
+          "example": "20-11-2026"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis/rujuk/khusus/123/noKartu/0001234567890/tglEstRujuk/20-11-2026"
     },
     {
       "id": "6.15.7",
@@ -3042,16 +4294,41 @@
       "function": "",
       "header": "",
       "parameters": [
-        "Kode Khusus — `kdKhusus = [\"THA\",\"HEM\"]`",
-        "Kode Sub Spesialis:",
-        "Nomor Kartu Peserta",
-        "Tanggal Estimasi Rujuk, format `dd-mm-yyyy`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Kode Khusus — `kdKhusus = [\"THA\",\"HEM\"]`",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Kode Sub Spesialis:",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Nomor Kartu Peserta",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "Parameter 4",
+          "placeholder": "{Parameter 4}",
+          "description": "Tanggal Estimasi Rujuk, format `dd-mm-yyyy`",
+          "type": "URL Path",
+          "example": "20-11-2026"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/spesialis/rujuk/khusus/123/subspesialis/123/noKartu/0001234567890/tglEstRujuk/20-11-2026"
     },
     {
       "id": "6.16.1",
@@ -3063,13 +4340,20 @@
       "function": "Get Status Pulang",
       "header": "",
       "parameters": [
-        "Jika rawat inap maka diisi `true`, sebaliknya `false`"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Jika rawat inap maka diisi `true`, sebaliknya `false`",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/statuspulang/rawatInap/123"
     },
     {
       "id": "6.17.1",
@@ -3081,13 +4365,20 @@
       "function": "Get Data Alergi",
       "header": "",
       "parameters": [
-        "`01` Makanan, `02` Udara, `03` Obat"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "`01` Makanan, `02` Udara, `03` Obat",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/alergi/jenis/123"
     },
     {
       "id": "6.18.1",
@@ -3103,7 +4394,8 @@
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/prognosa"
     },
     {
       "id": "6.19.1",
@@ -3119,7 +4411,8 @@
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/skrinning/rekap"
     },
     {
       "id": "6.19.2",
@@ -3131,15 +4424,34 @@
       "function": "Mengambil data rekapitulasi Skrining Riwayat Kesehatan per peserta",
       "header": "",
       "parameters": [
-        "Nomor atau Nama Peserta",
-        "Row data awal yang akan ditampilkan",
-        "Limit jumlah data yang akan ditampilkan"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor atau Nama Peserta",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data yang akan ditampilkan",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/skrinning/peserta/123/123/123"
     },
     {
       "id": "6.19.3",
@@ -3151,15 +4463,34 @@
       "function": "Mengambil data peserta prolanis DM sejak tahun 2017",
       "header": "",
       "parameters": [
-        "Nomor atau Nama Peserta",
-        "Row data awal",
-        "Limit jumlah data"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor atau Nama Peserta",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/skrinning/prolanis/dm/123/123/123"
     },
     {
       "id": "6.19.4",
@@ -3171,15 +4502,34 @@
       "function": "Mengambil data peserta prolanis HT sejak tahun 2017",
       "header": "",
       "parameters": [
-        "Nomor atau Nama Peserta",
-        "Row data awal",
-        "Limit jumlah data"
+        {
+          "name": "Parameter 1",
+          "placeholder": "{Parameter 1}",
+          "description": "Nomor atau Nama Peserta",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 2",
+          "placeholder": "{Parameter 2}",
+          "description": "Row data awal",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "Parameter 3",
+          "placeholder": "{Parameter 3}",
+          "description": "Limit jumlah data",
+          "type": "URL Path",
+          "example": "123"
+        }
       ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "PCare"
+      "mainCategory": "PCare",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev/skrinning/prolanis/ht/123/123/123"
     },
     {
       "id": "7.1.1",
@@ -3190,12 +4540,21 @@
       "url": "{BASE_URL}/auth",
       "function": "Membuat token",
       "header": "`x-username: {user akses}` , `x-password: {password akses}`",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "",
       "response": "{\n\n  \"response\": { \"token\": \"1231242353534645645\" },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}\n\n**Keterangan:** Contoh generate token dapat menggunakan link berikut \\[jwt\\]: [https://jwt.io/](https://jwt.io/)",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/auth"
     },
     {
       "id": "7.1.2",
@@ -3206,12 +4565,35 @@
       "url": "{BASE_URL}/antrean/status/{kode_poli}/{tanggalperiksa}",
       "function": "Menampilkan status antrean per poli",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "kode_poli",
+          "placeholder": "{kode_poli}",
+          "description": "Parameter kode_poli pada URL",
+          "type": "URL Path",
+          "example": "INT"
+        },
+        {
+          "name": "tanggalperiksa",
+          "placeholder": "{tanggalperiksa}",
+          "description": "Parameter tanggalperiksa pada URL",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
+      ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"namapoli\": \"Poli Umum\",\n\n    \"totalantrean\": \"25\",\n\n    \"sisaantrean\": \"4\",\n\n    \"antreanpanggil\": \"A21\",\n\n    \"keterangan\": \"\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal. Selain metadata code 200, agar message pada metadata diisi sesuai dengan kondisi di lapangan.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean/status/INT/2026-11-20"
     },
     {
       "id": "7.1.3",
@@ -3222,12 +4604,21 @@
       "url": "{BASE_URL}/antrean",
       "function": "Mengambil antrean",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "{\n\n  \"nomorkartu\": \"00012345678\",\n\n  \"nik\": \"3212345678987654\",\n\n  \"kodepoli\": \"001\",\n\n  \"tanggalperiksa\": \"2020-01-28\",\n\n  \"keluhan\": \"sakit kepala\"\n\n}",
       "response": "{\n\n  \"response\": {\n\n    \"nomorantrean\": \"A12\",\n\n    \"angkaantrean\": \"12\",\n\n    \"namapoli\": \"Poli Umum\",\n\n    \"sisaantrean\": \"4\",\n\n    \"antreanpanggil\": \"A8\",\n\n    \"keterangan\": \"Apabila antrean terlewat harap mengambil antrean kembali.\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal, `202`: Pasien Baru.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean"
     },
     {
       "id": "7.1.4",
@@ -3238,12 +4629,42 @@
       "url": "{BASE_URL}/antrean/sisapeserta/{nomorkartu_jkn}/{kode_poli}/{tanggalperiksa}",
       "function": "Melihat sisa antrean di hari H pelayanan",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "nomorkartu_jkn",
+          "placeholder": "{nomorkartu_jkn}",
+          "description": "Parameter nomorkartu_jkn pada URL",
+          "type": "URL Path",
+          "example": "0001234567890"
+        },
+        {
+          "name": "kode_poli",
+          "placeholder": "{kode_poli}",
+          "description": "Parameter kode_poli pada URL",
+          "type": "URL Path",
+          "example": "INT"
+        },
+        {
+          "name": "tanggalperiksa",
+          "placeholder": "{tanggalperiksa}",
+          "description": "Parameter tanggalperiksa pada URL",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
+      ],
       "request": "",
       "response": "{\n\n  \"response\": {\n\n    \"nomorantrean\": \"A20\",\n\n    \"namapoli\": \"Poli Umum\",\n\n    \"sisaantrean\": \"4\",\n\n    \"antreanpanggil\": \"A8\",\n\n    \"keterangan\": \"\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean/sisapeserta/0001234567890/INT/2026-11-20"
     },
     {
       "id": "7.1.5",
@@ -3254,12 +4675,21 @@
       "url": "{BASE_URL}/peserta",
       "function": "Kirim informasi identitas peserta sebagai pasien baru",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "{\n\n  \"nomorkartu\": \"00012345678\",\n\n  \"nik\": \"3212345678987654\",\n\n  \"nomorkk\": \"3212345678987654\",\n\n  \"nama\": \"sumarsono\",\n\n  \"jeniskelamin\": \"L\",\n\n  \"tanggallahir\": \"1985-03-01\",\n\n  \"alamat\": \"alamat yang muncul merupakan alamat lengkap\",\n\n  \"kodeprop\": \"11\",\n\n  \"namaprop\": \"Jawa Barat\",\n\n  \"kodedati2\": \"0120\",\n\n  \"namadati2\": \"Kab. Bandung\",\n\n  \"kodekec\": \"1319\",\n\n  \"namakec\": \"Soreang\",\n\n  \"kodekel\": \"D2105\",\n\n  \"namakel\": \"Cingcin\",\n\n  \"rw\": \"001\",\n\n  \"rt\": \"013\"\n\n}",
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/peserta"
     },
     {
       "id": "7.1.6",
@@ -3270,12 +4700,21 @@
       "url": "{BASE_URL}/antrean/batal",
       "function": "Membatalkan antrean peserta",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "{\n\n  \"nomorkartu\": \"00012345678\",\n\n  \"kodepoli\": \"001\",\n\n  \"tanggalperiksa\": \"2020-01-28\"\n\n}",
       "response": "\"metadata\": { \"code\": 200, \"message\": \"OK\" }",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean/batal"
     },
     {
       "id": "7.1.7",
@@ -3286,12 +4725,21 @@
       "url": "{BASE_URL}/antrean",
       "function": "Mengambil antrean",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "{\n\n  \"nomorkartu\": \"0000012345678\",\n\n  \"nik\": \"3212345678987654\",\n\n  \"kodepoli\": \"001\",\n\n  \"tanggalperiksa\": \"2020-01-28\",\n\n  \"keluhan\": \"sakit kepala\",\n\n  \"kodedokter\": 123456,\n\n  \"jampraktek\": \"08:00-12:00\",\n\n  \"norm\": \"654321\",\n\n  \"nohp\": \"081234567890\"\n\n}",
       "response": "{\n\n  \"response\": {\n\n    \"nomorantrean\": \"A12\",\n\n    \"angkaantrean\": 12,\n\n    \"namapoli\": \"Poli Umum\",\n\n    \"sisaantrean\": \"4\",\n\n    \"antreanpanggil\": \"A8\",\n\n    \"keterangan\": \"Apabila antrean terlewat harap mengambil antrean kembali.\"\n\n  },\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal, `202`: Pasien Baru.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean"
     },
     {
       "id": "7.1.8",
@@ -3302,12 +4750,35 @@
       "url": "{BASE_URL}/antrean/status/{kode_poli}/{tanggalperiksa}",
       "function": "Menampilkan **list** status antrean per poli",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        },
+        {
+          "name": "kode_poli",
+          "placeholder": "{kode_poli}",
+          "description": "Parameter kode_poli pada URL",
+          "type": "URL Path",
+          "example": "INT"
+        },
+        {
+          "name": "tanggalperiksa",
+          "placeholder": "{tanggalperiksa}",
+          "description": "Parameter tanggalperiksa pada URL",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
+      ],
       "request": "",
       "response": "{\n\n  \"response\": \\[\n\n    {\n\n      \"namapoli\": \"Poli Umum\",\n\n      \"totalantrean\": \"25\",\n\n      \"sisaantrean\": 4,\n\n      \"antreanpanggil\": \"A1-21\",\n\n      \"keterangan\": \"\",\n\n      \"kodedokter\": 123456,\n\n      \"namadokter\": \"Dr. Ali\",\n\n      \"jampraktek\": \"08:00-13:00\"\n\n    },\n\n    {\n\n      \"namapoli\": \"Poli Umum\",\n\n      \"totalantrean\": \"11\",\n\n      \"sisaantrean\": 1,\n\n      \"antreanpanggil\": \"A2-10\",\n\n      \"keterangan\": \"\",\n\n      \"kodedokter\": 123466,\n\n      \"namadokter\": \"Dr. Adi\",\n\n      \"jampraktek\": \"08:00-12:00\"\n\n    }\n\n  \\],\n\n  \"metadata\": { \"message\": \"Ok\", \"code\": 200 }\n\n}",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean/status/INT/2026-11-20"
     },
     {
       "id": "7.1.9",
@@ -3318,12 +4789,21 @@
       "url": "{BASE_URL}/antrean/batal",
       "function": "Membatalkan antrean peserta",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "BASE_URL",
+          "placeholder": "{BASE_URL}",
+          "description": "Parameter BASE_URL pada URL",
+          "type": "URL Path",
+          "example": "123"
+        }
+      ],
       "request": "{\n\n  \"nomorkartu\": \"00012345678\",\n\n  \"kodepoli\": \"001\",\n\n  \"tanggalperiksa\": \"2020-01-28\",\n\n  \"keterangan\": \"peserta batal hadir\"\n\n}",
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "Metadata code — `200`: Sukses, `201`: Gagal.",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "123/antrean/batal"
     },
     {
       "id": "7.2.1",
@@ -3334,12 +4814,21 @@
       "url": "{BASE URL}/{Service Name}/ref/poli/tanggal/{tanggal}",
       "function": "Melihat referensi poli",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "tanggal",
+          "placeholder": "{tanggal}",
+          "description": "Parameter tanggal pada URL",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
+      ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev/ref/poli/tanggal/2026-11-20"
     },
     {
       "id": "7.2.2",
@@ -3350,12 +4839,28 @@
       "url": "{BASE URL}/{Service Name}/ref/dokter/kodepoli/{kodepoli}/tanggal/{tanggal}",
       "function": "Melihat list dokter per poli",
       "header": "",
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "kodepoli",
+          "placeholder": "{kodepoli}",
+          "description": "Parameter kodepoli pada URL",
+          "type": "URL Path",
+          "example": "INT"
+        },
+        {
+          "name": "tanggal",
+          "placeholder": "{tanggal}",
+          "description": "Parameter tanggal pada URL",
+          "type": "URL Path",
+          "example": "2026-11-20"
+        }
+      ],
       "request": "",
       "response": "",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev/ref/dokter/kodepoli/INT/tanggal/2026-11-20"
     },
     {
       "id": "7.2.3",
@@ -3371,7 +4876,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev/antrean/add"
     },
     {
       "id": "7.2.4",
@@ -3387,7 +4893,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev/antrean/panggil"
     },
     {
       "id": "7.2.5",
@@ -3403,7 +4910,8 @@
       "response": "{ \"metadata\": { \"message\": \"Ok\", \"code\": 200 } }",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "Antrean FKTP"
+      "mainCategory": "Antrean FKTP",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev/antrean/batal"
     },
     {
       "id": "8.1.1",
@@ -3419,7 +4927,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"url\": \"https://dvlp.bpjs-kesehatan.go.id/ihs/history?token=e6b610b4-2960-46a3-8420-de879756dce3\"\n\n  },\n\n  \"metaData\": { \"code\": 200, \"message\": \"Sukses\" }\n\n}",
       "notes": "",
       "target": "FKRTL (Rumah Sakit)",
-      "mainCategory": "i-Care JKN"
+      "mainCategory": "i-Care JKN",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/api/rs/validate"
     },
     {
       "id": "8.1.2",
@@ -3435,7 +4944,8 @@
       "response": "{\n\n  \"response\": {\n\n    \"url\": \"https://dvlp.bpjs-kesehatan.go.id/ihs/history?token=e6b610b4-2960-46a3-8420-de879756dce3\"\n\n  },\n\n  \"metaData\": { \"code\": 200, \"message\": \"Sukses\" }\n\n}",
       "notes": "",
       "target": "FKTP (Puskesmas / Klinik)",
-      "mainCategory": "i-Care JKN"
+      "mainCategory": "i-Care JKN",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/api/pcare/validate"
     },
     {
       "id": "8.2.1",
@@ -3451,7 +4961,8 @@
       "response": "",
       "notes": "",
       "target": "FKRTL & FKTP",
-      "mainCategory": "i-Care JKN"
+      "mainCategory": "i-Care JKN",
+      "exampleUrl": "https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/eclaim/rekammedis/insert"
     }
   ]
 }

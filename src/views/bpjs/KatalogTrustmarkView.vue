@@ -270,13 +270,10 @@
           <div class="card-footer bg-white border-top p-3 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2 small text-muted">
               <span v-if="ep.parameters && ep.parameters.length > 0" class="badge bg-light text-muted border">
-                <i class="fas fa-sliders-h me-1"></i>{{ ep.parameters.length }} param
+                <i class="fas fa-sliders-h me-1 text-primary"></i>{{ ep.parameters.length }} parameter URL
               </span>
               <span v-if="ep.request" class="badge bg-light text-muted border" title="Memiliki format Request Body">
-                <i class="fas fa-arrow-up text-primary"></i> Body
-              </span>
-              <span v-if="ep.response" class="badge bg-light text-muted border" title="Memiliki format Response Body">
-                <i class="fas fa-arrow-down text-success"></i> Resp
+                <i class="fas fa-arrow-up text-primary"></i> Body JSON
               </span>
             </div>
             <button 
@@ -284,7 +281,7 @@
               class="btn btn-sm btn-primary fw-semibold px-3 py-1 shadow-sm d-flex align-items-center gap-1"
               @click="openDetail(ep)"
             >
-              <span>Detail</span>
+              <span>Buka Detail</span>
               <i class="fas fa-arrow-right small"></i>
             </button>
           </div>
@@ -370,132 +367,261 @@
       </div>
     </div>
 
-    <!-- MODAL DETAIL ENDPOINT -->
+    <!-- MODAL DETAIL ENDPOINT (INTERAKTIF & JELAS) -->
     <div 
       v-if="selectedEndpoint" 
       class="modal fade show d-block" 
       tabindex="-1" 
-      style="background-color: rgba(0, 0, 0, 0.5);"
+      style="background-color: rgba(0, 0, 0, 0.55);"
       @click.self="selectedEndpoint = null"
     >
-      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
           <!-- Modal Header -->
           <div class="modal-header border-bottom py-3 px-4 bg-light">
             <div class="d-flex align-items-center gap-2">
               <span class="badge method-badge fw-bold font-monospace fs-6" :class="getMethodBadgeClass(selectedEndpoint.method)">
                 {{ selectedEndpoint.method }}
               </span>
-              <h5 class="modal-title fw-bold mb-0">
+              <h5 class="modal-title fw-bold mb-0 text-dark">
                 #{{ selectedEndpoint.id }} - {{ selectedEndpoint.title }}
               </h5>
             </div>
             <button type="button" class="btn-close" @click="selectedEndpoint = null"></button>
           </div>
 
+          <!-- Modal Tabs Navigation -->
+          <div class="bg-white border-bottom px-4 pt-2">
+            <ul class="nav nav-tabs border-0" role="tablist">
+              <li class="nav-item">
+                <button 
+                  class="nav-link py-2 px-3 fw-bold" 
+                  :class="activeModalTab === 'params' ? 'active text-primary border-primary border-bottom border-2' : 'text-muted border-0'"
+                  @click="activeModalTab = 'params'"
+                >
+                  <i class="fas fa-link me-1"></i> Cara Pakai & Parameter URL
+                  <span v-if="selectedEndpoint.parameters && selectedEndpoint.parameters.length > 0" class="badge bg-primary-subtle text-primary ms-1">
+                    {{ selectedEndpoint.parameters.length }}
+                  </span>
+                </button>
+              </li>
+              <li v-if="selectedEndpoint.request" class="nav-item">
+                <button 
+                  class="nav-link py-2 px-3 fw-bold" 
+                  :class="activeModalTab === 'request' ? 'active text-primary border-primary border-bottom border-2' : 'text-muted border-0'"
+                  @click="activeModalTab = 'request'"
+                >
+                  <i class="fas fa-arrow-up me-1 text-primary"></i> Request Body (JSON)
+                </button>
+              </li>
+              <li v-if="selectedEndpoint.response" class="nav-item">
+                <button 
+                  class="nav-link py-2 px-3 fw-bold" 
+                  :class="activeModalTab === 'response' ? 'active text-primary border-primary border-bottom border-2' : 'text-muted border-0'"
+                  @click="activeModalTab = 'response'"
+                >
+                  <i class="fas fa-arrow-down me-1 text-success"></i> Response Balasan (JSON)
+                </button>
+              </li>
+              <li v-if="selectedEndpoint.notes" class="nav-item">
+                <button 
+                  class="nav-link py-2 px-3 fw-bold" 
+                  :class="activeModalTab === 'notes' ? 'active text-primary border-primary border-bottom border-2' : 'text-muted border-0'"
+                  @click="activeModalTab = 'notes'"
+                >
+                  <i class="fas fa-info-circle me-1 text-warning"></i> Catatan Aturan BPJS
+                </button>
+              </li>
+            </ul>
+          </div>
+
           <!-- Modal Body -->
           <div class="modal-body p-4">
-            <!-- Meta Tag Badges -->
-            <div class="d-flex flex-wrap gap-2 mb-3">
-              <span class="badge bg-light text-dark border">
-                <i class="fas fa-folder me-1 text-primary"></i> {{ selectedEndpoint.mainCategory }}
-              </span>
-              <span class="badge bg-light text-dark border">
-                <i class="fas fa-tag me-1 text-info"></i> {{ selectedEndpoint.subCategory }}
-              </span>
-              <span class="badge target-badge rounded-pill" :class="getTargetBadgeClass(selectedEndpoint.target)">
-                <i class="fas fa-hospital-alt me-1"></i> {{ selectedEndpoint.target }}
-              </span>
-            </div>
-
-            <!-- URL Path Box -->
-            <div class="mb-4">
-              <label class="small fw-bold text-muted text-uppercase mb-1">URL Endpoint</label>
-              <div class="p-3 bg-dark text-light rounded-3 d-flex align-items-center justify-content-between gap-3 font-monospace small">
-                <span class="text-break">{{ selectedEndpoint.url }}</span>
-                <button 
-                  type="button" 
-                  class="btn btn-sm btn-outline-light flex-shrink-0" 
-                  @click="copyText(selectedEndpoint.url)"
-                >
-                  <i class="fas fa-copy me-1"></i> Salin
-                </button>
-              </div>
-            </div>
-
-            <!-- Fungsi / Deskripsi -->
-            <div class="mb-4">
-              <label class="small fw-bold text-muted text-uppercase mb-1">Deskripsi & Fungsi</label>
-              <div class="p-3 bg-light rounded-3 border">
-                <p class="mb-0 text-dark">{{ selectedEndpoint.function || selectedEndpoint.title }}</p>
-              </div>
-            </div>
-
-            <!-- Header Requirements -->
-            <div class="mb-4">
-              <label class="small fw-bold text-muted text-uppercase mb-1">HTTP Header Spesifikasi</label>
-              <div class="p-3 bg-light rounded-3 border small">
-                <div v-if="selectedEndpoint.header">
-                  <code>{{ selectedEndpoint.header }}</code>
+            <!-- TAB 1: PARAMETER & URL BUILDER -->
+            <div v-if="activeModalTab === 'params'">
+              <!-- Info Box Deskripsi -->
+              <div class="p-3 bg-light-subtle rounded-3 border mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="badge bg-light text-dark border">
+                    <i class="fas fa-folder text-primary me-1"></i> {{ selectedEndpoint.mainCategory }}
+                  </span>
+                  <span class="badge bg-light text-dark border">
+                    <i class="fas fa-tag text-info me-1"></i> {{ selectedEndpoint.subCategory }}
+                  </span>
+                  <span class="badge target-badge rounded-pill" :class="getTargetBadgeClass(selectedEndpoint.target)">
+                    <i class="fas fa-hospital-alt me-1"></i> {{ selectedEndpoint.target }}
+                  </span>
                 </div>
-                <div v-else class="text-muted">
-                  Mengikuti standar header VClaim / BPJS: <code>X-cons-id</code>, <code>X-timestamp</code>, <code>X-signature</code>, <code>user_key</code>, <code>Content-Type: application/x-www-form-urlencoded</code> (atau <code>application/json</code>).
+                <div class="fw-semibold text-dark">
+                  {{ selectedEndpoint.function || selectedEndpoint.title }}
                 </div>
               </div>
+
+              <!-- URL TEMPLATE VS REAL PREVIEW -->
+              <div class="card border mb-4 shadow-sm">
+                <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                  <span class="small fw-bold text-muted text-uppercase">
+                    <i class="fas fa-code me-1 text-primary"></i> 1. Format URL Template (Spesifikasi BPJS)
+                  </span>
+                  <button class="btn btn-xs btn-outline-secondary" @click="copyText(selectedEndpoint.url)">
+                    <i class="fas fa-copy me-1"></i> Salin Template
+                  </button>
+                </div>
+                <div class="card-body p-3 bg-dark text-warning font-monospace small text-break">
+                  {{ selectedEndpoint.url }}
+                </div>
+              </div>
+
+              <!-- REAL SIMULATED URL -->
+              <div class="card border mb-4 shadow-sm">
+                <div class="card-header bg-success-subtle py-2 px-3 d-flex justify-content-between align-items-center">
+                  <span class="small fw-bold text-success-emphasis text-uppercase">
+                    <i class="fas fa-play-circle me-1 text-success"></i> 2. Contoh URL Nyata Saat Ditembak (Setelah Parameter Diisi)
+                  </span>
+                  <button class="btn btn-xs btn-success" @click="copyText(simulatedUrl)">
+                    <i class="fas fa-copy me-1"></i> Salin URL Nyata
+                  </button>
+                </div>
+                <div class="card-body p-3 bg-dark text-info font-monospace small text-break">
+                  {{ simulatedUrl }}
+                </div>
+              </div>
+
+              <!-- PARAMETERS TABLE -->
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold mb-0 text-dark">
+                    <i class="fas fa-sliders-h text-primary me-1"></i> Variabel Parameter Yang Harus Diisi di URL
+                  </h6>
+                  <span class="text-muted small">
+                    Ubah nilai simulasi di bawah untuk melihat contoh URL berubah otomatis
+                  </span>
+                </div>
+
+                <div v-if="selectedEndpoint.parameters && selectedEndpoint.parameters.length > 0" class="table-responsive border rounded-3">
+                  <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 170px;">Placeholder di URL</th>
+                        <th>Arti / Keterangan Data</th>
+                        <th style="width: 130px;">Tipe & Posisi</th>
+                        <th style="width: 220px;">Simulasi Nilai Riil</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(p, pIdx) in selectedEndpoint.parameters" :key="pIdx">
+                        <td class="font-monospace text-warning-emphasis fw-bold bg-light">
+                          <code>{{ p.placeholder || ('{' + p.name + '}') }}</code>
+                        </td>
+                        <td>
+                          <div class="fw-bold text-dark">{{ p.description }}</div>
+                          <div class="text-muted small">Wajib diganti dengan nilai nyata saat memanggil endpoint.</div>
+                        </td>
+                        <td>
+                          <span class="badge bg-light text-dark border">
+                            <i class="fas fa-link text-muted me-1"></i> {{ p.type || 'URL Path' }}
+                          </span>
+                        </td>
+                        <td>
+                          <input 
+                            v-model="simulatedValues[p.placeholder || p.name]" 
+                            type="text" 
+                            class="form-control form-control-sm font-monospace"
+                            :placeholder="p.example || 'Isi nilai...'"
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div v-else class="p-3 bg-light rounded-3 text-muted small text-center border">
+                  <i class="fas fa-check-circle text-success me-1"></i> Endpoint ini tidak memerlukan parameter dinamis di dalam path URL.
+                </div>
+              </div>
+
+              <!-- HTTP HEADERS -->
+              <div class="card border">
+                <div class="card-header bg-light py-2 px-3">
+                  <span class="small fw-bold text-muted text-uppercase">
+                    <i class="fas fa-key text-warning me-1"></i> HTTP Header Wajib
+                  </span>
+                </div>
+                <div class="card-body p-3 small text-muted">
+                  <div v-if="selectedEndpoint.header" class="font-monospace text-primary mb-2">
+                    <code>{{ selectedEndpoint.header }}</code>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-md-6">
+                      <div class="p-2 border rounded bg-light">
+                        <div class="fw-bold text-dark">X-cons-id & X-timestamp</div>
+                        <div class="text-muted small">Consumer ID BPJS dan Unix Timestamp UTC dalam detik.</div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="p-2 border rounded bg-light">
+                        <div class="fw-bold text-dark">X-signature & user_key</div>
+                        <div class="text-muted small">HMAC-SHA256 signature dan User Key TrustMark BPJS.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- Parameters Section -->
-            <div v-if="selectedEndpoint.parameters && selectedEndpoint.parameters.length > 0" class="mb-4">
-              <label class="small fw-bold text-muted text-uppercase mb-1">Daftar Parameter</label>
-              <ul class="list-group list-group-flush rounded-3 border">
-                <li v-for="(param, pIdx) in selectedEndpoint.parameters" :key="pIdx" class="list-group-item small py-2">
-                  <i class="fas fa-chevron-right text-primary me-2"></i> {{ param }}
-                </li>
-              </ul>
-            </div>
-
-            <!-- Request Body Sample -->
-            <div v-if="selectedEndpoint.request" class="mb-4">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small fw-bold text-muted text-uppercase mb-0">Contoh Request Body (JSON)</label>
+            <!-- TAB 2: REQUEST BODY -->
+            <div v-else-if="activeModalTab === 'request'">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark">
+                  <i class="fas fa-file-code text-primary me-1"></i> Format JSON Payload Request (Body)
+                </h6>
                 <button 
                   type="button" 
-                  class="btn btn-xs btn-outline-primary"
+                  class="btn btn-sm btn-outline-primary"
                   @click="copyText(selectedEndpoint.request)"
                 >
-                  <i class="fas fa-copy me-1"></i> Salin Request
+                  <i class="fas fa-copy me-1"></i> Salin Format JSON
                 </button>
               </div>
-              <pre class="bg-dark text-success p-3 rounded-3 small font-monospace overflow-auto" style="max-height: 250px;"><code>{{ selectedEndpoint.request }}</code></pre>
+              <p class="text-muted small mb-3">
+                Format data yang dikirimkan oleh sistem ke server BPJS Kesehatan (dikirim sebagai payload HTTP Method <strong>{{ selectedEndpoint.method }}</strong>):
+              </p>
+              <pre class="bg-dark text-success p-3 rounded-3 small font-monospace overflow-auto" style="max-height: 400px;"><code>{{ selectedEndpoint.request }}</code></pre>
             </div>
 
-            <!-- Response Sample -->
-            <div v-if="selectedEndpoint.response" class="mb-4">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label class="small fw-bold text-muted text-uppercase mb-0">Contoh Response Body (JSON)</label>
+            <!-- TAB 3: RESPONSE BODY -->
+            <div v-else-if="activeModalTab === 'response'">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0 text-dark">
+                  <i class="fas fa-reply text-success me-1"></i> Contoh Format Response Balasan BPJS
+                </h6>
                 <button 
                   type="button" 
-                  class="btn btn-xs btn-outline-success"
+                  class="btn btn-sm btn-outline-success"
                   @click="copyText(selectedEndpoint.response)"
                 >
                   <i class="fas fa-copy me-1"></i> Salin Response
                 </button>
               </div>
-              <pre class="bg-dark text-info p-3 rounded-3 small font-monospace overflow-auto" style="max-height: 300px;"><code>{{ selectedEndpoint.response }}</code></pre>
+              <p class="text-muted small mb-3">
+                Contoh data JSON yang dikembalikan oleh BPJS setelah response didekripsi (metadata status 200 OK):
+              </p>
+              <pre class="bg-dark text-info p-3 rounded-3 small font-monospace overflow-auto" style="max-height: 450px;"><code>{{ selectedEndpoint.response }}</code></pre>
             </div>
 
-            <!-- Notes Section -->
-            <div v-if="selectedEndpoint.notes" class="mb-3">
-              <label class="small fw-bold text-muted text-uppercase mb-1">Catatan Khusus BPJS</label>
-              <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 border border-warning-subtle small">
-                <i class="fas fa-info-circle me-1"></i>
-                <span style="white-space: pre-line;">{{ selectedEndpoint.notes }}</span>
+            <!-- TAB 4: CATATAN & ATURAN -->
+            <div v-else-if="activeModalTab === 'notes'">
+              <h6 class="fw-bold mb-3 text-dark">
+                <i class="fas fa-exclamation-triangle text-warning me-1"></i> Catatan & Aturan Bisnis BPJS
+              </h6>
+              <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 border border-warning-subtle mb-3">
+                <p class="mb-0" style="white-space: pre-line;">{{ selectedEndpoint.notes }}</p>
               </div>
             </div>
           </div>
 
           <!-- Modal Footer -->
-          <div class="modal-footer border-top py-2 px-4">
+          <div class="modal-footer border-top py-2 px-4 bg-light">
             <button type="button" class="btn btn-secondary fw-semibold px-4" @click="selectedEndpoint = null">
               Tutup
             </button>
@@ -509,7 +635,7 @@
       v-if="showBaseUrlModal" 
       class="modal fade show d-block" 
       tabindex="-1" 
-      style="background-color: rgba(0, 0, 0, 0.5);"
+      style="background-color: rgba(0, 0, 0, 0.55);"
       @click.self="showBaseUrlModal = false"
     >
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -535,7 +661,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="b in catalogData.base_urls" :key="b.layanan">
+                  <tr v-for="b in baseUrls" :key="b.layanan">
                     <td class="fw-bold">{{ b.layanan }}</td>
                     <td><span class="badge bg-light text-dark border">{{ b.target }}</span></td>
                     <td class="font-monospace text-primary">
@@ -580,7 +706,7 @@
               </ul>
             </div>
           </div>
-          <div class="modal-footer border-top py-2 px-4">
+          <div class="modal-footer border-top py-2 px-4 bg-light">
             <button type="button" class="btn btn-secondary fw-semibold px-4" @click="showBaseUrlModal = false">
               Tutup
             </button>
@@ -592,12 +718,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import rawCatalog from '../../data/bpjsTrustmarkCatalog.json'
 import { showToast } from '../../utils/notification'
 
 // Data
-const catalogData = ref(rawCatalog)
 const allEndpoints = ref(rawCatalog.endpoints || [])
 const totalEndpoints = computed(() => allEndpoints.value.length)
 
@@ -609,13 +734,78 @@ const selectedMethod = ref('ALL')
 const searchQuery = ref('')
 const viewMode = ref('grid') // 'grid' | 'table'
 
-// Modals
+// Modals & Tabs
 const selectedEndpoint = ref(null)
+const activeModalTab = ref('params')
 const showBaseUrlModal = ref(false)
+
+// Simulated parameters for active modal
+const simulatedValues = reactive({})
+
+// Watch selectedEndpoint to populate simulation defaults
+watch(selectedEndpoint, (ep) => {
+  if (ep) {
+    activeModalTab.value = 'params'
+    // Clear & populate defaults
+    Object.keys(simulatedValues).forEach(k => delete simulatedValues[k])
+    if (ep.parameters) {
+      ep.parameters.forEach(p => {
+        const key = p.placeholder || p.name
+        simulatedValues[key] = p.example || '123'
+      })
+    }
+  }
+})
+
+// Dynamic simulated URL based on user input
+const simulatedUrl = computed(() => {
+  if (!selectedEndpoint.value) return ''
+  let url = selectedEndpoint.value.exampleUrl || selectedEndpoint.value.url
+
+  // Replace each parameter if modified by user
+  if (selectedEndpoint.value.parameters) {
+    let rawUrl = selectedEndpoint.value.url
+    const baseMap = {
+      'VClaim': 'https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev',
+      'Antrean RS': 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev',
+      'Aplicares': 'https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws',
+      'Apotek': 'https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev',
+      'PCare': 'https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev',
+      'Antrean FKTP': 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev',
+      'i-Care JKN': 'https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev'
+    }
+    const bUrl = baseMap[selectedEndpoint.value.mainCategory] || 'https://apijkn-dev.bpjs-kesehatan.go.id'
+    rawUrl = rawUrl.replace(/{base url}/gi, bUrl).replace(/{service name}/gi, '')
+    rawUrl = rawUrl.replace('//', '/').replace('https:/', 'https://').replace('http:/', 'http://')
+
+    selectedEndpoint.value.parameters.forEach(p => {
+      const key = p.placeholder || p.name
+      const val = simulatedValues[key] || p.example || '123'
+      const ph = p.placeholder || `{${p.name}}`
+      rawUrl = rawUrl.replace(ph, val)
+      rawUrl = rawUrl.replace(ph.toLowerCase(), val)
+      rawUrl = rawUrl.replace(`{${p.name}}`, val)
+    })
+    url = rawUrl
+  }
+
+  return url
+})
+
+// Base URL reference
+const baseUrls = [
+  { layanan: "VClaim (FKRTL)", target: "FKRTL (Rumah Sakit)", url: "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev" },
+  { layanan: "Antrean RS", target: "FKRTL (Rumah Sakit)", url: "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev" },
+  { layanan: "Aplicares (Kamar)", target: "FKRTL (Rumah Sakit)", url: "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws" },
+  { layanan: "Apotek (Pelayanan Obat)", target: "Apotek / Farmasi", url: "https://apijkn-dev.bpjs-kesehatan.go.id/apotek-rest-dev" },
+  { layanan: "PCare (FKTP)", target: "FKTP (Puskesmas/Klinik)", url: "https://apijkn-dev.bpjs-kesehatan.go.id/pcare-rest-dev" },
+  { layanan: "Antrean FKTP", target: "FKTP (Puskesmas/Klinik)", url: "https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev" },
+  { layanan: "i-Care JKN (IHS)", target: "FKRTL & FKTP", url: "https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev" }
+]
 
 // Category Tabs Definition
 const categoryList = computed(() => {
-  const cats = [
+  return [
     { id: 'ALL', name: 'Semua', icon: '🌐', count: totalEndpoints.value },
     { id: 'VClaim', name: 'VClaim (FKRTL)', icon: '🏥', count: allEndpoints.value.filter(e => e.mainCategory === 'VClaim').length },
     { id: 'Antrean RS', name: 'Antrean RS', icon: '📱', count: allEndpoints.value.filter(e => e.mainCategory === 'Antrean RS').length },
@@ -625,7 +815,6 @@ const categoryList = computed(() => {
     { id: 'Antrean FKTP', name: 'Antrean FKTP', icon: '⏱️', count: allEndpoints.value.filter(e => e.mainCategory === 'Antrean FKTP').length },
     { id: 'i-Care JKN', name: 'i-Care JKN', icon: '📋', count: allEndpoints.value.filter(e => e.mainCategory === 'i-Care JKN').length },
   ]
-  return cats
 })
 
 // Subcategory list based on current main category
