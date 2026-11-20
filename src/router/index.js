@@ -613,6 +613,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/bpjs/surat-kontrol',
+    name: 'BpjsSuratKontrol',
+    component: () => import('../views/bpjs/SuratKontrolVclaimView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/rs-online/ref-tempat-tidur',
     alias: '/rs-online/ketersediaan-kamar',
     name: 'RsOnlineRefTempatTidur',

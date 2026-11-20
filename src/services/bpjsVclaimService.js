@@ -110,6 +110,15 @@ const bpjsVclaimService = {
      * Delete SEP
      */
     deleteSep: (payload) => api.delete('/bpjs/vclaim/sep/delete', { data: payload }),
+
+    /**
+     * Surat Kontrol & SPRI Methods
+     */
+    getSuratKontrolByNoSurat: (noSurat) => api.get(`/bpjs/vclaim/surat-kontrol/nosurat/${noSurat}`),
+    getSuratKontrolBySep: (noSep) => api.get(`/bpjs/vclaim/surat-kontrol/sep/${noSep}`),
+    getSuratKontrolByTanggal: (params) => api.get('/bpjs/vclaim/surat-kontrol/tanggal', { params }),
+    getSuratKontrolByNoKartu: (noKartu, params) => api.get(`/bpjs/vclaim/surat-kontrol/peserta/${noKartu}`, { params }),
+    syncSuratKontrol: (payload) => api.post('/bpjs/vclaim/surat-kontrol/sync', payload),
 };
 
 export default bpjsVclaimService;
