@@ -140,7 +140,52 @@
         </div>
       </div>
 
-      <!-- Live Room Status Cards -->
+      <!-- INTERACTIVE WEEK STRIP (Navigasi Kalender 7 Hari) -->
+      <div class="card glass-card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small fw-bold text-muted text-uppercase">
+              <i class="fas fa-calendar-week text-primary me-1"></i> Kalender Sepekan (Klik Hari Untuk Berpindah)
+            </span>
+            <span class="badge bg-primary-subtle text-primary fw-bold">
+              {{ weekTotalMeetings }} Rapat Minggu Ini
+            </span>
+          </div>
+
+          <div class="row g-2">
+            <div 
+              v-for="day in currentWeekDays" 
+              :key="day.dateStr"
+              class="col"
+            >
+              <div 
+                class="week-day-pill p-2 text-center rounded-3 cursor-pointer transition-all border"
+                :class="{
+                  'active-day shadow-sm border-primary bg-primary text-white': day.isSelected,
+                  'bg-white text-dark hover-light': !day.isSelected,
+                  'is-today-marker': day.isToday
+                }"
+                @click="selectDateDirectly(day.dateStr)"
+              >
+                <div class="small fw-semibold text-uppercase opacity-75">{{ day.dayNameShort }}</div>
+                <div class="fs-5 fw-bold font-monospace">{{ day.dayNum }}</div>
+                <div class="mt-1">
+                  <span 
+                    v-if="day.count > 0" 
+                    class="badge rounded-pill"
+                    :class="day.isSelected ? 'bg-white text-primary' : 'bg-danger text-white'"
+                  >
+                    {{ day.count }} Rapat
+                  </span>
+                  <span v-else class="small opacity-50 fst-italic" style="font-size: 0.7rem;">
+                    Kosong
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
@@ -321,18 +366,55 @@
         </div>
       </div>
 
-      <!-- DAFTAR RAPAT HARI INI (Agenda List) -->
+      <!-- DAFTAR RAPAT (Agenda List with Scope Filter) -->
       <div class="card glass-card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold mb-0 text-dark">
-            <i class="fas fa-list-ul text-primary me-2"></i> Daftar Rapat & Pertemuan ({{ schedules.length }} Agenda)
-          </h5>
+        <div class="card-header bg-white py-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <div>
+            <h5 class="fw-bold mb-0 text-dark">
+              <i class="fas fa-list-ul text-primary me-2"></i> Daftar Agenda Rapat & Reservasi ({{ displayedSchedules.length }} Agenda)
+            </h5>
+            <div class="text-muted small mt-1">
+              <span v-if="agendaScope === 'day'">Menampilkan jadwal khusus tanggal: <strong>{{ formatSelectedDateHuman }}</strong></span>
+              <span v-else-if="agendaScope === 'week'">Menampilkan seluruh agenda sepekan ini</span>
+              <span v-else>Menampilkan seluruh agenda bulan terpilih</span>
+            </div>
+          </div>
+
+          <!-- Scope Switcher Buttons -->
+          <div class="btn-group shadow-sm p-1 bg-light rounded-pill border" role="group">
+            <button 
+              type="button" 
+              class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
+              :class="agendaScope === 'day' ? 'btn-primary text-white' : 'btn-light text-muted'"
+              @click="agendaScope = 'day'"
+            >
+              <i class="fas fa-calendar-day me-1"></i> Hari Terpilih ({{ daySchedules.length }})
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
+              :class="agendaScope === 'week' ? 'btn-primary text-white' : 'btn-light text-muted'"
+              @click="agendaScope = 'week'"
+            >
+              <i class="fas fa-calendar-week me-1"></i> Minggu Ini ({{ weekSchedules.length }})
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm rounded-pill px-3 fw-semibold transition-all"
+              :class="agendaScope === 'month' ? 'btn-primary text-white' : 'btn-light text-muted'"
+              @click="agendaScope = 'month'"
+            >
+              <i class="fas fa-calendar-alt me-1"></i> Bulan Ini ({{ allSchedules.length }})
+            </button>
+          </div>
         </div>
+
         <div class="card-body p-0">
-          <div v-if="schedules.length > 0" class="table-responsive">
+          <div v-if="displayedSchedules.length > 0" class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small">
                 <tr>
+                  <th v-if="agendaScope !== 'day'" width="140px">Tanggal</th>
                   <th width="120px">Waktu</th>
                   <th width="220px">Ruang Rapat</th>
                   <th>Perihal Rapat</th>
@@ -342,7 +424,16 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in schedules" :key="item.id">
+                <tr v-for="item in displayedSchedules" :key="item.id">
+                  <td v-if="agendaScope !== 'day'">
+                    <div class="fw-bold text-dark small">{{ formatDateShort(item.tanggal) }}</div>
+                    <span 
+                      v-if="item.tanggal && item.tanggal.split(' ')[0] === selectedDate"
+                      class="badge bg-primary-subtle text-primary"
+                    >
+                      Hari Terpilih
+                    </span>
+                  </td>
                   <td>
                     <div class="fw-bold font-monospace text-primary fs-6">{{ item.jam_mulai }} - {{ item.jam_selesai }}</div>
                     <div class="text-muted small">{{ item.durasi_menit }} menit</div>
@@ -389,8 +480,12 @@
             <div class="mb-3">
               <i class="fas fa-calendar-check fa-3x text-success opacity-50"></i>
             </div>
-            <h6 class="fw-bold text-dark">Tidak Ada Agenda Rapat Terjadwal</h6>
-            <p class="small mb-0">Pada tanggal {{ formatSelectedDateHuman }}, semua ruang rapat berstatus kosong dan tersedia.</p>
+            <h6 class="fw-bold text-dark">Tidak Ada Agenda Rapat</h6>
+            <p class="small mb-0">
+              <span v-if="agendaScope === 'day'">Pada tanggal {{ formatSelectedDateHuman }}, semua ruang rapat berstatus kosong dan tersedia.</span>
+              <span v-else-if="agendaScope === 'week'">Tidak ada agenda rapat yang terjadwal di minggu ini.</span>
+              <span v-else>Tidak ada agenda rapat yang terjadwal di bulan ini.</span>
+            </p>
           </div>
         </div>
       </div>
@@ -794,10 +889,12 @@ export default {
     const loading = ref(false)
     const savingRoom = ref(false)
     const rooms = ref([])
-    const schedules = ref([])
+    const allSchedules = ref([])
+    const dateCounts = ref({})
     const selectedDate = ref(new Date().toISOString().split('T')[0])
     const filterRuangId = ref('all')
     const selectedMeetingDetail = ref(null)
+    const agendaScope = ref('day') // 'day' | 'week' | 'month'
 
     // Signage
     const selectedSignageRoomId = ref(null)
@@ -860,6 +957,70 @@ export default {
       })
     })
 
+    // 7-day week calendar strip calculation based on selectedDate
+    const currentWeekDays = computed(() => {
+      const curr = new Date(selectedDate.value + 'T00:00:00')
+      const dayOfWeek = curr.getDay() // 0 is Sunday, 1 is Monday...
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const monday = new Date(curr)
+      monday.setDate(curr.getDate() + diffToMonday)
+
+      const days = []
+      const todayStr = new Date().toISOString().split('T')[0]
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday)
+        d.setDate(monday.getDate() + i)
+        const dateStr = d.toISOString().split('T')[0]
+        const dayNum = d.getDate()
+        const dayNameShort = d.toLocaleDateString('id-ID', { weekday: 'short' })
+        
+        // Count meetings on this date
+        const count = dateCounts.value[dateStr] || allSchedules.value.filter(s => {
+          const tgl = s.tgl_only || (s.tanggal ? s.tanggal.split(' ')[0] : '')
+          return tgl === dateStr
+        }).length
+
+        days.push({
+          dateStr,
+          dayNum,
+          dayNameShort,
+          count,
+          isSelected: dateStr === selectedDate.value,
+          isToday: dateStr === todayStr
+        })
+      }
+      return days
+    })
+
+    const weekTotalMeetings = computed(() => {
+      return currentWeekDays.value.reduce((acc, d) => acc + d.count, 0)
+    })
+
+    // Schedules filtered specifically for the selected date (used for Timeline Gantt & Day view)
+    const daySchedules = computed(() => {
+      return allSchedules.value.filter(s => {
+        const tgl = s.tgl_only || (s.tanggal ? s.tanggal.split(' ')[0] : '')
+        return tgl === selectedDate.value
+      })
+    })
+
+    // Schedules filtered for the current 7-day week
+    const weekSchedules = computed(() => {
+      const weekDateSet = new Set(currentWeekDays.value.map(d => d.dateStr))
+      return allSchedules.value.filter(s => {
+        const tgl = s.tgl_only || (s.tanggal ? s.tanggal.split(' ')[0] : '')
+        return weekDateSet.has(tgl)
+      })
+    })
+
+    // Schedules displayed in the table below based on user's active scope
+    const displayedSchedules = computed(() => {
+      if (agendaScope.value === 'month') return allSchedules.value
+      if (agendaScope.value === 'week') return weekSchedules.value
+      return daySchedules.value
+    })
+
     // Methods
     const updateClock = () => {
       const now = new Date()
@@ -884,13 +1045,22 @@ export default {
     const loadJadwal = async () => {
       loading.value = true
       try {
+        const curr = new Date(selectedDate.value + 'T00:00:00')
+        const year = curr.getFullYear()
+        const month = curr.getMonth()
+        // Query full month range (e.g. 2026-11-01 s/d 2026-11-30)
+        const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+        const lastDay = new Date(year, month + 1, 0).getDate()
+        const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+
         const res = await ruangRapatService.getJadwal({
-          start: selectedDate.value,
-          end: selectedDate.value,
+          start: monthStart,
+          end: monthEnd,
           ruang_id: filterRuangId.value
         })
-        if (res.data && res.data.schedules) {
-          schedules.value = res.data.schedules
+        if (res.data) {
+          allSchedules.value = res.data.schedules || []
+          dateCounts.value = res.data.date_counts || {}
         }
       } catch (err) {
         console.error('Error loading schedule:', err)
@@ -911,20 +1081,30 @@ export default {
       })
     }
 
+    const selectDateDirectly = (dateStr) => {
+      const oldMonth = selectedDate.value.slice(0, 7)
+      const newMonth = dateStr.slice(0, 7)
+      selectedDate.value = dateStr
+      if (oldMonth !== newMonth) {
+        loadJadwal()
+      }
+    }
+
     const shiftDate = (days) => {
       const d = new Date(selectedDate.value + 'T00:00:00')
       d.setDate(d.getDate() + days)
-      selectedDate.value = d.toISOString().split('T')[0]
-      loadJadwal()
+      const newDate = d.toISOString().split('T')[0]
+      selectDateDirectly(newDate)
     }
 
     const goToToday = () => {
-      selectedDate.value = new Date().toISOString().split('T')[0]
-      loadJadwal()
+      const today = new Date().toISOString().split('T')[0]
+      selectDateDirectly(today)
     }
 
+    // In timeline, only show meetings for the selected single day
     const getMeetingsForRoom = (roomId) => {
-      return schedules.value.filter(s => s.ruang_id === roomId)
+      return daySchedules.value.filter(s => s.ruang_id === roomId)
     }
 
     // Calculate position and width of agenda bar in the timeline
@@ -963,6 +1143,13 @@ export default {
       if (!dateStr) return '-'
       const d = new Date(dateStr)
       return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    }
+
+    const formatDateShort = (dateStr) => {
+      if (!dateStr) return '-'
+      const d = new Date(dateStr)
+      if (isNaN(d.getTime())) return dateStr
+      return d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })
     }
 
     const showMeetingDetail = (item) => {
@@ -1070,10 +1257,17 @@ export default {
       loading,
       savingRoom,
       rooms,
-      schedules,
+      allSchedules,
+      dateCounts,
+      daySchedules,
+      weekSchedules,
+      displayedSchedules,
       filteredRooms,
       selectedDate,
       filterRuangId,
+      agendaScope,
+      currentWeekDays,
+      weekTotalMeetings,
       selectedMeetingDetail,
       selectedSignageRoomId,
       selectedSignageRoom,
@@ -1087,6 +1281,7 @@ export default {
       roomForm,
       availableFacilitiesPreset,
       refreshData,
+      selectDateDirectly,
       shiftDate,
       goToToday,
       getMeetingsForRoom,
@@ -1094,6 +1289,7 @@ export default {
       hasFacility,
       formatTime,
       formatDate,
+      formatDateShort,
       showMeetingDetail,
       openSuratDetail,
       openRoomModal,
@@ -1173,6 +1369,44 @@ export default {
   100% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.week-day-pill {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.week-day-pill:hover:not(.active-day) {
+  background-color: #f1f5f9 !important;
+  transform: translateY(-2px);
+  border-color: #cbd5e1 !important;
+}
+
+.week-day-pill.active-day {
+  transform: scale(1.03);
+}
+
+.is-today-marker {
+  position: relative;
+}
+
+.is-today-marker::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ef4444;
 }
 
 /* Timeline Gantt Styling */
