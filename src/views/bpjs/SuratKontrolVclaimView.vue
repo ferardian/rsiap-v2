@@ -8,7 +8,7 @@
             <span>📋</span> Tarik Data Surat Kontrol & SPRI BPJS
           </h1>
           <p class="page-subtitle mb-0">
-            Pencarian, verifikasi status, dan sinkronisasi surat kontrol langsung dari BPJS VClaim ke database SIMRS Khanza (<code>bridging_surat_kontrol_bpjs</code> & <code>bridging_surat_pri_bpjs</code>)
+            Pencarian, verifikasi status, dan sinkronisasi surat kontrol langsung dari BPJS VClaim ke database SIMRS
           </p>
         </div>
         <div v-if="searchMode !== 'nosurat' && listSuratKontrol.length > 0" class="d-flex align-items-center gap-2">
@@ -210,10 +210,10 @@
                     <td>{{ detailSurat.namaDokterPembuat || '-' }}</td>
                   </tr>
                   <tr>
-                    <td class="text-muted">Target Tabel DB</td>
+                    <td class="text-muted">Jenis Pelayanan</td>
                     <td>
-                      <span class="badge bg-secondary font-monospace">
-                        {{ detailSurat.jnsKontrol === '1' ? 'bridging_surat_pri_bpjs' : 'bridging_surat_kontrol_bpjs' }}
+                      <span class="badge bg-secondary">
+                        {{ detailSurat.jnsKontrol === '1' ? 'Rawat Inap (SPRI)' : 'Rawat Jalan (Surat Kontrol)' }}
                       </span>
                     </td>
                   </tr>
@@ -422,7 +422,7 @@
           <span class="visually-hidden">Loading...</span>
         </div>
         <h6 class="fw-bold text-primary">Menghubungkan ke BPJS VClaim...</h6>
-        <p class="text-muted small mb-0">Sedang menarik dan memverifikasi data terhadap database SIMRS Khanza.</p>
+        <p class="text-muted small mb-0">Sedang menarik dan memverifikasi data terhadap database SIMRS.</p>
       </div>
     </div>
   </div>
@@ -661,7 +661,7 @@ const handleBulkSync = async () => {
       })
       Swal.fire({
         title: 'Berhasil!',
-        text: `${count} data surat kontrol berhasil disimpan ke database SIMRS Khanza.`,
+        text: `${count} data surat kontrol berhasil disimpan ke database SIMRS.`,
         icon: 'success'
       })
     } else {
