@@ -175,73 +175,60 @@
               </div>
             </div>
 
-            <!-- 2. QUICK DAY STATS SUMMARY (Luxury Ambient Briefing Card) -->
-            <div class="card border-0 rounded-4 ambient-brief-card text-white p-3 position-relative overflow-hidden">
-              <div class="ambient-glow-circle"></div>
-              
-              <div class="position-relative z-1">
-                <!-- Top Badge Row -->
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="badge rounded-pill bg-white bg-opacity-15 text-white border border-white-10 d-inline-flex align-items-center gap-1.5 px-2.5 py-1 small fw-semibold">
-                    <span class="pulse-sparkle"></span>
-                    <span>Ringkasan Harian</span>
-                  </span>
-                  <span v-if="isViewingToday" class="badge rounded-pill bg-success bg-opacity-25 text-success-light border border-success border-opacity-30 px-2 py-0.5 font-monospace" style="font-size: 0.7rem;">
-                    Hari Ini
-                  </span>
-                </div>
+            <!-- 2. QUICK DAY STATS SUMMARY (Clean Hospital Standard) -->
+            <div class="card border rounded-3 shadow-xs p-3 bg-white">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                  <i class="fas fa-calendar-day text-primary me-1"></i> Ringkasan Hari Ini
+                </span>
+                <span v-if="isViewingToday" class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">
+                  Hari Ini
+                </span>
+                <span v-else class="text-muted small font-monospace" style="font-size: 0.72rem;">
+                  {{ formatSelectedDateHumanShort }}
+                </span>
+              </div>
 
-                <!-- Main Metric Counter -->
-                <div class="d-flex align-items-baseline gap-2 mt-2">
-                  <span class="display-5 fw-extrabold text-white font-monospace lh-1">
-                    {{ daySchedules.length }}
-                  </span>
-                  <div>
-                    <div class="fw-bold text-white small">Agenda Rapat</div>
-                    <div class="text-white-50" style="font-size: 0.72rem;">
-                      {{ daySchedules.length > 0 ? 'Ruangan terpakai sebagian' : 'Semua ruangan kosong' }}
-                    </div>
+              <div class="d-flex align-items-baseline gap-2 mt-1 mb-2">
+                <span class="fs-2 fw-bold text-dark font-monospace lh-1">
+                  {{ daySchedules.length }}
+                </span>
+                <div>
+                  <div class="fw-bold text-dark small">Agenda Rapat</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">
+                    {{ daySchedules.length > 0 ? `${daySchedules.length} kegiatan terjadwal` : 'Tidak ada kegiatan (ruang kosong)' }}
                   </div>
                 </div>
+              </div>
 
-                <!-- Booked Rooms Quick Tags -->
-                <div v-if="daySchedules.length > 0" class="mt-3 pt-2 border-top border-white-10">
-                  <div class="text-white-50 mb-1.5 fw-semibold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Jadwal Hari Ini:
-                  </div>
-                  <div class="d-flex flex-wrap gap-1">
-                    <span 
-                      v-for="m in daySchedules.slice(0, 3)" 
-                      :key="m.id"
-                      class="mini-agenda-pill cursor-pointer"
-                      :title="`${m.perihal} (${m.nama_ruang})`"
-                      @click="showMeetingDetail(m)"
-                    >
-                      <span class="pill-dot" :style="{ backgroundColor: m.warna_label }"></span>
-                      <span class="text-truncate" style="max-width: 95px;">{{ m.nama_ruang.replace('Ruang Rapat ', '').replace('Ruang Pertemuan ', '') }}</span>
-                      <span class="opacity-75 font-monospace">({{ m.jam_mulai }})</span>
-                    </span>
-                    <span v-if="daySchedules.length > 3" class="mini-agenda-pill opacity-75">
-                      +{{ daySchedules.length - 3 }} lagi
-                    </span>
-                  </div>
-                </div>
-
-                <div v-else class="mt-3 pt-2 border-top border-white-10 d-flex align-items-center gap-1.5 text-success-light small">
-                  <i class="fas fa-check-circle text-success"></i>
-                  <span>5 Ruangan bebas reservasi</span>
-                </div>
-
-                <!-- Footer Date Info -->
-                <div class="mt-3 pt-2 border-top border-white-10 d-flex justify-content-between align-items-center small text-white-70">
-                  <span class="d-flex align-items-center gap-1.5">
-                    <i class="fas fa-calendar-day text-primary-light"></i>
-                    <span>{{ formatSelectedDateHumanShort }}</span>
-                  </span>
-                  <span class="badge bg-white bg-opacity-10 text-white rounded-pill px-2 py-0.5 font-monospace" style="font-size: 0.7rem;">
-                    {{ availableRoomsCount }} Kosong
+              <!-- Booked Rooms Quick Tags -->
+              <div v-if="daySchedules.length > 0" class="pt-2 border-top">
+                <div class="text-muted mb-1" style="font-size: 0.7rem;">Ruangan Terjadwal:</div>
+                <div class="d-flex flex-wrap gap-1">
+                  <span 
+                    v-for="m in daySchedules" 
+                    :key="m.id"
+                    class="badge bg-light text-dark border cursor-pointer hover-bg-subtle"
+                    :style="{ borderLeft: `3px solid ${m.warna_label} !important` }"
+                    :title="`${m.perihal} (${m.nama_ruang})`"
+                    @click="showMeetingDetail(m)"
+                  >
+                    {{ m.nama_ruang.replace('Ruang Rapat ', '').replace('Ruang Pertemuan ', '') }} ({{ m.jam_mulai }})
                   </span>
                 </div>
+              </div>
+
+              <div v-else class="pt-2 border-top text-success small d-flex align-items-center gap-1.5">
+                <i class="fas fa-check-circle text-success"></i>
+                <span>Semua ruangan siap digunakan</span>
+              </div>
+
+              <!-- Footer Availability -->
+              <div class="pt-2 mt-2 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;">
+                <span>Ketersediaan:</span>
+                <span class="fw-semibold text-dark">
+                  <span class="text-success fw-bold">{{ availableRoomsCount }}</span> dari {{ rooms.length }} Ruang Kosong
+                </span>
               </div>
             </div>
 
@@ -1694,93 +1681,17 @@ export default {
   bottom: 2px;
 }
 
-/* Ambient Luxury Briefing Card */
-.ambient-brief-card {
-  background: linear-gradient(135deg, #090d16 0%, #0f172a 45%, #1e1b4b 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.shadow-xs {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.ambient-brief-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 36px -6px rgba(30, 27, 75, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+.hover-bg-subtle {
+  transition: all 0.15s ease;
 }
 
-.ambient-glow-circle {
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 140px;
-  height: 140px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(59, 130, 246, 0.1) 60%, transparent 100%);
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(8px);
-}
-
-.pulse-sparkle {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #38bdf8;
-  display: inline-block;
-  box-shadow: 0 0 8px #38bdf8;
-  animation: pulse-glow 1.5s infinite;
-}
-
-@keyframes pulse-glow {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.7; }
-}
-
-.border-white-10 {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-.text-white-70 {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.text-white-50 {
-  color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.text-primary-light {
-  color: #60a5fa !important;
-}
-
-.text-success-light {
-  color: #4ade80 !important;
-}
-
-.mini-agenda-pill {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  font-size: 0.72rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
-}
-
-.mini-agenda-pill:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
-
-.pill-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
+.hover-bg-subtle:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Room Filter Items */
