@@ -175,20 +175,73 @@
               </div>
             </div>
 
-            <!-- 2. QUICK DAY STATS SUMMARY -->
-            <div class="card border-0 shadow-sm rounded-4 bg-gradient-blue text-white p-3">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <div class="small text-white-50 text-uppercase fw-semibold">Agenda Terpilih</div>
-                  <div class="fs-4 fw-bold font-monospace">{{ daySchedules.length }} <span class="fs-6 fw-normal text-white-70">Rapat</span></div>
+            <!-- 2. QUICK DAY STATS SUMMARY (Luxury Ambient Briefing Card) -->
+            <div class="card border-0 rounded-4 ambient-brief-card text-white p-3 position-relative overflow-hidden">
+              <div class="ambient-glow-circle"></div>
+              
+              <div class="position-relative z-1">
+                <!-- Top Badge Row -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge rounded-pill bg-white bg-opacity-15 text-white border border-white-10 d-inline-flex align-items-center gap-1.5 px-2.5 py-1 small fw-semibold">
+                    <span class="pulse-sparkle"></span>
+                    <span>Ringkasan Harian</span>
+                  </span>
+                  <span v-if="isViewingToday" class="badge rounded-pill bg-success bg-opacity-25 text-success-light border border-success border-opacity-30 px-2 py-0.5 font-monospace" style="font-size: 0.7rem;">
+                    Hari Ini
+                  </span>
                 </div>
-                <div class="p-2 bg-white bg-opacity-20 rounded-3">
-                  <i class="fas fa-calendar-check fa-lg text-white"></i>
+
+                <!-- Main Metric Counter -->
+                <div class="d-flex align-items-baseline gap-2 mt-2">
+                  <span class="display-5 fw-extrabold text-white font-monospace lh-1">
+                    {{ daySchedules.length }}
+                  </span>
+                  <div>
+                    <div class="fw-bold text-white small">Agenda Rapat</div>
+                    <div class="text-white-50" style="font-size: 0.72rem;">
+                      {{ daySchedules.length > 0 ? 'Ruangan terpakai sebagian' : 'Semua ruangan kosong' }}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="small text-white-80 border-top border-white-20 pt-2 d-flex justify-content-between">
-                <span>{{ formatSelectedDateHumanShort }}</span>
-                <span class="fw-bold">{{ isViewingToday ? 'Hari Ini' : '' }}</span>
+
+                <!-- Booked Rooms Quick Tags -->
+                <div v-if="daySchedules.length > 0" class="mt-3 pt-2 border-top border-white-10">
+                  <div class="text-white-50 mb-1.5 fw-semibold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Jadwal Hari Ini:
+                  </div>
+                  <div class="d-flex flex-wrap gap-1">
+                    <span 
+                      v-for="m in daySchedules.slice(0, 3)" 
+                      :key="m.id"
+                      class="mini-agenda-pill cursor-pointer"
+                      :title="`${m.perihal} (${m.nama_ruang})`"
+                      @click="showMeetingDetail(m)"
+                    >
+                      <span class="pill-dot" :style="{ backgroundColor: m.warna_label }"></span>
+                      <span class="text-truncate" style="max-width: 95px;">{{ m.nama_ruang.replace('Ruang Rapat ', '').replace('Ruang Pertemuan ', '') }}</span>
+                      <span class="opacity-75 font-monospace">({{ m.jam_mulai }})</span>
+                    </span>
+                    <span v-if="daySchedules.length > 3" class="mini-agenda-pill opacity-75">
+                      +{{ daySchedules.length - 3 }} lagi
+                    </span>
+                  </div>
+                </div>
+
+                <div v-else class="mt-3 pt-2 border-top border-white-10 d-flex align-items-center gap-1.5 text-success-light small">
+                  <i class="fas fa-check-circle text-success"></i>
+                  <span>5 Ruangan bebas reservasi</span>
+                </div>
+
+                <!-- Footer Date Info -->
+                <div class="mt-3 pt-2 border-top border-white-10 d-flex justify-content-between align-items-center small text-white-70">
+                  <span class="d-flex align-items-center gap-1.5">
+                    <i class="fas fa-calendar-day text-primary-light"></i>
+                    <span>{{ formatSelectedDateHumanShort }}</span>
+                  </span>
+                  <span class="badge bg-white bg-opacity-10 text-white rounded-pill px-2 py-0.5 font-monospace" style="font-size: 0.7rem;">
+                    {{ availableRoomsCount }} Kosong
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1597,40 +1650,40 @@ export default {
 }
 
 .cal-day-cell {
-  height: 34px;
+  height: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: #1e293b;
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cal-day-cell:hover:not(.is-selected) {
   background-color: #f1f5f9;
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .cal-day-cell.diff-month {
   color: #94a3b8;
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .cal-day-cell.is-selected {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
   color: #ffffff !important;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  font-weight: 700;
+  box-shadow: 0 6px 16px -2px rgba(37, 99, 235, 0.45);
 }
 
 .cal-day-cell.is-today:not(.is-selected) {
   border: 1.5px solid #2563eb;
   color: #2563eb;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .meeting-dot {
@@ -1641,27 +1694,110 @@ export default {
   bottom: 2px;
 }
 
-/* Background Gradients */
-.bg-gradient-blue {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+/* Ambient Luxury Briefing Card */
+.ambient-brief-card {
+  background: linear-gradient(135deg, #090d16 0%, #0f172a 45%, #1e1b4b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-white-70 { color: rgba(255, 255, 255, 0.7); }
-.text-white-80 { color: rgba(255, 255, 255, 0.8); }
-.border-white-20 { border-color: rgba(255, 255, 255, 0.2) !important; }
+.ambient-brief-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 36px -6px rgba(30, 27, 75, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.ambient-glow-circle {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(59, 130, 246, 0.1) 60%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(8px);
+}
+
+.pulse-sparkle {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  display: inline-block;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.border-white-10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.text-white-70 {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.text-white-50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.text-primary-light {
+  color: #60a5fa !important;
+}
+
+.text-success-light {
+  color: #4ade80 !important;
+}
+
+.mini-agenda-pill {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.mini-agenda-pill:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
 
 /* Room Filter Items */
 .room-filter-item {
   border: 1px solid transparent;
+  transition: all 0.15s ease;
 }
 
 .room-filter-item:hover:not(.active) {
   background-color: #f8fafc;
+  transform: translateX(2px);
 }
 
 .room-filter-item.active {
   background-color: #eff6ff;
   border-color: #bfdbfe;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
 }
 
 .room-color-dot {
@@ -1763,23 +1899,24 @@ export default {
   position: absolute;
   top: 8px;
   bottom: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #ffffff;
-  padding: 6px 10px;
+  padding: 6px 12px;
   cursor: pointer;
   z-index: 6;
   display: flex;
   align-items: center;
-  transition: all 0.2s ease;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border-left: 3.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .meeting-chip:hover {
   filter: brightness(1.08);
-  transform: translateY(-2px);
-  z-index: 9;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+  transform: translateY(-2px) scale(1.005);
+  z-index: 10;
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .chip-content {
