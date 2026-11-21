@@ -956,6 +956,25 @@ export default {
     // Agenda scope: 'day' | 'week' | 'month'
     const agendaScope = ref('day')
 
+    // Helper to format Date into YYYY-MM-DD using local time (avoids UTC timezone shift)
+    const toLocalDateStr = (d) => {
+      if (!d || isNaN(d.getTime())) return ''
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const date = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${date}`
+    }
+
+    // Helper to safely parse YYYY-MM-DD into local Date at 12:00:00 noon
+    const parseLocalDate = (dateStr) => {
+      if (!dateStr) return new Date()
+      const parts = dateStr.split('-').map(Number)
+      if (parts.length === 3) {
+        return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0)
+      }
+      return new Date()
+    }
+
     const loading = ref(false)
     const savingRoom = ref(false)
     const rooms = ref([])
@@ -963,7 +982,7 @@ export default {
     const dateCounts = ref({})
 
     // Selected Date & Filter
-    const selectedDate = ref(new Date().toISOString().split('T')[0])
+    const selectedDate = ref(toLocalDateStr(new Date()))
     const filterRuangId = ref('all')
     const selectedMeetingDetail = ref(null)
 
@@ -1009,7 +1028,7 @@ export default {
     // ----------------------------------------------------
     // COMPUTED PROPERTIES
     // ----------------------------------------------------
-    const todayStr = computed(() => new Date().toISOString().split('T')[0])
+    const todayStr = computed(() => toLocalDateStr(new Date()))
     const isViewingToday = computed(() => selectedDate.value === todayStr.value)
 
     const filteredRooms = computed(() => {
@@ -1036,7 +1055,7 @@ export default {
 
     const formatSelectedDateHuman = computed(() => {
       if (!selectedDate.value) return ''
-      const d = new Date(selectedDate.value + 'T00:00:00')
+      const d = parseLocalDate(selectedDate.value)
       return d.toLocaleDateString('id-ID', {
         weekday: 'long',
         year: 'numeric',
@@ -1047,7 +1066,7 @@ export default {
 
     const formatSelectedDateHumanShort = computed(() => {
       if (!selectedDate.value) return ''
-      const d = new Date(selectedDate.value + 'T00:00:00')
+      const d = parseLocalDate(selectedDate.value)
       return d.toLocaleDateString('id-ID', {
         weekday: 'short',
         day: 'numeric',
@@ -1075,8 +1094,8 @@ export default {
       // 1. Padding days from previous month
       for (let i = firstDayOfMonth - 1; i >= 0; i--) {
         const pDay = daysInPrevMonth - i
-        const prevDate = new Date(year, month - 1, pDay)
-        const dateStr = prevDate.toISOString().split('T')[0]
+        const prevDate = new Date(year, month - 1, pDay, 12, 0, 0)
+        const dateStr = toLocalDateStr(prevDate)
         days.push({
           dateStr,
           dayNum: pDay,
@@ -1106,8 +1125,8 @@ export default {
       const totalCells = days.length <= 35 ? 35 : 42
       const remaining = totalCells - days.length
       for (let day = 1; day <= remaining; day++) {
-        const nextDate = new Date(year, month + 1, day)
-        const dateStr = nextDate.toISOString().split('T')[0]
+        const nextDate = new Date(year, month + 1, day, 12, 0, 0)
+        const dateStr = toLocalDateStr(nextDate)
         days.push({
           dateStr,
           dayNum: day,
@@ -1152,7 +1171,7 @@ export default {
 
     // Schedules filtered for the current 7-day week of selectedDate
     const weekSchedules = computed(() => {
-      const curr = new Date(selectedDate.value + 'T00:00:00')
+      const curr = parseLocalDate(selectedDate.value)
       const dayOfWeek = curr.getDay()
       const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
       const monday = new Date(curr)
@@ -1162,7 +1181,7 @@ export default {
       for (let i = 0; i < 7; i++) {
         const d = new Date(monday)
         d.setDate(monday.getDate() + i)
-        weekDates.add(d.toISOString().split('T')[0])
+        weekDates.add(toLocalDateStr(d))
       }
 
       return allSchedules.value.filter(s => {
@@ -1263,13 +1282,13 @@ export default {
       const now = new Date()
       calYear.value = now.getFullYear()
       calMonth.value = now.getMonth()
-      selectedDate.value = now.toISOString().split('T')[0]
+      selectedDate.value = toLocalDateStr(now)
       loadJadwal()
     }
 
     const onSelectDate = (dateStr) => {
       selectedDate.value = dateStr
-      const targetDate = new Date(dateStr + 'T00:00:00')
+      const targetDate = parseLocalDate(dateStr)
       if (targetDate.getMonth() !== calMonth.value || targetDate.getFullYear() !== calYear.value) {
         calMonth.value = targetDate.getMonth()
         calYear.value = targetDate.getFullYear()
@@ -1278,9 +1297,9 @@ export default {
     }
 
     const shiftDate = (days) => {
-      const d = new Date(selectedDate.value + 'T00:00:00')
+      const d = parseLocalDate(selectedDate.value)
       d.setDate(d.getDate() + days)
-      const newStr = d.toISOString().split('T')[0]
+      const newStr = toLocalDateStr(d)
       onSelectDate(newStr)
     }
 
@@ -1432,7 +1451,7 @@ export default {
       clockInterval = setInterval(updateClock, 1000)
       
       // Initialize calYear and calMonth from selectedDate
-      const d = new Date(selectedDate.value + 'T00:00:00')
+      const d = parseLocalDate(selectedDate.value)
       calYear.value = d.getFullYear()
       calMonth.value = d.getMonth()
 
