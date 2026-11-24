@@ -31,16 +31,23 @@
         <!-- Filters -->
         <div class="card mb-3" style="overflow: visible; z-index: 100;">
         <div class="card-body py-3" style="overflow: visible;">
-            <div class="row g-3 align-items-end">
+            <div class="row g-2 align-items-end">
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Tanggal Awal</label>
+                    <label class="form-label small fw-bold text-muted">Basis Tanggal</label>
+                    <select v-model="filters.basis_tanggal" class="form-select form-select-sm">
+                        <option value="transaksi">Tgl Transaksi</option>
+                        <option value="tgl_faktur">Tgl Faktur (Penerimaan)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">{{ filters.basis_tanggal === 'tgl_faktur' ? 'Tgl Faktur Awal' : 'Tanggal Awal' }}</label>
                     <input v-model="filters.tgl_awal" type="date" class="form-control form-control-sm">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Tanggal Akhir</label>
+                    <label class="form-label small fw-bold text-muted">{{ filters.basis_tanggal === 'tgl_faktur' ? 'Tgl Faktur Akhir' : 'Tanggal Akhir' }}</label>
                     <input v-model="filters.tgl_akhir" type="date" class="form-control form-control-sm">
                 </div>
-                 <div class="col-md-3">
+                 <div class="col-md-2">
                     <label class="form-label small mb-1">Lokasi / Bangsal</label>
                      <v-select 
                         v-model="filters.kd_bangsal" 
@@ -55,10 +62,10 @@
                     <label class="form-label small fw-bold text-muted">Pencarian</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                        <input v-model="filters.keyword" type="text" class="form-control border-start-0 ps-0" placeholder="Nama Obat, No Batch, No Faktur...">
+                        <input v-model="filters.keyword" type="text" class="form-control border-start-0 ps-0" placeholder="Nama Obat, No Batch...">
                     </div>
                 </div>
-                <div class="col-md-3 d-flex gap-1">
+                <div class="col-md-2 d-flex gap-1">
                     <button class="btn btn-secondary btn-sm" @click="resetFilters" :disabled="loading" title="Reset Filter" style="min-width: 36px;">
                         <i class="fas fa-undo"></i>
                     </button>
@@ -127,6 +134,7 @@
                              <td>{{ item.petugas }}</td>
                              <td>
                                  <div v-if="item.no_faktur" class="text-nowrap"><i class="fas fa-file-invoice me-1 text-muted"></i>{{ item.no_faktur }}</div>
+                                 <div v-if="item.pemesanan?.tgl_faktur" class="text-nowrap small text-success"><i class="fas fa-calendar-alt me-1"></i>Faktur: {{ item.pemesanan.tgl_faktur }}</div>
                                  <div v-if="item.no_batch" class="text-nowrap small text-muted"><i class="fas fa-barcode me-1"></i>{{ item.no_batch }}</div>
                              </td>
                              <td><small>{{ item.keterangan }}</small></td>
@@ -163,21 +171,34 @@
         <!-- Summary Filters -->
         <div class="card mb-3" style="overflow: visible; z-index: 100;">
             <div class="card-body py-3" style="overflow: visible;">
-                <div class="row g-3 align-items-end">
+                <div class="row g-2 align-items-end">
                     <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">Tanggal Awal</label>
+                        <label class="form-label small fw-bold text-muted">Basis Tanggal</label>
+                        <select v-model="summaryFilters.basis_tanggal" class="form-select form-select-sm" @change="onSummaryBasisTanggalChange">
+                            <option value="transaksi">Tgl Transaksi</option>
+                            <option value="tgl_faktur">Tgl Faktur (Penerimaan)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">{{ summaryFilters.basis_tanggal === 'tgl_faktur' ? 'Tgl Faktur Awal' : 'Tanggal Awal' }}</label>
                         <input v-model="summaryFilters.tgl_awal" type="date" class="form-control form-control-sm">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">Tanggal Akhir</label>
+                        <label class="form-label small fw-bold text-muted">{{ summaryFilters.basis_tanggal === 'tgl_faktur' ? 'Tgl Faktur Akhir' : 'Tanggal Akhir' }}</label>
                         <input v-model="summaryFilters.tgl_akhir" type="date" class="form-control form-control-sm">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label small mb-1">Posisi (Jenis Transaksi)</label>
+                    <div class="col-md-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small mb-0">Posisi</label>
+                            <span v-if="summaryFilters.basis_tanggal === 'tgl_faktur'" class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;">
+                                <i class="fas fa-lock me-1"></i>Terkunci
+                            </span>
+                        </div>
                          <v-select 
                             v-model="summaryFilters.posisi" 
                             :options="posisiOptions" 
                             multiple
+                            :disabled="summaryFilters.basis_tanggal === 'tgl_faktur'"
                             placeholder="Semua Posisi"
                             class="style-chooser-sm"
                         />
@@ -185,10 +206,10 @@
                     <div class="col-md-2">
                         <label class="form-label small fw-bold text-muted">Cari Obat</label>
                         <div class="input-group input-group-sm">
-                             <input v-model="summaryFilters.keyword" type="text" class="form-control" placeholder="Nama abat...">
+                             <input v-model="summaryFilters.keyword" type="text" class="form-control" placeholder="Nama obat...">
                         </div>
                     </div>
-                    <div class="col-md-3 d-flex gap-1">
+                    <div class="col-md-2 d-flex gap-1">
                         <button class="btn btn-secondary btn-sm" @click="resetSummaryFilters" :disabled="summaryLoading" title="Reset Filter" style="min-width: 36px;">
                             <i class="fas fa-undo"></i>
                         </button>
@@ -395,8 +416,20 @@ const filters = ref({
     tgl_awal: new Date().toISOString().slice(0, 10),
     tgl_akhir: new Date().toISOString().slice(0, 10),
     keyword: '',
-    kd_bangsal: ''
+    kd_bangsal: '',
+    basis_tanggal: 'transaksi'
 })
+
+const resetFilters = () => {
+    filters.value = {
+        tgl_awal: new Date().toISOString().slice(0, 10),
+        tgl_akhir: new Date().toISOString().slice(0, 10),
+        keyword: '',
+        kd_bangsal: '',
+        basis_tanggal: 'transaksi'
+    }
+    fetchRiwayat(1)
+}
 
 const fetchBangsals = async () => {
     try {
@@ -418,7 +451,8 @@ const fetchRiwayat = async (page = 1) => {
             tgl_awal: filters.value.tgl_awal,
             tgl_akhir: filters.value.tgl_akhir,
             keyword: filters.value.keyword,
-            kd_bangsal: filters.value.kd_bangsal
+            kd_bangsal: filters.value.kd_bangsal,
+            basis_tanggal: filters.value.basis_tanggal
         }
 
         const response = await api.get('/farmasi/riwayat-obat', { params })
@@ -449,8 +483,15 @@ const summaryFilters = ref({
     tgl_awal: new Date().toISOString().slice(0, 10),
     tgl_akhir: new Date().toISOString().slice(0, 10),
     keyword: '',
-    posisi: []
+    posisi: [],
+    basis_tanggal: 'transaksi'
 })
+
+const onSummaryBasisTanggalChange = () => {
+    if (summaryFilters.value.basis_tanggal === 'tgl_faktur') {
+        summaryFilters.value.posisi = ['Penerimaan']
+    }
+}
 
 const summaryPagination = ref({
     current_page: 1,
@@ -513,7 +554,8 @@ const fetchSummary = async (page = 1, append = false) => {
             tgl_awal: summaryFilters.value.tgl_awal,
             tgl_akhir: summaryFilters.value.tgl_akhir,
             keyword: summaryFilters.value.keyword,
-            posisi: summaryFilters.value.posisi
+            posisi: summaryFilters.value.posisi,
+            basis_tanggal: summaryFilters.value.basis_tanggal
         }
 
         const response = await api.get('/farmasi/riwayat-obat/summary', { 
@@ -574,7 +616,8 @@ const exportExcel = async () => {
             tgl_awal: summaryFilters.value.tgl_awal,
             tgl_akhir: summaryFilters.value.tgl_akhir,
             keyword: summaryFilters.value.keyword,
-            posisi: summaryFilters.value.posisi
+            posisi: summaryFilters.value.posisi,
+            basis_tanggal: summaryFilters.value.basis_tanggal
         }
         
         // We use window.open for simple get request triggers if no auth token needed in header, 
@@ -614,7 +657,8 @@ const resetSummaryFilters = () => {
         tgl_awal: new Date().toISOString().slice(0, 10),
         tgl_akhir: new Date().toISOString().slice(0, 10),
         keyword: '',
-        posisi: []
+        posisi: [],
+        basis_tanggal: 'transaksi'
     }
     summaryLoaded.value = false
     summaryItems.value = []

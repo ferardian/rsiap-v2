@@ -943,6 +943,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/laporan/rekap-obat-pasien',
+    name: 'RekapObatPasien',
+    component: () => import('@/views/laporan/RekapObatPasienView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ppra/tim',
     name: 'TimPpra',
     component: () => import('../views/ppra/TimPpraView.vue'),
