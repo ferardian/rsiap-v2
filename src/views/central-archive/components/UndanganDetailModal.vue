@@ -103,6 +103,14 @@
                     <span class="action-desc">{{ downloading === 'proof' ? 'Mengunduh...' : 'Presensi & Pengesahan' }}</span>
                   </div>
                 </button>
+
+                <button @click="handleDownload('notulen')" class="action-card btn-link-action" :disabled="downloading === 'notulen'">
+                  <i class="fas fa-file-signature text-purple-600"></i>
+                  <div class="action-info">
+                    <span class="action-name">Unduh Notulen (PDF)</span>
+                    <span class="action-desc">{{ downloading === 'notulen' ? 'Mengunduh...' : 'Format PDF Resmi & QR' }}</span>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
@@ -259,6 +267,17 @@
             <div class="notulen-header-actions">
               <button 
                 v-if="!isEditingNotulen && notulenData" 
+                class="btn-switch-preview-pdf" 
+                @click="handlePreviewNotulenPdf"
+                :disabled="previewingNotulenPdf"
+                title="Preview dan Cetak PDF Notulen"
+              >
+                <i class="fas fa-spinner fa-spin mr-1" v-if="previewingNotulenPdf"></i>
+                <i class="fas fa-file-pdf mr-1 text-rose-500" v-else></i>
+                PDF
+              </button>
+              <button 
+                v-if="!isEditingNotulen && notulenData" 
                 class="btn-switch-edit" 
                 @click="startEditNotulen"
               >
@@ -348,12 +367,12 @@
             <div class="notulen-form-group mb-4">
               <label class="form-sublabel"><i class="fas fa-tag mr-1"></i> Status Dokumen</label>
               <div class="status-choice-group">
-                <label class="status-choice-label" :class="{ 'active': notulenForm.status === 1 }">
-                  <input type="radio" v-model="notulenForm.status" :value="1">
+                <label class="status-choice-label" :class="{ 'active': Number(notulenForm.status) === 1 }">
+                  <input type="radio" v-model.number="notulenForm.status" :value="1">
                   <span><i class="fas fa-check-circle text-success mr-1"></i> Terbit / Final</span>
                 </label>
-                <label class="status-choice-label" :class="{ 'active': notulenForm.status === 0 }">
-                  <input type="radio" v-model="notulenForm.status" :value="0">
+                <label class="status-choice-label" :class="{ 'active': Number(notulenForm.status) === 0 }">
+                  <input type="radio" v-model.number="notulenForm.status" :value="0">
                   <span><i class="fas fa-pencil-ruler text-warning mr-1"></i> Draf Sementara</span>
                 </label>
               </div>
@@ -382,8 +401,8 @@
               </div>
               <div class="meta-item text-right">
                 <span class="meta-label">Status Dokumen</span>
-                <span class="badge-notulen-status" :class="notulenData.status === 1 ? 'status-published' : 'status-draft'">
-                  {{ notulenData.status === 1 ? '✓ Diterbitkan' : 'Draf' }}
+                <span class="badge-notulen-status" :class="Number(notulenData.status) === 1 ? 'status-published' : 'status-draft'">
+                  {{ Number(notulenData.status) === 1 ? '✓ Diterbitkan' : 'Draf' }}
                 </span>
                 <span class="meta-sub" v-if="notulenData.updated_at">
                   Update: {{ notulenData.updated_at }}
@@ -397,6 +416,11 @@
             </div>
 
             <div class="notulen-footer-actions">
+              <button class="btn-preview-pdf-notulen" @click="handlePreviewNotulenPdf" :disabled="previewingNotulenPdf">
+                <i class="fas fa-spinner fa-spin mr-2" v-if="previewingNotulenPdf"></i>
+                <i class="fas fa-file-pdf text-rose-500 mr-2" v-else></i>
+                {{ previewingNotulenPdf ? 'Membuka PDF...' : 'Preview / Cetak PDF' }}
+              </button>
               <button class="btn-edit-notulen-secondary" @click="startEditNotulen">
                 <i class="fas fa-pencil-alt mr-2"></i> Perbarui Notulensi
               </button>
@@ -1013,6 +1037,25 @@ const fetchQrData = async () => {
   }
 }
 
+const previewingNotulenPdf = ref(false)
+
+const handlePreviewNotulenPdf = async () => {
+  if (!props.data?.id) return
+  previewingNotulenPdf.value = true
+  try {
+    const response = await undanganService.getNotulenPdf(props.data.id)
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    toast.success('Preview PDF notulen terbuka di tab baru')
+  } catch (e) {
+    console.error('Failed to preview notulen PDF:', e)
+    toast.error(e.response?.data?.message || 'Gagal memuat preview PDF notulen. Pastikan notulensi sudah disimpan.')
+  } finally {
+    previewingNotulenPdf.value = false
+  }
+}
+
 const handleDownload = async (type) => {
   if (!props.data?.id) return
   downloading.value = type
@@ -1023,9 +1066,12 @@ const handleDownload = async (type) => {
     if (type === 'undangan') {
       response = await undanganService.download(props.data.id)
       filename = `Undangan - ${props.data.perihal || props.data.id}.pdf`
-    } else {
+    } else if (type === 'proof') {
       response = await undanganService.getProof(props.data.id)
       filename = `Bukti Kehadiran - ${props.data.perihal || props.data.id}.pdf`
+    } else if (type === 'notulen') {
+      response = await undanganService.getNotulenPdf(props.data.id)
+      filename = `Notulen - ${props.data.perihal || props.data.id}.pdf`
     }
 
     // Sanitize filename (remove characters that might cause issues)
@@ -1058,7 +1104,10 @@ const showNotulenDetail = async () => {
     const base64Id = btoa(props.data.id.toString())
     const response = await undanganService.getNotulen(base64Id)
     if (response.data?.data?.notulen) {
-      notulenData.value = response.data.data.notulen
+      notulenData.value = {
+        ...response.data.data.notulen,
+        status: Number(response.data.data.notulen.status)
+      }
     }
   } catch (e) {
     console.error('Failed to fetch notulen:', e)
@@ -1078,7 +1127,7 @@ const startEditNotulen = () => {
       notulis_nik: notulenData.value.notulis_nik || '',
       notulis_nama: notulenData.value.notulis?.nama || notulenData.value.notulis_nik || '',
       pembahasan: notulenData.value.pembahasan || '',
-      status: notulenData.value.status ?? 1
+      status: notulenData.value.status !== undefined ? Number(notulenData.value.status) : 1
     }
   } else {
     // Default notulis from PJ or first attendee if available
@@ -1149,18 +1198,21 @@ const handleSaveNotulen = async () => {
     const response = await undanganService.saveNotulen(props.data.id, {
       notulis_nik: notulenForm.value.notulis_nik,
       pembahasan: notulenForm.value.pembahasan,
-      status: notulenForm.value.status
+      status: Number(notulenForm.value.status)
     })
     
     if (response.data?.data) {
-      notulenData.value = response.data.data
+      notulenData.value = {
+        ...response.data.data,
+        status: Number(response.data.data.status)
+      }
     } else {
       notulenData.value = {
         no_surat: props.data.no_surat || props.data.surat_id,
         notulis_nik: notulenForm.value.notulis_nik,
         notulis: { nama: notulenForm.value.notulis_nama },
         pembahasan: notulenForm.value.pembahasan,
-        status: notulenForm.value.status,
+        status: Number(notulenForm.value.status),
         updated_at: new Date().toISOString()
       }
     }
@@ -2148,10 +2200,70 @@ const goToTimelineProgram = (progId) => {
   margin-bottom: 0.25rem;
 }
 
+.notulen-footer-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-preview-pdf-notulen {
+  flex: 1;
+  padding: 0.75rem;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.btn-preview-pdf-notulen:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);
+}
+.btn-preview-pdf-notulen:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-switch-preview-pdf {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+.btn-switch-preview-pdf:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .btn-edit-notulen-secondary {
-  width: 100%; padding: 0.75rem; background: #eff6ff; color: #2563eb;
-  border: 1px solid #bfdbfe; border-radius: 12px; font-weight: 700; font-size: 0.85rem;
-  cursor: pointer; transition: all 0.2s;
+  flex: 1;
+  padding: 0.75rem;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 .btn-edit-notulen-secondary:hover { background: #dbeafe; color: #1e40af; }
 

@@ -41,6 +41,10 @@ export const undanganService = {
         return api.post(`/undangan/${id}/notulen`, data)
     },
 
+    getNotulenPdf(id) {
+        return api.get(`/undangan/${id}/notulen/pdf`, { responseType: 'blob' })
+    },
+
     download(id) {
         return api.get(`/undangan/${id}/download`, { responseType: 'blob' })
     },
