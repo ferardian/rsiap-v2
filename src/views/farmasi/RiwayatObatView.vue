@@ -284,11 +284,14 @@
 
                  <!-- Footer Info (Static) -->
                  <div class="border-top p-2 bg-light text-center small text-muted">
-                     <span v-if="summaryItems.length > 0">
+                     <span v-if="summaryLoading">
+                         <span class="spinner-border spinner-border-sm me-1 text-primary"></span>Memuat data...
+                     </span>
+                     <span v-else-if="summaryItems.length > 0">
                          Menampilkan {{ summaryItems.length }} data (Scroll untuk memuat lebih banyak)
                      </span>
                      <span v-else>
-                         Memuat...
+                         Tidak ada data
                      </span>
                  </div>
             </div>
