@@ -103,14 +103,6 @@
                     <span class="action-desc">{{ downloading === 'proof' ? 'Mengunduh...' : 'Presensi & Pengesahan' }}</span>
                   </div>
                 </button>
-
-                <button @click="handleDownload('notulen')" class="action-card btn-link-action" :disabled="downloading === 'notulen'">
-                  <i class="fas fa-file-signature text-purple-600"></i>
-                  <div class="action-info">
-                    <span class="action-name">Unduh Notulen (PDF)</span>
-                    <span class="action-desc">{{ downloading === 'notulen' ? 'Mengunduh...' : 'Format PDF Resmi & QR' }}</span>
-                  </div>
-                </button>
               </div>
             </div>
           </div>
