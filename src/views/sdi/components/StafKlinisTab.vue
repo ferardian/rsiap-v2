@@ -86,6 +86,7 @@
               <th>Jabatan</th>
               <th>Pendidikan</th>
               <th>Kredensial</th>
+              <th>Nomor SPK RKK</th>
               <th>No. Telp</th>
               <th>Kategori Profesi</th>
               <th>Nomor STR</th>
@@ -121,6 +122,26 @@
                     <i class="far fa-calendar-alt"></i>
                     <span>{{ formatDate(staf.tgl_terbit_sk) }}</span>
                   </div>
+                </div>
+                <span v-else class="text-muted">-</span>
+              </td>
+              <td>
+                <div v-if="staf.nomor_spk_rkk" class="spk-rkk-cell">
+                  <a 
+                    v-if="staf.berkas_sk" 
+                    :href="getSkUrl(staf.berkas_sk)" 
+                    target="_blank" 
+                    class="spk-badge-interactive"
+                    :title="`Buka Berkas: ${staf.judul_sk || staf.nomor_spk_rkk}`"
+                  >
+                    <i class="fas fa-file-pdf text-danger"></i>
+                    <span>{{ staf.nomor_spk_rkk }}</span>
+                    <i class="fas fa-external-link-alt text-muted ms-1" style="font-size: 0.65rem;"></i>
+                  </a>
+                  <span v-else class="spk-badge-static" :title="staf.judul_sk || 'Nomor SPK RKK'">
+                    <i class="fas fa-hashtag text-muted"></i>
+                    <span>{{ staf.nomor_spk_rkk }}</span>
+                  </span>
                 </div>
                 <span v-else class="text-muted">-</span>
               </td>
@@ -448,32 +469,36 @@
                 <label>Nama</label>
                 <div class="detail-value">{{ selectedStaf.nama }}</div>
               </div>
-              <div class="detail-item full-width" v-if="selectedStaf.judul_sk">
-                <label>Kredensial Terakhir</label>
+              <div class="detail-item full-width" v-if="selectedStaf.judul_sk || selectedStaf.nomor_spk_rkk">
+                <label>Kredensial Terakhir & SPK RKK</label>
                 <div class="kredensial-card-mini">
-                  <div class="k-card-header">
+                  <div class="k-card-header d-flex justify-content-between align-items-center">
                     <div class="level-badge-premium" :class="getLevelClass(selectedStaf.level_kredensial || calculateKredensial(selectedStaf))">
                       <i class="fas fa-shield-alt"></i>
                       {{ selectedStaf.level_kredensial || calculateKredensial(selectedStaf) }}
                     </div>
+                    <div v-if="selectedStaf.nomor_spk_rkk" class="spk-badge-interactive" style="background: #ffffff; border-color: #cbd5e1;">
+                      <i class="fas fa-file-signature text-primary"></i>
+                      <span>No. {{ selectedStaf.nomor_spk_rkk }}</span>
+                    </div>
                   </div>
                   <div class="k-card-body">
-                    <div class="sk-title">{{ selectedStaf.judul_sk }}</div>
+                    <div class="sk-title">{{ selectedStaf.judul_sk || 'Surat Penugasan Klinis' }}</div>
                     <div class="sk-meta">
                       <div class="meta-item">
                         <i class="fas fa-calendar-check"></i>
                         <span>Terbit: {{ formatDate(selectedStaf.tgl_terbit_sk) }}</span>
                       </div>
-                      <div class="meta-item border-left-mini">
+                      <div class="meta-item border-left-mini" v-if="selectedStaf.tgl_terbit_sk">
                         <i class="fas fa-hourglass-half"></i>
                         <span>Masa Kerja: {{ (new Date(selectedStaf.tgl_terbit_sk).getFullYear() - 2017) }} Tahun</span>
                       </div>
                     </div>
                   </div>
                   <div class="k-card-footer" v-if="selectedStaf.berkas_sk">
-                    <a :href="`http://192.168.100.33/webapps/rsia_sk/${selectedStaf.berkas_sk}`" target="_blank" class="btn-preview-sk-mini">
+                    <a :href="getSkUrl(selectedStaf.berkas_sk)" target="_blank" class="btn-preview-sk-mini">
                       <i class="fas fa-file-pdf"></i>
-                      <span>Lihat Lampiran SK</span>
+                      <span>Lihat Lampiran SK ({{ selectedStaf.nomor_spk_rkk || 'PDF' }})</span>
                       <i class="fas fa-arrow-right arrow"></i>
                     </a>
                   </div>
@@ -856,6 +881,7 @@ const exportExcel = () => {
       'Jabatan': staf.jabatan || '-',
       'Pendidikan': staf.pendidikan || '-',
       'Tingkat Kredensial': kredensial || '-',
+      'Nomor SPK RKK': staf.nomor_spk_rkk || '-',
       'Tanggal Kredensial': staf.tgl_terbit_sk ? formatDate(staf.tgl_terbit_sk) : '-',
       'Status Anggota': staf.status_anggota || '-',
       'No. Telp': staf.no_telp || '-',
@@ -882,6 +908,7 @@ const exportExcel = () => {
     { wch: 20 }, // Jabatan
     { wch: 20 }, // Pendidikan
     { wch: 20 }, // Tingkat Kredensial
+    { wch: 24 }, // Nomor SPK RKK
     { wch: 15 }, // Tanggal Kredensial
     { wch: 15 }, // Status Anggota
     { wch: 15 }, // No. Telp
@@ -1138,6 +1165,12 @@ const getLevelClass = (level) => {
 
 const getBuktiKelulusanUrl = (filename) => {
   return `http://192.168.100.33/webapps/rsia_kualifikasi/${filename}`
+}
+
+const getSkUrl = (filename) => {
+  if (!filename) return '#'
+  const baseUrl = import.meta.env.VITE_APP_URL || 'http://192.168.100.33'
+  return `${baseUrl}/webapps/rsia_sk/${filename}`
 }
 
 const getFileIcon = (filename) => {
@@ -2336,6 +2369,54 @@ tbody tr:hover .sticky-col-right {
   font-size: 0.7rem;
   color: #64748b;
   padding-left: 4px;
+}
+
+/* SPK RKK Styles */
+.spk-rkk-cell {
+  display: flex;
+  align-items: center;
+  min-width: 175px;
+}
+
+.spk-badge-interactive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.spk-badge-interactive:hover {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15);
+  color: #1e40af;
+}
+
+.spk-badge-static {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* Level Variants */
