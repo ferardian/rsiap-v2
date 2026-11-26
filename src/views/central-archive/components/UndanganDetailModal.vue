@@ -936,12 +936,13 @@ watch(() => props.show, (newVal) => {
     tindakLanjutList.value = []
     publishedPrograms.value = []
     showPublishProgram.value = false
+    notulenData.value = null
     fetchQrData()
     fetchRecipients()
     fetchAttendance()
     fetchTindakLanjut()
     fetchTimelinePrograms()
-    notulenData.value = null
+    fetchNotulenSilent()
     showNotulen.value = false
     isEditingNotulen.value = false
     showQrFull.value = false
@@ -1084,6 +1085,24 @@ const handleDownload = async (type) => {
     toast.error('Gagal mengunduh dokumen. Pastikan data tersedia.')
   } finally {
     downloading.value = null
+  }
+}
+
+const fetchNotulenSilent = async () => {
+  if (!props.data?.id) return
+  try {
+    const base64Id = btoa(props.data.id.toString())
+    const response = await undanganService.getNotulen(base64Id)
+    if (response.data?.data?.notulen) {
+      notulenData.value = {
+        ...response.data.data.notulen,
+        status: Number(response.data.data.notulen.status)
+      }
+    } else {
+      notulenData.value = null
+    }
+  } catch (e) {
+    console.error('Failed to pre-fetch notulen:', e)
   }
 }
 
