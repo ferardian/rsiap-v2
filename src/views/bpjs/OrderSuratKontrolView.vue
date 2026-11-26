@@ -5,7 +5,7 @@
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
           <h1 class="page-title d-flex align-items-center gap-2">
-            <span>🏥</span> Order Surat Kontrol Ranap (Trigger Resume)
+            <span>🏥</span> Order Surat Kontrol Ranap
           </h1>
           <p class="page-subtitle mb-0">
             Antrean penerbitan Surat Kontrol BPJS otomatis dari Resume Medis Rawat Inap (Batas Maksimal Penerbitan: <strong>H+1</strong> setelah Update Pulang SEP)
