@@ -247,30 +247,30 @@
                   </div>
                 </td>
                 <td class="text-center pe-3">
-                  <div class="d-flex justify-content-center gap-1">
+                  <div class="d-inline-flex align-items-center justify-content-center gap-1 flex-nowrap">
                     <button
                       v-if="item.status_order !== 'TERBIT'"
                       type="button"
-                      class="btn btn-sm fw-semibold"
+                      class="btn btn-action-compact fw-semibold d-inline-flex align-items-center gap-1 text-nowrap"
                       :class="item.belum_pulang_sep ? 'btn-outline-secondary' : (item.status_order === 'PERLU_UPDATE_SKRJ' ? 'btn-info text-white' : 'btn-primary')"
                       :disabled="processingId === item.id || item.belum_pulang_sep"
                       :title="item.belum_pulang_sep ? 'Update tanggal pulang SEP terlebih dahulu' : 'Terbitkan Surat Kontrol ke VClaim BPJS'"
                       @click="handleTerbitkan(item)"
                     >
                       <i class="fas" :class="processingId === item.id ? 'fa-spinner fa-spin' : (item.status_order === 'PERLU_UPDATE_SKRJ' ? 'fa-edit' : 'fa-paper-plane')"></i>
-                      <span class="ms-1">{{ item.status_order === 'PERLU_UPDATE_SKRJ' ? 'Update' : 'Terbitkan' }}</span>
+                      <span>{{ item.status_order === 'PERLU_UPDATE_SKRJ' ? 'Update' : 'Terbitkan' }}</span>
                     </button>
                     <button
                       v-if="item.status_order !== 'TERBIT'"
                       type="button"
-                      class="btn btn-outline-secondary btn-sm"
+                      class="btn btn-outline-secondary btn-action-compact d-inline-flex align-items-center justify-content-center"
                       :disabled="processingId === item.id"
                       title="Cek Ulang Status SEP di Database"
                       @click="handleSyncSep(item)"
                     >
                       <i class="fas fa-sync"></i>
                     </button>
-                    <span v-if="item.status_order === 'TERBIT'" class="text-success small fw-bold">
+                    <span v-if="item.status_order === 'TERBIT'" class="text-success small fw-bold text-nowrap">
                       <i class="fas fa-check-double"></i> Selesai
                     </span>
                   </div>
@@ -554,6 +554,13 @@ export default {
 .page-subtitle {
   font-size: 0.875rem;
   color: #64748b;
+}
+.btn-action-compact {
+  padding: 0.25rem 0.55rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1.25 !important;
+  border-radius: 0.375rem !important;
+  min-height: unset !important;
 }
 </style>
 
