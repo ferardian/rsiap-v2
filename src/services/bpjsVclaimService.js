@@ -119,6 +119,14 @@ const bpjsVclaimService = {
     getSuratKontrolByTanggal: (params) => api.get('/bpjs/vclaim/surat-kontrol/tanggal', { params }),
     getSuratKontrolByNoKartu: (noKartu, params) => api.get(`/bpjs/vclaim/surat-kontrol/peserta/${noKartu}`, { params }),
     syncSuratKontrol: (payload) => api.post('/bpjs/vclaim/surat-kontrol/sync', payload),
+
+    /**
+     * Order Surat Kontrol Ranap (Trigger Resume Medis Ranap)
+     */
+    getOrderSuratKontrol: (params) => api.get('/bpjs/vclaim/order-surat-kontrol', { params }),
+    getOrderSuratKontrolReferensi: () => api.get('/bpjs/vclaim/order-surat-kontrol/referensi'),
+    terbitkanOrderSuratKontrol: (id, payload = {}) => api.post(`/bpjs/vclaim/order-surat-kontrol/terbitkan/${id}`, payload),
+    syncOrderSuratKontrolSep: (id) => api.post(`/bpjs/vclaim/order-surat-kontrol/sync-sep/${id}`),
 };
 
 export default bpjsVclaimService;

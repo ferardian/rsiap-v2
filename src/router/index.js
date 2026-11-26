@@ -619,6 +619,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/bpjs/order-surat-kontrol',
+    name: 'BpjsOrderSuratKontrol',
+    component: () => import('../views/bpjs/OrderSuratKontrolView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/bpjs/katalog-trustmark',
     name: 'BpjsKatalogTrustmark',
     component: () => import('../views/bpjs/KatalogTrustmarkView.vue'),
