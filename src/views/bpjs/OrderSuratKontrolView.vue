@@ -194,7 +194,7 @@
                       <i class="fas fa-exclamation-triangle me-1"></i> Belum Update Pulang SEP
                     </span>
                     <div class="small text-danger mt-1" style="font-size: 0.72rem;">
-                      `bridging_sep.tglpulang` kosong
+                      Update tanggal pulang SEP terlebih dahulu
                     </div>
                   </div>
                   <div v-else>
@@ -556,3 +556,4 @@ export default {
   color: #64748b;
 }
 </style>
+
