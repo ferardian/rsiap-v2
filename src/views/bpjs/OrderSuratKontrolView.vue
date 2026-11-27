@@ -193,8 +193,16 @@
                     <span class="badge bg-danger text-white rounded-pill px-2 py-1">
                       <i class="fas fa-exclamation-triangle me-1"></i> Belum Update Pulang SEP
                     </span>
-                    <div class="small text-danger mt-1" style="font-size: 0.72rem;">
-                      Update tanggal pulang SEP terlebih dahulu
+                    <div class="mt-1.5">
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger btn-action-compact fw-semibold d-inline-flex align-items-center gap-1"
+                        :disabled="processingId === item.id"
+                        @click="openModalUpdatePulang(item)"
+                      >
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Update Tgl Pulang</span>
+                      </button>
                     </div>
                   </div>
                   <div v-else>
@@ -324,6 +332,56 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Update Tanggal Pulang SEP (VClaim 2.0) -->
+    <div v-if="modalUpdatePulang.show" class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.55);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-danger text-white py-2 px-3">
+            <h6 class="modal-title fw-bold mb-0">
+              <i class="fas fa-calendar-check me-1"></i> Update Tanggal Pulang SEP (VClaim)
+            </h6>
+            <button type="button" class="btn-close btn-close-white" @click="modalUpdatePulang.show = false"></button>
+          </div>
+          <div class="modal-body p-3">
+            <div class="alert alert-light border small mb-3">
+              <strong>{{ modalUpdatePulang.item?.nm_pasien }}</strong> ({{ modalUpdatePulang.item?.no_rkm_medis }})<br>
+              No. SEP: <span class="font-monospace fw-bold text-primary">{{ modalUpdatePulang.item?.no_sep }}</span>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Tanggal Pulang SEP <span class="text-danger">*</span></label>
+              <input v-model="modalUpdatePulang.tgl_pulang" type="date" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Status / Cara Pulang BPJS <span class="text-danger">*</span></label>
+              <select v-model="modalUpdatePulang.status_pulang" class="form-select form-select-sm">
+                <option value="1">1 - Atas Persetujuan Dokter</option>
+                <option value="3">3 - Atas Permintaan Sendiri</option>
+                <option value="4">4 - Meninggal</option>
+                <option value="5">5 - Lain-lain</option>
+              </select>
+            </div>
+            <div v-if="modalUpdatePulang.status_pulang === '4'" class="row g-2 mb-2">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">No. Surat Meninggal</label>
+                <input v-model="modalUpdatePulang.no_surat_meninggal" type="text" class="form-control form-control-sm" placeholder="Nomor surat kematian">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Tanggal Meninggal</label>
+                <input v-model="modalUpdatePulang.tgl_meninggal" type="date" class="form-control form-control-sm">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2 px-3">
+            <button type="button" class="btn btn-secondary btn-sm" @click="modalUpdatePulang.show = false">Batal</button>
+            <button type="button" class="btn btn-danger btn-sm fw-bold" :disabled="modalUpdatePulang.loading" @click="submitUpdatePulang">
+              <i class="fas" :class="modalUpdatePulang.loading ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+              <span class="ms-1">{{ modalUpdatePulang.loading ? 'Mengirim ke VClaim...' : 'Simpan & Update SEP' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -362,6 +420,15 @@ export default {
         nm_dokter_bpjs: '',
         kd_poli_bpjs: '',
         nm_poli_bpjs: '',
+      },
+      modalUpdatePulang: {
+        show: false,
+        loading: false,
+        item: null,
+        tgl_pulang: '',
+        status_pulang: '1',
+        no_surat_meninggal: '',
+        tgl_meninggal: '',
       },
     };
   },
@@ -496,6 +563,51 @@ export default {
         Swal.fire('Gagal', err.response?.data?.message || 'Gagal sinkronisasi SEP.', 'error');
       } finally {
         this.processingId = null;
+      }
+    },
+    openModalUpdatePulang(item) {
+      const today = new Date().toISOString().slice(0, 10);
+      const tglKeluar = item.tgl_keluar_ranap && !String(item.tgl_keluar_ranap).startsWith('0000-00-00')
+        ? String(item.tgl_keluar_ranap).slice(0, 10)
+        : today;
+
+      this.modalUpdatePulang = {
+        show: true,
+        loading: false,
+        item,
+        tgl_pulang: tglKeluar,
+        status_pulang: '1',
+        no_surat_meninggal: '',
+        tgl_meninggal: '',
+      };
+    },
+    async submitUpdatePulang() {
+      if (!this.modalUpdatePulang.tgl_pulang) {
+        Swal.fire('Peringatan', 'Tanggal pulang SEP wajib diisi.', 'warning');
+        return;
+      }
+
+      this.modalUpdatePulang.loading = true;
+      try {
+        const id = this.modalUpdatePulang.item.id;
+        const res = await bpjsVclaimService.updatePulangOrderSuratKontrol(id, {
+          tgl_pulang: this.modalUpdatePulang.tgl_pulang,
+          status_pulang: this.modalUpdatePulang.status_pulang,
+          no_surat_meninggal: this.modalUpdatePulang.no_surat_meninggal,
+          tgl_meninggal: this.modalUpdatePulang.tgl_meninggal,
+        });
+
+        if (res.data?.success) {
+          this.modalUpdatePulang.show = false;
+          Swal.fire('Berhasil!', res.data.message, 'success');
+          this.fetchOrders();
+        } else {
+          Swal.fire('Gagal VClaim', res.data?.message || 'Gagal memperbarui tanggal pulang SEP.', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Gagal VClaim', err.response?.data?.message || 'Terjadi kesalahan saat menghubungi VClaim BPJS.', 'error');
+      } finally {
+        this.modalUpdatePulang.loading = false;
       }
     },
     formatTanggal(tgl) {

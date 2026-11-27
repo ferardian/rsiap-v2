@@ -126,6 +126,7 @@ const bpjsVclaimService = {
     getOrderSuratKontrol: (params) => api.get('/bpjs/vclaim/order-surat-kontrol', { params }),
     getOrderSuratKontrolReferensi: () => api.get('/bpjs/vclaim/order-surat-kontrol/referensi'),
     terbitkanOrderSuratKontrol: (id, payload = {}) => api.post(`/bpjs/vclaim/order-surat-kontrol/terbitkan/${id}`, payload),
+    updatePulangOrderSuratKontrol: (id, payload) => api.post(`/bpjs/vclaim/order-surat-kontrol/update-pulang/${id}`, payload),
     syncOrderSuratKontrolSep: (id) => api.post(`/bpjs/vclaim/order-surat-kontrol/sync-sep/${id}`),
 };
 
