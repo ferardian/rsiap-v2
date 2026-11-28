@@ -250,6 +250,14 @@
                   <div v-if="item.no_surat_kontrol" class="small font-monospace fw-bold text-success mt-1">
                     {{ item.no_surat_kontrol }}
                   </div>
+                  <div
+                    v-if="item.tgl_rencana_skrj"
+                    class="small mt-0.5"
+                    :class="item.status_order === 'PERLU_UPDATE_SKRJ' ? 'text-danger fw-semibold' : 'text-muted'"
+                    style="font-size: 0.74rem;"
+                  >
+                    Tgl SKRJ: {{ formatTanggal(item.tgl_rencana_skrj) }}
+                  </div>
                   <div v-if="item.status_order === 'GAGAL_TERBIT' && item.response_bpjs" class="small text-danger mt-1" style="font-size: 0.72rem;">
                     {{ item.response_bpjs }}
                   </div>
