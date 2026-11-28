@@ -65,5 +65,27 @@ export default {
     // Delete incorrect room stay (Hapus Data Salah)
     hapusDataSalah(data) {
         return api.post('/rawat-inap/hapus-data-salah', data)
+    },
+
+    // Get Resume Medis Pasien Ranap data
+    getResume(no_rawat) {
+        const encodedNoRawat = btoa(no_rawat);
+        return api.get('/rawat-inap/resume', {
+            params: {
+                no_rawat: encodedNoRawat
+            }
+        });
+    },
+
+    // Print Resume Medis Pasien Ranap (returns PDF blob)
+    printResume(no_rawat, format = 'pdf') {
+        const encodedNoRawat = btoa(no_rawat);
+        return api.get('/rawat-inap/resume/print', {
+            params: {
+                no_rawat: encodedNoRawat,
+                format
+            },
+            responseType: 'blob'
+        });
     }
 }

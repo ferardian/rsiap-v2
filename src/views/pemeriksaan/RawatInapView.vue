@@ -2060,12 +2060,13 @@ const handleContextAction = async (action) => {
       break
     case 'soap':
     case 'asesmen':
-    case 'resume':
       openModal(item)
       activeTab.value = 'rme'
       fetchRme()
       fetchPenunjang()
-      // Future: Implement scrolling to specific section
+      break
+    case 'resume':
+      printResumeMedis(item)
       break
     case 'req-operasi':
        openBookingOperasiModal(item)
@@ -2154,6 +2155,7 @@ const serverGrandTotal = ref(0)
 const penunjangData = ref(null)
 const isLoadingRme = ref(false)
 const isLoadingBilling = ref(false)
+const isLoadingResume = ref(false)
 const billingError = ref(null)
 const rmeError = ref(null)
 // SKU Modal State
@@ -2921,6 +2923,22 @@ const fetchBilling = async () => {
    } finally {
      isLoadingBilling.value = false
    }
+}
+
+
+// Print Resume Medis Pasien Ranap
+const printResumeMedis = async (item) => {
+  if (!item?.no_rawat) return
+  try {
+    const response = await rawatInapService.printResume(item.no_rawat)
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+  } catch (error) {
+    console.error('Error mencetak resume medis:', error)
+    alert('Gagal mencetak resume medis. Silakan coba lagi.')
+  }
 }
 
 // Watchers
