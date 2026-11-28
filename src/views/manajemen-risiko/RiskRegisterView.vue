@@ -80,7 +80,7 @@
           </div>
 
           <!-- Search Input -->
-          <div class="col-12 mt-2">
+          <div class="col-12 col-md-7 mt-2">
             <div class="input-group input-group-sm">
               <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
               <input 
@@ -93,6 +93,21 @@
               <button v-if="filters.search" @click="filters.search = ''; fetchData()" class="btn btn-outline-secondary">
                 <i class="fas fa-times"></i>
               </button>
+            </div>
+          </div>
+
+          <!-- Sort Selector -->
+          <div class="col-12 col-md-5 mt-2">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="fas fa-arrow-down-wide-short text-primary me-1"></i> Urutan:</span>
+              <select v-model="filters.sort_by" @change="fetchData" class="form-select form-select-sm">
+                <option value="skor_awal_desc">🔴 Risiko Awal Tertinggi (Default)</option>
+                <option value="skor_awal_asc">🟢 Risiko Awal Terendah</option>
+                <option value="skor_sisa_desc">🛡️ Risiko Sisa (Residual) Tertinggi</option>
+                <option value="skor_sisa_asc">🛡️ Risiko Sisa (Residual) Terendah</option>
+                <option value="terbaru">🕒 Input Terbaru</option>
+                <option value="terlama">🕒 Input Terlama</option>
+              </select>
             </div>
           </div>
         </div>
@@ -123,9 +138,25 @@
                 <th>Proses Kerja & Sasaran</th>
                 <th>Klasifikasi & Lingkup</th>
                 <th>Identifikasi Risiko</th>
-                <th class="text-center bg-danger-subtle text-danger" style="width: 100px;">Risiko Awal (D×F=R)</th>
+                <th 
+                  @click="toggleSort('skor_awal')" 
+                  class="text-center bg-danger-subtle text-danger user-select-none" 
+                  style="width: 115px; cursor: pointer;"
+                  title="Klik untuk mengurutkan berdasarkan Skor Risiko Awal"
+                >
+                  <span>Risiko Awal (D×F=R)</span>
+                  <i class="fas ms-1" :class="getSortIcon('skor_awal')"></i>
+                </th>
                 <th>Rekomendasi Pengendalian</th>
-                <th class="text-center bg-success-subtle text-success" style="width: 100px;">Risiko Sisa (D×F=R)</th>
+                <th 
+                  @click="toggleSort('skor_sisa')" 
+                  class="text-center bg-success-subtle text-success user-select-none" 
+                  style="width: 115px; cursor: pointer;"
+                  title="Klik untuk mengurutkan berdasarkan Skor Risiko Sisa"
+                >
+                  <span>Risiko Sisa (D×F=R)</span>
+                  <i class="fas ms-1" :class="getSortIcon('skor_sisa')"></i>
+                </th>
                 <th>Risk Owner</th>
                 <th class="text-center" style="width: 80px;">Aksi</th>
               </tr>
@@ -820,7 +851,8 @@ const filters = reactive({
   kd_departemen: '',
   id_klasifikasi: '',
   level_awal: '',
-  search: ''
+  search: '',
+  sort_by: 'skor_awal_desc'
 })
 
 const form = reactive({
@@ -954,7 +986,8 @@ const fetchData = async () => {
       kd_departemen: filters.kd_departemen || undefined,
       id_klasifikasi: filters.id_klasifikasi || undefined,
       level_awal: filters.level_awal || undefined,
-      search: filters.search || undefined
+      search: filters.search || undefined,
+      sort_by: filters.sort_by || undefined
     }
     const res = await manajemenRisikoService.getAll(params)
     if (res.data?.success) {
@@ -965,6 +998,27 @@ const fetchData = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const toggleSort = (col) => {
+  if (col === 'skor_awal') {
+    filters.sort_by = filters.sort_by === 'skor_awal_desc' ? 'skor_awal_asc' : 'skor_awal_desc'
+  } else if (col === 'skor_sisa') {
+    filters.sort_by = filters.sort_by === 'skor_sisa_desc' ? 'skor_sisa_asc' : 'skor_sisa_desc'
+  }
+  fetchData()
+}
+
+const getSortIcon = (col) => {
+  if (col === 'skor_awal') {
+    if (filters.sort_by === 'skor_awal_desc') return 'fa-sort-down text-danger'
+    if (filters.sort_by === 'skor_awal_asc') return 'fa-sort-up text-danger'
+  }
+  if (col === 'skor_sisa') {
+    if (filters.sort_by === 'skor_sisa_desc') return 'fa-sort-down text-success'
+    if (filters.sort_by === 'skor_sisa_asc') return 'fa-sort-up text-success'
+  }
+  return 'fa-sort text-muted opacity-50'
 }
 
 let searchTimer = null
